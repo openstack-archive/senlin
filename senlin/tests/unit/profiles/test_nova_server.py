@@ -70,172 +70,196 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         self.assertIsNone(profile.server_id)
 
-    def test_do_validate_all_passed(self):
+    def test__validate_az(self):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
         cc.validate_azs.return_value = ['FAKE_AZ']
-        x_flavor = mock.Mock(is_disabled=False, id='FLAV')
-        cc.flavor_list.return_value = [x_flavor]
-        x_image = mock.Mock(id='FAKE_IMAGE')
-        cc.image_list.return_value = [x_image]
-        x_key = mock.Mock()
-        x_key.name = 'FAKE_KEYNAME'
-        cc.keypair_list.return_value = [x_key]
         profile._computeclient = cc
 
-        res = profile.do_validate(mock.Mock())
+        res = profile._validate_az(mock.Mock(), 'FAKE_AZ')
 
-        self.assertTrue(res)
+        self.assertEqual('FAKE_AZ', res)
         cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
-        cc.flavor_list.assert_called_once_with()
-        cc.image_list.assert_called_once_with()
-        cc.keypair_list.assert_called_once_with()
 
-    def test_do_validate_az_not_found(self):
+    def test__validate_az_driver_failure(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        cc.validate_azs.side_effect = exc.InternalError(message='BANG.')
+        profile._computeclient = cc
+
+        ex = self.assertRaises(exc.InternalError,
+                               profile._validate_az,
+                               mock.Mock(), 'FAKE_AZ')
+        self.assertEqual("BANG.", six.text_type(ex))
+        cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
+
+    def test__validate_az_not_found(self):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
         cc.validate_azs.return_value = []
         profile._computeclient = cc
 
         ex = self.assertRaises(exc.InvalidSpec,
-                               profile.do_validate,
-                               mock.Mock())
+                               profile._validate_az,
+                               mock.Mock(), 'FAKE_AZ')
         self.assertEqual("The specified availability_zone 'FAKE_AZ' could "
                          "not be found.", six.text_type(ex))
         cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
 
-    def test_do_validate_flavor_disabled(self):
+    def test__validate_flavor(self):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
-        cc.validate_azs.return_value = ['FAKE_AZ']  # skip this
-        cc.flavor_list.return_value = [mock.Mock(is_disabled=True)]
+        x_flavor = mock.Mock(id='FAKE_FLAVOR')
+        cc.flavor_find.return_value = x_flavor
+        profile._computeclient = cc
 
+        res = profile._validate_flavor(mock.Mock(), 'FAKE_FLAVOR')
+
+        self.assertEqual(x_flavor, res)
+        cc.flavor_find.assert_called_once_with('FAKE_FLAVOR', False)
+
+    def test__validate_flavor_driver_failure(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        cc.flavor_find.side_effect = exc.InternalError(message='BANG.')
+        profile._computeclient = cc
+
+        ex = self.assertRaises(exc.InternalError,
+                               profile._validate_flavor,
+                               mock.Mock(), 'FAKE_FLAVOR')
+        self.assertEqual("BANG.", six.text_type(ex))
+        cc.flavor_find.assert_called_once_with('FAKE_FLAVOR', False)
+
+    def test__validate_flavor_not_found(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        err = exc.InternalError(code=404, message='BANG')
+        cc.flavor_find.side_effect = err
         profile._computeclient = cc
 
         ex = self.assertRaises(exc.InvalidSpec,
-                               profile.do_validate,
-                               mock.Mock())
+                               profile._validate_flavor,
+                               mock.Mock(), 'FLAV')
         self.assertEqual("The specified flavor 'FLAV' could "
                          "not be found.", six.text_type(ex))
-        cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
-        cc.flavor_list.assert_called_once_with()
+        cc.flavor_find.assert_called_once_with('FLAV', False)
 
-    def test_do_validate_flavor_not_match(self):
+    def test__validate_image(self):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
-        cc.validate_azs.return_value = ['FAKE_AZ']  # skip this
-        x_flavor = mock.Mock(is_disabled=False, id='FLA', name='FLAV_NAME')
-        cc.flavor_list.return_value = [x_flavor]
+        x_image = mock.Mock()
+        cc.image_find.return_value = x_image
+        profile._computeclient = cc
 
+        res = profile._validate_image(mock.Mock(), 'FAKE_IMAGE')
+
+        self.assertEqual(x_image, res)
+        cc.image_find.assert_called_once_with('FAKE_IMAGE', False)
+
+    def test__validate_image_driver_failure(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        cc.image_find.side_effect = exc.InternalError(message='BANG')
+        profile._computeclient = cc
+
+        ex = self.assertRaises(exc.InternalError,
+                               profile._validate_image,
+                               mock.Mock(), 'IMAGE')
+        self.assertEqual("BANG", six.text_type(ex))
+        cc.image_find.assert_called_once_with('IMAGE', False)
+
+    def test__validate_image_not_found(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        cc.image_find.side_effect = exc.InternalError(code=404, message='BANG')
         profile._computeclient = cc
 
         ex = self.assertRaises(exc.InvalidSpec,
-                               profile.do_validate,
-                               mock.Mock())
-        self.assertEqual("The specified flavor 'FLAV' could "
-                         "not be found.", six.text_type(ex))
-        cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
-        cc.flavor_list.assert_called_once_with()
-
-    def test_do_validate_image_not_found(self):
-        profile = server.ServerProfile('t', self.spec)
-        cc = mock.Mock()
-        cc.validate_azs.return_value = ['FAKE_AZ']  # skip this
-        # have id match this time
-        x_flavor = mock.Mock(is_disabled=False, id='FLAV', name='FLAV_NAME')
-        cc.flavor_list.return_value = [x_flavor]
-        x_image = mock.Mock(id='WEIRD_ID', name='WEIRD_NAME')
-        cc.image_list.return_value = [x_image]
-        profile._computeclient = cc
-
-        ex = self.assertRaises(exc.InvalidSpec,
-                               profile.do_validate,
-                               mock.Mock())
+                               profile._validate_image,
+                               mock.Mock(), 'FAKE_IMAGE')
         self.assertEqual("The specified image 'FAKE_IMAGE' could "
                          "not be found.", six.text_type(ex))
-        cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
-        cc.flavor_list.assert_called_once_with()
-        cc.image_list.assert_called_once_with()
+        cc.image_find.assert_called_once_with('FAKE_IMAGE', False)
 
-    def test_do_validate_key_not_found(self):
+    def test__validate_keypair(self):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
-        cc.validate_azs.return_value = ['FAKE_AZ']  # skip this
-        # have name match this time
-        x_flavor = mock.Mock(is_disabled=False, id='FLAV_ID')
-        x_flavor.name = 'FLAV'
-        cc.flavor_list.return_value = [x_flavor]
-        # have ID match this time
-        x_image = mock.Mock(id='FAKE_IMAGE', name='WEIRD_NAME')
-        cc.image_list.return_value = [x_image]
-        x_key = mock.Mock(name='BOGUS_KEY')
-        cc.keypair_list.return_value = [x_key]
+        x_keypair = mock.Mock()
+        cc.keypair_get_by_name.return_value = x_keypair
+        profile._computeclient = cc
+
+        res = profile._validate_keypair(mock.Mock(), 'KEYPAIR')
+
+        self.assertEqual(x_keypair, res)
+        cc.keypair_get_by_name.assert_called_once_with('KEYPAIR', False)
+
+    def test__validate_keypair_driver_failure(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        cc.keypair_get_by_name.side_effect = exc.InternalError(message='BANG.')
+        profile._computeclient = cc
+
+        ex = self.assertRaises(exc.InternalError,
+                               profile._validate_keypair,
+                               mock.Mock(), 'KEYPAIR')
+        self.assertEqual("BANG.", six.text_type(ex))
+        cc.keypair_get_by_name.assert_called_once_with('KEYPAIR', False)
+
+    def test__validate_keypair_not_found(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        err = exc.InternalError(code=404, message='BANG')
+        cc.keypair_get_by_name.side_effect = err
         profile._computeclient = cc
 
         ex = self.assertRaises(exc.InvalidSpec,
-                               profile.do_validate,
-                               mock.Mock())
+                               profile._validate_keypair,
+                               mock.Mock(), 'FAKE_KEYNAME')
         self.assertEqual("The specified key_name 'FAKE_KEYNAME' could "
                          "not be found.", six.text_type(ex))
-        cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
-        cc.flavor_list.assert_called_once_with()
-        cc.image_list.assert_called_once_with()
-        cc.keypair_list.assert_called_once_with()
+        cc.keypair_get_by_name.assert_called_once_with('FAKE_KEYNAME', False)
 
-    def test_do_validate_both_bdm_specified(self):
+    def test__validate_bdm(self):
+        profile = server.ServerProfile('t', self.spec)
+
+        res = profile._validate_bdm()
+
+        self.assertIsNone(res)
+
+    def test__validate_bdm_both_specified(self):
         self.spec['properties']['block_device_mapping_v2'] = [{
             'source_type': 'XTYPE',
             'destination_type': 'YTYPE',
             'volume_size': 10
         }]
         profile = server.ServerProfile('t', self.spec)
-        cc = mock.Mock()
-        cc.validate_azs.return_value = ['FAKE_AZ']  # skip this
-        # have name match this time
-        x_flavor = mock.Mock(is_disabled=False, id='FLAV_ID')
-        x_flavor.name = 'FLAV'
-        cc.flavor_list.return_value = [x_flavor]
-        # have name match this time
-        x_image = mock.Mock(id='WEIRD_ID')
-        x_image.name = 'FAKE_IMAGE'
-        cc.image_list.return_value = [x_image]
-        # let keypair pass this time
-        x_key = mock.Mock()
-        x_key.name = 'FAKE_KEYNAME'
-        cc.keypair_list.return_value = [x_key]
-        profile._computeclient = cc
 
         ex = self.assertRaises(exc.InvalidSpec,
-                               profile.do_validate,
-                               mock.Mock())
+                               profile._validate_bdm)
 
         self.assertEqual("Only one of 'block_device_mapping' or "
                          "'block_device_mapping_v2' can be specified, "
                          "not both.", six.text_type(ex))
-        cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
-        cc.flavor_list.assert_called_once_with()
-        cc.image_list.assert_called_once_with()
-        cc.keypair_list.assert_called_once_with()
 
-    def test_do_check(self):
+    def test_do_validate_all_passed(self):
         profile = server.ServerProfile('t', self.spec)
-
         cc = mock.Mock()
-        cc.server_get.return_value = None
+        cc.validate_azs.return_value = ['FAKE_AZ']
+        x_flavor = mock.Mock(is_disabled=False, id='FLAV')
+        cc.flavor_find.return_value = x_flavor
+        x_image = mock.Mock()
+        cc.image_find.return_value = x_image
+        x_key = mock.Mock()
+        cc.keypair_get_by_name.return_value = x_key
         profile._computeclient = cc
 
-        test_server = mock.Mock(physical_id='FAKE_ID')
+        res = profile.do_validate(mock.Mock())
 
-        res = profile.do_check(test_server)
-        cc.server_get.assert_called_once_with('FAKE_ID')
-        self.assertFalse(res)
-
-        return_server = mock.Mock()
-        return_server.status = 'ACTIVE'
-        cc.server_get.return_value = return_server
-        res = profile.do_check(test_server)
-        cc.server_get.assert_called_with('FAKE_ID')
         self.assertTrue(res)
+        cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
+        cc.flavor_find.assert_called_once_with('FLAV', False)
+        cc.image_find.assert_called_once_with('FAKE_IMAGE', False)
+        cc.keypair_get_by_name.assert_called_once_with('FAKE_KEYNAME', False)
 
     def test_do_create(self):
         cc = mock.Mock()
@@ -1555,6 +1579,26 @@ class TestNovaServerProfile(base.SenlinTestCase):
         # Test path where server doesn't already exist
         res = profile.do_rebuild(test_server)
         self.assertFalse(res)
+
+    def test_do_check(self):
+        profile = server.ServerProfile('t', self.spec)
+
+        cc = mock.Mock()
+        cc.server_get.return_value = None
+        profile._computeclient = cc
+
+        test_server = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_check(test_server)
+        cc.server_get.assert_called_once_with('FAKE_ID')
+        self.assertFalse(res)
+
+        return_server = mock.Mock()
+        return_server.status = 'ACTIVE'
+        cc.server_get.return_value = return_server
+        res = profile.do_check(test_server)
+        cc.server_get.assert_called_with('FAKE_ID')
+        self.assertTrue(res)
 
     @mock.patch.object(server.ServerProfile, 'do_rebuild')
     def test_do_recover_rebuild(self, mock_rebuild):
