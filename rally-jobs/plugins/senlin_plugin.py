@@ -83,15 +83,15 @@ class SenlinPlugin(senlin_utils.SenlinScenario):
 
     @validation.required_openstack(admin=True)
     @validation.required_services(consts.Service.SENLIN)
+    @validation.required_contexts("profiles")
     @scenario.configure(context={"cleanup": ["senlin"]})
-    def create_resize_delete_cluster(self, profile_spec, create_params,
+    def create_resize_delete_cluster(self, create_params,
                                      resize_params, timeout=3600):
         """Create a cluster, resize it and then delete it.
 
         Measure the `senlin cluster-create`, `senlin cluster-resize`
         and `senlin cluster-delete` commands performance.
 
-        :param profile_spec: the spec dictionary used to create profile
         :param create_params: the dictionary provides the parameters for
                               cluster creation
         :param resize_params: the dictionary provides the parameters
@@ -99,9 +99,8 @@ class SenlinPlugin(senlin_utils.SenlinScenario):
         :param timeout: The timeout value in seconds for each cluster
                         action, including creation, deletion and resizing
         """
-        profile = self._create_profile(profile_spec)
-        cluster = self._create_cluster(profile.id, timeout=timeout,
+        profile_id = self.context["tenant"]["profile"]
+        cluster = self._create_cluster(profile_id, timeout=timeout,
                                        **create_params)
         self._resize_cluster(cluster, **resize_params)
         self._delete_cluster(cluster)
-        self._delete_profile(profile)
