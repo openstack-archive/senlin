@@ -13,7 +13,6 @@
 import base64
 import copy
 
-from oslo_log import log as logging
 from oslo_utils import encodeutils
 import six
 
@@ -22,8 +21,6 @@ from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.profiles import base
-
-LOG = logging.getLogger(__name__)
 
 
 class ServerProfile(base.Profile):

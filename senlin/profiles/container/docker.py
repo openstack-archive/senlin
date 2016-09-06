@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_log import log as logging
 import random
 import six
 
@@ -23,8 +22,6 @@ from senlin.drivers.container import docker_v1 as docker_driver
 from senlin.engine import cluster
 from senlin.engine import node
 from senlin.profiles import base
-
-LOG = logging.getLogger(__name__)
 
 
 class DockerProfile(base.Profile):
