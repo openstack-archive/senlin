@@ -12,6 +12,8 @@
 
 import docker
 
+from senlin.drivers.openstack import sdk
+
 
 class DockerClient(object):
     """Docker driver."""
@@ -19,10 +21,12 @@ class DockerClient(object):
     def __init__(self, url):
         self._dockerclient = docker.Client(base_url=url)
 
+    @sdk.translate_exception
     def container_create(self, image, name=None, command=None):
         return self._dockerclient.create_container(name=name, image=image,
                                                    command=command)
 
+    @sdk.translate_exception
     def container_delete(self, container):
         self._dockerclient.remove_container(container)
         return True
