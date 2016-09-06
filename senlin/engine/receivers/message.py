@@ -83,10 +83,16 @@ class Message(base.Receiver):
                                                          self.project)
             if not trust:
                 # Create a trust if no existing one found
-                # TODO(Yanyanhu): get user roles list for trust creation
+                roles = self.notifier_roles
+                for role in roles:
+                    # Remove 'admin' role from delegated roles list
+                    # unless it is the only role user has
+                    if role == 'admin' and len(roles) > 1:
+                        roles.remove(role)
                 trust = self.keystone().trust_create(self.user,
                                                      zaqar_trustee_user_id,
-                                                     self.project, ['admin'])
+                                                     self.project,
+                                                     roles)
         except exc.InternalError as ex:
             msg = _('Can not build trust between user %(user)s and zaqar '
                     'service user %(zaqar)s for receiver %(receiver)s.'
@@ -135,7 +141,8 @@ class Message(base.Receiver):
                                         message=ex.message)
         return subscription
 
-    def initialize_channel(self):
+    def initialize_channel(self, context):
+        self.notifier_roles = context.roles
         queue_name = self._create_queue()
         subscription = self._create_subscription(queue_name)
 
@@ -145,7 +152,7 @@ class Message(base.Receiver):
         }
         return self.channel
 
-    def release_channel(self):
+    def release_channel(self, context):
         queue_name = self.channel['queue_name']
         subscription = self.channel['subscription']
 
