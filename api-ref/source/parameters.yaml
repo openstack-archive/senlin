@@ -569,13 +569,6 @@ cluster_policy_id:
   description: |
     The UUID of a cluster_policy object.
 
-cluster_policy_property:
-  type: array
-  in: body
-  description: |
-    A list of the UUIDs of policy objects which are attached to the current
-    cluster.
-
 cluster_status:
   type: string
   in: body
@@ -1040,14 +1033,6 @@ receiver_actor:
   required: True
   description: |
     A map of key and value pairs to use for authentication.
-
-receiver_actor_req:
-  type: object
-  in: body
-  required: False
-  description: |
-    A map of key and value pairs to use for authentication. If omitted,
-    the requester is assumed to be the actor.
 
 receiver_channel:
   type: object
