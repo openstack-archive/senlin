@@ -316,7 +316,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
 
     @mock.patch.object(docker_profile.DockerProfile, 'docker')
     def test_do_create_failed(self, mock_docker):
-        mock_docker.side_effect = Exception
+        mock_docker.side_effect = exc.InternalError
         profile = docker_profile.DockerProfile('container', self.spec)
         obj = mock.Mock()
         self.assertRaises(exc.EResourceCreation,
@@ -344,7 +344,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         obj = mock.Mock()
         physical_id = mock.Mock()
         obj.physical_id = physical_id
-        mock_docker.side_effect = Exception
+        mock_docker.side_effect = exc.InternalError
         profile = docker_profile.DockerProfile('container', self.spec)
         self.assertRaises(exc.EResourceDeletion,
                           profile.do_delete, obj)

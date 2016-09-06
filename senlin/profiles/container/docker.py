@@ -234,13 +234,11 @@ class DockerProfile(base.Profile):
             'command': self.properties[self.COMMAND],
         }
 
-        # TODO(Anyone): Wrap docker exceptions at the driver layer so they
-        # are converted to exc.InternalError
         try:
             dockerclient = self.docker(obj)
             self.add_dependents_to_vm(obj.id)
             container = dockerclient.container_create(**params)
-        except Exception as ex:
+        except exc.InternalError as ex:
             raise exc.EResourceCreation(type='container',
                                         message=six.text_type(ex))
 
@@ -272,11 +270,9 @@ class DockerProfile(base.Profile):
         if not obj.physical_id:
             return
 
-        # TODO(Anyone): Wrap docker exceptions at the driver layer so they
-        # are converted to exc.InternalError
         try:
             self.docker(obj).container_delete(obj.physical_id)
-        except Exception as ex:
+        except exc.InternalError as ex:
             raise exc.EResourceDeletion(type='container',
                                         id=obj.physical_id,
                                         message=six.text_type(ex))
