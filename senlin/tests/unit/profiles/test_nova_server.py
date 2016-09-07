@@ -513,6 +513,44 @@ class TestNovaServerProfile(base.SenlinTestCase):
         cc.image_find.assert_called_once_with('FAKE_IMAGE', False)
         cc.keypair_find.assert_called_once_with('FAKE_KEYNAME', False)
 
+    def test__resolve_network(self):
+        nc = mock.Mock()
+        nc.network_get.return_value = mock.Mock(id='NET_ID')
+        profile = server.ServerProfile('t', self.spec)
+        profile._networkclient = nc
+        networks = [{'network': 'NET_NAME', 'port': None, 'fixed-ip': None}]
+
+        res = profile._resolve_network(mock.Mock(), networks)
+
+        self.assertEqual([{'uuid': 'NET_ID'}], res)
+        nc.network_get.assert_called_once_with('NET_NAME')
+
+    def test__resolve_network_port_fixed_ip_preserved(self):
+        nc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._networkclient = nc
+        networks = [{'port': 'PORT_ID', 'fixed-ip': 'FIXED_IP'}]
+
+        res = profile._resolve_network(mock.Mock(), networks)
+
+        self.assertEqual([{'port': 'PORT_ID', 'fixed-ip': 'FIXED_IP'}], res)
+        self.assertEqual(0, nc.network_get.call_count)
+
+    def test__resolve_network_driver_error(self):
+        nc = mock.Mock()
+        nc.network_get.side_effect = exc.InternalError(message='BOOM')
+        profile = server.ServerProfile('t', self.spec)
+        profile._networkclient = nc
+        networks = [{'network': 'NET_NAME', 'port': None, 'fixed-ip': None}]
+
+        ex = self.assertRaises(exc.EResourceCreation,
+                               profile._resolve_network,
+                               mock.Mock(), networks)
+
+        self.assertEqual('Failed in creating server: BOOM.',
+                         six.text_type(ex))
+        nc.network_get.assert_called_once_with('NET_NAME')
+
     def _stubout_profile(self, profile):
         image = mock.Mock(id='FAKE_IMAGE_ID')
         self.patchobject(profile, '_validate_image', return_value=image)

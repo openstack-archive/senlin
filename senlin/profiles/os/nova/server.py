@@ -400,17 +400,22 @@ class ServerProfile(base.Profile):
                     del bd[key]
         return bdm
 
-    def _resolve_network(self, networks, client):
+    def _resolve_network(self, obj, networks):
         for network in networks:
             net_name_id = network.get(self.NETWORK)
             if net_name_id:
-                res = client.network_get(net_name_id)
+                try:
+                    res = self.network(obj).network_get(net_name_id)
+                except exc.InternalError as ex:
+                    raise exc.EResourceCreation(type='server',
+                                                message=six.text_type(ex))
+
                 network['uuid'] = res.id
                 del network[self.NETWORK]
-                if network['port'] is None:
-                    del network['port']
-                if network['fixed-ip'] is None:
-                    del network['fixed-ip']
+            if network['port'] is None:
+                del network['port']
+            if network['fixed-ip'] is None:
+                del network['fixed-ip']
         return networks
 
     def do_create(self, obj):
@@ -465,8 +470,7 @@ class ServerProfile(base.Profile):
 
         networks = self.properties[self.NETWORKS]
         if networks is not None:
-            nc = self.network(obj)
-            kwargs['networks'] = self._resolve_network(networks, nc)
+            kwargs['networks'] = self._resolve_network(obj, networks)
 
         secgroups = self.properties[self.SECURITY_GROUPS]
         if secgroups:
