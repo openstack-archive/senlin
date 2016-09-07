@@ -4,6 +4,8 @@
 Clustering API
 ==============
 
+.. rest_expand_all::
+
 .. include:: versions.inc
 .. include:: build_info.inc
 .. include:: profile_types.inc
