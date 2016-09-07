@@ -285,6 +285,7 @@ class TestCluster(base.SenlinTestCase):
             'status_reason': None,
             'metadata': {},
             'data': None,
+            'dependents': {},
             'nodes': [],
             'policies': [],
             'profile_name': None,

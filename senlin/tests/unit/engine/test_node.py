@@ -596,6 +596,7 @@ class TestNode(base.SenlinTestCase):
 
         self.assertFalse(res)
         mock_status.assert_called_once_with(
+            self.context,
             node.ERROR,
             'Failed in checking server %s: failed get' % node.physical_id)
 

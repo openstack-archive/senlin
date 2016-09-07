@@ -41,6 +41,7 @@ class Cluster(base.SenlinObject, base.VersionedObjectDictCompat):
         'user': fields.StringField(),
         'project': fields.StringField(),
         'domain': fields.StringField(nullable=True),
+        'dependents': fields.JsonField(nullable=True),
     }
 
     @classmethod

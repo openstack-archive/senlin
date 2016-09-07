@@ -92,6 +92,7 @@ class Cluster(BASE, TimestampMixin, models.ModelBase):
     status_reason = Column(Text)
     meta_data = Column(types.Dict)
     data = Column(types.Dict)
+    dependents = Column(types.Dict)
 
 
 class Node(BASE, TimestampMixin, models.ModelBase):
