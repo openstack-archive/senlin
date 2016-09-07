@@ -33,7 +33,7 @@ CONF = cfg.CONF
 class Receiver(object):
     """Create a Receiver which is used to trigger a cluster action."""
 
-    def __new__(cls, rtype, cluster_id, action, **kwargs):
+    def __new__(cls, rtype, cluster_id=None, action=None, **kwargs):
         """Create a new receiver object.
 
         :param rtype: Type name of receiver.
@@ -53,7 +53,7 @@ class Receiver(object):
 
         return super(Receiver, cls).__new__(ReceiverClass)
 
-    def __init__(self, rtype, cluster_id, action, **kwargs):
+    def __init__(self, rtype, cluster_id=None, action=None, **kwargs):
 
         self.id = kwargs.get('id', None)
         self.name = kwargs.get('name', None)
@@ -102,7 +102,7 @@ class Receiver(object):
     @classmethod
     def create(cls, context, rtype, cluster, action, **kwargs):
         cdata = dict()
-        if context.is_admin:
+        if rtype == consts.RECEIVER_WEBHOOK and context.is_admin:
             # use object owner if request is from admin
             cred = co.Credential.get(context, cluster.user, cluster.project)
             trust_id = cred['cred']['openstack']['trust']
@@ -116,7 +116,8 @@ class Receiver(object):
         kwargs['user'] = context.user
         kwargs['project'] = context.project
         kwargs['domain'] = context.domain
-        obj = cls(rtype, cluster.id, action, **kwargs)
+        cluster_id = cluster.id if cluster else None
+        obj = cls(rtype, cluster_id, action, **kwargs)
         obj.initialize_channel()
         obj.store(context)
 

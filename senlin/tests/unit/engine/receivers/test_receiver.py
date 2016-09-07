@@ -21,6 +21,7 @@ from senlin.common import exception
 from senlin.common import utils as common_utils
 from senlin.drivers import base as driver_base
 from senlin.engine.receivers import base as rb
+from senlin.engine.receivers import message as rm
 from senlin.engine.receivers import webhook as rw
 from senlin.objects import credential as co
 from senlin.objects import receiver as ro
@@ -145,13 +146,46 @@ class TestReceiver(base.SenlinTestCase):
         self.assertEqual(receiver.params, result.params)
         self.assertEqual(receiver.channel, result.channel)
 
+    @mock.patch.object(co.Credential, 'get')
     @mock.patch.object(rw.Webhook, 'initialize_channel')
-    def test_receiver_create(self, mock_initialize_channel):
+    def test_receiver_create_webhook_admin(self, mock_initialize_channel,
+                                           mock_c_get):
+        mock_c_get.return_value = {
+            'cred': {'openstack': {'trust': '123abc'}}
+        }
+        ctx = utils.dummy_context(is_admin=True)
         cluster = mock.Mock()
         cluster.id = CLUSTER_ID
-        receiver = rb.Receiver.create(self.context, 'webhook', cluster,
+        cluster.user = 'user1'
+        cluster.project = 'project1'
+        receiver = rb.Receiver.create(ctx, 'webhook', cluster,
                                       'FAKE_ACTION',
                                       name='test_receiver_2234')
+
+        self.assertEqual(ctx.user, receiver.user)
+        self.assertEqual(ctx.project, receiver.project)
+        self.assertEqual(ctx.domain, receiver.domain)
+        self.assertEqual('123abc', receiver.actor['trust_id'])
+        mock_c_get.assert_called_once_with(ctx, 'user1', 'project1')
+
+    @mock.patch.object(rw.Webhook, 'initialize_channel')
+    def test_receiver_create_webhook_non_admin(self, mock_initialize_channel):
+        ctx = utils.dummy_context(is_admin=False)
+        cluster = mock.Mock()
+        cluster.id = CLUSTER_ID
+        receiver = rb.Receiver.create(ctx, 'webhook', cluster,
+                                      'FAKE_ACTION',
+                                      name='test_receiver_2234')
+
+        self.assertEqual(ctx.user, receiver.user)
+        self.assertEqual(ctx.project, receiver.project)
+        self.assertEqual(ctx.domain, receiver.domain)
+        self.assertIsNone(receiver.actor['trust_id'])
+
+    @mock.patch.object(rm.Message, 'initialize_channel')
+    def test_receiver_create_message(self, mock_initialize_channel):
+        receiver = rb.Receiver.create(self.context, 'message', None,
+                                      None, name='test_receiver_2234')
 
         self.assertEqual(self.context.user, receiver.user)
         self.assertEqual(self.context.project, receiver.project)
