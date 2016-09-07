@@ -87,7 +87,7 @@ class Node(object):
         try:
             profile = pb.Profile.load(context, profile_id=self.profile_id,
                                       project_safe=False)
-        except exc.ProfileNotFound:
+        except exc.ResourceNotFound:
             LOG.debug(_('Profile not found: %s'), self.profile_id)
 
         self.rt = {'profile': profile}
@@ -167,7 +167,7 @@ class Node(object):
         if db_node is None:
             db_node = no.Node.get(context, node_id, project_safe=project_safe)
             if db_node is None:
-                raise exc.NodeNotFound(node=node_id)
+                raise exc.ResourceNotFound(type='node', id=node_id)
 
         return cls._from_object(context, db_node)
 

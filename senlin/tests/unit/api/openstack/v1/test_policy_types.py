@@ -87,7 +87,7 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         type_name = 'BogusPolicyType'
         req = self._get('/policy_types/%(type)s' % {'type': type_name})
 
-        error = senlin_exc.PolicyTypeNotFound(policy_type=type_name)
+        error = senlin_exc.ResourceNotFound(type='policy_type', id=type_name)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -99,7 +99,7 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, ('policy_type_get', {'type_name': type_name}))
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('PolicyTypeNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_policy_type_schema_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)

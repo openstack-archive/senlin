@@ -53,7 +53,8 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_policy_list_cluster_not_found(self, mock_find):
-        mock_find.side_effect = exc.ClusterNotFound(cluster='Bogus')
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_policy_list,
@@ -121,11 +122,12 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_policy_get_cluster_not_found(self, mock_find):
-        mock_find.side_effect = exc.ClusterNotFound(cluster='Bogus')
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='Bogus')
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_policy_get,
                                self.ctx, 'Bogus', 'POLICY')
-        self.assertEqual(exc.ClusterNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster (Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
@@ -135,13 +137,14 @@ class ClusterPolicyTest(base.SenlinTestCase):
     def test_cluster_policy_get_policy_not_found(self, mock_policy,
                                                  mock_cluster):
         mock_cluster.return_value = mock.Mock(id='FAKE_CLUSTER')
-        mock_policy.side_effect = exc.PolicyNotFound(policy='Bogus')
+        mock_policy.side_effect = exc.ResourceNotFound(type='policy',
+                                                       id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_policy_get,
                                self.ctx, 'CLUSTER', 'Bogus')
 
-        self.assertEqual(exc.PolicyNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The policy (Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'CLUSTER')
@@ -193,13 +196,14 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_policy_attach_cluster_not_found(self, mock_cluster):
-        mock_cluster.side_effect = exc.ClusterNotFound(cluster='Bogus')
+        mock_cluster.side_effect = exc.ResourceNotFound(type='cluster',
+                                                        id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_policy_attach,
                                self.ctx, 'Bogus', 'POLICY_ID')
 
-        self.assertEqual(exc.ClusterNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster (Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
@@ -209,7 +213,8 @@ class ClusterPolicyTest(base.SenlinTestCase):
     def test_cluster_policy_attach_policy_not_found(self, mock_policy,
                                                     mock_cluster):
         mock_cluster.return_value = mock.Mock(id='12345678abcd')
-        mock_policy.side_effect = exc.PolicyNotFound(policy='BOGUS')
+        mock_policy.side_effect = exc.ResourceNotFound(type='policy',
+                                                       id='BOGUS')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_policy_attach,
@@ -217,7 +222,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The specified policy "
-                         "(BOGUS) is not found.",
+                         "(BOGUS) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
         mock_policy.assert_called_once_with(self.ctx, 'BOGUS')
@@ -267,13 +272,14 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_policy_detach_cluster_not_found(self, mock_cluster):
-        mock_cluster.side_effect = exc.ClusterNotFound(cluster='Bogus')
+        mock_cluster.side_effect = exc.ResourceNotFound(type='cluster',
+                                                        id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_policy_detach,
                                self.ctx, 'Bogus', 'POLICY_ID')
 
-        self.assertEqual(exc.ClusterNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster (Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
@@ -283,14 +289,15 @@ class ClusterPolicyTest(base.SenlinTestCase):
     def test_cluster_policy_detach_policy_not_found(self, mock_policy,
                                                     mock_cluster):
         mock_cluster.return_value = mock.Mock()
-        mock_policy.side_effect = exc.PolicyNotFound(policy='Bogus')
+        mock_policy.side_effect = exc.ResourceNotFound(type='policy',
+                                                       id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_policy_detach,
                                self.ctx, 'FAKE_CLUSTER', 'Bogus')
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The specified policy "
-                         "(Bogus) is not found.",
+                         "(Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
         mock_policy.assert_called_once_with(self.ctx, 'Bogus')
@@ -346,13 +353,14 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_policy_update_cluster_not_found(self, mock_cluster):
-        mock_cluster.side_effect = exc.ClusterNotFound(cluster='Bogus')
+        mock_cluster.side_effect = exc.ResourceNotFound(type='cluster',
+                                                        id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_policy_update,
                                self.ctx, 'Bogus', 'P1', enabled=True)
 
-        self.assertEqual(exc.ClusterNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster (Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
@@ -362,7 +370,8 @@ class ClusterPolicyTest(base.SenlinTestCase):
     def test_cluster_policy_update_policy_not_found(self, mock_policy,
                                                     mock_cluster):
         mock_cluster.return_value = mock.Mock()
-        mock_policy.side_effect = exc.PolicyNotFound(policy='Bogus')
+        mock_policy.side_effect = exc.ResourceNotFound(type='policy',
+                                                       id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_policy_update,
@@ -370,7 +379,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The specified policy "
-                         "(Bogus) is not found.",
+                         "(Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'C1')
         mock_policy.assert_called_once_with(self.ctx, 'Bogus')

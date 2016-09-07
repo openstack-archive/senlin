@@ -59,12 +59,13 @@ class WebhookTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'receiver_find')
     def test_webhook_trigger_receiver_not_found(self, mock_find):
-        mock_find.side_effect = exception.ReceiverNotFound(receiver='RRR')
+        mock_find.side_effect = exception.ResourceNotFound(type='receiver',
+                                                           id='RRR')
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.webhook_trigger,
                                self.ctx, 'RRR')
 
-        self.assertEqual(exception.ReceiverNotFound, ex.exc_info[0])
+        self.assertEqual(exception.ResourceNotFound, ex.exc_info[0])
         self.assertEqual('The receiver (RRR) could not be found.',
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'RRR')
@@ -75,14 +76,15 @@ class WebhookTest(base.SenlinTestCase):
         receiver = mock.Mock()
         receiver.cluster_id = 'BOGUS'
         mock_find.return_value = receiver
-        mock_cluster.side_effect = exception.ClusterNotFound(cluster='BOGUS')
+        mock_cluster.side_effect = exception.ResourceNotFound(type='cluster',
+                                                              id='BOGUS')
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.webhook_trigger,
                                self.ctx, 'RRR')
 
         self.assertEqual(exception.BadRequest, ex.exc_info[0])
         self.assertEqual('The request is malformed: The referenced cluster '
-                         '(BOGUS) is not found.',
+                         '(BOGUS) could not be found.',
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'RRR')
         mock_cluster.assert_called_once_with(self.ctx, 'BOGUS')

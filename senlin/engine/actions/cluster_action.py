@@ -344,7 +344,7 @@ class ClusterAction(base.Action):
         for node_id in node_ids:
             try:
                 node = node_mod.Node.load(self.context, node_id)
-            except exception.NodeNotFound:
+            except exception.ResourceNotFound:
                 errors.append(_('Node [%s] is not found.') % node_id)
                 continue
             if node.cluster_id:
@@ -430,7 +430,7 @@ class ClusterAction(base.Action):
         for node_id in node_ids:
             try:
                 node = no.Node.get(self.context, node_id)
-            except exception.NodeNotFound:
+            except exception.ResourceNotFound:
                 errors.append(_('Node [%s] is not found.') % node_id)
                 continue
             if ((not node.cluster_id) or

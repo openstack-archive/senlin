@@ -288,7 +288,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
         req = self._post('/profiles', jsonutils.dumps(body))
 
-        error = senlin_exc.ProfileTypeNotFound(profile_type=type_name)
+        error = senlin_exc.ResourceNotFound(type='profile_type', id=type_name)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      side_effect=error)
 
@@ -299,7 +299,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context,
                                           ('profile_create', body['profile']))
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ProfileTypeNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_profile_create_with_spec_validation_failed(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -383,7 +383,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         pid = 'non-existent-profile'
         req = self._get('/profiles/%(profile_id)s' % {'profile_id': pid})
 
-        error = senlin_exc.ProfileNotFound(profile=pid)
+        error = senlin_exc.ResourceNotFound(type='profile', id=pid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -392,7 +392,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, profile_id=pid)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ProfileNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_profile_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)
@@ -500,7 +500,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
                         jsonutils.dumps(body))
 
-        error = senlin_exc.ProfileNotFound(profile=pid)
+        error = senlin_exc.ResourceNotFound(type='profile', id=pid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -510,7 +510,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               body=body)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ProfileNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_profile_update_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', False)
@@ -548,7 +548,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         pid = 'aaaa-bbbb-cccc'
         req = self._delete('/profiles/%(profile_id)s' % {'profile_id': pid})
 
-        error = senlin_exc.ProfileNotFound(profile=pid)
+        error = senlin_exc.ResourceNotFound(type='profile', id=pid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -557,7 +557,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, profile_id=pid)
 
         self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ProfileNotFound', resp.json['error']['type'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_profile_delete_resource_in_use(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)

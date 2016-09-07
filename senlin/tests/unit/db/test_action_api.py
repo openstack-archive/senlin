@@ -68,7 +68,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertEqual('Cluster creation failed', action.status_reason)
         self.assertEqual({'key1': 'value1', 'key2': 'value2'}, action.data)
 
-        self.assertRaises(exception.ActionNotFound,
+        self.assertRaises(exception.ResourceNotFound,
                           db_api.action_update, self.ctx, 'fake-uuid', values)
 
     def test_action_get(self):

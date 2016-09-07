@@ -209,7 +209,7 @@ class ActionBaseTest(base.SenlinTestCase):
 
     def test_load_not_found(self):
         # not found due to bad identity
-        ex = self.assertRaises(exception.ActionNotFound,
+        ex = self.assertRaises(exception.ResourceNotFound,
                                ab.Action.load,
                                self.ctx, 'non-existent', None)
         self.assertEqual('The action (non-existent) could not be found.',
@@ -217,7 +217,7 @@ class ActionBaseTest(base.SenlinTestCase):
 
         # not found due to no object
         self.patchobject(ao.Action, 'get', return_value=None)
-        ex = self.assertRaises(exception.ActionNotFound,
+        ex = self.assertRaises(exception.ResourceNotFound,
                                ab.Action.load,
                                self.ctx, 'whatever', None)
         self.assertEqual('The action (whatever) could not be found.',

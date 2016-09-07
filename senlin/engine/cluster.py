@@ -186,7 +186,7 @@ class Cluster(object):
             dbcluster = co.Cluster.get(context, cluster_id,
                                        project_safe=project_safe)
             if dbcluster is None:
-                raise exception.ClusterNotFound(cluster=cluster_id)
+                raise exception.ResourceNotFound(type='cluster', id=cluster_id)
 
         return cls._from_object(context, dbcluster)
 

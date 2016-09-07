@@ -170,9 +170,9 @@ class TestEnvironment(base.SenlinTestCase):
         plugin = mock.Mock()
         env = environment.Environment()
 
-        ex = self.assertRaises(exception.ProfileTypeNotFound,
+        ex = self.assertRaises(exception.ResourceNotFound,
                                env.get_profile, 'foo')
-        self.assertEqual('Profile type (foo) is not found.',
+        self.assertEqual('The profile_type (foo) could not be found.',
                          six.text_type(ex))
 
         env.register_profile('foo', plugin)
@@ -193,9 +193,9 @@ class TestEnvironment(base.SenlinTestCase):
         plugin = mock.Mock()
         env = environment.Environment()
 
-        ex = self.assertRaises(exception.PolicyTypeNotFound,
+        ex = self.assertRaises(exception.ResourceNotFound,
                                env.get_policy, 'foo')
-        self.assertEqual('Policy type (foo) is not found.',
+        self.assertEqual('The policy_type (foo) could not be found.',
                          six.text_type(ex))
 
         env.register_policy('foo', plugin)

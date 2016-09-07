@@ -279,8 +279,8 @@ class EngineService(service.Service):
         :param project_safe: A boolean indicating whether profile from
                              projects other than the requesting one can be
                              returned.
-        :return: A DB object of profile or an exception `ProfileNotFound` if
-                 no matching object is found.
+        :return: A DB object of profile or an exception `ResourceNotFound`
+                 if no matching object is found.
         """
         if uuidutils.is_uuid_like(identity):
             profile = profile_obj.Profile.get(context, identity,
@@ -296,7 +296,7 @@ class EngineService(service.Service):
                     context, identity, project_safe=project_safe)
 
         if not profile:
-            raise exception.ProfileNotFound(profile=identity)
+            raise exception.ResourceNotFound(type='profile', id=identity)
 
         return profile
 
@@ -348,9 +348,8 @@ class EngineService(service.Service):
         type_str = "-".join([type_name, version])
         try:
             plugin = environment.global_env().get_profile(type_str)
-        except exception.ProfileTypeNotFound:
-            msg = _("The specified profile type (%(name)s) is not found."
-                    ) % {"name": type_str}
+        except exception.ResourceNotFound as ex:
+            msg = ex.enhance_msg('specified', ex)
             raise exception.SpecValidationFailed(message=msg)
 
         kwargs = {
@@ -422,7 +421,7 @@ class EngineService(service.Service):
         :param context: An instance of the request context.
         :param identity: The UUID, name or short-id of a profile.
         :return: A dictionary containing the policy details, or an exception
-                 of type `ProfileNotFound` if no matching object is found.
+                 of type `ResourceNotFound` if no matching object is found.
         """
         db_profile = self.profile_find(context, identity)
         profile = profile_base.Profile.load(context, profile=db_profile)
@@ -438,7 +437,7 @@ class EngineService(service.Service):
         :param metadata: A dictionary of key-value pairs to be associated with
                          the profile.
         :returns: A dictionary containing the details of the updated profile,
-                  or an exception `ProfileNotFound` if no matching profile is
+                  or an exception `ResourceNotFound` if no matching profile is
                   found.
         """
         LOG.info(_LI("Updating profile '%(id)s.'"), {'id': profile_id})
@@ -514,8 +513,8 @@ class EngineService(service.Service):
         :param project_safe: A boolean indicating whether policies from
                              projects other than the requesting one should be
                              evaluated.
-        :return: A DB object of policy or an exception of `PolicyNotFound` if
-                 no matching object is found.
+        :return: A DB object of policy or an exception of `ResourceNotFound`
+                 if no matching object is found.
         """
         if uuidutils.is_uuid_like(identity):
             policy = policy_obj.Policy.get(context, identity,
@@ -531,7 +530,7 @@ class EngineService(service.Service):
                     context, identity, project_safe=project_safe)
 
         if not policy:
-            raise exception.PolicyNotFound(policy=identity)
+            raise exception.ResourceNotFound(type='policy', id=identity)
 
         return policy
 
@@ -579,9 +578,8 @@ class EngineService(service.Service):
         type_str = "-".join([type_name, version])
         try:
             plugin = environment.global_env().get_policy(type_str)
-        except exception.PolicyTypeNotFound:
-            msg = _("The specified policy type (%(name)s) is not found."
-                    ) % {"name": type_str}
+        except exception.ResourceNotFound as ex:
+            msg = ex.enhance_msg('specified', ex)
             raise exception.SpecValidationFailed(message=msg)
 
         kwargs = {
@@ -635,7 +633,7 @@ class EngineService(service.Service):
         :param context: An instance of the request context.
         :param identity: The UUID, name or short-id of a policy.
         :return: A dictionary containing the policy details, or an exception
-                 of type `PolicyNotFound` if no matching object is found.
+                 of type `ResourceNotFound` if no matching object is found.
         """
         db_policy = self.policy_find(context, identity)
         policy = policy_base.Policy.load(context, db_policy=db_policy)
@@ -649,8 +647,8 @@ class EngineService(service.Service):
         :param identity: The UUID, name or short-id of a policy.
         :param name: The new name for the policy.
         :returns: A dictionary containing the details of the updated policy or
-                  an exception `PolicyNotFound` if no matching poicy is found,
-                  or an exception `BadRequest` if name is not provided.
+                  an exception `ResourceNotFound` if no matching poicy is
+                  found, or an exception `BadRequest` if name is not provided.
         """
         if not name:
             msg = _('Policy name not specified.')
@@ -709,7 +707,7 @@ class EngineService(service.Service):
                              clusters from the same project are qualified to
                              be returned.
         :return: An instance of `Cluster` class.
-        :raises: `ClusterNotFound` if no matching object can be found.
+        :raises: `ResourceNotFound` if no matching object can be found.
         """
 
         if uuidutils.is_uuid_like(identity):
@@ -727,7 +725,7 @@ class EngineService(service.Service):
                     context, identity, project_safe=project_safe)
 
         if not cluster:
-            raise exception.ClusterNotFound(cluster=identity)
+            raise exception.ResourceNotFound(type='cluster', id=identity)
 
         return cluster
 
@@ -814,8 +812,8 @@ class EngineService(service.Service):
 
         try:
             db_profile = self.profile_find(context, profile_id)
-        except exception.ProfileNotFound:
-            msg = _("The specified profile '%s' is not found.") % profile_id
+        except exception.ResourceNotFound as ex:
+            msg = ex.enhance_msg('specified', ex)
             raise exception.BadRequest(msg=msg)
 
         init_size = utils.parse_int_param(consts.CLUSTER_DESIRED_CAPACITY,
@@ -896,9 +894,8 @@ class EngineService(service.Service):
             old_profile = self.profile_find(context, cluster.profile_id)
             try:
                 new_profile = self.profile_find(context, profile_id)
-            except exception.ProfileNotFound:
-                msg = _("The specified profile '%s' is not found."
-                        ) % profile_id
+            except exception.ResourceNotFound as ex:
+                msg = ex.enhance_msg('specified', ex)
                 raise exception.BadRequest(msg=msg)
 
             if new_profile.type != old_profile.type:
@@ -1026,7 +1023,7 @@ class EngineService(service.Service):
                         not_match_nodes.append(db_node.id)
                     else:
                         found.append(db_node.id)
-            except exception.NodeNotFound:
+            except exception.ResourceNotFound:
                 not_found.append(node)
                 pass
 
@@ -1093,7 +1090,7 @@ class EngineService(service.Service):
                     bad_nodes.append(db_node.id)
                 else:
                     found.append(db_node.id)
-            except exception.NodeNotFound:
+            except exception.ResourceNotFound:
                 not_found.append(node)
                 pass
 
@@ -1416,8 +1413,8 @@ class EngineService(service.Service):
         :param project_safe: A boolean indicating whether only nodes from the
                              same project as the requesting one are qualified
                              to be returned.
-        :return: A DB object of Node or an exception of `NodeNotFound` if no
-                 matching object is found.
+        :return: A DB object of Node or an exception of `ResourceNotFound` if
+                 no matching object is found.
         """
         if uuidutils.is_uuid_like(identity):
             node = node_obj.Node.get(context, identity,
@@ -1433,7 +1430,7 @@ class EngineService(service.Service):
                     context, identity, project_safe=project_safe)
 
         if node is None:
-            raise exception.NodeNotFound(node=identity)
+            raise exception.ResourceNotFound(type='node', id=identity)
 
         return node
 
@@ -1505,17 +1502,17 @@ class EngineService(service.Service):
 
         try:
             node_profile = self.profile_find(context, profile_id)
-        except exception.ProfileNotFound:
-            msg = _("The specified profile (%s) is not found.") % profile_id
+        except exception.ResourceNotFound as ex:
+            msg = ex.enhance_msg('specified', ex)
             raise exception.BadRequest(msg=msg)
 
         index = -1
         if cluster_id:
             try:
                 db_cluster = self.cluster_find(context, cluster_id)
-            except exception.ClusterNotFound:
-                msg = _("The specified cluster (%s) is not found."
-                        ) % cluster_id
+            except exception.ResourceNotFound as ex:
+                msg = ex.enhance_msg('specified', ex)
+
                 raise exception.BadRequest(msg=msg)
 
             cluster_id = db_cluster.id
@@ -1566,8 +1563,8 @@ class EngineService(service.Service):
         :param show_details: Optional parameter indicating whether the details
                              about the physical object should be returned.
         :return: A dictionary containing the detailed information about a node
-                 or an exception of `NodeNotFound` if no matching node could
-                 be found.
+                 or an exception of `ResourceNotFound` if no matching node
+                 could be found.
         """
         db_node = self.node_find(context, identity)
         node = node_mod.Node.load(context, db_node=db_node)
@@ -1600,9 +1597,8 @@ class EngineService(service.Service):
         if profile_id:
             try:
                 db_profile = self.profile_find(context, profile_id)
-            except exception.ProfileNotFound:
-                msg = _("The specified profile (%s) is not found."
-                        ) % profile_id
+            except exception.ResourceNotFound as ex:
+                msg = ex.enhance_msg('specified', ex)
                 raise exception.BadRequest(msg=msg)
             profile_id = db_profile.id
 
@@ -1793,8 +1789,8 @@ class EngineService(service.Service):
         db_cluster = self.cluster_find(context, identity)
         try:
             db_policy = self.policy_find(context, policy)
-        except exception.PolicyNotFound:
-            msg = _("The specified policy (%s) is not found.") % policy
+        except exception.ResourceNotFound as ex:
+            msg = ex.enhance_msg('specified', ex)
             raise exception.BadRequest(msg=msg)
 
         params = {
@@ -1832,8 +1828,8 @@ class EngineService(service.Service):
         db_cluster = self.cluster_find(context, identity)
         try:
             db_policy = self.policy_find(context, policy)
-        except exception.PolicyNotFound:
-            msg = _("The specified policy (%s) is not found.") % policy
+        except exception.ResourceNotFound as ex:
+            msg = ex.enhance_msg('specified', ex)
             raise exception.BadRequest(msg=msg)
 
         binding = cp_obj.ClusterPolicy.get(context, db_cluster.id,
@@ -1875,8 +1871,8 @@ class EngineService(service.Service):
         db_cluster = self.cluster_find(context, identity)
         try:
             db_policy = self.policy_find(context, policy)
-        except exception.PolicyNotFound:
-            msg = _("The specified policy (%s) is not found.") % policy
+        except exception.ResourceNotFound as ex:
+            msg = ex.enhance_msg('specified', ex)
             raise exception.BadRequest(msg=msg)
 
         binding = cp_obj.ClusterPolicy.get(context, db_cluster.id,
@@ -1909,8 +1905,8 @@ class EngineService(service.Service):
 
         :param context: An instance of the request context.
         :param identity: The UUID, name or short-id of an action.
-        :return: A DB object of action or an exception `ActionNotFound` if no
-                 matching action is found.
+        :return: A DB object of action or an exception `ResourceNotFound` if
+                 no matching action is found.
         """
         if uuidutils.is_uuid_like(identity):
             action = action_obj.Action.get(context, identity,
@@ -1926,7 +1922,7 @@ class EngineService(service.Service):
                     context, identity, project_safe=project_safe)
 
         if not action:
-            raise exception.ActionNotFound(action=identity)
+            raise exception.ResourceNotFound(type='action', id=identity)
 
         return action
 
@@ -1999,7 +1995,7 @@ class EngineService(service.Service):
         :param context: An instance of the request context.
         :param identity: The UUID, name or short-id of an action.
         :return: A dictionary containing the details about an action, or an
-                 exception `ActionNotFound` if no matching action is found.
+                 exception `ResourceNotFound` if no matching action is found.
         """
         db_action = self.action_find(context, identity)
         action = action_mod.Action.load(context, db_action=db_action)
@@ -2032,7 +2028,7 @@ class EngineService(service.Service):
         :param project_safe: A boolean indicating whether receiver from other
                              projects other than the requesting one can be
                              returned.
-        :return: A DB object of receiver or an exception `ReceiverNotFound`
+        :return: A DB object of receiver or an exception `ResourceNotFound`
                  if no matching receiver is found.
         """
         if uuidutils.is_uuid_like(identity):
@@ -2049,7 +2045,7 @@ class EngineService(service.Service):
                     context, identity, project_safe=project_safe)
 
         if not receiver:
-            raise exception.ReceiverNotFound(receiver=identity)
+            raise exception.ResourceNotFound(type='receiver', id=identity)
 
         return receiver
 
@@ -2119,9 +2115,8 @@ class EngineService(service.Service):
             # Check whether cluster identified by cluster_id does exist
             try:
                 cluster = self.cluster_find(context, cluster_id)
-            except exception.ClusterNotFound:
-                msg = _("The referenced cluster '%s' is not found."
-                        ) % cluster_id
+            except exception.ResourceNotFound as ex:
+                msg = ex.enhance_msg('referenced', ex)
                 raise exception.BadRequest(msg=msg)
 
             # permission checking
@@ -2164,7 +2159,7 @@ class EngineService(service.Service):
         :param project_safe: Whether matching object from other projects can
                              be returned.
         :return: A dictionary containing the details about a receiver or
-                 an exception `ReceiverNotFound` if no matching object found.
+                 an exception `ResourceNotFound` if no matching object found.
         """
         db_receiver = self.receiver_find(context, identity,
                                          project_safe=project_safe)
@@ -2180,7 +2175,7 @@ class EngineService(service.Service):
         :param context: An instance of the request context.
         :param identity: The UUID, name or short-id of a receiver.
         :return: None if successfully deleted the receiver or an exception of
-                 `ReceiverNotFound` if the object could not be found.
+                 `ResourceNotFound` if the object could not be found.
         """
         db_receiver = self.receiver_find(context, identity)
         LOG.info(_LI("Deleting receiver %s."), identity)
@@ -2195,9 +2190,8 @@ class EngineService(service.Service):
 
         try:
             cluster = self.cluster_find(context, receiver.cluster_id)
-        except exception.ClusterNotFound:
-            msg = _("The referenced cluster (%s) is not found."
-                    ) % receiver.cluster_id
+        except exception.ResourceNotFound as ex:
+            msg = ex.enhance_msg('referenced', ex)
             raise exception.BadRequest(msg=msg)
 
         data = copy.deepcopy(receiver.params)
@@ -2236,7 +2230,7 @@ class EngineService(service.Service):
             event = event_obj.Event.get_by_short_id(context, identity,
                                                     project_safe=project_safe)
         if not event:
-            raise exception.EventNotFound(event=identity)
+            raise exception.ResourceNotFound(type='event', id=identity)
 
         return event
 
@@ -2285,8 +2279,8 @@ class EngineService(service.Service):
         :param context: An instance of the request context.
         :param identity: The UUID, name or short-id of an event.
         :return: A dictionary containing the details about the event or an
-                 exception of `EventNotFound` if no matching record could be
-                 found.
+                 exception of `ResourceNotFound` if no matching record could
+                 be found.
         """
         db_event = self.event_find(context, identity)
         return db_event.as_dict()

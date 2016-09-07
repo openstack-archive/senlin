@@ -180,7 +180,7 @@ def cluster_update(context, cluster_id, values):
         cluster = session.query(models.Cluster).get(cluster_id)
 
         if not cluster:
-            raise exception.ClusterNotFound(cluster=cluster_id)
+            raise exception.ResourceNotFound(type='cluster', id=cluster_id)
 
         cluster.update(values)
         cluster.save(session)
@@ -190,7 +190,7 @@ def cluster_delete(context, cluster_id):
     with session_for_write() as session:
         cluster = session.query(models.Cluster).get(cluster_id)
         if cluster is None:
-            raise exception.ClusterNotFound(cluster=cluster_id)
+            raise exception.ResourceNotFound(type='cluster', id=cluster_id)
 
         query = session.query(models.Node).filter_by(cluster_id=cluster_id)
         nodes = query.all()
@@ -280,12 +280,12 @@ def node_update(context, node_id, values):
 
     :param node_id: ID of the node to be updated.
     :param values: A dictionary of values to be updated on the node.
-    :raises ClusterNotFound: The specified node does not exist in database.
+    :raises ResourceNotFound: The specified node does not exist in database.
     '''
     with session_for_write() as session:
         node = session.query(models.Node).get(node_id)
         if not node:
-            raise exception.NodeNotFound(node=node_id)
+            raise exception.ResourceNotFound(type='node', id=node_id)
 
         node.update(values)
         node.save(session)
@@ -486,7 +486,7 @@ def policy_update(context, policy_id, values):
     with session_for_write() as session:
         policy = session.query(models.Policy).get(policy_id)
         if not policy:
-            raise exception.PolicyNotFound(policy=policy_id)
+            raise exception.ResourceNotFound(type='policy', id=policy_id)
 
         policy.update(values)
         policy.save(session)
@@ -630,7 +630,7 @@ def profile_update(context, profile_id, values):
     with session_for_write() as session:
         profile = session.query(models.Profile).get(profile_id)
         if not profile:
-            raise exception.ProfileNotFound(profile=profile_id)
+            raise exception.ResourceNotFound(type='profile', id=profile_id)
 
         profile.update(values)
         profile.save(session)
@@ -784,7 +784,7 @@ def action_update(context, action_id, values):
     with session_for_write() as session:
         action = session.query(models.Action).get(action_id)
         if not action:
-            raise exception.ActionNotFound(action=action_id)
+            raise exception.ResourceNotFound(type='action', id=action_id)
 
         action.update(values)
         action.save(session)
@@ -1048,7 +1048,7 @@ def action_abandon(context, action_id):
 def action_lock_check(context, action_id, owner=None):
     action = model_query(context, models.Action).get(action_id)
     if not action:
-        raise exception.ActionNotFound(action=action_id)
+        raise exception.ResourceNotFound(type='action', id=action_id)
 
     if owner:
         return owner if owner == action.owner else action.owner

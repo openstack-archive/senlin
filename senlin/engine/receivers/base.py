@@ -162,7 +162,8 @@ class Receiver(object):
             receiver_obj = ro.Receiver.get(context, receiver_id,
                                            project_safe=project_safe)
             if receiver_obj is None:
-                raise exception.ReceiverNotFound(receiver=receiver_id)
+                raise exception.ResourceNotFound(type='receiver',
+                                                 id=receiver_id)
 
         return cls._from_object(receiver_obj)
 

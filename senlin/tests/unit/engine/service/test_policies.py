@@ -106,7 +106,7 @@ class PolicyTest(base.SenlinTestCase):
     def test_policy_find_not_found(self, mock_get_name):
         mock_get_name.return_value = None
 
-        ex = self.assertRaises(exc.PolicyNotFound,
+        ex = self.assertRaises(exc.ResourceNotFound,
                                self.eng.policy_find,
                                self.ctx, 'Bogus')
 
@@ -248,8 +248,8 @@ class PolicyTest(base.SenlinTestCase):
                                self.ctx, 'p-2', spec)
 
         self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
-        self.assertEqual("The specified policy "
-                         "type (FakePolicy-1.0) is not found.",
+        self.assertEqual("The specified policy_type "
+                         "(FakePolicy-1.0) could not be found.",
                          six.text_type(ex.exc_info[1]))
 
     def test_policy_create_invalid_spec(self):
@@ -334,12 +334,12 @@ class PolicyTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_policy_get_not_found(self, mock_find):
-        mock_find.side_effect = exc.PolicyNotFound(policy='Bogus')
+        mock_find.side_effect = exc.ResourceNotFound(type='policy', id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.policy_get, self.ctx, 'Bogus')
 
-        self.assertEqual(exc.PolicyNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual('The policy (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
@@ -375,13 +375,13 @@ class PolicyTest(base.SenlinTestCase):
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_policy_update_not_found(self, mock_find):
 
-        mock_find.side_effect = exc.PolicyNotFound(policy='Bogus')
+        mock_find.side_effect = exc.ResourceNotFound(type='policy', id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.policy_update,
                                self.ctx, 'Bogus', name='NEW_NAME')
 
-        self.assertEqual(exc.PolicyNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual('The policy (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
@@ -420,12 +420,12 @@ class PolicyTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_policy_delete_not_found(self, mock_find):
-        mock_find.side_effect = exc.PolicyNotFound(policy='Bogus')
+        mock_find.side_effect = exc.ResourceNotFound(type='policy', id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.policy_delete, self.ctx, 'Bogus')
 
-        self.assertEqual(exc.PolicyNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual('The policy (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')

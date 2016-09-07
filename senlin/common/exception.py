@@ -44,6 +44,9 @@ class SenlinException(Exception):
 
         try:
             self.message = self.msg_fmt % kwargs
+            # if last char is '.', wipe out redundant '.'
+            if self.message[-1] == '.':
+                self.message = self.message.rstrip('.') + '.'
         except KeyError:
             # exc_info = sys.exc_info()
             # if kwargs doesn't match a variable in the message
@@ -79,7 +82,7 @@ class Forbidden(SenlinException):
 
 
 class BadRequest(SenlinException):
-    msg_fmt = _("The request is malformed: %(msg)s")
+    msg_fmt = _("The request is malformed: %(msg)s.")
 
 
 class InvalidAPIVersionString(SenlinException):
@@ -105,28 +108,26 @@ class InvalidParameter(SenlinException):
     msg_fmt = _("Invalid value '%(value)s' specified for '%(name)s'")
 
 
-class ClusterNotFound(SenlinException):
-    msg_fmt = _("The cluster (%(cluster)s) could not be found.")
+class ResourceNotFound(SenlinException):
+    """Generic exception for resource not found.
+
+    The type here can be 'cluster', 'node', 'profile', 'policy', 'receiver',
+    'webhook', 'profile_type', 'policy_type' 'action' 'event' and so on.
+    """
+    msg_fmt = _("The %(type)s (%(id)s) could not be found.")
+
+    @staticmethod
+    def enhance_msg(enhance, ex):
+            enhance_msg = ex.message[:4] + enhance + ' ' + ex.message[4:]
+            return enhance_msg
 
 
 class ClusterBusy(SenlinException):
     msg_fmt = _("The cluster (%(cluster)s) cannot be deleted: %(reason)s")
 
 
-class NodeNotFound(SenlinException):
-    msg_fmt = _("The node (%(node)s) could not be found.")
-
-
-class ProfileTypeNotFound(SenlinException):
-    msg_fmt = _("Profile type (%(profile_type)s) is not found.")
-
-
 class ProfileTypeNotMatch(SenlinException):
     msg_fmt = _("%(message)s")
-
-
-class ProfileNotFound(SenlinException):
-    msg_fmt = _("The profile (%(profile)s) could not be found.")
 
 
 class ProfileNotSpecified(SenlinException):
@@ -143,14 +144,6 @@ class ProfileOperationTimeout(SenlinException):
 
 class PolicyNotSpecified(SenlinException):
     msg_fmt = _("Policy not specified.")
-
-
-class PolicyTypeNotFound(SenlinException):
-    msg_fmt = _("Policy type (%(policy_type)s) is not found.")
-
-
-class PolicyNotFound(SenlinException):
-    msg_fmt = _("The policy (%(policy)s) could not be found.")
 
 
 class PolicyBindingNotFound(SenlinException):
@@ -193,24 +186,8 @@ class RequestLimitExceeded(SenlinException):
     msg_fmt = _('Request limit exceeded: %(message)s')
 
 
-class WebhookNotFound(SenlinException):
-    msg_fmt = _("The webhook (%(webhook)s) could not be found.")
-
-
-class ReceiverNotFound(SenlinException):
-    msg_fmt = _("The receiver (%(receiver)s) could not be found.")
-
-
-class ActionNotFound(SenlinException):
-    msg_fmt = _("The action (%(action)s) could not be found.")
-
-
 class ActionInProgress(SenlinException):
     msg_fmt = _("The %(type)s %(id)s is in status %(status)s.")
-
-
-class EventNotFound(SenlinException):
-    msg_fmt = _("The event (%(event)s) could not be found.")
 
 
 class NodeNotOrphan(SenlinException):
@@ -262,11 +239,6 @@ class EResourceDeletion(InternalError):
 class EResourceOperation(InternalError):
     # Used when operating resources from other services
     msg_fmt = _("Failed in %(op)s %(type)s %(id)s: %(message)s")
-
-
-class ResourceNotFound(InternalError):
-    # Used when retrieving resources from other services
-    msg_fmt = _("The resource (%(resource)s) could not be found.")
 
 
 class InvalidPlugin(InternalError):

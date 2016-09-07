@@ -265,5 +265,5 @@ class TestGetPathParser(base.SenlinTestCase):
                                 utils.get_path_parser,
                                 '^foo.bar')
         self.assertEqual("The request is malformed: Invalid attribute path - "
-                         "Unexpected character: ^",
+                         "Unexpected character: ^.",
                          six.text_type(err))

@@ -90,7 +90,7 @@ class NodeTest(base.SenlinTestCase):
     def test_node_find_not_found(self, mock_shortid):
         mock_shortid.return_value = None
 
-        ex = self.assertRaises(exc.NodeNotFound,
+        ex = self.assertRaises(exc.ResourceNotFound,
                                self.eng.node_find,
                                self.ctx, 'BOGUS')
         self.assertEqual("The node (BOGUS) could not be found.",
@@ -181,13 +181,14 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_node_list_cluster_not_found(self, mock_find):
-        mock_find.side_effect = exc.ClusterNotFound(cluster='BOGUS')
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='BOGUS')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_list,
                                self.ctx, cluster_id='BOGUS')
 
-        self.assertEqual(exc.ClusterNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster (BOGUS) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'BOGUS')
@@ -371,14 +372,15 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'profile_find')
     def test_node_create_profile_not_found(self, mock_profile):
-        mock_profile.side_effect = exc.ProfileNotFound(profile='Bogus')
+        mock_profile.side_effect = exc.ResourceNotFound(type='profile',
+                                                        id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_create,
                                self.ctx, 'n-1', 'Bogus')
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The specified profile "
-                         "(Bogus) is not found.",
+                         "(Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_profile.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -386,7 +388,8 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(service.EngineService, 'profile_find')
     def test_node_create_cluster_not_found(self, mock_profile, mock_cluster):
         mock_profile.return_value = mock.Mock()
-        mock_cluster.side_effect = exc.ClusterNotFound(cluster='Bogus')
+        mock_cluster.side_effect = exc.ResourceNotFound(type='cluster',
+                                                        id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_create,
@@ -395,7 +398,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The specified cluster "
-                         "(Bogus) is not found.",
+                         "(Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_profile.assert_called_once_with(self.ctx, 'FAKE_PROFILE')
         mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
@@ -463,13 +466,13 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_get_node_not_found(self, mock_find):
-        mock_find.side_effect = exc.NodeNotFound(node='Bogus')
+        mock_find.side_effect = exc.ResourceNotFound(type='node', id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_get,
                                self.ctx, 'Bogus')
 
-        self.assertEqual(exc.NodeNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The node (Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
@@ -570,12 +573,12 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_update_node_not_found(self, mock_find):
-        mock_find.side_effect = exc.NodeNotFound(node='Bogus')
+        mock_find.side_effect = exc.ResourceNotFound(type='node', id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_update, self.ctx, 'Bogus')
 
-        self.assertEqual(exc.NodeNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual('The node (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
@@ -584,7 +587,8 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_update_profile_not_found(self, mock_find, mock_profile):
         mock_find.return_value = mock.Mock()
-        mock_profile.side_effect = exc.ProfileNotFound(profile='Bogus')
+        mock_profile.side_effect = exc.ResourceNotFound(type='profile',
+                                                        id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_update,
@@ -592,7 +596,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual('The request is malformed: The specified profile '
-                         '(Bogus) is not found.',
+                         '(Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
         mock_profile.assert_called_once_with(self.ctx, 'Bogus')
@@ -658,12 +662,12 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_delete_node_not_found(self, mock_find):
-        mock_find.side_effect = exc.NodeNotFound(node='Bogus')
+        mock_find.side_effect = exc.ResourceNotFound(type='node', id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_delete, self.ctx, 'Bogus')
 
-        self.assertEqual(exc.NodeNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual('The node (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
@@ -705,13 +709,13 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_check_not_found(self, mock_find):
-        mock_find.side_effect = exc.NodeNotFound(node='Bogus')
+        mock_find.side_effect = exc.ResourceNotFound(type='node', id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_check,
                                self.ctx, 'Bogus')
 
-        self.assertEqual(exc.NodeNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual('The node (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
@@ -738,13 +742,13 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_recover_not_found(self, mock_find):
-        mock_find.side_effect = exc.NodeNotFound(node='Bogus')
+        mock_find.side_effect = exc.ResourceNotFound(type='node', id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_recover,
                                self.ctx, 'Bogus')
 
-        self.assertEqual(exc.NodeNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual('The node (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')

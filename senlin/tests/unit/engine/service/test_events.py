@@ -70,7 +70,7 @@ class EventTest(base.SenlinTestCase):
     def test_event_find_not_found(self, mock_shortid):
         mock_shortid.return_value = None
 
-        ex = self.assertRaises(exc.EventNotFound,
+        ex = self.assertRaises(exc.ResourceNotFound,
                                self.eng.event_find,
                                self.ctx, 'BOGUS')
         self.assertEqual("The event (BOGUS) could not be found.",
@@ -202,11 +202,11 @@ class EventTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'event_find')
     def test_event_get_not_found(self, mock_find):
-        mock_find.side_effect = exc.EventNotFound(event='BOGUS')
+        mock_find.side_effect = exc.ResourceNotFound(type='event', id='BOGUS')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.event_get,
                                self.ctx, 'BOGUS')
 
-        self.assertEqual(exc.EventNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         mock_find.assert_called_once_with(self.ctx, 'BOGUS')

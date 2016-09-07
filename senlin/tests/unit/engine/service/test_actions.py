@@ -88,7 +88,7 @@ class ActionTest(base.SenlinTestCase):
     def test_action_find_not_found(self, mock_get_name):
         mock_get_name.return_value = None
 
-        ex = self.assertRaises(exc.ActionNotFound,
+        ex = self.assertRaises(exc.ResourceNotFound,
                                self.eng.action_find,
                                self.ctx, 'bogus')
         self.assertEqual('The action (bogus) could not be found.',
@@ -200,13 +200,13 @@ class ActionTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_action_create_cluster_not_found(self, mock_find):
-        mock_find.side_effect = exc.ClusterNotFound(cluster='C1')
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster', id='C1')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.action_create,
                                self.ctx, 'a1', 'C1', 'OBJECT_ACTION')
 
-        self.assertEqual(exc.ClusterNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         mock_find.assert_called_once_with(self.ctx, 'C1')
 
     @mock.patch.object(action_base.Action, 'load')
@@ -226,12 +226,12 @@ class ActionTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'action_find')
     def test_action_get_not_found(self, mock_find):
-        mock_find.side_effect = exc.ActionNotFound(action='Bogus')
+        mock_find.side_effect = exc.ResourceNotFound(type='action', id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.action_get,
                                self.ctx, 'Bogus')
-        self.assertEqual(exc.ActionNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(action_base.Action, 'delete')
@@ -266,10 +266,10 @@ class ActionTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'action_find')
     def test_action_delete_not_found(self, mock_find):
-        mock_find.side_effect = exc.ActionNotFound(action='Bogus')
+        mock_find.side_effect = exc.ResourceNotFound(type='action', id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.action_delete,
                                self.ctx, 'Bogus')
 
-        self.assertEqual(exc.ActionNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])

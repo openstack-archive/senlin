@@ -159,7 +159,9 @@ class TestContainerDockerProfile(base.SenlinTestCase):
 
     @mock.patch.object(cluster.Cluster, 'load')
     def test_get_host_cluster_not_found(self, mock_load):
-        mock_load.side_effect = exc.ClusterNotFound(cluster='host_cluster')
+        mock_load.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='host_cluster')
+
         ctx = mock.Mock()
         profile = docker_profile.DockerProfile('container', self.spec)
         ex = self.assertRaises(exc.EResourceCreation,
@@ -181,12 +183,13 @@ class TestContainerDockerProfile(base.SenlinTestCase):
 
     @mock.patch.object(node.Node, 'load')
     def test_get_specified_node_not_found(self, mock_load):
-        mock_load.side_effect = exc.NodeNotFound(node='fake_node')
+        mock_load.side_effect = exc.ResourceNotFound(type='node',
+                                                     id='fake_node')
         profile = docker_profile.DockerProfile('container', self.spec)
         obj = mock.Mock()
         ex = self.assertRaises(exc.EResourceCreation,
                                profile.docker, obj)
-        msg = _('Failed in creating container: The host_node (fake_node) '
+        msg = _('Failed in creating container: The host node (fake_node) '
                 'could not be found.')
         self.assertEqual(msg, ex.message)
 

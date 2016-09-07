@@ -91,7 +91,7 @@ class ReceiverTest(base.SenlinTestCase):
         mock_get_name.return_value = None
         fake_id = '12345678'  # not a uuid
 
-        self.assertRaises(exc.ReceiverNotFound,
+        self.assertRaises(exc.ResourceNotFound,
                           self.eng.receiver_find,
                           self.ctx, fake_id, True)
 
@@ -245,13 +245,14 @@ class ReceiverTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_receiver_create_webhook_cluster_not_found(self, mock_find):
-        mock_find.side_effect = exc.ClusterNotFound(cluster='C1')
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster', id='C1')
+
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.receiver_create,
                                self.ctx, 'r1', 'webhook', 'C1', 'whatever')
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The referenced cluster "
-                         "'C1' is not found.",
+                         "(C1) could not be found.",
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(service.EngineService, 'cluster_find')
@@ -343,11 +344,11 @@ class ReceiverTest(base.SenlinTestCase):
     @mock.patch.object(service.EngineService, 'receiver_find')
     def test_receiver_get_not_found(self, mock_find):
 
-        mock_find.side_effect = exc.ReceiverNotFound(receiver='RR')
+        mock_find.side_effect = exc.ResourceNotFound(type='receiver', id='RR')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.receiver_get, self.ctx, 'Bogus')
-        self.assertEqual(exc.ReceiverNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
 
     @mock.patch.object(service.EngineService, 'receiver_find')
     @mock.patch.object(rb.Receiver, 'delete')
@@ -364,8 +365,8 @@ class ReceiverTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'receiver_find')
     def test_receiver_delete_not_found(self, mock_find):
-        mock_find.side_effect = exc.ReceiverNotFound(receiver='RR')
+        mock_find.side_effect = exc.ResourceNotFound(type='receiver', id='RR')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.receiver_delete, self.ctx, 'Bogus')
-        self.assertEqual(exc.ReceiverNotFound, ex.exc_info[0])
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])

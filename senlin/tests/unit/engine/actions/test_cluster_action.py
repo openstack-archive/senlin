@@ -831,8 +831,8 @@ class ClusterActionTest(base.SenlinTestCase):
     def test_do_add_nodes_node_not_found(self, mock_load_node, mock_load):
         action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
         action.inputs = {'nodes': ['NODE_1']}
-        mock_load_node.side_effect = exception.NodeNotFound(node='NODE_1')
-
+        obj = exception.ResourceNotFound(type='node', id='NODE_1')
+        mock_load_node.side_effect = obj
         # do it
         res_code, res_msg = action.do_add_nodes()
 
@@ -1020,7 +1020,8 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_load.return_value = cluster
         action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
         action.inputs = {'candidates': ['NODE_1']}
-        mock_get.side_effect = exception.NodeNotFound(node='NODE_1')
+        mock_get.side_effect = exception.ResourceNotFound(type='node',
+                                                          id='NODE_1')
 
         # do it
         res_code, res_msg = action.do_del_nodes()

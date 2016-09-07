@@ -149,7 +149,7 @@ class Profile(object):
             profile = po.Profile.get(ctx, profile_id,
                                      project_safe=project_safe)
             if profile is None:
-                raise exc.ProfileNotFound(profile=profile_id)
+                raise exc.ResourceNotFound(type='profile', id=profile_id)
 
         return cls.from_object(profile)
 
