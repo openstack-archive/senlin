@@ -15,7 +15,7 @@ import copy
 import mock
 import six
 
-from senlin.common import exception
+from senlin.common import exception as exc
 from senlin.profiles.os.heat import stack
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -68,12 +68,12 @@ class TestHeatStackProfile(base.SenlinTestCase):
         oc = mock.Mock()
         profile = stack.StackProfile('t', self.spec)
         profile._orchestrationclient = oc
-        err = exception.InternalError(code=400, message='Boom')
+        err = exc.InternalError(code=400, message='Boom')
         oc.stack_create = mock.Mock(side_effect=err)
         node_obj = mock.Mock()
         node_obj.name = 'stack_node'
 
-        ex = self.assertRaises(exception.InvalidSpec,
+        ex = self.assertRaises(exc.InvalidSpec,
                                profile.do_validate, node_obj)
 
         props = self.spec['properties']
@@ -153,12 +153,12 @@ class TestHeatStackProfile(base.SenlinTestCase):
 
         stack_node = mock.Mock()
         stack_node.name = 'test_stack'
-        err = exception.InternalError(code=400, message='Too Bad')
+        err = exc.InternalError(code=400, message='Too Bad')
         oc.stack_create = mock.Mock(side_effect=err)
         profile._orchestrationclient = oc
 
         # do it
-        ex = self.assertRaises(exception.EResourceCreation,
+        ex = self.assertRaises(exc.EResourceCreation,
                                profile.do_create,
                                stack_node)
 
@@ -187,12 +187,12 @@ class TestHeatStackProfile(base.SenlinTestCase):
         fake_stack = mock.Mock(id='FAKE_ID')
 
         oc.stack_create = mock.Mock(return_value=fake_stack)
-        err = exception.InternalError(code=400, message='Timeout')
+        err = exc.InternalError(code=400, message='Timeout')
         oc.wait_for_stack = mock.Mock(side_effect=err)
         profile._orchestrationclient = oc
 
         # do it
-        ex = self.assertRaises(exception.EResourceCreation,
+        ex = self.assertRaises(exc.EResourceCreation,
                                profile.do_create,
                                stack_node)
 
@@ -244,12 +244,12 @@ class TestHeatStackProfile(base.SenlinTestCase):
         profile = stack.StackProfile('t', self.spec)
         oc = mock.Mock()
         profile._orchestrationclient = oc
-        err = exception.InternalError(code=400, message='Boom')
+        err = exc.InternalError(code=400, message='Boom')
         oc.stack_delete = mock.Mock(side_effect=err)
         test_stack = mock.Mock(physical_id='FAKE_ID')
 
         # do it
-        ex = self.assertRaises(exception.EResourceDeletion,
+        ex = self.assertRaises(exc.EResourceDeletion,
                                profile.do_delete,
                                test_stack)
 
@@ -264,11 +264,11 @@ class TestHeatStackProfile(base.SenlinTestCase):
         oc = mock.Mock()
         test_stack = mock.Mock(physical_id='FAKE_ID')
         profile._orchestrationclient = oc
-        err = exception.InternalError(code=400, message='Boom')
+        err = exc.InternalError(code=400, message='Boom')
         oc.wait_for_stack_delete = mock.Mock(side_effect=err)
 
         # do it
-        ex = self.assertRaises(exception.EResourceDeletion,
+        ex = self.assertRaises(exc.EResourceDeletion,
                                profile.do_delete, test_stack)
 
         # assertions
@@ -450,13 +450,13 @@ class TestHeatStackProfile(base.SenlinTestCase):
         oc = mock.Mock()
         profile._orchestrationclient = oc
         oc.stack_update = mock.Mock(
-            side_effect=exception.InternalError(code=400, message='Failed'))
+            side_effect=exc.InternalError(code=400, message='Failed'))
         stack_obj = mock.Mock(physical_id='FAKE_ID')
         new_spec = copy.deepcopy(self.spec)
         new_spec['properties']['environment'] = {"new": "env1"}
         new_profile = stack.StackProfile('u', new_spec)
 
-        ex = self.assertRaises(exception.EResourceUpdate,
+        ex = self.assertRaises(exc.EResourceUpdate,
                                profile.do_update,
                                stack_obj, new_profile)
 
@@ -471,13 +471,13 @@ class TestHeatStackProfile(base.SenlinTestCase):
         oc = mock.Mock()
         profile._orchestrationclient = oc
         oc.wait_for_stack = mock.Mock(
-            side_effect=exception.InternalError(code=400, message='Timeout'))
+            side_effect=exc.InternalError(code=400, message='Timeout'))
         stack_obj = mock.Mock(physical_id='FAKE_ID')
         new_spec = copy.deepcopy(self.spec)
         new_spec['properties']['environment'] = {"new": "env1"}
         new_profile = stack.StackProfile('u', new_spec)
 
-        ex = self.assertRaises(exception.EResourceUpdate,
+        ex = self.assertRaises(exc.EResourceUpdate,
                                profile.do_update,
                                stack_obj, new_profile)
 
@@ -517,7 +517,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         oc = mock.Mock()
         profile._orchestrationclient = oc
         oc.stack_check = mock.Mock(
-            side_effect=exception.InternalError(code=400, message='BOOM'))
+            side_effect=exc.InternalError(code=400, message='BOOM'))
 
         res = profile.do_check(node_obj)
 
@@ -531,7 +531,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         oc = mock.Mock()
         profile._orchestrationclient = oc
         oc.wait_for_stack = mock.Mock(
-            side_effect=exception.InternalError(code=400, message='BOOM'))
+            side_effect=exc.InternalError(code=400, message='BOOM'))
 
         res = profile.do_check(node_obj)
 
@@ -545,12 +545,13 @@ class TestHeatStackProfile(base.SenlinTestCase):
         oc = mock.Mock()
         profile._orchestrationclient = oc
         details = mock.Mock()
+        details.to_dict.return_value = {'foo': 'bar'}
         oc.stack_get = mock.Mock(return_value=details)
         node_obj = mock.Mock(physical_id='FAKE_ID')
 
         res = profile.do_get_details(node_obj)
 
-        self.assertEqual(details, res)
+        self.assertEqual({'foo': 'bar'}, res)
         oc.stack_get.assert_called_once_with('FAKE_ID')
 
     def test_do_get_details_no_physical_id(self):
@@ -560,3 +561,15 @@ class TestHeatStackProfile(base.SenlinTestCase):
         res = profile.do_get_details(node_obj)
 
         self.assertEqual({}, res)
+
+    def test_do_get_details_failed_retrieval(self):
+        profile = stack.StackProfile('t', self.spec)
+        node_obj = mock.Mock(physical_id='STACK_ID')
+        oc = mock.Mock()
+        oc.stack_get.side_effect = exc.InternalError(message='BOOM')
+        profile._orchestrationclient = oc
+
+        res = profile.do_get_details(node_obj)
+
+        self.assertEqual({'Error': {'code': 500, 'message': 'BOOM'}}, res)
+        oc.stack_get.assert_called_once_with('STACK_ID')

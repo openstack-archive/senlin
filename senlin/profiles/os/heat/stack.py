@@ -256,7 +256,16 @@ class StackProfile(base.Profile):
         if not obj.physical_id:
             return {}
 
-        return self.orchestration(obj).stack_get(obj.physical_id)
+        try:
+            stack = self.orchestration(obj).stack_get(obj.physical_id)
+            return stack.to_dict()
+        except exc.InternalError as ex:
+            return {
+                'Error': {
+                    'code': ex.code,
+                    'message': six.text_type(ex)
+                }
+            }
 
     def handle_abandon(self, obj, **options):
         """Handler for abandoning a heat stack node."""
