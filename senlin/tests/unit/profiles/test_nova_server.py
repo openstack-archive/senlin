@@ -185,31 +185,31 @@ class TestNovaServerProfile(base.SenlinTestCase):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
         x_keypair = mock.Mock()
-        cc.keypair_get_by_name.return_value = x_keypair
+        cc.keypair_find.return_value = x_keypair
         profile._computeclient = cc
 
         res = profile._validate_keypair(mock.Mock(), 'KEYPAIR')
 
         self.assertEqual(x_keypair, res)
-        cc.keypair_get_by_name.assert_called_once_with('KEYPAIR', False)
+        cc.keypair_find.assert_called_once_with('KEYPAIR', False)
 
     def test__validate_keypair_driver_failure(self):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
-        cc.keypair_get_by_name.side_effect = exc.InternalError(message='BANG.')
+        cc.keypair_find.side_effect = exc.InternalError(message='BANG.')
         profile._computeclient = cc
 
         ex = self.assertRaises(exc.InternalError,
                                profile._validate_keypair,
                                mock.Mock(), 'KEYPAIR')
         self.assertEqual("BANG.", six.text_type(ex))
-        cc.keypair_get_by_name.assert_called_once_with('KEYPAIR', False)
+        cc.keypair_find.assert_called_once_with('KEYPAIR', False)
 
     def test__validate_keypair_not_found(self):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
         err = exc.InternalError(code=404, message='BANG')
-        cc.keypair_get_by_name.side_effect = err
+        cc.keypair_find.side_effect = err
         profile._computeclient = cc
 
         ex = self.assertRaises(exc.InvalidSpec,
@@ -217,7 +217,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
                                mock.Mock(), 'FAKE_KEYNAME')
         self.assertEqual("The specified key_name 'FAKE_KEYNAME' could "
                          "not be found.", six.text_type(ex))
-        cc.keypair_get_by_name.assert_called_once_with('FAKE_KEYNAME', False)
+        cc.keypair_find.assert_called_once_with('FAKE_KEYNAME', False)
 
     def test__validate_bdm(self):
         profile = server.ServerProfile('t', self.spec)
@@ -250,7 +250,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         x_image = mock.Mock()
         cc.image_find.return_value = x_image
         x_key = mock.Mock()
-        cc.keypair_get_by_name.return_value = x_key
+        cc.keypair_find.return_value = x_key
         profile._computeclient = cc
 
         res = profile.do_validate(mock.Mock())
@@ -259,7 +259,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
         cc.flavor_find.assert_called_once_with('FLAV', False)
         cc.image_find.assert_called_once_with('FAKE_IMAGE', False)
-        cc.keypair_get_by_name.assert_called_once_with('FAKE_KEYNAME', False)
+        cc.keypair_find.assert_called_once_with('FAKE_KEYNAME', False)
 
     def test_do_create(self):
         cc = mock.Mock()
