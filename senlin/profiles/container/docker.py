@@ -74,6 +74,7 @@ class DockerProfile(base.Profile):
         self._dockerclient = None
         self.container_id = None
         self.host = None
+        self.cluster = None
 
     def docker(self, obj):
         """Construct docker client based on object.
@@ -117,8 +118,9 @@ class DockerProfile(base.Profile):
         if host_node is not None:
             host = self._get_specified_node(ctx, host_node)
             if host_cluster is not None:
-                cluster = self._get_host_cluster(ctx, host_cluster)
-                if host.id not in cluster.nodes:
+                self.cluster = self._get_host_cluster(ctx, host_cluster)
+                if host.id not in [
+                        node.id for node in self.cluster.rt['nodes']]:
                     msg = _("Host node %(host_node)s does not belong to "
                             "cluster %(host_cluster)s") % {
                         "host_node": host_node,
@@ -167,8 +169,8 @@ class DockerProfile(base.Profile):
         :param host_cluster: The uuid of the hosting cluster.
         """
 
-        cluster = self._get_host_cluster(ctx, host_cluster)
-        nodes = cluster.nodes
+        self.cluster = self._get_host_cluster(ctx, host_cluster)
+        nodes = self.cluster.rt['nodes']
         if len(nodes) == 0:
             msg = _("The cluster (%s) contains no nodes") % host_cluster
             raise exc.EResourceCreation(type='container', message=msg)
@@ -217,6 +219,23 @@ class DockerProfile(base.Profile):
 
         return host_ip
 
+    def _add_dependents_to_host(self, host, container):
+        """Add container node id to host property.
+
+        :param host: The host(node or cluster) to host the container
+        :param container: The id of the container node
+        """
+
+        ctx = context.get_admin_context()
+        containers = host.dependents.get('containers', None)
+        if not containers:
+            dependents = {'containers': [container]}
+        else:
+            containers.append(container)
+            dependents = {'containers': containers}
+
+        host.add_dependents(ctx, dependents)
+
     def do_create(self, obj):
         """Create a container instance using the given profile.
 
@@ -236,7 +255,9 @@ class DockerProfile(base.Profile):
 
         try:
             dockerclient = self.docker(obj)
-            self.add_dependents_to_vm(obj.id)
+            self._add_dependents_to_host(self.host, obj.id)
+            if self.cluster is not None:
+                self._add_dependents_to_host(self.cluster, obj.id)
             container = dockerclient.container_create(**params)
         except exc.InternalError as ex:
             raise exc.EResourceCreation(type='container',
@@ -244,22 +265,6 @@ class DockerProfile(base.Profile):
 
         self.container_id = container['Id'][:36]
         return self.container_id
-
-    def add_dependents_to_vm(self, node_id):
-        """Add container node id to host vm.
-
-        :param node_id: The id of the container node
-        """
-
-        ctx = context.get_admin_context()
-        containers = self.host.dependents.get('containers', None)
-        if not containers:
-            dependents = {'containers': [node_id]}
-        else:
-            containers.append(node_id)
-            dependents = {'containers': containers}
-
-        self.host.add_dependents(ctx, dependents)
 
     def do_delete(self, obj):
         """Delete a container node.

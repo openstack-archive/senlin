@@ -9,6 +9,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+
 from oslo_log import log as logging
 from oslo_utils import timeutils
 import six
@@ -21,7 +22,6 @@ from senlin.objects import node as no
 from senlin.profiles import base as pb
 
 LOG = logging.getLogger(__name__)
-_CONTAINER_PROFILE_TYPE = 'container.dockerinc.docker'
 
 
 class Node(object):
@@ -246,7 +246,7 @@ class Node(object):
         """Add dependency information into node's property.
 
         :param context: An instance of request context.
-        :param dependents: The dependency information node.
+        :param dependents: The dependency information.
         """
 
         values = {'dependents': dependents}
@@ -367,7 +367,7 @@ class Node(object):
         try:
             res = pb.Profile.check_object(context, self)
         except exc.EResourceOperation as ex:
-            self.set_status(self.ERROR, six.text_type(ex))
+            self.set_status(context, self.ERROR, six.text_type(ex))
             return False
 
         if res:
