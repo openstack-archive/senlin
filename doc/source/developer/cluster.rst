@@ -448,7 +448,7 @@ added or removed respectively. The Senlin engine will use the outputs from
 these policies as the number of nodes to create (or delete) if such policies
 exist. When the request does contain a ``count`` parameter and there are
 policies governing the scaling arguments, the ``count`` parameter value may
-be overriden/ignored.
+be overridden/ignored.
 
 When a ``scale_out`` or a ``scale_in`` request is received by the Senlin
 engine, a ``CLUSTER_SCALE_OUT`` or a ``CLUSTER_SCALE_IN`` action is then
