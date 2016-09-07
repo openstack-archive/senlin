@@ -81,7 +81,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertEqual('FAKE_AZ', res)
         cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
 
-    def test__validate_az_driver_failure(self):
+    def test__validate_az_validate_driver_failure(self):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
         cc.validate_azs.side_effect = exc.InternalError(message='BANG.')
@@ -93,7 +93,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertEqual("BANG.", six.text_type(ex))
         cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
 
-    def test__validate_az_not_found(self):
+    def test__validate_az_validate_not_found(self):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
         cc.validate_azs.return_value = []
@@ -103,13 +103,39 @@ class TestNovaServerProfile(base.SenlinTestCase):
                                profile._validate_az,
                                mock.Mock(), 'FAKE_AZ')
         self.assertEqual("The specified availability_zone 'FAKE_AZ' could "
-                         "not be found.", six.text_type(ex))
+                         "not be found", six.text_type(ex))
         cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
 
-    def test__validate_flavor(self):
+    def test__validate_az_create_driver_failure(self):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
-        x_flavor = mock.Mock(id='FAKE_FLAVOR')
+        cc.validate_azs.side_effect = exc.InternalError(message='BANG')
+        profile._computeclient = cc
+
+        ex = self.assertRaises(exc.EResourceCreation,
+                               profile._validate_az,
+                               mock.Mock(), 'FAKE_AZ', 'create')
+        self.assertEqual("Failed in creating server: BANG.", six.text_type(ex))
+        cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
+
+    def test__validate_az_create_not_found(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        cc.validate_azs.return_value = []
+        profile._computeclient = cc
+
+        ex = self.assertRaises(exc.EResourceCreation,
+                               profile._validate_az,
+                               mock.Mock(), 'FAKE_AZ', 'create')
+        self.assertEqual("Failed in creating server: The specified "
+                         "availability_zone 'FAKE_AZ' could not be found.",
+                         six.text_type(ex))
+        cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
+
+    def test__validate_flavor_validate(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        x_flavor = mock.Mock(is_disabled=False)
         cc.flavor_find.return_value = x_flavor
         profile._computeclient = cc
 
@@ -118,7 +144,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertEqual(x_flavor, res)
         cc.flavor_find.assert_called_once_with('FAKE_FLAVOR', False)
 
-    def test__validate_flavor_driver_failure(self):
+    def test__validate_flavor_validate_driver_failure(self):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
         cc.flavor_find.side_effect = exc.InternalError(message='BANG.')
@@ -130,7 +156,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertEqual("BANG.", six.text_type(ex))
         cc.flavor_find.assert_called_once_with('FAKE_FLAVOR', False)
 
-    def test__validate_flavor_not_found(self):
+    def test__validate_flavor_validate_not_found(self):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
         err = exc.InternalError(code=404, message='BANG')
@@ -139,9 +165,109 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         ex = self.assertRaises(exc.InvalidSpec,
                                profile._validate_flavor,
-                               mock.Mock(), 'FLAV')
+                               mock.Mock(), 'FLAV',)
         self.assertEqual("The specified flavor 'FLAV' could "
                          "not be found.", six.text_type(ex))
+        cc.flavor_find.assert_called_once_with('FLAV', False)
+
+    def test__validate_flavor_validate_disabled(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        x_flavor = mock.Mock(is_disabled=True)
+        cc.flavor_find.return_value = x_flavor
+        profile._computeclient = cc
+
+        ex = self.assertRaises(exc.InvalidSpec,
+                               profile._validate_flavor,
+                               mock.Mock(), 'FLAV')
+        self.assertEqual("The specified flavor 'FLAV' is disabled",
+                         six.text_type(ex))
+        cc.flavor_find.assert_called_once_with('FLAV', False)
+
+    def test__validate_flavor_create_driver_failure(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        cc.flavor_find.side_effect = exc.InternalError(message='BANG')
+        profile._computeclient = cc
+
+        ex = self.assertRaises(exc.EResourceCreation,
+                               profile._validate_flavor,
+                               mock.Mock(), 'FAKE_FLAVOR', 'create')
+        self.assertEqual("Failed in creating server: BANG.", six.text_type(ex))
+        cc.flavor_find.assert_called_once_with('FAKE_FLAVOR', False)
+
+    def test__validate_flavor_create_not_found(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        err = exc.InternalError(code=404, message='BANG')
+        cc.flavor_find.side_effect = err
+        profile._computeclient = cc
+
+        ex = self.assertRaises(exc.EResourceCreation,
+                               profile._validate_flavor,
+                               mock.Mock(), 'FLAV', 'create')
+        self.assertEqual("Failed in creating server: BANG.", six.text_type(ex))
+        cc.flavor_find.assert_called_once_with('FLAV', False)
+
+    def test__validate_flavor_create_disabled(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        x_flavor = mock.Mock(is_disabled=True)
+        cc.flavor_find.return_value = x_flavor
+        profile._computeclient = cc
+
+        ex = self.assertRaises(exc.EResourceCreation,
+                               profile._validate_flavor,
+                               mock.Mock(), 'FLAV', 'create')
+        self.assertEqual("Failed in creating server: The specified flavor "
+                         "'FLAV' is disabled.",
+                         six.text_type(ex))
+        cc.flavor_find.assert_called_once_with('FLAV', False)
+
+    def test__validate_flavor_update_driver_failure(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        cc.flavor_find.side_effect = exc.InternalError(message='BANG')
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='SERVER')
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._validate_flavor,
+                               node_obj, 'FAKE_FLAVOR', 'update')
+
+        self.assertEqual("Failed in updating server SERVER: BANG.",
+                         six.text_type(ex))
+        cc.flavor_find.assert_called_once_with('FAKE_FLAVOR', False)
+
+    def test__validate_flavor_update_not_found(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        err = exc.InternalError(code=404, message='BANG')
+        cc.flavor_find.side_effect = err
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='SERVER')
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._validate_flavor,
+                               node_obj, 'FLAV', 'update')
+        self.assertEqual("Failed in updating server SERVER: BANG.",
+                         six.text_type(ex))
+        cc.flavor_find.assert_called_once_with('FLAV', False)
+
+    def test__validate_flavor_update_disabled(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        x_flavor = mock.Mock(is_disabled=True)
+        cc.flavor_find.return_value = x_flavor
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='SERVER')
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._validate_flavor,
+                               node_obj, 'FLAV', 'update')
+        self.assertEqual("Failed in updating server SERVER: The specified "
+                         "flavor 'FLAV' is disabled.",
+                         six.text_type(ex))
         cc.flavor_find.assert_called_once_with('FLAV', False)
 
     def test__validate_image(self):
@@ -156,7 +282,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertEqual(x_image, res)
         cc.image_find.assert_called_once_with('FAKE_IMAGE', False)
 
-    def test__validate_image_driver_failure(self):
+    def test__validate_image_driver_failure_validate(self):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
         cc.image_find.side_effect = exc.InternalError(message='BANG')
@@ -168,7 +294,35 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertEqual("BANG", six.text_type(ex))
         cc.image_find.assert_called_once_with('IMAGE', False)
 
-    def test__validate_image_not_found(self):
+    def test__validate_image_driver_failure_create(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        cc.image_find.side_effect = exc.InternalError(message='BANG')
+        profile._computeclient = cc
+
+        ex = self.assertRaises(exc.EResourceCreation,
+                               profile._validate_image,
+                               mock.Mock(), 'IMAGE', 'create')
+
+        self.assertEqual("Failed in creating server: BANG.", six.text_type(ex))
+        cc.image_find.assert_called_once_with('IMAGE', False)
+
+    def test__validate_image_driver_failure_update(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        cc.image_find.side_effect = exc.InternalError(message='BANG')
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='SERVER')
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._validate_image,
+                               node_obj, 'IMAGE', 'update')
+
+        self.assertEqual("Failed in updating server SERVER: BANG.",
+                         six.text_type(ex))
+        cc.image_find.assert_called_once_with('IMAGE', False)
+
+    def test__validate_image_not_found_validate(self):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
         cc.image_find.side_effect = exc.InternalError(code=404, message='BANG')
@@ -179,6 +333,33 @@ class TestNovaServerProfile(base.SenlinTestCase):
                                mock.Mock(), 'FAKE_IMAGE')
         self.assertEqual("The specified image 'FAKE_IMAGE' could "
                          "not be found.", six.text_type(ex))
+        cc.image_find.assert_called_once_with('FAKE_IMAGE', False)
+
+    def test__validate_image_not_found_create(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        cc.image_find.side_effect = exc.InternalError(code=404, message='BANG')
+        profile._computeclient = cc
+
+        ex = self.assertRaises(exc.EResourceCreation,
+                               profile._validate_image,
+                               mock.Mock(), 'FAKE_IMAGE', 'create')
+        self.assertEqual("Failed in creating server: BANG.", six.text_type(ex))
+        cc.image_find.assert_called_once_with('FAKE_IMAGE', False)
+
+    def test__validate_image_not_found_update(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        cc.image_find.side_effect = exc.InternalError(code=404, message='BANG')
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='SERVER')
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._validate_image,
+                               node_obj, 'FAKE_IMAGE', 'update')
+
+        self.assertEqual("Failed in updating server SERVER: BANG.",
+                         six.text_type(ex))
         cc.image_find.assert_called_once_with('FAKE_IMAGE', False)
 
     def test__validate_keypair(self):
@@ -193,7 +374,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertEqual(x_keypair, res)
         cc.keypair_find.assert_called_once_with('KEYPAIR', False)
 
-    def test__validate_keypair_driver_failure(self):
+    def test__validate_keypair_validate_driver_failure(self):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
         cc.keypair_find.side_effect = exc.InternalError(message='BANG.')
@@ -205,7 +386,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self.assertEqual("BANG.", six.text_type(ex))
         cc.keypair_find.assert_called_once_with('KEYPAIR', False)
 
-    def test__validate_keypair_not_found(self):
+    def test__validate_keypair_valide_not_found(self):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
         err = exc.InternalError(code=404, message='BANG')
@@ -219,6 +400,60 @@ class TestNovaServerProfile(base.SenlinTestCase):
                          "not be found.", six.text_type(ex))
         cc.keypair_find.assert_called_once_with('FAKE_KEYNAME', False)
 
+    def test__validate_keypair_create_driver_failure(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        cc.keypair_find.side_effect = exc.InternalError(message='BANG')
+        profile._computeclient = cc
+
+        ex = self.assertRaises(exc.EResourceCreation,
+                               profile._validate_keypair,
+                               mock.Mock(), 'KEYPAIR', 'create')
+        self.assertEqual("Failed in creating server: BANG.", six.text_type(ex))
+        cc.keypair_find.assert_called_once_with('KEYPAIR', False)
+
+    def test__validate_keypair_create_not_found(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        err = exc.InternalError(code=404, message='BANG')
+        cc.keypair_find.side_effect = err
+        profile._computeclient = cc
+
+        ex = self.assertRaises(exc.EResourceCreation,
+                               profile._validate_keypair,
+                               mock.Mock(), 'FAKE_KEYNAME', 'create')
+        self.assertEqual("Failed in creating server: BANG.", six.text_type(ex))
+        cc.keypair_find.assert_called_once_with('FAKE_KEYNAME', False)
+
+    def test__validate_keypair_update_driver_failure(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        cc.keypair_find.side_effect = exc.InternalError(message='BANG')
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='SERVER')
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._validate_keypair,
+                               node_obj, 'KEYPAIR', 'update')
+        self.assertEqual("Failed in updating server SERVER: BANG.",
+                         six.text_type(ex))
+        cc.keypair_find.assert_called_once_with('KEYPAIR', False)
+
+    def test__validate_keypair_update_not_found(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        err = exc.InternalError(code=404, message='BANG')
+        cc.keypair_find.side_effect = err
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='SERVER')
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._validate_keypair,
+                               node_obj, 'FAKE_KEYNAME', 'update')
+        self.assertEqual("Failed in updating server SERVER: BANG.",
+                         six.text_type(ex))
+        cc.keypair_find.assert_called_once_with('FAKE_KEYNAME', False)
+
     def test__validate_bdm(self):
         profile = server.ServerProfile('t', self.spec)
 
@@ -226,7 +461,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         self.assertIsNone(res)
 
-    def test__validate_bdm_both_specified(self):
+    def test__validate_bdm_both_specified_validate(self):
         self.spec['properties']['block_device_mapping_v2'] = [{
             'source_type': 'XTYPE',
             'destination_type': 'YTYPE',
@@ -239,7 +474,24 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
         self.assertEqual("Only one of 'block_device_mapping' or "
                          "'block_device_mapping_v2' can be specified, "
-                         "not both.", six.text_type(ex))
+                         "not both", six.text_type(ex))
+
+    def test__validate_bdm_both_specified_create(self):
+        self.spec['properties']['block_device_mapping_v2'] = [{
+            'source_type': 'XTYPE',
+            'destination_type': 'YTYPE',
+            'volume_size': 10
+        }]
+        profile = server.ServerProfile('t', self.spec)
+
+        ex = self.assertRaises(exc.EResourceCreation,
+                               profile._validate_bdm,
+                               'create')
+
+        self.assertEqual("Failed in creating server: Only one of "
+                         "'block_device_mapping' or 'block_device_mapping_v2'"
+                         " can be specified, not both.",
+                         six.text_type(ex))
 
     def test_do_validate_all_passed(self):
         profile = server.ServerProfile('t', self.spec)
@@ -261,9 +513,24 @@ class TestNovaServerProfile(base.SenlinTestCase):
         cc.image_find.assert_called_once_with('FAKE_IMAGE', False)
         cc.keypair_find.assert_called_once_with('FAKE_KEYNAME', False)
 
+    def _stubout_profile(self, profile):
+        image = mock.Mock(id='FAKE_IMAGE_ID')
+        self.patchobject(profile, '_validate_image', return_value=image)
+        flavor = mock.Mock(id='FAKE_FLAVOR_ID')
+        self.patchobject(profile, '_validate_flavor', return_value=flavor)
+        keypair = mock.Mock()
+        keypair.name = 'FAKE_KEYNAME'
+        self.patchobject(profile, '_validate_keypair', return_value=keypair)
+        self.patchobject(profile, '_validate_bdm', return_value=None)
+
     def test_do_create(self):
         cc = mock.Mock()
         nc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        profile._networkclient = nc
+        self._stubout_profile(profile)
+
         test_server = mock.Mock(id='FAKE_NODE_ID', index=123,
                                 cluster_id='FAKE_CLUSTER_ID',
                                 data={
@@ -273,24 +540,15 @@ class TestNovaServerProfile(base.SenlinTestCase):
                                     }
                                 })
         test_server.name = 'TEST_SERVER'
-        image = mock.Mock(id='FAKE_IMAGE_ID')
-        cc.image_find.return_value = image
-        flavor = mock.Mock(id='FAKE_FLAVOR_ID')
-        cc.flavor_find.return_value = flavor
         net = mock.Mock(id='FAKE_NETWORK_ID')
         nc.network_get.return_value = net
 
         nova_server = mock.Mock(id='FAKE_NOVA_SERVER_ID')
         cc.server_create.return_value = nova_server
 
-        profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = cc
-        profile._networkclient = nc
-
         server_id = profile.do_create(test_server)
 
-        cc.image_find.assert_called_once_with('FAKE_IMAGE')
-        cc.flavor_find.assert_called_once_with('FLAV', False)
+        # assertion
         nc.network_get.assert_called_once_with('FAKE_NET')
 
         attrs = dict(
@@ -336,22 +594,80 @@ class TestNovaServerProfile(base.SenlinTestCase):
         cc.server_create.assert_called_once_with(**attrs)
         self.assertEqual(nova_server.id, server_id)
 
+    def test_do_create_invalid_image(self):
+        profile = server.ServerProfile('s2', self.spec)
+        err = exc.EResourceCreation(type='server', message='boom')
+        mock_image = self.patchobject(profile, '_validate_image',
+                                      side_effect=err)
+        node_obj = mock.Mock()
+
+        self.assertRaises(exc.EResourceCreation, profile.do_create, node_obj)
+
+        mock_image.assert_called_once_with(node_obj, 'FAKE_IMAGE', 'create')
+
+    def test_do_create_invalid_flavor(self):
+        profile = server.ServerProfile('s2', self.spec)
+        image = mock.Mock(id='IMAGE_ID')
+        mock_image = self.patchobject(profile, '_validate_image',
+                                      return_value=image)
+        err = exc.EResourceCreation(type='server', message='boom')
+        mock_flavor = self.patchobject(profile, '_validate_flavor',
+                                       side_effect=err)
+        node_obj = mock.Mock()
+
+        self.assertRaises(exc.EResourceCreation, profile.do_create, node_obj)
+
+        mock_image.assert_called_once_with(node_obj, 'FAKE_IMAGE', 'create')
+        mock_flavor.assert_called_once_with(node_obj, 'FLAV', 'create')
+
+    def test_do_create_invalid_keypair(self):
+        profile = server.ServerProfile('s2', self.spec)
+        image = mock.Mock(id='IMAGE_ID')
+        mock_image = self.patchobject(profile, '_validate_image',
+                                      return_value=image)
+        flavor = mock.Mock(id='FLAVOR_ID')
+        mock_flavor = self.patchobject(profile, '_validate_flavor',
+                                       return_value=flavor)
+        err = exc.EResourceCreation(type='server', message='boom')
+        mock_kp = self.patchobject(profile, '_validate_keypair',
+                                   side_effect=err)
+        node_obj = mock.Mock()
+
+        self.assertRaises(exc.EResourceCreation, profile.do_create, node_obj)
+
+        mock_image.assert_called_once_with(node_obj, 'FAKE_IMAGE', 'create')
+        mock_flavor.assert_called_once_with(node_obj, 'FLAV', 'create')
+        mock_kp.assert_called_once_with(node_obj, 'FAKE_KEYNAME', 'create')
+
+    def test_do_create_invalid_bdm(self):
+        profile = server.ServerProfile('s2', self.spec)
+        image = mock.Mock(id='IMAGE_ID')
+        mock_image = self.patchobject(profile, '_validate_image',
+                                      return_value=image)
+        flavor = mock.Mock(id='FLAVOR_ID')
+        mock_flavor = self.patchobject(profile, '_validate_flavor',
+                                       return_value=flavor)
+        keypair = mock.Mock()
+        mock_keypair = self.patchobject(profile, '_validate_keypair',
+                                        return_value=keypair)
+        err = exc.EResourceCreation(type='server', message='boom')
+        mock_bdm = self.patchobject(profile, '_validate_bdm', side_effect=err)
+        node_obj = mock.Mock()
+
+        self.assertRaises(exc.EResourceCreation, profile.do_create, node_obj)
+
+        mock_image.assert_called_once_with(node_obj, 'FAKE_IMAGE', 'create')
+        mock_flavor.assert_called_once_with(node_obj, 'FLAV', 'create')
+        mock_keypair.assert_called_once_with(node_obj, 'FAKE_KEYNAME',
+                                             'create')
+        mock_bdm.assert_called_once_with('create')
+
     def test_do_create_port_and_fixedip_not_defined(self):
         cc = mock.Mock()
         nc = mock.Mock()
-        test_server = mock.Mock(id='FAKE_NODE_ID', data={}, index=123,
-                                cluster_id='FAKE_CLUSTER_ID')
-        test_server.name = 'TEST_SERVER'
-        image = mock.Mock(id='FAKE_IMAGE_ID')
-        cc.image_find.return_value = image
-        flavor = mock.Mock(id='FAKE_FLAVOR_ID')
-        cc.flavor_find.return_value = flavor
-        net = mock.Mock(id='FAKE_NETWORK_ID')
-        nc.network_get.return_value = net
-
-        nova_server = mock.Mock(id='FAKE_NOVA_SERVER_ID')
-        cc.server_create.return_value = nova_server
-
+        nc.network_get.return_value = mock.Mock(id='FAKE_NETWORK_ID')
+        node_obj = mock.Mock(id='FAKE_NODE_ID', data={}, index=123,
+                             cluster_id='FAKE_CLUSTER_ID')
         spec = {
             'type': 'os.nova.server',
             'version': '1.0',
@@ -369,7 +685,12 @@ class TestNovaServerProfile(base.SenlinTestCase):
         profile = server.ServerProfile('s2', spec)
         profile._computeclient = cc
         profile._networkclient = nc
-        server_id = profile.do_create(test_server)
+        self._stubout_profile(profile)
+
+        nova_server = mock.Mock(id='FAKE_NOVA_SERVER_ID')
+        cc.server_create.return_value = nova_server
+
+        server_id = profile.do_create(node_obj)
 
         attrs = dict(auto_disk_config=True,
                      flavorRef='FAKE_FLAVOR_ID',
@@ -389,16 +710,9 @@ class TestNovaServerProfile(base.SenlinTestCase):
     def test_do_create_server_attrs_not_defined(self):
         cc = mock.Mock()
         nc = mock.Mock()
-        test_server = mock.Mock(id='FAKE_NODE_ID', data={}, index=123,
-                                cluster_id='FAKE_CLUSTER_ID')
-        test_server.name = 'TEST_SERVER'
-        flavor = mock.Mock(id='FAKE_FLAVOR_ID')
-        cc.flavor_find.return_value = flavor
-        net = mock.Mock(id='FAKE_NETWORK_ID')
-        nc.network_get.return_value = net
-
-        nova_server = mock.Mock(id='FAKE_NOVA_SERVER_ID')
-        cc.server_create.return_value = nova_server
+        nc.network_get.return_value = mock.Mock(id='FAKE_NETWORK_ID')
+        node_obj = mock.Mock(id='FAKE_NODE_ID', data={}, index=123,
+                             cluster_id='FAKE_CLUSTER_ID')
 
         # Assume image/scheduler_hints/user_data were not defined in spec file
         spec = {
@@ -410,11 +724,15 @@ class TestNovaServerProfile(base.SenlinTestCase):
                 'security_groups': ['HIGH_SECURITY_GROUP'],
             }
         }
-
-        profile = server.ServerProfile('s1', spec)
+        profile = server.ServerProfile('t', spec)
         profile._computeclient = cc
         profile._networkclient = nc
-        server_id = profile.do_create(test_server)
+        self._stubout_profile(profile)
+
+        nova_server = mock.Mock(id='FAKE_NOVA_SERVER_ID')
+        cc.server_create.return_value = nova_server
+
+        server_id = profile.do_create(node_obj)
 
         attrs = dict(auto_disk_config=True,
                      flavorRef='FAKE_FLAVOR_ID',
@@ -432,17 +750,6 @@ class TestNovaServerProfile(base.SenlinTestCase):
     def test_do_create_obj_name_cluster_id_is_none(self):
         cc = mock.Mock()
         nc = mock.Mock()
-        test_server = mock.Mock(id='FAKE_NODE_ID', cluster_id=None, data={},
-                                index=None)
-        test_server.name = None
-        flavor = mock.Mock(id='FAKE_FLAVOR_ID')
-        cc.flavor_find.return_value = flavor
-        net = mock.Mock(id='FAKE_NETWORK_ID')
-        nc.network_get.return_value = net
-
-        nova_server = mock.Mock(id='FAKE_NOVA_SERVER_ID')
-        cc.server_create.return_value = nova_server
-
         spec = {
             'type': 'os.nova.server',
             'version': '1.0',
@@ -452,11 +759,18 @@ class TestNovaServerProfile(base.SenlinTestCase):
                 'security_groups': ['HIGH_SECURITY_GROUP'],
             }
         }
-
         profile = server.ServerProfile('t', spec)
         profile._computeclient = cc
         profile._networkclient = nc
-        server_id = profile.do_create(test_server)
+        self._stubout_profile(profile)
+
+        node_obj = mock.Mock(id='FAKE_NODE_ID', cluster_id=None, data={},
+                             index=None)
+        node_obj.name = None
+        nova_server = mock.Mock(id='FAKE_NOVA_SERVER_ID')
+        cc.server_create.return_value = nova_server
+
+        server_id = profile.do_create(node_obj)
 
         attrs = dict(auto_disk_config=True,
                      flavorRef='FAKE_FLAVOR_ID',
@@ -470,17 +784,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
     def test_do_create_name_property_is_not_defined(self):
         cc = mock.Mock()
         nc = mock.Mock()
-        test_server = mock.Mock(id='FAKE_NODE_ID', cluster_id='',
-                                index=-1, data={})
-        test_server.name = 'TEST-SERVER'
-        flavor = mock.Mock(id='FAKE_FLAVOR_ID')
-        cc.flavor_find.return_value = flavor
-        net = mock.Mock(id='FAKE_NETWORK_ID')
-        nc.network_get.return_value = net
-
-        nova_server = mock.Mock(id='FAKE_NOVA_SERVER_ID')
-        cc.server_create.return_value = nova_server
-
+        nc.network_get.return_value = mock.Mock(id='FAKE_NETWORK_ID')
         spec = {
             'type': 'os.nova.server',
             'version': '1.0',
@@ -489,16 +793,23 @@ class TestNovaServerProfile(base.SenlinTestCase):
                 'security_groups': ['HIGH_SECURITY_GROUP'],
             }
         }
-
         profile = server.ServerProfile('t', spec)
         profile._computeclient = cc
         profile._networkclient = nc
-        server_id = profile.do_create(test_server)
+        self._stubout_profile(profile)
+
+        node_obj = mock.Mock(id='NODE_ID', cluster_id='', index=-1, data={})
+        node_obj.name = 'TEST-SERVER'
+
+        nova_server = mock.Mock(id='FAKE_NOVA_SERVER_ID')
+        cc.server_create.return_value = nova_server
+
+        server_id = profile.do_create(node_obj)
 
         attrs = dict(auto_disk_config=True,
                      flavorRef='FAKE_FLAVOR_ID',
                      name='TEST-SERVER',
-                     metadata={'cluster_node_id': 'FAKE_NODE_ID'},
+                     metadata={'cluster_node_id': 'NODE_ID'},
                      security_groups=[{'name': 'HIGH_SECURITY_GROUP'}])
 
         cc.server_create.assert_called_once_with(**attrs)
@@ -507,16 +818,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
     def test_do_create_bdm_v2(self):
         cc = mock.Mock()
         nc = mock.Mock()
-        test_server = mock.Mock(id='FAKE_NODE_ID', cluster_id='', index=-1,
-                                data={})
-        test_server.name = None
-        flavor = mock.Mock(id='FAKE_FLAVOR_ID')
-        cc.flavor_find.return_value = flavor
-        net = mock.Mock(id='FAKE_NETWORK_ID')
-        nc.network_get.return_value = net
-
-        nova_server = mock.Mock(id='FAKE_NOVA_SERVER_ID')
-        cc.server_create.return_value = nova_server
+        nc.network_get.return_value = mock.Mock(id='FAKE_NETWORK_ID')
         bdm_v2 = [
             {
                 'volume_size': 1,
@@ -531,6 +833,31 @@ class TestNovaServerProfile(base.SenlinTestCase):
                 'destination_type': 'volume',
             }
         ]
+        spec = {
+            'type': 'os.nova.server',
+            'version': '1.0',
+            'properties': {
+                'flavor': 'FLAV',
+                'name': 'FAKE_SERVER_NAME',
+                'security_groups': ['HIGH_SECURITY_GROUP'],
+                'block_device_mapping_v2': bdm_v2,
+            }
+        }
+        profile = server.ServerProfile('t', spec)
+        profile._computeclient = cc
+        profile._networkclient = nc
+        self._stubout_profile(profile)
+
+        node_obj = mock.Mock(id='NODE_ID', cluster_id='', index=-1, data={})
+        node_obj.name = None
+
+        nova_server = mock.Mock(id='FAKE_NOVA_SERVER_ID')
+        cc.server_create.return_value = nova_server
+
+        # do it
+        server_id = profile.do_create(node_obj)
+
+        # assertions
         expected_volume = {
             'guest_format': None,
             'boot_index': 0,
@@ -543,30 +870,13 @@ class TestNovaServerProfile(base.SenlinTestCase):
             'destination_type': 'volume',
             'delete_on_termination': None
         }
-
-        spec = {
-            'type': 'os.nova.server',
-            'version': '1.0',
-            'properties': {
-                'flavor': 'FLAV',
-                'name': 'FAKE_SERVER_NAME',
-                'security_groups': ['HIGH_SECURITY_GROUP'],
-                'block_device_mapping_v2': bdm_v2,
-            }
-        }
-
-        profile = server.ServerProfile('t', spec)
-        self.assertEqual(profile.properties['block_device_mapping_v2'][0],
-                         expected_volume)
-
-        profile._computeclient = cc
-        profile._networkclient = nc
-        server_id = profile.do_create(test_server)
+        self.assertEqual(expected_volume,
+                         profile.properties['block_device_mapping_v2'][0])
 
         attrs = dict(auto_disk_config=True,
                      flavorRef='FAKE_FLAVOR_ID',
                      name='FAKE_SERVER_NAME',
-                     metadata={'cluster_node_id': 'FAKE_NODE_ID'},
+                     metadata={'cluster_node_id': 'NODE_ID'},
                      security_groups=[{'name': 'HIGH_SECURITY_GROUP'}],
                      block_device_mapping_v2=bdm_v2)
 

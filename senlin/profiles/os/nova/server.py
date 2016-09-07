@@ -269,56 +269,100 @@ class ServerProfile(base.Profile):
         super(ServerProfile, self).__init__(type_name, name, **kwargs)
         self.server_id = None
 
-    def _validate_az(self, obj, az_name):
-        res = self.compute(obj).validate_azs([az_name])
-        if not res:
-            msg = _("The specified %(key)s '%(value)s' could not be found."
-                    ) % {'key': self.AVAILABILITY_ZONE, 'value': az_name}
-            raise exc.InvalidSpec(message=msg)
-
-        return az_name
-
-    def _validate_flavor(self, obj, name_or_id):
+    def _validate_az(self, obj, az_name, reason=None):
         try:
-            return self.compute(obj).flavor_find(name_or_id, False)
+            res = self.compute(obj).validate_azs([az_name])
         except exc.InternalError as ex:
-            if ex.code == 404:
-                msg = _("The specified %(k)s '%(v)s' could not be found."
-                        ) % {'k': self.FLAVOR, 'v': name_or_id}
-                raise exc.InvalidSpec(message=msg)
+            if reason == 'create':
+                raise exc.EResourceCreation(type='server',
+                                            message=six.text_type(ex))
             else:
                 raise
 
-    def _validate_image(self, obj, name_or_id):
+        if not res:
+            msg = _("The specified %(key)s '%(value)s' could not be found"
+                    ) % {'key': self.AVAILABILITY_ZONE, 'value': az_name}
+            if reason == 'create':
+                raise exc.EResourceCreation(type='server', message=msg)
+            else:
+                raise exc.InvalidSpec(message=msg)
+
+        return az_name
+
+    def _validate_flavor(self, obj, name_or_id, reason=None):
+        flavor = None
+        msg = ''
+        try:
+            flavor = self.compute(obj).flavor_find(name_or_id, False)
+        except exc.InternalError as ex:
+            msg = six.text_type(ex)
+            if reason is None:  # reaons is 'validate'
+                if ex.code == 404:
+                    msg = _("The specified %(k)s '%(v)s' could not be found."
+                            ) % {'k': self.FLAVOR, 'v': name_or_id}
+                    raise exc.InvalidSpec(message=msg)
+                else:
+                    raise
+
+        if flavor is not None:
+            if not flavor.is_disabled:
+                return flavor
+            msg = _("The specified %(k)s '%(v)s' is disabled"
+                    ) % {'k': self.FLAVOR, 'v': name_or_id}
+
+        if reason == 'create':
+            raise exc.EResourceCreation(type='server', message=msg)
+        elif reason == 'update':
+            raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                      message=msg)
+        else:
+            raise exc.InvalidSpec(message=msg)
+
+    def _validate_image(self, obj, name_or_id, reason=None):
         try:
             return self.compute(obj).image_find(name_or_id, False)
         except exc.InternalError as ex:
-            if ex.code == 404:
+            if reason == 'create':
+                raise exc.EResourceCreation(type='server',
+                                            message=six.text_type(ex))
+            elif reason == 'update':
+                raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                          message=six.text_type(ex))
+            elif ex.code == 404:
                 msg = _("The specified %(k)s '%(v)s' could not be found."
                         ) % {'k': self.IMAGE, 'v': name_or_id}
                 raise exc.InvalidSpec(message=msg)
             else:
                 raise
 
-    def _validate_keypair(self, obj, name_or_id):
+    def _validate_keypair(self, obj, name_or_id, reason=None):
         try:
             return self.compute(obj).keypair_find(name_or_id, False)
         except exc.InternalError as ex:
-            if ex.code == 404:
+            if reason == 'create':
+                raise exc.EResourceCreation(type='server',
+                                            message=six.text_type(ex))
+            elif reason == 'update':
+                raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                          message=six.text_type(ex))
+            elif ex.code == 404:
                 msg = _("The specified %(k)s '%(v)s' could not be found."
                         ) % {'k': self.KEY_NAME, 'v': name_or_id}
                 raise exc.InvalidSpec(message=msg)
             else:
                 raise
 
-    def _validate_bdm(self):
+    def _validate_bdm(self, reason=None):
         bdm = self.properties[self.BLOCK_DEVICE_MAPPING]
         bdmv2 = self.properties[self.BLOCK_DEVICE_MAPPING_V2]
         if all((bdm, bdmv2)):
             msg = _("Only one of '%(key1)s' or '%(key2)s' can be specified, "
-                    "not both.") % {'key1': self.BLOCK_DEVICE_MAPPING,
-                                    'key2': self.BLOCK_DEVICE_MAPPING_V2}
-            raise exc.InvalidSpec(message=msg)
+                    "not both") % {'key1': self.BLOCK_DEVICE_MAPPING,
+                                   'key2': self.BLOCK_DEVICE_MAPPING_V2}
+            if reason == 'create':
+                raise exc.EResourceCreation(type='server', message=msg)
+            else:
+                raise exc.InvalidSpec(message=msg)
 
     def do_validate(self, obj):
         """Validate if the spec has provided valid info for server creation.
@@ -370,7 +414,10 @@ class ServerProfile(base.Profile):
         return networks
 
     def do_create(self, obj):
-        '''Create a server using the given profile.'''
+        """Create a server for the node object.
+
+        :param obj: The node object for which a server will be created.
+        """
         kwargs = {}
         for key in self.KEYS:
             # context is treated as connection parameters
@@ -380,35 +427,32 @@ class ServerProfile(base.Profile):
             if self.properties[key] is not None:
                 kwargs[key] = self.properties[key]
 
-        name_or_id = self.properties[self.IMAGE]
-        if name_or_id is not None:
-            image = self.compute(obj).image_find(name_or_id)
-            # wait for new version of openstacksdk to fix this
+        image_ident = self.properties[self.IMAGE]
+        if image_ident is not None:
+            image = self._validate_image(obj, image_ident, 'create')
             kwargs.pop(self.IMAGE)
             kwargs['imageRef'] = image.id
 
-        # TODO(Qiming): Check if flavor is disabled
-        flavor_id = self.properties[self.FLAVOR]
-        flavor = self.compute(obj).flavor_find(flavor_id, False)
-
-        # wait for new verson of openstacksdk to fix this
+        flavor_ident = self.properties[self.FLAVOR]
+        flavor = self._validate_flavor(obj, flavor_ident, 'create')
         kwargs.pop(self.FLAVOR)
         kwargs['flavorRef'] = flavor.id
 
-        name = self.properties[self.NAME]
-        if name:
-            kwargs['name'] = name
-        else:
-            kwargs['name'] = obj.name
+        keypair_name = self.properties[self.KEY_NAME]
+        if keypair_name:
+            keypair = self._validate_keypair(obj, keypair_name, 'create')
+            kwargs['key_name'] = keypair.name
+
+        kwargs['name'] = self.properties[self.NAME] or obj.name
 
         metadata = self.properties[self.METADATA] or {}
         metadata['cluster_node_id'] = obj.id
         if obj.cluster_id:
             metadata['cluster_id'] = obj.cluster_id
             metadata['cluster_node_index'] = six.text_type(obj.index)
-
         kwargs['metadata'] = metadata
 
+        self._validate_bdm('create')
         block_device_mapping_v2 = self.properties[self.BLOCK_DEVICE_MAPPING_V2]
         if block_device_mapping_v2 is not None:
             kwargs['block_device_mapping_v2'] = self._resolve_bdm(
@@ -431,6 +475,7 @@ class ServerProfile(base.Profile):
         if 'placement' in obj.data:
             if 'zone' in obj.data['placement']:
                 kwargs['availability_zone'] = obj.data['placement']['zone']
+
             if 'servergroup' in obj.data['placement']:
                 group_id = obj.data['placement']['servergroup']
                 hints = self.properties.get(self.SCHEDULER_HINTS, {})
