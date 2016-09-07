@@ -391,6 +391,8 @@ class ServerProfile(base.Profile):
         # validate bdm conflicts
         self._validate_bdm()
 
+        # TODO(Qiming): Validate network
+
         return True
 
     def _resolve_bdm(self, bdm):
@@ -400,7 +402,7 @@ class ServerProfile(base.Profile):
                     del bd[key]
         return bdm
 
-    def _resolve_network(self, obj, networks):
+    def _validate_network(self, obj, networks):
         for network in networks:
             net_name_id = network.get(self.NETWORK)
             if net_name_id:
@@ -470,7 +472,7 @@ class ServerProfile(base.Profile):
 
         networks = self.properties[self.NETWORKS]
         if networks is not None:
-            kwargs['networks'] = self._resolve_network(obj, networks)
+            kwargs['networks'] = self._validate_network(obj, networks)
 
         secgroups = self.properties[self.SECURITY_GROUPS]
         if secgroups:
