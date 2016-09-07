@@ -48,7 +48,7 @@ properties are always available on a node:
 - ``updated_at``: The timestamp when last time the node was updated.
 - ``metadata``: A list of key-value pairs that are associated with the node.
 - ``physical_id``: The UUID of the physical object that backs this node. The
-  property value is empty if there is no physical objects associated with it.
+  property value is empty if there are no physical objects associated with it.
 - ``status``: A string indicating the current status of the node.
 - ``status_reason``: A string describing the reason why the node transited to
   its current status.
