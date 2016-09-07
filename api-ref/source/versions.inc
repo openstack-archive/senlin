@@ -34,6 +34,13 @@ Response Parameters
 
   - X-OpenStack-Request-Id: request_id
   - versions: versions
+  - id: version_id
+  - links: version_links
+  - max_version: version_max_version
+  - media-types: version_media_types
+  - min_version: version_min_version
+  - status: version_status
+  - updated: version_updated
 
 Response Example
 ----------------
@@ -62,7 +69,7 @@ Response Codes
    - 406
    - 503
 
-Response Parameters
+Request Parameters
 -------------------
 
 .. rest_parameters:: parameters.yaml
