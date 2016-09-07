@@ -77,7 +77,7 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.get_keypair(image)
 
     @sdk.translate_exception
-    def keypair_get_by_name(self, name_or_id, ignore_missing=False):
+    def keypair_find(self, name_or_id, ignore_missing=False):
         return self.conn.compute.find_keypair(name_or_id, ignore_missing)
 
     @sdk.translate_exception

@@ -154,17 +154,17 @@ class TestNovaV2(base.SenlinTestCase):
         d.keypair_get('foo')
         self.compute.get_keypair.assert_called_once_with('foo')
 
-    def test_keypair_get_by_name(self):
+    def test_keypair_find(self):
         d = nova_v2.NovaClient(self.conn_params)
-        d.keypair_get_by_name('foo')
+        d.keypair_find('foo')
         self.compute.find_keypair.assert_called_once_with('foo', False)
         self.compute.find_keypair.reset_mock()
 
-        d.keypair_get_by_name('foo', True)
+        d.keypair_find('foo', True)
         self.compute.find_keypair.assert_called_once_with('foo', True)
         self.compute.find_keypair.reset_mock()
 
-        d.keypair_get_by_name('foo', False)
+        d.keypair_find('foo', False)
         self.compute.find_keypair.assert_called_once_with('foo', False)
 
     def test_keypair_list(self):

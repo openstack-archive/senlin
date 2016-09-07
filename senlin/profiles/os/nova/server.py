@@ -302,7 +302,7 @@ class ServerProfile(base.Profile):
 
     def _validate_keypair(self, obj, name_or_id):
         try:
-            return self.compute(obj).keypair_get_by_name(name_or_id, False)
+            return self.compute(obj).keypair_find(name_or_id, False)
         except exc.InternalError as ex:
             if ex.code == 404:
                 msg = _("The specified %(k)s '%(v)s' could not be found."
