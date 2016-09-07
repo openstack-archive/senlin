@@ -26,3 +26,5 @@ it can be used by both users and developers.
 ---
 
    Added ``cluster_collect`` API.
+   Added ``profile_validate`` API.
+   Added ``policy_validate`` API.
