@@ -642,7 +642,8 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_delete(self, mock_find, mock_action, mock_start):
-        mock_find.return_value = mock.Mock(id='12345678AB', status='ACTIVE')
+        mock_find.return_value = mock.Mock(id='12345678AB', status='ACTIVE',
+                                           dependents={})
         mock_action.return_value = 'ACTION_ID'
 
         result = self.eng.node_delete(self.ctx, 'FAKE_NODE')
@@ -682,6 +683,19 @@ class NodeTest(base.SenlinTestCase):
             self.assertEqual("The node BUSY is in status %s." % bad_status,
                              six.text_type(ex.exc_info[1]))
             # skipping assertion on mock_find
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    def test_node_delete_contain_container(self, mock_find):
+        dependents = {'containers': ['container1']}
+        node = mock.Mock(id='node1', status='ACTIVE', dependents=dependents)
+        mock_find.return_value = node
+        identity = mock.Mock()
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_delete,
+                               self.ctx, identity)
+        msg = _('The host_node (node1) is still in use.')
+        self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
+        self.assertEqual(msg, six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')

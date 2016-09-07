@@ -331,16 +331,27 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         self.assertRaises(exc.EResourceCreation,
                           profile.do_create, obj)
 
+    @mock.patch.object(docker_profile.DockerProfile,
+                       '_remove_dependents_from_host')
     @mock.patch.object(docker_profile.DockerProfile, 'docker')
-    def test_do_delete(self, mock_docker):
-        obj = mock.Mock()
+    def test_do_delete(self, mock_docker, mock_dep):
+        obj = mock.Mock(id='container1')
         physical_id = mock.Mock()
         obj.physical_id = physical_id
         dockerclient = mock.Mock()
         mock_docker.return_value = dockerclient
+        host = mock.Mock()
         profile = docker_profile.DockerProfile('container', self.spec)
+        profile.host = host
+        profile.cluster = None
         self.assertIsNone(profile.do_delete(obj))
-        dockerclient.container_delete.assert_called_once_with(physical_id)
+        dockerclient.container_delete.assert_any_call(physical_id)
+        mock_dep.assert_any_call(host, 'container1')
+
+        cluster = mock.Mock()
+        profile.cluster = cluster
+        self.assertIsNone(profile.do_delete(obj))
+        mock_dep.assert_any_call(cluster, 'container1')
 
     def test_do_delete_no_physical_id(self):
         obj = mock.Mock()
@@ -357,3 +368,15 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         profile = docker_profile.DockerProfile('container', self.spec)
         self.assertRaises(exc.EResourceDeletion,
                           profile.do_delete, obj)
+
+    @mock.patch.object(context, 'get_admin_context')
+    def test_remove_dependents_from_host(self, mock_ctx):
+        ctx = mock.Mock()
+        mock_ctx.return_value = ctx
+        dependents = {'containers': ['con1', 'con2', 'con3']}
+        host = mock.Mock(dependents=dependents)
+        profile = docker_profile.DockerProfile('container', self.spec)
+        profile._remove_dependents_from_host(host, 'con2')
+        new_deps = {'containers': ['con1', 'con3']}
+        self.assertEqual(new_deps, host.dependents)
+        host.update_dependents.assert_called_once_with(ctx, new_deps)

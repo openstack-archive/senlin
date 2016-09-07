@@ -242,8 +242,8 @@ class Node(object):
             return {}
         return pb.Profile.get_details(context, self)
 
-    def add_dependents(self, context, dependents):
-        """Add dependency information into node's property.
+    def update_dependents(self, context, dependents):
+        """Update dependency information of node's property.
 
         :param context: An instance of request context.
         :param dependents: The dependency information.

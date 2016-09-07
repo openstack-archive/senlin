@@ -266,6 +266,18 @@ class DockerProfile(base.Profile):
         self.container_id = container['Id'][:36]
         return self.container_id
 
+    def _remove_dependents_from_host(self, host, container):
+        """Remove dependency record of host
+
+        :param host: The host(node or cluster) to host the container
+        :param container: The id of the container node
+        """
+        ctx = context.get_admin_context()
+        containers = host.dependents['containers']
+        containers.remove(container)
+        dependents = {'containers': containers}
+        host.update_dependents(ctx, dependents)
+
     def do_delete(self, obj):
         """Delete a container node.
 
@@ -281,4 +293,7 @@ class DockerProfile(base.Profile):
             raise exc.EResourceDeletion(type='container',
                                         id=obj.physical_id,
                                         message=six.text_type(ex))
+        self._remove_dependents_from_host(self.host, obj.id)
+        if self.cluster is not None:
+            self._remove_dependents_from_host(self.cluster, obj.id)
         return
