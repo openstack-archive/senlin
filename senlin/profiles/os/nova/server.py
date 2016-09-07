@@ -269,6 +269,57 @@ class ServerProfile(base.Profile):
         super(ServerProfile, self).__init__(type_name, name, **kwargs)
         self.server_id = None
 
+    def _validate_az(self, obj, az_name):
+        res = self.compute(obj).validate_azs([az_name])
+        if not res:
+            msg = _("The specified %(key)s '%(value)s' could not be found."
+                    ) % {'key': self.AVAILABILITY_ZONE, 'value': az_name}
+            raise exc.InvalidSpec(message=msg)
+
+        return az_name
+
+    def _validate_flavor(self, obj, name_or_id):
+        try:
+            return self.compute(obj).flavor_find(name_or_id, False)
+        except exc.InternalError as ex:
+            if ex.code == 404:
+                msg = _("The specified %(k)s '%(v)s' could not be found."
+                        ) % {'k': self.FLAVOR, 'v': name_or_id}
+                raise exc.InvalidSpec(message=msg)
+            else:
+                raise
+
+    def _validate_image(self, obj, name_or_id):
+        try:
+            return self.compute(obj).image_find(name_or_id, False)
+        except exc.InternalError as ex:
+            if ex.code == 404:
+                msg = _("The specified %(k)s '%(v)s' could not be found."
+                        ) % {'k': self.IMAGE, 'v': name_or_id}
+                raise exc.InvalidSpec(message=msg)
+            else:
+                raise
+
+    def _validate_keypair(self, obj, name_or_id):
+        try:
+            return self.compute(obj).keypair_get_by_name(name_or_id, False)
+        except exc.InternalError as ex:
+            if ex.code == 404:
+                msg = _("The specified %(k)s '%(v)s' could not be found."
+                        ) % {'k': self.KEY_NAME, 'v': name_or_id}
+                raise exc.InvalidSpec(message=msg)
+            else:
+                raise
+
+    def _validate_bdm(self):
+        bdm = self.properties[self.BLOCK_DEVICE_MAPPING]
+        bdmv2 = self.properties[self.BLOCK_DEVICE_MAPPING_V2]
+        if all((bdm, bdmv2)):
+            msg = _("Only one of '%(key1)s' or '%(key2)s' can be specified, "
+                    "not both.") % {'key1': self.BLOCK_DEVICE_MAPPING,
+                                    'key2': self.BLOCK_DEVICE_MAPPING_V2}
+            raise exc.InvalidSpec(message=msg)
+
     def do_validate(self, obj):
         """Validate if the spec has provided valid info for server creation.
 
@@ -277,59 +328,24 @@ class ServerProfile(base.Profile):
         # validate availability_zone
         az_name = self.properties[self.AVAILABILITY_ZONE]
         if az_name is not None:
-            res = self.compute(obj).validate_azs([az_name])
-            if not res:
-                msg = _("The specified %(key)s '%(value)s' could not be "
-                        "found.") % {'key': self.AVAILABILITY_ZONE,
-                                     'value': az_name}
-                raise exc.InvalidSpec(message=msg)
+            self._validate_az(obj, az_name)
 
         # validate flavor
         flavor = self.properties[self.FLAVOR]
-        valid_flavors = self.compute(obj).flavor_list()
-        found = False
-        for f in valid_flavors:
-            if not f.is_disabled and (flavor == f.id or flavor == f.name):
-                found = True
-        if not found:
-            msg = _("The specified %(key)s '%(value)s' could not be found."
-                    ) % {'key': self.FLAVOR, 'value': flavor}
-            raise exc.InvalidSpec(message=msg)
+        self._validate_flavor(obj, flavor)
 
         # validate image
         image = self.properties[self.IMAGE]
         if image is not None:
-            valid_images = self.compute(obj).image_list()
-            found = False
-            for img in valid_images:
-                if image == img.id or image == img.name:
-                    found = True
-            if not found:
-                msg = _("The specified %(key)s '%(value)s' could not be "
-                        "found.") % {'key': self.IMAGE, 'value': image}
-                raise exc.InvalidSpec(message=msg)
+            self._validate_image(obj, image)
 
         # validate key_name
         keypair = self.properties[self.KEY_NAME]
         if keypair is not None:
-            valid_keys = self.compute(obj).keypair_list()
-            found = False
-            for key in valid_keys:
-                if keypair == key.name:
-                    found = True
-            if not found:
-                msg = _("The specified %(key)s '%(value)s' could not be "
-                        "found.") % {'key': self.KEY_NAME, 'value': keypair}
-                raise exc.InvalidSpec(message=msg)
+            self._validate_keypair(obj, keypair)
 
         # validate bdm conflicts
-        bdm = self.properties[self.BLOCK_DEVICE_MAPPING]
-        bdmv2 = self.properties[self.BLOCK_DEVICE_MAPPING_V2]
-        if all((bdm, bdmv2)):
-            msg = _("Only one of '%(key1)s' or '%(key2)s' can be specified, "
-                    "not both.") % {'key1': self.BLOCK_DEVICE_MAPPING,
-                                    'key2': self.BLOCK_DEVICE_MAPPING_V2}
-            raise exc.InvalidSpec(message=msg)
+        self._validate_bdm()
 
         return True
 
@@ -371,6 +387,7 @@ class ServerProfile(base.Profile):
             kwargs.pop(self.IMAGE)
             kwargs['imageRef'] = image.id
 
+        # TODO(Qiming): Check if flavor is disabled
         flavor_id = self.properties[self.FLAVOR]
         flavor = self.compute(obj).flavor_find(flavor_id, False)
 
