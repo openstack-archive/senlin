@@ -184,8 +184,7 @@ def parse_resize_params(action, cluster):
         return action.RES_ERROR, result
 
     # save sanitized properties
-    current_size = cluster.desired_capacity
-    count = current_size - desired
+    count = cluster.desired_capacity - desired
     if count > 0:
         action.data.update({
             'deletion': {
