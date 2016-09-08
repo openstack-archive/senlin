@@ -237,196 +237,198 @@ class TestFlavorValidation(base.SenlinTestCase):
         self.cc.flavor_find.assert_called_once_with(flavor, False)
 
 
+class TestImageValidation(base.SenlinTestCase):
+
+    scenarios = [
+        ('validate:success', dict(
+            reason=None,
+            success=True,
+            validate_result=[mock.Mock(id='IMAGE_ID')],
+            result='IMAGE_ID',
+            exception=None,
+            message='')),
+        ('validate:driver_failure', dict(
+            reason=None,
+            success=False,
+            validate_result=exc.InternalError(message='BANG.'),
+            result='FID',
+            exception=exc.InternalError,
+            message='BANG.')),
+        ('validate:not_found', dict(
+            reason=None,
+            success=False,
+            validate_result=exc.InternalError(code=404, message='BANG.'),
+            result='FID',
+            exception=exc.InvalidSpec,
+            message="The specified image 'IMAGE' could not be found.")),
+        ('create:success', dict(
+            reason='create',
+            success=True,
+            validate_result=[mock.Mock(id='IMAGE_ID')],
+            result='IMAGE_ID',
+            exception=None,
+            message='')),
+        ('create:driver_failure', dict(
+            reason='create',
+            success=False,
+            validate_result=exc.InternalError(message='BANG'),
+            result='FID',
+            exception=exc.EResourceCreation,
+            message='Failed in creating server: BANG.')),
+        ('create:not_found', dict(
+            reason='create',
+            success=False,
+            validate_result=exc.InternalError(code=404, message='BANG'),
+            result='FID',
+            exception=exc.EResourceCreation,
+            message="Failed in creating server: BANG.")),
+        ('update:success', dict(
+            reason='update',
+            success=True,
+            validate_result=[mock.Mock(id='IMAGE_ID')],
+            result='IMAGE_ID',
+            exception=None,
+            message='')),
+        ('update:driver_failure', dict(
+            reason='update',
+            success=False,
+            validate_result=exc.InternalError(message='BANG'),
+            result='FID',
+            exception=exc.EResourceUpdate,
+            message='Failed in updating server NOVA_ID: BANG.')),
+        ('update:not_found', dict(
+            reason='update',
+            success=False,
+            validate_result=exc.InternalError(code=404, message='BANG'),
+            result='FID',
+            exception=exc.EResourceUpdate,
+            message="Failed in updating server NOVA_ID: BANG.")),
+    ]
+
+    def setUp(self):
+        super(TestImageValidation, self).setUp()
+
+        self.cc = mock.Mock()
+        self.profile = server.ServerProfile('t', spec)
+        self.profile._computeclient = self.cc
+
+    def test_validation(self):
+        self.cc.image_find.side_effect = self.validate_result
+        node = mock.Mock(id='NODE_ID', physical_id='NOVA_ID')
+        image = 'IMAGE'
+
+        if self.success:
+            res = self.profile._validate_image(node, image, self.reason)
+            self.assertIsNotNone(res)
+            self.assertEqual(self.result, res.id)
+        else:
+            ex = self.assertRaises(self.exception,
+                                   self.profile._validate_image,
+                                   node, image, self.reason)
+            self.assertEqual(self.message, six.text_type(ex))
+
+        self.cc.image_find.assert_called_once_with(image, False)
+
+
+class TestKeypairValidation(base.SenlinTestCase):
+
+    scenarios = [
+        ('validate:success', dict(
+            reason=None,
+            success=True,
+            validate_result=[mock.Mock(id='KEY_ID')],
+            result='KEY_ID',
+            exception=None,
+            message='')),
+        ('validate:driver_failure', dict(
+            reason=None,
+            success=False,
+            validate_result=exc.InternalError(message='BANG.'),
+            result='FID',
+            exception=exc.InternalError,
+            message='BANG.')),
+        ('validate:not_found', dict(
+            reason=None,
+            success=False,
+            validate_result=exc.InternalError(code=404, message='BANG.'),
+            result='FID',
+            exception=exc.InvalidSpec,
+            message="The specified key_name 'KEY' could not be found.")),
+        ('create:success', dict(
+            reason='create',
+            success=True,
+            validate_result=[mock.Mock(id='IMAGE_ID')],
+            result='IMAGE_ID',
+            exception=None,
+            message='')),
+        ('create:driver_failure', dict(
+            reason='create',
+            success=False,
+            validate_result=exc.InternalError(message='BANG'),
+            result='FID',
+            exception=exc.EResourceCreation,
+            message='Failed in creating server: BANG.')),
+        ('create:not_found', dict(
+            reason='create',
+            success=False,
+            validate_result=exc.InternalError(code=404, message='BANG'),
+            result='FID',
+            exception=exc.EResourceCreation,
+            message="Failed in creating server: BANG.")),
+        ('update:success', dict(
+            reason='update',
+            success=True,
+            validate_result=[mock.Mock(id='KEY_ID')],
+            result='KEY_ID',
+            exception=None,
+            message='')),
+        ('update:driver_failure', dict(
+            reason='update',
+            success=False,
+            validate_result=exc.InternalError(message='BANG'),
+            result='FID',
+            exception=exc.EResourceUpdate,
+            message='Failed in updating server NOVA_ID: BANG.')),
+        ('update:not_found', dict(
+            reason='update',
+            success=False,
+            validate_result=exc.InternalError(code=404, message='BANG'),
+            result='FID',
+            exception=exc.EResourceUpdate,
+            message="Failed in updating server NOVA_ID: BANG.")),
+    ]
+
+    def setUp(self):
+        super(TestKeypairValidation, self).setUp()
+
+        self.cc = mock.Mock()
+        self.profile = server.ServerProfile('t', spec)
+        self.profile._computeclient = self.cc
+
+    def test_validation(self):
+        self.cc.keypair_find.side_effect = self.validate_result
+        node = mock.Mock(id='NODE_ID', physical_id='NOVA_ID')
+        key = 'KEY'
+
+        if self.success:
+            res = self.profile._validate_keypair(node, key, self.reason)
+            self.assertIsNotNone(res)
+            self.assertEqual(self.result, res.id)
+        else:
+            ex = self.assertRaises(self.exception,
+                                   self.profile._validate_keypair,
+                                   node, key, self.reason)
+            self.assertEqual(self.message, six.text_type(ex))
+
+        self.cc.keypair_find.assert_called_once_with(key, False)
+
+
 class TestNovaServerValidate(base.SenlinTestCase):
 
     def setUp(self):
         super(TestNovaServerValidate, self).setUp()
 
         self.context = utils.dummy_context()
-
-    def test__validate_image(self):
-        profile = server.ServerProfile('t', spec)
-        cc = mock.Mock()
-        x_image = mock.Mock()
-        cc.image_find.return_value = x_image
-        profile._computeclient = cc
-
-        res = profile._validate_image(mock.Mock(), 'FAKE_IMAGE')
-
-        self.assertEqual(x_image, res)
-        cc.image_find.assert_called_once_with('FAKE_IMAGE', False)
-
-    def test__validate_image_driver_failure_validate(self):
-        profile = server.ServerProfile('t', spec)
-        cc = mock.Mock()
-        cc.image_find.side_effect = exc.InternalError(message='BANG')
-        profile._computeclient = cc
-
-        ex = self.assertRaises(exc.InternalError,
-                               profile._validate_image,
-                               mock.Mock(), 'IMAGE')
-        self.assertEqual("BANG", six.text_type(ex))
-        cc.image_find.assert_called_once_with('IMAGE', False)
-
-    def test__validate_image_driver_failure_create(self):
-        profile = server.ServerProfile('t', spec)
-        cc = mock.Mock()
-        cc.image_find.side_effect = exc.InternalError(message='BANG')
-        profile._computeclient = cc
-
-        ex = self.assertRaises(exc.EResourceCreation,
-                               profile._validate_image,
-                               mock.Mock(), 'IMAGE', 'create')
-
-        self.assertEqual("Failed in creating server: BANG.", six.text_type(ex))
-        cc.image_find.assert_called_once_with('IMAGE', False)
-
-    def test__validate_image_driver_failure_update(self):
-        profile = server.ServerProfile('t', spec)
-        cc = mock.Mock()
-        cc.image_find.side_effect = exc.InternalError(message='BANG')
-        profile._computeclient = cc
-        node_obj = mock.Mock(physical_id='SERVER')
-
-        ex = self.assertRaises(exc.EResourceUpdate,
-                               profile._validate_image,
-                               node_obj, 'IMAGE', 'update')
-
-        self.assertEqual("Failed in updating server SERVER: BANG.",
-                         six.text_type(ex))
-        cc.image_find.assert_called_once_with('IMAGE', False)
-
-    def test__validate_image_not_found_validate(self):
-        profile = server.ServerProfile('t', spec)
-        cc = mock.Mock()
-        cc.image_find.side_effect = exc.InternalError(code=404, message='BANG')
-        profile._computeclient = cc
-
-        ex = self.assertRaises(exc.InvalidSpec,
-                               profile._validate_image,
-                               mock.Mock(), 'FAKE_IMAGE')
-        self.assertEqual("The specified image 'FAKE_IMAGE' could "
-                         "not be found.", six.text_type(ex))
-        cc.image_find.assert_called_once_with('FAKE_IMAGE', False)
-
-    def test__validate_image_not_found_create(self):
-        profile = server.ServerProfile('t', spec)
-        cc = mock.Mock()
-        cc.image_find.side_effect = exc.InternalError(code=404, message='BANG')
-        profile._computeclient = cc
-
-        ex = self.assertRaises(exc.EResourceCreation,
-                               profile._validate_image,
-                               mock.Mock(), 'FAKE_IMAGE', 'create')
-        self.assertEqual("Failed in creating server: BANG.", six.text_type(ex))
-        cc.image_find.assert_called_once_with('FAKE_IMAGE', False)
-
-    def test__validate_image_not_found_update(self):
-        profile = server.ServerProfile('t', spec)
-        cc = mock.Mock()
-        cc.image_find.side_effect = exc.InternalError(code=404, message='BANG')
-        profile._computeclient = cc
-        node_obj = mock.Mock(physical_id='SERVER')
-
-        ex = self.assertRaises(exc.EResourceUpdate,
-                               profile._validate_image,
-                               node_obj, 'FAKE_IMAGE', 'update')
-
-        self.assertEqual("Failed in updating server SERVER: BANG.",
-                         six.text_type(ex))
-        cc.image_find.assert_called_once_with('FAKE_IMAGE', False)
-
-    def test__validate_keypair(self):
-        profile = server.ServerProfile('t', spec)
-        cc = mock.Mock()
-        x_keypair = mock.Mock()
-        cc.keypair_find.return_value = x_keypair
-        profile._computeclient = cc
-
-        res = profile._validate_keypair(mock.Mock(), 'KEYPAIR')
-
-        self.assertEqual(x_keypair, res)
-        cc.keypair_find.assert_called_once_with('KEYPAIR', False)
-
-    def test__validate_keypair_validate_driver_failure(self):
-        profile = server.ServerProfile('t', spec)
-        cc = mock.Mock()
-        cc.keypair_find.side_effect = exc.InternalError(message='BANG.')
-        profile._computeclient = cc
-
-        ex = self.assertRaises(exc.InternalError,
-                               profile._validate_keypair,
-                               mock.Mock(), 'KEYPAIR')
-        self.assertEqual("BANG.", six.text_type(ex))
-        cc.keypair_find.assert_called_once_with('KEYPAIR', False)
-
-    def test__validate_keypair_valide_not_found(self):
-        profile = server.ServerProfile('t', spec)
-        cc = mock.Mock()
-        err = exc.InternalError(code=404, message='BANG')
-        cc.keypair_find.side_effect = err
-        profile._computeclient = cc
-
-        ex = self.assertRaises(exc.InvalidSpec,
-                               profile._validate_keypair,
-                               mock.Mock(), 'FAKE_KEYNAME')
-        self.assertEqual("The specified key_name 'FAKE_KEYNAME' could "
-                         "not be found.", six.text_type(ex))
-        cc.keypair_find.assert_called_once_with('FAKE_KEYNAME', False)
-
-    def test__validate_keypair_create_driver_failure(self):
-        profile = server.ServerProfile('t', spec)
-        cc = mock.Mock()
-        cc.keypair_find.side_effect = exc.InternalError(message='BANG')
-        profile._computeclient = cc
-
-        ex = self.assertRaises(exc.EResourceCreation,
-                               profile._validate_keypair,
-                               mock.Mock(), 'KEYPAIR', 'create')
-        self.assertEqual("Failed in creating server: BANG.", six.text_type(ex))
-        cc.keypair_find.assert_called_once_with('KEYPAIR', False)
-
-    def test__validate_keypair_create_not_found(self):
-        profile = server.ServerProfile('t', spec)
-        cc = mock.Mock()
-        err = exc.InternalError(code=404, message='BANG')
-        cc.keypair_find.side_effect = err
-        profile._computeclient = cc
-
-        ex = self.assertRaises(exc.EResourceCreation,
-                               profile._validate_keypair,
-                               mock.Mock(), 'FAKE_KEYNAME', 'create')
-        self.assertEqual("Failed in creating server: BANG.", six.text_type(ex))
-        cc.keypair_find.assert_called_once_with('FAKE_KEYNAME', False)
-
-    def test__validate_keypair_update_driver_failure(self):
-        profile = server.ServerProfile('t', spec)
-        cc = mock.Mock()
-        cc.keypair_find.side_effect = exc.InternalError(message='BANG')
-        profile._computeclient = cc
-        node_obj = mock.Mock(physical_id='SERVER')
-
-        ex = self.assertRaises(exc.EResourceUpdate,
-                               profile._validate_keypair,
-                               node_obj, 'KEYPAIR', 'update')
-        self.assertEqual("Failed in updating server SERVER: BANG.",
-                         six.text_type(ex))
-        cc.keypair_find.assert_called_once_with('KEYPAIR', False)
-
-    def test__validate_keypair_update_not_found(self):
-        profile = server.ServerProfile('t', spec)
-        cc = mock.Mock()
-        err = exc.InternalError(code=404, message='BANG')
-        cc.keypair_find.side_effect = err
-        profile._computeclient = cc
-        node_obj = mock.Mock(physical_id='SERVER')
-
-        ex = self.assertRaises(exc.EResourceUpdate,
-                               profile._validate_keypair,
-                               node_obj, 'FAKE_KEYNAME', 'update')
-        self.assertEqual("Failed in updating server SERVER: BANG.",
-                         six.text_type(ex))
-        cc.keypair_find.assert_called_once_with('FAKE_KEYNAME', False)
 
     def test__validate_bdm(self):
         profile = server.ServerProfile('t', spec)
@@ -469,26 +471,6 @@ class TestNovaServerValidate(base.SenlinTestCase):
                          " can be specified, not both.",
                          six.text_type(ex))
 
-    def test_do_validate_all_passed(self):
-        profile = server.ServerProfile('t', spec)
-        cc = mock.Mock()
-        cc.validate_azs.return_value = ['FAKE_AZ']
-        x_flavor = mock.Mock(is_disabled=False, id='FLAV')
-        cc.flavor_find.return_value = x_flavor
-        x_image = mock.Mock()
-        cc.image_find.return_value = x_image
-        x_key = mock.Mock()
-        cc.keypair_find.return_value = x_key
-        profile._computeclient = cc
-
-        res = profile.do_validate(mock.Mock())
-
-        self.assertTrue(res)
-        cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
-        cc.flavor_find.assert_called_once_with('FLAV', False)
-        cc.image_find.assert_called_once_with('FAKE_IMAGE', False)
-        cc.keypair_find.assert_called_once_with('FAKE_KEYNAME', False)
-
     def test__validate_network(self):
         nc = mock.Mock()
         nc.network_get.return_value = mock.Mock(id='NET_ID')
@@ -526,3 +508,23 @@ class TestNovaServerValidate(base.SenlinTestCase):
         self.assertEqual('Failed in creating server: BOOM.',
                          six.text_type(ex))
         nc.network_get.assert_called_once_with('NET_NAME')
+
+    def test_do_validate_all_passed(self):
+        profile = server.ServerProfile('t', spec)
+        cc = mock.Mock()
+        cc.validate_azs.return_value = ['FAKE_AZ']
+        x_flavor = mock.Mock(is_disabled=False, id='FLAV')
+        cc.flavor_find.return_value = x_flavor
+        x_image = mock.Mock()
+        cc.image_find.return_value = x_image
+        x_key = mock.Mock()
+        cc.keypair_find.return_value = x_key
+        profile._computeclient = cc
+
+        res = profile.do_validate(mock.Mock())
+
+        self.assertTrue(res)
+        cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
+        cc.flavor_find.assert_called_once_with('FLAV', False)
+        cc.image_find.assert_called_once_with('FAKE_IMAGE', False)
+        cc.keypair_find.assert_called_once_with('FAKE_KEYNAME', False)
