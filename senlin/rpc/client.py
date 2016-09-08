@@ -338,6 +338,11 @@ class EngineClient(object):
         return rpc_method(ctxt, self.make_msg('receiver_delete',
                                               identity=identity))
 
+    def receiver_notify(self, ctxt, identity, params=None):
+        return self.call(ctxt,
+                         self.make_msg('receiver_notify', identity=identity,
+                                       params=params))
+
     def webhook_trigger(self, ctxt, identity, params=None):
         return self.call(ctxt,
                          self.make_msg('webhook_trigger', identity=identity,

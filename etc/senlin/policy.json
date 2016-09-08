@@ -41,6 +41,7 @@
     "receivers:create": "",
     "receivers:get": "",
     "receivers:delete": "",
+    "receivers:notify": "",
     "actions:index": "",
     "actions:get": "",
     "events:index": "",

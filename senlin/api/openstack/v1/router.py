@@ -254,6 +254,10 @@ class API(wsgi.Router):
                                "/receivers/{receiver_id}",
                                action="delete",
                                conditions={'method': 'DELETE'})
+            sub_mapper.connect("receiver_notify",
+                               "/receivers/{receiver_id}/notify",
+                               action="notify",
+                               conditions={'method': 'POST'})
 
         # Webhooks
         res = wsgi.Resource(webhooks.WebhookController(conf))

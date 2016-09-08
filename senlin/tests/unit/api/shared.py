@@ -94,7 +94,7 @@ class ControllerTest(object):
         self.context = req.context
         ver = version if version else wsgi.DEFAULT_API_VERSION
         req.version_request = vr.APIVersionRequest(ver)
-        req.body = encodeutils.safe_encode(data)
+        req.body = encodeutils.safe_encode(data) if data else None
         return req
 
     def _post(self, path, data, content_type='application/json', version=None):
