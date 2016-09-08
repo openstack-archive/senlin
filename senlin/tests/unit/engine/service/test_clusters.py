@@ -645,7 +645,7 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_delete(self, notify, mock_find, mock_policies,
                             mock_receivers, mock_action):
-        x_obj = mock.Mock(id='12345678AB', status='ACTIVE')
+        x_obj = mock.Mock(id='12345678AB', status='ACTIVE', dependents={})
         mock_find.return_value = x_obj
         mock_policies.return_value = []
         mock_receivers.return_value = []
@@ -665,6 +665,20 @@ class ClusterTest(base.SenlinTestCase):
             status=am.Action.READY)
 
         notify.assert_called_once_with()
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_delete_contain_container(self, mock_find):
+        dependents = {'containers': ['container1']}
+        cluster = mock.Mock(id='cluster1', status='ACTIVE',
+                            dependents=dependents)
+        mock_find.return_value = cluster
+        identity = mock.Mock()
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_delete,
+                               self.ctx, identity)
+        msg = _('The host_cluster (cluster1) is still in use.')
+        self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
+        self.assertEqual(msg, six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_delete_not_found(self, mock_find):
@@ -697,7 +711,7 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_delete_policy_attached(self, mock_find, mock_policies):
-        x_obj = mock.Mock(id='12345678AB')
+        x_obj = mock.Mock(id='12345678AB', dependents={})
         mock_find.return_value = x_obj
         mock_policies.return_value = [mock.Mock()]
 
@@ -717,7 +731,7 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_delete_with_receiver(self, mock_find, mock_policies,
                                           mock_receivers):
-        x_obj = mock.Mock(id='12345678AB')
+        x_obj = mock.Mock(id='12345678AB', dependents={})
         mock_find.return_value = x_obj
         mock_policies.return_value = []
         mock_receivers.return_value = [mock.Mock()]

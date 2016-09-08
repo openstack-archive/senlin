@@ -954,6 +954,11 @@ class EngineService(service.Service):
             raise exception.ActionInProgress(type='cluster', id=identity,
                                              status=cluster.status)
 
+        containers = cluster.dependents.get('containers', None)
+        if containers is not None and len(containers) > 0:
+            raise exception.ResourceInUse(resource_type='host_cluster',
+                                          resource_id=cluster.id)
+
         policies = cp_obj.ClusterPolicy.get_all(context, cluster.id)
         if len(policies) > 0:
             msg = _('Cluster %(id)s cannot be deleted without having all '
@@ -1659,6 +1664,11 @@ class EngineService(service.Service):
                            node_mod.Node.DELETING, node_mod.Node.RECOVERING]:
             raise exception.ActionInProgress(type='node', id=identity,
                                              status=node.status)
+
+        containers = node.dependents.get('containers', None)
+        if containers is not None and len(containers) > 0:
+            raise exception.ResourceInUse(resource_type='host_node',
+                                          resource_id=node.id)
 
         params = {
             'name': 'node_delete_%s' % node.id[:8],

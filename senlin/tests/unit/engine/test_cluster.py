@@ -380,6 +380,15 @@ class TestCluster(base.SenlinTestCase):
         mock_update.assert_called_once_with(self.context, CLUSTER_ID,
                                             {'status': cluster.WARNING})
 
+    @mock.patch.object(co.Cluster, 'update')
+    def test_update_dependents(self, mock_update):
+        cluster = cb.Cluster('test-cluster', 0, PROFILE_ID,
+                             id=CLUSTER_ID, status='ACTIVE')
+        dependents = {'containers': ['container1']}
+        cluster.update_dependents(self.context, dependents)
+        values = {'dependents': {'containers': ['container1']}}
+        mock_update.assert_called_once_with(self.context, CLUSTER_ID, values)
+
     def test_do_create(self):
         cluster = cb.Cluster('test-cluster', 0, PROFILE_ID)
         mock_status = self.patchobject(cluster, 'set_status')
