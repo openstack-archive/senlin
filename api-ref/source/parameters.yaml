@@ -156,7 +156,7 @@ global_project:
     returns only resources in the current project.
 
 limit:
-  type: int
+  type: integer
   in: query
   description: |
     Requests a page size of resources. Returns a number of resources up to the
