@@ -175,12 +175,15 @@ function install_senlin_dashboard {
 function config_senlin_dashboard {
     # Install Senlin Dashboard as plugin for Horizon
     ln -sf $SENLIN_DASHBOARD_DIR/_50_senlin.py.example $HORIZON_DIR/openstack_dashboard/local/enabled/_50_senlin.py
+    # Enable senlin policy
+    ln -sf $SENLIN_DASHBOARD_DIR/senlin_dashboard/conf/senlin_policy.json $HORIZON_DIR/openstack_dashboard/conf/senlin_policy.json
 }
 
 # cleanup_senlin_dashboard() - Remove residual data files, anything left over from previous
 # runs that a clean run would need to clean up
 function cleanup_senlin_dashboard {
     sudo rm -rf $HORIZON_DIR/openstack_dashboard/local/enabled/_50_senlin.py
+    sudo rm -rf $HORIZON_DIR/openstack_dashboard/conf/senlin_policy.json
 }
 
 # install_senlin() - Collect source and prepare
