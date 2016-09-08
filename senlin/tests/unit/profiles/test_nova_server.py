@@ -551,6 +551,37 @@ class TestNovaServerProfile(base.SenlinTestCase):
                          six.text_type(ex))
         nc.network_get.assert_called_once_with('NET_NAME')
 
+    def test__build_metadata(self):
+        obj = mock.Mock(id='NODE_ID', cluster_id='')
+        profile = server.ServerProfile('t', self.spec)
+
+        res = profile._build_metadata(obj, None)
+
+        self.assertEqual({'cluster_node_id': 'NODE_ID'}, res)
+
+    def test__build_metadata_with_inputs(self):
+        obj = mock.Mock(id='NODE_ID', cluster_id='')
+        profile = server.ServerProfile('t', self.spec)
+
+        res = profile._build_metadata(obj, {'foo': 'bar'})
+
+        self.assertEqual({'cluster_node_id': 'NODE_ID', 'foo': 'bar'}, res)
+
+    def test__build_metadata_for_cluster_node(self):
+        obj = mock.Mock(id='NODE_ID', cluster_id='CLUSTER_ID', index=123)
+        profile = server.ServerProfile('t', self.spec)
+
+        res = profile._build_metadata(obj, None)
+
+        self.assertEqual(
+            {
+                'cluster_id': 'CLUSTER_ID',
+                'cluster_node_id': 'NODE_ID',
+                'cluster_node_index': '123'
+            },
+            res
+        )
+
     def _stubout_profile(self, profile, mock_image=False, mock_flavor=False,
                          mock_keypair=False, mock_bdm=False, mock_net=False):
         if mock_image:
@@ -782,7 +813,7 @@ class TestNovaServerProfile(base.SenlinTestCase):
         self._stubout_profile(profile, mock_image=True, mock_flavor=True,
                               mock_keypair=True, mock_bdm=True, mock_net=True)
 
-        node_obj = mock.Mock(id='FAKE_NODE_ID', cluster_id=None, data={},
+        node_obj = mock.Mock(id='FAKE_NODE_ID', cluster_id='', data={},
                              index=None)
         node_obj.name = None
         cc.server_create.return_value = mock.Mock(id='FAKE_ID')
@@ -988,187 +1019,404 @@ class TestNovaServerProfile(base.SenlinTestCase):
         cc.server_delete.assert_called_once_with('FAKE_ID', True)
         cc.wait_for_server_delete.assert_called_once_with('FAKE_ID')
 
-    def test__update_basic_properties_ok(self):
-        obj = mock.Mock()
+    def test__update_name(self):
+        obj = mock.Mock(physical_id='PHY_ID')
         cc = mock.Mock()
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = cc
-        profile.server_id = 'FAKE_ID'
-        new_spec = copy.deepcopy(self.spec)
-        new_spec['properties']['name'] = 'TEST_SERVER'
-        new_spec['properties']['metadata'] = {'new_key': 'new_value'}
-        new_profile = server.ServerProfile('t', new_spec)
-
-        res = profile._update_basic_properties(obj, new_profile)
-
-        self.assertIsNone(res)
-        cc.server_metadata_update.assert_called_once_with(
-            'FAKE_ID', {'new_key': 'new_value'})
-        cc.server_update.assert_called_once_with('FAKE_ID', name='TEST_SERVER')
-
-    def test__update_basic_properties_nothing_changed(self):
-        obj = mock.Mock()
-        cc = mock.Mock()
-        profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = cc
-        profile.server_id = 'FAKE_ID'
-        new_spec = copy.deepcopy(self.spec)
-        new_profile = server.ServerProfile('t', new_spec)
-
-        res = profile._update_basic_properties(obj, new_profile)
-
-        self.assertIsNone(res)
-        self.assertEqual(0, cc.server_metadata_update.call_count)
-        self.assertEqual(0, cc.server_update.call_count)
-
-    def test___update_basic_properties_update_metadata_failed(self):
-        ex = exc.InternalError(code=500, message='Nova Error')
-
-        obj = mock.Mock()
-        profile = server.ServerProfile('t', self.spec)
-        profile.server_id = 'FAKE_ID'
-        cc = mock.Mock()
-        cc.server_metadata_update.side_effect = ex
-        profile._computeclient = cc
-        new_spec = copy.deepcopy(self.spec)
-        new_spec['properties']['metadata'] = {'new_key': 'new_value'}
-        new_profile = server.ServerProfile('t', new_spec)
-
-        ex = self.assertRaises(exc.InternalError,
-                               profile._update_basic_properties,
-                               obj, new_profile)
-
-        self.assertEqual('Nova Error', six.text_type(ex))
-        cc.server_metadata_update.assert_called_once_with(
-            'FAKE_ID', {'new_key': 'new_value'})
-
-    def test__update_basic_properties_update_name_failed(self):
-        cc = mock.Mock()
-        err = exc.InternalError(code=500, message='Nova Error')
-        cc.server_update.side_effect = err
-        obj = mock.Mock()
-        profile = server.ServerProfile('t', self.spec)
-        profile.server_id = 'FAKE_ID'
-        profile._computeclient = cc
-        # new profile with new name
         new_spec = copy.deepcopy(self.spec)
         new_spec['properties']['name'] = 'TEST_SERVER'
         new_profile = server.ServerProfile('t', new_spec)
 
-        ex = self.assertRaises(exc.InternalError,
-                               profile._update_basic_properties,
-                               obj, new_profile)
+        res = profile._update_name(obj, new_profile)
 
-        self.assertEqual('Nova Error', six.text_type(ex))
-        cc.server_update.assert_called_once_with(
-            'FAKE_ID', name='TEST_SERVER')
-        self.assertEqual(0, cc.server_metadata_update.call_count)
+        self.assertIsNone(res)
+        cc.server_update.assert_called_once_with('PHY_ID', name='TEST_SERVER')
 
-    def test__update_basic_properties_name_to_none(self):
-        obj = mock.Mock()
-        obj.name = 'FAKE_OBJ_NAME'
-
+    def test__update_name_to_None(self):
+        obj = mock.Mock(physical_id='PHY_ID')
+        obj.name = 'NODE_NAME'
         cc = mock.Mock()
         profile = server.ServerProfile('t', self.spec)
-        profile.server_id = 'FAKE_ID'
         profile._computeclient = cc
-        # new spec with name deleted
         new_spec = copy.deepcopy(self.spec)
         del new_spec['properties']['name']
         new_profile = server.ServerProfile('t', new_spec)
 
-        res = profile._update_basic_properties(obj, new_profile)
+        res = profile._update_name(obj, new_profile)
 
         self.assertIsNone(res)
-        cc.server_update.assert_called_once_with(
-            'FAKE_ID', name='FAKE_OBJ_NAME')
+        cc.server_update.assert_called_once_with('PHY_ID', name='NODE_NAME')
 
-    def test__update_basic_properties_metadata_to_none(self):
-        obj = mock.Mock()
+    def test__update_name_no_change(self):
+        obj = mock.Mock(physical_id='PHY_ID')
         cc = mock.Mock()
         profile = server.ServerProfile('t', self.spec)
-        profile.server_id = 'FAKE_ID'
         profile._computeclient = cc
-        # new profile with metadata removed
         new_spec = copy.deepcopy(self.spec)
-        del new_spec['properties']['metadata']
         new_profile = server.ServerProfile('t', new_spec)
 
-        res = profile._update_basic_properties(obj, new_profile)
+        res = profile._update_name(obj, new_profile)
+
+        self.assertIsNone(res)
+        self.assertEqual(0, cc.server_update.call_count)
+
+    def test__update_name_nova_failure(self):
+        obj = mock.Mock(physical_id='PHY_ID')
+        obj.name = 'NODE_NAME'
+        cc = mock.Mock()
+        cc.server_update.side_effect = exc.InternalError(message='BOOM')
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['name'] = 'TEST_SERVER'
+        new_profile = server.ServerProfile('t', new_spec)
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_name,
+                               obj, new_profile)
+
+        self.assertEqual('Failed in updating server PHY_ID: BOOM.',
+                         six.text_type(ex))
+        cc.server_update.assert_called_once_with('PHY_ID', name='TEST_SERVER')
+
+    def test__update_metadata(self):
+        obj = mock.Mock(id='NODE_ID', physical_id='NOVA_ID',
+                        cluster_id='CLUSTER_ID', index=456)
+        cc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['metadata'] = {'new_key': 'new_value'}
+        new_profile = server.ServerProfile('t', new_spec)
+
+        res = profile._update_metadata(obj, new_profile)
 
         self.assertIsNone(res)
         cc.server_metadata_update.assert_called_once_with(
-            'FAKE_ID', {})
+            'NOVA_ID',
+            {
+                'new_key': 'new_value',
+                'cluster_node_id': 'NODE_ID',
+                'cluster_id': 'CLUSTER_ID',
+                'cluster_node_index': '456',
+            }
+        )
 
-    @mock.patch.object(server.ServerProfile, '_update_network')
-    def test_do_update_network_successful_no_definition_overlap(
-            self, mock_update_network):
-
-        mock_update_network.return_value = True
+    def test___update_metadata_no_change(self):
+        obj = mock.Mock(id='NODE_ID')
         profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = mock.Mock()
-
-        obj = mock.Mock()
-        obj.physical_id = 'FAKE_ID'
-
-        networks_delete = [{
-            'port': 'FAKE_PORT',
-            'fixed-ip': 'FAKE_IP',
-            'network': 'FAKE_NET',
-        }]
-        new_networks = [{
-            'port': 'FAKE_PORT_NEW',
-            'fixed-ip': 'FAKE_IP_NEW',
-            'network': 'FAKE_NET_NEW',
-        }]
+        cc = mock.Mock()
+        profile._computeclient = cc
         new_spec = copy.deepcopy(self.spec)
-        new_spec['properties']['networks'] = new_networks
         new_profile = server.ServerProfile('t', new_spec)
 
-        res = profile.do_update(obj, new_profile)
-        self.assertTrue(res)
-        mock_update_network.assert_called_with(obj, new_networks,
-                                               networks_delete)
+        res = profile._update_metadata(obj, new_profile)
 
-    @mock.patch.object(server.ServerProfile, '_update_network')
-    def test_do_update_network_successful_definition_overlap(
-            self, mock_update_network):
+        self.assertIsNone(res)
+        self.assertEqual(0, cc.server_metadata_update.call_count)
 
-        mock_update_network.return_value = True
+    def test__update_metadata_nova_failure(self):
+        obj = mock.Mock(id='NODE_ID', physical_id='NOVA_ID', cluster_id='')
+        err = exc.InternalError(code=500, message='Nova Error')
+        cc = mock.Mock()
+        cc.server_metadata_update.side_effect = err
         profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = mock.Mock()
+        profile._computeclient = cc
 
-        obj = mock.Mock()
-        obj.physical_id = 'FAKE_ID'
-
-        networks_delete = [{
-            'port': 'FAKE_PORT',
-            'fixed-ip': 'FAKE_IP',
-            'network': 'FAKE_NET',
-        }]
-        new_networks = [{
-            'port': 'FAKE_PORT_NEW',
-            'fixed-ip': 'FAKE_IP_NEW',
-            'network': 'FAKE_NET_NEW',
-        }]
+        # new profile with new metadata
         new_spec = copy.deepcopy(self.spec)
-        new_spec['properties']['networks'] = [new_networks[0],
-                                              networks_delete[0]]
+        new_spec['properties']['metadata'] = {'fooa': 'baaar'}
         new_profile = server.ServerProfile('t', new_spec)
 
-        res = profile.do_update(obj, new_profile)
-        self.assertTrue(res)
-        mock_update_network.assert_called_with(obj, new_networks, [])
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_metadata,
+                               obj, new_profile)
 
-    def test_do_update_without_profile(self):
+        self.assertEqual('Failed in updating server NOVA_ID: Nova Error.',
+                         six.text_type(ex))
+        cc.server_metadata_update.assert_called_once_with(
+            'NOVA_ID', {'fooa': 'baaar', 'cluster_node_id': 'NODE_ID'}
+        )
+
+    def test__update_flavor(self):
+        obj = mock.Mock(physical_id='NOVA_ID')
+        cc = mock.Mock()
         profile = server.ServerProfile('t', self.spec)
-        obj = mock.Mock()
-        obj.physical_id = 'FAKE_ID'
-        new_profile = None
-        res = profile.do_update(obj, new_profile)
-        self.assertFalse(res)
+        profile._computeclient = cc
+        x_flavors = [mock.Mock(id='123'), mock.Mock(id='456')]
+        mock_validate = self.patchobject(profile, '_validate_flavor',
+                                         side_effect=x_flavors)
 
-    def test_update_network(self):
+        profile._update_flavor(obj, 'old_flavor', 'new_flavor')
+
+        mock_validate.assert_has_calls([
+            mock.call(obj, 'old_flavor', 'update'),
+            mock.call(obj, 'new_flavor', 'update')
+        ])
+        cc.server_resize.assert_called_once_with('NOVA_ID', '456')
+        cc.server_resize_confirm.assert_called_once_with('NOVA_ID')
+        cc.wait_for_server.has_calls([
+            mock.call('NOVA_ID', 'VERIFY_RESIZE'),
+            mock.call('NOVA_ID', 'ACTIVE')])
+
+    def test__update_flavor_failed_validation(self):
+        obj = mock.Mock(physical_id='NOVA_ID')
+        cc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        err = exc.EResourceUpdate(type='server', id='NOVA_ID', message='BOOM')
+        mock_validate = self.patchobject(profile, '_validate_flavor',
+                                         side_effect=err)
+
+        self.assertRaises(exc.EResourceUpdate,
+                          profile._update_flavor,
+                          obj, 'old_flavor', 'new_flavor')
+
+        mock_validate.assert_called_once_with(obj, 'old_flavor', 'update')
+
+    def test__update_flavor_failed_validation_2(self):
+        obj = mock.Mock(physical_id='NOVA_ID')
+        cc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        result = [
+            mock.Mock(),
+            exc.EResourceUpdate(type='server', id='NOVA_ID', message='BOOM')
+        ]
+        mock_validate = self.patchobject(profile, '_validate_flavor',
+                                         side_effect=result)
+
+        self.assertRaises(exc.EResourceUpdate,
+                          profile._update_flavor,
+                          obj, 'old_flavor', 'new_flavor')
+
+        mock_validate.assert_has_calls([
+            mock.call(obj, 'old_flavor', 'update'),
+            mock.call(obj, 'new_flavor', 'update'),
+        ])
+
+    def test__update_flavor_same(self):
+        obj = mock.Mock(physical_id='NOVA_ID')
+        cc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        x_flavors = [mock.Mock(id=123), mock.Mock(id=123)]
+        mock_validate = self.patchobject(profile, '_validate_flavor',
+                                         side_effect=x_flavors)
+
+        res = profile._update_flavor(obj, 'old_flavor', 'new_flavor')
+
+        self.assertIsNone(res)
+        mock_validate.assert_has_calls([
+            mock.call(obj, 'old_flavor', 'update'),
+            mock.call(obj, 'new_flavor', 'update'),
+        ])
+        self.assertEqual(0, cc.server_resize.call_count)
+
+    def test__update_flavor_resize_failed(self):
+        obj = mock.Mock(physical_id='NOVA_ID')
+        cc = mock.Mock()
+        cc.server_resize.side_effect = [
+            exc.InternalError(code=500, message='Resize failed')]
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        x_flavors = [mock.Mock(id='123'), mock.Mock(id='456')]
+        mock_validate = self.patchobject(profile, '_validate_flavor',
+                                         side_effect=x_flavors)
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_flavor,
+                               obj, 'old_flavor', 'new_flavor')
+
+        mock_validate.assert_has_calls([
+            mock.call(obj, 'old_flavor', 'update'),
+            mock.call(obj, 'new_flavor', 'update'),
+        ])
+        cc.server_resize.assert_called_once_with('NOVA_ID', '456')
+        cc.server_resize_revert.assert_called_once_with('NOVA_ID')
+        cc.wait_for_server.assert_called_once_with('NOVA_ID', 'ACTIVE')
+        self.assertEqual('Failed in updating server NOVA_ID: Resize failed.',
+                         six.text_type(ex))
+
+    def test__update_flavor_first_wait_for_server_failed(self):
+        obj = mock.Mock(physical_id='NOVA_ID')
+        cc = mock.Mock()
+        cc.wait_for_server.side_effect = [
+            exc.InternalError(code=500, message='TIMEOUT'),
+            None
+        ]
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        x_flavors = [mock.Mock(id='123'), mock.Mock(id='456')]
+        mock_validate = self.patchobject(profile, '_validate_flavor',
+                                         side_effect=x_flavors)
+        # do it
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_flavor,
+                               obj, 'old_flavor', 'new_flavor')
+
+        # assertions
+        mock_validate.assert_has_calls([
+            mock.call(obj, 'old_flavor', 'update'),
+            mock.call(obj, 'new_flavor', 'update'),
+        ])
+        cc.server_resize.assert_called_once_with('NOVA_ID', '456')
+        cc.wait_for_server.has_calls([
+            mock.call('NOVA_ID', 'VERIFY_RESIZE'),
+            mock.call('NOVA_ID', 'ACTIVE')])
+        cc.server_resize_revert.assert_called_once_with('NOVA_ID')
+        self.assertEqual('Failed in updating server NOVA_ID: TIMEOUT.',
+                         six.text_type(ex))
+
+    def test__update_flavor_resize_failed_revert_failed(self):
+        obj = mock.Mock(physical_id='NOVA_ID')
+        cc = mock.Mock()
+        err_resize = exc.InternalError(code=500, message='Resize')
+        cc.server_resize.side_effect = err_resize
+        err_revert = exc.InternalError(code=500, message='Revert')
+        cc.server_resize_revert.side_effect = err_revert
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        x_flavors = [mock.Mock(id='123'), mock.Mock(id='456')]
+        mock_validate = self.patchobject(profile, '_validate_flavor',
+                                         side_effect=x_flavors)
+
+        # do it
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_flavor,
+                               obj, 'old_flavor', 'new_flavor')
+
+        # assertions
+        mock_validate.assert_has_calls([
+            mock.call(obj, 'old_flavor', 'update'),
+            mock.call(obj, 'new_flavor', 'update'),
+        ])
+        cc.server_resize.assert_called_once_with('NOVA_ID', '456')
+        cc.server_resize_revert.assert_called_once_with('NOVA_ID')
+        # the wait_for_server wasn't called
+        self.assertEqual(0, cc.wait_for_server.call_count)
+        self.assertEqual('Failed in updating server NOVA_ID: Revert.',
+                         six.text_type(ex))
+
+    def test__update_flavor_confirm_failed(self):
+        obj = mock.Mock(physical_id='NOVA_ID')
+        cc = mock.Mock()
+        err_confirm = exc.InternalError(code=500, message='Confirm')
+        cc.server_resize_confirm.side_effect = err_confirm
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        x_flavors = [mock.Mock(id='123'), mock.Mock(id='456')]
+        mock_validate = self.patchobject(profile, '_validate_flavor',
+                                         side_effect=x_flavors)
+
+        # do it
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_flavor,
+                               obj, 'old_flavor', 'new_flavor')
+
+        # assertions
+        mock_validate.assert_has_calls([
+            mock.call(obj, 'old_flavor', 'update'),
+            mock.call(obj, 'new_flavor', 'update'),
+        ])
+        cc.server_resize.assert_called_once_with('NOVA_ID', '456')
+        cc.server_resize_confirm.assert_called_once_with('NOVA_ID')
+        cc.wait_for_server.assert_called_once_with('NOVA_ID', 'VERIFY_RESIZE')
+        self.assertEqual('Failed in updating server NOVA_ID: Confirm.',
+                         six.text_type(ex))
+
+    def test__update_flavor_wait_confirm_failed(self):
+        obj = mock.Mock(physical_id='NOVA_ID')
+        cc = mock.Mock()
+        err_wait = exc.InternalError(code=500, message='Wait')
+        cc.wait_for_server.side_effect = [None, err_wait]
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        x_flavors = [mock.Mock(id='123'), mock.Mock(id='456')]
+        mock_validate = self.patchobject(profile, '_validate_flavor',
+                                         side_effect=x_flavors)
+
+        # do it
+        ex = self.assertRaises(exc.InternalError,
+                               profile._update_flavor,
+                               obj, 'old_flavor', 'new_flavor')
+
+        # assertions
+        mock_validate.assert_has_calls([
+            mock.call(obj, 'old_flavor', 'update'),
+            mock.call(obj, 'new_flavor', 'update'),
+        ])
+        cc.server_resize.assert_called_once_with('NOVA_ID', '456')
+        cc.server_resize_confirm.assert_called_once_with('NOVA_ID')
+        cc.wait_for_server.assert_has_calls([
+            mock.call('NOVA_ID', 'VERIFY_RESIZE'),
+            mock.call('NOVA_ID', 'ACTIVE')
+        ])
+        self.assertEqual('Failed in updating server NOVA_ID: Wait.',
+                         six.text_type(ex))
+
+    def test__update_image(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        mock_old_image = mock.Mock(id='123')
+        mock_new_image = mock.Mock(id='456')
+        cc = mock.Mock()
+        cc.image_find.side_effect = [mock_old_image, mock_new_image]
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        profile._update_image(obj, 'old_image', 'new_image', 'adminpass')
+        cc.image_find.has_calls([
+            mock.call('old_image'), mock.call('new_image')
+        ])
+        cc.server_rebuild.assert_called_once_with('FAKE_ID', '456',
+                                                  'FAKE_SERVER_NAME',
+                                                  'adminpass')
+        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
+
+    def test__update_image_old_image_is_none(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        cc = mock.Mock()
+        mock_server = mock.Mock()
+        mock_server.image = {
+            'id': '123',
+            'link': {
+                'href': 'http://openstack.example.com/openstack/images/123',
+                'rel': 'bookmark'
+            }
+        }
+        cc.server_get.return_value = mock_server
+        mock_image = mock.Mock(id='456')
+        cc.image_find.return_value = mock_image
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        profile._update_image(obj, None, 'new_image', 'adminpass')
+        cc.image_find.assert_called_once_with('new_image')
+        cc.server_get.assert_called_once_with('FAKE_ID')
+        cc.server_rebuild.assert_called_once_with('FAKE_ID', '456',
+                                                  'FAKE_SERVER_NAME',
+                                                  'adminpass')
+        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
+
+    def test__update_image_new_image_is_none(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        cc = mock.Mock()
+        mock_image = mock.Mock(id='123')
+        cc.image_find.return_value = mock_image
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        ex = self.assertRaises(exc.InternalError,
+                               profile._update_image,
+                               obj, 'old_image', None, 'adminpass')
+        msg = ("Updating Nova server with image set to None is not "
+               "supported by Nova.")
+        self.assertEqual(msg, six.text_type(ex))
+        cc.image_find.assert_called_once_with('old_image')
+
+    def test__update_network(self):
         obj = mock.Mock(physical_id='FAKE_ID')
         cc = mock.Mock()
         nc = mock.Mock()
@@ -1223,8 +1471,10 @@ class TestNovaServerProfile(base.SenlinTestCase):
         ]
         cc.server_interface_create.assert_has_calls(calls)
 
+    @mock.patch.object(server.ServerProfile, '_update_flavor')
     @mock.patch.object(server.ServerProfile, '_update_image')
-    def test_do_update_image_succeeded(self, mock_update_image):
+    def test_do_update_image_succeeded(self, mock_update_image,
+                                       mock_update_flavor):
         obj = mock.Mock()
         obj.physical_id = 'FAKE_ID'
 
@@ -1242,10 +1492,11 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
     # TODO(Yanyan Hu): remove this mock after admin_pass update
     # is completely supported.
+    @mock.patch.object(server.ServerProfile, '_update_flavor')
     @mock.patch.object(profiles_base.Profile, 'validate_for_update')
     @mock.patch.object(server.ServerProfile, '_update_image')
     def test_do_update_image_with_passwd(self, mock_update_image,
-                                         mock_validate):
+                                         mock_validate, mock_update_flavor):
         obj = mock.Mock(physical_id='FAKE_ID')
         mock_validate.return_value = True
         profile = server.ServerProfile('t', self.spec)
@@ -1269,8 +1520,12 @@ class TestNovaServerProfile(base.SenlinTestCase):
                                              'FAKE_IMAGE_NEW',
                                              'adminpass')
 
+    @mock.patch.object(server.ServerProfile, '_update_flavor')
+    @mock.patch.object(server.ServerProfile, '_update_name')
+    @mock.patch.object(server.ServerProfile, '_update_metadata')
     @mock.patch.object(server.ServerProfile, '_update_image')
-    def test_do_update_image_failed(self, mock_update_image):
+    def test_do_update_image_failed(self, mock_update_image, mock_update_meta,
+                                    mock_update_name, mock_update_flavor):
         ex = exc.InternalError(code=404, message='Image Not Found')
         mock_update_image.side_effect = ex
         obj = mock.Mock(physical_id='FAKE_ID')
@@ -1305,9 +1560,10 @@ class TestNovaServerProfile(base.SenlinTestCase):
 
     @mock.patch.object(server.ServerProfile, '_update_flavor')
     def test_do_update__update_flavor_failed(self, mock_update_flavor):
-        ex = exc.InternalError(code=404, message='Flavor Not Found')
+        ex = exc.EResourceUpdate(type='server', id='NOVA_ID',
+                                 message='Flavor Not Found')
         mock_update_flavor.side_effect = ex
-        obj = mock.Mock(physical_id='FAKE_ID')
+        obj = mock.Mock(physical_id='NOVA_ID')
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = mock.Mock()
         new_spec = copy.deepcopy(self.spec)
@@ -1319,199 +1575,78 @@ class TestNovaServerProfile(base.SenlinTestCase):
                                obj, new_profile)
 
         mock_update_flavor.assert_called_with(obj, 'FLAV', 'FAKE_FLAVOR_NEW')
-        self.assertEqual('Failed in updating server FAKE_ID: '
+        self.assertEqual('Failed in updating server NOVA_ID: '
                          'Flavor Not Found.',
                          six.text_type(ex))
 
-    def test__update_flavor(self):
-        obj = mock.Mock(physical_id='FAKE_ID')
-        cc = mock.Mock()
-        cc.flavor_find.side_effect = [
-            mock.Mock(id='123'), mock.Mock(id='456')]
+    @mock.patch.object(server.ServerProfile, '_update_flavor')
+    @mock.patch.object(server.ServerProfile, '_update_network')
+    def test_do_update_network_successful_no_definition_overlap(
+            self, mock_update_network, mock_update_flavor):
+        mock_update_network.return_value = True
         profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = cc
+        profile._computeclient = mock.Mock()
 
-        profile._update_flavor(obj, 'old_flavor', 'new_flavor')
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
 
-        cc.flavor_find.has_calls(
-            [mock.call('old_flavor'), mock.call('new_flavor')])
-        cc.server_resize.assert_called_once_with('FAKE_ID', '456')
-        cc.wait_for_server.has_calls([
-            mock.call('FAKE_ID', 'VERIFY_RESIZE'),
-            mock.call('FAKE_ID', 'ACTIVE')])
-        cc.server_resize_confirm.assert_called_once_with('FAKE_ID')
+        networks_delete = [{
+            'port': 'FAKE_PORT',
+            'fixed-ip': 'FAKE_IP',
+            'network': 'FAKE_NET',
+        }]
+        new_networks = [{
+            'port': 'FAKE_PORT_NEW',
+            'fixed-ip': 'FAKE_IP_NEW',
+            'network': 'FAKE_NET_NEW',
+        }]
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['networks'] = new_networks
+        new_profile = server.ServerProfile('t', new_spec)
 
-    def test__update_flavor_resize_failed(self):
-        obj = mock.Mock(physical_id='FAKE_ID')
-        cc = mock.Mock()
-        cc.flavor_find.side_effect = [
-            mock.Mock(id='123'), mock.Mock(id='456')]
-        cc.server_resize.side_effect = [
-            exc.InternalError(code=500, message='Resize failed')]
+        res = profile.do_update(obj, new_profile)
+        self.assertTrue(res)
+        mock_update_network.assert_called_with(obj, new_networks,
+                                               networks_delete)
+
+    @mock.patch.object(server.ServerProfile, '_update_flavor')
+    @mock.patch.object(server.ServerProfile, '_update_network')
+    def test_do_update_network_successful_definition_overlap(
+            self, mock_update_network, mock_update_flavor):
+
+        mock_update_network.return_value = True
         profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = cc
+        profile._computeclient = mock.Mock()
 
-        ex = self.assertRaises(exc.InternalError,
-                               profile._update_flavor,
-                               obj, 'old_flavor', 'new_flavor')
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
 
-        cc.server_resize.assert_called_once_with('FAKE_ID', '456')
-        cc.server_resize_revert.assert_called_once_with('FAKE_ID')
-        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
-        self.assertEqual('Resize failed', six.text_type(ex))
+        networks_delete = [{
+            'port': 'FAKE_PORT',
+            'fixed-ip': 'FAKE_IP',
+            'network': 'FAKE_NET',
+        }]
+        new_networks = [{
+            'port': 'FAKE_PORT_NEW',
+            'fixed-ip': 'FAKE_IP_NEW',
+            'network': 'FAKE_NET_NEW',
+        }]
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['networks'] = [new_networks[0],
+                                              networks_delete[0]]
+        new_profile = server.ServerProfile('t', new_spec)
 
-    def test__update_flavor_first_wait_for_server_failed(self):
-        obj = mock.Mock(physical_id='FAKE_ID')
-        cc = mock.Mock()
-        cc.flavor_find.side_effect = [
-            mock.Mock(id='123'), mock.Mock(id='456')]
-        cc.wait_for_server.side_effect = [
-            exc.InternalError(code=500, message='TIMEOUT'),
-            None
-        ]
+        res = profile.do_update(obj, new_profile)
+        self.assertTrue(res)
+        mock_update_network.assert_called_with(obj, new_networks, [])
+
+    def test_do_update_without_profile(self):
         profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = cc
-
-        # do it
-        ex = self.assertRaises(exc.InternalError,
-                               profile._update_flavor,
-                               obj, 'old_flavor', 'new_flavor')
-
-        # assertions
-        cc.server_resize.assert_called_once_with('FAKE_ID', '456')
-        cc.wait_for_server.has_calls([
-            mock.call('FAKE_ID', 'VERIFY_RESIZE'),
-            mock.call('FAKE_ID', 'ACTIVE')])
-        cc.server_resize_revert.assert_called_once_with('FAKE_ID')
-        self.assertEqual('TIMEOUT', six.text_type(ex))
-
-    def test__update_flavor_resize_failed_revert_failed(self):
-        obj = mock.Mock(physical_id='FAKE_ID')
-        cc = mock.Mock()
-        cc.flavor_find.side_effect = [
-            mock.Mock(id='123'), mock.Mock(id='456')]
-        err_resize = exc.InternalError(code=500, message='Resize')
-        cc.server_resize.side_effect = err_resize
-        err_revert = exc.InternalError(code=500, message='Revert')
-        cc.server_resize_revert.side_effect = err_revert
-        profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = cc
-
-        # do it
-        ex = self.assertRaises(exc.InternalError,
-                               profile._update_flavor,
-                               obj, 'old_flavor', 'new_flavor')
-
-        # assertions
-        cc.server_resize.assert_called_once_with('FAKE_ID', '456')
-        cc.server_resize_revert.assert_called_once_with('FAKE_ID')
-        # the wait_for_server wasn't called
-        self.assertEqual(0, cc.wait_for_server.call_count)
-        self.assertEqual('Revert', six.text_type(ex))
-
-    def test__update_flavor_confirm_failed(self):
-        obj = mock.Mock(physical_id='FAKE_ID')
-        cc = mock.Mock()
-        cc.flavor_find.side_effect = [
-            mock.Mock(id='123'), mock.Mock(id='456')]
-        err_confirm = exc.InternalError(code=500, message='Confirm')
-        cc.server_resize_confirm.side_effect = err_confirm
-        profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = cc
-
-        # do it
-        ex = self.assertRaises(exc.InternalError,
-                               profile._update_flavor,
-                               obj, 'old_flavor', 'new_flavor')
-
-        # assertions
-        cc.server_resize.assert_called_once_with('FAKE_ID', '456')
-        cc.server_resize_confirm.assert_called_once_with('FAKE_ID')
-        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'VERIFY_RESIZE')
-        self.assertEqual('Confirm', six.text_type(ex))
-
-    def test__update_flavor_wait_confirm_failed(self):
-        obj = mock.Mock(physical_id='FAKE_ID')
-        cc = mock.Mock()
-        cc.flavor_find.side_effect = [
-            mock.Mock(id='123'), mock.Mock(id='456')]
-        err_wait = exc.InternalError(code=500, message='Wait')
-        cc.wait_for_server.side_effect = [None, err_wait]
-        profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = cc
-
-        # do it
-        ex = self.assertRaises(exc.InternalError,
-                               profile._update_flavor,
-                               obj, 'old_flavor', 'new_flavor')
-
-        # assertions
-        cc.server_resize.assert_called_once_with('FAKE_ID', '456')
-        cc.server_resize_confirm.assert_called_once_with('FAKE_ID')
-        cc.wait_for_server.assert_has_calls([
-            mock.call('FAKE_ID', 'VERIFY_RESIZE'),
-            mock.call('FAKE_ID', 'ACTIVE')
-        ])
-        self.assertEqual('Wait', six.text_type(ex))
-
-    def test_update_image(self):
-        obj = mock.Mock(physical_id='FAKE_ID')
-        mock_old_image = mock.Mock(id='123')
-        mock_new_image = mock.Mock(id='456')
-        cc = mock.Mock()
-        cc.image_find.side_effect = [mock_old_image, mock_new_image]
-
-        profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = cc
-        profile._update_image(obj, 'old_image', 'new_image', 'adminpass')
-        cc.image_find.has_calls([
-            mock.call('old_image'), mock.call('new_image')
-        ])
-        cc.server_rebuild.assert_called_once_with('FAKE_ID', '456',
-                                                  'FAKE_SERVER_NAME',
-                                                  'adminpass')
-        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
-
-    def test_update_image_old_image_is_none(self):
-        obj = mock.Mock(physical_id='FAKE_ID')
-        cc = mock.Mock()
-        mock_server = mock.Mock()
-        mock_server.image = {
-            'id': '123',
-            'link': {
-                'href': 'http://openstack.example.com/openstack/images/123',
-                'rel': 'bookmark'
-            }
-        }
-        cc.server_get.return_value = mock_server
-        mock_image = mock.Mock(id='456')
-        cc.image_find.return_value = mock_image
-
-        profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = cc
-        profile._update_image(obj, None, 'new_image', 'adminpass')
-        cc.image_find.assert_called_once_with('new_image')
-        cc.server_get.assert_called_once_with('FAKE_ID')
-        cc.server_rebuild.assert_called_once_with('FAKE_ID', '456',
-                                                  'FAKE_SERVER_NAME',
-                                                  'adminpass')
-        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
-
-    def test_update_image_new_image_is_none(self):
-        obj = mock.Mock(physical_id='FAKE_ID')
-        cc = mock.Mock()
-        mock_image = mock.Mock(id='123')
-        cc.image_find.return_value = mock_image
-
-        profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = cc
-        ex = self.assertRaises(exc.InternalError,
-                               profile._update_image,
-                               obj, 'old_image', None, 'adminpass')
-        msg = ("Updating Nova server with image set to None is not "
-               "supported by Nova.")
-        self.assertEqual(msg, six.text_type(ex))
-        cc.image_find.assert_called_once_with('old_image')
+        obj = mock.Mock()
+        obj.physical_id = 'FAKE_ID'
+        new_profile = None
+        res = profile.do_update(obj, new_profile)
+        self.assertFalse(res)
 
     def test_do_update_no_physical_id(self):
         profile = server.ServerProfile('t', self.spec)
