@@ -177,7 +177,7 @@ class ServerProfile(base.Profile):
             updatable=True,
         ),
         NAME: schema.String(
-            _('Name of the server.'),
+            _('Name of the server. When omitted, the node name will be used.'),
             updatable=True,
         ),
         NETWORKS: schema.List(
@@ -420,6 +420,20 @@ class ServerProfile(base.Profile):
                 del network['fixed-ip']
         return networks
 
+    def _build_metadata(self, obj, usermeta):
+        """Build custom metadata for server.
+
+        :param obj: The node object to operate on.
+        :return: A dictionary containing the new metadata.
+        """
+        metadata = usermeta or {}
+        metadata['cluster_node_id'] = obj.id
+        if obj.cluster_id:
+            metadata['cluster_id'] = obj.cluster_id
+            metadata['cluster_node_index'] = six.text_type(obj.index)
+
+        return metadata
+
     def do_create(self, obj):
         """Create a server for the node object.
 
@@ -452,11 +466,7 @@ class ServerProfile(base.Profile):
 
         kwargs['name'] = self.properties[self.NAME] or obj.name
 
-        metadata = self.properties[self.METADATA] or {}
-        metadata['cluster_node_id'] = obj.id
-        if obj.cluster_id:
-            metadata['cluster_id'] = obj.cluster_id
-            metadata['cluster_node_index'] = six.text_type(obj.index)
+        metadata = self._build_metadata(obj, self.properties[self.METADATA])
         kwargs['metadata'] = metadata
 
         self._validate_bdm('create')
@@ -524,105 +534,45 @@ class ServerProfile(base.Profile):
             raise exc.EResourceDeletion(type='server', id=server_id,
                                         message=six.text_type(ex))
 
-    def do_update(self, obj, new_profile=None, **params):
-        """Perform update on the server.
-
-        :param obj: the server to operate on
-        :param new_profile: the new profile for the server.
-        :param params: a dictionary of optional parameters.
-        :returns: True if update was successful or False otherwise.
-        :raises: `EResourceUpdate` if operation fails.
-        """
-        self.server_id = obj.physical_id
-        if not self.server_id:
-            return False
-
-        if not new_profile:
-            return False
-
-        if not self.validate_for_update(new_profile):
-            return False
-
-        # TODO(Yanyan Hu): Update block_device properties
-
-        # Update basic properties of server
-        try:
-            self._update_basic_properties(obj, new_profile)
-        except exc.InternalError as ex:
-            raise exc.EResourceUpdate(type='server', id=self.server_id,
-                                      message=ex.message)
-
-        # Update server flavor
-        flavor = self.properties[self.FLAVOR]
-        new_flavor = new_profile.properties[self.FLAVOR]
-        if new_flavor != flavor:
-            try:
-                self._update_flavor(obj, flavor, new_flavor)
-            except exc.InternalError as ex:
-                raise exc.EResourceUpdate(type='server', id=self.server_id,
-                                          message=ex.message)
-
-        # Update server image
-        old_passwd = self.properties.get(self.ADMIN_PASS)
-        passwd = old_passwd
-        if new_profile.properties[self.ADMIN_PASS] is not None:
-            passwd = new_profile.properties[self.ADMIN_PASS]
-        image = self.properties[self.IMAGE]
-        new_image = new_profile.properties[self.IMAGE]
-        if new_image != image:
-            try:
-                self._update_image(obj, image, new_image, passwd)
-            except exc.InternalError as ex:
-                raise exc.EResourceUpdate(type='server', id=self.server_id,
-                                          message=ex.message)
-
-        elif old_passwd != passwd:
-            # TODO(Jun Xu): update server admin password
-            pass
-
-        # Update server network
-        networks_current = self.properties[self.NETWORKS]
-        networks_create = new_profile.properties[self.NETWORKS]
-        networks_delete = copy.deepcopy(networks_current)
-        for network in networks_current:
-            if network in networks_create:
-                networks_create.remove(network)
-                networks_delete.remove(network)
-        if networks_create or networks_delete:
-            # We have network interfaces to be deleted and/or created
-            try:
-                self._update_network(obj, networks_create, networks_delete)
-            except exc.InternalError as ex:
-                raise exc.EResourceUpdate(type='server', id=self.server_id,
-                                          message=ex.message)
-        return True
-
-    def _update_basic_properties(self, obj, new_profile):
-        """Updating basic server properties including name, metadata.
+    def _update_name(self, obj, new_profile):
+        """Update the name of the server.
 
         :param obj: The node object to operate on.
-        :param new_profile: The new profile that may contain some changes of
-                            basic properties for update.
-        :returns: None
-        :raises: `InternalError` if the compute call fails.
+        :param new_profile: The new profile which may contain the server name.
+        :return: ``None``.
+        :raises: ``EResourceUpdate``.
         """
-        # Update server metadata
-        metadata = self.properties[self.METADATA]
-        new_metadata = new_profile.properties[self.METADATA]
-        if new_metadata != metadata:
-            if new_metadata is None:
-                new_metadata = {}
-            self.compute(obj).server_metadata_update(
-                self.server_id, new_metadata)
+        old_name = self.properties[self.NAME] or obj.name
+        new_name = new_profile.properties[self.NAME] or obj.name
+        if old_name == new_name:
+            return
 
-        # Update server name
-        name = self.properties[self.NAME]
-        new_name = new_profile.properties[self.NAME]
-        if new_name != name:
-            attrs = {'name': new_name if new_name else obj.name}
-            self.compute(obj).server_update(self.server_id, **attrs)
+        try:
+            self.compute(obj).server_update(obj.physical_id, name=new_name)
+        except exc.InternalError as ex:
+            raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                      message=six.text_type(ex))
 
-        return
+    def _update_metadata(self, obj, new_profile):
+        """Update the server metadata.
+
+        :param obj: The node object to operate on.
+        :param new_profile: The new profile that may contain some changes to
+                            the metadata.
+        :returns: ``None``
+        :raises: `EResourceUpdate`.
+        """
+        old_meta = self._build_metadata(obj, self.properties[self.METADATA])
+        new_meta = self._build_metadata(obj,
+                                        new_profile.properties[self.METADATA])
+        if new_meta == old_meta:
+            return
+
+        try:
+            self.compute(obj).server_metadata_update(obj.physical_id, new_meta)
+        except exc.InternalError as ex:
+            raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                      message=six.text_type(ex))
 
     def _update_flavor(self, obj, old_flavor, new_flavor):
         """Update server flavor.
@@ -633,31 +583,31 @@ class ServerProfile(base.Profile):
         :returns: ``None``.
         :raises: `InternalError` when operation was a failure.
         """
-        driver = self.compute(obj)
-        res = driver.flavor_find(old_flavor)
-        old_flavor_id = res.id
-        res = driver.flavor_find(new_flavor)
-        new_flavor_id = res.id
-        if new_flavor_id == old_flavor_id:
+        cc = self.compute(obj)
+        oldflavor = self._validate_flavor(obj, old_flavor, 'update')
+        newflavor = self._validate_flavor(obj, new_flavor, 'update')
+        if oldflavor.id == newflavor.id:
             return
 
         try:
-            driver.server_resize(obj.physical_id, new_flavor_id)
-            driver.wait_for_server(obj.physical_id, 'VERIFY_RESIZE')
-        except exc.InternalError:
+            cc.server_resize(obj.physical_id, newflavor.id)
+            cc.wait_for_server(obj.physical_id, 'VERIFY_RESIZE')
+        except exc.InternalError as ex:
+            msg = six.text_type(ex)
             try:
-                driver.server_resize_revert(obj.physical_id)
-                driver.wait_for_server(obj.physical_id, 'ACTIVE')
-            except exc.InternalError:
-                raise
-            else:
-                raise
+                cc.server_resize_revert(obj.physical_id)
+                cc.wait_for_server(obj.physical_id, 'ACTIVE')
+            except exc.InternalError as ex1:
+                msg = six.text_type(ex1)
+            raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                      message=msg)
 
         try:
-            driver.server_resize_confirm(obj.physical_id)
-            driver.wait_for_server(obj.physical_id, 'ACTIVE')
-        except exc.InternalError:
-            raise
+            cc.server_resize_confirm(obj.physical_id)
+            cc.wait_for_server(obj.physical_id, 'ACTIVE')
+        except exc.InternalError as ex:
+            raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                      message=six.text_type(ex))
 
     def _update_image(self, obj, old_image, new_image, admin_password):
         """Update image used by server node.
@@ -759,6 +709,72 @@ class ServerProfile(base.Profile):
             cc.server_interface_create(server, **n)
 
         return
+
+    def do_update(self, obj, new_profile=None, **params):
+        """Perform update on the server.
+
+        :param obj: the server to operate on
+        :param new_profile: the new profile for the server.
+        :param params: a dictionary of optional parameters.
+        :returns: True if update was successful or False otherwise.
+        :raises: `EResourceUpdate` if operation fails.
+        """
+        self.server_id = obj.physical_id
+        if not self.server_id:
+            return False
+
+        if not new_profile:
+            return False
+
+        if not self.validate_for_update(new_profile):
+            return False
+
+        # TODO(Yanyan Hu): Update block_device properties
+
+        # Update basic properties of server
+        self._update_name(obj, new_profile)
+        self._update_metadata(obj, new_profile)
+
+        # Update server flavor
+        # Note the flavor is a required property so it must have a value.
+        old_flavor = self.properties[self.FLAVOR]
+        new_flavor = new_profile.properties[self.FLAVOR]
+        self._update_flavor(obj, old_flavor, new_flavor)
+
+        # Update server image
+        old_passwd = self.properties.get(self.ADMIN_PASS)
+        passwd = old_passwd
+        if new_profile.properties[self.ADMIN_PASS] is not None:
+            passwd = new_profile.properties[self.ADMIN_PASS]
+
+        old_image = self.properties[self.IMAGE]
+        new_image = new_profile.properties[self.IMAGE]
+        if new_image != old_image:
+            try:
+                self._update_image(obj, old_image, new_image, passwd)
+            except exc.InternalError as ex:
+                raise exc.EResourceUpdate(type='server', id=self.server_id,
+                                          message=ex.message)
+        elif old_passwd != passwd:
+            # TODO(Jun Xu): update server admin password
+            pass
+
+        # Update server network
+        networks_current = self.properties[self.NETWORKS]
+        networks_create = new_profile.properties[self.NETWORKS]
+        networks_delete = copy.deepcopy(networks_current)
+        for network in networks_current:
+            if network in networks_create:
+                networks_create.remove(network)
+                networks_delete.remove(network)
+        if networks_create or networks_delete:
+            # We have network interfaces to be deleted and/or created
+            try:
+                self._update_network(obj, networks_create, networks_delete)
+            except exc.InternalError as ex:
+                raise exc.EResourceUpdate(type='server', id=self.server_id,
+                                          message=ex.message)
+        return True
 
     def do_get_details(self, obj):
         known_keys = {
