@@ -15,6 +15,7 @@ Routines for configuring Senlin
 """
 import socket
 
+from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
 
 from senlin.api.common import wsgi
@@ -157,6 +158,20 @@ webhook_opts = [
 cfg.CONF.register_group(webhook_group)
 cfg.CONF.register_opts(webhook_opts, group=webhook_group)
 
+# Zaqar group
+zaqar_group = cfg.OptGroup(
+    'zaqar',
+    title='Zaqar Options',
+    help='Configuration options for zaqar trustee.')
+
+zaqar_opts = (
+    ks_loading.get_auth_common_conf_options() +
+    ks_loading.get_auth_plugin_conf_options('password'))
+
+cfg.CONF.register_group(zaqar_group)
+ks_loading.register_session_conf_options(cfg.CONF, 'zaqar')
+ks_loading.register_auth_conf_options(cfg.CONF, 'zaqar')
+
 
 def list_opts():
     """Return a list of oslo.config options available.
@@ -185,3 +200,4 @@ def list_opts():
     yield authentication_group.name, authentication_opts
     yield revision_group.name, revision_opts
     yield webhook_group.name, webhook_opts
+    yield zaqar_group.name, zaqar_opts

@@ -12,6 +12,7 @@
 
 import socket
 
+from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
 from oslo_log import log as logging
 
@@ -30,6 +31,7 @@ class Message(base.Receiver):
     def __init__(self, rtype, cluster_id, action, **kwargs):
         super(Message, self).__init__(rtype, cluster_id, action, **kwargs)
         self._zaqarclient = None
+        self._keystoneclient = None
 
     def zaqar(self):
         if self._zaqarclient is not None:
@@ -37,6 +39,13 @@ class Message(base.Receiver):
         params = self._build_conn_params(self.user, self.project)
         self._zaqarclient = driver_base.SenlinDriver().message(params)
         return self._zaqarclient
+
+    def keystone(self):
+        if self._keystoneclient is not None:
+            return self._keystoneclient
+        params = self._build_conn_params(self.user, self.project)
+        self._keystoneclient = driver_base.SenlinDriver().identity(params)
+        return self._keystoneclient
 
     def _generate_subscriber_url(self):
         # TODO(Yanyanhu): Define dedicated configuration options
@@ -61,8 +70,32 @@ class Message(base.Receiver):
             base = "http://%(h)s:%(p)s/v1" % {'h': host, 'p': port}
         sub_url = "/receivers/%(id)s/notify" % {'id': self.id}
 
-        # TODO(Yanyanhu): building trust for subscription.
         return "".join(["trust+", base, sub_url])
+
+    def _build_trust(self):
+        # Get zaqar trustee user ID for trust building
+        auth = ks_loading.load_auth_from_conf_options(CONF, 'zaqar')
+        session = ks_loading.load_session_from_conf_options(CONF, 'zaqar')
+        zaqar_trustee_user_id = session.get_user_id(auth=auth)
+        try:
+            trust = self.keystone().trust_get_by_trustor(self.user,
+                                                         zaqar_trustee_user_id,
+                                                         self.project)
+            if not trust:
+                # Create a trust if no existing one found
+                # TODO(Yanyanhu): get user roles list for trust creation
+                trust = self.keystone().trust_create(self.user,
+                                                     zaqar_trustee_user_id,
+                                                     self.project, ['admin'])
+        except exc.InternalError as ex:
+            msg = _('Can not build trust between user %(user)s and zaqar '
+                    'service user %(zaqar)s for receiver %(receiver)s.'
+                    ) % {'user': self.user, 'zaqar': zaqar_trustee_user_id,
+                         'receiver': self.id}
+            LOG.error(msg)
+            raise exc.EResourceCreation(type='trust',
+                                        message=ex.message)
+        return trust.id
 
     def _create_queue(self):
         # TODO(YanyanHu): make queue attributes configurable.
@@ -80,14 +113,18 @@ class Message(base.Receiver):
 
         return queue_name
 
-    def _create_subscription(self, queue_name, subscriber):
+    def _create_subscription(self, queue_name):
+        subscriber = self._generate_subscriber_url()
+        trust_id = self._build_trust()
+
         # TODO(Yanyanhu): make subscription attributes configurable.
         kwargs = {
             "ttl": 3600,
             "subscriber": subscriber,
             "options": {
                 "from": "senlin and zaqar",
-                "subject": "hello, senlin"
+                "subject": "hello, senlin",
+                "trust_id": trust_id
             }
         }
         try:
@@ -100,8 +137,7 @@ class Message(base.Receiver):
 
     def initialize_channel(self):
         queue_name = self._create_queue()
-        subscriber = self._generate_subscriber_url()
-        subscription = self._create_subscription(queue_name, subscriber)
+        subscription = self._create_subscription(queue_name)
 
         self.channel = {
             'queue_name': queue_name,
@@ -130,8 +166,8 @@ class Message(base.Receiver):
 
     def to_dict(self):
         message = super(Message, self).to_dict()
-        # Pop subscription from channel info since it should be
-        # invisible for user.
+        # Pop subscription from channel info since it
+        # should be invisible for user.
         message['channel'].pop('subscription')
 
         return message

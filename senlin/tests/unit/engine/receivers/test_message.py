@@ -14,6 +14,7 @@
 import mock
 import socket
 
+from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
 
 from senlin.common import exception
@@ -25,6 +26,31 @@ UUID = 'aa5f86b8-e52b-4f2b-828a-4c14c770938d'
 
 
 class TestMessage(base.SenlinTestCase):
+
+    @mock.patch.object(driver_base, 'SenlinDriver')
+    def test_keystone_client(self, mock_senlindriver):
+        sd = mock.Mock()
+        kc = mock.Mock()
+        sd.identity.return_value = kc
+        mock_senlindriver.return_value = sd
+
+        message = mmod.Message('message', None, None, user='user1',
+                               project='project1')
+
+        # cached will be returned
+        message._keystoneclient = kc
+        self.assertEqual(kc, message.keystone())
+
+        # new keystone client created if no cache found
+        message._keystoneclient = None
+        params = mock.Mock()
+        mock_param = self.patchobject(mmod.Message, '_build_conn_params',
+                                      return_value=params)
+        res = message.keystone()
+        self.assertEqual(kc, res)
+        self.assertEqual(kc, message._keystoneclient)
+        mock_param.assert_called_once_with('user1', 'project1')
+        sd.identity.assert_called_once_with(params)
 
     @mock.patch.object(driver_base, 'SenlinDriver')
     def test_zaqar_client(self, mock_senlindriver):
@@ -106,15 +132,12 @@ class TestMessage(base.SenlinTestCase):
         self.assertEqual(expected_res, res)
 
     @mock.patch.object(mmod.Message, '_create_queue')
-    @mock.patch.object(mmod.Message, '_generate_subscriber_url')
     @mock.patch.object(mmod.Message, '_create_subscription')
     def test_initialize_channel(self, mock_create_subscription,
-                                mock_generate_subscriber_url,
                                 mock_create_queue):
         mock_sub = mock.Mock()
         mock_sub.subscription_id = 'test-subscription-id'
         mock_create_subscription.return_value = mock_sub
-        mock_generate_subscriber_url.return_value = 'SUBSCRIBER_URL'
         mock_create_queue.return_value = 'test-queue'
 
         message = mmod.Message('message', None, None)
@@ -124,9 +147,7 @@ class TestMessage(base.SenlinTestCase):
                             'subscription': 'test-subscription-id'}
         self.assertEqual(expected_channel, res)
         mock_create_queue.assert_called_once_with()
-        mock_generate_subscriber_url.assert_called_once_with()
-        mock_create_subscription.assert_called_once_with('test-queue',
-                                                         'SUBSCRIBER_URL')
+        mock_create_subscription.assert_called_once_with('test-queue')
 
     @mock.patch.object(mmod.Message, 'zaqar')
     def test__create_queue(self, mock_zaqar):
@@ -162,48 +183,61 @@ class TestMessage(base.SenlinTestCase):
         self.assertRaises(exception.EResourceCreation, message._create_queue)
         mock_zc.queue_create.assert_called_once_with(**kwargs)
 
+    @mock.patch.object(mmod.Message, '_generate_subscriber_url')
+    @mock.patch.object(mmod.Message, '_build_trust')
     @mock.patch.object(mmod.Message, 'zaqar')
-    def test__create_subscription(self, mock_zaqar):
+    def test__create_subscription(self, mock_zaqar, mock_build_trust,
+                                  mock_generate_subscriber_url):
         mock_zc = mock.Mock()
         mock_zaqar.return_value = mock_zc
+        mock_build_trust.return_value = '123abc'
+        subscriber = 'subscriber_url'
+        mock_generate_subscriber_url.return_value = subscriber
         message = mmod.Message('message', None, None, id=UUID)
         queue_name = 'test-queue'
-        subscriber = 'subscriber_url'
         kwargs = {
             "ttl": 3600,
             "subscriber": subscriber,
             "options": {
                 "from": "senlin and zaqar",
-                "subject": "hello, senlin"
+                "subject": "hello, senlin",
+                "trust_id": "123abc"
             }
         }
         mock_zc.subscription_create.return_value = 'subscription'
-        res = message._create_subscription(queue_name, subscriber)
+        res = message._create_subscription(queue_name)
 
         self.assertEqual('subscription', res)
+        mock_generate_subscriber_url.assert_called_once_with()
         mock_zc.subscription_create.assert_called_once_with(queue_name,
                                                             **kwargs)
 
+    @mock.patch.object(mmod.Message, '_generate_subscriber_url')
+    @mock.patch.object(mmod.Message, '_build_trust')
     @mock.patch.object(mmod.Message, 'zaqar')
-    def test__create_subscription_fail(self, mock_zaqar):
+    def test__create_subscription_fail(self, mock_zaqar, mock_build_trust,
+                                       mock_generate_subscriber_url):
         mock_zc = mock.Mock()
         mock_zaqar.return_value = mock_zc
+        mock_build_trust.return_value = '123abc'
+        subscriber = 'subscriber_url'
+        mock_generate_subscriber_url.return_value = subscriber
         message = mmod.Message('message', None, None, id=UUID)
         queue_name = 'test-queue'
-        subscriber = 'subscriber_url'
         kwargs = {
             "ttl": 3600,
             "subscriber": subscriber,
             "options": {
                 "from": "senlin and zaqar",
-                "subject": "hello, senlin"
+                "subject": "hello, senlin",
+                "trust_id": "123abc"
             }
         }
 
         mock_zc.subscription_create.side_effect = exception.InternalError()
         self.assertRaises(exception.EResourceCreation,
-                          message._create_subscription,
-                          queue_name, subscriber)
+                          message._create_subscription, queue_name)
+        mock_generate_subscriber_url.assert_called_once_with()
         mock_zc.subscription_create.assert_called_once_with(queue_name,
                                                             **kwargs)
 
@@ -251,3 +285,110 @@ class TestMessage(base.SenlinTestCase):
         mock_zc.subscription_delete.assert_called_once_with(
             'test-queue', 'test-subscription-id')
         mock_zc.queue_delete.assert_called_once_with('test-queue')
+
+    @mock.patch.object(ks_loading, 'load_auth_from_conf_options')
+    @mock.patch.object(ks_loading, 'load_session_from_conf_options')
+    @mock.patch.object(mmod.Message, 'keystone')
+    def test__build_trust_exists(self, mock_keystone, mock_load_session,
+                                 mock_load_auth):
+        mock_auth = mock.Mock()
+        mock_session = mock.Mock()
+        mock_session.get_user_id.return_value = 'zaqar-trustee-user-id'
+        mock_load_session.return_value = mock_session
+        mock_load_auth.return_value = mock_auth
+        mock_kc = mock.Mock()
+        mock_keystone.return_value = mock_kc
+        mock_trust = mock.Mock()
+        mock_trust.id = 'mock-trust-id'
+        message = mmod.Message('message', None, None, id=UUID,
+                               user='user1', project='project1')
+        mock_kc.trust_get_by_trustor.return_value = mock_trust
+
+        res = message._build_trust()
+
+        self.assertEqual('mock-trust-id', res)
+        mock_kc.trust_get_by_trustor.assert_called_once_with(
+            'user1', 'zaqar-trustee-user-id', 'project1')
+        mock_load_auth.assert_called_once_with(cfg.CONF, 'zaqar')
+        mock_load_session.assert_called_once_with(cfg.CONF, 'zaqar')
+        mock_session.get_user_id.assert_called_once_with(auth=mock_auth)
+
+    @mock.patch.object(ks_loading, 'load_auth_from_conf_options')
+    @mock.patch.object(ks_loading, 'load_session_from_conf_options')
+    @mock.patch.object(mmod.Message, 'keystone')
+    def test__build_trust_create_new(self, mock_keystone, mock_load_session,
+                                     mock_load_auth):
+        mock_auth = mock.Mock()
+        mock_session = mock.Mock()
+        mock_session.get_user_id.return_value = 'zaqar-trustee-user-id'
+        mock_load_session.return_value = mock_session
+        mock_load_auth.return_value = mock_auth
+        mock_kc = mock.Mock()
+        mock_keystone.return_value = mock_kc
+        mock_trust = mock.Mock()
+        mock_trust.id = 'mock-trust-id'
+        message = mmod.Message('message', None, None, id=UUID,
+                               user='user1', project='project1')
+        mock_kc.trust_get_by_trustor.return_value = None
+        mock_kc.trust_create.return_value = mock_trust
+
+        res = message._build_trust()
+
+        self.assertEqual('mock-trust-id', res)
+        mock_kc.trust_get_by_trustor.assert_called_once_with(
+            'user1', 'zaqar-trustee-user-id', 'project1')
+        mock_kc.trust_create.assert_called_once_with(
+            'user1', 'zaqar-trustee-user-id', 'project1', ['admin'])
+
+    @mock.patch.object(ks_loading, 'load_auth_from_conf_options')
+    @mock.patch.object(ks_loading, 'load_session_from_conf_options')
+    @mock.patch.object(mmod.Message, 'keystone')
+    def test__build_trust_create_new_trust_failed(self, mock_keystone,
+                                                  mock_load_session,
+                                                  mock_load_auth):
+        mock_auth = mock.Mock()
+        mock_session = mock.Mock()
+        mock_session.get_user_id.return_value = 'zaqar-trustee-user-id'
+        mock_load_session.return_value = mock_session
+        mock_load_auth.return_value = mock_auth
+        mock_kc = mock.Mock()
+        mock_keystone.return_value = mock_kc
+        mock_trust = mock.Mock()
+        mock_trust.id = 'mock-trust-id'
+        message = mmod.Message('message', None, None, id=UUID,
+                               user='user1', project='project1')
+        mock_kc.trust_get_by_trustor.return_value = None
+        mock_kc.trust_create.side_effect = exception.InternalError()
+
+        self.assertRaises(exception.EResourceCreation,
+                          message._build_trust)
+
+        mock_kc.trust_get_by_trustor.assert_called_once_with(
+            'user1', 'zaqar-trustee-user-id', 'project1')
+        mock_kc.trust_create.assert_called_once_with(
+            'user1', 'zaqar-trustee-user-id', 'project1', ['admin'])
+
+    @mock.patch.object(ks_loading, 'load_auth_from_conf_options')
+    @mock.patch.object(ks_loading, 'load_session_from_conf_options')
+    @mock.patch.object(mmod.Message, 'keystone')
+    def test__build_trust_get_trust_exception(self, mock_keystone,
+                                              mock_load_session,
+                                              mock_load_auth):
+        mock_auth = mock.Mock()
+        mock_session = mock.Mock()
+        mock_session.get_user_id.return_value = 'zaqar-trustee-user-id'
+        mock_load_session.return_value = mock_session
+        mock_load_auth.return_value = mock_auth
+        mock_kc = mock.Mock()
+        mock_keystone.return_value = mock_kc
+        mock_trust = mock.Mock()
+        mock_trust.id = 'mock-trust-id'
+        message = mmod.Message('message', None, None, id=UUID,
+                               user='user1', project='project1')
+        mock_kc.trust_get_by_trustor.side_effect = exception.InternalError()
+
+        self.assertRaises(exception.EResourceCreation,
+                          message._build_trust)
+
+        mock_kc.trust_get_by_trustor.assert_called_once_with(
+            'user1', 'zaqar-trustee-user-id', 'project1')
