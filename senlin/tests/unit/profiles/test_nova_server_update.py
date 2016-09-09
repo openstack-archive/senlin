@@ -22,6 +22,55 @@ from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
 
+class TestServerNameChecking(base.SenlinTestCase):
+
+    scenarios = [
+        ('none-none', dict(
+            old_name=None,
+            new_name=None,
+            result=(False, 'NODE_NAME'))),
+        ('none-new', dict(
+            old_name=None,
+            new_name='NEW_NAME',
+            result=(True, 'NEW_NAME'))),
+        ('old-none', dict(
+            old_name='OLD_NAME',
+            new_name=None,
+            result=(True, 'NODE_NAME'))),
+        ('old-new', dict(
+            old_name='OLD_NAME',
+            new_name='NEW_NAME',
+            result=(True, 'NEW_NAME')))
+    ]
+
+    def setUp(self):
+        super(TestServerNameChecking, self).setUp()
+        self.old_spec = {
+            'type': 'os.nova.server',
+            'version': '1.0',
+            'properties': {
+                'flavor': 'FLAVOR',
+            }
+        }
+        self.new_spec = copy.deepcopy(self.old_spec)
+        obj = mock.Mock()
+        obj.name = 'NODE_NAME'
+        self.obj = obj
+
+    def test_check_server_name(self):
+        if self.old_name:
+            self.old_spec['properties']['name'] = self.old_name
+        if self.new_name:
+            self.new_spec['properties']['name'] = self.new_name
+
+        profile = server.ServerProfile('t', self.old_spec)
+        new_profile = server.ServerProfile('t1', self.new_spec)
+
+        res = profile._check_server_name(self.obj, new_profile)
+
+        self.assertEqual(self.result, res)
+
+
 class TestNovaServerUpdate(base.SenlinTestCase):
     def setUp(self):
         super(TestNovaServerUpdate, self).setUp()
@@ -63,65 +112,30 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         }
 
     def test__update_name(self):
-        obj = mock.Mock(physical_id='PHY_ID')
-        cc = mock.Mock()
         profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
         profile._computeclient = cc
-        new_spec = copy.deepcopy(self.spec)
-        new_spec['properties']['name'] = 'TEST_SERVER'
-        new_profile = server.ServerProfile('t', new_spec)
+        obj = mock.Mock(physical_id='NOVA_ID')
 
-        res = profile._update_name(obj, new_profile)
+        res = profile._update_name(obj, 'NEW_NAME')
 
         self.assertIsNone(res)
-        cc.server_update.assert_called_once_with('PHY_ID', name='TEST_SERVER')
-
-    def test__update_name_to_None(self):
-        obj = mock.Mock(physical_id='PHY_ID')
-        obj.name = 'NODE_NAME'
-        cc = mock.Mock()
-        profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = cc
-        new_spec = copy.deepcopy(self.spec)
-        del new_spec['properties']['name']
-        new_profile = server.ServerProfile('t', new_spec)
-
-        res = profile._update_name(obj, new_profile)
-
-        self.assertIsNone(res)
-        cc.server_update.assert_called_once_with('PHY_ID', name='NODE_NAME')
-
-    def test__update_name_no_change(self):
-        obj = mock.Mock(physical_id='PHY_ID')
-        cc = mock.Mock()
-        profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = cc
-        new_spec = copy.deepcopy(self.spec)
-        new_profile = server.ServerProfile('t', new_spec)
-
-        res = profile._update_name(obj, new_profile)
-
-        self.assertIsNone(res)
-        self.assertEqual(0, cc.server_update.call_count)
+        cc.server_update.assert_called_once_with('NOVA_ID', name='NEW_NAME')
 
     def test__update_name_nova_failure(self):
-        obj = mock.Mock(physical_id='PHY_ID')
-        obj.name = 'NODE_NAME'
-        cc = mock.Mock()
-        cc.server_update.side_effect = exc.InternalError(message='BOOM')
         profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
         profile._computeclient = cc
-        new_spec = copy.deepcopy(self.spec)
-        new_spec['properties']['name'] = 'TEST_SERVER'
-        new_profile = server.ServerProfile('t', new_spec)
+        cc.server_update.side_effect = exc.InternalError(message='BOOM')
+        obj = mock.Mock(physical_id='NOVA_ID')
 
         ex = self.assertRaises(exc.EResourceUpdate,
                                profile._update_name,
-                               obj, new_profile)
+                               obj, 'NEW_NAME')
 
-        self.assertEqual('Failed in updating server PHY_ID: BOOM.',
+        self.assertEqual('Failed in updating server NOVA_ID: BOOM.',
                          six.text_type(ex))
-        cc.server_update.assert_called_once_with('PHY_ID', name='TEST_SERVER')
+        cc.server_update.assert_called_once_with('NOVA_ID', name='NEW_NAME')
 
     def test__update_metadata(self):
         obj = mock.Mock(id='NODE_ID', physical_id='NOVA_ID',
@@ -645,10 +659,99 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         ]
         cc.server_interface_create.assert_has_calls(calls)
 
+    @mock.patch.object(server.ServerProfile, '_update_name')
+    @mock.patch.object(server.ServerProfile, '_check_server_name')
+    @mock.patch.object(server.ServerProfile, '_update_flavor')
+    @mock.patch.object(server.ServerProfile, '_update_metadata')
+    @mock.patch.object(server.ServerProfile, '_update_image')
+    @mock.patch.object(server.ServerProfile, '_update_network')
+    def test_do_update_name_succeeded(self, mock_update_network,
+                                      mock_update_image, mock_update_metadata,
+                                      mock_update_flavor, mock_check_name,
+                                      mock_update_name):
+        mock_check_name.return_value = True, 'NEW_NAME'
+        obj = mock.Mock(physical_id='FAKE_ID')
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = mock.Mock()
+        new_profile = server.ServerProfile('t', self.spec)
+
+        res = profile.do_update(obj, new_profile)
+
+        self.assertTrue(res)
+        mock_update_name.assert_called_once_with(obj, 'NEW_NAME')
+        mock_update_metadata.assert_called_once_with(obj, new_profile)
+        mock_check_name.assert_called_once_with(obj, new_profile)
+        mock_update_flavor.assert_called_once_with(obj, 'FLAV', 'FLAV')
+        mock_update_image.assert_called_once_with(
+            obj, 'FAKE_IMAGE', 'FAKE_IMAGE', 'adminpass')
+        self.assertEqual(0, mock_update_network.call_count)
+
+    @mock.patch.object(server.ServerProfile, '_update_name')
+    @mock.patch.object(server.ServerProfile, '_check_server_name')
+    @mock.patch.object(server.ServerProfile, '_update_flavor')
+    @mock.patch.object(server.ServerProfile, '_update_metadata')
+    @mock.patch.object(server.ServerProfile, '_update_image')
+    @mock.patch.object(server.ServerProfile, '_update_network')
+    def test_do_update_name_no_change(self, mock_update_network,
+                                      mock_update_image, mock_update_metadata,
+                                      mock_update_flavor, mock_check_name,
+                                      mock_update_name):
+        mock_check_name.return_value = False, 'NEW_NAME'
+        obj = mock.Mock(physical_id='NOVA_ID')
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = mock.Mock()
+        new_profile = server.ServerProfile('t', self.spec)
+
+        res = profile.do_update(obj, new_profile)
+
+        self.assertTrue(res)
+        mock_check_name.assert_called_once_with(obj, new_profile)
+        self.assertEqual(0, mock_update_name.call_count)
+        mock_update_metadata.assert_called_once_with(obj, new_profile)
+        mock_update_flavor.assert_called_once_with(obj, 'FLAV', 'FLAV')
+        mock_update_image.assert_called_once_with(
+            obj, 'FAKE_IMAGE', 'FAKE_IMAGE', 'adminpass')
+        self.assertEqual(0, mock_update_network.call_count)
+
+    @mock.patch.object(server.ServerProfile, '_update_name')
+    @mock.patch.object(server.ServerProfile, '_check_server_name')
+    @mock.patch.object(server.ServerProfile, '_update_flavor')
+    @mock.patch.object(server.ServerProfile, '_update_metadata')
+    @mock.patch.object(server.ServerProfile, '_update_image')
+    @mock.patch.object(server.ServerProfile, '_update_network')
+    def test_do_update_name_failed(self, mock_update_network,
+                                   mock_update_image, mock_update_metadata,
+                                   mock_update_flavor, mock_check_name,
+                                   mock_update_name):
+        mock_check_name.return_value = True, 'NEW_NAME'
+        err = exc.EResourceUpdate(type='server', id='NOVA_ID', message='BANG')
+        mock_update_name.side_effect = err
+        obj = mock.Mock(physical_id='NOVA_ID')
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = mock.Mock()
+        new_profile = server.ServerProfile('t', self.spec)
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile.do_update,
+                               obj, new_profile)
+
+        self.assertEqual('Failed in updating server NOVA_ID: BANG.',
+                         six.text_type(ex))
+        mock_check_name.assert_called_once_with(obj, new_profile)
+        mock_update_name.assert_called_once_with(obj, 'NEW_NAME')
+        self.assertEqual(0, mock_update_metadata.call_count)
+        self.assertEqual(0, mock_update_flavor.call_count)
+        self.assertEqual(0, mock_update_image.call_count)
+
+    @mock.patch.object(server.ServerProfile, '_check_server_name')
     @mock.patch.object(server.ServerProfile, '_update_flavor')
     @mock.patch.object(server.ServerProfile, '_update_image')
     def test_do_update_image_succeeded(self, mock_update_image,
-                                       mock_update_flavor):
+                                       mock_update_flavor, mock_check):
+        mock_check.return_value = False, 'OLD_NAME'
         obj = mock.Mock()
         obj.physical_id = 'FAKE_ID'
 
