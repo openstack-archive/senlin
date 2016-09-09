@@ -45,6 +45,7 @@ class FaultWrapper(wsgi.Middleware):
 
     error_map = {
         'ActionInProgress': webob.exc.HTTPConflict,
+        'BadRequest': webob.exc.HTTPBadRequest,
         'ClusterBusy': webob.exc.HTTPConflict,
         'FeatureNotSupported': webob.exc.HTTPConflict,
         'Forbidden': webob.exc.HTTPForbidden,
@@ -56,13 +57,11 @@ class FaultWrapper(wsgi.Middleware):
         'MultipleChoices': webob.exc.HTTPBadRequest,
         'NodeNotOrphan': webob.exc.HTTPConflict,
         'PolicyBindingNotFound': webob.exc.HTTPNotFound,
-        'ProfileInUse': webob.exc.HTTPConflict,
         'ProfileTypeNotMatch': webob.exc.HTTPBadRequest,
         'RequestLimitExceeded': webob.exc.HTTPBadRequest,
         'ResourceInUse': webob.exc.HTTPConflict,
-        'BadRequest': webob.exc.HTTPBadRequest,
-        'SpecValidationFailed': webob.exc.HTTPBadRequest,
         'ResourceNotFound': webob.exc.HTTPNotFound,
+        'SpecValidationFailed': webob.exc.HTTPBadRequest,
     }
 
     def _map_exception_to_error(self, class_exception):
