@@ -31,12 +31,6 @@ Request Parameters
 
   - OpenStack-API-Version: microversion
 
-Response Example
-----------------
-
-.. literalinclude:: samples/profile-types-list-response.json
-   :language: javascript
-
 Response Parameters
 -------------------
 
@@ -44,6 +38,12 @@ Response Parameters
 
   - X-OpenStack-Request-Id: request_id
   - profile_types: profile_types
+
+Response Example
+----------------
+
+.. literalinclude:: samples/profile-types-list-response.json
+   :language: javascript
 
 
 Show profile type details
