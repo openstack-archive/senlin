@@ -533,19 +533,28 @@ class ServerProfile(base.Profile):
             raise exc.EResourceDeletion(type='server', id=server_id,
                                         message=six.text_type(ex))
 
-    def _update_name(self, obj, new_profile):
-        """Update the name of the server.
+    def _check_server_name(self, obj, profile):
+        """Check if there is a new name to be assigned to the server.
 
         :param obj: The node object to operate on.
+        :param new_profile: The new profile which may contain a name for
+                            the server instance.
+        :return: A tuple consisting a boolean indicating whether the name
+                 needs change and the server name determined.
+        """
+        old_name = self.properties[self.NAME] or obj.name
+        new_name = profile.properties[self.NAME] or obj.name
+        if old_name == new_name:
+            return False, new_name
+        return True, new_name
+
+    def _update_name(self, obj, new_name):
+        """Update the name of the server.
+
         :param new_profile: The new profile which may contain the server name.
         :return: ``None``.
         :raises: ``EResourceUpdate``.
         """
-        old_name = self.properties[self.NAME] or obj.name
-        new_name = new_profile.properties[self.NAME] or obj.name
-        if old_name == new_name:
-            return
-
         try:
             self.compute(obj).server_update(obj.physical_id, name=new_name)
         except exc.InternalError as ex:
@@ -739,7 +748,9 @@ class ServerProfile(base.Profile):
         # TODO(Yanyan Hu): Update block_device properties
 
         # Update basic properties of server
-        self._update_name(obj, new_profile)
+        name_changed, new_name = self._check_server_name(obj, new_profile)
+        if name_changed:
+            self._update_name(obj, new_name)
         self._update_metadata(obj, new_profile)
 
         # Update server flavor
