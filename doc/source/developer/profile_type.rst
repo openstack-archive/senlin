@@ -61,7 +61,7 @@ operations:
     implementation a chance to make changes to the object accordingly;
   * ``recover_object()``: recover an object with operation given by inputs from
     the profile object. By default, ``recreate`` is used if no operation is
-    provided to to delete firstly then create the object.
+    provided to delete firstly then create the object.
 
 
 Abstract Methods
