@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_config import cfg
 from oslo_context import context as oslo_context
 from oslo_log import log as logging
 from oslo_utils import timeutils
@@ -26,8 +25,6 @@ from senlin.objects import credential as co
 from senlin.objects import receiver as ro
 
 LOG = logging.getLogger(__name__)
-
-CONF = cfg.CONF
 
 
 class Receiver(object):
