@@ -401,63 +401,194 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                          six.text_type(ex))
 
     def test__update_image(self):
-        obj = mock.Mock(physical_id='FAKE_ID')
-        mock_old_image = mock.Mock(id='123')
-        mock_new_image = mock.Mock(id='456')
-        cc = mock.Mock()
-        cc.image_find.side_effect = [mock_old_image, mock_new_image]
-
         profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
         profile._computeclient = cc
+        x_old_image = mock.Mock(id='123')
+        x_new_image = mock.Mock(id='456')
+        x_images = [x_new_image, x_old_image]
+        mock_check = self.patchobject(profile, '_validate_image',
+                                      side_effect=x_images)
+        obj = mock.Mock(physical_id='NOVA_ID')
+
         profile._update_image(obj, 'old_image', 'new_image', 'adminpass')
-        cc.image_find.has_calls([
-            mock.call('old_image'), mock.call('new_image')
+
+        mock_check.assert_has_calls([
+            mock.call(obj, 'new_image', reason='update'),
+            mock.call(obj, 'old_image', reason='update')
         ])
-        cc.server_rebuild.assert_called_once_with('FAKE_ID', '456',
-                                                  'FAKE_SERVER_NAME',
-                                                  'adminpass')
-        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
-
-    def test__update_image_old_image_is_none(self):
-        obj = mock.Mock(physical_id='FAKE_ID')
-        cc = mock.Mock()
-        mock_server = mock.Mock()
-        mock_server.image = {
-            'id': '123',
-            'link': {
-                'href': 'http://openstack.example.com/openstack/images/123',
-                'rel': 'bookmark'
-            }
-        }
-        cc.server_get.return_value = mock_server
-        mock_image = mock.Mock(id='456')
-        cc.image_find.return_value = mock_image
-
-        profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = cc
-        profile._update_image(obj, None, 'new_image', 'adminpass')
-        cc.image_find.assert_called_once_with('new_image')
-        cc.server_get.assert_called_once_with('FAKE_ID')
-        cc.server_rebuild.assert_called_once_with('FAKE_ID', '456',
-                                                  'FAKE_SERVER_NAME',
-                                                  'adminpass')
-        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
+        cc.server_rebuild.assert_called_once_with(
+            'NOVA_ID', '456', 'FAKE_SERVER_NAME', 'adminpass')
+        cc.wait_for_server.assert_called_once_with('NOVA_ID', 'ACTIVE')
 
     def test__update_image_new_image_is_none(self):
-        obj = mock.Mock(physical_id='FAKE_ID')
-        cc = mock.Mock()
-        mock_image = mock.Mock(id='123')
-        cc.image_find.return_value = mock_image
-
         profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = cc
-        ex = self.assertRaises(exc.InternalError,
+        obj = mock.Mock(physical_id='NOVA_ID')
+
+        ex = self.assertRaises(exc.EResourceUpdate,
                                profile._update_image,
                                obj, 'old_image', None, 'adminpass')
-        msg = ("Updating Nova server with image set to None is not "
-               "supported by Nova.")
+
+        msg = ("Failed in updating server NOVA_ID: Updating Nova server with "
+               "image set to None is not supported by Nova.")
         self.assertEqual(msg, six.text_type(ex))
-        cc.image_find.assert_called_once_with('old_image')
+
+    def test__update_image_new_image_invalid(self):
+        # NOTE: The image invalid could be caused by a non-existent image or
+        # a compute driver failure
+        profile = server.ServerProfile('t', self.spec)
+        # _validate_image will always throw EResourceUpdate if driver fails
+        err = exc.EResourceUpdate(type='server', id='NOVA_ID', message='BAD')
+        mock_check = self.patchobject(profile, '_validate_image',
+                                      side_effect=err)
+        obj = mock.Mock(physical_id='NOVA_ID')
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_image,
+                               obj, 'old_image', 'new_image', 'adminpass')
+
+        msg = ("Failed in updating server NOVA_ID: BAD.")
+        self.assertEqual(msg, six.text_type(ex))
+        mock_check.assert_called_once_with(obj, 'new_image', reason='update')
+
+    def test__update_image_old_image_invalid(self):
+        # NOTE: The image invalid could be caused by a non-existent image or
+        # a compute driver failure
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = mock.Mock()
+        # _validate_image will always throw EResourceUpdate if driver fails
+        results = [
+            mock.Mock(id='NEW_IMAGE'),
+            exc.EResourceUpdate(type='server', id='NOVA_ID', message='BAD')
+        ]
+        mock_check = self.patchobject(profile, '_validate_image',
+                                      side_effect=results)
+        obj = mock.Mock(physical_id='NOVA_ID')
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_image,
+                               obj, 'old_image', 'new_image', 'adminpass')
+
+        msg = ("Failed in updating server NOVA_ID: BAD.")
+        self.assertEqual(msg, six.text_type(ex))
+        mock_check.assert_has_calls([
+            mock.call(obj, 'new_image', reason='update'),
+            mock.call(obj, 'old_image', reason='update')
+        ])
+
+    def test__update_image_old_image_is_none_but_succeeded(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        profile._computeclient = cc
+        x_server = mock.Mock(image={'id': '123'})
+        cc.server_get.return_value = x_server
+        # this is the new one
+        x_image = mock.Mock(id='456')
+        mock_check = self.patchobject(profile, '_validate_image',
+                                      return_value=x_image)
+        obj = mock.Mock(physical_id='NOVA_ID')
+
+        res = profile._update_image(obj, None, 'new_image', 'adminpass')
+
+        self.assertIsNone(res)
+        mock_check.assert_called_once_with(obj, 'new_image', reason='update')
+        cc.server_get.assert_called_once_with('NOVA_ID')
+        cc.server_rebuild.assert_called_once_with(
+            'NOVA_ID', '456', 'FAKE_SERVER_NAME', 'adminpass')
+        cc.wait_for_server.assert_called_once_with('NOVA_ID', 'ACTIVE')
+
+    def test__update_image_old_image_is_none_but_failed(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        profile._computeclient = cc
+        # this is about the new one
+        x_image = mock.Mock(id='456')
+        mock_check = self.patchobject(profile, '_validate_image',
+                                      return_value=x_image)
+        cc.server_get.side_effect = exc.InternalError(message='DRIVER')
+        obj = mock.Mock(physical_id='NOVA_ID')
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_image,
+                               obj, None, 'new_image', 'adminpass')
+
+        self.assertEqual('Failed in updating server NOVA_ID: DRIVER.',
+                         six.text_type(ex))
+        mock_check.assert_called_once_with(obj, 'new_image', reason='update')
+        cc.server_get.assert_called_once_with('NOVA_ID')
+
+    def test__update_image_updating_to_same_image(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        profile._computeclient = cc
+        x_old_image = mock.Mock(id='123')
+        x_new_image = mock.Mock(id='123')
+        x_images = [x_old_image, x_new_image]
+        mock_check = self.patchobject(profile, '_validate_image',
+                                      side_effect=x_images)
+        obj = mock.Mock(physical_id='NOVA_ID')
+
+        res = profile._update_image(obj, 'old_image', 'new_image', 'adminpass')
+
+        self.assertIsNone(res)
+        mock_check.assert_has_calls([
+            mock.call(obj, 'new_image', reason='update'),
+            mock.call(obj, 'old_image', reason='update')
+        ])
+        self.assertEqual(0, cc.server_rebuild.call_count)
+        self.assertEqual(0, cc.wait_for_server.call_count)
+
+    def test__update_image_failed_rebuilding(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        cc.server_rebuild.side_effect = exc.InternalError(message='FAILED')
+        profile._computeclient = cc
+        x_old_image = mock.Mock(id='123')
+        x_new_image = mock.Mock(id='456')
+        x_images = [x_new_image, x_old_image]
+        mock_check = self.patchobject(profile, '_validate_image',
+                                      side_effect=x_images)
+        obj = mock.Mock(physical_id='NOVA_ID')
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_image,
+                               obj, 'old_image', 'new_image', 'adminpass')
+
+        self.assertEqual('Failed in updating server NOVA_ID: FAILED.',
+                         six.text_type(ex))
+        mock_check.assert_has_calls([
+            mock.call(obj, 'new_image', reason='update'),
+            mock.call(obj, 'old_image', reason='update')
+        ])
+        cc.server_rebuild.assert_called_once_with(
+            'NOVA_ID', '456', 'FAKE_SERVER_NAME', 'adminpass')
+        self.assertEqual(0, cc.wait_for_server.call_count)
+
+    def test__update_image_failed_waiting(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        cc.wait_for_server.side_effect = exc.InternalError(message='TIMEOUT')
+        profile._computeclient = cc
+        x_old_image = mock.Mock(id='123')
+        x_new_image = mock.Mock(id='456')
+        x_images = [x_new_image, x_old_image]
+        mock_check = self.patchobject(profile, '_validate_image',
+                                      side_effect=x_images)
+        obj = mock.Mock(physical_id='NOVA_ID')
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_image,
+                               obj, 'old_image', 'new_image', 'adminpass')
+
+        self.assertEqual('Failed in updating server NOVA_ID: TIMEOUT.',
+                         six.text_type(ex))
+        mock_check.assert_has_calls([
+            mock.call(obj, 'new_image', reason='update'),
+            mock.call(obj, 'old_image', reason='update')
+        ])
+        cc.server_rebuild.assert_called_once_with(
+            'NOVA_ID', '456', 'FAKE_SERVER_NAME', 'adminpass')
+        cc.wait_for_server.assert_called_once_with('NOVA_ID', 'ACTIVE')
 
     def test__update_network(self):
         obj = mock.Mock(physical_id='FAKE_ID')
@@ -528,13 +659,11 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         new_profile = server.ServerProfile('t', new_spec)
 
         res = profile.do_update(obj, new_profile)
-        self.assertTrue(res)
-        mock_update_image.assert_called_with(obj, 'FAKE_IMAGE',
-                                             'FAKE_IMAGE_NEW',
-                                             'adminpass')
 
-    # TODO(Yanyan Hu): remove this mock after admin_pass update
-    # is completely supported.
+        self.assertTrue(res)
+        mock_update_image.assert_called_with(
+            obj, 'FAKE_IMAGE', 'FAKE_IMAGE_NEW', 'adminpass')
+
     @mock.patch.object(server.ServerProfile, '_update_flavor')
     @mock.patch.object(profiles_base.Profile, 'validate_for_update')
     @mock.patch.object(server.ServerProfile, '_update_image')
@@ -548,20 +677,12 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         new_spec['properties']['image'] = 'FAKE_IMAGE_NEW'
         new_spec['properties']['adminPass'] = 'adminpass2'
         new_profile = server.ServerProfile('t', new_spec)
-        res = profile.do_update(obj, new_profile)
-        self.assertTrue(res)
-        mock_update_image.assert_called_with(obj, 'FAKE_IMAGE',
-                                             'FAKE_IMAGE_NEW',
-                                             'adminpass2')
 
-        del new_spec['properties']['adminPass']
-        new_profile = server.ServerProfile('t', new_spec)
-        self.assertIsNone(new_profile.properties['adminPass'])
         res = profile.do_update(obj, new_profile)
+
         self.assertTrue(res)
-        mock_update_image.assert_called_with(obj, 'FAKE_IMAGE',
-                                             'FAKE_IMAGE_NEW',
-                                             'adminpass')
+        mock_update_image.assert_called_with(
+            obj, 'FAKE_IMAGE', 'FAKE_IMAGE_NEW', 'adminpass2')
 
     @mock.patch.object(server.ServerProfile, '_update_flavor')
     @mock.patch.object(server.ServerProfile, '_update_name')
@@ -569,14 +690,16 @@ class TestNovaServerUpdate(base.SenlinTestCase):
     @mock.patch.object(server.ServerProfile, '_update_image')
     def test_do_update_image_failed(self, mock_update_image, mock_update_meta,
                                     mock_update_name, mock_update_flavor):
-        ex = exc.InternalError(code=404, message='Image Not Found')
+        # _update_image always throw EResourceUpdate
+        ex = exc.EResourceUpdate(type='server', id='NOVA_ID',
+                                 message='Image Not Found')
         mock_update_image.side_effect = ex
-        obj = mock.Mock(physical_id='FAKE_ID')
+        obj = mock.Mock(physical_id='NOVA_ID')
 
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = mock.Mock()
+        # don't need to invent a new spec
         new_spec = copy.deepcopy(self.spec)
-        new_spec['properties']['image'] = 'FAKE_IMAGE_NEW'
         new_profile = server.ServerProfile('t', new_spec)
 
         ex = self.assertRaises(exc.EResourceUpdate,
@@ -584,8 +707,8 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                obj, new_profile)
 
         mock_update_image.assert_called_with(
-            obj, 'FAKE_IMAGE', 'FAKE_IMAGE_NEW', 'adminpass')
-        self.assertEqual('Failed in updating server FAKE_ID: Image Not Found.',
+            obj, 'FAKE_IMAGE', 'FAKE_IMAGE', 'adminpass')
+        self.assertEqual('Failed in updating server NOVA_ID: Image Not Found.',
                          six.text_type(ex))
 
     @mock.patch.object(server.ServerProfile, '_update_flavor')
