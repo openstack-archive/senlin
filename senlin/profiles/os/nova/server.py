@@ -411,7 +411,6 @@ class ServerProfile(base.Profile):
                 except exc.InternalError as ex:
                     raise exc.EResourceCreation(type='server',
                                                 message=six.text_type(ex))
-
                 network['uuid'] = res.id
                 del network[self.NETWORK]
             if network['port'] is None:
@@ -612,7 +611,7 @@ class ServerProfile(base.Profile):
     def _update_image(self, obj, old_image, new_image, admin_password):
         """Update image used by server node.
 
-        :param old: The node object to operate on.
+        :param obj: The node object to operate on.
         :param old_image: The identity of the image currently used.
         :param new_image: The identity of the new image to use.
         :param admin_password: The new password for the administrative account
@@ -620,33 +619,41 @@ class ServerProfile(base.Profile):
         :returns: ``None``.
         :raises: ``InternalError`` if operation was a failure.
         """
-        driver = self.compute(obj)
-
-        if old_image:
-            res = driver.image_find(old_image)
-            image_id = res.id
-        else:
-            server = driver.server_get(obj.physical_id)
-            image_id = server.image['id']
-
         if not new_image:
-            # TODO(Yanyan Hu): Allow server update with new_image
-            # set to None if Nova service supports it
-            message = _("Updating Nova server with image set to None is "
-                        "not supported by Nova.")
-            raise exc.InternalError(code=500, message=message)
+            msg = _("Updating Nova server with image set to None is not "
+                    "supported by Nova")
+            raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                      message=msg)
+        # check the new image first
+        img_new = self._validate_image(obj, new_image, reason='update')
+        new_image_id = img_new.id
 
-        res = driver.image_find(new_image)
-        new_image_id = res.id
-        if new_image_id != image_id:
-            # (Jun Xu): Not update name here if name changed,
-            # it should be updated in do_update
+        driver = self.compute(obj)
+        if old_image:
+            img_old = self._validate_image(obj, old_image, reason='update')
+            old_image_id = img_old.id
+        else:
+            try:
+                server = driver.server_get(obj.physical_id)
+            except exc.InternalError as ex:
+                raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                          message=six.text_type(ex))
+            # Still, this 'old_image_id' could be empty, but it doesn't matter
+            # because the comparison below would succeed if that is the case
+            old_image_id = server.image['id']
+
+        if new_image_id == old_image_id:
+            return
+
+        # TODO(Qiming): Correct the name used here
+        try:
+            server_name = self.properties.get(self.NAME) or obj.name
             driver.server_rebuild(obj.physical_id, new_image_id,
-                                  self.properties.get(self.NAME),
-                                  admin_password)
+                                  server_name, admin_password)
             driver.wait_for_server(obj.physical_id, 'ACTIVE')
-
-        return
+        except exc.InternalError as ex:
+            raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                      message=six.text_type(ex))
 
     def _update_network(self, obj, networks_create, networks_delete):
         '''Updating server network interfaces'''
@@ -747,17 +754,11 @@ class ServerProfile(base.Profile):
         if new_profile.properties[self.ADMIN_PASS] is not None:
             passwd = new_profile.properties[self.ADMIN_PASS]
 
+        # TODO(Qiming): Check if server name can be separately updated
+        # TODO(Qiming): Check if password alone should be updated
         old_image = self.properties[self.IMAGE]
         new_image = new_profile.properties[self.IMAGE]
-        if new_image != old_image:
-            try:
-                self._update_image(obj, old_image, new_image, passwd)
-            except exc.InternalError as ex:
-                raise exc.EResourceUpdate(type='server', id=self.server_id,
-                                          message=ex.message)
-        elif old_passwd != passwd:
-            # TODO(Jun Xu): update server admin password
-            pass
+        self._update_image(obj, old_image, new_image, passwd)
 
         # Update server network
         networks_current = self.properties[self.NETWORKS]
