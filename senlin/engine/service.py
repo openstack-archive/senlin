@@ -475,8 +475,7 @@ class EngineService(service.Service):
             profile_base.Profile.delete(context, db_profile.id)
         except exception.EResourceBusy:
             LOG.error(_LI("The profile '%s' cannot be deleted."), identity)
-            raise exception.ResourceInUse(resource_type='profile',
-                                          resource_id=db_profile.id)
+            raise exception.ResourceInUse(type='profile', id=db_profile.id)
 
         LOG.info(_LI("Profile '%(id)s' is deleted."), {'id': identity})
 
@@ -680,8 +679,7 @@ class EngineService(service.Service):
             policy_base.Policy.delete(context, db_policy.id)
         except exception.EResourceBusy:
             LOG.error(_LI("Policy '%s' cannot be deleted."), identity)
-            raise exception.ResourceInUse(resource_type='policy',
-                                          resource_id=db_policy.id)
+            raise exception.ResourceInUse(type='policy', id=db_policy.id)
 
         LOG.info(_LI("Policy '%s' is deleted."), identity)
 
@@ -956,8 +954,7 @@ class EngineService(service.Service):
 
         containers = cluster.dependents.get('containers', None)
         if containers is not None and len(containers) > 0:
-            raise exception.ResourceInUse(resource_type='host_cluster',
-                                          resource_id=cluster.id)
+            raise exception.ResourceInUse(type='host_cluster', id=cluster.id)
 
         policies = cp_obj.ClusterPolicy.get_all(context, cluster.id)
         if len(policies) > 0:
@@ -1667,8 +1664,7 @@ class EngineService(service.Service):
 
         containers = node.dependents.get('containers', None)
         if containers is not None and len(containers) > 0:
-            raise exception.ResourceInUse(resource_type='host_node',
-                                          resource_id=node.id)
+            raise exception.ResourceInUse(type='host_node', id=node.id)
 
         params = {
             'name': 'node_delete_%s' % node.id[:8],
@@ -2025,8 +2021,7 @@ class EngineService(service.Service):
         try:
             action_mod.Action.delete(context, db_action.id)
         except exception.EResourceBusy:
-            raise exception.ResourceInUse(resource_type='action',
-                                          resource_id=db_action.id)
+            raise exception.ResourceInUse(type='action', id=db_action.id)
 
         LOG.info(_LI("Action '%s' is deleted."), identity)
 

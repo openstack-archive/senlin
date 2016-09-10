@@ -111,15 +111,26 @@ class InvalidParameter(SenlinException):
 class ResourceNotFound(SenlinException):
     """Generic exception for resource not found.
 
-    The type here can be 'cluster', 'node', 'profile', 'policy', 'receiver',
-    'webhook', 'profile_type', 'policy_type' 'action' 'event' and so on.
+    The resource type here can be 'cluster', 'node', 'profile',
+    'policy', 'receiver', 'webhook', 'profile_type', 'policy_type',
+    'action', 'event' and so on.
     """
     msg_fmt = _("The %(type)s (%(id)s) could not be found.")
 
     @staticmethod
     def enhance_msg(enhance, ex):
-            enhance_msg = ex.message[:4] + enhance + ' ' + ex.message[4:]
-            return enhance_msg
+        enhance_msg = ex.message[:4] + enhance + ' ' + ex.message[4:]
+        return enhance_msg
+
+
+class ResourceInUse(SenlinException):
+    """Generic exception for resource in use.
+
+    The resource type here can be 'cluster', 'node', 'profile',
+    'policy', 'receiver', 'webhook', 'profile_type', 'policy_type',
+    'action', 'event' and so on.
+    """
+    msg_fmt = _("The %(type)s (%(id)s) is still in use.")
 
 
 class ClusterBusy(SenlinException):
@@ -172,10 +183,6 @@ class Error(SenlinException):
 
     def __init__(self, msg):
         super(Error, self).__init__(message=msg)
-
-
-class ResourceInUse(SenlinException):
-    msg_fmt = _("The %(resource_type)s (%(resource_id)s) is still in use.")
 
 
 class InvalidContentType(SenlinException):

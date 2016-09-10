@@ -564,8 +564,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         pid = 'aaaa-bbbb-cccc'
         req = self._delete('/profiles/%(profile_id)s' % {'profile_id': pid})
 
-        error = senlin_exc.ResourceInUse(resource_type='profile',
-                                         resource_id=pid)
+        error = senlin_exc.ResourceInUse(type='profile', id=pid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         mock_call.side_effect = shared.to_remote_error(error)
 
