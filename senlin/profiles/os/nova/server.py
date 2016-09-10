@@ -666,7 +666,55 @@ class ServerProfile(base.Profile):
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
                                       message=six.text_type(ex))
 
-    def _delete_interfaces(self, cc, nc, server, networks, ports_existing):
+    def _create_interfaces(self, obj, networks):
+        """Create new interfaces for the node.
+
+        :param obj: The node object to operate.
+        :param networks: A list containing information about network
+                         interfaces to be created.
+        :returns: ``None``
+        :raises: ``EInternalError``
+        """
+        cc = self.compute(obj)
+        nc = self.network(obj)
+        server = cc.server_get(obj.physical_id)
+        # Attach new ports added in new network definition
+        for n in networks:
+            net_identity = n.get(self.NETWORK, None)
+            if net_identity:
+                res = nc.network_get(net_identity)
+                n['net_id'] = res.id
+                if n['fixed-ip'] is not None:
+                    n['fixed_ips'] = [{'ip_address': n['fixed-ip']}]
+
+            if n['port'] is not None:
+                n['port_id'] = n['port']
+
+            del n['network']
+            del n['port']
+            del n['fixed-ip']
+            cc.server_interface_create(server, **n)
+
+    def _delete_interfaces(self, obj, networks):
+        """Create new interfaces for the node.
+
+        :param obj: The node object to operate.
+        :param networks: A list containing information about network
+                         interfaces to be created.
+        :returns: ``None``
+        :raises: ``EInternalError``
+        """
+        cc = self.compute(obj)
+        nc = self.network(obj)
+        server = cc.server_get(obj.physical_id)
+        ports_existing = list(cc.server_interface_list(server))
+        ports = []
+        for p in ports_existing:
+            fixed_ips = []
+            for addr in p['fixed_ips']:
+                fixed_ips.append(addr['ip_address'])
+            ports.append({'port_id': p['port_id'], 'net_id': p['net_id'],
+                          'fixed_ips': fixed_ips})
 
         # Step1. Accurately search port with port_id or fixed-ip/net_id
         for n in networks:
@@ -697,24 +745,6 @@ class ServerProfile(base.Profile):
                         ports_existing.remove(p)
                         break
 
-    def _create_interfaces(self, cc, nc, server, networks):
-        # Attach new ports added in new network definition
-        for n in networks:
-            net_identity = n.get(self.NETWORK, None)
-            if net_identity:
-                res = nc.network_get(net_identity)
-                n['net_id'] = res.id
-                if n['fixed-ip'] is not None:
-                    n['fixed_ips'] = [{'ip_address': n['fixed-ip']}]
-
-            if n['port'] is not None:
-                n['port_id'] = n['port']
-
-            del n['network']
-            del n['port']
-            del n['fixed-ip']
-            cc.server_interface_create(server, **n)
-
     def _update_network(self, obj, new_profile):
         """Updating server network interfaces.
 
@@ -735,24 +765,21 @@ class ServerProfile(base.Profile):
         if not networks_create and not networks_delete:
             return
 
-        cc = self.compute(obj)
-        nc = self.network(obj)
-        server = cc.server_get(self.server_id)
-        ports_existing = list(cc.server_interface_list(server))
-        ports = []
-        for p in ports_existing:
-            fixed_ips = []
-            for addr in p['fixed_ips']:
-                fixed_ips.append(addr['ip_address'])
-            ports.append({'port_id': p['port_id'], 'net_id': p['net_id'],
-                          'fixed_ips': fixed_ips})
-
-        # Detach some existing ports
-        self._delete_interfaces(cc, nc, server, networks_delete, ports)
+        # Detach some existing interfaces
+        if networks_delete:
+            try:
+                self._delete_interfaces(obj, networks_delete)
+            except exc.InternalError as ex:
+                raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                          message=six.text_type(ex))
 
         # Attach new interfaces
-        self._create_interfaces(cc, nc, server, networks_create)
-
+        if networks_create:
+            try:
+                self._create_interfaces(obj, networks_create)
+            except exc.InternalError as ex:
+                raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                          message=six.text_type(ex))
         return
 
     def do_update(self, obj, new_profile=None, **params):
