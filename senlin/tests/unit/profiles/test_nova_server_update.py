@@ -204,11 +204,13 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         x_flavors = [mock.Mock(id='123'), mock.Mock(id='456')]
         mock_validate = self.patchobject(profile, '_validate_flavor',
                                          side_effect=x_flavors)
-
-        profile._update_flavor(obj, 'old_flavor', 'new_flavor')
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['flavor'] = 'new_flavor'
+        new_profile = server.ServerProfile('t1', new_spec)
+        profile._update_flavor(obj, new_profile)
 
         mock_validate.assert_has_calls([
-            mock.call(obj, 'old_flavor', 'update'),
+            mock.call(obj, 'FLAV', 'update'),
             mock.call(obj, 'new_flavor', 'update')
         ])
         cc.server_resize.assert_called_once_with('NOVA_ID', '456')
@@ -222,21 +224,27 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         cc = mock.Mock()
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = cc
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['flavor'] = 'new_flavor'
+        new_profile = server.ServerProfile('t1', new_spec)
         err = exc.EResourceUpdate(type='server', id='NOVA_ID', message='BOOM')
         mock_validate = self.patchobject(profile, '_validate_flavor',
                                          side_effect=err)
 
         self.assertRaises(exc.EResourceUpdate,
                           profile._update_flavor,
-                          obj, 'old_flavor', 'new_flavor')
+                          obj, new_profile)
 
-        mock_validate.assert_called_once_with(obj, 'old_flavor', 'update')
+        mock_validate.assert_called_once_with(obj, 'FLAV', 'update')
 
     def test__update_flavor_failed_validation_2(self):
         obj = mock.Mock(physical_id='NOVA_ID')
         cc = mock.Mock()
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = cc
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['flavor'] = 'new_flavor'
+        new_profile = server.ServerProfile('t1', new_spec)
         result = [
             mock.Mock(),
             exc.EResourceUpdate(type='server', id='NOVA_ID', message='BOOM')
@@ -246,10 +254,10 @@ class TestNovaServerUpdate(base.SenlinTestCase):
 
         self.assertRaises(exc.EResourceUpdate,
                           profile._update_flavor,
-                          obj, 'old_flavor', 'new_flavor')
+                          obj, new_profile)
 
         mock_validate.assert_has_calls([
-            mock.call(obj, 'old_flavor', 'update'),
+            mock.call(obj, 'FLAV', 'update'),
             mock.call(obj, 'new_flavor', 'update'),
         ])
 
@@ -258,16 +266,19 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         cc = mock.Mock()
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = cc
+        new_spec = copy.deepcopy(self.spec)
+        new_profile = server.ServerProfile('t1', new_spec)
+
         x_flavors = [mock.Mock(id=123), mock.Mock(id=123)]
         mock_validate = self.patchobject(profile, '_validate_flavor',
                                          side_effect=x_flavors)
 
-        res = profile._update_flavor(obj, 'old_flavor', 'new_flavor')
+        res = profile._update_flavor(obj, new_profile)
 
         self.assertIsNone(res)
         mock_validate.assert_has_calls([
-            mock.call(obj, 'old_flavor', 'update'),
-            mock.call(obj, 'new_flavor', 'update'),
+            mock.call(obj, 'FLAV', 'update'),
+            mock.call(obj, 'FLAV', 'update'),
         ])
         self.assertEqual(0, cc.server_resize.call_count)
 
@@ -278,16 +289,19 @@ class TestNovaServerUpdate(base.SenlinTestCase):
             exc.InternalError(code=500, message='Resize failed')]
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = cc
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['flavor'] = 'new_flavor'
+        new_profile = server.ServerProfile('t1', new_spec)
         x_flavors = [mock.Mock(id='123'), mock.Mock(id='456')]
         mock_validate = self.patchobject(profile, '_validate_flavor',
                                          side_effect=x_flavors)
 
         ex = self.assertRaises(exc.EResourceUpdate,
                                profile._update_flavor,
-                               obj, 'old_flavor', 'new_flavor')
+                               obj, new_profile)
 
         mock_validate.assert_has_calls([
-            mock.call(obj, 'old_flavor', 'update'),
+            mock.call(obj, 'FLAV', 'update'),
             mock.call(obj, 'new_flavor', 'update'),
         ])
         cc.server_resize.assert_called_once_with('NOVA_ID', '456')
@@ -306,17 +320,20 @@ class TestNovaServerUpdate(base.SenlinTestCase):
 
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = cc
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['flavor'] = 'new_flavor'
+        new_profile = server.ServerProfile('t1', new_spec)
         x_flavors = [mock.Mock(id='123'), mock.Mock(id='456')]
         mock_validate = self.patchobject(profile, '_validate_flavor',
                                          side_effect=x_flavors)
         # do it
         ex = self.assertRaises(exc.EResourceUpdate,
                                profile._update_flavor,
-                               obj, 'old_flavor', 'new_flavor')
+                               obj, new_profile)
 
         # assertions
         mock_validate.assert_has_calls([
-            mock.call(obj, 'old_flavor', 'update'),
+            mock.call(obj, 'FLAV', 'update'),
             mock.call(obj, 'new_flavor', 'update'),
         ])
         cc.server_resize.assert_called_once_with('NOVA_ID', '456')
@@ -336,6 +353,9 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         cc.server_resize_revert.side_effect = err_revert
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = cc
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['flavor'] = 'new_flavor'
+        new_profile = server.ServerProfile('t1', new_spec)
         x_flavors = [mock.Mock(id='123'), mock.Mock(id='456')]
         mock_validate = self.patchobject(profile, '_validate_flavor',
                                          side_effect=x_flavors)
@@ -343,11 +363,11 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         # do it
         ex = self.assertRaises(exc.EResourceUpdate,
                                profile._update_flavor,
-                               obj, 'old_flavor', 'new_flavor')
+                               obj, new_profile)
 
         # assertions
         mock_validate.assert_has_calls([
-            mock.call(obj, 'old_flavor', 'update'),
+            mock.call(obj, 'FLAV', 'update'),
             mock.call(obj, 'new_flavor', 'update'),
         ])
         cc.server_resize.assert_called_once_with('NOVA_ID', '456')
@@ -364,6 +384,9 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         cc.server_resize_confirm.side_effect = err_confirm
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = cc
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['flavor'] = 'new_flavor'
+        new_profile = server.ServerProfile('t1', new_spec)
         x_flavors = [mock.Mock(id='123'), mock.Mock(id='456')]
         mock_validate = self.patchobject(profile, '_validate_flavor',
                                          side_effect=x_flavors)
@@ -371,11 +394,11 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         # do it
         ex = self.assertRaises(exc.EResourceUpdate,
                                profile._update_flavor,
-                               obj, 'old_flavor', 'new_flavor')
+                               obj, new_profile)
 
         # assertions
         mock_validate.assert_has_calls([
-            mock.call(obj, 'old_flavor', 'update'),
+            mock.call(obj, 'FLAV', 'update'),
             mock.call(obj, 'new_flavor', 'update'),
         ])
         cc.server_resize.assert_called_once_with('NOVA_ID', '456')
@@ -391,6 +414,9 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         cc.wait_for_server.side_effect = [None, err_wait]
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = cc
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['flavor'] = 'new_flavor'
+        new_profile = server.ServerProfile('t1', new_spec)
         x_flavors = [mock.Mock(id='123'), mock.Mock(id='456')]
         mock_validate = self.patchobject(profile, '_validate_flavor',
                                          side_effect=x_flavors)
@@ -398,11 +424,11 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         # do it
         ex = self.assertRaises(exc.InternalError,
                                profile._update_flavor,
-                               obj, 'old_flavor', 'new_flavor')
+                               obj, new_profile)
 
         # assertions
         mock_validate.assert_has_calls([
-            mock.call(obj, 'old_flavor', 'update'),
+            mock.call(obj, 'FLAV', 'update'),
             mock.call(obj, 'new_flavor', 'update'),
         ])
         cc.server_resize.assert_called_once_with('NOVA_ID', '456')
@@ -682,7 +708,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         mock_update_name.assert_called_once_with(obj, 'NEW_NAME')
         mock_update_metadata.assert_called_once_with(obj, new_profile)
         mock_check_name.assert_called_once_with(obj, new_profile)
-        mock_update_flavor.assert_called_once_with(obj, 'FLAV', 'FLAV')
+        mock_update_flavor.assert_called_once_with(obj, new_profile)
         mock_update_image.assert_called_once_with(
             obj, 'FAKE_IMAGE', 'FAKE_IMAGE', 'adminpass')
         self.assertEqual(0, mock_update_network.call_count)
@@ -710,7 +736,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         mock_check_name.assert_called_once_with(obj, new_profile)
         self.assertEqual(0, mock_update_name.call_count)
         mock_update_metadata.assert_called_once_with(obj, new_profile)
-        mock_update_flavor.assert_called_once_with(obj, 'FLAV', 'FLAV')
+        mock_update_flavor.assert_called_once_with(obj, new_profile)
         mock_update_image.assert_called_once_with(
             obj, 'FAKE_IMAGE', 'FAKE_IMAGE', 'adminpass')
         self.assertEqual(0, mock_update_network.call_count)
@@ -825,7 +851,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
 
         res = profile.do_update(obj, new_profile)
         self.assertTrue(res)
-        mock_update_flavor.assert_called_with(obj, 'FLAV', 'FAKE_FLAVOR_NEW')
+        mock_update_flavor.assert_called_with(obj, new_profile)
 
     @mock.patch.object(server.ServerProfile, '_update_flavor')
     def test_do_update__update_flavor_failed(self, mock_update_flavor):
@@ -843,7 +869,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile.do_update,
                                obj, new_profile)
 
-        mock_update_flavor.assert_called_with(obj, 'FLAV', 'FAKE_FLAVOR_NEW')
+        mock_update_flavor.assert_called_with(obj, new_profile)
         self.assertEqual('Failed in updating server NOVA_ID: '
                          'Flavor Not Found.',
                          six.text_type(ex))
