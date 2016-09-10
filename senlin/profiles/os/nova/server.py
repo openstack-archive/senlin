@@ -666,8 +666,75 @@ class ServerProfile(base.Profile):
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
                                       message=six.text_type(ex))
 
-    def _update_network(self, obj, networks_create, networks_delete):
-        '''Updating server network interfaces'''
+    def _delete_interfaces(self, cc, nc, server, networks, ports_existing):
+
+        # Step1. Accurately search port with port_id or fixed-ip/net_id
+        for n in networks:
+            if n['port'] is not None:
+                for p in ports_existing:
+                    if p['port_id'] == n['port']:
+                        ports_existing.remove(p)
+                        break
+                cc.server_interface_delete(n['port'], server)
+            elif n['fixed-ip'] is not None:
+                res = nc.network_get(n['network'])
+                net_id = res.id
+                for p in ports_existing:
+                    if (n['fixed-ip'] in p['fixed_ips']) and (
+                            p['net_id'] == net_id):
+                        cc.server_interface_delete(p['port_id'], server)
+                        ports_existing.remove(p)
+                        break
+
+        # Step2. Fuzzy search port with net_id
+        for n in networks:
+            if n['port'] is None and n['fixed-ip'] is None:
+                res = nc.network_get(n['network'])
+                net_id = res.id
+                for p in ports_existing:
+                    if p['net_id'] == net_id:
+                        cc.server_interface_delete(p['port_id'], server)
+                        ports_existing.remove(p)
+                        break
+
+    def _create_interfaces(self, cc, nc, server, networks):
+        # Attach new ports added in new network definition
+        for n in networks:
+            net_identity = n.get(self.NETWORK, None)
+            if net_identity:
+                res = nc.network_get(net_identity)
+                n['net_id'] = res.id
+                if n['fixed-ip'] is not None:
+                    n['fixed_ips'] = [{'ip_address': n['fixed-ip']}]
+
+            if n['port'] is not None:
+                n['port_id'] = n['port']
+
+            del n['network']
+            del n['port']
+            del n['fixed-ip']
+            cc.server_interface_create(server, **n)
+
+    def _update_network(self, obj, new_profile):
+        """Updating server network interfaces.
+
+        :param obj: The node object to operate.
+        :param new_profile: The new profile which may contain new network
+                            settings.
+        :return: ``None``
+        :raises: ``EResourceUpdate`` if driver failure.
+        """
+        networks_current = self.properties[self.NETWORKS]
+        networks_create = new_profile.properties[self.NETWORKS]
+        networks_delete = copy.deepcopy(networks_current)
+        for network in networks_current:
+            if network in networks_create:
+                networks_create.remove(network)
+                networks_delete.remove(network)
+
+        if not networks_create and not networks_delete:
+            return
+
         cc = self.compute(obj)
         nc = self.network(obj)
         server = cc.server_get(self.server_id)
@@ -681,50 +748,10 @@ class ServerProfile(base.Profile):
                           'fixed_ips': fixed_ips})
 
         # Detach some existing ports
-        # Step1. Accurately search port with port_id or fixed-ip/net_id
-        for n in networks_delete:
-            if n['port'] is not None:
-                for p in ports:
-                    if p['port_id'] == n['port']:
-                        ports.remove(p)
-                        break
-                res = cc.server_interface_delete(n['port'], server)
-            elif n['fixed-ip'] is not None:
-                res = nc.network_get(n['network'])
-                net_id = res.id
-                for p in ports:
-                    if (n['fixed-ip'] in p['fixed_ips']) and (
-                            p['net_id'] == net_id):
-                        res = cc.server_interface_delete(p['port_id'], server)
-                        ports.remove(p)
-                        break
+        self._delete_interfaces(cc, nc, server, networks_delete, ports)
 
-        # Step2. Fuzzy search port with net_id
-        for n in networks_delete:
-            if n['port'] is None and n['fixed-ip'] is None:
-                res = nc.network_get(n['network'])
-                net_id = res.id
-                for p in ports:
-                    if p['net_id'] == net_id:
-                        res = cc.server_interface_delete(p['port_id'], server)
-                        ports.remove(p)
-                        break
-
-        # Attach new ports added in new network definition
-        for n in networks_create:
-            net_name_id = n.get(self.NETWORK, None)
-            if net_name_id:
-                res = nc.network_get(net_name_id)
-                n['net_id'] = res.id
-                if n['fixed-ip'] is not None:
-                    n['fixed_ips'] = [
-                        {'ip_address': n['fixed-ip']}]
-            if n['port'] is not None:
-                n['port_id'] = n['port']
-            del n['network']
-            del n['port']
-            del n['fixed-ip']
-            cc.server_interface_create(server, **n)
+        # Attach new interfaces
+        self._create_interfaces(cc, nc, server, networks_create)
 
         return
 
@@ -769,22 +796,8 @@ class ServerProfile(base.Profile):
         old_image = self.properties[self.IMAGE]
         new_image = new_profile.properties[self.IMAGE]
         self._update_image(obj, old_image, new_image, passwd)
+        self._update_network(obj, new_profile)
 
-        # Update server network
-        networks_current = self.properties[self.NETWORKS]
-        networks_create = new_profile.properties[self.NETWORKS]
-        networks_delete = copy.deepcopy(networks_current)
-        for network in networks_current:
-            if network in networks_create:
-                networks_create.remove(network)
-                networks_delete.remove(network)
-        if networks_create or networks_delete:
-            # We have network interfaces to be deleted and/or created
-            try:
-                self._update_network(obj, networks_create, networks_delete)
-            except exc.InternalError as ex:
-                raise exc.EResourceUpdate(type='server', id=self.server_id,
-                                          message=ex.message)
         return True
 
     def do_get_details(self, obj):

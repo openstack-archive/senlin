@@ -655,24 +655,29 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                 'fixed_ips': [{'subnet_id': 'subnet2', 'ip_address': 'ip3'}]
             },
         ]
-        deleted_networks = [
-            {'fixed-ip': 'ip1', 'network': 'net1', 'port': None},
-            {'fixed-ip': None, 'network': 'net1', 'port': None},
-            {'fixed-ip': None, 'network': None, 'port': 'port3'}
-        ]
-        created_networks = [
-            {'fixed-ip': 'ip2', 'network': 'net1', 'port': None},
-            {'fixed-ip': None, 'network': 'net2', 'port': None},
-            {'fixed-ip': None, 'network': None, 'port': 'port4'}
-        ]
         cc.server_get.return_value = server_obj
         cc.server_interface_list.return_value = existing_ports
         nc.network_get.side_effect = [net1, net1, net1, net2]
 
-        profile = server.ServerProfile('t', self.spec)
+        old_spec = copy.deepcopy(self.spec)
+        old_spec['properties']['networks'] = [
+            {'network': 'net1', 'fixed-ip': 'ip1'},
+            {'network': 'net1'},
+            {'port': 'port3'}
+        ]
+        profile = server.ServerProfile('t', old_spec)
         profile._computeclient = cc
         profile._networkclient = nc
-        profile._update_network(obj, created_networks, deleted_networks)
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['networks'] = [
+            {'network': 'net1', 'fixed-ip': 'ip2'},
+            {'network': 'net2'},
+            {'port': 'port4'}
+        ]
+        new_profile = server.ServerProfile('t1', new_spec)
+
+        profile._update_network(obj, new_profile)
+
         calls = [mock.call('port1', server_obj),
                  mock.call('port3', server_obj),
                  mock.call('port2', server_obj)]
@@ -711,7 +716,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         mock_update_flavor.assert_called_once_with(obj, new_profile)
         mock_update_image.assert_called_once_with(
             obj, 'FAKE_IMAGE', 'FAKE_IMAGE', 'adminpass')
-        self.assertEqual(0, mock_update_network.call_count)
+        mock_update_network.assert_called_once_with(obj, new_profile)
 
     @mock.patch.object(server.ServerProfile, '_update_name')
     @mock.patch.object(server.ServerProfile, '_check_server_name')
@@ -739,7 +744,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         mock_update_flavor.assert_called_once_with(obj, new_profile)
         mock_update_image.assert_called_once_with(
             obj, 'FAKE_IMAGE', 'FAKE_IMAGE', 'adminpass')
-        self.assertEqual(0, mock_update_network.call_count)
+        mock_update_network.assert_called_once_with(obj, new_profile)
 
     @mock.patch.object(server.ServerProfile, '_update_name')
     @mock.patch.object(server.ServerProfile, '_check_server_name')
@@ -854,7 +859,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         mock_update_flavor.assert_called_with(obj, new_profile)
 
     @mock.patch.object(server.ServerProfile, '_update_flavor')
-    def test_do_update__update_flavor_failed(self, mock_update_flavor):
+    def test_do_update_update_flavor_failed(self, mock_update_flavor):
         ex = exc.EResourceUpdate(type='server', id='NOVA_ID',
                                  message='Flavor Not Found')
         mock_update_flavor.side_effect = ex
@@ -876,64 +881,63 @@ class TestNovaServerUpdate(base.SenlinTestCase):
 
     @mock.patch.object(server.ServerProfile, '_update_flavor')
     @mock.patch.object(server.ServerProfile, '_update_network')
-    def test_do_update_network_successful_no_definition_overlap(
+    def test_do_update_update_network_succeeded(
             self, mock_update_network, mock_update_flavor):
         mock_update_network.return_value = True
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = mock.Mock()
 
-        obj = mock.Mock()
-        obj.physical_id = 'FAKE_ID'
+        obj = mock.Mock(physical_id='NOVA_ID')
 
-        networks_delete = [{
-            'port': 'FAKE_PORT',
-            'fixed-ip': 'FAKE_IP',
-            'network': 'FAKE_NET',
-        }]
-        new_networks = [{
-            'port': 'FAKE_PORT_NEW',
-            'fixed-ip': 'FAKE_IP_NEW',
-            'network': 'FAKE_NET_NEW',
-        }]
         new_spec = copy.deepcopy(self.spec)
-        new_spec['properties']['networks'] = new_networks
+        new_spec['properties']['networks'] = [
+            {'network': 'new_net', 'port': 'new_port', 'fixed-ip': 'new-ip'}
+        ]
         new_profile = server.ServerProfile('t', new_spec)
 
         res = profile.do_update(obj, new_profile)
         self.assertTrue(res)
-        mock_update_network.assert_called_with(obj, new_networks,
-                                               networks_delete)
+        mock_update_network.assert_called_with(obj, new_profile)
 
+    @mock.patch.object(server.ServerProfile, '_update_name')
+    @mock.patch.object(server.ServerProfile, '_check_server_name')
     @mock.patch.object(server.ServerProfile, '_update_flavor')
+    @mock.patch.object(server.ServerProfile, '_update_metadata')
+    @mock.patch.object(server.ServerProfile, '_update_image')
     @mock.patch.object(server.ServerProfile, '_update_network')
-    def test_do_update_network_successful_definition_overlap(
-            self, mock_update_network, mock_update_flavor):
+    def test_do_update_update_network_failed(
+            self, mock_update_network, mock_update_image, mock_update_metadata,
+            mock_update_flavor, mock_check_name, mock_update_name):
 
-        mock_update_network.return_value = True
+        mock_check_name.return_value = True, 'NEW_NAME'
+        err = exc.EResourceUpdate(type='server', id='NOVA_ID', message='BOOM')
+        mock_update_network.side_effect = err
+
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = mock.Mock()
-
-        obj = mock.Mock()
-        obj.physical_id = 'FAKE_ID'
-
-        networks_delete = [{
-            'port': 'FAKE_PORT',
-            'fixed-ip': 'FAKE_IP',
-            'network': 'FAKE_NET',
-        }]
-        new_networks = [{
+        new_network = {
             'port': 'FAKE_PORT_NEW',
             'fixed-ip': 'FAKE_IP_NEW',
             'network': 'FAKE_NET_NEW',
-        }]
+        }
         new_spec = copy.deepcopy(self.spec)
-        new_spec['properties']['networks'] = [new_networks[0],
-                                              networks_delete[0]]
+        new_spec['properties']['networks'] = [new_network]
         new_profile = server.ServerProfile('t', new_spec)
+        obj = mock.Mock(physical_id='NOVA_ID')
 
-        res = profile.do_update(obj, new_profile)
-        self.assertTrue(res)
-        mock_update_network.assert_called_with(obj, new_networks, [])
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile.do_update,
+                               obj, new_profile)
+
+        self.assertEqual('Failed in updating server NOVA_ID: BOOM.',
+                         six.text_type(ex))
+        mock_update_name.assert_called_once_with(obj, 'NEW_NAME')
+        mock_update_metadata.assert_called_once_with(obj, new_profile)
+        mock_check_name.assert_called_once_with(obj, new_profile)
+        mock_update_flavor.assert_called_once_with(obj, new_profile)
+        mock_update_image.assert_called_once_with(
+            obj, 'FAKE_IMAGE', 'FAKE_IMAGE', 'adminpass')
+        mock_update_network.assert_called_with(obj, new_profile)
 
     def test_do_update_without_profile(self):
         profile = server.ServerProfile('t', self.spec)
