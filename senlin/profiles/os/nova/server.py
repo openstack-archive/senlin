@@ -582,15 +582,17 @@ class ServerProfile(base.Profile):
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
                                       message=six.text_type(ex))
 
-    def _update_flavor(self, obj, old_flavor, new_flavor):
+    def _update_flavor(self, obj, new_profile):
         """Update server flavor.
 
         :param obj: The node object to operate on.
         :param old_flavor: The identity of the current flavor.
         :param new_flavor: The identity of the new flavor.
         :returns: ``None``.
-        :raises: `InternalError` when operation was a failure.
+        :raises: `EResourceUpdate` when operation was a failure.
         """
+        old_flavor = self.properties[self.FLAVOR]
+        new_flavor = new_profile.properties[self.FLAVOR]
         cc = self.compute(obj)
         oldflavor = self._validate_flavor(obj, old_flavor, 'update')
         newflavor = self._validate_flavor(obj, new_flavor, 'update')
@@ -753,11 +755,8 @@ class ServerProfile(base.Profile):
             self._update_name(obj, new_name)
         self._update_metadata(obj, new_profile)
 
-        # Update server flavor
-        # Note the flavor is a required property so it must have a value.
-        old_flavor = self.properties[self.FLAVOR]
-        new_flavor = new_profile.properties[self.FLAVOR]
-        self._update_flavor(obj, old_flavor, new_flavor)
+        # Update server flavor: Note flavor is a required property
+        self._update_flavor(obj, new_profile)
 
         # Update server image
         old_passwd = self.properties.get(self.ADMIN_PASS)
