@@ -597,12 +597,43 @@ class ServerProfile(base.Profile):
     def _update_name(self, obj, new_name):
         """Update the name of the server.
 
-        :param new_profile: The new profile which may contain the server name.
+        :param obj: The node object to operate.
+        :param new_name: The new name for the server instance.
         :return: ``None``.
         :raises: ``EResourceUpdate``.
         """
         try:
             self.compute(obj).server_update(obj.physical_id, name=new_name)
+        except exc.InternalError as ex:
+            raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                      message=six.text_type(ex))
+
+    def _check_password(self, new_profile):
+        """Check if the admin password has been changed in the new profile.
+
+        :param new_profile: The new profile which may contain a new password
+                            for the server instance.
+        :return: A tuple consisting a boolean indicating whether the password
+                 needs a change and the password determined (which could be
+                 None).
+        """
+        old_passwd = self.properties.get(self.ADMIN_PASS)
+        new_passwd = new_profile.properties[self.ADMIN_PASS]
+        if old_passwd == new_passwd:
+            return False, new_passwd
+        return True, new_passwd
+
+    def _update_password(self, obj, new_password):
+        """Update the admin password for the server.
+
+        :param obj: The node object to operate.
+        :param new_password: The new password for the server instance.
+        :return: ``None``.
+        :raises: ``EResourceUpdate``.
+        """
+        try:
+            self.compute(obj).server_change_password(obj.physical_id,
+                                                     new_password)
         except exc.InternalError as ex:
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
                                       message=six.text_type(ex))
@@ -745,48 +776,61 @@ class ServerProfile(base.Profile):
         :param networks: A list containing information about network
                          interfaces to be created.
         :returns: ``None``
-        :raises: ``EInternalError``
+        :raises: ``EResourceUpdate``
         """
+        def _get_network(nc, net_id, server_id):
+            try:
+                net = nc.network_get(net_id)
+                return net.id
+            except exc.InternalError as ex:
+                raise exc.EResourceUpdate(type='server', id=server_id,
+                                          message=six.text_type(ex))
+
+        def _do_delete(port_id, server_id):
+            try:
+                cc.server_interface_delete(port_id, server_id)
+            except exc.InternalError as ex:
+                raise exc.EResourceUpdate(type='server', id=server_id,
+                                          message=six.text_type(ex))
+
         cc = self.compute(obj)
         nc = self.network(obj)
-        server = cc.server_get(obj.physical_id)
-        ports_existing = list(cc.server_interface_list(server))
+        try:
+            existing = list(cc.server_interface_list(obj.physical_id))
+        except exc.InternalError as ex:
+            raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                      message=six.text_type(ex))
+
         ports = []
-        for p in ports_existing:
-            fixed_ips = [addr['ip_address'] for addr in p['fixed_ips']]
+        for intf in existing:
+            fixed_ips = [addr['ip_address'] for addr in intf.fixed_ips]
             ports.append({
-                'port_id': p['port_id'],
-                'net_id': p['net_id'],
-                'fixed_ips': fixed_ips})
+                'id': intf.port_id,
+                'net': intf.net_id,
+                'ips': fixed_ips
+            })
 
-        # Step1. Accurately search port with port_id or fixed_ip/net_id
         for n in networks:
-            if n['port'] is not None:
+            network = n.get('network', None)
+            port = n.get('port', None)
+            fixed_ip = n.get('fixed_ip', None)
+            if port:
                 for p in ports:
-                    if p['port_id'] == n['port']:
+                    if p['id'] == port:
                         ports.remove(p)
-                        break
-                cc.server_interface_delete(n['port'], server)
-            elif n['fixed_ip'] is not None:
-                res = nc.network_get(n['network'])
-                net_id = res.id
+                        _do_delete(port, obj.physical_id)
+            elif fixed_ip:
+                net_id = _get_network(nc, network, obj.physical_id)
                 for p in ports:
-                    if (n['fixed_ip'] in p['fixed_ips']) and (
-                            p['net_id'] == net_id):
-                        cc.server_interface_delete(p['port_id'], server)
+                    if (fixed_ip in p['ips'] and net_id == p['net']):
                         ports.remove(p)
-                        break
-
-        # Step2. Fuzzy search port with net_id
-        for n in networks:
-            if n['port'] is None and n['fixed_ip'] is None:
-                res = nc.network_get(n['network'])
-                net_id = res.id
+                        _do_delete(p['id'], obj.physical_id)
+            elif port is None and fixed_ip is None:
+                net_id = _get_network(nc, network, obj.physical_id)
                 for p in ports:
-                    if p['net_id'] == net_id:
-                        cc.server_interface_delete(p['port_id'], server)
+                    if p['net'] == net_id:
                         ports.remove(p)
-                        break
+                        _do_delete(p['id'], obj.physical_id)
 
     def _update_network(self, obj, new_profile):
         """Updating server network interfaces.
@@ -844,17 +888,16 @@ class ServerProfile(base.Profile):
         # Update server flavor: Note flavor is a required property
         self._update_flavor(obj, new_profile)
 
-        # Update server image
-        old_passwd = self.properties.get(self.ADMIN_PASS)
-        passwd = old_passwd
-        if new_profile.properties[self.ADMIN_PASS] is not None:
-            passwd = new_profile.properties[self.ADMIN_PASS]
+        passwd_changed, new_passwd = self._check_password(new_profile)
+        if passwd_changed and new_passwd is not None:
+            self._update_password(obj, new_passwd)
 
-        # TODO(Qiming): Check if server name can be separately updated
-        # TODO(Qiming): Check if password alone should be updated
+        # Update server image
+        # TODO(Qiming): merge name update into image update when possible
+        # TODO(Qiming): merge password update into image update when possible
         old_image = self.properties[self.IMAGE]
         new_image = new_profile.properties[self.IMAGE]
-        self._update_image(obj, old_image, new_image, passwd)
+        self._update_image(obj, old_image, new_image, new_passwd)
         self._update_network(obj, new_profile)
 
         return True

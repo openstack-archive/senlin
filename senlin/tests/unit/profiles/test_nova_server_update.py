@@ -719,27 +719,21 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         cc = mock.Mock()
         nc = mock.Mock()
         net1 = mock.Mock(id='net1')
-        server_obj = mock.Mock(id='OBJ_ID')
-        cc.server_get.return_value = server_obj
-        existing_ports = [
-            {
-                'port_id': 'port1',
-                'net_id': 'net1',
-                'fixed_ips': [{'subnet_id': 'subnet1', 'ip_address': 'ip1'}]
-            },
-            {
-                'port_id': 'port2',
-                'net_id': 'net1',
-                'fixed_ips': [{'subnet_id': 'subnet1',
-                               'ip_address': 'ip-random2'}]
-            },
-            {
-                'port_id': 'port3',
-                'net_id': 'net2',
-                'fixed_ips': [{'subnet_id': 'subnet2', 'ip_address': 'ip3'}]
-            },
+        interfaces = [
+            mock.Mock(port_id='port1', net_id='net1',
+                      fixed_ips=[{
+                          'subnet_id': 'subnet1', 'ip_address': 'ip1'
+                      }]),
+            mock.Mock(port_id='port2', net_id='net1',
+                      fixed_ips=[{
+                          'subnet_id': 'subnet1', 'ip_address': 'ip-random2'
+                      }]),
+            mock.Mock(port_id='port3', net_id='net2',
+                      fixed_ips=[{
+                          'subnet_id': 'subnet2', 'ip_address': 'ip3'
+                      }])
         ]
-        cc.server_interface_list.return_value = existing_ports
+        cc.server_interface_list.return_value = interfaces
         nc.network_get.side_effect = [net1, net1]
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = cc
@@ -755,16 +749,202 @@ class TestNovaServerUpdate(base.SenlinTestCase):
 
         self.assertIsNone(res)
 
-        cc.server_get.assert_called_once_with('NOVA_ID')
-        cc.server_interface_list.assert_called_once_with(server_obj)
+        cc.server_interface_list.assert_called_once_with('NOVA_ID')
         nc.network_get.assert_has_calls([
             mock.call('net1'), mock.call('net1')
         ])
         cc.server_interface_delete.assert_has_calls([
-            mock.call('port1', server_obj),
-            mock.call('port3', server_obj),
-            mock.call('port2', server_obj),
+            mock.call('port1', 'NOVA_ID'),
+            mock.call('port2', 'NOVA_ID'),
+            mock.call('port3', 'NOVA_ID'),
         ])
+
+    def test__delete_interfaces_failed_listing_interfaces(self):
+        cc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        profile._networkclient = mock.Mock()
+        err = exc.InternalError(message='BANG')
+        cc.server_interface_list.side_effect = err
+        obj = mock.Mock(physical_id='NOVA_ID')
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._delete_interfaces,
+                               obj, mock.Mock())
+
+        self.assertEqual('Failed in updating server NOVA_ID: BANG.',
+                         six.text_type(ex))
+        cc.server_interface_list.assert_called_once_with('NOVA_ID')
+
+    def test__delete_interfaces_failed_1st_delete(self):
+        cc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        profile._networkclient = mock.Mock()
+        interfaces = [
+            mock.Mock(port_id='port1', net_id='net1',
+                      fixed_ips=[{
+                          'subnet_id': 'subnet1', 'ip_address': 'ip1'
+                      }]),
+            mock.Mock(port_id='port2', net_id='net1',
+                      fixed_ips=[{
+                          'subnet_id': 'subnet1', 'ip_address': 'ip-random2'
+                      }]),
+            mock.Mock(port_id='port3', net_id='net2',
+                      fixed_ips=[{
+                          'subnet_id': 'subnet2', 'ip_address': 'ip3'
+                      }])
+        ]
+        cc.server_interface_list.return_value = interfaces
+        err = exc.InternalError(message='BANG')
+        cc.server_interface_delete.side_effect = err
+        obj = mock.Mock(physical_id='NOVA_ID')
+        networks = [
+            {'network': 'net1', 'port': None, 'fixed_ip': 'ip1'},
+            {'network': 'net1', 'port': None, 'fixed_ip': None},
+            {'network': None, 'port': 'port3', 'fixed_ip': None}
+        ]
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._delete_interfaces,
+                               obj, networks)
+
+        self.assertEqual('Failed in updating server NOVA_ID: BANG.',
+                         six.text_type(ex))
+        cc.server_interface_list.assert_called_once_with('NOVA_ID')
+        cc.server_interface_delete.assert_called_once_with('port3', 'NOVA_ID')
+
+    def test__delete_interfaces_failed_1st_get_network(self):
+        cc = mock.Mock()
+        nc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        profile._networkclient = nc
+        interfaces = [
+            mock.Mock(port_id='port1', net_id='net1',
+                      fixed_ips=[{
+                          'subnet_id': 'subnet1', 'ip_address': 'ip1'
+                      }]),
+        ]
+        cc.server_interface_list.return_value = interfaces
+        err = exc.InternalError(message='BANG')
+        nc.network_get.side_effect = err
+        obj = mock.Mock(physical_id='NOVA_ID')
+        networks = [
+            {'network': 'net1', 'port': None, 'fixed_ip': 'ip1'},
+        ]
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._delete_interfaces,
+                               obj, networks)
+
+        self.assertEqual('Failed in updating server NOVA_ID: BANG.',
+                         six.text_type(ex))
+        cc.server_interface_list.assert_called_once_with('NOVA_ID')
+        nc.network_get.assert_called_once_with('net1')
+
+    def test__delete_interfaces_failed_2nd_delete(self):
+        cc = mock.Mock()
+        nc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        profile._networkclient = nc
+        interfaces = [
+            mock.Mock(port_id='port3', net_id='net2',
+                      fixed_ips=[{
+                          'subnet_id': 'subnet2', 'ip_address': 'ip3'
+                      }])
+        ]
+        cc.server_interface_list.return_value = interfaces
+        net2 = mock.Mock(id='net2')
+        nc.network_get.return_value = net2
+        err = exc.InternalError(message='BANG')
+        cc.server_interface_delete.side_effect = err
+        obj = mock.Mock(physical_id='NOVA_ID')
+        networks = [
+            {'network': 'net2', 'port': None, 'fixed_ip': None},
+        ]
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._delete_interfaces,
+                               obj, networks)
+
+        self.assertEqual('Failed in updating server NOVA_ID: BANG.',
+                         six.text_type(ex))
+        cc.server_interface_list.assert_called_once_with('NOVA_ID')
+        nc.network_get.assert_called_once_with('net2')
+
+    def test__delete_interfaces_failed_2nd_get_network(self):
+        cc = mock.Mock()
+        nc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        profile._networkclient = nc
+        interfaces = [
+            mock.Mock(port_id='port1', net_id='net1',
+                      fixed_ips=[{
+                          'subnet_id': 'subnet1', 'ip_address': 'ip1'
+                      }]),
+        ]
+        cc.server_interface_list.return_value = interfaces
+        net1 = mock.Mock(id='net1')
+        nc.network_get.return_value = net1
+        err = exc.InternalError(message='BANG')
+        cc.server_interface_delete.side_effect = err
+        obj = mock.Mock(physical_id='NOVA_ID')
+        networks = [
+            {'network': 'net1', 'port': None, 'fixed_ip': 'ip1'},
+        ]
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._delete_interfaces,
+                               obj, networks)
+
+        self.assertEqual('Failed in updating server NOVA_ID: BANG.',
+                         six.text_type(ex))
+        cc.server_interface_list.assert_called_once_with('NOVA_ID')
+        nc.network_get.assert_called_once_with('net1')
+        cc.server_interface_delete.assert_called_once_with('port1', 'NOVA_ID')
+
+    def test__delete_interfaces_failed_3rd_delete(self):
+        cc = mock.Mock()
+        nc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        profile._networkclient = nc
+        interfaces = [
+            mock.Mock(port_id='port1', net_id='net1',
+                      fixed_ips=[{
+                          'subnet_id': 'subnet1', 'ip_address': 'ip1'
+                      }]),
+            mock.Mock(port_id='port2', net_id='net1',
+                      fixed_ips=[{
+                          'subnet_id': 'subnet1', 'ip_address': 'ip-random2'
+                      }]),
+            mock.Mock(port_id='port3', net_id='net2',
+                      fixed_ips=[{
+                          'subnet_id': 'subnet2', 'ip_address': 'ip3'
+                      }])
+        ]
+        cc.server_interface_list.return_value = interfaces
+        net2 = mock.Mock(id='net2')
+        nc.network_get.return_value = net2
+        err = exc.InternalError(message='BANG')
+        cc.server_interface_delete.side_effect = err
+        obj = mock.Mock(physical_id='NOVA_ID')
+        networks = [
+            {'network': 'net2', 'port': None, 'fixed_ip': None},
+        ]
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._delete_interfaces,
+                               obj, networks)
+
+        self.assertEqual('Failed in updating server NOVA_ID: BANG.',
+                         six.text_type(ex))
+        cc.server_interface_list.assert_called_once_with('NOVA_ID')
+        nc.network_get.assert_called_once_with('net2')
+        cc.server_interface_delete.assert_called_once_with('port3', 'NOVA_ID')
 
     @mock.patch.object(server.ServerProfile, '_delete_interfaces')
     @mock.patch.object(server.ServerProfile, '_create_interfaces')
