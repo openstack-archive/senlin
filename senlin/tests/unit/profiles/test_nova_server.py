@@ -49,7 +49,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                 'name': 'FAKE_SERVER_NAME',
                 'networks': [{
                     'port': 'FAKE_PORT',
-                    'fixed-ip': 'FAKE_IP',
+                    'fixed_ip': 'FAKE_IP',
                     'network': 'FAKE_NET',
                 }],
                 'personality': [{
@@ -119,11 +119,11 @@ class TestNovaServerBasic(base.SenlinTestCase):
             self.patchobject(profile, '_validate_bdm', return_value=None)
 
         if mock_net:
-            fake_net = [{
-                'fixed-ip': 'FAKE_IP',
+            fake_net = {
+                'fixed_ip': 'FAKE_IP',
                 'port': 'FAKE_PORT',
                 'uuid': 'FAKE_NETWORK_ID',
-            }]
+            }
             self.patchobject(profile, '_validate_network',
                              return_value=fake_net)
 
@@ -170,7 +170,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
             },
             name='FAKE_SERVER_NAME',
             networks=[{
-                'fixed-ip': 'FAKE_IP',
+                'fixed_ip': 'FAKE_IP',
                 'port': 'FAKE_PORT',
                 'uuid': 'FAKE_NETWORK_ID',
             }],
@@ -272,8 +272,8 @@ class TestNovaServerBasic(base.SenlinTestCase):
                           profile.do_create,
                           node_obj)
         mock_net.assert_called_once_with(
-            node_obj,
-            [{'network': 'FAKE_NET', 'port': None, 'fixed-ip': None}])
+            node_obj, {'network': 'FAKE_NET', 'port': None, 'fixed_ip': None},
+            'create')
 
     def test_do_create_server_attrs_not_defined(self):
         cc = mock.Mock()

@@ -38,7 +38,7 @@ spec = {
         'name': 'FAKE_SERVER_NAME',
         'networks': [{
             'port': 'FAKE_PORT',
-            'fixed-ip': 'FAKE_IP',
+            'fixed_ip': 'FAKE_IP',
             'network': 'FAKE_NET',
         }],
         'scheduler_hints': {
@@ -423,6 +423,237 @@ class TestKeypairValidation(base.SenlinTestCase):
         self.cc.keypair_find.assert_called_once_with(key, False)
 
 
+class TestNetworkValidation(base.SenlinTestCase):
+
+    scenarios = [
+        ('validate:net-y:port-y:fixed_ip-n', dict(
+            reason=None,
+            success=True,
+            inputs={'network': 'NET', 'port': 'PORT'},
+            net_result=[mock.Mock(id='NET_ID')],
+            port_result=[mock.Mock(id='PORT_ID', status='DOWN')],
+            result={'uuid': 'NET_ID', 'port': 'PORT_ID'},
+            exception=None,
+            message='')),
+        ('validate:net-y:port-n:fixed_ip-y', dict(
+            reason=None,
+            success=True,
+            inputs={'network': 'NET', 'fixed_ip': 'FIXED_IP'},
+            net_result=[mock.Mock(id='NET_ID')],
+            port_result=[],
+            result={'uuid': 'NET_ID', 'fixed_ip': 'FIXED_IP'},
+            exception=None,
+            message='')),
+        ('validate:net-f:port-y:fixed_ip-n', dict(
+            reason=None,
+            success=False,
+            inputs={'network': 'NET', 'port': 'PORT'},
+            net_result=[exc.InternalError(message='NET Failure')],
+            port_result=[],
+            result={},
+            exception=exc.InvalidSpec,
+            message='NET Failure')),
+        ('validate:net-n:port-f:fixed_ip-n', dict(
+            reason=None,
+            success=False,
+            inputs={'port': 'PORT'},
+            net_result=[],
+            port_result=[exc.InternalError(message='PORT Failure')],
+            result={},
+            exception=exc.InvalidSpec,
+            message='PORT Failure')),
+        ('validate:net-n:port-active:fixed_ip-n', dict(
+            reason=None,
+            success=False,
+            inputs={'port': 'PORT'},
+            net_result=[],
+            port_result=[mock.Mock(id='PORT_ID', status='ACTIVE')],
+            result={},
+            exception=exc.InvalidSpec,
+            message='The status of the port PORT must be DOWN')),
+        ('validate:net-n:port-n:fixed_ip-n', dict(
+            reason=None,
+            success=False,
+            inputs={'fixed_ip': 'FIXED_IP'},
+            net_result=[],
+            port_result=[],
+            result={},
+            exception=exc.InvalidSpec,
+            message="'port' is required if 'network' is omitted")),
+        ('validate:net-n:port-y:fixed_ip-y', dict(
+            reason=None,
+            success=False,
+            inputs={'port': 'PORT', 'fixed_ip': 'FIXED_IP'},
+            net_result=[],
+            port_result=[mock.Mock(id='PORT_ID', status='DOWN')],
+            result={},
+            exception=exc.InvalidSpec,
+            message=("The 'port' property and the 'fixed_ip' property cannot "
+                     "be specified at the same time"))),
+        ('create:net-y:port-y:fixed_ip-n', dict(
+            reason='create',
+            success=True,
+            inputs={'network': 'NET', 'port': 'PORT'},
+            net_result=[mock.Mock(id='NET_ID')],
+            port_result=[mock.Mock(id='PORT_ID', status='DOWN')],
+            result={'uuid': 'NET_ID', 'port': 'PORT_ID'},
+            exception=None,
+            message='')),
+        ('create:net-y:port-n:fixed_ip-y', dict(
+            reason='create',
+            success=True,
+            inputs={'network': 'NET', 'fixed_ip': 'FIXED_IP'},
+            net_result=[mock.Mock(id='NET_ID')],
+            port_result=[],
+            result={'uuid': 'NET_ID', 'fixed_ip': 'FIXED_IP'},
+            exception=None,
+            message='')),
+        ('create:net-f:port-y:fixed_ip-n', dict(
+            reason='create',
+            success=False,
+            inputs={'network': 'NET', 'port': 'PORT'},
+            net_result=[exc.InternalError(message='NET Failure')],
+            port_result=[],
+            result={},
+            exception=exc.EResourceCreation,
+            message='Failed in creating server: NET Failure.')),
+        ('create:net-n:port-f:fixed_ip-n', dict(
+            reason='create',
+            success=False,
+            inputs={'port': 'PORT'},
+            net_result=[],
+            port_result=[exc.InternalError(message='PORT Failure')],
+            result={},
+            exception=exc.EResourceCreation,
+            message='Failed in creating server: PORT Failure.')),
+        ('create:net-n:port-active:fixed_ip-n', dict(
+            reason='create',
+            success=False,
+            inputs={'port': 'PORT'},
+            net_result=[],
+            port_result=[mock.Mock(id='PORT_ID', status='ACTIVE')],
+            result={},
+            exception=exc.EResourceCreation,
+            message=('Failed in creating server: The status of the port PORT '
+                     'must be DOWN.'))),
+        ('create:net-n:port-n:fixed_ip-n', dict(
+            reason='create',
+            success=False,
+            inputs={'fixed_ip': 'FIXED_IP'},
+            net_result=[],
+            port_result=[],
+            result={},
+            exception=exc.EResourceCreation,
+            message=("Failed in creating server: 'port' is required if "
+                     "'network' is omitted."))),
+        ('create:net-n:port-y:fixed_ip-y', dict(
+            reason='create',
+            success=False,
+            inputs={'port': 'PORT', 'fixed_ip': 'FIXED_IP'},
+            net_result=[],
+            port_result=[mock.Mock(id='PORT_ID', status='DOWN')],
+            result={},
+            exception=exc.EResourceCreation,
+            message=("Failed in creating server: The 'port' property and the "
+                     "'fixed_ip' property cannot be specified at the same "
+                     "time."))),
+        ('update:net-y:port-y:fixed_ip-n', dict(
+            reason='update',
+            success=True,
+            inputs={'network': 'NET', 'port': 'PORT'},
+            net_result=[mock.Mock(id='NET_ID')],
+            port_result=[mock.Mock(id='PORT_ID', status='DOWN')],
+            result={'net_id': 'NET_ID', 'port_id': 'PORT_ID'},
+            exception=None,
+            message='')),
+        ('update:net-y:port-n:fixed_ip-y', dict(
+            reason='update',
+            success=True,
+            inputs={'network': 'NET', 'fixed_ip': 'FIXED_IP'},
+            net_result=[mock.Mock(id='NET_ID')],
+            port_result=[],
+            result={'net_id': 'NET_ID',
+                    'fixed_ips': [{'ip_address': 'FIXED_IP'}]},
+            exception=None,
+            message='')),
+        ('update:net-f:port-y:fixed_ip-n', dict(
+            reason='update',
+            success=False,
+            inputs={'network': 'NET', 'port': 'PORT'},
+            net_result=[exc.InternalError(message='NET Failure')],
+            port_result=[],
+            result={},
+            exception=exc.EResourceUpdate,
+            message='Failed in updating server NOVA_ID: NET Failure.')),
+        ('update:net-n:port-f:fixed_ip-n', dict(
+            reason='update',
+            success=False,
+            inputs={'port': 'PORT'},
+            net_result=[],
+            port_result=[exc.InternalError(message='PORT Failure')],
+            result={},
+            exception=exc.EResourceUpdate,
+            message='Failed in updating server NOVA_ID: PORT Failure.')),
+        ('update:net-n:port-active:fixed_ip-n', dict(
+            reason='update',
+            success=False,
+            inputs={'port': 'PORT'},
+            net_result=[],
+            port_result=[mock.Mock(id='PORT_ID', status='ACTIVE')],
+            result={},
+            exception=exc.EResourceUpdate,
+            message=('Failed in updating server NOVA_ID: The status of the '
+                     'port PORT must be DOWN.'))),
+        ('update:net-n:port-n:fixed_ip-n', dict(
+            reason='update',
+            success=False,
+            inputs={'fixed_ip': 'FIXED_IP'},
+            net_result=[],
+            port_result=[],
+            result={},
+            exception=exc.EResourceUpdate,
+            message=("Failed in updating server NOVA_ID: 'port' is required "
+                     "if 'network' is omitted."))),
+        ('update:net-n:port-y:fixed_ip-y', dict(
+            reason='update',
+            success=False,
+            inputs={'port': 'PORT', 'fixed_ip': 'FIXED_IP'},
+            net_result=[],
+            port_result=[mock.Mock(id='PORT_ID', status='DOWN')],
+            result={},
+            exception=exc.EResourceUpdate,
+            message=("Failed in updating server NOVA_ID: The 'port' property "
+                     "and the 'fixed_ip' property cannot be specified at the "
+                     "same time."))),
+    ]
+
+    def setUp(self):
+        super(TestNetworkValidation, self).setUp()
+
+        self.nc = mock.Mock()
+        self.profile = server.ServerProfile('t', spec)
+        self.profile._networkclient = self.nc
+
+    def test_validation(self):
+        self.nc.network_get.side_effect = self.net_result
+        self.nc.port_find.side_effect = self.port_result
+        obj = mock.Mock(physical_id='NOVA_ID')
+
+        if self.success:
+            res = self.profile._validate_network(obj, self.inputs, self.reason)
+            self.assertEqual(self.result, res)
+        else:
+            ex = self.assertRaises(self.exception,
+                                   self.profile._validate_network,
+                                   obj, self.inputs, self.reason)
+            self.assertEqual(self.message, six.text_type(ex))
+
+        if self.net_result:
+            self.nc.network_get.assert_called_once_with('NET')
+        if self.port_result:
+            self.nc.port_find.assert_called_once_with('PORT')
+
+
 class TestNovaServerValidate(base.SenlinTestCase):
 
     def setUp(self):
@@ -471,60 +702,21 @@ class TestNovaServerValidate(base.SenlinTestCase):
                          " can be specified, not both.",
                          six.text_type(ex))
 
-    def test__validate_network(self):
-        nc = mock.Mock()
-        nc.network_get.return_value = mock.Mock(id='NET_ID')
-        profile = server.ServerProfile('t', spec)
-        profile._networkclient = nc
-        networks = [{'network': 'NET_NAME', 'port': None, 'fixed-ip': None}]
-
-        res = profile._validate_network(mock.Mock(), networks)
-
-        self.assertEqual([{'uuid': 'NET_ID'}], res)
-        nc.network_get.assert_called_once_with('NET_NAME')
-
-    def test__validate_network_port_fixed_ip_preserved(self):
-        nc = mock.Mock()
-        profile = server.ServerProfile('t', spec)
-        profile._networkclient = nc
-        networks = [{'port': 'PORT_ID', 'fixed-ip': 'FIXED_IP'}]
-
-        res = profile._validate_network(mock.Mock(), networks)
-
-        self.assertEqual([{'port': 'PORT_ID', 'fixed-ip': 'FIXED_IP'}], res)
-        self.assertEqual(0, nc.network_get.call_count)
-
-    def test__validate_network_driver_error(self):
-        nc = mock.Mock()
-        nc.network_get.side_effect = exc.InternalError(message='BOOM')
-        profile = server.ServerProfile('t', spec)
-        profile._networkclient = nc
-        networks = [{'network': 'NET_NAME', 'port': None, 'fixed-ip': None}]
-
-        ex = self.assertRaises(exc.EResourceCreation,
-                               profile._validate_network,
-                               mock.Mock(), networks)
-
-        self.assertEqual('Failed in creating server: BOOM.',
-                         six.text_type(ex))
-        nc.network_get.assert_called_once_with('NET_NAME')
-
     def test_do_validate_all_passed(self):
         profile = server.ServerProfile('t', spec)
-        cc = mock.Mock()
-        cc.validate_azs.return_value = ['FAKE_AZ']
-        x_flavor = mock.Mock(is_disabled=False, id='FLAV')
-        cc.flavor_find.return_value = x_flavor
-        x_image = mock.Mock()
-        cc.image_find.return_value = x_image
-        x_key = mock.Mock()
-        cc.keypair_find.return_value = x_key
-        profile._computeclient = cc
+        mock_az = self.patchobject(profile, '_validate_az')
+        mock_flavor = self.patchobject(profile, '_validate_flavor')
+        mock_image = self.patchobject(profile, '_validate_image')
+        mock_keypair = self.patchobject(profile, '_validate_keypair')
+        mock_network = self.patchobject(profile, '_validate_network')
+        obj = mock.Mock()
 
-        res = profile.do_validate(mock.Mock())
+        res = profile.do_validate(obj)
 
+        properties = spec['properties']
         self.assertTrue(res)
-        cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
-        cc.flavor_find.assert_called_once_with('FLAV', False)
-        cc.image_find.assert_called_once_with('FAKE_IMAGE', False)
-        cc.keypair_find.assert_called_once_with('FAKE_KEYNAME', False)
+        mock_az.assert_called_once_with(obj, properties['availability_zone'])
+        mock_flavor.assert_called_once_with(obj, properties['flavor'])
+        mock_image.assert_called_once_with(obj, properties['image'])
+        mock_keypair.assert_called_once_with(obj, properties['key_name'])
+        mock_network.assert_called_once_with(obj, properties['networks'][0])

@@ -23,20 +23,22 @@ class NeutronClient(base.DriverBase):
 
     @sdk.translate_exception
     def network_get(self, name_or_id, ignore_missing=False):
-        network = self.conn.network.find_network(name_or_id,
-                                                 ignore_missing)
+        network = self.conn.network.find_network(name_or_id, ignore_missing)
         return network
 
     @sdk.translate_exception
+    def port_find(self, name_or_id, ignore_missing=False):
+        port = self.conn.network.find_port(name_or_id, ignore_missing)
+        return port
+
+    @sdk.translate_exception
     def subnet_get(self, name_or_id, ignore_missing=False):
-        subnet = self.conn.network.find_subnet(name_or_id,
-                                               ignore_missing)
+        subnet = self.conn.network.find_subnet(name_or_id, ignore_missing)
         return subnet
 
     @sdk.translate_exception
     def loadbalancer_get(self, name_or_id, ignore_missing=False):
-        lb = self.conn.network.find_load_balancer(name_or_id,
-                                                  ignore_missing)
+        lb = self.conn.network.find_load_balancer(name_or_id, ignore_missing)
         return lb
 
     @sdk.translate_exception
