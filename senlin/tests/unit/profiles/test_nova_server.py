@@ -842,7 +842,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                node_obj)
 
         self.assertEqual('Failed in rebuilding server FAKE_ID: '
-                         'FAKE_ID not found',
+                         'FAKE_ID not found.',
                          six.text_type(ex))
         cc.server_get.assert_called_once_with('FAKE_ID')
 
@@ -862,7 +862,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                node_obj)
 
         self.assertEqual('Failed in rebuilding server FAKE_ID: '
-                         'cannot rebuild',
+                         'cannot rebuild.',
                          six.text_type(ex))
         cc.server_get.assert_called_once_with('FAKE_ID')
         cc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
@@ -885,7 +885,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                profile.do_rebuild,
                                node_obj)
 
-        self.assertEqual('Failed in rebuilding server FAKE_ID: timeout',
+        self.assertEqual('Failed in rebuilding server FAKE_ID: timeout.',
                          six.text_type(ex))
         cc.server_get.assert_called_once_with('FAKE_ID')
         cc.server_rebuild.assert_called_once_with('FAKE_ID', '123',

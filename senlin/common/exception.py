@@ -244,8 +244,20 @@ class EResourceDeletion(InternalError):
 
 
 class EResourceOperation(InternalError):
+    """Generic exception for resource fail operation.
+
+    The op here can be 'recovering','rebuilding', 'checking' and
+    so on. And the op 'creating', 'updating' and 'deleting' we can
+    use separately class `EResourceCreation`,`EResourceUpdate` and
+    `EResourceDeletion`.
+    The type here is resource's dirver type.It can be 'server',
+    'stack', 'container' and so on.
+    The id is resource's id.
+    The message here can be message from class 'ResourceNotFound',
+    'ResourceInUse' and so on, or developer can specified message.
+    """
     # Used when operating resources from other services
-    msg_fmt = _("Failed in %(op)s %(type)s %(id)s: %(message)s")
+    msg_fmt = _("Failed in %(op)s %(type)s %(id)s: %(message)s.")
 
 
 class InvalidPlugin(InternalError):
