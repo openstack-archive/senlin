@@ -630,13 +630,39 @@ class TestNovaServerUpdate(base.SenlinTestCase):
             'NOVA_ID', '456', 'FAKE_SERVER_NAME', 'adminpass')
         cc.wait_for_server.assert_called_once_with('NOVA_ID', 'ACTIVE')
 
-    def test__update_network(self):
-        obj = mock.Mock(physical_id='FAKE_ID')
+    def test__create_interfaces(self):
         cc = mock.Mock()
         nc = mock.Mock()
-        server_obj = mock.Mock()
         net1 = mock.Mock(id='net1')
         net2 = mock.Mock(id='net2')
+        server_obj = mock.Mock(id='NOVA_ID')
+        cc.server_get.return_value = server_obj
+        nc.network_get.side_effect = [net1, net2]
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        profile._networkclient = nc
+        obj = mock.Mock(physical_id='NOVA_ID')
+        networks = [
+            {'network': 'net1', 'port': None, 'fixed-ip': 'ip2'},
+            {'network': 'net2', 'port': None, 'fixed-ip': None},
+            {'network': None, 'port': 'port4', 'fixed-ip': None}
+        ]
+        profile._create_interfaces(obj, networks)
+
+        calls = [
+            mock.call(
+                server_obj, net_id='net1', fixed_ips=[{'ip_address': 'ip2'}]),
+            mock.call(server_obj, net_id='net2'),
+            mock.call(server_obj, port_id='port4'),
+        ]
+        cc.server_interface_create.assert_has_calls(calls)
+
+    def test__delete_interfaces(self):
+        cc = mock.Mock()
+        nc = mock.Mock()
+        net1 = mock.Mock(id='net1')
+        server_obj = mock.Mock(id='OBJ_ID')
+        cc.server_get.return_value = server_obj
         existing_ports = [
             {
                 'port_id': 'port1',
@@ -655,9 +681,36 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                 'fixed_ips': [{'subnet_id': 'subnet2', 'ip_address': 'ip3'}]
             },
         ]
-        cc.server_get.return_value = server_obj
         cc.server_interface_list.return_value = existing_ports
-        nc.network_get.side_effect = [net1, net1, net1, net2]
+        nc.network_get.side_effect = [net1, net1]
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        profile._networkclient = nc
+        obj = mock.Mock(physical_id='NOVA_ID')
+        networks = [
+            {'network': 'net1', 'port': None, 'fixed-ip': 'ip1'},
+            {'network': 'net1', 'port': None, 'fixed-ip': None},
+            {'network': None, 'port': 'port3', 'fixed-ip': None}
+        ]
+
+        res = profile._delete_interfaces(obj, networks)
+
+        self.assertIsNone(res)
+
+        cc.server_get.assert_called_once_with('NOVA_ID')
+        cc.server_interface_list.assert_called_once_with(server_obj)
+        nc.network_get.assert_has_calls([
+            mock.call('net1'), mock.call('net1')
+        ])
+        cc.server_interface_delete.assert_has_calls([
+            mock.call('port3', server_obj),
+            mock.call('port1', server_obj)
+        ])
+
+    @mock.patch.object(server.ServerProfile, '_delete_interfaces')
+    @mock.patch.object(server.ServerProfile, '_create_interfaces')
+    def test__update_network(self, mock_create, mock_delete):
+        obj = mock.Mock(physical_id='FAKE_ID')
 
         old_spec = copy.deepcopy(self.spec)
         old_spec['properties']['networks'] = [
@@ -666,8 +719,6 @@ class TestNovaServerUpdate(base.SenlinTestCase):
             {'port': 'port3'}
         ]
         profile = server.ServerProfile('t', old_spec)
-        profile._computeclient = cc
-        profile._networkclient = nc
         new_spec = copy.deepcopy(self.spec)
         new_spec['properties']['networks'] = [
             {'network': 'net1', 'fixed-ip': 'ip2'},
@@ -676,19 +727,22 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         ]
         new_profile = server.ServerProfile('t1', new_spec)
 
-        profile._update_network(obj, new_profile)
+        res = profile._update_network(obj, new_profile)
 
-        calls = [mock.call('port1', server_obj),
-                 mock.call('port3', server_obj),
-                 mock.call('port2', server_obj)]
-        cc.server_interface_delete.assert_has_calls(calls)
-        calls = [
-            mock.call(
-                server_obj, net_id='net1', fixed_ips=[{'ip_address': 'ip2'}]),
-            mock.call(server_obj, net_id='net2'),
-            mock.call(server_obj, port_id='port4'),
+        self.assertIsNone(res)
+
+        networks_create = [
+            {'network': 'net1', 'port': None, 'fixed-ip': 'ip2'},
+            {'network': 'net2', 'port': None, 'fixed-ip': None},
+            {'network': None, 'port': 'port4', 'fixed-ip': None}
         ]
-        cc.server_interface_create.assert_has_calls(calls)
+        mock_create.assert_called_once_with(obj, networks_create)
+        networks_delete = [
+            {'network': 'net1', 'port': None, 'fixed-ip': 'ip1'},
+            {'network': 'net1', 'port': None, 'fixed-ip': None},
+            {'network': None, 'port': 'port3', 'fixed-ip': None}
+        ]
+        mock_delete.assert_called_once_with(obj, networks_delete)
 
     @mock.patch.object(server.ServerProfile, '_update_name')
     @mock.patch.object(server.ServerProfile, '_check_server_name')
