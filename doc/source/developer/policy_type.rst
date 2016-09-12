@@ -199,12 +199,12 @@ property of an ``Action`` object (see :doc:`action <action>`).
 A policy type may want to check if there are other policy objects leaving some
 policy decisions in the ``data`` property of an action object.
 
-Senlin allows for more than one policies to be attached to the same cluster.
+Senlin allows for more than one policy to be attached to the same cluster.
 Each policy, when enabled, is supposed to check a specific subset of cluster
 actions. In other words, different policies may get checked before/after the
 engine executes a specific cluster action. This design is effectively forming
 a chain of policies for checking. The decisions (outcomes) from one policy
-somtimes impact other policies that are checked later.
+sometimes impact other policies that are checked later.
 
 To help other developers to understand how a specific policy type is designed
 to work in concert with others, we require all policy type implementations
