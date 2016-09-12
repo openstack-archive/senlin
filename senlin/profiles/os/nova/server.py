@@ -614,11 +614,11 @@ class ServerProfile(base.Profile):
         :param new_profile: The new profile which may contain a new password
                             for the server instance.
         :return: A tuple consisting a boolean indicating whether the password
-                 needs a change and the password determined (which could be
-                 None).
+                 needs a change and the password determined which could be
+                 '' if new password is not set.
         """
-        old_passwd = self.properties.get(self.ADMIN_PASS)
-        new_passwd = new_profile.properties[self.ADMIN_PASS]
+        old_passwd = self.properties.get(self.ADMIN_PASS) or ''
+        new_passwd = new_profile.properties[self.ADMIN_PASS] or ''
         if old_passwd == new_passwd:
             return False, new_passwd
         return True, new_passwd
