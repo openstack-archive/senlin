@@ -713,37 +713,33 @@ class ServerProfile(base.Profile):
                                       message=six.text_type(ex))
 
     def _create_interfaces(self, obj, networks):
-        """Create new interfaces for the node.
+        """Create new interfaces for the server node.
 
         :param obj: The node object to operate.
-        :param networks: A list containing information about network
+        :param networks: A list containing information about new network
                          interfaces to be created.
-        :returns: ``None``
-        :raises: ``EInternalError``
+        :returns: ``None``.
+        :raises: ``EResourceUpdate`` if interaction with drivers failed.
         """
         cc = self.compute(obj)
-        nc = self.network(obj)
-        server = cc.server_get(obj.physical_id)
-        # Attach new ports added in new network definition
-        for n in networks:
-            attrs = {}
-            net_identity = n.get(self.NETWORK, None)
-            port = n.get(self.PORT, None)
-            if net_identity:
-                res = nc.network_get(net_identity)
-                attrs['net_id'] = res.id
-                fixed_ip = n.get(self.FIXED_IP, None)
-                if fixed_ip:
-                    attrs['fixed_ips'] = [{'ip_address': fixed_ip}]
+        try:
+            server = cc.server_get(obj.physical_id)
+        except exc.InternalError as ex:
+            raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                      message=six.text_type(ex))
 
-            if port:
-                attrs['port_id'] = port
-
-            if attrs:
-                cc.server_interface_create(server, **attrs)
+        for net_spec in networks:
+            net_attrs = self._validate_network(obj, net_spec, 'update')
+            if net_attrs:
+                try:
+                    cc.server_interface_create(server, **net_attrs)
+                except exc.InternalError as ex:
+                    raise exc.EResourceUpdate(type='server',
+                                              id=obj.physical_id,
+                                              message=six.text_type(ex))
 
     def _delete_interfaces(self, obj, networks):
-        """Create new interfaces for the node.
+        """Delete existing interfaces from the node.
 
         :param obj: The node object to operate.
         :param networks: A list containing information about network
@@ -757,28 +753,28 @@ class ServerProfile(base.Profile):
         ports_existing = list(cc.server_interface_list(server))
         ports = []
         for p in ports_existing:
-            fixed_ips = []
-            for addr in p['fixed_ips']:
-                fixed_ips.append(addr['ip_address'])
-            ports.append({'port_id': p['port_id'], 'net_id': p['net_id'],
-                          'fixed_ips': fixed_ips})
+            fixed_ips = [addr['ip_address'] for addr in p['fixed_ips']]
+            ports.append({
+                'port_id': p['port_id'],
+                'net_id': p['net_id'],
+                'fixed_ips': fixed_ips})
 
         # Step1. Accurately search port with port_id or fixed_ip/net_id
         for n in networks:
             if n['port'] is not None:
-                for p in ports_existing:
+                for p in ports:
                     if p['port_id'] == n['port']:
-                        ports_existing.remove(p)
+                        ports.remove(p)
                         break
                 cc.server_interface_delete(n['port'], server)
             elif n['fixed_ip'] is not None:
                 res = nc.network_get(n['network'])
                 net_id = res.id
-                for p in ports_existing:
+                for p in ports:
                     if (n['fixed_ip'] in p['fixed_ips']) and (
                             p['net_id'] == net_id):
                         cc.server_interface_delete(p['port_id'], server)
-                        ports_existing.remove(p)
+                        ports.remove(p)
                         break
 
         # Step2. Fuzzy search port with net_id
@@ -786,10 +782,10 @@ class ServerProfile(base.Profile):
             if n['port'] is None and n['fixed_ip'] is None:
                 res = nc.network_get(n['network'])
                 net_id = res.id
-                for p in ports_existing:
+                for p in ports:
                     if p['net_id'] == net_id:
                         cc.server_interface_delete(p['port_id'], server)
-                        ports_existing.remove(p)
+                        ports.remove(p)
                         break
 
     def _update_network(self, obj, new_profile):
@@ -799,7 +795,7 @@ class ServerProfile(base.Profile):
         :param new_profile: The new profile which may contain new network
                             settings.
         :return: ``None``
-        :raises: ``EResourceUpdate`` if driver failure.
+        :raises: ``EResourceUpdate`` if there are driver failures.
         """
         networks_current = self.properties[self.NETWORKS]
         networks_create = new_profile.properties[self.NETWORKS]
