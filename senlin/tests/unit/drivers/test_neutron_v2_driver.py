@@ -44,6 +44,15 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         self.conn.network.find_network.assert_called_once_with(net_id, False)
         self.assertEqual(network_obj, res)
 
+    def test_port_find(self):
+        port_id = 'port_identifier'
+        port_obj = mock.Mock()
+
+        self.conn.network.find_port.return_value = port_obj
+        res = self.nc.port_find(port_id)
+        self.conn.network.find_port.assert_called_once_with(port_id, False)
+        self.assertEqual(port_obj, res)
+
     def test_subnet_get(self):
         subnet_id = 'subnet_identifier'
         subnet_obj = mock.Mock()

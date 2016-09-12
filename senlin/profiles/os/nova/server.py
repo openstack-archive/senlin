@@ -61,7 +61,7 @@ class ServerProfile(base.Profile):
     NETWORK_KEYS = (
         PORT, FIXED_IP, NETWORK,
     ) = (
-        'port', 'fixed-ip', 'network',
+        'port', 'fixed_ip', 'network',
     )
 
     PERSONALITY_KEYS = (
@@ -388,10 +388,13 @@ class ServerProfile(base.Profile):
         if keypair is not None:
             self._validate_keypair(obj, keypair)
 
+        # validate networks
+        networks = self.properties[self.NETWORKS]
+        for net in networks:
+            self._validate_network(obj, net)
+
         # validate bdm conflicts
         self._validate_bdm()
-
-        # TODO(Qiming): Validate network
 
         return True
 
@@ -402,22 +405,62 @@ class ServerProfile(base.Profile):
                     del bd[key]
         return bdm
 
-    def _validate_network(self, obj, networks):
-        for network in networks:
-            net_name_id = network.get(self.NETWORK)
-            if net_name_id:
-                try:
-                    res = self.network(obj).network_get(net_name_id)
-                except exc.InternalError as ex:
-                    raise exc.EResourceCreation(type='server',
-                                                message=six.text_type(ex))
-                network['uuid'] = res.id
-                del network[self.NETWORK]
-            if network['port'] is None:
-                del network['port']
-            if network['fixed-ip'] is None:
-                del network['fixed-ip']
-        return networks
+    def _validate_network(self, obj, network, reason=None):
+        result = {}
+        error = None
+        # check network
+        net_ident = network.get(self.NETWORK)
+        if net_ident:
+            try:
+                net = self.network(obj).network_get(net_ident)
+                if reason == 'update':
+                    result['net_id'] = net.id
+                else:
+                    result['uuid'] = net.id
+            except exc.InternalError as ex:
+                error = six.text_type(ex)
+
+        # check port
+        port_ident = network.get(self.PORT)
+        if not error and port_ident:
+            try:
+                port = self.network(obj).port_find(port_ident)
+                if port.status != 'DOWN':
+                    error = _("The status of the port %(port)s must be DOWN"
+                              ) % {'port': port_ident}
+
+                if reason == 'update':
+                    result['port_id'] = port.id
+                else:
+                    result['port'] = port.id
+            except exc.InternalError as ex:
+                error = six.text_type(ex)
+        elif port_ident is None and net_ident is None:
+            error = _("'%(port)s' is required if '%(net)s' is omitted"
+                      ) % {'port': self.PORT, 'net': self.NETWORK}
+
+        fixed_ip = network.get(self.FIXED_IP)
+        if not error and fixed_ip:
+            if port_ident is not None:
+                error = _("The '%(port)s' property and the '%(fixed_ip)s' "
+                          "property cannot be specified at the same time"
+                          ) % {'port': self.PORT, 'fixed_ip': self.FIXED_IP}
+            else:
+                if reason == 'update':
+                    result['fixed_ips'] = [{'ip_address': fixed_ip}]
+                else:
+                    result['fixed_ip'] = fixed_ip
+
+        if error:
+            if reason == 'create':
+                raise exc.EResourceCreation(type='server', message=error)
+            elif reason == 'update':
+                raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                          message=error)
+            else:
+                raise exc.InvalidSpec(message=error)
+
+        return result
 
     def _build_metadata(self, obj, usermeta):
         """Build custom metadata for server.
@@ -481,7 +524,10 @@ class ServerProfile(base.Profile):
 
         networks = self.properties[self.NETWORKS]
         if networks is not None:
-            kwargs['networks'] = self._validate_network(obj, networks)
+            kwargs['networks'] = []
+            for net_spec in networks:
+                net = self._validate_network(obj, net_spec, 'create')
+                kwargs['networks'].append(net)
 
         secgroups = self.properties[self.SECURITY_GROUPS]
         if secgroups:
@@ -680,20 +726,21 @@ class ServerProfile(base.Profile):
         server = cc.server_get(obj.physical_id)
         # Attach new ports added in new network definition
         for n in networks:
+            attrs = {}
             net_identity = n.get(self.NETWORK, None)
+            port = n.get(self.PORT, None)
             if net_identity:
                 res = nc.network_get(net_identity)
-                n['net_id'] = res.id
-                if n['fixed-ip'] is not None:
-                    n['fixed_ips'] = [{'ip_address': n['fixed-ip']}]
+                attrs['net_id'] = res.id
+                fixed_ip = n.get(self.FIXED_IP, None)
+                if fixed_ip:
+                    attrs['fixed_ips'] = [{'ip_address': fixed_ip}]
 
-            if n['port'] is not None:
-                n['port_id'] = n['port']
+            if port:
+                attrs['port_id'] = port
 
-            del n['network']
-            del n['port']
-            del n['fixed-ip']
-            cc.server_interface_create(server, **n)
+            if attrs:
+                cc.server_interface_create(server, **attrs)
 
     def _delete_interfaces(self, obj, networks):
         """Create new interfaces for the node.
@@ -716,7 +763,7 @@ class ServerProfile(base.Profile):
             ports.append({'port_id': p['port_id'], 'net_id': p['net_id'],
                           'fixed_ips': fixed_ips})
 
-        # Step1. Accurately search port with port_id or fixed-ip/net_id
+        # Step1. Accurately search port with port_id or fixed_ip/net_id
         for n in networks:
             if n['port'] is not None:
                 for p in ports_existing:
@@ -724,11 +771,11 @@ class ServerProfile(base.Profile):
                         ports_existing.remove(p)
                         break
                 cc.server_interface_delete(n['port'], server)
-            elif n['fixed-ip'] is not None:
+            elif n['fixed_ip'] is not None:
                 res = nc.network_get(n['network'])
                 net_id = res.id
                 for p in ports_existing:
-                    if (n['fixed-ip'] in p['fixed_ips']) and (
+                    if (n['fixed_ip'] in p['fixed_ips']) and (
                             p['net_id'] == net_id):
                         cc.server_interface_delete(p['port_id'], server)
                         ports_existing.remove(p)
@@ -736,7 +783,7 @@ class ServerProfile(base.Profile):
 
         # Step2. Fuzzy search port with net_id
         for n in networks:
-            if n['port'] is None and n['fixed-ip'] is None:
+            if n['port'] is None and n['fixed_ip'] is None:
                 res = nc.network_get(n['network'])
                 net_id = res.id
                 for p in ports_existing:
@@ -762,24 +809,13 @@ class ServerProfile(base.Profile):
                 networks_create.remove(network)
                 networks_delete.remove(network)
 
-        if not networks_create and not networks_delete:
-            return
-
         # Detach some existing interfaces
         if networks_delete:
-            try:
-                self._delete_interfaces(obj, networks_delete)
-            except exc.InternalError as ex:
-                raise exc.EResourceUpdate(type='server', id=obj.physical_id,
-                                          message=six.text_type(ex))
+            self._delete_interfaces(obj, networks_delete)
 
         # Attach new interfaces
         if networks_create:
-            try:
-                self._create_interfaces(obj, networks_create)
-            except exc.InternalError as ex:
-                raise exc.EResourceUpdate(type='server', id=obj.physical_id,
-                                          message=six.text_type(ex))
+            self._create_interfaces(obj, networks_create)
         return
 
     def do_update(self, obj, new_profile=None, **params):

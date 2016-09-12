@@ -96,7 +96,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                 'name': 'FAKE_SERVER_NAME',
                 'networks': [{
                     'port': 'FAKE_PORT',
-                    'fixed-ip': 'FAKE_IP',
+                    'fixed_ip': 'FAKE_IP',
                     'network': 'FAKE_NET',
                 }],
                 'personality': [{
@@ -643,9 +643,9 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         profile._networkclient = nc
         obj = mock.Mock(physical_id='NOVA_ID')
         networks = [
-            {'network': 'net1', 'port': None, 'fixed-ip': 'ip2'},
-            {'network': 'net2', 'port': None, 'fixed-ip': None},
-            {'network': None, 'port': 'port4', 'fixed-ip': None}
+            {'network': 'net1', 'port': None, 'fixed_ip': 'ip2'},
+            {'network': 'net2', 'port': None, 'fixed_ip': None},
+            {'network': None, 'port': 'port4', 'fixed_ip': None}
         ]
         profile._create_interfaces(obj, networks)
 
@@ -688,9 +688,9 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         profile._networkclient = nc
         obj = mock.Mock(physical_id='NOVA_ID')
         networks = [
-            {'network': 'net1', 'port': None, 'fixed-ip': 'ip1'},
-            {'network': 'net1', 'port': None, 'fixed-ip': None},
-            {'network': None, 'port': 'port3', 'fixed-ip': None}
+            {'network': 'net1', 'port': None, 'fixed_ip': 'ip1'},
+            {'network': 'net1', 'port': None, 'fixed_ip': None},
+            {'network': None, 'port': 'port3', 'fixed_ip': None}
         ]
 
         res = profile._delete_interfaces(obj, networks)
@@ -714,14 +714,14 @@ class TestNovaServerUpdate(base.SenlinTestCase):
 
         old_spec = copy.deepcopy(self.spec)
         old_spec['properties']['networks'] = [
-            {'network': 'net1', 'fixed-ip': 'ip1'},
+            {'network': 'net1', 'fixed_ip': 'ip1'},
             {'network': 'net1'},
             {'port': 'port3'}
         ]
         profile = server.ServerProfile('t', old_spec)
         new_spec = copy.deepcopy(self.spec)
         new_spec['properties']['networks'] = [
-            {'network': 'net1', 'fixed-ip': 'ip2'},
+            {'network': 'net1', 'fixed_ip': 'ip2'},
             {'network': 'net2'},
             {'port': 'port4'}
         ]
@@ -732,15 +732,15 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         self.assertIsNone(res)
 
         networks_create = [
-            {'network': 'net1', 'port': None, 'fixed-ip': 'ip2'},
-            {'network': 'net2', 'port': None, 'fixed-ip': None},
-            {'network': None, 'port': 'port4', 'fixed-ip': None}
+            {'network': 'net1', 'port': None, 'fixed_ip': 'ip2'},
+            {'network': 'net2', 'port': None, 'fixed_ip': None},
+            {'network': None, 'port': 'port4', 'fixed_ip': None}
         ]
         mock_create.assert_called_once_with(obj, networks_create)
         networks_delete = [
-            {'network': 'net1', 'port': None, 'fixed-ip': 'ip1'},
-            {'network': 'net1', 'port': None, 'fixed-ip': None},
-            {'network': None, 'port': 'port3', 'fixed-ip': None}
+            {'network': 'net1', 'port': None, 'fixed_ip': 'ip1'},
+            {'network': 'net1', 'port': None, 'fixed_ip': None},
+            {'network': None, 'port': 'port3', 'fixed_ip': None}
         ]
         mock_delete.assert_called_once_with(obj, networks_delete)
 
@@ -945,7 +945,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
 
         new_spec = copy.deepcopy(self.spec)
         new_spec['properties']['networks'] = [
-            {'network': 'new_net', 'port': 'new_port', 'fixed-ip': 'new-ip'}
+            {'network': 'new_net', 'port': 'new_port', 'fixed_ip': 'new-ip'}
         ]
         new_profile = server.ServerProfile('t', new_spec)
 
@@ -971,7 +971,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         profile._computeclient = mock.Mock()
         new_network = {
             'port': 'FAKE_PORT_NEW',
-            'fixed-ip': 'FAKE_IP_NEW',
+            'fixed_ip': 'FAKE_IP_NEW',
             'network': 'FAKE_NET_NEW',
         }
         new_spec = copy.deepcopy(self.spec)
