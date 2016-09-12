@@ -71,6 +71,52 @@ class TestServerNameChecking(base.SenlinTestCase):
         self.assertEqual(self.result, res)
 
 
+class TestPasswordChecking(base.SenlinTestCase):
+
+    scenarios = [
+        ('none-none', dict(
+            old_passwd=None,
+            new_passwd=None,
+            result=(False, ''))),
+        ('none-new', dict(
+            old_passwd=None,
+            new_passwd='NEW_PASSWD',
+            result=(True, 'NEW_PASSWD'))),
+        ('old-none', dict(
+            old_passwd='OLD_PASSWD',
+            new_passwd=None,
+            result=(True, ''))),
+        ('old-new', dict(
+            old_passwd='OLD_PASSWD',
+            new_passwd='NEW_PASSWD',
+            result=(True, 'NEW_PASSWD')))
+    ]
+
+    def setUp(self):
+        super(TestPasswordChecking, self).setUp()
+        self.old_spec = {
+            'type': 'os.nova.server',
+            'version': '1.0',
+            'properties': {
+                'flavor': 'FLAVOR',
+            }
+        }
+        self.new_spec = copy.deepcopy(self.old_spec)
+
+    def test_check_password(self):
+        if self.old_passwd:
+            self.old_spec['properties']['adminPass'] = self.old_passwd
+        if self.new_passwd:
+            self.new_spec['properties']['adminPass'] = self.new_passwd
+
+        profile = server.ServerProfile('t', self.old_spec)
+        new_profile = server.ServerProfile('t1', self.new_spec)
+
+        res = profile._check_password(new_profile)
+
+        self.assertEqual(self.result, res)
+
+
 class TestNovaServerUpdate(base.SenlinTestCase):
     def setUp(self):
         super(TestNovaServerUpdate, self).setUp()
@@ -136,6 +182,35 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         self.assertEqual('Failed in updating server NOVA_ID: BOOM.',
                          six.text_type(ex))
         cc.server_update.assert_called_once_with('NOVA_ID', name='NEW_NAME')
+
+    def test__update_password(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        profile._computeclient = cc
+        obj = mock.Mock(physical_id='NOVA_ID')
+
+        res = profile._update_password(obj, 'NEW_PASSWORD')
+
+        self.assertIsNone(res)
+        cc.server_change_password.assert_called_once_with(
+            'NOVA_ID', 'NEW_PASSWORD')
+
+    def test__update_password_nova_failure(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        profile._computeclient = cc
+        err = exc.InternalError(message='BOOM')
+        cc.server_change_password.side_effect = err
+        obj = mock.Mock(physical_id='NOVA_ID')
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_password,
+                               obj, 'NEW_PASSWORD')
+
+        self.assertEqual('Failed in updating server NOVA_ID: BOOM.',
+                         six.text_type(ex))
+        cc.server_change_password.assert_called_once_with(
+            'NOVA_ID', 'NEW_PASSWORD')
 
     def test__update_metadata(self):
         obj = mock.Mock(id='NODE_ID', physical_id='NOVA_ID',
