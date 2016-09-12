@@ -457,6 +457,96 @@ class ClusterAction(base.Action):
 
         return result, reason
 
+    def do_replace_nodes(self):
+        """Handler for the CLUSTER_REPLACE_NODES action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
+        node_dict = self.inputs
+
+        errors = []
+        original_nodes = []
+        replacement_nodes = []
+        for (original, replacement) in node_dict.items():
+            original_node = no.Node.get(self.context, original)
+            replacement_node = no.Node.get(self.context, replacement)
+
+            # The return value is None if node not found
+            if not original_node:
+                errors.append(_('Original node %s not found.'
+                                ) % original)
+                continue
+            if not replacement_node:
+                errors.append(_('Replacement node %s not found.'
+                                ) % replacement)
+                continue
+            if original_node.cluster_id != self.target:
+                errors.append(_('Node %(o)s is not a member of the '
+                                'cluster %(c)s.') % {'o': original,
+                                                     'c': self.target})
+                continue
+            if replacement_node.cluster_id:
+                errors.append(_('Node %(r)s is already owned by cluster %(c)s.'
+                                ) % {'r': replacement,
+                                     'c': replacement_node.cluster_id})
+                continue
+            if replacement_node.status != node_mod.Node.ACTIVE:
+                errors.append(_('Node %s is not in ACTIVE status.'
+                                ) % replacement)
+                continue
+            original_nodes.append(original_node)
+            replacement_nodes.append(replacement_node)
+
+        if len(errors) > 0:
+            return self.RES_ERROR, '\n'.join(errors)
+
+        result = self.RES_OK
+        reason = _('Completed replacing nodes.')
+
+        children = []
+        for (original, replacement) in node_dict.items():
+            kwargs = {
+                'cause': base.CAUSE_DERIVED,
+            }
+
+            # node_leave action
+            kwargs['name'] = 'node_leave_%s' % original[:8]
+            leave_action_id = base.Action.create(self.context, original,
+                                                 consts.NODE_LEAVE, **kwargs)
+            # node_join action
+            kwargs['name'] = 'node_join_%s' % replacement[:8]
+            kwargs['inputs'] = {'cluster_id': self.target}
+            join_action_id = base.Action.create(self.context, replacement,
+                                                consts.NODE_JOIN, **kwargs)
+
+            children.append((join_action_id, leave_action_id))
+
+        if children:
+            dobj.Dependency.create(self.context, [c[0] for c in children],
+                                   self.id)
+            for child in children:
+                join_id = child[0]
+                leave_id = child[1]
+                ao.Action.update(self.context, join_id,
+                                 {'status': base.Action.READY})
+
+                dobj.Dependency.create(self.context, [join_id], leave_id)
+                ao.Action.update(self.context, leave_id,
+                                 {'status': base.Action.READY})
+
+                dispatcher.start_action()
+
+            result, new_reason = self._wait_for_dependents()
+            if result != self.RES_OK:
+                reason = new_reason
+            else:
+                for n in range(len(original_nodes)):
+                    self.cluster.remove_node(original_nodes[n])
+                    self.cluster.add_node(replacement_nodes[n])
+
+        self.cluster.eval_status(self.context, 'replace')
+        return result, reason
+
     def do_check(self):
         """Handler for CLUSTER_CHECK action.
 
