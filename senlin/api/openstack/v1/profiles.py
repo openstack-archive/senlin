@@ -54,7 +54,6 @@ class ProfileController(wsgi.Controller):
         filter_whitelist = {
             consts.PROFILE_NAME: 'mixed',
             consts.PROFILE_TYPE: 'mixed',
-            consts.PROFILE_METADATA: 'mixed',
         }
         param_whitelist = {
             consts.PARAM_LIMIT: 'single',

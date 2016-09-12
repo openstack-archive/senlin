@@ -145,7 +145,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {
             'type': 'some_type',
             'name': 'fake name',
-            'metadata': 'fake_data',
         }
         req = self._get('/profiles', params=params)
 
@@ -159,10 +158,9 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('filters', engine_args)
 
         filters = engine_args['filters']
-        self.assertEqual(3, len(filters))
+        self.assertEqual(2, len(filters))
         self.assertIn('name', filters)
         self.assertIn('type', filters)
-        self.assertIn('metadata', filters)
 
     def test_profile_index_whitelist_filter_bad_params(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
