@@ -16,7 +16,6 @@ import mock
 import six
 
 from senlin.common import exception as exc
-from senlin.profiles import base as profiles_base
 from senlin.profiles.os.nova import server
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -102,6 +101,7 @@ class TestPasswordChecking(base.SenlinTestCase):
             }
         }
         self.new_spec = copy.deepcopy(self.old_spec)
+        self.obj = mock.Mock()
 
     def test_check_password(self):
         if self.old_passwd:
@@ -112,7 +112,7 @@ class TestPasswordChecking(base.SenlinTestCase):
         profile = server.ServerProfile('t', self.old_spec)
         new_profile = server.ServerProfile('t1', self.new_spec)
 
-        res = profile._check_password(new_profile)
+        res = profile._check_password(self.obj, new_profile)
 
         self.assertEqual(self.result, res)
 
@@ -525,24 +525,30 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         mock_check = self.patchobject(profile, '_validate_image',
                                       side_effect=x_images)
         obj = mock.Mock(physical_id='NOVA_ID')
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['image'] = 'new_image'
+        new_profile = server.ServerProfile('t1', new_spec)
 
-        profile._update_image(obj, 'old_image', 'new_image', 'adminpass')
+        profile._update_image(obj, new_profile, 'new_name', 'new_pass')
 
         mock_check.assert_has_calls([
             mock.call(obj, 'new_image', reason='update'),
-            mock.call(obj, 'old_image', reason='update')
+            mock.call(obj, 'FAKE_IMAGE', reason='update')
         ])
         cc.server_rebuild.assert_called_once_with(
-            'NOVA_ID', '456', 'FAKE_SERVER_NAME', 'adminpass')
+            'NOVA_ID', '456', 'new_name', 'new_pass')
         cc.wait_for_server.assert_called_once_with('NOVA_ID', 'ACTIVE')
 
     def test__update_image_new_image_is_none(self):
         profile = server.ServerProfile('t', self.spec)
         obj = mock.Mock(physical_id='NOVA_ID')
+        new_spec = copy.deepcopy(self.spec)
+        del new_spec['properties']['image']
+        new_profile = server.ServerProfile('t1', new_spec)
 
         ex = self.assertRaises(exc.EResourceUpdate,
                                profile._update_image,
-                               obj, 'old_image', None, 'adminpass')
+                               obj, new_profile, 'new_name', '')
 
         msg = ("Failed in updating server NOVA_ID: Updating Nova server with "
                "image set to None is not supported by Nova.")
@@ -557,10 +563,13 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         mock_check = self.patchobject(profile, '_validate_image',
                                       side_effect=err)
         obj = mock.Mock(physical_id='NOVA_ID')
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['image'] = 'new_image'
+        new_profile = server.ServerProfile('t1', new_spec)
 
         ex = self.assertRaises(exc.EResourceUpdate,
                                profile._update_image,
-                               obj, 'old_image', 'new_image', 'adminpass')
+                               obj, new_profile, 'new_name', 'new_pass')
 
         msg = ("Failed in updating server NOVA_ID: BAD.")
         self.assertEqual(msg, six.text_type(ex))
@@ -579,20 +588,25 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         mock_check = self.patchobject(profile, '_validate_image',
                                       side_effect=results)
         obj = mock.Mock(physical_id='NOVA_ID')
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['image'] = 'new_image'
+        new_profile = server.ServerProfile('t1', new_spec)
 
         ex = self.assertRaises(exc.EResourceUpdate,
                                profile._update_image,
-                               obj, 'old_image', 'new_image', 'adminpass')
+                               obj, new_profile, 'new_name', 'new_pass')
 
         msg = ("Failed in updating server NOVA_ID: BAD.")
         self.assertEqual(msg, six.text_type(ex))
         mock_check.assert_has_calls([
             mock.call(obj, 'new_image', reason='update'),
-            mock.call(obj, 'old_image', reason='update')
+            mock.call(obj, 'FAKE_IMAGE', reason='update')
         ])
 
     def test__update_image_old_image_is_none_but_succeeded(self):
-        profile = server.ServerProfile('t', self.spec)
+        old_spec = copy.deepcopy(self.spec)
+        del old_spec['properties']['image']
+        profile = server.ServerProfile('t', old_spec)
         cc = mock.Mock()
         profile._computeclient = cc
         x_server = mock.Mock(image={'id': '123'})
@@ -602,18 +616,23 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         mock_check = self.patchobject(profile, '_validate_image',
                                       return_value=x_image)
         obj = mock.Mock(physical_id='NOVA_ID')
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['image'] = 'new_image'
+        new_profile = server.ServerProfile('t1', new_spec)
 
-        res = profile._update_image(obj, None, 'new_image', 'adminpass')
+        res = profile._update_image(obj, new_profile, 'new_name', 'new_pass')
 
-        self.assertIsNone(res)
+        self.assertTrue(res)
         mock_check.assert_called_once_with(obj, 'new_image', reason='update')
         cc.server_get.assert_called_once_with('NOVA_ID')
         cc.server_rebuild.assert_called_once_with(
-            'NOVA_ID', '456', 'FAKE_SERVER_NAME', 'adminpass')
+            'NOVA_ID', '456', 'new_name', 'new_pass')
         cc.wait_for_server.assert_called_once_with('NOVA_ID', 'ACTIVE')
 
     def test__update_image_old_image_is_none_but_failed(self):
-        profile = server.ServerProfile('t', self.spec)
+        old_spec = copy.deepcopy(self.spec)
+        del old_spec['properties']['image']
+        profile = server.ServerProfile('t', old_spec)
         cc = mock.Mock()
         profile._computeclient = cc
         # this is about the new one
@@ -622,10 +641,13 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                       return_value=x_image)
         cc.server_get.side_effect = exc.InternalError(message='DRIVER')
         obj = mock.Mock(physical_id='NOVA_ID')
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['image'] = 'new_image'
+        new_profile = server.ServerProfile('t1', new_spec)
 
         ex = self.assertRaises(exc.EResourceUpdate,
                                profile._update_image,
-                               obj, None, 'new_image', 'adminpass')
+                               obj, new_profile, 'new_name', 'new_pass')
 
         self.assertEqual('Failed in updating server NOVA_ID: DRIVER.',
                          six.text_type(ex))
@@ -642,13 +664,16 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         mock_check = self.patchobject(profile, '_validate_image',
                                       side_effect=x_images)
         obj = mock.Mock(physical_id='NOVA_ID')
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['image'] = 'new_image'
+        new_profile = server.ServerProfile('t1', new_spec)
 
-        res = profile._update_image(obj, 'old_image', 'new_image', 'adminpass')
+        res = profile._update_image(obj, new_profile, 'new_name', 'new_pass')
 
-        self.assertIsNone(res)
+        self.assertFalse(res)
         mock_check.assert_has_calls([
             mock.call(obj, 'new_image', reason='update'),
-            mock.call(obj, 'old_image', reason='update')
+            mock.call(obj, 'FAKE_IMAGE', reason='update')
         ])
         self.assertEqual(0, cc.server_rebuild.call_count)
         self.assertEqual(0, cc.wait_for_server.call_count)
@@ -664,19 +689,22 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         mock_check = self.patchobject(profile, '_validate_image',
                                       side_effect=x_images)
         obj = mock.Mock(physical_id='NOVA_ID')
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['image'] = 'new_image'
+        new_profile = server.ServerProfile('t1', new_spec)
 
         ex = self.assertRaises(exc.EResourceUpdate,
                                profile._update_image,
-                               obj, 'old_image', 'new_image', 'adminpass')
+                               obj, new_profile, 'new_name', 'new_pass')
 
         self.assertEqual('Failed in updating server NOVA_ID: FAILED.',
                          six.text_type(ex))
         mock_check.assert_has_calls([
             mock.call(obj, 'new_image', reason='update'),
-            mock.call(obj, 'old_image', reason='update')
+            mock.call(obj, 'FAKE_IMAGE', reason='update')
         ])
         cc.server_rebuild.assert_called_once_with(
-            'NOVA_ID', '456', 'FAKE_SERVER_NAME', 'adminpass')
+            'NOVA_ID', '456', 'new_name', 'new_pass')
         self.assertEqual(0, cc.wait_for_server.call_count)
 
     def test__update_image_failed_waiting(self):
@@ -690,19 +718,22 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         mock_check = self.patchobject(profile, '_validate_image',
                                       side_effect=x_images)
         obj = mock.Mock(physical_id='NOVA_ID')
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['image'] = 'new_image'
+        new_profile = server.ServerProfile('t1', new_spec)
 
         ex = self.assertRaises(exc.EResourceUpdate,
                                profile._update_image,
-                               obj, 'old_image', 'new_image', 'adminpass')
+                               obj, new_profile, 'new_name', 'new_pass')
 
         self.assertEqual('Failed in updating server NOVA_ID: TIMEOUT.',
                          six.text_type(ex))
         mock_check.assert_has_calls([
             mock.call(obj, 'new_image', reason='update'),
-            mock.call(obj, 'old_image', reason='update')
+            mock.call(obj, 'FAKE_IMAGE', reason='update')
         ])
         cc.server_rebuild.assert_called_once_with(
-            'NOVA_ID', '456', 'FAKE_SERVER_NAME', 'adminpass')
+            'NOVA_ID', '456', 'new_name', 'new_pass')
         cc.wait_for_server.assert_called_once_with('NOVA_ID', 'ACTIVE')
 
     def test__create_interfaces(self):
@@ -1058,6 +1089,8 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         ]
         mock_delete.assert_called_once_with(obj, networks_delete)
 
+    @mock.patch.object(server.ServerProfile, '_update_password')
+    @mock.patch.object(server.ServerProfile, '_check_password')
     @mock.patch.object(server.ServerProfile, '_update_name')
     @mock.patch.object(server.ServerProfile, '_check_server_name')
     @mock.patch.object(server.ServerProfile, '_update_flavor')
@@ -1067,8 +1100,11 @@ class TestNovaServerUpdate(base.SenlinTestCase):
     def test_do_update_name_succeeded(self, mock_update_network,
                                       mock_update_image, mock_update_metadata,
                                       mock_update_flavor, mock_check_name,
-                                      mock_update_name):
+                                      mock_update_name, mock_check_password,
+                                      mock_update_password):
         mock_check_name.return_value = True, 'NEW_NAME'
+        mock_check_password.return_value = True, 'NEW_PASSWORD'
+        mock_update_image.return_value = False
         obj = mock.Mock(physical_id='FAKE_ID')
 
         profile = server.ServerProfile('t', self.spec)
@@ -1078,14 +1114,17 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         res = profile.do_update(obj, new_profile)
 
         self.assertTrue(res)
-        mock_update_name.assert_called_once_with(obj, 'NEW_NAME')
-        mock_update_metadata.assert_called_once_with(obj, new_profile)
         mock_check_name.assert_called_once_with(obj, new_profile)
-        mock_update_flavor.assert_called_once_with(obj, new_profile)
+        mock_update_metadata.assert_called_once_with(obj, new_profile)
         mock_update_image.assert_called_once_with(
-            obj, 'FAKE_IMAGE', 'FAKE_IMAGE', 'adminpass')
+            obj, new_profile, 'NEW_NAME', 'NEW_PASSWORD')
+        mock_update_name.assert_called_once_with(obj, 'NEW_NAME')
+        mock_update_password.assert_called_once_with(obj, 'NEW_PASSWORD')
+        mock_update_flavor.assert_called_once_with(obj, new_profile)
         mock_update_network.assert_called_once_with(obj, new_profile)
 
+    @mock.patch.object(server.ServerProfile, '_update_password')
+    @mock.patch.object(server.ServerProfile, '_check_password')
     @mock.patch.object(server.ServerProfile, '_update_name')
     @mock.patch.object(server.ServerProfile, '_check_server_name')
     @mock.patch.object(server.ServerProfile, '_update_flavor')
@@ -1095,8 +1134,10 @@ class TestNovaServerUpdate(base.SenlinTestCase):
     def test_do_update_name_no_change(self, mock_update_network,
                                       mock_update_image, mock_update_metadata,
                                       mock_update_flavor, mock_check_name,
-                                      mock_update_name):
+                                      mock_update_name, mock_check_password,
+                                      mock_update_password):
         mock_check_name.return_value = False, 'NEW_NAME'
+        mock_check_password.return_value = False, 'OLD_PASS'
         obj = mock.Mock(physical_id='NOVA_ID')
 
         profile = server.ServerProfile('t', self.spec)
@@ -1107,13 +1148,17 @@ class TestNovaServerUpdate(base.SenlinTestCase):
 
         self.assertTrue(res)
         mock_check_name.assert_called_once_with(obj, new_profile)
-        self.assertEqual(0, mock_update_name.call_count)
-        mock_update_metadata.assert_called_once_with(obj, new_profile)
-        mock_update_flavor.assert_called_once_with(obj, new_profile)
+        mock_check_password.assert_called_once_with(obj, new_profile)
         mock_update_image.assert_called_once_with(
-            obj, 'FAKE_IMAGE', 'FAKE_IMAGE', 'adminpass')
+            obj, new_profile, 'NEW_NAME', 'OLD_PASS')
+        self.assertEqual(0, mock_update_name.call_count)
+        self.assertEqual(0, mock_update_password.call_count)
+        mock_update_flavor.assert_called_once_with(obj, new_profile)
         mock_update_network.assert_called_once_with(obj, new_profile)
+        mock_update_metadata.assert_called_once_with(obj, new_profile)
 
+    @mock.patch.object(server.ServerProfile, '_update_password')
+    @mock.patch.object(server.ServerProfile, '_check_password')
     @mock.patch.object(server.ServerProfile, '_update_name')
     @mock.patch.object(server.ServerProfile, '_check_server_name')
     @mock.patch.object(server.ServerProfile, '_update_flavor')
@@ -1123,8 +1168,11 @@ class TestNovaServerUpdate(base.SenlinTestCase):
     def test_do_update_name_failed(self, mock_update_network,
                                    mock_update_image, mock_update_metadata,
                                    mock_update_flavor, mock_check_name,
-                                   mock_update_name):
+                                   mock_update_name, mock_check_password,
+                                   mock_update_password):
         mock_check_name.return_value = True, 'NEW_NAME'
+        mock_check_password.return_value = False, 'OLD_PASS'
+        mock_update_image.return_value = False
         err = exc.EResourceUpdate(type='server', id='NOVA_ID', message='BANG')
         mock_update_name.side_effect = err
         obj = mock.Mock(physical_id='NOVA_ID')
@@ -1140,17 +1188,27 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         self.assertEqual('Failed in updating server NOVA_ID: BANG.',
                          six.text_type(ex))
         mock_check_name.assert_called_once_with(obj, new_profile)
+        mock_check_password.assert_called_once_with(obj, new_profile)
+        mock_update_image.assert_called_once_with(
+            obj, new_profile, 'NEW_NAME', 'OLD_PASS')
         mock_update_name.assert_called_once_with(obj, 'NEW_NAME')
-        self.assertEqual(0, mock_update_metadata.call_count)
+        self.assertEqual(0, mock_update_password.call_count)
         self.assertEqual(0, mock_update_flavor.call_count)
-        self.assertEqual(0, mock_update_image.call_count)
+        self.assertEqual(0, mock_update_metadata.call_count)
 
+    @mock.patch.object(server.ServerProfile, '_update_password')
+    @mock.patch.object(server.ServerProfile, '_update_name')
+    @mock.patch.object(server.ServerProfile, '_check_password')
     @mock.patch.object(server.ServerProfile, '_check_server_name')
     @mock.patch.object(server.ServerProfile, '_update_flavor')
     @mock.patch.object(server.ServerProfile, '_update_image')
     def test_do_update_image_succeeded(self, mock_update_image,
-                                       mock_update_flavor, mock_check):
-        mock_check.return_value = False, 'OLD_NAME'
+                                       mock_update_flavor, mock_check_name,
+                                       mock_check_password, mock_update_name,
+                                       mock_update_password):
+        mock_check_name.return_value = False, 'OLD_NAME'
+        mock_check_password.return_value = False, 'OLD_PASS'
+        mock_update_image.return_value = True
         obj = mock.Mock()
         obj.physical_id = 'FAKE_ID'
 
@@ -1164,34 +1222,21 @@ class TestNovaServerUpdate(base.SenlinTestCase):
 
         self.assertTrue(res)
         mock_update_image.assert_called_with(
-            obj, 'FAKE_IMAGE', 'FAKE_IMAGE_NEW', 'adminpass')
-
-    @mock.patch.object(server.ServerProfile, '_update_flavor')
-    @mock.patch.object(profiles_base.Profile, 'validate_for_update')
-    @mock.patch.object(server.ServerProfile, '_update_image')
-    def test_do_update_image_with_passwd(self, mock_update_image,
-                                         mock_validate, mock_update_flavor):
-        obj = mock.Mock(physical_id='FAKE_ID')
-        mock_validate.return_value = True
-        profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = mock.Mock()
-        new_spec = copy.deepcopy(self.spec)
-        new_spec['properties']['image'] = 'FAKE_IMAGE_NEW'
-        new_spec['properties']['adminPass'] = 'adminpass2'
-        new_profile = server.ServerProfile('t', new_spec)
-
-        res = profile.do_update(obj, new_profile)
-
-        self.assertTrue(res)
-        mock_update_image.assert_called_with(
-            obj, 'FAKE_IMAGE', 'FAKE_IMAGE_NEW', 'adminpass2')
+            obj, new_profile, 'OLD_NAME', 'OLD_PASS')
+        self.assertEqual(0, mock_update_name.call_count)
+        self.assertEqual(0, mock_update_password.call_count)
 
     @mock.patch.object(server.ServerProfile, '_update_flavor')
     @mock.patch.object(server.ServerProfile, '_update_name')
     @mock.patch.object(server.ServerProfile, '_update_metadata')
     @mock.patch.object(server.ServerProfile, '_update_image')
-    def test_do_update_image_failed(self, mock_update_image, mock_update_meta,
+    @mock.patch.object(server.ServerProfile, '_check_password')
+    @mock.patch.object(server.ServerProfile, '_check_server_name')
+    def test_do_update_image_failed(self, mock_check_name, mock_check_password,
+                                    mock_update_image, mock_update_meta,
                                     mock_update_name, mock_update_flavor):
+        mock_check_name.return_value = False, 'OLD_NAME'
+        mock_check_password.return_value = False, 'OLD_PASS'
         # _update_image always throw EResourceUpdate
         ex = exc.EResourceUpdate(type='server', id='NOVA_ID',
                                  message='Image Not Found')
@@ -1209,7 +1254,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                obj, new_profile)
 
         mock_update_image.assert_called_with(
-            obj, 'FAKE_IMAGE', 'FAKE_IMAGE', 'adminpass')
+            obj, new_profile, 'OLD_NAME', 'OLD_PASS')
         self.assertEqual('Failed in updating server NOVA_ID: Image Not Found.',
                          six.text_type(ex))
 
@@ -1267,6 +1312,8 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         self.assertTrue(res)
         mock_update_network.assert_called_with(obj, new_profile)
 
+    @mock.patch.object(server.ServerProfile, '_update_password')
+    @mock.patch.object(server.ServerProfile, '_check_password')
     @mock.patch.object(server.ServerProfile, '_update_name')
     @mock.patch.object(server.ServerProfile, '_check_server_name')
     @mock.patch.object(server.ServerProfile, '_update_flavor')
@@ -1275,9 +1322,12 @@ class TestNovaServerUpdate(base.SenlinTestCase):
     @mock.patch.object(server.ServerProfile, '_update_network')
     def test_do_update_update_network_failed(
             self, mock_update_network, mock_update_image, mock_update_metadata,
-            mock_update_flavor, mock_check_name, mock_update_name):
+            mock_update_flavor, mock_check_name, mock_update_name,
+            mock_check_password, mock_update_password):
 
         mock_check_name.return_value = True, 'NEW_NAME'
+        mock_check_password.return_value = True, 'NEW_PASSWORD'
+        mock_update_image.return_value = True
         err = exc.EResourceUpdate(type='server', id='NOVA_ID', message='BOOM')
         mock_update_network.side_effect = err
 
@@ -1299,13 +1349,15 @@ class TestNovaServerUpdate(base.SenlinTestCase):
 
         self.assertEqual('Failed in updating server NOVA_ID: BOOM.',
                          six.text_type(ex))
-        mock_update_name.assert_called_once_with(obj, 'NEW_NAME')
-        mock_update_metadata.assert_called_once_with(obj, new_profile)
         mock_check_name.assert_called_once_with(obj, new_profile)
-        mock_update_flavor.assert_called_once_with(obj, new_profile)
+        mock_check_password.assert_called_once_with(obj, new_profile)
         mock_update_image.assert_called_once_with(
-            obj, 'FAKE_IMAGE', 'FAKE_IMAGE', 'adminpass')
+            obj, new_profile, 'NEW_NAME', 'NEW_PASSWORD')
+        self.assertEqual(0, mock_update_name.call_count)
+        self.assertEqual(0, mock_update_password.call_count)
+        mock_update_flavor.assert_called_once_with(obj, new_profile)
         mock_update_network.assert_called_with(obj, new_profile)
+        self.assertEqual(0, mock_update_metadata.call_count)
 
     def test_do_update_without_profile(self):
         profile = server.ServerProfile('t', self.spec)

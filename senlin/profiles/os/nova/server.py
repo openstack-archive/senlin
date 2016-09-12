@@ -608,9 +608,10 @@ class ServerProfile(base.Profile):
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
                                       message=six.text_type(ex))
 
-    def _check_password(self, new_profile):
+    def _check_password(self, obj, new_profile):
         """Check if the admin password has been changed in the new profile.
 
+        :param obj: The server node to operate, not used currently.
         :param new_profile: The new profile which may contain a new password
                             for the server instance.
         :return: A tuple consisting a boolean indicating whether the password
@@ -696,17 +697,20 @@ class ServerProfile(base.Profile):
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
                                       message=six.text_type(ex))
 
-    def _update_image(self, obj, old_image, new_image, admin_password):
+    def _update_image(self, obj, new_profile, new_name, new_password):
         """Update image used by server node.
 
         :param obj: The node object to operate on.
-        :param old_image: The identity of the image currently used.
-        :param new_image: The identity of the new image to use.
-        :param admin_password: The new password for the administrative account
-                               if provided.
-        :returns: ``None``.
+        :param new_profile: The profile which may contain a new image name or
+                            ID to use.
+        :param new_name: The name for the server node.
+        :param newn_password: The new password for the administrative account
+                              if provided.
+        :returns: A boolean indicating whether the image needs an update.
         :raises: ``InternalError`` if operation was a failure.
         """
+        old_image = self.properties[self.IMAGE]
+        new_image = new_profile.properties[self.IMAGE]
         if not new_image:
             msg = _("Updating Nova server with image set to None is not "
                     "supported by Nova")
@@ -727,21 +731,20 @@ class ServerProfile(base.Profile):
                 raise exc.EResourceUpdate(type='server', id=obj.physical_id,
                                           message=six.text_type(ex))
             # Still, this 'old_image_id' could be empty, but it doesn't matter
-            # because the comparison below would succeed if that is the case
-            old_image_id = server.image['id']
+            # because the comparison below would fail if that is the case
+            old_image_id = server.image.get('id', None)
 
         if new_image_id == old_image_id:
-            return
+            return False
 
-        # TODO(Qiming): Correct the name used here
         try:
-            server_name = self.properties.get(self.NAME) or obj.name
             driver.server_rebuild(obj.physical_id, new_image_id,
-                                  server_name, admin_password)
+                                  new_name, new_password)
             driver.wait_for_server(obj.physical_id, 'ACTIVE')
         except exc.InternalError as ex:
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
                                       message=six.text_type(ex))
+        return True
 
     def _create_interfaces(self, obj, networks):
         """Create new interfaces for the server node.
@@ -877,28 +880,26 @@ class ServerProfile(base.Profile):
         if not self.validate_for_update(new_profile):
             return False
 
-        # TODO(Yanyan Hu): Update block_device properties
-
-        # Update basic properties of server
         name_changed, new_name = self._check_server_name(obj, new_profile)
-        if name_changed:
-            self._update_name(obj, new_name)
-        self._update_metadata(obj, new_profile)
+        passwd_changed, new_passwd = self._check_password(obj, new_profile)
+        # Update server image: may have side effect of changing server name
+        # and/or admin password
+        image_changed = self._update_image(obj, new_profile, new_name,
+                                           new_passwd)
+        if not image_changed:
+            # we do this separately only when rebuild wasn't performed
+            if name_changed:
+                self._update_name(obj, new_name)
+            if passwd_changed:
+                self._update_password(obj, new_passwd)
 
-        # Update server flavor: Note flavor is a required property
+        # Update server flavor: note that flavor is a required property
         self._update_flavor(obj, new_profile)
-
-        passwd_changed, new_passwd = self._check_password(new_profile)
-        if passwd_changed and new_passwd is not None:
-            self._update_password(obj, new_passwd)
-
-        # Update server image
-        # TODO(Qiming): merge name update into image update when possible
-        # TODO(Qiming): merge password update into image update when possible
-        old_image = self.properties[self.IMAGE]
-        new_image = new_profile.properties[self.IMAGE]
-        self._update_image(obj, old_image, new_image, new_passwd)
         self._update_network(obj, new_profile)
+
+        # TODO(Yanyan Hu): Update block_device properties
+        # Update server metadata
+        self._update_metadata(obj, new_profile)
 
         return True
 
