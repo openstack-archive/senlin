@@ -1138,6 +1138,103 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
+    def _validate_replace_node(self, context, db_cluster, nodes):
+        db_cluster_profile = self.profile_find(context,
+                                               db_cluster.profile_id)
+        cluster_profile_type = db_cluster_profile.type
+
+        found = {}
+        not_member = []
+        owned_nodes = []
+        not_found_new = []
+        not_found_old = []
+        bad_nodes = []
+        not_match_nodes = []
+        for (old_node, new_node) in nodes.items():
+            try:
+                db_old_node = self.node_find(context, old_node)
+            except exception.ResourceNotFound:
+                not_found_old.append(old_node)
+                continue
+            try:
+                db_new_node = self.node_find(context, new_node)
+            except exception.ResourceNotFound:
+                not_found_new.append(new_node)
+                continue
+
+            if db_old_node.cluster_id != db_cluster.id:
+                not_member.append(old_node)
+            elif db_new_node.cluster_id:
+                owned_nodes.append(new_node)
+            elif db_new_node.status != node_mod.Node.ACTIVE:
+                bad_nodes.append(new_node)
+            else:
+                # check the profile type
+                db_new_profile = self.profile_find(context,
+                                                   db_new_node.profile_id)
+                if cluster_profile_type != db_new_profile.type:
+                    not_match_nodes.append(new_node)
+                else:
+                    found[db_old_node.id] = db_new_node.id
+
+        msg = None
+        if len(not_member) > 0:
+            msg = _("The specified nodes %(n)s to be replaced are not "
+                    "members of the cluster %(c)s.") % {'n': not_member,
+                                                        'c': db_cluster.id}
+        elif len(owned_nodes) > 0:
+            msg = _("Nodes %s already member of a cluster."
+                    ) % owned_nodes
+            LOG.error(msg)
+            raise exception.NodeNotOrphan(message=msg)
+        elif len(bad_nodes) > 0:
+            msg = _("Nodes are not ACTIVE: %s.") % bad_nodes
+        elif len(not_match_nodes) > 0:
+            msg = _("Profile type of nodes %s do not match that of the "
+                    "cluster.") % not_match_nodes
+            LOG.error(msg)
+            raise exception.ProfileTypeNotMatch(message=msg)
+        elif len(not_found_old) > 0:
+            msg = _("Original nodes not found: %s.") % not_found_old
+        elif len(not_found_new) > 0:
+            msg = _("Replacement nodes not found: %s.") % not_found_new
+
+        if msg is not None:
+            LOG.error(msg)
+            raise exception.BadRequest(msg=msg)
+
+        return found
+
+    @request_context
+    def cluster_replace_nodes(self, context, identity, nodes=None):
+        """Replace the nodes in cluster with specified nodes
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of the target cluster.
+        :param nodes: A dictionary contains the original nodes and the nodes
+                      used to replace. The key is the original nodes' UUID,
+                      the value is the specified node's UUID
+        :return: A dictionary containing the ID of the action triggered.
+        """
+        LOG.info(_LI("Replace nodes of the cluster '%s'."), identity)
+        db_cluster = self.cluster_find(context, identity)
+
+        nodes_dict = self._validate_replace_node(context, db_cluster,
+                                                 nodes)
+        kwargs = {
+            'name': 'cluster_replace_nodes_%s' % db_cluster.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+            'inputs': nodes_dict,
+        }
+        action_id = action_mod.Action.create(context, db_cluster.id,
+                                             consts.CLUSTER_REPLACE_NODES,
+                                             **kwargs)
+        dispatcher.start_action()
+        LOG.info(_LI("Cluster replace nodes action queued: %s."), action_id)
+
+        return {'action': action_id}
+
     @request_context
     def cluster_resize(self, context, identity, adj_type=None, number=None,
                        min_size=None, max_size=None, min_step=None,

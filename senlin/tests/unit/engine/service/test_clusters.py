@@ -750,6 +750,211 @@ class ClusterTest(base.SenlinTestCase):
         mock_receivers.assert_called_once_with(
             self.ctx, filters={'cluster_id': '12345678AB'})
 
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(service.EngineService, '_validate_replace_node')
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_replace_nodes(self, notify, mock_find,
+                                   mock_profile, mock_node,
+                                   mock_validate, mock_action):
+        cluster = mock.Mock(id='CID', profile_id='FAKE_ID')
+        mock_find.return_value = cluster
+        mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
+        origin_node = mock.Mock(id='ORIGIN', cluster_id='CID',
+                                status='ACTIVE')
+        replace_node = mock.Mock(id='REPLACE', cluster_id='',
+                                 status='ACTIVE',
+                                 profile_id='FAKE_ID_1')
+        mock_node.side_effect = [origin_node, replace_node]
+        mock_action.return_value = 'ACTION_ID'
+
+        param = {'ORIGIN': 'REPLACE'}
+        mock_validate.return_value = param
+        result = self.eng.cluster_replace_nodes(self.ctx, 'CID',
+                                                nodes=param)
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+
+        mock_find.assert_called_once_with(self.ctx, 'CID')
+        mock_validate.assert_called_once_with(self.ctx, cluster,
+                                              param)
+
+        mock_action.assert_called_once_with(
+            self.ctx, 'CID', consts.CLUSTER_REPLACE_NODES,
+            name='cluster_replace_nodes_CID',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={'ORIGIN': 'REPLACE'})
+        notify.assert_called_once_with()
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_replace_nodes_origin_not_found(self, mock_find,
+                                                    mock_profile,
+                                                    mock_node):
+        nodes = {'ORIGIN': 'REPLACE'}
+        mock_find.return_value = mock.Mock(id='1234', profile_id='FAKE_ID')
+        mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
+        mock_node.side_effect = exc.ResourceNotFound(type='node',
+                                                     id='ORIGIN')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_replace_nodes,
+                               self.ctx, 'CLUSTER', nodes=nodes)
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Original nodes "
+                         "not found: ['ORIGIN'].",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_profile.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_node.assert_called_once_with(self.ctx, 'ORIGIN')
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_replace_nodes_replace_not_found(self, mock_find,
+                                                     mock_profile,
+                                                     mock_node):
+        nodes = {'ORIGIN': 'REPLACE'}
+        mock_find.return_value = mock.Mock(id='1234', profile_id='FAKE_ID')
+        mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
+        original = mock.Mock(id='ORIGIN', cluster_id='1234')
+        mock_node.side_effect = [original,
+                                 exc.ResourceNotFound(type='node',
+                                                      id='REPLACE')]
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_replace_nodes,
+                               self.ctx, 'CLUSTER', nodes=nodes)
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Replacement nodes "
+                         "not found: ['REPLACE'].",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_profile.assert_called_once_with(self.ctx, 'FAKE_ID')
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_replace_nodes_bad_status(self, mock_find, mock_profile,
+                                              mock_node):
+        nodes = {'ORIGIN': 'REPLACE'}
+        mock_find.return_value = mock.Mock(id='1234', profile_id='FAKE_ID')
+        mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
+        origin_node = mock.Mock(id='ORIGIN', cluster_id='1234',
+                                ACTIVE='ACTIVE', status='ACTIVE')
+        replace_node = mock.Mock(id='REPLACE', cluster_id='',
+                                 ACTIVE='ACTIVE', status='ERROR')
+        mock_node.side_effect = [origin_node, replace_node]
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_replace_nodes,
+                               self.ctx, 'CLUSTER', nodes=nodes)
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Nodes are not ACTIVE: "
+                         "['REPLACE'].",
+                         six.text_type(ex.exc_info[1]))
+
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_profile.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_node.assert_has_calls([
+            mock.call(self.ctx, 'ORIGIN'),
+            mock.call(self.ctx, 'REPLACE')])
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_replace_nodes_node_already_owned(self, mock_find,
+                                                      mock_profile,
+                                                      mock_node):
+        nodes = {'ORIGIN': 'REPLACE'}
+        mock_find.return_value = mock.Mock(id='1234', profile_id='FAKE_ID')
+        mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
+        origin_node = mock.Mock(id='ORIGIN', cluster_id='1234',
+                                ACTIVE='ACTIVE', status='ACTIVE')
+        replace_node = mock.Mock(id='REPLACE', cluster_id='1234',
+                                 ACTIVE='ACTIVE', status='ACTIVE')
+        mock_node.side_effect = [origin_node, replace_node]
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_replace_nodes,
+                               self.ctx, 'CLUSTER', nodes=nodes)
+
+        self.assertEqual(exc.NodeNotOrphan, ex.exc_info[0])
+        self.assertEqual("Nodes ['REPLACE'] already member of a cluster.",
+                         six.text_type(ex.exc_info[1]))
+
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_profile.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_node.assert_has_calls([
+            mock.call(self.ctx, 'ORIGIN'),
+            mock.call(self.ctx, 'REPLACE')])
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_replace_nodes_origin_already_remove(self, mock_find,
+                                                         mock_profile,
+                                                         mock_node):
+        nodes = {'ORIGIN': 'REPLACE'}
+        mock_find.return_value = mock.Mock(id='1234', profile_id='FAKE_ID')
+        mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
+        origin_node = mock.Mock(id='ORIGIN', cluster_id='',
+                                ACTIVE='ACTIVE', status='ACTIVE')
+        replace_node = mock.Mock(id='REPLACE', cluster_id='',
+                                 ACTIVE='ACTIVE', status='ACTIVE')
+        mock_node.side_effect = [origin_node, replace_node]
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_replace_nodes,
+                               self.ctx, 'CLUSTER', nodes=nodes)
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The specified "
+                         "nodes ['ORIGIN'] to be replaced are "
+                         "not members of the cluster 1234.",
+                         six.text_type(ex.exc_info[1]))
+
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_profile.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_node.assert_has_calls([
+            mock.call(self.ctx, 'ORIGIN'),
+            mock.call(self.ctx, 'REPLACE')])
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_replace_nodes_node_profile_type_not_match(
+            self, mock_find, mock_profile, mock_node):
+        nodes = {'ORIGIN': 'REPLACE'}
+        mock_find.return_value = mock.Mock(id='1234', profile_id='FAKE_ID')
+        mock_profile.side_effect = [
+            mock.Mock(type='FAKE_TYPE_1'),
+            mock.Mock(type='FAKE_TYPE_2')
+        ]
+
+        origin_node = mock.Mock(id='ORIGIN', cluster_id='1234',
+                                ACTIVE='ACTIVE', status='ACTIVE',
+                                profile_id='FAKE_ID')
+        replace_node = mock.Mock(id='REPLACE', cluster_id='',
+                                 ACTIVE='ACTIVE', status='ACTIVE',
+                                 profile_id='DIFF')
+        mock_node.side_effect = [origin_node, replace_node]
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_replace_nodes,
+                               self.ctx, 'CLUSTER', nodes=nodes)
+
+        self.assertEqual(exc.ProfileTypeNotMatch, ex.exc_info[0])
+        self.assertEqual("Profile type of nodes ['REPLACE'] do not "
+                         "match that of the cluster.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_profile.assert_has_calls([
+            mock.call(self.ctx, 'FAKE_ID'),
+            mock.call(self.ctx, 'DIFF')])
+        mock_node.assert_has_calls([
+            mock.call(self.ctx, 'ORIGIN'),
+            mock.call(self.ctx, 'REPLACE')])
+
     @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(am.Action, 'create')
     @mock.patch.object(service.EngineService, 'node_find')
