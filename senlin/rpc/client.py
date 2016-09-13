@@ -229,6 +229,11 @@ class EngineClient(object):
                                              identity=identity,
                                              params=params))
 
+    def cluster_replace_nodes(self, ctxt, identity, nodes=None):
+        return self.call(ctxt, self.make_msg('cluster_replace_nodes',
+                                             identity=identity,
+                                             nodes=nodes))
+
     def node_list(self, ctxt, cluster_id=None, limit=None, marker=None,
                   sort=None, filters=None, project_safe=True):
         return self.call(ctxt,

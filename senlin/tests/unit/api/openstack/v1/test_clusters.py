@@ -858,6 +858,129 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
+    def test_cluster_action_replace_nodes(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {
+            'replace_nodes': {
+                'nodes': {
+                    'dddd-eeee-ffff': 'gggg-hhhh-iiii'
+                }
+            }
+        }
+
+        eng_resp = {'action': 'action-id'}
+
+        req = self._put('/clusters/%(cluster_id)s/action' % {
+                        'cluster_id': cid}, jsonutils.dumps(body),
+                        version='1.3')
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=eng_resp)
+
+        resp = self.controller.action(req, cluster_id=cid, body=body)
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('cluster_replace_nodes', {
+                'identity': cid,
+                'nodes': {'dddd-eeee-ffff': 'gggg-hhhh-iiii'},
+            })
+        )
+
+        result = {
+            'action': 'action-id',
+            'location': '/actions/action-id'
+        }
+        self.assertEqual(result, resp)
+
+    def test_cluster_action_replace_nodes_not_map(self,
+                                                  mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'CID'
+        body = {'replace_nodes': {'nodes': ['node1']}}
+
+        req = self._put('/clusters/%(cluster_id)s/action' % {
+                        'cluster_id': cid}, jsonutils.dumps(body),
+                        version='1.3')
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, cluster_id=cid, body=body)
+
+        self.assertEqual('The data provided is not a map.',
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
+    def test_cluster_action_replace_nodes_miss_origin(self,
+                                                      mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'CID'
+        body = {'replace_nodes': {'nodes': {'': 'replace_node'}}}
+
+        req = self._post('/clusters/%(cluster_id)s/action' % {
+                         'cluster_id': cid}, jsonutils.dumps(body),
+                         version='1.3')
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, cluster_id=cid, body=body)
+
+        self.assertEqual('The original node id could not be empty.',
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
+    def test_cluster_action_replace_nodes_miss_replace(self,
+                                                       mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'CID'
+        body = {'replace_nodes': {'nodes': {'origin_node': ''}}}
+
+        req = self._put('/clusters/%(cluster_id)s/action' % {
+                        'cluster_id': cid}, jsonutils.dumps(body),
+                        version='1.3')
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, cluster_id=cid, body=body)
+
+        self.assertEqual('The replacement node id could not be empty.',
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
+    def test_cluster_action_replace_nodes_duplicate(self,
+                                                    mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'CID'
+        body = {
+            'replace_nodes': {
+                'nodes': {
+                    'origin1': 'replace_node',
+                    'origin2': 'replace_node'
+                }
+            }
+        }
+
+        req = self._put('/clusters/%(cluster_id)s/action' % {
+                        'cluster_id': cid}, jsonutils.dumps(body),
+                        version='1.3')
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, cluster_id=cid, body=body)
+
+        self.assertEqual('The data provided contains duplicated nodes.',
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
     def test_cluster_action_add_nodes(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'

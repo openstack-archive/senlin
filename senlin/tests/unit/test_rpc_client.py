@@ -300,6 +300,11 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         self._test_engine_api('cluster_recover', 'call', identity='a-cluster',
                               params=params)
 
+    def test_cluster_replace_nodes(self):
+        self._test_engine_api('cluster_replace_nodes', 'call',
+                              identity='a-cluster',
+                              nodes={'o_node': 'r_node'})
+
     def test_node_list(self):
         default_args = {
             'cluster_id': mock.ANY,

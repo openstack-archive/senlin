@@ -118,11 +118,11 @@ class ClusterController(wsgi.Controller):
     SUPPORTED_ACTIONS = (
         ADD_NODES, DEL_NODES, SCALE_OUT, SCALE_IN, RESIZE,
         POLICY_ATTACH, POLICY_DETACH, POLICY_UPDATE,
-        CHECK, RECOVER
+        CHECK, RECOVER, REPLACE_NODES
     ) = (
         'add_nodes', 'del_nodes', 'scale_out', 'scale_in', 'resize',
         'policy_attach', 'policy_detach', 'policy_update',
-        'check', 'recover'
+        'check', 'recover', 'replace_nodes'
     )
 
     @util.policy_enforce
@@ -287,6 +287,33 @@ class ClusterController(wsgi.Controller):
 
         return data
 
+    @wsgi.Controller.api_version('1.3')
+    def _replace_nodes(self, req, cluster_id, this_action, body):
+        params = body.get(this_action).get('nodes')
+        if not params or not isinstance(params, dict):
+            msg = _("The data provided is not a map.")
+            raise exc.HTTPBadRequest(msg)
+
+        new_nodes = params.values()
+        if len(new_nodes) != len(list(set(new_nodes))):
+            msg = _("The data provided contains duplicated nodes.")
+            raise exc.HTTPBadRequest(msg)
+
+        for (old_node, new_node) in params.items():
+            if not old_node:
+                msg = _("The original node id could not be empty.")
+                raise exc.HTTPBadRequest(msg)
+            if not new_node:
+                msg = _("The replacement node id could not be empty.")
+                raise exc.HTTPBadRequest(msg)
+
+        res = self.rpc_client.cluster_replace_nodes(req.context,
+                                                    cluster_id,
+                                                    nodes=params)
+        location = {'location': '/actions/%s' % res['action']}
+        res.update(location)
+        return res
+
     @util.policy_enforce
     def action(self, req, cluster_id, body=None):
         """Perform specified action on a cluster."""
@@ -351,6 +378,8 @@ class ClusterController(wsgi.Controller):
                 raise exc.HTTPBadRequest(msg)
             res = self.rpc_client.cluster_check(req.context, cluster_id,
                                                 params=params)
+        elif this_action == self.REPLACE_NODES:
+            return self._replace_nodes(req, cluster_id, this_action, body)
         else:
             # this_action == self.RECOVER:
             params = body.get(this_action)
