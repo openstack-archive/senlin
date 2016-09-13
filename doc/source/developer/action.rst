@@ -237,7 +237,7 @@ Creating An Action
 ~~~~~~~~~~~~~~~~~~
 
 Currently, Senlin actions are mostly generated from within the Senlin engine,
-either due to a RPC request, or due to aother action's execution.
+either due to a RPC request, or due to another action's execution.
 
 In future, Senlin plans to support user-defined actions (UDAs). Senlin API will
 provide API for creating an UDA and invoking an action which can be an UDA.
