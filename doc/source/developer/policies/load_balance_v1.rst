@@ -82,7 +82,7 @@ load-balancer. The map may contain values for keys like "``type``",
 "``delay``", "``max_retries``", "``http_method``" etc.
 
 For more details specifications of the policy specifications, you can use the
-:command:`opentack cluster policy type show senlin.policy.loadbalance-1.0`
+:command:`openstack cluster policy type show senlin.policy.loadbalance-1.0`
 command.
 
 
