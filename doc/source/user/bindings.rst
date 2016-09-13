@@ -66,14 +66,14 @@ Filtering the List
 The :program:`openstack cluster` command also supports options for filtering
 the policy list at the server side. The option :option:`--filters` can be used
 for this purpose. For example, the following command filters clusters by the
-``enabled`` field::
+``is_enabled`` field::
 
   $ openstack cluster policy binding list --filters enabled=True c3
-  +-----------+--------+-----------------------+---------+
-  | policy_id | policy | type                  | enabled |
-  +-----------+--------+-----------------------+---------+
-  | 0705f0f4  | up01   | senlin.policy.scaling | True    |
-  +-----------+--------+-----------------------+---------+
+  +-----------+-------------+-----------------------+------------+
+  | policy_id | policy_name | policy_type           | is_enabled |
+  +-----------+-------------+-----------------------+------------+
+  | 0705f0f4  | up01        | senlin.policy.scaling | True       |
+  +-----------+-------------+-----------------------+------------+
 
 The option :option:`--filters` accepts a list of key-value pairs separated by
 semicolon (``;``), where each key-value pair is expected to be of format
