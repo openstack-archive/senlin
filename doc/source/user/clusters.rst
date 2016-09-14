@@ -444,6 +444,6 @@ links for operations related to cluster membership management and the creation
 and management of cluster-policy bindings:
 
 - :doc:`Managing Cluster Membership <membership>`
-- :doc:`Bindging Policies to Clusters <bindings>`
+- :doc:`Binding Policies to Clusters <bindings>`
 - :doc:`Examining Actions <actions>`
 - :doc:`Browsing Events <events>`
