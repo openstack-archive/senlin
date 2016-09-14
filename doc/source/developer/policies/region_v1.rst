@@ -46,7 +46,7 @@ The policy is capable of handling the following actions:
 The policy will be checked **BEFORE** any of the above mentioned actions is
 executed. Because the same policy implementation is used for covering both the
 cases of scaling out a cluster and the cases of scaling in, the region
-placment policy need to parse the inputs in different scenarios.
+placement policy need to parse the inputs in different scenarios.
 
 The placement policy can be used independently, with and without other polices
 attached to the same cluster. So the policy needs to understand whether there
@@ -94,7 +94,7 @@ specified in the policy spec, senlin engine continues to calculate a placement
 plan that best matches the desired distribution.
 
 If there are nodes that cannot be fit into the distribution plan, the policy
-check failes with an error recorded in the action's ``data``, as shown below:
+check failed with an error recorded in the action's ``data``, as shown below:
 
 ::
 
@@ -216,7 +216,7 @@ When the placement policy finds out the number of nodes to create (or delete),
 it proceeds to calculate a distribution plan. If the action is about growing
 the size of the cluster, the logic and the output format are the same as that
 have been outlined in scenario *S2*. Otherwise, the logic and the output
-format are identical to that have been describled in scenario *S1*.
+format are identical to that have been described in scenario *S1*.
 
 
 S4: ``NODE_CREATE``
