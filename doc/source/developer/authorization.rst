@@ -33,7 +33,7 @@ or multi-region, or multi-availability-zone setups.
 Major Components
 ~~~~~~~~~~~~~~~~
 
-In the context of an OpenStack cloud, the most important components invovled in
+In the context of an OpenStack cloud, the most important components involved in
 the authentication and the authorization process are:
 
  - The Senlin client (i.e. the `python-senlinclient` package) which accepts
@@ -72,7 +72,7 @@ and/or authorization is performed.
    requests will carry a valid Keystone token for verification by the
    `auth_token` middleware as well.
 3) Users interact with Senlin service API directly by making HTTP requests, but
-   the requests are "naked" ones which means that the requests do not contain
+   the requests are "naked" ones which mean that the requests do not contain
    credentials as expected by Senlin API (or other OpenStack services). In
    stead, the URI requested contains some special parameters for authentication
    and/or authorization's purposes.
@@ -105,7 +105,7 @@ other services. In fact, this may be the only solution that can be applied on
 different cloud backends.
 
 Senlin supports a `context` property for all "profile" types by default unless
-overriden by a profile type implementation. This context can be treated as a
+overridden by a profile type implementation. This context can be treated as a
 container for these credentials. Storing user credential in Senlin database
 does imply a security risk. In future, we hope Senlin can make use of the
 Barbican service for this purpose.
