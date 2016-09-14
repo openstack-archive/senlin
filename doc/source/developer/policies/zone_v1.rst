@@ -47,7 +47,7 @@ The policy is capable of handling the following actions:
 
 The policy will be checked **BEFORE** any of the above mentioned actions is
 executed. Because the same policy implementation is used for covering both the
-cases of scaling out a cluster and the cases of scaling in, the zone placment
+cases of scaling out a cluster and the cases of scaling in, the zone placement
 policy need to parse the inputs in different scenarios.
 
 The placement policy can be used independently, with and without other polices
@@ -228,7 +228,7 @@ S4: ``NODE_CREATE``
 When handling a ``NODE_CREATE`` action, the zone placement policy needs to
 process the single node associated with the action, i.e. the node to be
 created. If, however, the node is referencing a profile whose spec contains
-a ``availability_zone`` property, it means the requesting user has a prefered
+a ``availability_zone`` property, it means the requesting user has a preferred
 availability zone for the new node. In this case, the placement policy will
 return directly without choosing availability zone for the node.
 
