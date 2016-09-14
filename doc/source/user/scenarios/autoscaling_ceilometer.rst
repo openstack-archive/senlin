@@ -87,7 +87,7 @@ cluster ID into an environment variable for convenience:
 
   $ export MYCLUSTER_ID=10c80bfe-41af-41f7-b9b1-9c81c9e5d21f
 
-You may want to check the IP addesses assigned to each node. In the output
+You may want to check the IP addresses assigned to each node. In the output
 from the following command, you will find the IP address for the specific node:
 
 .. code-block:: console
