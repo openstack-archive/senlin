@@ -40,7 +40,7 @@ use the following command::
 
   $ openstack cluster profile list
   +----------+----------+--------------------+---------------------+
-  | id       | name     | type_name          | created_at          |
+  | id       | name     | type               | created_at          |
   +----------+----------+--------------------+---------------------+
   | 560a8f9d | myserver | os.nova.server-1.0 | 2015-05-05T13:26:00 |
   | ceda64bd | mystack  | os.heat.stack-1.0  | 2015-05-05T13:26:25 |
@@ -54,7 +54,7 @@ ID* in the list, you can add the :option:`--full-id` option to the command::
 
   $ openstack cluster profile list --full-id
   +-------------------+----------+--------------------+---------------------+
-  | id                | name     | type_name          | created_at          |
+  | id                | name     | type               | created_at          |
   +-------------------+----------+--------------------+---------------------+
   | 560a8f9d-7596-... | myserver | os.nova.server-1.0 | 2015-05-05T13:26:00 |
   | ceda64bd-70b7-... | mystack  | os.heat.stack-1.0  | 2015-05-05T13:26:25 |
@@ -77,7 +77,7 @@ property in descending order::
 
   $ openstack cluster profile list --sort name:desc
 
-When sorting the list of profiles, you can use one of ``type_name``, ``name``,
+When sorting the list of profiles, you can use one of ``type``, ``name``,
 ``created_at`` and ``updated_at``.
 
 
@@ -90,7 +90,7 @@ number of profiles returned from Senlin server, using the option
 
   $ openstack cluster profile list --limit 1
   +----------+----------+--------------------+---------------------+
-  | id       | name     | type_name          | created_at          |
+  | id       | name     | type               | created_at          |
   +----------+----------+--------------------+---------------------+
   | 560a8f9d | myserver | os.nova.server-1.0 | 2015-05-05T13:26:00 |
   +----------+----------+--------------------+---------------------+
@@ -103,7 +103,7 @@ option :option:`--marker <ID>` for this purpose. For example::
   $ openstack cluster profile list --limit 1 \
       --marker ceda64bd-70b7-4711-9526-77d5d51241c5
   +----------+--------+-------------------+---------------------+
-  | id       | name   | type_name         | created_at          |
+  | id       | name   | type              | created_at          |
   +----------+--------+-------------------+---------------------+
   | 9b127538 | pstack | os.heat.stack-1.0 | 2015-06-25T12:59:01 |
   +----------+--------+-------------------+---------------------+
@@ -269,13 +269,13 @@ of an UUID as the "short ID" for query. For example::
 
   $ openstack cluster profile show 560a8f9d
   +----------+----------+--------------------+---------------------+
-  | id       | name     | type_name          | created_at          |
+  | id       | name     | type               | created_at          |
   +----------+----------+--------------------+---------------------+
   | 560a8f9d | myserver | os.nova.server-1.0 | 2015-05-05T13:26:00 |
   +----------+----------+--------------------+---------------------+
   $ openstack cluster profile show 560a
   +----------+----------+--------------------+---------------------+
-  | id       | name     | type_name          | created_at          |
+  | id       | name     | type               | created_at          |
   +----------+----------+--------------------+---------------------+
   | 560a8f9d | myserver | os.nova.server-1.0 | 2015-05-05T13:26:00 |
   +----------+----------+--------------------+---------------------+
