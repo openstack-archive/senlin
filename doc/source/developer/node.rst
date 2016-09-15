@@ -52,6 +52,9 @@ properties are always available on a node:
 - ``status``: A string indicating the current status of the node.
 - ``status_reason``: A string describing the reason why the node transited to
   its current status.
+- ``dependents``: A dict contains dependency information between nova server/
+  heat stack node and container node. The container node's id will be stored
+  in 'dependents' property of its host node.
 
 In addition to the above properties, when a node is retrieved and shown to the
 user, Senlin provides a pseudo-property named ``profile_name`` for user's

@@ -89,6 +89,9 @@ JSON request body:
   - ``timeout``: the maximum number of seconds to wait for the cluster to
     become ready, i.e. ``ACTIVE``.
   - ``metadata``: a list of key-value pairs to be associated with the cluster.
+  - ``dependents``: A dict contains dependency information between nova server/
+    heat stack cluster and container cluster. The container node's id will be
+    stored in 'dependents' property of its host cluster.
 
 The ``max_size`` and the ``min_size`` fields, when specified, will be checked
 against each other by the Senlin API. The API also checks if the specified

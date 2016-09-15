@@ -142,6 +142,7 @@ associated with the cluster. For example::
   +------------------+--------------------------------------+
   | created_at       | None                                 |
   | data             | {}                                   |
+  | dependents       | {}                                   |
   | desired_capacity | 0                                    |
   | domain           | None                                 |
   | id               | 60424eb3-6adf-4fc3-b9a1-4a035bf171ac |
@@ -232,6 +233,7 @@ An example is shown below::
   +------------------+--------------------------------------+
   | created_at       | 2015-07-07T03:30:53                  |
   | data             | {}                                   |
+  | dependents       | {}                                   |
   | desired_capacity | 0                                    |
   | domain           | None                                 |
   | id               | 2b7e9294-b5cd-470f-b191-b18f7e672495 |

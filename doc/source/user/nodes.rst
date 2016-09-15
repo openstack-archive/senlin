@@ -130,6 +130,7 @@ using a profile named ``pstack``::
   | cluster_id    | None                                 |
   | created_at    | None                                 |
   | data          | {}                                   |
+  | dependents    | {}                                   |
   | details       | None                                 |
   | id            | 1984b5a0-9dd7-4dda-b1e6-e8c1f640598f |
   | index         | -1                                   |
@@ -207,6 +208,7 @@ An example is shown below::
   | cluster_id    | None                                 |
   | created_at    | 2015-07-09T11:41:20                  |
   | data          | {}                                   |
+  | dependents    | {}                                   |
   | details       | {}                                   |
   | id            | 1984b5a0-9dd7-4dda-b1e6-e8c1f640598f |
   | index         | -1                                   |
