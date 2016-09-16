@@ -247,11 +247,9 @@ class TestNovaV2(base.SenlinTestCase):
             'personality': '123',
             'metadata': {'k1': 'v1'}
         }
-        d.server_rebuild('fakeid', 'new_image', 'new_name', 'new_pass',
-                         **attrs)
+        d.server_rebuild('sid', 'new_image', 'new_name', 'new_pass', **attrs)
         self.compute.rebuild_server.assert_called_once_with(
-            'fakeid', 'new_image', name='new_name',
-            admin_password='new_pass', **attrs)
+            'sid', 'new_name', 'new_pass', image='new_image', **attrs)
 
     def test_server_resize(self):
         d = nova_v2.NovaClient(self.conn_params)
