@@ -1,0 +1,4 @@
+---
+features:
+  - Added dependents to clusters and nodes for recording other clusters/nodes
+    that depend on them.

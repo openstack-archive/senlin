@@ -1,0 +1,4 @@
+---
+deprecations:
+  - Deprecate 'block_device_mapping' from nova server profile since it was
+    never supported by OpenStack SDK.

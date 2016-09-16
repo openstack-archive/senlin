@@ -1,0 +1,4 @@
+---
+features:
+  - The 'image', 'flavor', 'key_name' and 'networks' properties of a
+    nova server profile can now be validated via profile-validate API.
