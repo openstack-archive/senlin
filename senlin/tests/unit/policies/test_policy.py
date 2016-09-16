@@ -141,6 +141,15 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual(policy.created_at, result.created_at)
         self.assertEqual(policy.updated_at, result.updated_at)
 
+    def test_load_with_policy(self):
+        policy = utils.create_policy(self.ctx, UUID1)
+        expected = pb.Policy.load(self.ctx, policy.id)
+
+        res = pb.Policy.load(self.ctx, db_policy=policy)
+
+        self.assertIsNotNone(res)
+        self.assertEqual(expected.id, res.id)
+
     def test_load_diff_project(self):
         policy = utils.create_policy(self.ctx, UUID1)
 
