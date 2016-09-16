@@ -1,0 +1,4 @@
+---
+fixes:
+  - Added validation of key_name, flavor, image, networks when updating nova
+    server.

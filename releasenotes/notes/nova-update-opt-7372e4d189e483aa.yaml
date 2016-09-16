@@ -1,0 +1,4 @@
+---
+features:
+  - Optimized nova server update so that password and server name can be
+    updated with and without image-based rebuild. 
