@@ -105,9 +105,9 @@ class TestPasswordChecking(base.SenlinTestCase):
 
     def test_check_password(self):
         if self.old_passwd:
-            self.old_spec['properties']['adminPass'] = self.old_passwd
+            self.old_spec['properties']['admin_pass'] = self.old_passwd
         if self.new_passwd:
-            self.new_spec['properties']['adminPass'] = self.new_passwd
+            self.new_spec['properties']['admin_pass'] = self.new_passwd
 
         profile = server.ServerProfile('t', self.old_spec)
         new_profile = server.ServerProfile('t1', self.new_spec)
@@ -127,7 +127,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
             'version': '1.0',
             'properties': {
                 'context': {},
-                'adminPass': 'adminpass',
+                'admin_pass': 'adminpass',
                 'auto_disk_config': True,
                 'availability_zone': 'FAKE_AZ',
                 'block_device_mapping': [{

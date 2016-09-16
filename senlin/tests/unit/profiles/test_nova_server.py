@@ -34,7 +34,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
             'version': '1.0',
             'properties': {
                 'context': {},
-                'adminPass': 'adminpass',
+                'admin_pass': 'adminpass',
                 'auto_disk_config': True,
                 'availability_zone': 'FAKE_AZ',
                 'block_device_mapping': [{
@@ -152,8 +152,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         attrs = dict(
             adminPass='adminpass',
-            auto_disk_config=True,
-            # availability_zone='FAKE_AZ',
+            availability_zone='AZ1',
             block_device_mapping=[{
                 'volume_size': 1000,
                 'device_name': 'FAKE_NAME'
@@ -184,11 +183,11 @@ class TestNovaServerBasic(base.SenlinTestCase):
             },
             security_groups=[{'name': 'HIGH_SECURITY_GROUP'}],
             user_data='FAKE_USER_DATA',
-            availability_zone='AZ1',
         )
 
         ud = encodeutils.safe_encode('FAKE_USER_DATA')
         attrs['user_data'] = encodeutils.safe_decode(base64.b64encode(ud))
+        attrs['OS-DCF:diskConfig'] = 'AUTO'
 
         cc.server_create.assert_called_once_with(**attrs)
         self.assertEqual('FAKE_ID', server_id)
@@ -300,15 +299,17 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         server_id = profile.do_create(node_obj)
 
-        attrs = dict(auto_disk_config=True,
-                     flavorRef='FAKE_FLAVOR_ID',
-                     name='FAKE_SERVER_NAME',
-                     metadata={
-                         'cluster_id': 'FAKE_CLUSTER_ID',
-                         'cluster_node_id': 'FAKE_NODE_ID',
-                         'cluster_node_index': '123',
-                     },
-                     security_groups=[{'name': 'HIGH_SECURITY_GROUP'}])
+        attrs = {
+            'OS-DCF:diskConfig': 'AUTO',
+            'flavorRef': 'FAKE_FLAVOR_ID',
+            'name': 'FAKE_SERVER_NAME',
+            'metadata': {
+                'cluster_id': 'FAKE_CLUSTER_ID',
+                'cluster_node_id': 'FAKE_NODE_ID',
+                'cluster_node_index': '123',
+            },
+            'security_groups': [{'name': 'HIGH_SECURITY_GROUP'}]
+        }
 
         cc.server_create.assert_called_once_with(**attrs)
         self.assertEqual('FAKE_ID', server_id)
@@ -338,11 +339,13 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         server_id = profile.do_create(node_obj)
 
-        attrs = dict(auto_disk_config=True,
-                     flavorRef='FAKE_FLAVOR_ID',
-                     name='FAKE_SERVER_NAME',
-                     metadata={'cluster_node_id': 'FAKE_NODE_ID'},
-                     security_groups=[{'name': 'HIGH_SECURITY_GROUP'}])
+        attrs = {
+            'OS-DCF:diskConfig': 'AUTO',
+            'flavorRef': 'FAKE_FLAVOR_ID',
+            'name': 'FAKE_SERVER_NAME',
+            'metadata': {'cluster_node_id': 'FAKE_NODE_ID'},
+            'security_groups': [{'name': 'HIGH_SECURITY_GROUP'}]
+        }
 
         cc.server_create.assert_called_once_with(**attrs)
         self.assertEqual('FAKE_ID', server_id)
@@ -371,11 +374,13 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         server_id = profile.do_create(node_obj)
 
-        attrs = dict(auto_disk_config=True,
-                     flavorRef='FAKE_FLAVOR_ID',
-                     name='TEST-SERVER',
-                     metadata={'cluster_node_id': 'NODE_ID'},
-                     security_groups=[{'name': 'HIGH_SECURITY_GROUP'}])
+        attrs = {
+            'OS-DCF:diskConfig': 'AUTO',
+            'flavorRef': 'FAKE_FLAVOR_ID',
+            'name': 'TEST-SERVER',
+            'metadata': {'cluster_node_id': 'NODE_ID'},
+            'security_groups': [{'name': 'HIGH_SECURITY_GROUP'}]
+        }
 
         cc.server_create.assert_called_once_with(**attrs)
         self.assertEqual('FAKE_ID', server_id)
@@ -436,12 +441,14 @@ class TestNovaServerBasic(base.SenlinTestCase):
         self.assertEqual(expected_volume,
                          profile.properties['block_device_mapping_v2'][0])
 
-        attrs = dict(auto_disk_config=True,
-                     flavorRef='FAKE_FLAVOR_ID',
-                     name='FAKE_SERVER_NAME',
-                     metadata={'cluster_node_id': 'NODE_ID'},
-                     security_groups=[{'name': 'HIGH_SECURITY_GROUP'}],
-                     block_device_mapping_v2=bdm_v2)
+        attrs = {
+            'OS-DCF:diskConfig': 'AUTO',
+            'flavorRef': 'FAKE_FLAVOR_ID',
+            'name': 'FAKE_SERVER_NAME',
+            'metadata': {'cluster_node_id': 'NODE_ID'},
+            'security_groups': [{'name': 'HIGH_SECURITY_GROUP'}],
+            'block_device_mapping_v2': bdm_v2
+        }
 
         cc.server_create.assert_called_once_with(**attrs)
         self.assertEqual('FAKE_ID', server_id)
@@ -1028,7 +1035,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._computeclient = cc
 
         # do it
-        res = profile.handle_change_password(obj, adminPass='new_pass')
+        res = profile.handle_change_password(obj, admin_pass='new_pass')
 
         self.assertTrue(res)
         cc.server_change_password.assert_called_once_with('FAKE_ID',
@@ -1039,7 +1046,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile = server.ServerProfile('t', self.spec)
 
         # do it
-        res = profile.handle_change_password(obj, adminPass='new_pass')
+        res = profile.handle_change_password(obj, admin_pass='new_pass')
 
         self.assertFalse(res)
 
@@ -1059,7 +1066,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._computeclient = mock.Mock()
 
         # do it
-        res = profile.handle_change_password(obj, adminPass=['foo'])
+        res = profile.handle_change_password(obj, admin_pass=['foo'])
         self.assertFalse(res)
 
         res = profile.handle_change_password(obj, foo='bar')

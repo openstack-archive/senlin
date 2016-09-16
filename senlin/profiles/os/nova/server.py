@@ -24,7 +24,7 @@ from senlin.profiles import base
 
 
 class ServerProfile(base.Profile):
-    '''Profile for an OpenStack Nova server.'''
+    """Profile for an OpenStack Nova server."""
 
     KEYS = (
         CONTEXT, ADMIN_PASS, AUTO_DISK_CONFIG, AVAILABILITY_ZONE,
@@ -33,7 +33,7 @@ class ServerProfile(base.Profile):
         NAME, NETWORKS, PERSONALITY, SECURITY_GROUPS,
         USER_DATA, SCHEDULER_HINTS,
     ) = (
-        'context', 'adminPass', 'auto_disk_config', 'availability_zone',
+        'context', 'admin_pass', 'auto_disk_config', 'availability_zone',
         'block_device_mapping', 'block_device_mapping_v2',
         'config_drive', 'flavor', 'image', 'key_name', 'metadata',
         'name', 'networks', 'personality', 'security_groups',
@@ -240,7 +240,7 @@ class ServerProfile(base.Profile):
 
     REBOOT_TYPE = 'type'
     REBOOT_TYPES = (REBOOT_SOFT, REBOOT_HARD) = ('SOFT', 'HARD')
-    ADMIN_PASSWORD = 'adminPass'
+    ADMIN_PASSWORD = 'admin_pass'
 
     OPERATIONS = {
         OP_REBOOT: schema.Operation(
@@ -489,6 +489,15 @@ class ServerProfile(base.Profile):
 
             if self.properties[key] is not None:
                 kwargs[key] = self.properties[key]
+
+        admin_pass = self.properties[self.ADMIN_PASS]
+        if admin_pass:
+            kwargs.pop(self.ADMIN_PASS)
+            kwargs['adminPass'] = admin_pass
+
+        auto_disk_config = self.properties[self.AUTO_DISK_CONFIG]
+        kwargs.pop(self.AUTO_DISK_CONFIG)
+        kwargs['OS-DCF:diskConfig'] = 'AUTO' if auto_disk_config else 'MANUAL'
 
         image_ident = self.properties[self.IMAGE]
         if image_ident is not None:
