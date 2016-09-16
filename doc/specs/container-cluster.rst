@@ -32,7 +32,7 @@ OpenStack-managed resources, thus other projects which want to use container
 resources can't invoke Magnum to acquire them. Furthermore, the dependency on
 those engines will cause version management problems and makes it difficult
 to test the container engine because the engines are not implemented in Python
-lauguage. For the cloud operaters who want to use OpenStack to manage
+language. For the cloud operators who want to use OpenStack to manage
 containers, they may want OpenStack's own container service instead of learning
 how to use docker swarm etc.
 
@@ -81,7 +81,7 @@ Proposed Changes
      started on some node of the cluster randomly.(This may be changed in
      future, to support the case of low CPU, memory usage priority.)
 4. Network
-   To allocate an IP address to erery container, a network for container is
+   To allocate an IP address to every container, a network for container is
    desired before creating a container. Kuryr brings container networking to
    neutron which can make container networking management similar to Nova
    server. Senlin will introduce Kuryr for container networking management.
