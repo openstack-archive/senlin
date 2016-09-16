@@ -37,10 +37,6 @@ class TestNovaServerBasic(base.SenlinTestCase):
                 'admin_pass': 'adminpass',
                 'auto_disk_config': True,
                 'availability_zone': 'FAKE_AZ',
-                'block_device_mapping': [{
-                    'device_name': 'FAKE_NAME',
-                    'volume_size': 1000,
-                }],
                 'config_drive': False,
                 'flavor': 'FLAV',
                 'image': 'FAKE_IMAGE',
@@ -101,7 +97,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         )
 
     def _stubout_profile(self, profile, mock_image=False, mock_flavor=False,
-                         mock_keypair=False, mock_bdm=False, mock_net=False):
+                         mock_keypair=False, mock_net=False):
         if mock_image:
             image = mock.Mock(id='FAKE_IMAGE_ID')
             self.patchobject(profile, '_validate_image', return_value=image)
@@ -115,9 +111,6 @@ class TestNovaServerBasic(base.SenlinTestCase):
             keypair.name = 'FAKE_KEYNAME'
             self.patchobject(profile, '_validate_keypair',
                              return_value=keypair)
-        if mock_bdm:
-            self.patchobject(profile, '_validate_bdm', return_value=None)
-
         if mock_net:
             fake_net = {
                 'fixed_ip': 'FAKE_IP',
@@ -134,7 +127,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._computeclient = cc
         profile._networkclient = nc
         self._stubout_profile(profile, mock_image=True, mock_flavor=True,
-                              mock_keypair=True, mock_bdm=True, mock_net=True)
+                              mock_keypair=True, mock_net=True)
 
         node_obj = mock.Mock(id='FAKE_NODE_ID', index=123,
                              cluster_id='FAKE_CLUSTER_ID',
@@ -153,10 +146,6 @@ class TestNovaServerBasic(base.SenlinTestCase):
         attrs = dict(
             adminPass='adminpass',
             availability_zone='AZ1',
-            block_device_mapping=[{
-                'volume_size': 1000,
-                'device_name': 'FAKE_NAME'
-            }],
             config_drive=False,
             flavorRef='FAKE_FLAVOR_ID',
             imageRef='FAKE_IMAGE_ID',
@@ -227,18 +216,6 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         mock_kp.assert_called_once_with(node_obj, 'FAKE_KEYNAME', 'create')
 
-    def test_do_create_invalid_bdm(self):
-        profile = server.ServerProfile('s2', self.spec)
-        self._stubout_profile(profile, mock_image=True, mock_flavor=True,
-                              mock_keypair=True)
-        err = exc.EResourceCreation(type='server', message='boom')
-        mock_bdm = self.patchobject(profile, '_validate_bdm', side_effect=err)
-        node_obj = mock.Mock()
-
-        self.assertRaises(exc.EResourceCreation, profile.do_create, node_obj)
-
-        mock_bdm.assert_called_once_with('create')
-
     def test_do_create_invalid_network(self):
         cc = mock.Mock()
         nc = mock.Mock()
@@ -262,7 +239,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._computeclient = cc
         profile._networkclient = nc
         self._stubout_profile(profile, mock_image=True, mock_flavor=True,
-                              mock_keypair=True, mock_bdm=True)
+                              mock_keypair=True)
         err = exc.EResourceCreation(type='server', message='FOO')
         mock_net = self.patchobject(profile, '_validate_network',
                                     side_effect=err)
@@ -294,7 +271,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._computeclient = cc
         profile._networkclient = nc
         self._stubout_profile(profile, mock_image=True, mock_flavor=True,
-                              mock_keypair=True, mock_bdm=True, mock_net=True)
+                              mock_keypair=True, mock_net=True)
         cc.server_create.return_value = mock.Mock(id='FAKE_ID')
 
         server_id = profile.do_create(node_obj)
@@ -330,7 +307,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._computeclient = cc
         profile._networkclient = nc
         self._stubout_profile(profile, mock_image=True, mock_flavor=True,
-                              mock_keypair=True, mock_bdm=True, mock_net=True)
+                              mock_keypair=True, mock_net=True)
 
         node_obj = mock.Mock(id='FAKE_NODE_ID', cluster_id='', data={},
                              index=None)
@@ -365,7 +342,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._computeclient = cc
         profile._networkclient = nc
         self._stubout_profile(profile, mock_image=True, mock_flavor=True,
-                              mock_keypair=True, mock_bdm=True, mock_net=True)
+                              mock_keypair=True, mock_net=True)
 
         node_obj = mock.Mock(id='NODE_ID', cluster_id='', index=-1, data={})
         node_obj.name = 'TEST-SERVER'
@@ -416,7 +393,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._computeclient = cc
         profile._networkclient = nc
         self._stubout_profile(profile, mock_image=True, mock_flavor=True,
-                              mock_keypair=True, mock_bdm=True, mock_net=True)
+                              mock_keypair=True, mock_net=True)
 
         node_obj = mock.Mock(id='NODE_ID', cluster_id='', index=-1, data={})
         node_obj.name = None
