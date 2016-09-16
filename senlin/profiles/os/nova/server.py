@@ -28,23 +28,16 @@ class ServerProfile(base.Profile):
 
     KEYS = (
         CONTEXT, ADMIN_PASS, AUTO_DISK_CONFIG, AVAILABILITY_ZONE,
-        BLOCK_DEVICE_MAPPING, BLOCK_DEVICE_MAPPING_V2,
+        BLOCK_DEVICE_MAPPING_V2,
         CONFIG_DRIVE, FLAVOR, IMAGE, KEY_NAME, METADATA,
         NAME, NETWORKS, PERSONALITY, SECURITY_GROUPS,
         USER_DATA, SCHEDULER_HINTS,
     ) = (
         'context', 'admin_pass', 'auto_disk_config', 'availability_zone',
-        'block_device_mapping', 'block_device_mapping_v2',
+        'block_device_mapping_v2',
         'config_drive', 'flavor', 'image', 'key_name', 'metadata',
         'name', 'networks', 'personality', 'security_groups',
         'user_data', 'scheduler_hints',
-    )
-
-    BDM_KEYS = (
-        BDM_DEVICE_NAME, BDM_VOLUME_SIZE,
-    ) = (
-        'device_name',
-        'volume_size',
     )
 
     BDM2_KEYS = (
@@ -89,22 +82,6 @@ class ServerProfile(base.Profile):
         ),
         AVAILABILITY_ZONE: schema.String(
             _('Name of availability zone for running the server.'),
-        ),
-        BLOCK_DEVICE_MAPPING: schema.List(
-            _('A list specifying the properties of block devices to be used '
-              'for this server.'),
-            schema=schema.Map(
-                _('A map specifying the properties of a block device to be '
-                  'used by the server.'),
-                schema={
-                    BDM_DEVICE_NAME: schema.String(
-                        _('Block device name, should be <=255 chars.'),
-                    ),
-                    BDM_VOLUME_SIZE: schema.Integer(
-                        _('Block device size in GB.'),
-                    ),
-                }
-            ),
         ),
         BLOCK_DEVICE_MAPPING_V2: schema.List(
             _('A list specifying the properties of block devices to be used '
@@ -352,18 +329,6 @@ class ServerProfile(base.Profile):
             else:
                 raise
 
-    def _validate_bdm(self, reason=None):
-        bdm = self.properties[self.BLOCK_DEVICE_MAPPING]
-        bdmv2 = self.properties[self.BLOCK_DEVICE_MAPPING_V2]
-        if all((bdm, bdmv2)):
-            msg = _("Only one of '%(key1)s' or '%(key2)s' can be specified, "
-                    "not both") % {'key1': self.BLOCK_DEVICE_MAPPING,
-                                   'key2': self.BLOCK_DEVICE_MAPPING_V2}
-            if reason == 'create':
-                raise exc.EResourceCreation(type='server', message=msg)
-            else:
-                raise exc.InvalidSpec(message=msg)
-
     def do_validate(self, obj):
         """Validate if the spec has provided valid info for server creation.
 
@@ -392,9 +357,6 @@ class ServerProfile(base.Profile):
         networks = self.properties[self.NETWORKS]
         for net in networks:
             self._validate_network(obj, net)
-
-        # validate bdm conflicts
-        self._validate_bdm()
 
         return True
 
@@ -520,7 +482,6 @@ class ServerProfile(base.Profile):
         metadata = self._build_metadata(obj, self.properties[self.METADATA])
         kwargs['metadata'] = metadata
 
-        self._validate_bdm('create')
         block_device_mapping_v2 = self.properties[self.BLOCK_DEVICE_MAPPING_V2]
         if block_device_mapping_v2 is not None:
             kwargs['block_device_mapping_v2'] = self._resolve_bdm(

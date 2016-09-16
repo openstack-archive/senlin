@@ -10,8 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import copy
-
 import mock
 import six
 
@@ -660,47 +658,6 @@ class TestNovaServerValidate(base.SenlinTestCase):
         super(TestNovaServerValidate, self).setUp()
 
         self.context = utils.dummy_context()
-
-    def test__validate_bdm(self):
-        profile = server.ServerProfile('t', spec)
-
-        res = profile._validate_bdm()
-
-        self.assertIsNone(res)
-
-    def test__validate_bdm_both_specified_validate(self):
-        new_spec = copy.deepcopy(spec)
-        new_spec['properties']['block_device_mapping_v2'] = [{
-            'source_type': 'XTYPE',
-            'destination_type': 'YTYPE',
-            'volume_size': 10
-        }]
-        profile = server.ServerProfile('t', new_spec)
-
-        ex = self.assertRaises(exc.InvalidSpec,
-                               profile._validate_bdm)
-
-        self.assertEqual("Only one of 'block_device_mapping' or "
-                         "'block_device_mapping_v2' can be specified, "
-                         "not both", six.text_type(ex))
-
-    def test__validate_bdm_both_specified_create(self):
-        new_spec = copy.deepcopy(spec)
-        new_spec['properties']['block_device_mapping_v2'] = [{
-            'source_type': 'XTYPE',
-            'destination_type': 'YTYPE',
-            'volume_size': 10
-        }]
-        profile = server.ServerProfile('t', new_spec)
-
-        ex = self.assertRaises(exc.EResourceCreation,
-                               profile._validate_bdm,
-                               'create')
-
-        self.assertEqual("Failed in creating server: Only one of "
-                         "'block_device_mapping' or 'block_device_mapping_v2'"
-                         " can be specified, not both.",
-                         six.text_type(ex))
 
     def test_do_validate_all_passed(self):
         profile = server.ServerProfile('t', spec)
