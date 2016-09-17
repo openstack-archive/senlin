@@ -130,7 +130,7 @@ class ResourceInUse(SenlinException):
     'policy', 'receiver', 'webhook', 'profile_type', 'policy_type',
     'action', 'event' and so on.
     """
-    msg_fmt = _("The %(type)s (%(id)s) is still in use.")
+    msg_fmt = _("The %(type)s %(id)s cannot be deleted: %(reason)s.")
 
 
 class ClusterBusy(SenlinException):

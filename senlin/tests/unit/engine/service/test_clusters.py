@@ -672,11 +672,11 @@ class ClusterTest(base.SenlinTestCase):
         cluster = mock.Mock(id='cluster1', status='ACTIVE',
                             dependents=dependents)
         mock_find.return_value = cluster
-        identity = mock.Mock()
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_delete,
-                               self.ctx, identity)
-        msg = _('The host_cluster (cluster1) is still in use.')
+                               self.ctx, 'FAKE_CLUSTER')
+        msg = _("The cluster FAKE_CLUSTER cannot be deleted: still depended "
+                "by other clusters and/or nodes.")
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
         self.assertEqual(msg, six.text_type(ex.exc_info[1]))
 
