@@ -133,10 +133,6 @@ class ResourceInUse(SenlinException):
     msg_fmt = _("The %(type)s %(id)s cannot be deleted: %(reason)s.")
 
 
-class ClusterBusy(SenlinException):
-    msg_fmt = _("The cluster (%(cluster)s) cannot be deleted: %(reason)s")
-
-
 class ProfileTypeNotMatch(SenlinException):
     msg_fmt = _("%(message)s")
 
