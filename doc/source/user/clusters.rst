@@ -218,7 +218,7 @@ Showing Details of a Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When there are clusters in the Senlin database, you can request Senlin to show
-the details about a cluster you are intested in.
+the details about a cluster you are intersted in.
 
 You can use the name, the ID or the "short ID" of a cluster to name a cluster
 for show. Senlin API and engine will verify if the identifier you specified
@@ -429,9 +429,9 @@ command, for example::
 
 Note that in this command you can use the name, the ID or the "short ID" to
 specify the cluster object you want to delete. If the specified criteria
-cannot match any clusters, you will get a ``ClusterNotFound`` error. If more
-than one cluster matches the criteria, you will get a ``MultipleChoices``
-error.
+cannot match any clusters, you will get a ``ResourceNotFound`` exception. If
+more than one cluster matches the criteria, you will get a ``MultipleChoices``
+exception.
 
 When there are nodes in the cluster, the Senlin engine will launch a process
 to delete all nodes from the cluster and destroy them before deleting the

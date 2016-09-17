@@ -284,8 +284,8 @@ command, for example::
 
 Note that in this command you can use the name, the ID or the "short ID" to
 specify the node you want to delete. If the specified criteria cannot match
-any nodes, you will get a ``NodeNotFound`` error. If more than one node
-matches the criteria, you will get a ``MultipleChoices`` error.
+any nodes, you will get a ``ResourceNotFound`` exception. If more than one
+node matches the criteria, you will get a ``MultipleChoices`` exception.
 
 
 See Also

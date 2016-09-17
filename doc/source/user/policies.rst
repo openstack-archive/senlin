@@ -213,9 +213,9 @@ the Senlin database using the following command::
 
 Note that in this command you can use the name, the ID or the "short ID" to
 specify the policy object you want to delete. If the specified criteria
-cannot match any policy objects, you will get a ``PolicyNotFound`` exception.
-If more than one policy matches the criteria, you will get an error message.
-
+cannot match any policy objects, you will get a ``ResoureNotFound`` exception.
+If more than one policy matches the criteria, you will get a ``MultipleChoices``
+exception.
 
 See Also
 ~~~~~~~~
