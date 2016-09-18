@@ -719,8 +719,8 @@ class ClusterTest(base.SenlinTestCase):
                                self.eng.cluster_delete,
                                self.ctx, 'IDENTITY')
 
-        self.assertEqual(exc.ClusterBusy, ex.exc_info[0])
-        expected_msg = _('The cluster (IDENTITY) cannot be deleted: '
+        self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
+        expected_msg = _('The cluster IDENTITY cannot be deleted: '
                          'there is still policy(s) attached to it.')
         self.assertEqual(expected_msg, six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'IDENTITY')
@@ -740,8 +740,8 @@ class ClusterTest(base.SenlinTestCase):
                                self.eng.cluster_delete,
                                self.ctx, 'IDENTITY')
 
-        self.assertEqual(exc.ClusterBusy, ex.exc_info[0])
-        expected_msg = _('The cluster (IDENTITY) cannot be deleted: '
+        self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
+        expected_msg = _('The cluster IDENTITY cannot be deleted: '
                          'there is still receiver(s) associated with it.')
         self.assertEqual(expected_msg, six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'IDENTITY')

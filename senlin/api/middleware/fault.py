@@ -46,7 +46,6 @@ class FaultWrapper(wsgi.Middleware):
     error_map = {
         'ActionInProgress': webob.exc.HTTPConflict,
         'BadRequest': webob.exc.HTTPBadRequest,
-        'ClusterBusy': webob.exc.HTTPConflict,
         'FeatureNotSupported': webob.exc.HTTPConflict,
         'Forbidden': webob.exc.HTTPForbidden,
         'InternalError': webob.exc.HTTPInternalServerError,
