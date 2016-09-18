@@ -302,19 +302,20 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.assertEqual(['node1', 'node3'], res)
 
     @mock.patch.object(no.Node, 'get_all_by_cluster')
+    @mock.patch.object(no.Node, 'count_by_cluster')
     @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(scaleutils, 'parse_resize_params')
     @mock.patch.object(scaleutils, 'nodes_by_random')
-    def test_get_delete_candidates_no_deletion_data_resize(self,
-                                                           m_nodes_random,
-                                                           m_parse_param,
-                                                           m_cluster_get,
-                                                           m_node_get):
-        def _parse_param(action, cluster):
+    def test_get_delete_candidates_no_deletion_data_resize(
+            self, m_nodes_random, m_parse_param, m_cluster_get, m_node_count,
+            m_node_get):
+
+        def _parse_param(action, cluster, current):
             action.data = {'deletion': {'count': 2}}
 
         self.context = utils.dummy_context()
         action = mock.Mock(action=consts.CLUSTER_RESIZE, data={})
+        m_node_count.return_value = 2
         m_parse_param.side_effect = _parse_param
         m_node_get.return_value = ['node1', 'node2', 'node3']
         m_cluster_get.return_value = 'cluster1'
@@ -325,7 +326,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         res = policy._get_delete_candidates('CLUSTERID', action)
 
         m_cluster_get.assert_called_once_with(action.context, 'CLUSTERID')
-        m_parse_param.assert_called_once_with(action, 'cluster1')
+        m_node_count.assert_called_once_with(action.context, 'CLUSTERID')
+        m_parse_param.assert_called_once_with(action, 'cluster1', 2)
         m_node_get.assert_called_once_with(action.context, 'CLUSTERID')
         m_nodes_random.assert_called_once_with(['node1', 'node2', 'node3'], 2)
         self.assertEqual(['node1', 'node3'], res)
