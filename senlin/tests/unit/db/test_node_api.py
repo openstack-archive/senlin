@@ -300,6 +300,8 @@ class DBAPINodeTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='a_different_project',
                                         is_admin=True)
         results = db_api.node_get_all(admin_ctx, project_safe=True)
+        self.assertEqual(0, len(results))
+        results = db_api.node_get_all(admin_ctx, project_safe=False)
         self.assertEqual(2, len(results))
 
     def test_node_get_by_cluster(self):
@@ -356,6 +358,9 @@ class DBAPINodeTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='a_different_project',
                                         is_admin=True)
         nodes = db_api.node_get_all_by_cluster(admin_ctx, self.cluster.id)
+        self.assertEqual(0, len(nodes))
+        nodes = db_api.node_get_all_by_cluster(admin_ctx, self.cluster.id,
+                                               project_safe=False)
         self.assertEqual(2, len(nodes))
         self.assertEqual(set([node1.id, node2.id]),
                          set([nodes[0].id, nodes[1].id]))
@@ -408,6 +413,9 @@ class DBAPINodeTest(base.SenlinTestCase):
         res = db_api.node_count_by_cluster(admin_ctx, self.cluster.id,
                                            project_safe=True)
         self.assertEqual(0, res)
+        res = db_api.node_count_by_cluster(admin_ctx, self.cluster.id,
+                                           project_safe=False)
+        self.assertEqual(2, res)
 
     def test_node_update(self):
         node = shared.create_node(self.ctx, self.cluster, self.profile)

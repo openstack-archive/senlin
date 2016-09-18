@@ -372,7 +372,7 @@ class LoadBalancingPolicy(base.Policy):
             return False, reason
 
         nodes = nm.Node.load_all(oslo_context.get_current(),
-                                 cluster_id=cluster.id)
+                                 cluster_id=cluster.id, project_safe=False)
         for node in nodes:
             if 'lb_member' in node.data:
                 node.data.pop('lb_member')
