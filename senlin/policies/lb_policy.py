@@ -404,7 +404,8 @@ class LoadBalancingPolicy(base.Policy):
             elif action.action == consts.CLUSTER_RESIZE:
                 # Calculate deletion count based on action input
                 db_cluster = co.Cluster.get(action.context, cluster_id)
-                scaleutils.parse_resize_params(action, db_cluster)
+                current = no.Node.count_by_cluster(action.context, cluster_id)
+                scaleutils.parse_resize_params(action, db_cluster, current)
                 if 'deletion' not in action.data:
                     return []
                 else:
