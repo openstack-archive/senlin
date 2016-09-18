@@ -16,6 +16,7 @@ from senlin.common import consts
 from senlin.common import scaleutils as su
 from senlin.engine import cluster as cm
 from senlin.objects import cluster as co
+from senlin.objects import node as no
 from senlin.policies import deletion_policy as dp
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -457,8 +458,9 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
     @mock.patch.object(dp.DeletionPolicy, '_update_action')
     @mock.patch.object(su, 'parse_resize_params')
+    @mock.patch.object(no.Node, 'count_by_cluster')
     @mock.patch.object(co.Cluster, 'get')
-    def test_pre_op_resize_failed_parse(self, mock_get, mock_parse,
+    def test_pre_op_resize_failed_parse(self, mock_get, mock_count, mock_parse,
                                         mock_update):
         action = mock.Mock()
         action.context = self.context
@@ -468,6 +470,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
         db_cluster = mock.Mock()
         mock_get.return_value = db_cluster
+        mock_count.return_value = 2
         mock_parse.return_value = 'ERROR', 'Failed parsing.'
 
         policy = dp.DeletionPolicy('test-policy', self.spec)
@@ -476,18 +479,19 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
         self.assertEqual('ERROR', action.data['status'])
         self.assertEqual('Failed parsing.', action.data['reason'])
-        mock_get.assert_called_once_with(action.context, 'FAKE_ID',
-                                         project_safe=True)
-        mock_parse.assert_called_once_with(action, db_cluster)
+        mock_get.assert_called_once_with(action.context, 'FAKE_ID')
+        mock_count.assert_called_once_with(action.context, 'FAKE_ID')
+        mock_parse.assert_called_once_with(action, db_cluster, 2)
         self.assertEqual(0, mock_update.call_count)
 
     @mock.patch.object(dp.DeletionPolicy, '_update_action')
     @mock.patch.object(su, 'parse_resize_params')
+    @mock.patch.object(no.Node, 'count_by_cluster')
     @mock.patch.object(co.Cluster, 'get')
-    def test_pre_op_resize_not_deletion(self, mock_get, mock_parse,
+    def test_pre_op_resize_not_deletion(self, mock_get, mock_count, mock_parse,
                                         mock_update):
-        def fake_parse(a, c):
-            a.data = {}
+        def fake_parse(action, cluster, current):
+            action.data = {}
             return 'OK', 'cool'
 
         action = mock.Mock()
@@ -497,6 +501,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
         db_cluster = mock.Mock()
         mock_get.return_value = db_cluster
+        mock_count.return_value = 2
         mock_parse.side_effect = fake_parse
 
         policy = dp.DeletionPolicy('test-policy', self.spec)
@@ -505,20 +510,21 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
         policy.pre_op('FAKE_ID', action)
 
-        mock_get.assert_called_once_with(action.context, 'FAKE_ID',
-                                         project_safe=True)
-        mock_parse.assert_called_once_with(action, db_cluster)
+        mock_get.assert_called_once_with(action.context, 'FAKE_ID')
+        mock_count.assert_called_once_with(action.context, 'FAKE_ID')
+        mock_parse.assert_called_once_with(action, db_cluster, 2)
         self.assertEqual(0, mock_update.call_count)
 
     @mock.patch.object(su, 'parse_resize_params')
+    @mock.patch.object(no.Node, 'count_by_cluster')
     @mock.patch.object(dp.DeletionPolicy, '_update_action')
     @mock.patch.object(su, 'nodes_by_age')
     @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'get')
     def test_pre_op_resize_with_count(self, mock_get, mock_load,
-                                      mock_select, mock_update,
+                                      mock_select, mock_update, mock_count,
                                       mock_parse):
-        def fake_parse(a, obj):
+        def fake_parse(a, cluster, current):
             a.data = {
                 'deletion': {
                     'count': 2
@@ -534,6 +540,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
         db_cluster = mock.Mock()
         mock_get.return_value = db_cluster
+        mock_count.return_value = 2
         mock_parse.side_effect = fake_parse
 
         cluster = mock.Mock(nodes=[mock.Mock(), mock.Mock()])
@@ -548,9 +555,9 @@ class TestDeletionPolicy(base.SenlinTestCase):
 
         policy.pre_op('FAKE_ID', action)
 
-        mock_get.assert_called_once_with(action.context, 'FAKE_ID',
-                                         project_safe=True)
-        mock_parse.assert_called_once_with(action, db_cluster)
+        mock_get.assert_called_once_with(action.context, 'FAKE_ID')
+        mock_count.assert_called_once_with(action.context, 'FAKE_ID')
+        mock_parse.assert_called_once_with(action, db_cluster, 2)
         mock_load.assert_called_once_with(action.context,
                                           dbcluster=db_cluster,
                                           cluster_id='FAKE_ID')
