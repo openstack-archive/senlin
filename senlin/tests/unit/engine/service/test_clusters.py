@@ -28,6 +28,7 @@ from senlin.engine import node as nm
 from senlin.engine import service
 from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
+from senlin.objects import node as no
 from senlin.objects import receiver as ro
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -1082,15 +1083,18 @@ class ClusterTest(base.SenlinTestCase):
         mock_node.assert_called_once_with(self.ctx, 'NODE1')
         mock_check.assert_called_once_with(x_cluster, 1, strict=True)
 
+    @mock.patch.object(no.Node, 'count_by_cluster')
     @mock.patch.object(su, 'calculate_desired')
     @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(am.Action, 'create')
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_resize_exact_capacity(self, mock_find, mock_action,
-                                           notify, mock_check, mock_calc):
-        x_cluster = mock.Mock(id='12345678ABCDEFGH', desired_capacity=3)
+                                           notify, mock_check, mock_calc,
+                                           mock_count):
+        x_cluster = mock.Mock(id='12345678ABCDEFGH')
         mock_find.return_value = x_cluster
+        mock_count.return_value = 3
         mock_calc.return_value = 5
         mock_check.return_value = None
         mock_action.return_value = 'ACTION_ID'
@@ -1119,16 +1123,19 @@ class ClusterTest(base.SenlinTestCase):
         )
         notify.assert_called_once_with()
 
+    @mock.patch.object(no.Node, 'count_by_cluster')
     @mock.patch.object(su, 'calculate_desired')
     @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(am.Action, 'create')
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_resize_change_in_capacity(self, mock_find, mock_action,
-                                               notify, mock_check, mock_calc):
-        x_cluster = mock.Mock(id='12345678ABCDEFGH', desired_capacity=4)
+                                               notify, mock_check, mock_calc,
+                                               mock_count):
+        x_cluster = mock.Mock(id='12345678ABCDEFGH')
         mock_find.return_value = x_cluster
-        mock_calc.return_value = 9
+        mock_count.return_value = 2
+        mock_calc.return_value = 7
         mock_check.return_value = None
         mock_action.return_value = 'ACTION_ID'
 
@@ -1138,9 +1145,9 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual({'action': 'ACTION_ID'}, res)
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
-        mock_calc.assert_called_once_with(4, consts.CHANGE_IN_CAPACITY, 5,
+        mock_calc.assert_called_once_with(2, consts.CHANGE_IN_CAPACITY, 5,
                                           None)
-        mock_check.assert_called_once_with(x_cluster, 9, None, None, True)
+        mock_check.assert_called_once_with(x_cluster, 7, None, None, True)
         mock_action.assert_called_once_with(
             self.ctx, '12345678ABCDEFGH', consts.CLUSTER_RESIZE,
             name='cluster_resize_12345678',
@@ -1157,6 +1164,7 @@ class ClusterTest(base.SenlinTestCase):
         )
         notify.assert_called_once_with()
 
+    @mock.patch.object(no.Node, 'count_by_cluster')
     @mock.patch.object(su, 'calculate_desired')
     @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(dispatcher, 'start_action')
@@ -1164,9 +1172,10 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_resize_change_in_percentage(self, mock_find, mock_action,
                                                  notify, mock_check,
-                                                 mock_calc):
-        x_cluster = mock.Mock(id='12345678ABCDEFGH', desired_capacity=10)
+                                                 mock_calc, mock_count):
+        x_cluster = mock.Mock(id='12345678ABCDEFGH')
         mock_find.return_value = x_cluster
+        mock_count.return_value = 10
         mock_calc.return_value = 8
         mock_check.return_value = None
         mock_action.return_value = 'ACTION_ID'

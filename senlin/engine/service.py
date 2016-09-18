@@ -1206,7 +1206,7 @@ class EngineService(service.Service):
             strict = utils.parse_bool_param(consts.ADJUSTMENT_STRICT, strict)
 
         db_cluster = self.cluster_find(context, identity)
-        current = db_cluster.desired_capacity
+        current = node_obj.Node.count_by_cluster(context, db_cluster.id)
         if adj_type is not None:
             desired = su.calculate_desired(current, adj_type, number, min_step)
         else:
