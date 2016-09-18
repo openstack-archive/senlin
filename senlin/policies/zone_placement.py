@@ -29,6 +29,7 @@ from senlin.common import scaleutils
 from senlin.common import schema
 from senlin.engine import cluster as cm
 from senlin.objects import cluster as co
+from senlin.objects import node as no
 from senlin.policies import base
 
 LOG = logging.getLogger(__name__)
@@ -182,7 +183,8 @@ class ZonePlacementPolicy(base.Policy):
                 return action.data['creation']['count']
 
             db_cluster = co.Cluster.get(action.context, cluster_id)
-            res = scaleutils.parse_resize_params(action, db_cluster)
+            current = no.Node.count_by_cluster(action.context, cluster_id)
+            res = scaleutils.parse_resize_params(action, db_cluster, current)
             if res[0] == base.CHECK_ERROR:
                 action.data['status'] = base.CHECK_ERROR
                 action.data['reason'] = res[1]
