@@ -559,8 +559,10 @@ class ClusterAction(base.Action):
         # Note the 'parse_resize_params' function is capable of calculating
         # desired capacity and handling best effort scaling. It also verifies
         # that the inputs are valid
+        curr_capacity = no.Node.count_by_cluster(self.context, self.cluster.id)
         if 'creation' not in self.data and 'deletion' not in self.data:
-            result, reason = scaleutils.parse_resize_params(self, self.cluster)
+            result, reason = scaleutils.parse_resize_params(self, self.cluster,
+                                                            curr_capacity)
             if result != self.RES_OK:
                 return result, reason
 
@@ -575,7 +577,7 @@ class ClusterAction(base.Action):
                 node_list = self.cluster.nodes
                 candidates = scaleutils.nodes_by_random(node_list, count)
 
-            self._update_cluster_size(self.cluster.desired_capacity - count)
+            self._update_cluster_size(curr_capacity - count)
 
             grace_period = self.data['deletion'].get('grace_period', 0)
             self._sleep(grace_period)
@@ -583,7 +585,7 @@ class ClusterAction(base.Action):
         else:
             # 'creation' in self.data:
             count = self.data['creation']['count']
-            self._update_cluster_size(self.cluster.desired_capacity + count)
+            self._update_cluster_size(curr_capacity + count)
             result, new_reason = self._create_nodes(count)
 
         if result != self.RES_OK:
