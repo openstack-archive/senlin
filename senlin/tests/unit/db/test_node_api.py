@@ -369,6 +369,21 @@ class DBAPINodeTest(base.SenlinTestCase):
         res = db_api.node_count_by_cluster(self.ctx, self.cluster.id)
         self.assertEqual(2, res)
 
+    def test_node_count_by_cluster_with_filters(self):
+        shared.create_cluster(self.ctx, self.profile)
+
+        shared.create_node(self.ctx, self.cluster, self.profile,
+                           status='ACTIVE')
+        shared.create_node(self.ctx, self.cluster, self.profile,
+                           status='ERROR')
+
+        res = db_api.node_count_by_cluster(self.ctx, self.cluster.id,
+                                           status='ACTIVE')
+        self.assertEqual(1, res)
+        res = db_api.node_count_by_cluster(self.ctx, self.cluster.id,
+                                           status='ERROR')
+        self.assertEqual(1, res)
+
     def test_node_count_by_cluster_diff_project(self):
         ctx_new = utils.dummy_context(project='a_different_project')
         shared.create_cluster(self.ctx, self.profile)
@@ -392,7 +407,7 @@ class DBAPINodeTest(base.SenlinTestCase):
                                         is_admin=True)
         res = db_api.node_count_by_cluster(admin_ctx, self.cluster.id,
                                            project_safe=True)
-        self.assertEqual(2, res)
+        self.assertEqual(0, res)
 
     def test_node_update(self):
         node = shared.create_node(self.ctx, self.cluster, self.profile)
