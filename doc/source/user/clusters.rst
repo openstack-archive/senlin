@@ -218,7 +218,7 @@ Showing Details of a Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When there are clusters in the Senlin database, you can request Senlin to show
-the details about a cluster you are intersted in.
+the details about a cluster you are interested in.
 
 You can use the name, the ID or the "short ID" of a cluster to name a cluster
 for show. Senlin API and engine will verify if the identifier you specified
