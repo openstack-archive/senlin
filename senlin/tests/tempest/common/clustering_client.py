@@ -107,6 +107,15 @@ class ClusteringAPIClient(rest_client.RestClient):
 
         return self._parsed_resp(resp, body)
 
+    def cluster_replace_nodes(self, obj_type, obj_id, params=None):
+        uri = '{0}/{1}/{2}/actions'.format(self.version, obj_type, obj_id)
+        if params is not None:
+            params = jsonutils.dumps(params)
+        headers = self.get_headers()
+        resp, body = self.post(uri, body=params, headers=headers)
+
+        return self._parsed_resp(resp, body)
+
     def list_cluster_policies(self, cluster_id, params=None):
         uri = '{0}/clusters/{1}/policies'.format(self.version, cluster_id)
         if params:

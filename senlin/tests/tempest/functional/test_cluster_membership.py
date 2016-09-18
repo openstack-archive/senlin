@@ -90,3 +90,76 @@ class TestClusterMembership(base.BaseSenlinFunctionalTest):
         self.assertEqual('', node3['cluster_id'])
         self.assertEqual(-1, node2['index'])
         self.assertEqual(-1, node3['index'])
+
+
+class TestClusterReplaceNodes(base.BaseSenlinFunctionalTest):
+
+    def setUp(self):
+        super(TestClusterReplaceNodes, self).setUp()
+        # Create a profile
+        self.profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        # Create a cluster
+        self.cluster_id = utils.create_a_cluster(self, self.profile_id,
+                                                 max_size=10)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+        self.old_id1 = utils.create_a_node(self, self.profile_id,
+                                           self.cluster_id)
+        self.old_id2 = utils.create_a_node(self, self.profile_id,
+                                           self.cluster_id)
+        self.old_id3 = utils.create_a_node(self, self.profile_id,
+                                           self.cluster_id)
+        self.addCleanup(utils.delete_a_node, self, self.old_id3)
+        self.addCleanup(utils.delete_a_node, self, self.old_id2)
+        self.addCleanup(utils.delete_a_node, self, self.old_id1)
+        # Create three orphan nodes
+        self.new_id1 = utils.create_a_node(self, self.profile_id)
+        self.new_id2 = utils.create_a_node(self, self.profile_id)
+        self.new_id3 = utils.create_a_node(self, self.profile_id)
+
+    @utils.api_microversion('1.3')
+    @test.attr(type=['functional'])
+    @decorators.idempotent_id('c2948087-b0ff-47f7-a4bf-1cb16e71cc9d')
+    def test_cluster_replace_node(self):
+        # Verify the cluster
+        cluster = utils.get_a_cluster(self, self.cluster_id)
+        cluster_nodes = cluster['nodes']
+        self.assertEqual(3, len(cluster_nodes))
+        self.assertEqual('ACTIVE', cluster['status'])
+
+        # Replace one node
+        nodes = {
+            self.old_id1: self.new_id1
+        }
+        utils.cluster_replace_nodes(self, self.cluster_id, nodes)
+        # Verify result
+        cluster = utils.get_a_cluster(self, self.cluster_id)
+        cluster_nodes = cluster['nodes']
+        self.assertEqual(3, len(cluster_nodes))
+        self.assertIn(self.new_id1, cluster_nodes)
+        new_node1 = utils.get_a_node(self, self.new_id1)
+        old_node1 = utils.get_a_node(self, self.old_id1)
+        self.assertEqual(self.cluster_id, new_node1['cluster_id'])
+        self.assertEqual('', old_node1['cluster_id'])
+
+        # Replace two nodes
+        nodes = {
+            self.old_id2: self.new_id2,
+            self.old_id3: self.new_id3
+        }
+        utils.cluster_replace_nodes(self, self.cluster_id, nodes)
+
+        # Verify result
+        cluster = utils.get_a_cluster(self, self.cluster_id)
+        cluster_nodes = cluster['nodes']
+        self.assertEqual(3, len(cluster_nodes))
+        self.assertIn(self.new_id2, cluster_nodes)
+        self.assertIn(self.new_id3, cluster_nodes)
+        new_node2 = utils.get_a_node(self, self.new_id2)
+        new_node3 = utils.get_a_node(self, self.new_id3)
+        old_node2 = utils.get_a_node(self, self.old_id2)
+        old_node3 = utils.get_a_node(self, self.old_id3)
+        self.assertEqual(self.cluster_id, new_node2['cluster_id'])
+        self.assertEqual(self.cluster_id, new_node3['cluster_id'])
+        self.assertEqual('', old_node2['cluster_id'])
+        self.assertEqual('', old_node3['cluster_id'])
