@@ -21,6 +21,7 @@ from senlin.common import exception as exc
 from senlin.common import scaleutils
 from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
+from senlin.objects import node as no
 from senlin.policies import affinity_policy as ap
 from senlin.policies import base as pb
 from senlin.tests.unit.common import base
@@ -609,10 +610,11 @@ class TestAffinityPolicy(base.SenlinTestCase):
             x_action.data)
         x_action.store.assert_called_once_with(x_action.context)
 
+    @mock.patch.object(no.Node, 'count_by_cluster')
     @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(cpo.ClusterPolicy, 'get')
-    def test_pre_op_use_resize_params(self, mock_cp, mock_cluster):
-        def fake_parse_func(action, cluster):
+    def test_pre_op_use_resize_params(self, mock_cp, mock_cluster, mock_count):
+        def fake_parse_func(action, cluster, current):
             action.data = {
                 'creation': {
                     'count': 2
@@ -628,6 +630,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         }
         x_cluster = mock.Mock()
         mock_cluster.return_value = x_cluster
+        mock_count.return_value = 10
         mock_parse = self.patchobject(scaleutils, 'parse_resize_params',
                                       side_effect=fake_parse_func)
 
@@ -646,7 +649,8 @@ class TestAffinityPolicy(base.SenlinTestCase):
         # do it
         policy.pre_op('CLUSTER_ID', x_action)
 
-        mock_parse.assert_called_once_with(x_action, x_cluster)
+        mock_count.assert_called_once_with(x_action.context, 'CLUSTER_ID')
+        mock_parse.assert_called_once_with(x_action, x_cluster, 10)
         mock_cluster.assert_called_once_with(x_action.context, 'CLUSTER_ID')
         mock_cp.assert_called_once_with(x_action.context, 'CLUSTER_ID',
                                         'POLICY_ID')
@@ -671,10 +675,11 @@ class TestAffinityPolicy(base.SenlinTestCase):
             x_action.data)
         x_action.store.assert_called_once_with(x_action.context)
 
+    @mock.patch.object(no.Node, 'count_by_cluster')
     @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(cpo.ClusterPolicy, 'get')
-    def test_pre_op_resize_shrinking(self, mock_cp, mock_cluster):
-        def fake_parse_func(action, cluster):
+    def test_pre_op_resize_shrinking(self, mock_cp, mock_cluster, mock_count):
+        def fake_parse_func(action, cluster, current):
             action.data = {
                 'deletion': {
                     'count': 2
@@ -690,6 +695,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         }
         x_cluster = mock.Mock()
         mock_cluster.return_value = x_cluster
+        mock_count.return_value = 5
         mock_parse = self.patchobject(scaleutils, 'parse_resize_params',
                                       side_effect=fake_parse_func)
         policy = ap.AffinityPolicy('test-policy', self.spec)
@@ -699,7 +705,8 @@ class TestAffinityPolicy(base.SenlinTestCase):
         # do it
         policy.pre_op('CLUSTER_ID', x_action)
 
-        mock_parse.assert_called_once_with(x_action, x_cluster)
+        mock_count.assert_called_once_with(x_action.context, 'CLUSTER_ID')
+        mock_parse.assert_called_once_with(x_action, x_cluster, 5)
         mock_cluster.assert_called_once_with(x_action.context, 'CLUSTER_ID')
         self.assertEqual(0, mock_cp.call_count)
         self.assertEqual(0, mock_extract.call_count)

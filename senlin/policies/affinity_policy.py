@@ -32,6 +32,7 @@ from senlin.common import schema
 from senlin.common import utils
 from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
+from senlin.objects import node as no
 from senlin.policies import base
 
 
@@ -257,7 +258,8 @@ class AffinityPolicy(base.Policy):
             count = 1
         else:  # CLUSTER_RESIZE
             db_cluster = co.Cluster.get(action.context, cluster_id)
-            su.parse_resize_params(action, db_cluster)
+            current = no.Node.count_by_cluster(action.context, cluster_id)
+            su.parse_resize_params(action, db_cluster, current)
             if 'creation' not in action.data:
                 return
             count = action.data['creation']['count']
