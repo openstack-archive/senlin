@@ -131,10 +131,9 @@ class ScaleUtilsTest(base.SenlinTestCase):
         actual = su.truncate_desired(cluster, 60, None, None)
         self.assertEqual(50, actual)
 
-    def test_parse_resize_params(self):
+    def test_parse_resize_params_deletion(self):
         action = mock.Mock()
         cluster = mock.Mock()
-        # delete nodes
         action.inputs = {
             consts.ADJUSTMENT_TYPE: consts.EXACT_CAPACITY,
             consts.ADJUSTMENT_NUMBER: 4,
@@ -145,12 +144,16 @@ class ScaleUtilsTest(base.SenlinTestCase):
         }
         action.data = {}
         action.RES_OK = 'OK'
-        cluster.desired_capacity = 6
-        result, reason = su.parse_resize_params(action, cluster)
+
+        result, reason = su.parse_resize_params(action, cluster, 6)
+
         self.assertEqual('OK', result)
         self.assertEqual('', reason)
         self.assertEqual({'deletion': {'count': 2}}, action.data)
-        # create nodes
+
+    def test_parse_resize_params_creation(self):
+        action = mock.Mock(RES_OK='OK')
+        cluster = mock.Mock()
         action.inputs = {
             consts.ADJUSTMENT_TYPE: consts.EXACT_CAPACITY,
             consts.ADJUSTMENT_NUMBER: 9,
@@ -160,11 +163,16 @@ class ScaleUtilsTest(base.SenlinTestCase):
             consts.ADJUSTMENT_STRICT: True,
         }
         action.data = {}
-        result, reason = su.parse_resize_params(action, cluster)
+
+        result, reason = su.parse_resize_params(action, cluster, 6)
+
         self.assertEqual('OK', result)
         self.assertEqual('', reason)
         self.assertEqual({'creation': {'count': 3}}, action.data)
-        #  resize params are incorrect.
+
+    def test_parse_resize_params_invalid(self):
+        action = mock.Mock()
+        cluster = mock.Mock()
         action.inputs = {
             consts.ADJUSTMENT_TYPE: consts.EXACT_CAPACITY,
             consts.ADJUSTMENT_NUMBER: 11,
@@ -175,7 +183,9 @@ class ScaleUtilsTest(base.SenlinTestCase):
         }
         action.data = {}
         action.RES_ERROR = 'ERROR'
-        result, reason = su.parse_resize_params(action, cluster)
+
+        result, reason = su.parse_resize_params(action, cluster, 6)
+
         self.assertEqual('ERROR', result)
         msg = _('The target capacity (11) is greater than '
                 'the specified max_size (10).')
