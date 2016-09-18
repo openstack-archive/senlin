@@ -60,7 +60,7 @@ This section contains the glossary for the Senlin service.
 
    Event
      An event is a record left in Senlin database when something matters to
-     users happened. A event can be of different criticality levels.
+     users happened. An event can be of different criticality levels.
 
    Index
      An integer property of a :term:`Node` when it is a member of a
@@ -129,7 +129,7 @@ This section contains the glossary for the Senlin service.
      :term:`Webhook`.
 
    Webhook
-     A webhook is an encoded URI (Universion Resource Identifier) that for
+     A webhook is an encoded URI (Uniform Resource Identifier) that for
      triggering some operations (e.g. Senlin actions) on some resources. Such
      a webhook URL is the only thing one needs to know to trigger an action on
      a cluster.
