@@ -443,7 +443,8 @@ class PolicyTest(base.SenlinTestCase):
                                self.ctx, 'FAKE_POLICY')
 
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
-        self.assertEqual('The policy (POLICY_ID) is still in use.',
+        self.assertEqual("The policy FAKE_POLICY cannot be deleted: still "
+                         "attached to some clusters.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_POLICY')
         mock_delete.assert_called_once_with(self.ctx, 'POLICY_ID')

@@ -261,6 +261,9 @@ class ActionTest(base.SenlinTestCase):
                                self.ctx, 'ACTION')
 
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
+        self.assertEqual("The action ACTION cannot be deleted: still in one "
+                         "of WAITING, RUNNING or SUSPENDED state.",
+                         six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'ACTION')
         mock_delete.assert_called_once_with(self.ctx, 'FAKE_ID')
 

@@ -446,7 +446,8 @@ class ProfileTest(base.SenlinTestCase):
                                self.ctx, 'FAKE_PROFILE')
 
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
-        self.assertEqual('The profile (PROFILE_ID) is still in use.',
+        self.assertEqual("The profile FAKE_PROFILE cannot be deleted: still "
+                         "referenced by some clusters and/or nodes.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_PROFILE')
         mock_delete.assert_called_once_with(self.ctx, 'PROFILE_ID')

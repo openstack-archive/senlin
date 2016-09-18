@@ -474,8 +474,9 @@ class EngineService(service.Service):
         try:
             profile_base.Profile.delete(context, db_profile.id)
         except exception.EResourceBusy:
-            LOG.error(_LI("The profile '%s' cannot be deleted."), identity)
-            raise exception.ResourceInUse(type='profile', id=db_profile.id)
+            reason = _("still referenced by some clusters and/or nodes.")
+            raise exception.ResourceInUse(type='profile', id=identity,
+                                          reason=reason)
 
         LOG.info(_LI("Profile '%(id)s' is deleted."), {'id': identity})
 
@@ -678,8 +679,9 @@ class EngineService(service.Service):
         try:
             policy_base.Policy.delete(context, db_policy.id)
         except exception.EResourceBusy:
-            LOG.error(_LI("Policy '%s' cannot be deleted."), identity)
-            raise exception.ResourceInUse(type='policy', id=db_policy.id)
+            reason = _("still attached to some clusters")
+            raise exception.ResourceInUse(type='policy', id=identity,
+                                          reason=reason)
 
         LOG.info(_LI("Policy '%s' is deleted."), identity)
 
@@ -954,7 +956,9 @@ class EngineService(service.Service):
 
         containers = cluster.dependents.get('containers', None)
         if containers is not None and len(containers) > 0:
-            raise exception.ResourceInUse(type='host_cluster', id=cluster.id)
+            reason = _("still depended by other clusters and/or nodes")
+            raise exception.ResourceInUse(type='cluster', id=identity,
+                                          reason=reason)
 
         policies = cp_obj.ClusterPolicy.get_all(context, cluster.id)
         if len(policies) > 0:
@@ -1664,7 +1668,9 @@ class EngineService(service.Service):
 
         containers = node.dependents.get('containers', None)
         if containers is not None and len(containers) > 0:
-            raise exception.ResourceInUse(type='host_node', id=node.id)
+            reason = _("still depended by other clusters and/or nodes")
+            raise exception.ResourceInUse(type='node', id=identity,
+                                          reason=reason)
 
         params = {
             'name': 'node_delete_%s' % node.id[:8],
@@ -2021,7 +2027,9 @@ class EngineService(service.Service):
         try:
             action_mod.Action.delete(context, db_action.id)
         except exception.EResourceBusy:
-            raise exception.ResourceInUse(type='action', id=db_action.id)
+            reason = _("still in one of WAITING, RUNNING or SUSPENDED state")
+            raise exception.ResourceInUse(type='action', id=identity,
+                                          reason=reason)
 
         LOG.info(_LI("Action '%s' is deleted."), identity)
 

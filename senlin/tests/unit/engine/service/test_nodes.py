@@ -691,15 +691,15 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_delete_contain_container(self, mock_find):
         dependents = {'containers': ['container1']}
-        node = mock.Mock(id='node1', status='ACTIVE', dependents=dependents)
+        node = mock.Mock(id='NODE_ID', status='ACTIVE', dependents=dependents)
         mock_find.return_value = node
-        identity = mock.Mock()
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_delete,
-                               self.ctx, identity)
-        msg = _('The host_node (node1) is still in use.')
+                               self.ctx, 'node1')
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
-        self.assertEqual(msg, six.text_type(ex.exc_info[1]))
+        self.assertEqual("The node node1 cannot be deleted: still depended "
+                         "by other clusters and/or nodes.",
+                         six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')
