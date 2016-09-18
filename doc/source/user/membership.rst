@@ -25,7 +25,7 @@ A :term:`Node` can belong to at most one :term:`Cluster` at any time. A node
 is referred to as an *orphan node* when it doesn't belong to any cluster.
 
 A node can be made a member of cluster when creation, or you can change the
-cluster membership after the cluster and and the node have been created.
+cluster membership after the cluster and the node have been created.
 
 
 Listing Nodes in a Cluster
