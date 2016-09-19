@@ -89,13 +89,14 @@ class NodeAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        if self.node.cluster_id and self.cause == base.CAUSE_RPC:
+        cluster_id = self.node.cluster_id
+        if cluster_id and self.cause == base.CAUSE_RPC:
             # If node belongs to a cluster, check size constraint
             # before deleting it
-            cluster = cm.Cluster.load(self.context, self.node.cluster_id)
-            result = su.check_size_params(cluster,
-                                          cluster.desired_capacity - 1,
-                                          None, None, True)
+            cluster = cm.Cluster.load(self.context, cluster_id)
+            current = no.Node.count_by_cluster(self.context, cluster_id)
+            desired = current - 1
+            result = su.check_size_params(cluster, desired, None, None, True)
             if result:
                 return self.RES_ERROR, result
 
@@ -105,17 +106,20 @@ class NodeAction(base.Action):
                 grace_period = pd.get('grace_period', 0)
                 if grace_period:
                     eventlet.sleep(grace_period)
+
+        res = self.node.do_delete(self.context)
+
+        if cluster_id and self.cause == base.CAUSE_RPC:
             # check if desired_capacity should be changed
             do_reduce = True
+            params = {}
             pd = self.data.get('deletion', None)
             if pd:
                 do_reduce = pd.get('reduce_desired_capacity', True)
-            if do_reduce:
-                cluster.desired_capacity -= 1
-                cluster.store(self.context)
-            cluster.remove_node(self.node.id)
+            if do_reduce and res:
+                params = {'desired_capacity': desired}
+            cluster.eval_status(self.context, 'delete_node', **params)
 
-        res = self.node.do_delete(self.context)
         if res:
             return self.RES_OK, _('Node deleted successfully.')
         else:
