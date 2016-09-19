@@ -151,8 +151,7 @@ class NodeAction(base.Action):
         # Check the size constraint of parent cluster
         cluster = cm.Cluster.load(self.context, cluster_id)
         current = no.Node.count_by_cluster(self.context, cluster_id)
-        desired = current + 1
-        result = su.check_size_params(cluster, desired, None, None, True)
+        result = su.check_size_params(cluster, current + 1, None, None, True)
         if result:
             return self.RES_ERROR, result
 
@@ -165,18 +164,22 @@ class NodeAction(base.Action):
     def do_leave(self):
         """Handler for the NODE_LEAVE action.
 
+        Note that we don't manipulate the cluster's status after this
+        operation. This is because a NODE_JOIN is always an internal action,
+        i.e. derived from a cluster action. The cluster's status is supposed
+        to be checked and set in the outer cluster action rather than here.
+
         :returns: A tuple containing the result and the corresponding reason.
         """
         # Check the size constraint of parent cluster
         cluster = cm.Cluster.load(self.context, self.node.cluster_id)
-        new_capacity = cluster.desired_capacity - 1
-        result = su.check_size_params(cluster, new_capacity, None, None, True)
+        current = no.Node.count_by_cluster(self.context, self.node.cluster_id)
+        result = su.check_size_params(cluster, current - 1, None, None, True)
         if result:
             return self.RES_ERROR, result
 
         res = self.node.do_leave(self.context)
         if res:
-            cluster.remove_node(self.node.id)
             return self.RES_OK, _('Node successfully left cluster.')
         else:
             return self.RES_ERROR, _('Node failed in leaving cluster.')
