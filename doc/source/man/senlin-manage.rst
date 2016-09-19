@@ -13,7 +13,7 @@ DESCRIPTION
 ~~~~~~~~~~~
 
 senlin-manage provides utilities for operators to manage Senlin specific
-maitenance operations.
+maintenance operations.
 
 
 OPTIONS
