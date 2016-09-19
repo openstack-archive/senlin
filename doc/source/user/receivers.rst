@@ -75,7 +75,7 @@ enables you to do pagination on the results returned from the server.
 Creating a Receiver
 ~~~~~~~~~~~~~~~~~~~
 
-1. Create a cluster named "``test_cluster``", with its desired capacity set to
+1. Create a cluster named "``test-cluster``", with its desired capacity set to
    2, its minimum size set to 1 and its maximum size set to 5, e.g.
 
 ::
