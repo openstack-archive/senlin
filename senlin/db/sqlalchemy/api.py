@@ -273,6 +273,7 @@ def node_get_all_by_cluster(context, cluster_id, project_safe=True):
 def node_count_by_cluster(context, cluster_id, **kwargs):
     project_safe = kwargs.pop('project_safe', True)
     query = model_query(context, models.Node)
+    query = query.filter_by(cluster_id=cluster_id)
     query = query.filter_by(**kwargs)
     if project_safe:
         query = query.filter_by(project=context.project)

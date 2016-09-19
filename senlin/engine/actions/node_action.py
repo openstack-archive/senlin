@@ -140,19 +140,24 @@ class NodeAction(base.Action):
     def do_join(self):
         """Handler for the NODE_JOIN action.
 
+        Note that we don't manipulate the cluster's status after this
+        operation. This is because a NODE_JOIN is always an internal action,
+        i.e. derived from a cluster action. The cluster's status is supposed
+        to be checked and set in the outer cluster action rather than here.
+
         :returns: A tuple containing the result and the corresponding reason.
         """
         cluster_id = self.inputs.get('cluster_id')
         # Check the size constraint of parent cluster
         cluster = cm.Cluster.load(self.context, cluster_id)
-        new_capacity = cluster.desired_capacity + 1
-        result = su.check_size_params(cluster, new_capacity, None, None, True)
+        current = no.Node.count_by_cluster(self.context, cluster_id)
+        desired = current + 1
+        result = su.check_size_params(cluster, desired, None, None, True)
         if result:
             return self.RES_ERROR, result
 
         result = self.node.do_join(self.context, cluster_id)
         if result:
-            cluster.add_node(self.node)
             return self.RES_OK, _('Node successfully joined cluster.')
         else:
             return self.RES_ERROR, _('Node failed in joining cluster.')
