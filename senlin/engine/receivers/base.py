@@ -115,7 +115,7 @@ class Receiver(object):
         kwargs['domain'] = context.domain
         cluster_id = cluster.id if cluster else None
         obj = cls(rtype, cluster_id, action, **kwargs)
-        obj.initialize_channel()
+        obj.initialize_channel(context)
         obj.store(context)
 
         return obj
@@ -194,10 +194,10 @@ class Receiver(object):
         }
         return info
 
-    def initialize_channel(self):
+    def initialize_channel(self, context):
         return {}
 
-    def release_channel(self):
+    def release_channel(self, context):
         return
 
     @classmethod
@@ -208,7 +208,7 @@ class Receiver(object):
         @param receiver_id: the unique ID of the receiver to delete.
         """
         receiver_obj = cls.load(context, receiver_id=receiver_id)
-        receiver_obj.release_channel()
+        receiver_obj.release_channel(context)
         ro.Receiver.delete(context, receiver_obj.id)
 
         return

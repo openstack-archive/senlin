@@ -21,11 +21,15 @@ from senlin.common import exception
 from senlin.drivers import base as driver_base
 from senlin.engine.receivers import message as mmod
 from senlin.tests.unit.common import base
+from senlin.tests.unit.common import utils
 
 UUID = 'aa5f86b8-e52b-4f2b-828a-4c14c770938d'
 
 
 class TestMessage(base.SenlinTestCase):
+    def setUp(self):
+        super(TestMessage, self).setUp()
+        self.context = utils.dummy_context()
 
     @mock.patch.object(driver_base, 'SenlinDriver')
     def test_keystone_client(self, mock_senlindriver):
@@ -141,7 +145,7 @@ class TestMessage(base.SenlinTestCase):
         mock_create_queue.return_value = 'test-queue'
 
         message = mmod.Message('message', None, None)
-        res = message.initialize_channel()
+        res = message.initialize_channel(self.context)
 
         expected_channel = {'queue_name': 'test-queue',
                             'subscription': 'test-subscription-id'}
@@ -250,7 +254,7 @@ class TestMessage(base.SenlinTestCase):
         message = mmod.Message('message', None, None, id=UUID,
                                channel=channel)
 
-        message.release_channel()
+        message.release_channel(self.context)
         mock_zc.subscription_delete.assert_called_once_with(
             'test-queue', 'test-subscription-id')
         mock_zc.queue_delete.assert_called_once_with('test-queue')
@@ -266,7 +270,7 @@ class TestMessage(base.SenlinTestCase):
         mock_zc.subscription_delete.side_effect = exception.InternalError()
 
         self.assertRaises(exception.EResourceDeletion,
-                          message.release_channel)
+                          message.release_channel, self.context)
         mock_zc.subscription_delete.assert_called_once_with(
             'test-queue', 'test-subscription-id')
 
@@ -281,7 +285,7 @@ class TestMessage(base.SenlinTestCase):
         mock_zc.queue_delete.side_effect = exception.InternalError()
 
         self.assertRaises(exception.EResourceDeletion,
-                          message.release_channel)
+                          message.release_channel, self.context)
         mock_zc.subscription_delete.assert_called_once_with(
             'test-queue', 'test-subscription-id')
         mock_zc.queue_delete.assert_called_once_with('test-queue')
@@ -301,7 +305,8 @@ class TestMessage(base.SenlinTestCase):
         mock_trust = mock.Mock()
         mock_trust.id = 'mock-trust-id'
         message = mmod.Message('message', None, None, id=UUID,
-                               user='user1', project='project1')
+                               user='user1', project='project1',
+                               params={'notifier_roles': ['test-role']})
         mock_kc.trust_get_by_trustor.return_value = mock_trust
 
         res = message._build_trust()
@@ -316,8 +321,8 @@ class TestMessage(base.SenlinTestCase):
     @mock.patch.object(ks_loading, 'load_auth_from_conf_options')
     @mock.patch.object(ks_loading, 'load_session_from_conf_options')
     @mock.patch.object(mmod.Message, 'keystone')
-    def test__build_trust_create_new(self, mock_keystone, mock_load_session,
-                                     mock_load_auth):
+    def test__build_trust_create_new_multiroles(
+            self, mock_keystone, mock_load_session, mock_load_auth):
         mock_auth = mock.Mock()
         mock_session = mock.Mock()
         mock_session.get_user_id.return_value = 'zaqar-trustee-user-id'
@@ -329,6 +334,35 @@ class TestMessage(base.SenlinTestCase):
         mock_trust.id = 'mock-trust-id'
         message = mmod.Message('message', None, None, id=UUID,
                                user='user1', project='project1')
+        message.notifier_roles = ['test_role']
+        mock_kc.trust_get_by_trustor.return_value = None
+        mock_kc.trust_create.return_value = mock_trust
+
+        res = message._build_trust()
+
+        self.assertEqual('mock-trust-id', res)
+        mock_kc.trust_get_by_trustor.assert_called_once_with(
+            'user1', 'zaqar-trustee-user-id', 'project1')
+        mock_kc.trust_create.assert_called_once_with(
+            'user1', 'zaqar-trustee-user-id', 'project1', ['test_role'])
+
+    @mock.patch.object(ks_loading, 'load_auth_from_conf_options')
+    @mock.patch.object(ks_loading, 'load_session_from_conf_options')
+    @mock.patch.object(mmod.Message, 'keystone')
+    def test__build_trust_create_new_single_admin_role(
+            self, mock_keystone, mock_load_session, mock_load_auth):
+        mock_auth = mock.Mock()
+        mock_session = mock.Mock()
+        mock_session.get_user_id.return_value = 'zaqar-trustee-user-id'
+        mock_load_session.return_value = mock_session
+        mock_load_auth.return_value = mock_auth
+        mock_kc = mock.Mock()
+        mock_keystone.return_value = mock_kc
+        mock_trust = mock.Mock()
+        mock_trust.id = 'mock-trust-id'
+        message = mmod.Message('message', None, None, id=UUID,
+                               user='user1', project='project1')
+        message.notifier_roles = ['admin']
         mock_kc.trust_get_by_trustor.return_value = None
         mock_kc.trust_create.return_value = mock_trust
 
@@ -357,6 +391,7 @@ class TestMessage(base.SenlinTestCase):
         mock_trust.id = 'mock-trust-id'
         message = mmod.Message('message', None, None, id=UUID,
                                user='user1', project='project1')
+        message.notifier_roles = ['test_role']
         mock_kc.trust_get_by_trustor.return_value = None
         mock_kc.trust_create.side_effect = exception.InternalError()
 
@@ -366,7 +401,7 @@ class TestMessage(base.SenlinTestCase):
         mock_kc.trust_get_by_trustor.assert_called_once_with(
             'user1', 'zaqar-trustee-user-id', 'project1')
         mock_kc.trust_create.assert_called_once_with(
-            'user1', 'zaqar-trustee-user-id', 'project1', ['admin'])
+            'user1', 'zaqar-trustee-user-id', 'project1', ['test_role'])
 
     @mock.patch.object(ks_loading, 'load_auth_from_conf_options')
     @mock.patch.object(ks_loading, 'load_session_from_conf_options')

@@ -287,7 +287,7 @@ class TestReceiver(base.SenlinTestCase):
     def test_release_channel(self):
         receiver = self._create_receiver('test-receiver', UUID1)
         receiver = rb.Receiver.load(self.context, UUID1)
-        res = receiver.release_channel()
+        res = receiver.release_channel(self.context)
         self.assertIsNone(res)
 
     @mock.patch.object(ro.Receiver, 'delete')
@@ -301,7 +301,7 @@ class TestReceiver(base.SenlinTestCase):
 
         mock_load.assert_called_once_with(self.context,
                                           receiver_id='test-receiver-id')
-        mock_receiver.release_channel.assert_called_once_with()
+        mock_receiver.release_channel.assert_called_once_with(self.context)
         mock_delete.assert_called_once_with(self.context, 'test-receiver-id')
 
     @mock.patch.object(context, "get_service_context")
