@@ -166,7 +166,7 @@ Barbican service, in addition to the current solution.
 Use VPNaaS to Build Cross-Region/Cross-Cloud
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When buidling clusters that span more than one region or cloud, there are
+When building clusters that span more than one region or cloud, there are
 requirements to place all cluster nodes on the same VPN so that workloads can
 be distributed to the nodes as if they sit on the same network.
 
