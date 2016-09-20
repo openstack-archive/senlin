@@ -187,7 +187,7 @@ def get_path_parser(path):
 
     :param path: A string containing a JsonPath.
     :returns: A parser used for path matching.
-    :raises: An exception of `BadRequest` if the path failes validation.
+    :raises: An exception of `BadRequest` if the path fails validation.
     """
     try:
         expr = parse(path)
