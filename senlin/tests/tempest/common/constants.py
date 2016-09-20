@@ -20,7 +20,8 @@ spec_nova_server = {
         "image": "cirros-0.3.4-x86_64-uec",
         "networks": [
             {"network": "private"}
-        ]
+        ],
+        "key_name": "oskey"
     }
 }
 
