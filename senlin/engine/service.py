@@ -154,6 +154,11 @@ class EngineService(service.Service):
         self.health_mgr.stop()
 
         self.TG.stop()
+
+        ctx = senlin_context.get_admin_context()
+        service_obj.Service.delete(ctx, self.engine_id)
+        LOG.info(_LI('Engine %s is deleted'), self.engine_id)
+
         super(EngineService, self).stop()
 
     def service_manage_report(self):
