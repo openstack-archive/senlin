@@ -174,6 +174,9 @@ class NovaClient(base.DriverBase):
     def keypair_list(self, details=True, **query):
         return [sdk.FakeResourceObject(self.fake_keypair)]
 
+    def keypair_find(self, name_or_id, ignore_missing=False):
+        return sdk.FakeResourceObject(self.keypair)
+
     def server_create(self, **attrs):
         self.fake_server_create['id'] = uuidutils.generate_uuid()
         self.fake_server_get['id'] = self.fake_server_create['id']
