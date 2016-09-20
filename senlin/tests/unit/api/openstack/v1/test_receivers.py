@@ -593,3 +593,36 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
+
+    def test_receiver_notify_success(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'notify')
+        wid = 'aaaa-bbbb-cccc'
+        req = self._post('/receivers/%(receiver_id)s/notify' % {
+            'receiver_id': wid}, None)
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=None)
+
+        self.assertRaises(exc.HTTPNoContent,
+                          self.controller.notify, req, receiver_id=wid)
+
+        mock_call.assert_called_with(
+            req.context,
+            ('receiver_notify', {'identity': wid, 'params': None}))
+
+    def test_receiver_notify_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'notify')
+        wid = 'aaaa-bbbb-cccc'
+        req = self._post('/receivers/%(receiver_id)s/notify' % {
+            'receiver_id': wid}, None)
+
+        error = senlin_exc.ResourceNotFound(type='receiver', id=wid)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.notify,
+                                              req, receiver_id=wid)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])

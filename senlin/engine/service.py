@@ -2198,6 +2198,26 @@ class EngineService(service.Service):
         LOG.info(_LI("Receiver %s is deleted."), identity)
 
     @request_context
+    def receiver_notify(self, context, identity, params=None):
+        """Handle notification to specified receiver.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of a receiver.
+        :param params: Parameters received from notification.
+        """
+        db_receiver = self.receiver_find(context, identity)
+        # permission checking
+        if not context.is_admin and context.user != db_receiver.user:
+            raise exception.Forbidden()
+
+        # Receiver type check
+        if db_receiver.type != consts.RECEIVER_MESSAGE:
+            raise exception.Forbidden()
+
+        # TODO(Yanyanhu): add notification handling logic
+        LOG.info(_LI("Received notification to receiver %s."), identity)
+
+    @request_context
     def webhook_trigger(self, context, identity, params=None):
 
         LOG.info(_LI("Triggering webhook (%s)."), identity)

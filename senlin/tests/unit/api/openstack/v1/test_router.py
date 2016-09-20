@@ -399,6 +399,16 @@ class RoutesTest(base.SenlinTestCase):
                 'receiver_id': 'bbbb'
             })
 
+        self.assertRoute(
+            self.m,
+            '/receivers/bbbb/notify',
+            'POST',
+            'notify',
+            'ReceiverController',
+            {
+                'receiver_id': 'bbbb'
+            })
+
     def test_webhook_collection(self):
         self.assertRoute(
             self.m,
