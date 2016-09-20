@@ -77,9 +77,9 @@ action using tools like ``curl``.
 
 .. code-block:: console
 
-  $ curl -X POST http://node1:8778/v1/webhooks/5dacde18-661e-4db4-b7a8-f2a6e3466f98/trigger?V=1 
+  $ curl -X POST http://node1:8778/v1/webhooks/5dacde18-661e-4db4-b7a8-f2a6e3466f98/trigger?V=1
 
-After a while, you can check that the cluster has been shrinked by 1 node.
+After a while, you can check that the cluster has been shrunk by 1 node.
 
 For more details about managing receivers, please check the
 :doc:`Receivers <../user/receivers>` section in the

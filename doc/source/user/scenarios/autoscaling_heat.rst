@@ -27,7 +27,7 @@ users who want to use heat to create a senlin cluster.
 
 It is often requried by real deployment practices to make the cluster load-balanced
 and auto-scaled. We also want the scaling action triggered based on business data
-instead of infrastructure metrics. When exsiting cluster is not enough to afford the
+instead of infrastructure metrics. When exisiting cluster is not enough to afford the
 throughput/workload, the cluster will be scaled-out; when low throughput or workload,
 the cluster will be scaled-in.
 
