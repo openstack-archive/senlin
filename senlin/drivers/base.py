@@ -36,8 +36,6 @@ class SenlinDriver(object):
 
         backend = environment.global_env().get_driver(backend_name)
 
-        # TODO(Yanyan Hu): Use openstack compute driver(nova_v2)
-        # as the start point of using senlin generic driver.
         self.compute = backend.compute
         self.loadbalancing = backend.loadbalancing
         self.network = backend.network
