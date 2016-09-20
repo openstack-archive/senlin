@@ -26,7 +26,7 @@ a receiver can change the size of a specified cluster.
 Listing Receivers
 ~~~~~~~~~~~~~~~~~
 
-The :program:`opentack cluster ` command line provides a sub-command
+The :program:`openstack cluster` command line provides a sub-command
 :command:`receiver list` that can be used to enumerate receiver objects known
 to the service. For example::
 
@@ -88,7 +88,7 @@ Creating a Receiver
 
 ::
 
-  $ opentack cluster policy attach --policy $POLICY_ID test-cluster
+  $ openstack cluster policy attach --policy $POLICY_ID test-cluster
 
 3. Create a receiver, use the option :option:`--cluster` to specify
    "``test-cluster``" as the targeted cluster and use the option
