@@ -185,7 +185,7 @@ the ID, the name or the "short ID" of a policy object. For example::
   +------------+------------------------------------------------------------+
 
 When there is no policy object matching the identifier, you will get an error
-message. When there are more than one object matching the identifier, you will
+message. When there is more than one object matching the identifier, you will
 get an error message as well.
 
 
@@ -213,7 +213,7 @@ the Senlin database using the following command::
 
 Note that in this command you can use the name, the ID or the "short ID" to
 specify the policy object you want to delete. If the specified criteria
-cannot match any policy objects, you will get a ``ResoureNotFound`` exception.
+cannot match any policy objects, you will get a ``ResourceNotFound`` exception.
 If more than one policy matches the criteria, you will get a ``MultipleChoices``
 exception.
 
