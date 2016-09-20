@@ -41,8 +41,8 @@ Request Parameters
   - action: action_action_query
   - status: action_status_query
 
-Reponse Parameters
-------------------
+Response Parameters
+-------------------
 
 .. rest_parameters:: parameters.yaml
 
