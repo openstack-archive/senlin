@@ -21,7 +21,7 @@ request_id:
   type: string
   in: header
   description: |
-    A unique ID for tracking service request. The request ID associated
+    An unique ID for tracking service request. The request ID associated
     with the request by default appears in the service logs.
 
 #### path parameters #########################################################
@@ -350,7 +350,7 @@ action_target:
   type: string
   in: body
   required: True
-  descrption: |
+  description: |
     The UUID of the targeted object (which is usually a cluster).
 
 action_timeout:
@@ -393,7 +393,7 @@ adjustment_number:
   type: number
   in: body
   description: |
-    The number of adjustment. The interpretion of the value depends on the
+    The number of adjustment. The interpretation of the value depends on the
     value of the ``adjustment_type`` parameter. This parameter is mandatory
     when ``adjustment_type`` is specified. Otherwise, it is optional.
 
