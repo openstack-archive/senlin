@@ -1475,7 +1475,9 @@ class EngineService(service.Service):
         LOG.info(_LI("Checking Cluster '%(cluster)s'."),
                  {'cluster': identity})
         db_cluster = self.cluster_find(context, identity)
-
+        if not context.user or not context.project:
+            context.user = db_cluster.user
+            context.project = db_cluster.project
         params = {
             'name': 'cluster_check_%s' % db_cluster.id[:8],
             'cause': action_mod.CAUSE_RPC,
