@@ -153,7 +153,7 @@ class EngineStatusTest(base.SenlinTestCase):
 
     @mock.patch.object(service_obj.Service, 'get_all')
     @mock.patch.object(service_obj.Service, 'delete')
-    def test_service_manage_report_cleanup(self, mock_delete, mock_get_all):
+    def test_service_manage_cleanup(self, mock_delete, mock_get_all):
         delta = datetime.timedelta(seconds=2 * cfg.CONF.periodic_interval)
         ages_a_go = timeutils.utcnow(True) - delta
         mock_get_all.return_value = [{'id': 'foo', 'updated_at': ages_a_go}]
