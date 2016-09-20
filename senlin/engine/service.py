@@ -2329,8 +2329,11 @@ class EngineService(service.Service):
         if db_receiver.type != consts.RECEIVER_MESSAGE:
             raise exception.Forbidden()
 
-        # TODO(Yanyanhu): add notification handling logic
         LOG.info(_LI("Received notification to receiver %s."), identity)
+        receiver = receiver_mod.Receiver.load(context,
+                                              receiver_obj=db_receiver,
+                                              project_safe=True)
+        receiver.notify(context, params)
 
     @request_context
     def webhook_trigger(self, context, identity, params=None):

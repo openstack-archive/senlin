@@ -290,6 +290,12 @@ class TestReceiver(base.SenlinTestCase):
         res = receiver.release_channel(self.context)
         self.assertIsNone(res)
 
+    def test_notify(self):
+        receiver = self._create_receiver('test-receiver', UUID1)
+        receiver = rb.Receiver.load(self.context, UUID1)
+        res = receiver.notify(self.context)
+        self.assertIsNone(res)
+
     @mock.patch.object(ro.Receiver, 'delete')
     @mock.patch.object(rb.Receiver, 'load')
     def test_receiver_delete(self, mock_load, mock_delete):
