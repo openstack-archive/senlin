@@ -209,7 +209,7 @@ as the "metadata" for the cluster.
 Since cluster operations may take some time to finish when being executed and
 Senlin interacts with the backend services to make it happen, there needs a
 way to verify whether an operation has timed out. When creating a cluster
-using the :program:`opentack cluster create` command line, you can use the
+using the :program:`openstack cluster create` command line, you can use the
 option :option:`--timeout <TIMEOUT>` to specify the default time out in number
 of seconds. This value would be the global setting for the cluster.
 
