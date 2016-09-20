@@ -26,9 +26,6 @@ from senlin.tests.unit.common import base
 
 class OpenStackSDKTest(base.SenlinTestCase):
 
-    def setUp(self):
-        super(OpenStackSDKTest, self).setUp()
-
     def test_parse_exception_http_exception_with_details(self):
         details = jsonutils.dumps({
             'error': {

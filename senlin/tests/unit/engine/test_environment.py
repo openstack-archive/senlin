@@ -31,9 +31,6 @@ custom_policies:
 
 class TestEnvironment(base.SenlinTestCase):
 
-    def setUp(self):
-        super(TestEnvironment, self).setUp()
-
     def test_create_global(self):
         e = environment.Environment(is_global=True)
 
