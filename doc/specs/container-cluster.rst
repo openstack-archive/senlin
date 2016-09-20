@@ -60,11 +60,12 @@ Proposed Changes
    will be contained to created a container.
 3. Scheduling
    To decide to start containers in which virtual/baremetal machines, a
-   scheduler is needed. There are some existing container scheduler like docker
-   swarm which are widely used in production, but by thinking about Senlin's
-   feature, it is reasonable to invent a scheduler which can support container
-   auto-scaling better. For example, starting containers preferentially in
-   specified nodes whose cpu utilization is lower than a certain value.
+   scheduler is needed. There are some existing container schedulers like
+   docker swarm which are widely used in production, but by thinking about
+   Senlin's feature, it is reasonable to invent a scheduler which can support
+   container auto-scaling better. For example, starting containers
+   preferentially in specified nodes whose cpu utilization is lower than a
+   certain value.
    This is an intelligent but complicated solution for container scheduling,
    to meet the limited needs, Senlin placement policy can be used to work as
    a scheduler to take place of complicated scheduler implementation.
