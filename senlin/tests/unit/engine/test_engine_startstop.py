@@ -80,7 +80,9 @@ class EngineBasicTest(base.SenlinTestCase):
         self.assertEqual(self.fake_rpc_server, self.eng._rpc_server)
         self.fake_rpc_server.start.assert_called_once_with()
 
-    def test_engine_stop(self, mock_msg_cls, mock_hm_cls, mock_disp_cls):
+    @mock.patch.object(service_obj.Service, 'delete')
+    def test_engine_stop(self, mock_delete, mock_msg_cls, mock_hm_cls,
+                         mock_disp_cls):
         mock_disp = mock_disp_cls.return_value
         mock_hm = mock_hm_cls.return_value
         self.eng.start()
@@ -92,6 +94,8 @@ class EngineBasicTest(base.SenlinTestCase):
 
         mock_disp.stop.assert_called_once_with()
         mock_hm.stop.assert_called_once_with()
+
+        mock_delete.assert_called_once_with(mock.ANY, self.fake_id)
 
     def test_engine_stop_with_exception(self, mock_msg_cls, mock_hm_cls,
                                         mock_disp_cls):
