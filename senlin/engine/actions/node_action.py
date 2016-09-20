@@ -13,12 +13,13 @@
 import eventlet
 
 from senlin.common.i18n import _
-from senlin.common import scaleutils
+from senlin.common import scaleutils as su
 from senlin.engine.actions import base
 from senlin.engine import cluster as cm
 from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.engine import senlin_lock
+from senlin.objects import node as no
 from senlin.policies import base as pb
 
 
@@ -57,21 +58,27 @@ class NodeAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        if self.node.cluster_id and self.cause == base.CAUSE_RPC:
-            # If node is created with target cluster specified,
-            # check cluster size constraint
-            cluster = cm.Cluster.load(self.context, self.node.cluster_id)
-            result = scaleutils.check_size_params(
-                cluster, cluster.desired_capacity + 1, None, None, True)
-
+        cluster_id = self.node.cluster_id
+        if cluster_id and self.cause == base.CAUSE_RPC:
+            # Check cluster size constraint if target cluster is specified
+            cluster = cm.Cluster.load(self.context, cluster_id)
+            current = no.Node.count_by_cluster(self.context, cluster_id)
+            desired = current + 1
+            result = su.check_size_params(cluster, desired, None, None, True)
             if result:
+                # cannot place node into the cluster
+                no.Node.update(self.context, self.node.id, {'cluster_id': ''})
                 return self.RES_ERROR, result
-            # Update cluster desired_capacity if node is already in db.
-            cluster.desired_capacity += 1
-            cluster.add_node(self.node)
-            cluster.store(self.context)
 
         res = self.node.do_create(self.context)
+
+        if cluster_id and self.cause == base.CAUSE_RPC:
+            # Update cluster's desired_capacity and re-evaluate its status no
+            # matter the creation is a success or not because the node object
+            # is # already treated as member of the cluster and the node
+            # creation may have changed the cluster's status
+            cluster.eval_status(self.context, 'create_node',
+                                desired_capacity=desired)
         if res:
             return self.RES_OK, _('Node created successfully.')
         else:
@@ -86,9 +93,9 @@ class NodeAction(base.Action):
             # If node belongs to a cluster, check size constraint
             # before deleting it
             cluster = cm.Cluster.load(self.context, self.node.cluster_id)
-            result = scaleutils.check_size_params(cluster,
-                                                  cluster.desired_capacity - 1,
-                                                  None, None, True)
+            result = su.check_size_params(cluster,
+                                          cluster.desired_capacity - 1,
+                                          None, None, True)
             if result:
                 return self.RES_ERROR, result
 
@@ -135,8 +142,7 @@ class NodeAction(base.Action):
         # Check the size constraint of parent cluster
         cluster = cm.Cluster.load(self.context, cluster_id)
         new_capacity = cluster.desired_capacity + 1
-        result = scaleutils.check_size_params(cluster, new_capacity,
-                                              None, None, True)
+        result = su.check_size_params(cluster, new_capacity, None, None, True)
         if result:
             return self.RES_ERROR, result
 
@@ -155,8 +161,7 @@ class NodeAction(base.Action):
         # Check the size constraint of parent cluster
         cluster = cm.Cluster.load(self.context, self.node.cluster_id)
         new_capacity = cluster.desired_capacity - 1
-        result = scaleutils.check_size_params(cluster, new_capacity,
-                                              None, None, True)
+        result = su.check_size_params(cluster, new_capacity, None, None, True)
         if result:
             return self.RES_ERROR, result
 

@@ -20,6 +20,7 @@ from senlin.engine import cluster as cluster_mod
 from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.engine import senlin_lock as lock
+from senlin.objects import node as node_obj
 from senlin.policies import base as policy_mod
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -32,77 +33,117 @@ class NodeActionTest(base.SenlinTestCase):
         super(NodeActionTest, self).setUp()
         self.ctx = utils.dummy_context()
 
-    def test_do_create(self, mock_load):
-        node = mock.Mock()
-        node.id = 'NID'
-        node.do_create = mock.Mock(return_value=None)
+    def test_do_create_ok(self, mock_load):
+        node = mock.Mock(id='NID')
+        node.do_create = mock.Mock(return_value=mock.Mock())
+        mock_load.return_value = node
+        action = node_action.NodeAction(node.id, 'ACTION', self.ctx)
+
+        res_code, res_msg = action.do_create()
+
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Node created successfully.', res_msg)
+        node.do_create.assert_called_once_with(action.context)
+
+    def test_do_create_failed(self, mock_load):
+        node = mock.Mock(id='NID')
+        node.do_create = mock.Mock(return_value=False)
         mock_load.return_value = node
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx)
 
         # Test node creation failure path
         res_code, res_msg = action.do_create()
+
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Node creation failed.', res_msg)
         node.do_create.assert_called_once_with(action.context)
-        node.reset_mock()
-
-        # Test node creation success path
-        node.do_create = mock.Mock(return_value=mock.Mock())
-        res_code, res_msg = action.do_create()
-        self.assertEqual(action.RES_OK, res_code)
-        self.assertEqual('Node created successfully.', res_msg)
-        node.do_create.assert_called_once_with(action.context)
 
     @mock.patch.object(scaleutils, 'check_size_params')
+    @mock.patch.object(node_obj.Node, 'count_by_cluster')
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    def test_do_create_with_cluster_id_specified(self, mock_c_load,
-                                                 mock_check, mock_load):
-        cluster = mock.Mock()
-        cluster.id = 'CID'
-        cluster.desired_capacity = 0
+    def test_do_create_with_cluster_id_success(self, mock_c_load, mock_count,
+                                               mock_check, mock_load):
+        cluster = mock.Mock(id='CID')
         mock_c_load.return_value = cluster
-        node = mock.Mock()
-        node.id = 'NID'
-        node.do_create = mock.Mock(return_value=None)
-        node.cluster_id = cluster.id
+        node = mock.Mock(id='NID', cluster_id='CID')
+        node.do_create = mock.Mock(return_value=mock.Mock())
         mock_load.return_value = node
+        mock_count.return_value = 10
         mock_check.return_value = None
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
                                         cause=base_action.CAUSE_RPC)
 
-        node.do_create = mock.Mock(return_value=mock.Mock())
+        # do it
         res_code, res_msg = action.do_create()
+
+        # assertions
         self.assertEqual(action.RES_OK, res_code)
-        mock_check.assert_called_once_with(cluster, 1, None, None, True)
         mock_c_load.assert_called_once_with(action.context, 'CID')
-        cluster.store.assert_called_once_with(action.context)
-        self.assertEqual(1, cluster.desired_capacity)
-        cluster.add_node.assert_called_once_with(node)
+        mock_count.assert_called_once_with(action.context, 'CID')
+        mock_check.assert_called_once_with(cluster, 11, None, None, True)
+        node.do_create.assert_called_once_with(action.context)
+        cluster.eval_status.assert_called_once_with(
+            action.context, 'create_node', desired_capacity=11)
+
+    @mock.patch.object(node_obj.Node, 'update')
+    @mock.patch.object(scaleutils, 'check_size_params')
+    @mock.patch.object(node_obj.Node, 'count_by_cluster')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_do_create_with_cluster_id_failed_checking(
+            self, mock_c_load, mock_count, mock_check, mock_update, mock_load):
+
+        cluster = mock.Mock(id='CID')
+        mock_c_load.return_value = cluster
+        node = mock.Mock(id='NID', cluster_id='CID')
+        node.do_create = mock.Mock(return_value=False)
+        mock_load.return_value = node
+        mock_count.return_value = 10
+        mock_check.return_value = 'overflow'
+        action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
+                                        cause=base_action.CAUSE_RPC)
+
+        # do it
+        res_code, res_msg = action.do_create()
+
+        # assertions
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('overflow', res_msg)
+        mock_c_load.assert_called_once_with(action.context, 'CID')
+        mock_count.assert_called_once_with(action.context, 'CID')
+        mock_check.assert_called_once_with(cluster, 11, None, None, True)
+        mock_update.assert_called_once_with(action.context, 'NID',
+                                            {'cluster_id': ''})
+        self.assertEqual(0, node.do_create.call_count)
+        self.assertEqual(0, cluster.eval_status.call_count)
 
     @mock.patch.object(scaleutils, 'check_size_params')
+    @mock.patch.object(node_obj.Node, 'count_by_cluster')
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    def test_do_create_with_node_create_failed(self, mock_c_load,
-                                               mock_check, mock_load):
-        cluster = mock.Mock()
-        cluster.id = 'CID'
-        cluster.desired_capacity = 0
+    def test_do_create_with_cluster_id_failed_creation(
+            self, mock_c_load, mock_count, mock_check, mock_load):
+
+        cluster = mock.Mock(id='CID')
         mock_c_load.return_value = cluster
-        node = mock.Mock()
-        node.id = 'NID'
-        node.do_create = mock.Mock(return_value=None)
-        node.cluster_id = cluster.id
+        node = mock.Mock(id='NID', cluster_id='CID')
+        node.do_create = mock.Mock(return_value=False)
         mock_load.return_value = node
+        mock_count.return_value = 10
         mock_check.return_value = ''
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
                                         cause=base_action.CAUSE_RPC)
 
-        node.do_create = mock.Mock(return_value=False)
+        # do it
         res_code, res_msg = action.do_create()
+
+        # assertions
         self.assertEqual(action.RES_ERROR, res_code)
-        mock_check.assert_called_once_with(cluster, 1, None, None, True)
+        self.assertEqual('Node creation failed.', res_msg)
         mock_c_load.assert_called_once_with(action.context, 'CID')
-        cluster.store.assert_called_once_with(action.context)
-        self.assertEqual(1, cluster.desired_capacity)
+        mock_count.assert_called_once_with(action.context, 'CID')
+        mock_check.assert_called_once_with(cluster, 11, None, None, True)
+        node.do_create.assert_called_once_with(action.context)
+        cluster.eval_status.assert_called_once_with(
+            action.context, 'create_node', desired_capacity=11)
 
     def test_do_check(self, mock_load):
         node = mock.Mock()
