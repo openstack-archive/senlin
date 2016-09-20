@@ -20,7 +20,7 @@
     There are multiple choices for resources. The request has to be more
     specific to successfully retrieve one of these resources.
   multi_version: |
-    There are more than one API version for choice. The client has to be more
+    There is more than one API version for choice. The client has to be more
     specific to request a service endpoint.
 
 #################
