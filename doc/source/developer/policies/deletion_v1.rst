@@ -17,7 +17,7 @@ Deletion Policy V1.0
 ====================
 
 The deletion policy is designed to be enforced when a cluster's size is to be
-shrinked.
+shrunk.
 
 
 Applicable Profiles
