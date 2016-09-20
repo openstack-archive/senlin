@@ -111,7 +111,7 @@ does imply a security risk. In future, we hope Senlin can make use of the
 Barbican service for this purpose.
 
 Senlin's implementation of context is based on the `oslo_context` package.
-There are still room for improvement thanks to the new enhancements to that
+There is still room for improvement thanks to the new enhancements to that
 package.
 
 
