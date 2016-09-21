@@ -66,7 +66,7 @@ Response Example
 
 
 Create policy
-==============
+=============
 
 .. rest_method::  POST /v1/policies
 
@@ -128,7 +128,7 @@ Response Example
 
 
 Show policy details
-====================
+===================
 
 .. rest_method::  GET /v1/policies/{policy_id}
 
@@ -183,7 +183,7 @@ Response Example
 
 
 Update policy
-==============
+=============
 
 .. rest_method::  PATCH /v1/policies/{policy_id}
 
@@ -250,7 +250,7 @@ Response Example
 
 
 Delete policy
-==============
+=============
 
 .. rest_method::  DELETE /v1/policies/{policy_id}
 
