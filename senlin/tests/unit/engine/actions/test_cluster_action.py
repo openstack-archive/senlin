@@ -12,7 +12,7 @@
 
 import mock
 
-from senlin.common import exception
+from senlin.common import exception as exc
 from senlin.common import scaleutils
 from senlin.engine.actions import base as ab
 from senlin.engine.actions import cluster_action as ca
@@ -1199,18 +1199,21 @@ class ClusterActionTest(base.SenlinTestCase):
     @mock.patch.object(ca.ClusterAction, '_sleep')
     @mock.patch.object(no.Node, 'get')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
-    def test_do_del_nodes(self, mock_delete, mock_get, mock_sleep, mock_load):
-        cluster = mock.Mock(id='FAKE_CLUSTER', desired_capacity=4)
+    @mock.patch.object(no.Node, 'count_by_cluster')
+    def test_do_del_nodes(self, mock_count, mock_delete, mock_get, mock_sleep,
+                          mock_load):
+
+        cluster = mock.Mock(id='FAKE_CLUSTER')
         mock_load.return_value = cluster
 
-        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
-        action.id = 'CLUSTER_ACTION_ID'
-        action.inputs = {'candidates': ['NODE_1', 'NODE_2']}
-        action.data = {}
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx,
+                                  id='CLUSTER_ACTION_ID', data={},
+                                  inputs={'candidates': ['NODE_1', 'NODE_2']})
 
         node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_CLUSTER')
         node2 = mock.Mock(id='NODE_2', cluster_id='FAKE_CLUSTER')
         mock_get.side_effect = [node1, node2]
+        mock_count.return_value = 2
         mock_delete.return_value = (action.RES_OK, 'Good to go!')
 
         # do it
@@ -1219,6 +1222,8 @@ class ClusterActionTest(base.SenlinTestCase):
         # assertions
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Completed deleting nodes.', res_msg)
+
+        # these are default settings
         expected = {
             'deletion': {
                 'destroy_after_deletion': False,
@@ -1231,24 +1236,29 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_get.assert_has_calls([
             mock.call(action.context, 'NODE_1'),
             mock.call(action.context, 'NODE_2')])
+        mock_count.assert_called_once_with(action.context, 'FAKE_CLUSTER')
         mock_delete.assert_called_once_with(['NODE_1', 'NODE_2'])
-        self.assertEqual(2, cluster.desired_capacity)
+        cluster.eval_status.assert_called_once_with(
+            action.context, 'del_nodes', desired_capacity=0)
 
     @mock.patch.object(ca.ClusterAction, '_sleep')
     @mock.patch.object(no.Node, 'get')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
-    def test_do_del_nodes_with_deletion_policy(self, mock_delete, mock_get,
-                                               mock_sleep, mock_load):
+    @mock.patch.object(no.Node, 'count_by_cluster')
+    def test_do_del_nodes_with_deletion_policy(self, mock_count, mock_delete,
+                                               mock_get, mock_sleep,
+                                               mock_load):
         cid = 'FAKE_CLUSTER'
         cluster = mock.Mock(id=cid, desired_capacity=4)
         mock_load.return_value = cluster
 
-        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
-        action.id = 'CLUSTER_ACTION_ID'
-        action.inputs = {'candidates': ['NODE_1', 'NODE_2']}
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx,
+                                  id='CLUSTER_ACTION_ID',
+                                  inputs={'candidates': ['NODE_1', 'NODE_2']})
         action.data = {
             'deletion': {
                 'count': 2,
+                # the 'candidates' value will be ignored
                 'candidates': ['NODE_1', 'NODE_2'],
                 'destroy_after_deletion': True,
                 'grace_period': 2,
@@ -1259,6 +1269,7 @@ class ClusterActionTest(base.SenlinTestCase):
         node1 = mock.Mock(id='NODE_1', cluster_id=cid)
         node2 = mock.Mock(id='NODE_2', cluster_id=cid)
         mock_get.side_effect = [node1, node2]
+        mock_count.return_value = 4
         mock_delete.return_value = (action.RES_OK, 'Good to go!')
 
         # do it
@@ -1270,30 +1281,28 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_get.assert_has_calls([
             mock.call(action.context, 'NODE_1'),
             mock.call(action.context, 'NODE_2')])
+        mock_count.assert_called_once_with(action.context, 'FAKE_CLUSTER')
         mock_delete.assert_called_once_with(['NODE_1', 'NODE_2'])
         self.assertTrue(action.data['deletion']['destroy_after_deletion'])
         mock_sleep.assert_called_once_with(2)
         # Note: desired_capacity not decreased due to policy enforcement
-        self.assertEqual(4, cluster.desired_capacity)
-        cluster.store.has_calls([
-            mock.call(action.context),
-            mock.call(action.context)])
+        cluster.eval_status.assert_called_once_with(
+            action.context, 'del_nodes')
 
     @mock.patch.object(no.Node, 'get')
     def test_do_del_nodes_node_not_found(self, mock_get, mock_load):
         cluster = mock.Mock()
         mock_load.return_value = cluster
-        action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {'candidates': ['NODE_1']}
-        mock_get.side_effect = exception.ResourceNotFound(type='node',
-                                                          id='NODE_1')
+        action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx,
+                                  inputs={'candidates': ['NODE_1']})
+        mock_get.side_effect = exc.ResourceNotFound(type='node', id='NODE_1')
 
         # do it
         res_code, res_msg = action.do_del_nodes()
 
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
-        self.assertEqual("Node [NODE_1] is not found.", res_msg)
+        self.assertEqual("Node NODE_1 is not found.", res_msg)
         expected = {
             'deletion': {
                 'destroy_after_deletion': False,
@@ -1307,8 +1316,8 @@ class ClusterActionTest(base.SenlinTestCase):
     def test_do_del_nodes_node_not_member(self, mock_get, mock_load):
         cluster = mock.Mock(id='FAKE_CLUSTER')
         mock_load.return_value = cluster
-        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {'nodes': ['NODE_1', 'NODE_2']}
+        action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx,
+                                  inputs={'candidates': ['NODE_1', 'NODE_2']})
         node1 = mock.Mock(cluster_id='')
         node2 = mock.Mock(cluster_id='ANOTHER_CLUSTER')
         mock_get.side_effect = [node1, node2]
@@ -1330,15 +1339,17 @@ class ClusterActionTest(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'get')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
-    def test_do_del_nodes_failed_delete(self, mock_delete, mock_get,
-                                        mock_load):
+    @mock.patch.object(no.Node, 'count_by_cluster')
+    def test_do_del_nodes_failed_delete(self, mock_count, mock_delete,
+                                        mock_get, mock_load):
+
         cluster = mock.Mock(id='FAKE_CLUSTER')
         mock_load.return_value = cluster
-        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {'candidates': ['NODE_1']}
-        action.data = {}
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx,
+                                  inputs={'candidates': ['NODE_1']}, data={})
         node1 = mock.Mock(cluster_id='FAKE_CLUSTER')
         mock_get.side_effect = [node1]
+        mock_count.return_value = 3
         mock_delete.return_value = (action.RES_ERROR, 'Things went bad.')
 
         # do it
@@ -1347,6 +1358,11 @@ class ClusterActionTest(base.SenlinTestCase):
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual("Things went bad.", res_msg)
+        mock_load.assert_called_once_with(action.context, 'FAKE_CLUSTER')
+        mock_get.assert_called_once_with(action.context, 'NODE_1')
+        mock_count.assert_called_once_with(action.context, 'FAKE_CLUSTER')
+        cluster.eval_status.assert_called_once_with(
+            action.context, 'del_nodes', desired_capacity=2)
 
     @mock.patch.object(ao.Action, 'update')
     @mock.patch.object(ab.Action, 'create')
