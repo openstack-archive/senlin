@@ -537,23 +537,26 @@ class Cluster(object):
             if node.status == 'ACTIVE':
                 active_count += 1
 
+        # use the new desired capacity immediately if provided
+        # TODO(anyone): handle min_size/max_size in the same way
+        desired = params.get('desired_capacity', None)
+        desired = desired or self.desired_capacity
+
         values = params or {}
         if active_count < self.min_size:
             status = self.ERROR
             reason = _("%(o)s: number of active nodes is below min_size "
                        "(%(n)d).") % {'o': operation, 'n': self.min_size}
-        elif active_count < self.desired_capacity:
+        elif active_count < desired:
             status = self.WARNING
             reason = _("%(o)s: number of active nodes is below "
                        "desired_capacity "
-                       "(%(n)d).") % {'o': operation,
-                                      'n': self.desired_capacity}
+                       "(%(n)d).") % {'o': operation, 'n': desired}
         elif self.max_size < 0 or active_count <= self.max_size:
             status = self.ACTIVE
             reason = _("%(o)s: number of active nodes is above "
                        "desired_capacity "
-                       "(%(n)d).") % {'o': operation,
-                                      'n': self.desired_capacity}
+                       "(%(n)d).") % {'o': operation, 'n': desired}
         else:
             status = self.WARNING
             reason = _("%(o)s: number of active nodes is above max_size "
