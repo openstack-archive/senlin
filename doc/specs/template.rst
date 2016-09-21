@@ -206,7 +206,7 @@ Aside from the API, are there other ways a user will interact with this
 feature?
 
 * Does this change have an impact on python-senlinclient?
-  
+
 * What does the user interface there look like?
 
 Performance Impact
@@ -221,7 +221,7 @@ Examples of things to consider here include:
 * A periodic task manipulating a cluster node implies workload which will be
   multiplied by the size of a cluster.
 
-* Any code interacting with backend services (e.g. nova or heat) may introduce 
+* Any code interacting with backend services (e.g. nova or heat) may introduce
   some latency which linear to the size of a cluster.
 
 * A small change in a utility function or a commonly used decorator can have a
