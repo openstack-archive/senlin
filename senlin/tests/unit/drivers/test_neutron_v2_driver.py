@@ -72,13 +72,6 @@ class TestNeutronV2Driver(base.SenlinTestCase):
                                                                      False)
         self.assertEqual(loadbalancer_obj, res)
 
-    def test_loadbalancer_list(self):
-        loadbalancers = ['lb1', 'lb2']
-
-        self.conn.network.load_balancers.return_value = loadbalancers
-        self.assertEqual(loadbalancers, self.nc.loadbalancer_list())
-        self.conn.network.load_balancers.assert_called_once_with()
-
     def test_loadbalancer_create(self):
         vip_subnet_id = 'ID1'
         lb_obj = mock.Mock()
@@ -115,23 +108,6 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         self.nc.loadbalancer_delete(lb_id)
         self.conn.network.delete_load_balancer.assert_called_with(
             lb_id, ignore_missing=True)
-
-    def test_listener_get(self):
-        name_or_id = 'listener_identifier'
-        listener_obj = mock.Mock()
-
-        self.conn.network.find_listener.return_value = listener_obj
-        res = self.nc.listener_get(name_or_id)
-        self.conn.network.find_listener.assert_called_once_with(
-            name_or_id, False)
-        self.assertEqual(listener_obj, res)
-
-    def test_listener_list(self):
-        listeners = ['listener1', 'listener2']
-
-        self.conn.network.listeners.return_value = listeners
-        self.assertEqual(listeners, self.nc.listener_list())
-        self.conn.network.listeners.assert_called_once_with()
 
     def test_listener_create(self):
         loadbalancer_id = 'ID1'
@@ -175,23 +151,6 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         self.conn.network.delete_listener.assert_called_with(
             listener_id, ignore_missing=True)
 
-    def test_pool_get(self):
-        name_or_id = 'pool_identifier'
-        pool_obj = mock.Mock()
-
-        self.conn.network.find_pool.return_value = pool_obj
-        res = self.nc.pool_get(name_or_id)
-        self.conn.network.find_pool.assert_called_once_with(name_or_id,
-                                                            False)
-        self.assertEqual(pool_obj, res)
-
-    def test_pool_list(self):
-        pools = ['pool1', 'pool2']
-
-        self.conn.network.pools.return_value = pools
-        self.assertEqual(pools, self.nc.pool_list())
-        self.conn.network.pools.assert_called_once_with()
-
     def test_pool_create(self):
         lb_algorithm = 'ROUND_ROBIN'
         listener_id = 'ID1'
@@ -232,25 +191,6 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         self.nc.pool_delete(pool_id)
         self.conn.network.delete_pool.assert_called_with(
             pool_id, ignore_missing=True)
-
-    def test_pool_member_get(self):
-        name_or_id = 'member_identifier'
-        pool_id = 'ID1'
-        member_obj = mock.Mock()
-
-        self.conn.network.find_pool_member.return_value = member_obj
-        res = self.nc.pool_member_get(pool_id, name_or_id)
-        self.conn.network.find_pool_member.assert_called_once_with(
-            name_or_id, pool_id, False)
-        self.assertEqual(member_obj, res)
-
-    def test_pool_member_list(self):
-        pool_id = 'ID1'
-        members = ['member1', 'member2']
-
-        self.conn.network.pool_members.return_value = members
-        self.assertEqual(members, self.nc.pool_member_list(pool_id))
-        self.conn.network.pool_members.assert_called_once_with(pool_id)
 
     def test_pool_member_create(self):
         pool_id = 'ID1'
@@ -294,23 +234,6 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         self.nc.pool_member_delete(pool_id, member_id)
         self.conn.network.delete_pool_member.assert_called_with(
             member_id, pool_id, ignore_missing=True)
-
-    def test_healthmonitor_get(self):
-        name_or_id = 'healthmonitor_identifier'
-        healthmonitor_obj = mock.Mock()
-
-        self.conn.network.find_health_monitor.return_value = healthmonitor_obj
-        res = self.nc.healthmonitor_get(name_or_id)
-        self.conn.network.find_health_monitor.assert_called_once_with(
-            name_or_id, False)
-        self.assertEqual(healthmonitor_obj, res)
-
-    def test_healthmonitor_list(self):
-        healthmonitors = ['hm1', 'hm2']
-
-        self.conn.network.health_monitors.return_value = healthmonitors
-        self.assertEqual(healthmonitors, self.nc.healthmonitor_list())
-        self.conn.network.health_monitors.assert_called_once_with()
 
     def test_healthmonitor_create(self):
         hm_type = 'HTTP'

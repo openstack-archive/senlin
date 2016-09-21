@@ -42,11 +42,6 @@ class NeutronClient(base.DriverBase):
         return lb
 
     @sdk.translate_exception
-    def loadbalancer_list(self):
-        lbs = [lb for lb in self.conn.network.load_balancers()]
-        return lbs
-
-    @sdk.translate_exception
     def loadbalancer_create(self, vip_subnet_id, vip_address=None,
                             admin_state_up=True, name=None, description=None):
 
@@ -70,17 +65,6 @@ class NeutronClient(base.DriverBase):
         self.conn.network.delete_load_balancer(
             lb_id, ignore_missing=ignore_missing)
         return
-
-    @sdk.translate_exception
-    def listener_get(self, name_or_id, ignore_missing=False):
-        listener = self.conn.network.find_listener(name_or_id,
-                                                   ignore_missing)
-        return listener
-
-    @sdk.translate_exception
-    def listener_list(self):
-        listeners = [i for i in self.conn.network.listeners()]
-        return listeners
 
     @sdk.translate_exception
     def listener_create(self, loadbalancer_id, protocol, protocol_port,
@@ -111,17 +95,6 @@ class NeutronClient(base.DriverBase):
         return
 
     @sdk.translate_exception
-    def pool_get(self, name_or_id, ignore_missing=False):
-        pool = self.conn.network.find_pool(name_or_id,
-                                           ignore_missing)
-        return pool
-
-    @sdk.translate_exception
-    def pool_list(self):
-        pools = [p for p in self.conn.network.pools()]
-        return pools
-
-    @sdk.translate_exception
     def pool_create(self, lb_algorithm, listener_id, protocol,
                     admin_state_up=True, name=None, description=None):
 
@@ -147,18 +120,6 @@ class NeutronClient(base.DriverBase):
         return
 
     @sdk.translate_exception
-    def pool_member_get(self, pool_id, name_or_id, ignore_missing=False):
-        member = self.conn.network.find_pool_member(name_or_id,
-                                                    pool_id,
-                                                    ignore_missing)
-        return member
-
-    @sdk.translate_exception
-    def pool_member_list(self, pool_id):
-        members = [m for m in self.conn.network.pool_members(pool_id)]
-        return members
-
-    @sdk.translate_exception
     def pool_member_create(self, pool_id, address, protocol_port, subnet_id,
                            weight=None, admin_state_up=True):
 
@@ -180,17 +141,6 @@ class NeutronClient(base.DriverBase):
         self.conn.network.delete_pool_member(
             member_id, pool_id, ignore_missing=ignore_missing)
         return
-
-    @sdk.translate_exception
-    def healthmonitor_get(self, name_or_id, ignore_missing=False):
-        hm = self.conn.network.find_health_monitor(name_or_id,
-                                                   ignore_missing)
-        return hm
-
-    @sdk.translate_exception
-    def healthmonitor_list(self):
-        hms = [hm for hm in self.conn.network.health_monitors()]
-        return hms
 
     @sdk.translate_exception
     def healthmonitor_create(self, hm_type, delay, timeout, max_retries,
