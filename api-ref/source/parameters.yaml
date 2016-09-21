@@ -569,6 +569,17 @@ cluster_policy_id:
   description: |
     The UUID of a cluster_policy object.
 
+cluster_replace_nodes:
+  type: object
+  in: body
+  required: True
+  description: |
+    A collection of key-value pairs. Each key is the node to be replaced of a
+    cluster, each value is the node used to replace the original one.
+
+    Each item in of the key-value pairs can be the name, the short-ID or the
+    UUID of a node.
+
 cluster_status:
   type: string
   in: body

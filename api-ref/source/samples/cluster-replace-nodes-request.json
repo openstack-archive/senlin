@@ -1,0 +1,7 @@
+{
+    "replace_nodes": {
+        "nodes": {
+            "node-1234": "node-5678"
+        }
+    }
+}

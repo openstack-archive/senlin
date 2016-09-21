@@ -596,6 +596,58 @@ Response Parameters
   - Location: location
 
 
+Replace nodes in a Cluster
+===========================
+
+.. rest_method::  POST /v1/clusters/{cluster_id}/actions
+
+  - min_version: 1.3
+
+Replace the specified nodes in a cluster.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - cluster_id: cluster_id_url
+  - action: action_request
+  - nodes: cluster_replace_nodes
+
+
+The ``action_name`` in the request body has to be ``replace_nodes``.
+
+Request Example
+---------------
+
+.. literalinclude:: samples/cluster-replace-nodes-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
+
+
 Attach a Policy to a Cluster
 ============================
 
