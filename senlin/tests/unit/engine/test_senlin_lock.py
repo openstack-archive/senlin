@@ -10,17 +10,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
 import mock
 from oslo_config import cfg
-from oslo_utils import timeutils
 
+from senlin.common import utils as common_utils
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock as lockm
 from senlin.objects import action as ao
 from senlin.objects import cluster_lock as clo
 from senlin.objects import node_lock as nlo
-from senlin.objects import service as service_obj
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -45,7 +43,7 @@ class SenlinLockTest(base.SenlinTestCase):
         mock_acquire.assert_called_once_with('CLUSTER_A', 'ACTION_XYZ',
                                              lockm.CLUSTER_SCOPE)
 
-    @mock.patch.object(lockm, 'is_engine_dead')
+    @mock.patch.object(common_utils, 'is_engine_dead')
     @mock.patch.object(scheduler, 'sleep')
     @mock.patch.object(ao.Action, 'mark_failed')
     @mock.patch.object(clo.ClusterLock, "acquire")
@@ -85,7 +83,7 @@ class SenlinLockTest(base.SenlinTestCase):
         ]
         mock_acquire.assert_has_calls(acquire_calls * 3)
 
-    @mock.patch.object(lockm, 'is_engine_dead')
+    @mock.patch.object(common_utils, 'is_engine_dead')
     @mock.patch.object(scheduler, 'sleep')
     @mock.patch.object(clo.ClusterLock, "acquire")
     def test_cluster_lock_acquire_max_retries(self, mock_acquire, mock_sleep,
@@ -129,7 +127,7 @@ class SenlinLockTest(base.SenlinTestCase):
         mock_acquire.assert_has_calls(acquire_calls * 3)
         mock_steal.assert_called_once_with('CLUSTER_A', 'ACTION_XY')
 
-    @mock.patch.object(lockm, 'is_engine_dead')
+    @mock.patch.object(common_utils, 'is_engine_dead')
     @mock.patch.object(scheduler, 'sleep')
     @mock.patch.object(clo.ClusterLock, "acquire")
     @mock.patch.object(clo.ClusterLock, "steal")
@@ -169,7 +167,7 @@ class SenlinLockTest(base.SenlinTestCase):
         self.assertTrue(res)
         mock_acquire.assert_called_once_with('NODE_A', 'ACTION_XYZ')
 
-    @mock.patch.object(lockm, 'is_engine_dead')
+    @mock.patch.object(common_utils, 'is_engine_dead')
     @mock.patch.object(ao.Action, 'mark_failed')
     @mock.patch.object(nlo.NodeLock, "acquire")
     @mock.patch.object(nlo.NodeLock, "steal")
@@ -203,7 +201,7 @@ class SenlinLockTest(base.SenlinTestCase):
         acquire_calls = [mock.call('NODE_A', 'ACTION_XYZ')]
         mock_acquire.assert_has_calls(acquire_calls * 3)
 
-    @mock.patch.object(lockm, 'is_engine_dead')
+    @mock.patch.object(common_utils, 'is_engine_dead')
     @mock.patch.object(scheduler, 'sleep')
     @mock.patch.object(nlo.NodeLock, "acquire")
     def test_node_lock_acquire_max_retries(self, mock_acquire, mock_sleep,
@@ -270,30 +268,3 @@ class SenlinLockTest(base.SenlinTestCase):
         actual = lockm.node_lock_release('C', 'A')
         self.assertEqual(mock_release.return_value, actual)
         mock_release.assert_called_once_with('C', 'A')
-
-
-class SenlinLockEnginCheckTest(base.SenlinTestCase):
-
-    def setUp(self):
-        super(SenlinLockEnginCheckTest, self).setUp()
-        self.ctx = utils.dummy_context()
-
-    @mock.patch.object(service_obj.Service, 'get')
-    def test_engine_is_none(self, mock_service):
-        mock_service.return_value = None
-        self.assertTrue(lockm.is_engine_dead(self.ctx, 'fake_engine_id'))
-        mock_service.assert_called_once_with(self.ctx, 'fake_engine_id')
-
-    @mock.patch.object(service_obj.Service, 'get')
-    def test_engine_is_dead(self, mock_service):
-        delta = datetime.timedelta(seconds=3 * cfg.CONF.periodic_interval)
-        update_time = timeutils.utcnow(True) - delta
-        mock_service.return_value = mock.Mock(updated_at=update_time)
-        self.assertTrue(lockm.is_engine_dead(self.ctx, 'fake_engine_id'))
-        mock_service.assert_called_once_with(self.ctx, 'fake_engine_id')
-
-    @mock.patch.object(service_obj.Service, 'get')
-    def test_engine_is_alive(self, mock_svc):
-        mock_svc.return_value = mock.Mock(updated_at=timeutils.utcnow(True))
-        self.assertFalse(lockm.is_engine_dead(self.ctx, 'fake_engine_id'))
-        mock_svc.assert_called_once_with(self.ctx, 'fake_engine_id')

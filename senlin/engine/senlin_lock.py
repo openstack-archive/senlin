@@ -12,15 +12,14 @@
 
 from oslo_config import cfg
 from oslo_log import log as logging
-from oslo_utils import timeutils
 import time
 
 from senlin.common.i18n import _, _LE, _LI
+from senlin.common import utils
 from senlin.engine import scheduler
 from senlin.objects import action as ao
 from senlin.objects import cluster_lock as cl_obj
 from senlin.objects import node_lock as nl_obj
-from senlin.objects import service as service_obj
 
 CONF = cfg.CONF
 
@@ -34,19 +33,6 @@ LOCK_SCOPES = (
 ) = (
     -1, 1,
 )
-
-
-def is_engine_dead(ctx, engine_id, period_time=None):
-    # if engine didn't report its status for peirod_time, will consider it
-    # as a dead engine.
-    if period_time is None:
-        period_time = 2 * CONF.periodic_interval
-    eng = service_obj.Service.get(ctx, engine_id)
-    if not eng:
-        return True
-    if timeutils.is_older_than(eng.updated_at, period_time):
-        return True
-    return False
 
 
 def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
@@ -89,7 +75,7 @@ def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
     # Will reach here only because scope == CLUSTER_SCOPE
     action = ao.Action.get(context, owners[0])
     if (action and action.owner and action.owner != engine and
-            is_engine_dead(context, action.owner)):
+            utils.is_engine_dead(context, action.owner)):
         LOG.info(_LI('The cluster %(c)s is locked by dead action %(a)s, '
                      'try to steal the lock.'), {
             'c': cluster_id,
@@ -155,7 +141,7 @@ def node_lock_acquire(context, node_id, action_id, engine=None,
     # if this node lock by dead engine
     action = ao.Action.get(context, owner)
     if (action and action.owner and action.owner != engine and
-            is_engine_dead(context, action.owner)):
+            utils.is_engine_dead(context, action.owner)):
         LOG.info(_LI('The node %(n)s is locked by dead action %(a)s, '
                      'try to steal the lock.'), {
             'n': node_id,

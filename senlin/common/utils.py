@@ -10,9 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
-Utilities module.
-'''
+"""
+Common utilities module.
+"""
 
 import random
 import string
@@ -21,6 +21,7 @@ from jsonpath_rw import parse
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import strutils
+from oslo_utils import timeutils
 import requests
 import six
 from six.moves import urllib
@@ -29,8 +30,11 @@ from senlin.common import consts
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common.i18n import _LI
+from senlin.objects import service as service_obj
 
 cfg.CONF.import_opt('max_response_size', 'senlin.common.config')
+cfg.CONF.import_opt('periodic_interval', 'senlin.common.config')
+
 LOG = logging.getLogger(__name__)
 _ISO8601_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
@@ -198,3 +202,24 @@ def get_path_parser(path):
             msg=_("Invalid attribute path - %s") % error_msg.strip())
 
     return expr
+
+
+def is_engine_dead(ctx, engine_id, duration=None):
+    """Check if an engine is dead.
+
+    If engine hasn't reported its status for the given duration, it is treated
+    as a dead engine.
+
+    :param ctx: A request context.
+    :param engine_id: The ID of the engine to test.
+    :param duration: The time duration in seconds.
+    """
+    if not duration:
+        duration = 2 * cfg.CONF.periodic_interval
+
+    eng = service_obj.Service.get(ctx, engine_id)
+    if not eng:
+        return True
+    if timeutils.is_older_than(eng.updated_at, duration):
+        return True
+    return False
