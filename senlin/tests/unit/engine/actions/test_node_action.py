@@ -145,27 +145,6 @@ class NodeActionTest(base.SenlinTestCase):
         cluster.eval_status.assert_called_once_with(
             action.context, 'create_node', desired_capacity=11)
 
-    def test_do_check(self, mock_load):
-        node = mock.Mock()
-        node.id = 'NID'
-        mock_load.return_value = node
-        action = node_action.NodeAction(node.id, 'ACTION', self.ctx)
-
-        # Test node check failure path
-        node.do_check = mock.Mock(return_value=False)
-        res_code, res_msg = action.do_check()
-        self.assertEqual(action.RES_ERROR, res_code)
-        self.assertEqual('Node status is not ACTIVE.', res_msg)
-        node.do_check.assert_called_once_with(action.context)
-        node.reset_mock()
-
-        # Test node check success path
-        node.do_check = mock.Mock(return_value=True)
-        res_code, res_msg = action.do_check()
-        self.assertEqual(action.RES_OK, res_code)
-        self.assertEqual('Node status is ACTIVE.', res_msg)
-        node.do_check.assert_called_once_with(action.context)
-
     def test_do_delete_okay(self, mock_load):
         node = mock.Mock(id='NID')
         node.do_delete = mock.Mock(return_value=True)
@@ -500,18 +479,17 @@ class NodeActionTest(base.SenlinTestCase):
         mock_check.assert_called_once_with(cluster, 6, None, None, True)
         node.do_join.assert_called_once_with(action.context, 'FAKE_ID')
 
-    @mock.patch.object(cluster_mod.Cluster, 'load')
     @mock.patch.object(scaleutils, 'check_size_params')
-    def test_do_leave_success(self, mock_check, mock_c_load, mock_load):
-        node = mock.Mock()
-        node.id = 'NID'
+    @mock.patch.object(node_obj.Node, 'count_by_cluster')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_do_leave_success(self, mock_c_load, mock_count, mock_check,
+                              mock_load):
+        node = mock.Mock(id='NID', cluster_id='CID')
         mock_load.return_value = node
-        node.cluster_id = 'FAKE_ID'
         action = node_action.NodeAction(node.id, 'NODE_LEAVE', self.ctx)
-        cluster = mock.Mock()
-        cluster.id = 'FAKE_ID'
-        cluster.desired_capacity = 100
+        cluster = mock.Mock(id='CID')
         mock_c_load.return_value = cluster
+        mock_count.return_value = 10
         mock_check.return_value = None
         node.do_leave = mock.Mock(return_value=True)
 
@@ -520,22 +498,22 @@ class NodeActionTest(base.SenlinTestCase):
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Node successfully left cluster.', res_msg)
+        mock_c_load.assert_called_once_with(action.context, 'CID')
+        mock_count.assert_called_once_with(action.context, 'CID')
+        mock_check.assert_called_once_with(cluster, 9, None, None, True)
         node.do_leave.assert_called_once_with(action.context)
-        mock_c_load.assert_called_once_with(action.context, 'FAKE_ID')
-        mock_check.assert_called_once_with(cluster, 99, None, None, True)
-        cluster.remove_node.assert_called_once_with('NID')
 
-    @mock.patch.object(cluster_mod.Cluster, 'load')
     @mock.patch.object(scaleutils, 'check_size_params')
-    def test_do_leave_failed_check(self, mock_check, mock_c_load, mock_load):
-        node = mock.Mock()
-        node.id = 'NID'
-        node.cluster_id = 'FAKE_ID'
+    @mock.patch.object(node_obj.Node, 'count_by_cluster')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_do_leave_failed_check(self, mock_c_load, mock_count, mock_check,
+                                   mock_load):
+        node = mock.Mock(id='NID', cluster_id='CID')
         mock_load.return_value = node
         action = node_action.NodeAction(node.id, 'NODE_LEAVE', self.ctx)
         cluster = mock.Mock()
-        cluster.desired_capacity = 100
         mock_c_load.return_value = cluster
+        mock_count.return_value = 10
         mock_check.return_value = 'Size limits'
         node.do_leave = mock.Mock(return_value=True)
 
@@ -544,11 +522,60 @@ class NodeActionTest(base.SenlinTestCase):
 
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Size limits', res_msg)
-        mock_c_load.assert_called_once_with(action.context, 'FAKE_ID')
-        mock_check.assert_called_once_with(cluster, 99, None, None, True)
+        mock_c_load.assert_called_once_with(action.context, 'CID')
+        mock_count.assert_called_once_with(action.context, 'CID')
+        mock_check.assert_called_once_with(cluster, 9, None, None, True)
         self.assertEqual(0, node.do_leave.call_count)
 
-    def test_do_recover(self, mock_load):
+    @mock.patch.object(scaleutils, 'check_size_params')
+    @mock.patch.object(node_obj.Node, 'count_by_cluster')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_do_leave_failed_leave(self, mock_c_load, mock_count, mock_check,
+                                   mock_load):
+        node = mock.Mock(id='NID', cluster_id='CID')
+        mock_load.return_value = node
+        action = node_action.NodeAction(node.id, 'NODE_LEAVE', self.ctx)
+        cluster = mock.Mock()
+        mock_c_load.return_value = cluster
+        mock_count.return_value = 10
+        mock_check.return_value = None
+        node.do_leave = mock.Mock(return_value=False)
+
+        # Test failed node join path
+        res_code, res_msg = action.do_leave()
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Node failed in leaving cluster.', res_msg)
+        mock_c_load.assert_called_once_with(action.context, 'CID')
+        mock_count.assert_called_once_with(action.context, 'CID')
+        mock_check.assert_called_once_with(cluster, 9, None, None, True)
+        node.do_leave.assert_called_once_with(action.context)
+
+    def test_do_check_success(self, mock_load):
+        node = mock.Mock(id='NID')
+        mock_load.return_value = node
+        action = node_action.NodeAction(node.id, 'ACTION', self.ctx)
+        node.do_check = mock.Mock(return_value=True)
+
+        res_code, res_msg = action.do_check()
+
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Node status is ACTIVE.', res_msg)
+        node.do_check.assert_called_once_with(action.context)
+
+    def test_do_check_failed(self, mock_load):
+        node = mock.Mock(id='NID')
+        mock_load.return_value = node
+        action = node_action.NodeAction(node.id, 'ACTION', self.ctx)
+        node.do_check = mock.Mock(return_value=False)
+
+        res_code, res_msg = action.do_check()
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Node status is not ACTIVE.', res_msg)
+        node.do_check.assert_called_once_with(action.context)
+
+    def test_do_recover_success(self, mock_load):
         node = mock.Mock(id='NID')
         mock_load.return_value = node
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx)
@@ -575,30 +602,6 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual('Node recover failed.', res_msg)
         node.do_recover.assert_called_once_with(action.context,
                                                 operation=['SWIM', 'DANCE'])
-
-    @mock.patch.object(cluster_mod.Cluster, 'load')
-    @mock.patch.object(scaleutils, 'check_size_params')
-    def test_do_leave_failed_do_leave(self, mock_check, mock_c_load,
-                                      mock_load):
-        node = mock.Mock()
-        node.id = 'NID'
-        node.cluster_id = 'FAKE_ID'
-        mock_load.return_value = node
-        action = node_action.NodeAction(node.id, 'NODE_LEAVE', self.ctx)
-        cluster = mock.Mock()
-        cluster.desired_capacity = 100
-        mock_c_load.return_value = cluster
-        mock_check.return_value = None
-        node.do_leave = mock.Mock(return_value=False)
-
-        # Test failed node join path
-        res_code, res_msg = action.do_leave()
-
-        self.assertEqual(action.RES_ERROR, res_code)
-        self.assertEqual('Node failed in leaving cluster.', res_msg)
-        node.do_leave.assert_called_once_with(action.context)
-        mock_c_load.assert_called_once_with(action.context, 'FAKE_ID')
-        mock_check.assert_called_once_with(cluster, 99, None, None, True)
 
     def test_execute(self, mock_load):
         node = mock.Mock()
