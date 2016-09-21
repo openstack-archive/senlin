@@ -82,8 +82,8 @@ class TestMessage(base.SenlinTestCase):
         sd.message.assert_called_once_with(params)
 
     def test__generate_subscriber_url_host_provided(self):
-        cfg.CONF.set_override('host', 'web.com', 'webhook')
-        cfg.CONF.set_override('port', '1234', 'webhook')
+        cfg.CONF.set_override('host', 'web.com', 'receiver')
+        cfg.CONF.set_override('port', '1234', 'receiver')
         message = mmod.Message('message', None, None, id=UUID)
         res = message._generate_subscriber_url()
 

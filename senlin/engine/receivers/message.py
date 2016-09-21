@@ -48,10 +48,8 @@ class Message(base.Receiver):
         return self._keystoneclient
 
     def _generate_subscriber_url(self):
-        # TODO(Yanyanhu): Define dedicated configuration options
-        # for subscriber base url building?
-        host = CONF.webhook.host
-        port = CONF.webhook.port
+        host = CONF.receiver.host
+        port = CONF.receiver.port
         base = None
 
         if not host:
@@ -59,12 +57,12 @@ class Message(base.Receiver):
             # is not provided in configuration file
             base = self._get_base_url()
             if not base:
-                host = socket.gethostname()
-                msg = _('Webhook host is not specified in configuration '
-                        'file and Senlin service endpoint can not be found,'
-                        'using local hostname (%(host)s) for subscriber url.'
-                        ) % {'host': host}
+                msg = _('Receiver notification host is not specified in '
+                        'configuration file and Senlin service endpoint can '
+                        'not be found, using local hostname (%(host)s) for '
+                        'subscriber url.') % {'host': host}
                 LOG.warning(msg)
+                host = socket.gethostname()
 
         if not base:
             base = "http://%(h)s:%(p)s/v1" % {'h': host, 'p': port}

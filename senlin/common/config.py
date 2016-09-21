@@ -144,19 +144,22 @@ revision_opts = [
 cfg.CONF.register_group(revision_group)
 cfg.CONF.register_opts(revision_opts, group=revision_group)
 
-# Webhook group
-webhook_group = cfg.OptGroup('webhook')
-webhook_opts = [
+# Receiver group
+receiver_group = cfg.OptGroup('receiver')
+receiver_opts = [
     cfg.StrOpt('host',
-               help=_('Address for invoking webhooks. It is useful for cases '
-                      'where proxies are used for triggering webhooks. '
-                      'Default to the hostname of the API node.')),
+               deprecated_group='webhook',
+               help=_('The address for notifying and triggering receivers. '
+                      'It is useful for case Senlin API service is running '
+                      'behind a proxy.')),
     cfg.PortOpt('port', default=8778,
-                help=_('The port on which a webhook will be invoked. Useful '
-                       'when service is running behind a proxy.'))
+                deprecated_group='webhook',
+                help=_('The port for notifying and triggering receivers. '
+                       'It is useful for case Senlin API service is running '
+                       'behind a proxy.'))
 ]
-cfg.CONF.register_group(webhook_group)
-cfg.CONF.register_opts(webhook_opts, group=webhook_group)
+cfg.CONF.register_group(receiver_group)
+cfg.CONF.register_opts(receiver_opts, group=receiver_group)
 
 # Zaqar group
 zaqar_group = cfg.OptGroup(
@@ -199,5 +202,5 @@ def list_opts():
     yield None, service_opts
     yield authentication_group.name, authentication_opts
     yield revision_group.name, revision_opts
-    yield webhook_group.name, webhook_opts
+    yield receiver_group.name, receiver_opts
     yield zaqar_group.name, zaqar_opts
