@@ -422,18 +422,19 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual('Node updated successfully.', res_msg)
         node.do_update.assert_called_once_with(action.context, inputs)
 
-    @mock.patch.object(cluster_mod.Cluster, 'load')
     @mock.patch.object(scaleutils, 'check_size_params')
-    def test_do_join_success(self, mock_check, mock_c_load, mock_load):
-        node = mock.Mock()
-        node.id = 'NID'
+    @mock.patch.object(node_obj.Node, 'count_by_cluster')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_do_join_success(self, mock_c_load, mock_count, mock_check,
+                             mock_load):
+        node = mock.Mock(id='NID')
         mock_load.return_value = node
         inputs = {"cluster_id": "FAKE_ID"}
         action = node_action.NodeAction(node.id, 'NODE_JOIN', self.ctx,
                                         inputs=inputs)
         cluster = mock.Mock()
-        cluster.desired_capacity = 100
         mock_c_load.return_value = cluster
+        mock_count.return_value = 3
         mock_check.return_value = None
         node.do_join = mock.Mock(return_value=True)
 
@@ -442,23 +443,24 @@ class NodeActionTest(base.SenlinTestCase):
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Node successfully joined cluster.', res_msg)
-        node.do_join.assert_called_once_with(action.context, 'FAKE_ID')
         mock_c_load.assert_called_once_with(action.context, 'FAKE_ID')
-        mock_check.assert_called_once_with(cluster, 101, None, None, True)
-        cluster.add_node.assert_called_once_with(node)
+        mock_count.assert_called_once_with(action.context, 'FAKE_ID')
+        mock_check.assert_called_once_with(cluster, 4, None, None, True)
+        node.do_join.assert_called_once_with(action.context, 'FAKE_ID')
 
-    @mock.patch.object(cluster_mod.Cluster, 'load')
     @mock.patch.object(scaleutils, 'check_size_params')
-    def test_do_join_fail_size_check(self, mock_check, mock_c_load, mock_load):
-        node = mock.Mock()
-        node.id = 'NID'
+    @mock.patch.object(node_obj.Node, 'count_by_cluster')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_do_join_failed_check(self, mock_c_load, mock_count, mock_check,
+                                  mock_load):
+        node = mock.Mock(id='NID')
         mock_load.return_value = node
         inputs = {"cluster_id": "FAKE_ID"}
         action = node_action.NodeAction(node.id, 'NODE_JOIN', self.ctx,
                                         inputs=inputs)
         cluster = mock.Mock()
-        cluster.desired_capacity = 100
         mock_c_load.return_value = cluster
+        mock_count.return_value = 10
         mock_check.return_value = 'Size limits'
         node.do_join = mock.Mock(return_value=True)
 
@@ -468,21 +470,23 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Size limits', res_msg)
         mock_c_load.assert_called_once_with(action.context, 'FAKE_ID')
-        mock_check.assert_called_once_with(cluster, 101, None, None, True)
+        mock_count.assert_called_once_with(action.context, 'FAKE_ID')
+        mock_check.assert_called_once_with(cluster, 11, None, None, True)
         self.assertEqual(0, node.do_join.call_count)
 
-    @mock.patch.object(cluster_mod.Cluster, 'load')
     @mock.patch.object(scaleutils, 'check_size_params')
-    def test_do_join_failed_do_join(self, mock_check, mock_c_load, mock_load):
-        node = mock.Mock()
-        node.id = 'NID'
+    @mock.patch.object(node_obj.Node, 'count_by_cluster')
+    @mock.patch.object(cluster_mod.Cluster, 'load')
+    def test_do_join_failed_do_join(self, mock_c_load, mock_count, mock_check,
+                                    mock_load):
+        node = mock.Mock(id='NID')
         mock_load.return_value = node
         inputs = {"cluster_id": "FAKE_ID"}
         action = node_action.NodeAction(node.id, 'NODE_JOIN', self.ctx,
                                         inputs=inputs)
         cluster = mock.Mock()
-        cluster.desired_capacity = 100
         mock_c_load.return_value = cluster
+        mock_count.return_value = 5
         mock_check.return_value = None
         node.do_join = mock.Mock(return_value=False)
 
@@ -492,7 +496,8 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Node failed in joining cluster.', res_msg)
         mock_c_load.assert_called_once_with(action.context, 'FAKE_ID')
-        mock_check.assert_called_once_with(cluster, 101, None, None, True)
+        mock_count.assert_called_once_with(action.context, 'FAKE_ID')
+        mock_check.assert_called_once_with(cluster, 6, None, None, True)
         node.do_join.assert_called_once_with(action.context, 'FAKE_ID')
 
     @mock.patch.object(cluster_mod.Cluster, 'load')

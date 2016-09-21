@@ -1536,9 +1536,13 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
 
     @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(no.Node, 'count_by_cluster')
     @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_cluster_resize_failing_size_check(self, mock_find, mock_check):
-        mock_find.return_value = mock.Mock()
+    def test_cluster_resize_failing_size_check(self, mock_find, mock_count,
+                                               mock_check):
+        x_cluster = mock.Mock(id='CID')
+        mock_find.return_value = x_cluster
+        mock_count.return_value = 5
         mock_check.return_value = 'size check.'
 
         ex = self.assertRaises(rpc.ExpectedException,
@@ -1547,6 +1551,8 @@ class ClusterTest(base.SenlinTestCase):
                                adj_type=consts.EXACT_CAPACITY, number=10)
 
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
+        mock_count.assert_called_once_with(self.ctx, 'CID')
+        mock_check.assert_called_once_with(x_cluster, 10, None, None, True)
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: size check.",
                          six.text_type(ex.exc_info[1]))
