@@ -433,7 +433,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         result = self.controller.update(req, profile_id=pid, body=body)
 
         args = copy.deepcopy(body['profile'])
-        args['profile_id'] = pid
+        args['identity'] = pid
         mock_call.assert_called_with(req.context, ('profile_update', args))
 
         expected = {'profile': engine_resp}

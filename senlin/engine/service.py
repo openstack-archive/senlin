@@ -433,11 +433,11 @@ class EngineService(service.Service):
         return profile.to_dict()
 
     @request_context
-    def profile_update(self, context, profile_id, name=None, metadata=None):
+    def profile_update(self, context, identity, name=None, metadata=None):
         """Update the properties of a given profile.
 
         :param context: An instance of the request context.
-        :param profile_id: The UUID, name or short-id of a profile.
+        :param identity: The UUID, name or short-id of a profile.
         :param name: The new name for the profile.
         :param metadata: A dictionary of key-value pairs to be associated with
                          the profile.
@@ -445,9 +445,9 @@ class EngineService(service.Service):
                   or an exception `ResourceNotFound` if no matching profile is
                   found.
         """
-        LOG.info(_LI("Updating profile '%(id)s.'"), {'id': profile_id})
+        LOG.info(_LI("Updating profile '%(id)s.'"), {'id': identity})
 
-        db_profile = self.profile_find(context, profile_id)
+        db_profile = self.profile_find(context, identity)
         profile = profile_base.Profile.load(context, profile=db_profile)
         changed = False
         if name is not None and name != profile.name:
@@ -462,7 +462,7 @@ class EngineService(service.Service):
             msg = _("No property needs an update.")
             raise exception.BadRequest(msg=msg)
 
-        LOG.info(_LI("Profile '%(id)s' is updated."), {'id': profile_id})
+        LOG.info(_LI("Profile '%(id)s' is updated."), {'id': identity})
         return profile.to_dict()
 
     @request_context
