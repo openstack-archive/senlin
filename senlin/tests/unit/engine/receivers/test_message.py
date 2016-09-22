@@ -200,11 +200,9 @@ class TestMessage(base.SenlinTestCase):
         message = mmod.Message('message', None, None, id=UUID)
         queue_name = 'test-queue'
         kwargs = {
-            "ttl": 3600,
+            "ttl": 2 ** 64,
             "subscriber": subscriber,
             "options": {
-                "from": "senlin and zaqar",
-                "subject": "hello, senlin",
                 "trust_id": "123abc"
             }
         }
@@ -227,13 +225,12 @@ class TestMessage(base.SenlinTestCase):
         subscriber = 'subscriber_url'
         mock_generate_subscriber_url.return_value = subscriber
         message = mmod.Message('message', None, None, id=UUID)
+        message.id = UUID
         queue_name = 'test-queue'
         kwargs = {
-            "ttl": 3600,
+            "ttl": 2 ** 64,
             "subscriber": subscriber,
             "options": {
-                "from": "senlin and zaqar",
-                "subject": "hello, senlin",
                 "trust_id": "123abc"
             }
         }
