@@ -575,7 +575,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/clusters', jsonutils.dumps(body))
 
         error = senlin_exc.HTTPExceptionDisguise(webob.exc.HTTPBadRequest())
-        self.controller.create = mock.MagicMock(side_effect=error)
+        self.controller.create = mock.Mock(side_effect=error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create, req,
