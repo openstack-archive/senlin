@@ -20,7 +20,7 @@ API
 
 ENGINE
 ------
-  - Scaling Improvments [https://etherpad.openstack.org/p/newton-senlin-ha]
+  - Scaling Improvements [https://etherpad.openstack.org/p/newton-senlin-ha]
     * Ensure all scaling operations are based on 'desired_capacity'.
     * Ensure 'desired_capacity' will be controlled by users, not senlin engine
       or policies.
@@ -77,7 +77,7 @@ ENGINE
 
 POLICY
 ------
-  - Batching policy: create batchs for node creation/deletion/update.
+  - Batching policy: create batches for node creation/deletion/update.
 
 PROFILE
 -------
