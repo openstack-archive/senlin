@@ -27,46 +27,12 @@ class ZaqarClient(base.DriverBase):
         return self.conn.message.create_queue(**attrs)
 
     @sdk.translate_exception
-    def queue_get(self, queue):
-        return self.conn.message.get_queue(queue)
-
-    @sdk.translate_exception
-    def queue_list(self, **query):
-        return [q for q in self.conn.message.queues(**query)]
-
-    @sdk.translate_exception
     def queue_delete(self, queue, ignore_missing=True):
         return self.conn.message.delete_queue(queue, ignore_missing)
 
     @sdk.translate_exception
-    def message_post(self, queue_name, messages):
-        return self.conn.message.post_message(queue_name, messages)
-
-    @sdk.translate_exception
-    def message_list(self, queue_name, **query):
-        return [m for m in self.conn.message.messages(queue_name, **query)]
-
-    @sdk.translate_exception
-    def message_get(self, queue_name, message):
-        return self.conn.message.get_message(queue_name, message)
-
-    @sdk.translate_exception
-    def message_delete(self, queue_name, message, ignore_missing=True):
-        return self.conn.message.delete_message(queue_name, message,
-                                                ignore_missing)
-
-    @sdk.translate_exception
     def subscription_create(self, queue_name, **attrs):
         return self.conn.message.create_subscription(queue_name, **attrs)
-
-    @sdk.translate_exception
-    def subscription_list(self, queue_name, **query):
-        return [s for s in self.conn.message.subscriptions(queue_name,
-                                                           **query)]
-
-    @sdk.translate_exception
-    def subscription_get(self, queue_name, subscription):
-        return self.conn.message.get_subscription(queue_name, subscription)
 
     @sdk.translate_exception
     def subscription_delete(self, queue_name, subscription,
@@ -77,16 +43,3 @@ class ZaqarClient(base.DriverBase):
     @sdk.translate_exception
     def claim_create(self, queue_name, **attrs):
         return self.conn.message.create_claim(queue_name, **attrs)
-
-    @sdk.translate_exception
-    def claim_update(self, queue_name, claim, **attrs):
-        return self.conn.message.update_claim(queue_name, claim, **attrs)
-
-    @sdk.translate_exception
-    def claim_get(self, queue_name, claim):
-        return self.conn.message.get_claim(queue_name, claim)
-
-    @sdk.translate_exception
-    def claim_delete(self, queue_name, claim, ignore_missing=True):
-        return self.conn.message.delete_claim(queue_name, claim,
-                                              ignore_missing)
