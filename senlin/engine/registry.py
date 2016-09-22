@@ -125,8 +125,8 @@ class Registry(object):
             giter = self.global_registry.iterable_by(name)
 
         matches = itertools.chain(self.iterable_by(name), giter)
-        infoes = sorted(matches)
-        return infoes[0].plugin if infoes else None
+        infos = sorted(matches)
+        return infos[0].plugin if infos else None
 
     def as_dict(self):
         return dict((k, v.plugin) for k, v in self._registry.items())
