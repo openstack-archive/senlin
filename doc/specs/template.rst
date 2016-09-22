@@ -108,7 +108,7 @@ Data model impact
 
 What are the new data objects and/or database schema changes, if any?
 
-What database migrations will accompany this change.
+What database migrations will accompany this change?
 
 How will the initial set of new data objects be generated?
 For example if you need to consider the existing resources or modify other
@@ -244,7 +244,7 @@ Other impacts on how you deploy and configure OpenStack, such as:
 * Is this a change that takes immediate effect after its merged, or is it
   something that has to be explicitly enabled?
 
-* If this change involes a new binary, how would it be deployed?
+* If this change involves a new binary, how would it be deployed?
 
 * Please state anything that those doing continuous deployment, or those
   upgrading from the previous release, need to be aware of. Also describe
