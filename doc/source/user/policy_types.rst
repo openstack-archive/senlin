@@ -41,13 +41,14 @@ assigned with concrete values. For example, a policy type
   grace_period: Integer
   reduce_desired_capacity: Boolean
 
-The speci of a policy object of this policy type may look like following::
+The specification of a policy object of this policy type may look like
+following::
 
   type: senlin.policy.deletion
   version: 1.0
   properties:
     criteria: OLDEST_FIRST
-    distroy_after_deletion: True
+    destroy_after_deletion: True
     grace_period: 120
     reduce_desired_capacity: True
 
@@ -131,7 +132,7 @@ Here, each property has the following attributes:
 
 The default output from the :command:`policy-type-show` command is in YAML
 format. You can choose to show the spec schema in JSON format by specifying
-the :option:`-F json` option as shown below::
+the :option:`-f json` option as shown below::
 
   $ openstack cluster policy type show -f json senlin.policy.deletion-1.0
 
