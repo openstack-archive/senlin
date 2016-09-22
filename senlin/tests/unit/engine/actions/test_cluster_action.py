@@ -12,7 +12,6 @@
 
 import mock
 
-from senlin.common import exception as exc
 from senlin.common import scaleutils
 from senlin.engine.actions import base as ab
 from senlin.engine.actions import cluster_action as ca
@@ -1295,7 +1294,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_load.return_value = cluster
         action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx,
                                   inputs={'candidates': ['NODE_1']})
-        mock_get.side_effect = exc.ResourceNotFound(type='node', id='NODE_1')
+        mock_get.return_value = None
 
         # do it
         res_code, res_msg = action.do_del_nodes()

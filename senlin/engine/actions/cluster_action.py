@@ -428,11 +428,13 @@ class ClusterAction(base.Action):
         node_ids = copy.deepcopy(nodes)
         errors = []
         for node_id in node_ids:
-            try:
-                node = no.Node.get(self.context, node_id)
-            except exception.ResourceNotFound:
+            node = no.Node.get(self.context, node_id)
+
+            # The return value is None if node not found
+            if not node:
                 errors.append(_('Node %s is not found.') % node_id)
                 continue
+
             if ((not node.cluster_id) or (node.cluster_id != self.target)):
                 nodes.remove(node_id)
 
