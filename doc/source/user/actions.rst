@@ -126,7 +126,7 @@ option :option:`--marker <ID>` for this purpose. For example::
       --marker 2959122e-11c7-4e82-b12f-f49dc5dac270
 
 Only 1 action record is returned in this example and its UUID comes after the
-the one specified from the command line.
+one specified from the command line.
 
 
 Showing Details of an Action
