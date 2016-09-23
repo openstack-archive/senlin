@@ -707,7 +707,7 @@ class ClusterAction(base.Action):
 
         # check provided params against current properties
         # desired is checked when strict is True
-        curr_size = len(self.cluster.nodes)
+        curr_size = no.Node.count_by_cluster(self.context, self.target)
         new_size = curr_size + count
         result = scaleutils.check_size_params(self.cluster, new_size,
                                               None, None, True)
@@ -752,7 +752,7 @@ class ClusterAction(base.Action):
 
         # check provided params against current properties
         # desired is checked when strict is True
-        curr_size = len(self.cluster.nodes)
+        curr_size = no.Node.count_by_cluster(self.context, self.target)
         if count > curr_size:
             msg = _("Triming count (%(count)s) to current "
                     "cluster size (%(curr)s) for scaling in")
