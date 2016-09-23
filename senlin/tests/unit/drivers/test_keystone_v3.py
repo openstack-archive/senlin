@@ -38,86 +38,6 @@ class TestKeystoneV3(base.SenlinTestCase):
         self.assertEqual(self.conn, kc.conn)
         self.assertEqual(self.conn.session, kc.session)
 
-    def test_trust_list(self, mock_create):
-        self.conn.identity.trusts.return_value = ('foo', 'bar')
-        mock_create.return_value = self.conn
-        kc = kv3.KeystoneClient({'k': 'v'})
-
-        res = kc.trust_list(p1='v1', p2='v2')
-
-        self.assertEqual(['foo', 'bar'], res)
-        self.conn.identity.trusts.assert_called_once_with(p1='v1', p2='v2')
-
-    def test_trust_delete(self, mock_create):
-        mock_create.return_value = self.conn
-        kc = kv3.KeystoneClient({'k': 'v'})
-
-        res = kc.trust_delete('value')
-
-        self.assertIsNone(res)
-        self.conn.identity.delete_trust.assert_called_once_with(
-            'value', ignore_missing=True)
-
-    def test_user_get(self, mock_create):
-        self.conn.identity.find_user.return_value = 'user1'
-        mock_create.return_value = self.conn
-        kc = kv3.KeystoneClient({'k': 'v'})
-
-        res = kc.user_get('user_id_or_name')
-
-        self.assertEqual('user1', res)
-        self.conn.identity.find_user.assert_called_once_with(
-            'user_id_or_name', ignore_missing=False)
-
-    def test_endpoint_get(self, mock_create):
-        self.conn.identity.endpoints.return_value = ['fake_endpoint']
-        mock_create.return_value = self.conn
-        kc = kv3.KeystoneClient({'k': 'v'})
-
-        res = kc.endpoint_get('FAKE_ID')
-
-        self.assertEqual('fake_endpoint', res)
-        self.conn.identity.endpoints.assert_called_once_with(
-            service_id='FAKE_ID')
-        self.conn.reset_mock()
-
-        # with region
-        res = kc.endpoint_get('FAKE_ID', 'FAKE_REGION')
-
-        self.assertEqual('fake_endpoint', res)
-        self.conn.identity.endpoints.assert_called_once_with(
-            service_id='FAKE_ID', region='FAKE_REGION')
-        self.conn.reset_mock()
-
-        # with interface
-        res = kc.endpoint_get('FAKE_ID', None, 'public')
-
-        self.assertEqual('fake_endpoint', res)
-        self.conn.identity.endpoints.assert_called_once_with(
-            service_id='FAKE_ID', interface='public')
-        self.conn.reset_mock()
-
-        # returning None
-        self.conn.identity.endpoints.return_value = []
-
-        res = kc.endpoint_get('FAKE_ID')
-
-        self.assertIsNone(res)
-        self.conn.identity.endpoints.assert_called_once_with(
-            service_id='FAKE_ID')
-
-    def test_service_get(self, mock_create):
-        svc = mock.Mock()
-        self.conn.identity.services.return_value = svc
-        mock_create.return_value = self.conn
-
-        kc = kv3.KeystoneClient({'k': 'v'})
-
-        res = kc.service_get('clustering')
-
-        self.assertEqual(svc, res)
-        self.conn.identity.services.assert_called_once_with(type='clustering')
-
     def test_trust_get_by_trustor(self, mock_create):
         trust1 = mock.Mock()
         trust1.trustee_user_id = 'USER_A_ID'
@@ -195,16 +115,6 @@ class TestKeystoneV3(base.SenlinTestCase):
             project_id='PROJECT_ID', impersonation=False,
             allow_redelegation=True, roles=[])
         self.conn.reset_mock()
-
-    def test_region_list(self, mock_create):
-        self.conn.identity.regions.return_value = ['fake_region']
-        mock_create.return_value = self.conn
-        kc = kv3.KeystoneClient({'k': 'v'})
-
-        res = kc.region_list(p1='v1', p2='v2')
-
-        self.assertEqual(['fake_region'], res)
-        self.conn.identity.regions.assert_called_once_with(p1='v1', p2='v2')
 
     @mock.patch.object(sdk, 'authenticate')
     def test_get_token(self, mock_auth, mock_create):

@@ -30,49 +30,6 @@ class KeystoneClient(base.DriverBase):
         self.session = self.conn.session
 
     @sdk.translate_exception
-    def trust_list(self, **query):
-        trusts = [t for t in self.conn.identity.trusts(**query)]
-        return trusts
-
-    @sdk.translate_exception
-    def trust_delete(self, trust_id):
-        self.conn.identity.delete_trust(trust_id, ignore_missing=True)
-        return
-
-    @sdk.translate_exception
-    def user_get(self, name_or_id, ignore_missing=False):
-        # Note: Since default keystone policy will block non-admin user to
-        # get/list user(s), this function may not be workable. Please use
-        # get_user_id method to get the ID of user if needed.
-        user = self.conn.identity.find_user(
-            name_or_id, ignore_missing=ignore_missing)
-        return user
-
-    @sdk.translate_exception
-    def endpoint_get(self, service_id, region=None, interface=None):
-        '''Utility function to get endpoints of a service.'''
-        filters = {
-            'service_id': service_id,
-        }
-        if region:
-            filters['region'] = region
-        if interface:
-            filters['interface'] = interface
-
-        endpoints = [e for e in self.conn.identity.endpoints(**filters)]
-        return endpoints[0] if endpoints else None
-
-    @sdk.translate_exception
-    def service_get(self, service_type):
-        """Utility function to get service detail based on type.
-
-        :param service_type: A string specifying the service type for
-            retrieval.
-        :return: An openstack.identity.v3.Service object.
-        """
-        return self.conn.identity.services(type=service_type)
-
-    @sdk.translate_exception
     def trust_get_by_trustor(self, trustor, trustee=None, project=None):
         '''Get trust by trustor.
 
@@ -130,10 +87,6 @@ class KeystoneClient(base.DriverBase):
 
         return result
 
-    @sdk.translate_exception
-    def region_list(self, **queries):
-        return self.conn.identity.regions(**queries)
-
     @classmethod
     @sdk.translate_exception
     def get_token(cls, **creds):
@@ -170,13 +123,15 @@ class KeystoneClient(base.DriverBase):
         creds.update(**kwargs)
         return creds
 
+    @sdk.translate_exception
     def validate_regions(self, regions):
         """Check whether the given regions are valid.
 
         :param regions: A list of regions for validation.
         :returns: A list of regions that are found available on keystone.
         """
-        known = [r['id'] for r in self.region_list()]
+        region_list = self.conn.identity.regions()
+        known = [r['id'] for r in region_list]
 
         validated = []
         for r in regions:
