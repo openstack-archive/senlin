@@ -161,7 +161,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
 
     def test_profile_update(self):
         default_args = {
-            'profile_id': 'aaaa-bbbb-cccc',
+            'identity': 'aaaa-bbbb-cccc',
             'name': mock.ANY,
             'metadata': mock.ANY,
         }
