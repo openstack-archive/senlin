@@ -10,7 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
+import mock
 from oslo_log import log as logging
+from oslo_utils import timeutils
 import requests
 import six
 
@@ -18,6 +21,7 @@ from oslo_config import cfg
 
 from senlin.common import exception
 from senlin.common import utils
+from senlin.objects import service as service_obj
 from senlin.tests.unit.common import base
 
 
@@ -267,3 +271,45 @@ class TestGetPathParser(base.SenlinTestCase):
         self.assertEqual("The request is malformed: Invalid attribute path - "
                          "Unexpected character: ^.",
                          six.text_type(err))
+
+
+class EngineDeathTest(base.SenlinTestCase):
+
+    def setUp(self):
+        super(EngineDeathTest, self).setUp()
+        self.ctx = mock.Mock()
+
+    @mock.patch.object(service_obj.Service, 'get')
+    def test_engine_is_none(self, mock_service):
+        mock_service.return_value = None
+        self.assertTrue(utils.is_engine_dead(self.ctx, 'fake_engine_id'))
+        mock_service.assert_called_once_with(self.ctx, 'fake_engine_id')
+
+    @mock.patch.object(service_obj.Service, 'get')
+    def test_engine_is_dead(self, mock_service):
+        delta = datetime.timedelta(seconds=3 * cfg.CONF.periodic_interval)
+        update_time = timeutils.utcnow(True) - delta
+        mock_service.return_value = mock.Mock(updated_at=update_time)
+
+        res = utils.is_engine_dead(self.ctx, 'fake_engine_id')
+
+        self.assertTrue(res)
+        mock_service.assert_called_once_with(self.ctx, 'fake_engine_id')
+
+    @mock.patch.object(service_obj.Service, 'get')
+    def test_engine_is_alive(self, mock_svc):
+        mock_svc.return_value = mock.Mock(updated_at=timeutils.utcnow(True))
+
+        res = utils.is_engine_dead(self.ctx, 'fake_engine_id')
+
+        self.assertFalse(res)
+        mock_svc.assert_called_once_with(self.ctx, 'fake_engine_id')
+
+    @mock.patch.object(service_obj.Service, 'get')
+    def test_use_specified_duration(self, mock_svc):
+        mock_svc.return_value = mock.Mock(updated_at=timeutils.utcnow(True))
+
+        res = utils.is_engine_dead(self.ctx, 'fake_engine_id', 10000)
+
+        self.assertFalse(res)
+        mock_svc.assert_called_once_with(self.ctx, 'fake_engine_id')
