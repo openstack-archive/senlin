@@ -537,22 +537,25 @@ class Cluster(object):
             if node.status == 'ACTIVE':
                 active_count += 1
 
-        # use the new desired capacity immediately if provided
-        # TODO(anyone): handle min_size/max_size in the same way
+        # get provided desired_capacity/min_size/max_size
         desired = params.get('desired_capacity', None)
         desired = desired or self.desired_capacity
+        min_size = params.get('min_size', None)
+        min_size = min_size or self.min_size
+        max_size = params.get('max_size', None)
+        max_size = max_size or self.max_size
 
         values = params or {}
-        if active_count < self.min_size:
+        if active_count < min_size:
             status = self.ERROR
             reason = _("%(o)s: number of active nodes is below min_size "
-                       "(%(n)d).") % {'o': operation, 'n': self.min_size}
+                       "(%(n)d).") % {'o': operation, 'n': min_size}
         elif active_count < desired:
             status = self.WARNING
             reason = _("%(o)s: number of active nodes is below "
                        "desired_capacity "
                        "(%(n)d).") % {'o': operation, 'n': desired}
-        elif self.max_size < 0 or active_count <= self.max_size:
+        elif max_size < 0 or active_count <= max_size:
             status = self.ACTIVE
             reason = _("%(o)s: number of active nodes is above "
                        "desired_capacity "
@@ -560,7 +563,7 @@ class Cluster(object):
         else:
             status = self.WARNING
             reason = _("%(o)s: number of active nodes is above max_size "
-                       "(%(n)d).") % {'o': operation, 'n': self.max_size}
+                       "(%(n)d).") % {'o': operation, 'n': max_size}
 
         values.update({'status': status, 'status_reason': reason})
         co.Cluster.update(ctx, self.id, values)
