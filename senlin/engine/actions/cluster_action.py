@@ -334,44 +334,45 @@ class ClusterAction(base.Action):
     def do_add_nodes(self):
         """Handler for the CLUSTER_ADD_NODES action.
 
+        TODO(anyone): handle placement data
+
         :returns: A tuple containing the result and the corresponding reason.
         """
         node_ids = self.inputs.get('nodes')
-        # TODO(anyone): handle placement data
-
         errors = []
         nodes = []
-        for node_id in node_ids:
-            try:
-                node = node_mod.Node.load(self.context, node_id)
-            except exception.ResourceNotFound:
-                errors.append(_('Node [%s] is not found.') % node_id)
+        for nid in node_ids:
+            node = no.Node.get(self.context, nid)
+            if not node:
+                errors.append(_('Node %s is not found.') % nid)
                 continue
+
             if node.cluster_id:
-                errors.append(_('Node [%(n)s] is already owned by cluster '
-                                '[%(c)s].') % {'n': node_id,
-                                               'c': node.cluster_id})
+                errors.append(_('Node %(n)s is already owned by cluster %(c)s.'
+                                ) % {'n': nid, 'c': node.cluster_id})
                 continue
-            if node.status != node.ACTIVE:
-                errors.append(_('Node [%s] is not in ACTIVE status.'
-                                ) % node_id)
+
+            if node.status != "ACTIVE":
+                errors.append(_('Node %s is not in ACTIVE status.') % nid)
                 continue
+
             nodes.append(node)
 
         if len(errors) > 0:
-            return self.RES_ERROR, ''.join(errors)
+            return self.RES_ERROR, '\n'.join(errors)
 
         reason = _('Completed adding nodes.')
-
+        current = no.Node.count_by_cluster(self.context, self.target)
         child = []
         for node in nodes:
+            nid = node.id
             kwargs = {
-                'name': 'node_join_%s' % node.id[:8],
+                'name': 'node_join_%s' % nid[:8],
                 'cause': base.CAUSE_DERIVED,
                 'inputs': {'cluster_id': self.target},
             }
-            action_id = base.Action.create(self.context, node.id,
-                                           consts.NODE_JOIN, **kwargs)
+            action_id = base.Action.create(self.context, nid, consts.NODE_JOIN,
+                                           **kwargs)
             child.append(action_id)
 
         if child:
@@ -386,17 +387,16 @@ class ClusterAction(base.Action):
         if result != self.RES_OK:
             reason = new_reason
         else:
-            self.cluster = cluster_mod.Cluster.load(self.context,
-                                                    self.cluster.id)
-            self.cluster.desired_capacity += len(nodes)
-            self.cluster.store(self.context)
-            nodes_added = [n.id for n in nodes]
-            self.outputs['nodes_added'] = nodes_added
+            desired = current + len(node_ids)
+            self.cluster.eval_status(self.context, 'add_nodes',
+                                     desired_capacity=desired)
+            self.outputs['nodes_added'] = node_ids
             creation = self.data.get('creation', {})
-            creation['nodes'] = nodes_added
+            creation['nodes'] = node_ids
             self.data['creation'] = creation
             for node in nodes:
-                self.cluster.add_node(node)
+                obj = node_mod.Node.load(self.context, db_node=node)
+                self.cluster.add_node(obj)
 
         return result, reason
 
