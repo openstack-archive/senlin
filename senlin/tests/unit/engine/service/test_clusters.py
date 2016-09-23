@@ -1873,13 +1873,40 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_check(self, notify, mock_find, mock_action):
-        x_cluster = mock.Mock(id='CID')
+        x_cluster = mock.Mock(id='CID',
+                              user='6820fddbae6742eaa40efb4a51ba50f2',
+                              project='956033b6e9ac4d1999a2f504748b0f73')
         mock_find.return_value = x_cluster
         mock_action.return_value = 'ACTION_ID'
 
         params = {'foo': 'bar'}
         result = self.eng.cluster_check(self.ctx, 'CLUSTER', params)
 
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_action.assert_called_once_with(
+            self.ctx, 'CID', consts.CLUSTER_CHECK,
+            name='cluster_check_CID',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={'foo': 'bar'},
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_check_user_or_project_is_none(self, notify,
+                                                   mock_find, mock_action):
+        x_cluster = mock.Mock(id='CID',
+                              project='956033b6e9ac4d1999a2f504748b0f73')
+        mock_find.return_value = x_cluster
+        mock_action.return_value = 'ACTION_ID'
+
+        params = {'foo': 'bar'}
+        result = self.eng.cluster_check(self.ctx, 'CLUSTER', params)
+
+        self.assertIsNotNone(x_cluster.user)
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_action.assert_called_once_with(
