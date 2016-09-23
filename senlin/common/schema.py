@@ -140,7 +140,8 @@ class SchemaBase(collections.Mapping):
                 raise exception.SpecValidationFailed(message=msg)
             else:
                 msg = _('Warning: %(key)s will be deprecated after version '
-                        '%(version)s!') % {'key': key, 'version': version}
+                        '%(version)s!') % {'key': key,
+                                           'version': self.max_version}
                 LOG.warning(msg)
 
     def __getitem__(self, key):
