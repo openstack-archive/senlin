@@ -696,8 +696,8 @@ class Resource(object):
 
         try:
             return method(*args, **kwargs)
-        except exception.MethodVersionNotFound as ex:
-            raise ex
+        except exception.MethodVersionNotFound:
+            raise
 
     def get_action_args(self, request_environment):
         """Parse dictionary created by routes library."""
