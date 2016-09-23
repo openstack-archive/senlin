@@ -155,14 +155,14 @@ class TestMessage(base.SenlinTestCase):
 
     @mock.patch.object(mmod.Message, 'zaqar')
     def test__create_queue(self, mock_zaqar):
+        cfg.CONF.set_override('max_message_size', 8192, 'receiver')
         mock_zc = mock.Mock()
         mock_zaqar.return_value = mock_zc
         message = mmod.Message('message', None, None, id=UUID)
         queue_name = 'senlin-receiver-%s' % message.id
         kwargs = {
-            '_max_messages_post_size': 262144,
-            '_default_message_ttl': 3600,
-            'description': 'Queue for Senlin receiver.',
+            '_max_messages_post_size': 8192,
+            'description': 'Senlin receiver %s.' % message.id,
             'name': queue_name
         }
         mock_zc.queue_create.return_value = queue_name
@@ -173,14 +173,14 @@ class TestMessage(base.SenlinTestCase):
 
     @mock.patch.object(mmod.Message, 'zaqar')
     def test__create_queue_fail(self, mock_zaqar):
+        cfg.CONF.set_override('max_message_size', 8192, 'receiver')
         mock_zc = mock.Mock()
         mock_zaqar.return_value = mock_zc
         message = mmod.Message('message', None, None, id=UUID)
         queue_name = 'senlin-receiver-%s' % message.id
         kwargs = {
-            '_max_messages_post_size': 262144,
-            '_default_message_ttl': 3600,
-            'description': 'Queue for Senlin receiver.',
+            '_max_messages_post_size': 8192,
+            'description': 'Senlin receiver %s.' % message.id,
             'name': queue_name
         }
         mock_zc.queue_create.side_effect = exception.InternalError()

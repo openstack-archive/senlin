@@ -156,7 +156,10 @@ receiver_opts = [
                 deprecated_group='webhook',
                 help=_('The port for notifying and triggering receivers. '
                        'It is useful for case Senlin API service is running '
-                       'behind a proxy.'))
+                       'behind a proxy.')),
+    cfg.PortOpt('max_message_size', default=65535,
+                help=_('The max size(bytes) of message can be posted to '
+                       'receiver queue.'))
 ]
 cfg.CONF.register_group(receiver_group)
 cfg.CONF.register_opts(receiver_opts, group=receiver_group)

@@ -102,12 +102,10 @@ class Message(base.Receiver):
         return trust.id
 
     def _create_queue(self):
-        # TODO(YanyanHu): make queue attributes configurable.
         queue_name = "senlin-receiver-%s" % self.id
         kwargs = {
-            "_max_messages_post_size": 262144,
-            "_default_message_ttl": 3600,
-            "description": "Queue for Senlin receiver.",
+            "_max_messages_post_size": CONF.receiver.max_message_size,
+            "description": "Senlin receiver %s." % self.id,
             "name": queue_name
         }
         try:
