@@ -431,10 +431,9 @@ class ClusterAction(base.Action):
             try:
                 node = no.Node.get(self.context, node_id)
             except exception.ResourceNotFound:
-                errors.append(_('Node [%s] is not found.') % node_id)
+                errors.append(_('Node %s is not found.') % node_id)
                 continue
-            if ((not node.cluster_id) or
-                    (node.cluster_id != self.cluster.id)):
+            if ((not node.cluster_id) or (node.cluster_id != self.target)):
                 nodes.remove(node_id)
 
         if len(errors) > 0:
@@ -447,13 +446,16 @@ class ClusterAction(base.Action):
         # sleep period
         self._sleep(grace_period)
 
+        current = no.Node.count_by_cluster(self.context, self.target)
         result, new_reason = self._delete_nodes(nodes)
-        if result != self.RES_OK:
-            return result, new_reason
 
+        params = {}
+        if result != self.RES_OK:
+            reason = new_reason
         if reduce_desired_capacity:
-            self.cluster.desired_capacity -= len(nodes)
-            self.cluster.store(self.context)
+            params['desired_capacity'] = current - len(nodes)
+
+        self.cluster.eval_status(self.context, 'del_nodes', **params)
 
         return result, reason
 
