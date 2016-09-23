@@ -21,7 +21,7 @@ API
 ENGINE
 ------
   - Scaling Improvements [https://etherpad.openstack.org/p/newton-senlin-ha]
-    * Ensure all scaling operations are based on 'desired_capacity'.
+    * Ensure all scaling operations are based on 'real' size.
     * Ensure 'desired_capacity' will be controlled by users, not senlin engine
       or policies.
     * Always do health check before any scaling actions.
@@ -71,7 +71,6 @@ ENGINE
 ------
   - Allow actions to be paused and resumed. This is important for some background
     actions such as health checking.
-  - Add support to replace a cluster node with another node.
   - Provide support to oslo.notification and allow nodes to receive and react
     to those notifications accordingly: `Autoscaling Notifications`_
 
@@ -82,10 +81,6 @@ POLICY
 PROFILE
 -------
   - Support disk property update for os.nova.server profile
-
-Receiver
---------
-  - Zaqar queue based receiver.
 
 
 DOC
