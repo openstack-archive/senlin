@@ -152,7 +152,7 @@ class AffinityPolicy(base.Policy):
 
         if group_name:
             try:
-                server_group = nc.find_server_group(group_name, True)
+                server_group = nc.server_group_find(group_name, True)
             except exc.InternalError as ex:
                 msg = _("Failed in retrieving servergroup '%s'."
                         ) % group_name
@@ -178,7 +178,7 @@ class AffinityPolicy(base.Policy):
             if not group_name:
                 group_name = 'server_group_%s' % utils.random_name()
             try:
-                server_group = nc.create_server_group(
+                server_group = nc.server_group_create(
                     name=group_name,
                     policies=[group.get(self.GROUP_POLICIES)])
             except Exception as ex:
@@ -220,7 +220,7 @@ class AffinityPolicy(base.Policy):
         if group_id and not inherited_group:
             try:
                 nc = self.nova(cluster.user, cluster.project)
-                nc.delete_server_group(group_id)
+                nc.server_group_delete(group_id)
             except Exception as ex:
                 msg = _('Failed in deleting servergroup.')
                 LOG.exception(_LE('%(msg)s: %(ex)s') % {
