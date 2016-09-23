@@ -29,68 +29,16 @@ class NovaClient(base.DriverBase):
         self.session = self.conn.session
 
     @sdk.translate_exception
-    def flavor_create(self, **attrs):
-        return self.conn.compute.create_flavor(**attrs)
-
-    @sdk.translate_exception
-    def flavor_get(self, flavor):
-        return self.conn.compute.get_flavor(flavor)
-
-    @sdk.translate_exception
     def flavor_find(self, name_or_id, ignore_missing=False):
         return self.conn.compute.find_flavor(name_or_id, ignore_missing)
-
-    @sdk.translate_exception
-    def flavor_list(self, details=True, **query):
-        return self.conn.compute.flavors(details, **query)
-
-    @sdk.translate_exception
-    def flavor_update(self, flavor, **attrs):
-        return self.conn.compute.update_flavor(flavor, **attrs)
-
-    @sdk.translate_exception
-    def flavor_delete(self, flavor, ignore_missing=True):
-        return self.conn.compute.delete_flavor(flavor, ignore_missing)
-
-    @sdk.translate_exception
-    def image_get(self, image):
-        return self.conn.compute.get_image(image)
 
     @sdk.translate_exception
     def image_find(self, name_or_id, ignore_missing=False):
         return self.conn.compute.find_image(name_or_id, ignore_missing)
 
     @sdk.translate_exception
-    def image_list(self, details=True, **query):
-        return self.conn.compute.images(details, **query)
-
-    @sdk.translate_exception
-    def image_delete(self, image, ignore_missing=True):
-        return self.conn.compute.delete_image(image, ignore_missing)
-
-    @sdk.translate_exception
-    def keypair_create(self, **attrs):
-        return self.conn.compute.create_keypair(**attrs)
-
-    @sdk.translate_exception
-    def keypair_get(self, image):
-        return self.conn.compute.get_keypair(image)
-
-    @sdk.translate_exception
     def keypair_find(self, name_or_id, ignore_missing=False):
         return self.conn.compute.find_keypair(name_or_id, ignore_missing)
-
-    @sdk.translate_exception
-    def keypair_list(self, **query):
-        return self.conn.compute.keypairs(**query)
-
-    @sdk.translate_exception
-    def keypair_update(self, keypair, **attrs):
-        return self.conn.compute.update_keypair(keypair, **attrs)
-
-    @sdk.translate_exception
-    def keypair_delete(self, keypair, ignore_missing=True):
-        return self.conn.compute.delete_keypair(keypair, ignore_missing)
 
     @sdk.translate_exception
     def server_create(self, **attrs):
@@ -100,10 +48,6 @@ class NovaClient(base.DriverBase):
     @sdk.translate_exception
     def server_get(self, server):
         return self.conn.compute.get_server(server)
-
-    @sdk.translate_exception
-    def server_list(self, details=True, **query):
-        return self.conn.compute.servers(details, **query)
 
     @sdk.translate_exception
     def server_update(self, server, **attrs):
@@ -177,10 +121,6 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.create_server_interface(server, **attrs)
 
     @sdk.translate_exception
-    def server_interface_get(self, interface, server):
-        return self.conn.compute.get_server_interface(interface, server)
-
-    @sdk.translate_exception
     def server_interface_list(self, server, **query):
         return self.conn.compute.server_interfaces(server, **query)
 
@@ -188,14 +128,6 @@ class NovaClient(base.DriverBase):
     def server_interface_delete(self, interface, server, ignore_missing=True):
         return self.conn.compute.delete_server_interface(interface, server,
                                                          ignore_missing)
-
-    @sdk.translate_exception
-    def server_ip_list(self, **query):
-        return self.conn.compute.server_ips(**query)
-
-    @sdk.translate_exception
-    def server_metadata_create(self, server, metadata):
-        self.conn.compute.set_server_metadata(server, **metadata)
 
     @sdk.translate_exception
     def server_metadata_get(self, server):
@@ -256,21 +188,8 @@ class NovaClient(base.DriverBase):
             name_or_id, ignore_missing=ignore_missing)
 
     @sdk.translate_exception
-    def server_group_get(self, server_group):
-        return self.conn.compute.get_server_group(server_group)
-
-    @sdk.translate_exception
-    def server_group_list(self, **query):
-        return self.conn.compute.server_groups(**query)
-
-    @sdk.translate_exception
     def hypervisor_list(self, **query):
         return self.conn.compute.hypervisors(**query)
-
-    @sdk.translate_exception
-    def hypervisor_find(self, name_or_id, ignore_missing=True):
-        return self.conn.compute.find_hypervisor(
-            name_or_id, ignore_missing=ignore_missing)
 
     @sdk.translate_exception
     def hypervisor_get(self, hypervisor):
@@ -284,15 +203,3 @@ class NovaClient(base.DriverBase):
     def service_force_down(self, service):
         return self.conn.compute.force_service_down(service, service.host,
                                                     service.binary)
-
-    @sdk.translate_exception
-    def service_enable(self, service):
-        return self.conn.compute.enable_service(service, service.host,
-                                                service.binary)
-
-    @sdk.translate_exception
-    def service_disable(self, service, disabled_reason=None):
-        return self.conn.compute.disable_service(service,
-                                                 service.host,
-                                                 service.binary,
-                                                 disabled_reason)
