@@ -14,7 +14,7 @@ from oslo_log import log as logging
 import six
 
 from senlin.common import exception as exc
-from senlin.common.i18n import _
+from senlin.common.i18n import _, _LE
 from senlin.common import schema
 from senlin.common import utils
 from senlin.profiles import base
@@ -247,7 +247,7 @@ class StackProfile(base.Profile):
             hc.stack_check(stack_id)
             hc.wait_for_stack(stack_id, 'CHECK_COMPLETE', timeout=timeout)
         except exc.InternalError as ex:
-            LOG.error(_('Failed in checking stack: %s.'), six.text_type(ex))
+            LOG.error(_LE('Failed in checking stack: %s.'), six.text_type(ex))
             return False
 
         return True
