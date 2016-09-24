@@ -137,8 +137,8 @@ class ThreadGroupManager(object):
         The task will be executed in a separate green thread.
         Interval is from cfg.CONF.periodic_interval
         '''
-
-        self.group.add_timer(interval, func, *args, **kwargs)
+        timer = self.group.add_timer(interval, func, *args, **kwargs)
+        return timer
 
     def stop_timers(self):
         self.group.stop_timers()

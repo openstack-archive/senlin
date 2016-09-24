@@ -93,6 +93,8 @@ class EngineService(service.Service):
         self.TG = None
         self.target = None
         self._rpc_server = None
+        self.cleanup_timer = None
+        self.cleanup_count = 0
 
         # Initialize the global environment
         environment.initialize()
@@ -118,7 +120,6 @@ class EngineService(service.Service):
         self.target = target
         self._rpc_server = rpc_messaging.get_rpc_server(target, self)
         self._rpc_server.start()
-        self.service_manage_cleanup()
 
         # create a health manager RPC service for this engine.
         self.health_mgr = health_manager.HealthManager(
@@ -126,6 +127,10 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Starting health manager for engine %s"), self.engine_id)
         self.health_mgr.start()
+
+        # we may want to make the clean-up attempts configurable.
+        self.cleanup_timer = self.TG.add_timer(2 * cfg.CONF.periodic_interval,
+                                               self.service_manage_cleanup)
 
         self.TG.add_timer(cfg.CONF.periodic_interval,
                           self.service_manage_report)
@@ -173,7 +178,7 @@ class EngineService(service.Service):
             LOG.error(_LE('Service %(service_id)s update failed: %(error)s'),
                       {'service_id': self.engine_id, 'error': ex})
 
-    def service_manage_cleanup(self):
+    def _service_manage_cleanup(self):
         ctx = senlin_context.get_admin_context()
         time_window = (2 * cfg.CONF.periodic_interval)
         svcs = service_obj.Service.get_all(ctx)
@@ -181,10 +186,17 @@ class EngineService(service.Service):
             if svc['id'] == self.engine_id:
                 continue
             if timeutils.is_older_than(svc['updated_at'], time_window):
-                # < time_line:
-                # hasn't been updated, assuming it's died.
                 LOG.info(_LI('Service %s was aborted'), svc['id'])
                 service_obj.Service.delete(ctx, svc['id'])
+
+    def service_manage_cleanup(self):
+        self._service_manage_cleanup()
+        self.cleanup_count += 1
+        LOG.info(_LI('Service chean-up attempt count:%s'), self.cleanup_count)
+        if self.cleanup_count >= 2:
+            self.cleanup_timer.stop()
+            LOG.info(_LI("Stopped cleaning up dead services after"
+                     " %s attempts."), self.cleanup_count)
 
     @request_context
     def credential_create(self, context, cred, attrs=None):
