@@ -58,7 +58,7 @@ The following command shows the actions known by the Senlin engine::
 
   $ openstack cluster action list
   +----------+-------------------------+----------------+-----------+----------+------------+-------------+
-  | id       | name                    | action         | status    | target   | depends_on | depended_by |
+  | id       | name                    | action         | status    | target_id| depends_on | depended_by |
   +----------+-------------------------+----------------+-----------+----------+------------+-------------+
   | 1189f5e8 | node_create_b825fb74    | NODE_CREATE    | SUCCEEDED | b825fb74 |            |             |
   | 2454c28a | node_delete_c035c519    | NODE_DELETE    | SUCCEEDED | c035c519 |            |             |
