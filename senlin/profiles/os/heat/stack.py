@@ -30,11 +30,11 @@ class StackProfile(base.Profile):
     '''
 
     KEYS = (
-        TEMPLATE, CONTEXT, PARAMETERS, FILES,
-        TIMEOUT, DISABLE_ROLLBACK, ENVIRONMENT,
+        CONTEXT, TEMPLATE, TEMPLATE_URL, PARAMETERS,
+        FILES, TIMEOUT, DISABLE_ROLLBACK, ENVIRONMENT,
     ) = (
-        'template', 'context', 'parameters', 'files',
-        'timeout', 'disable_rollback', 'environment',
+        'context', 'template', 'template_url', 'parameters',
+        'files', 'timeout', 'disable_rollback', 'environment',
     )
 
     properties_schema = {
@@ -45,7 +45,12 @@ class StackProfile(base.Profile):
         ),
         TEMPLATE: schema.Map(
             _('Heat stack template.'),
-            required=True,
+            default={},
+            updatable=True,
+        ),
+        TEMPLATE_URL: schema.String(
+            _('Heat stack template url.'),
+            default='',
             updatable=True,
         ),
         PARAMETERS: schema.Map(
@@ -93,6 +98,22 @@ class StackProfile(base.Profile):
         super(StackProfile, self).__init__(type_name, name, **kwargs)
         self.stack_id = None
 
+    def validate(self, validate_props=False):
+        '''Validate the schema and the data provided.'''
+        # general validation
+        self.spec_data.validate()
+        self.properties.validate()
+        # validate template
+        template = self.properties[self.TEMPLATE]
+        template_url = self.properties[self.TEMPLATE_URL]
+        if not template and not template_url:
+            msg = _("Both template and template_url are not specified "
+                    "for profile '%s'.") % self.name
+            raise exc.InvalidSpec(message=msg)
+
+        if validate_props:
+            self.do_validate(obj=self)
+
     def do_validate(self, obj):
         """Validate the stack template used by a node.
 
@@ -103,6 +124,7 @@ class StackProfile(base.Profile):
         kwargs = {
             'stack_name': utils.random_name(),
             'template': self.properties[self.TEMPLATE],
+            'template_url': self.properties[self.TEMPLATE_URL],
             'parameters': self.properties[self.PARAMETERS],
             'files': self.properties[self.FILES],
             'environment': self.properties[self.ENVIRONMENT],
@@ -125,6 +147,7 @@ class StackProfile(base.Profile):
         kwargs = {
             'stack_name': obj.name + '-' + utils.random_name(8),
             'template': self.properties[self.TEMPLATE],
+            'template_url': self.properties[self.TEMPLATE_URL],
             'timeout_mins': self.properties[self.TIMEOUT],
             'disable_rollback': self.properties[self.DISABLE_ROLLBACK],
             'parameters': self.properties[self.PARAMETERS],

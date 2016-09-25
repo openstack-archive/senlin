@@ -31,6 +31,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
             'version': '1.0',
             'properties': {
                 'template': {"Template": "data"},
+                'template_url': '/test_uri',
                 'context': {},
                 'parameters': {'foo': 'bar'},
                 'files': {},
@@ -56,6 +57,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         call_args = {
             'stack_name': mock.ANY,
             'template': props['template'],
+            'template_url': props['template_url'],
             'parameters': props['parameters'],
             'files': props['files'],
             'environment': props['environment'],
@@ -80,6 +82,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         call_args = {
             'stack_name': mock.ANY,
             'template': props['template'],
+            'template_url': props['template_url'],
             'parameters': props['parameters'],
             'files': props['files'],
             'environment': props['environment'],
@@ -105,11 +108,54 @@ class TestHeatStackProfile(base.SenlinTestCase):
         kwargs = {
             'stack_name': mock.ANY,
             'template': self.spec['properties']['template'],
+            'template_url': self.spec['properties']['template_url'],
             'timeout_mins': self.spec['properties']['timeout'],
             'disable_rollback': self.spec['properties']['disable_rollback'],
             'parameters': self.spec['properties']['parameters'],
             'files': self.spec['properties']['files'],
             'environment': self.spec['properties']['environment'],
+        }
+        self.assertEqual('FAKE_ID', res)
+        oc.stack_create.assert_called_once_with(**kwargs)
+        oc.wait_for_stack.assert_called_once_with('FAKE_ID', 'CREATE_COMPLETE',
+                                                  timeout=3600)
+
+    def test_do_create_with_template_url(self):
+        spec = {
+            'type': 'os.heat.stack',
+            'version': '1.0',
+            'properties': {
+                'template': {},
+                'template_url': '/test_uri',
+                'context': {},
+                'parameters': {'foo': 'bar'},
+                'files': {},
+                'timeout': 60,
+                'disable_rollback': True,
+                'environment': {}
+            }
+        }
+        oc = mock.Mock()
+        profile = stack.StackProfile('t', spec)
+        profile._orchestrationclient = oc
+        test_stack = mock.Mock()
+        test_stack.name = 'test_stack'
+        fake_stack = mock.Mock(id='FAKE_ID')
+        oc.stack_create = mock.Mock(return_value=fake_stack)
+
+        # do it
+        res = profile.do_create(test_stack)
+
+        # assertions
+        kwargs = {
+            'stack_name': mock.ANY,
+            'template': spec['properties']['template'],
+            'template_url': spec['properties']['template_url'],
+            'timeout_mins': spec['properties']['timeout'],
+            'disable_rollback': spec['properties']['disable_rollback'],
+            'parameters': spec['properties']['parameters'],
+            'files': spec['properties']['files'],
+            'environment': spec['properties']['environment'],
         }
         self.assertEqual('FAKE_ID', res)
         oc.stack_create.assert_called_once_with(**kwargs)
@@ -137,6 +183,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         kwargs = {
             'stack_name': mock.ANY,
             'template': self.spec['properties']['template'],
+            'template_url': self.spec['properties']['template_url'],
             'timeout_mins': None,
             'disable_rollback': self.spec['properties']['disable_rollback'],
             'parameters': self.spec['properties']['parameters'],
@@ -168,6 +215,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         call_args = {
             'stack_name': mock.ANY,
             'template': self.spec['properties']['template'],
+            'template_url': self.spec['properties']['template_url'],
             'timeout_mins': self.spec['properties']['timeout'],
             'disable_rollback': self.spec['properties']['disable_rollback'],
             'parameters': self.spec['properties']['parameters'],
@@ -202,6 +250,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         kwargs = {
             'stack_name': mock.ANY,
             'template': self.spec['properties']['template'],
+            'template_url': self.spec['properties']['template_url'],
             'timeout_mins': None,
             'disable_rollback': self.spec['properties']['disable_rollback'],
             'parameters': self.spec['properties']['parameters'],
