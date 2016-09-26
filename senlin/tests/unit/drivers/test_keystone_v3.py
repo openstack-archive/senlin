@@ -190,7 +190,8 @@ class TestKeystoneV3(base.SenlinTestCase):
         self.assertEqual([], res)
 
     def test_get_senlin_endpoint(self, mock_create):
-        cfg.CONF.set_override('default_region_name', 'RegionN')
+        cfg.CONF.set_override('default_region_name', 'RegionN',
+                              enforce_type=True)
         self.conn.session.get_endpoint.return_value = 'http://web.com:1234/v1'
         mock_create.return_value = self.conn
         kc = kv3.KeystoneClient({'k': 'v'})

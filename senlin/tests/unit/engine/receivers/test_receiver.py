@@ -308,7 +308,8 @@ class TestReceiver(base.SenlinTestCase):
     @mock.patch.object(driver_base, "SenlinDriver")
     def test__get_base_url_succeeded(self, mock_senlin_driver,
                                      mock_get_service_context):
-        cfg.CONF.set_override('default_region_name', 'RegionOne')
+        cfg.CONF.set_override('default_region_name', 'RegionOne',
+                              enforce_type=True)
         fake_driver = mock.Mock()
         fake_kc = mock.Mock()
         fake_cred = mock.Mock()
@@ -331,7 +332,8 @@ class TestReceiver(base.SenlinTestCase):
     @mock.patch.object(driver_base, "SenlinDriver")
     def test__get_base_url_failed_get_endpoint_exception(
             self, mock_senlin_driver, mock_get_service_context):
-        cfg.CONF.set_override('default_region_name', 'RegionOne')
+        cfg.CONF.set_override('default_region_name', 'RegionOne',
+                              enforce_type=True)
         fake_driver = mock.Mock()
         fake_kc = mock.Mock()
         fake_cred = mock.Mock()
