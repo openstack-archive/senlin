@@ -13,6 +13,7 @@
 from tempest.lib import decorators
 from tempest import test
 
+from senlin.tests.tempest.common import constants
 from senlin.tests.tempest.common import utils
 from senlin.tests.tempest.integration import base
 
@@ -21,7 +22,9 @@ class TestNovaServerCluster(base.BaseSenlinIntegrationTest):
 
     def setUp(self):
         super(TestNovaServerCluster, self).setUp()
-        self.profile_id = utils.create_a_profile(self)
+        spec = constants.spec_nova_server
+        spec['properties'].pop('key_name')
+        self.profile_id = utils.create_a_profile(self, spec)
         self.addCleanup(utils.delete_a_profile, self, self.profile_id)
 
     @test.attr(type=['integration'])
