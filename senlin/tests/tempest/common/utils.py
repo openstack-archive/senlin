@@ -375,3 +375,16 @@ def delete_a_receiver(base, receiver_id, ignore_missing=False):
         if ignore_missing:
             return
         raise exceptions.NotFound()
+
+
+def create_a_keypair(base, name=None):
+    """Utility function that creates a Nova keypair."""
+    if name is None:
+        name = data_utils.rand_name("tempest-created-keypair")
+    body = base.admin_manager.keypairs_client.create_keypair(name=name)
+    return body['keypair']['name']
+
+
+def delete_a_keypair(base, name):
+    """Utility function that deletes a Nova keypair."""
+    base.admin_manager.keypairs_client.delete_keypair(name)
