@@ -124,12 +124,15 @@ example::
   +--------------+--------------------------------------+
   | Property     | Value                                |
   +--------------+--------------------------------------+
-  | cluster_id   | 2b7e9294-b5cd-470f-b191-b18f7e672495 |
   | cluster_name | c3                                   |
-  | enabled      | True                                 |
-  | policy       | dp01                                 |
+  | data         | None                                 |
+  | id           | 2b7e9294-b5cd-470f-b191-b18f7e672495 |
+  | is_enabled   | True                                 |
+  | location     | None                                 |
+  | name         | None                                 |
   | policy_id    | 239d7212-6196-4a89-9446-44d28717d7de |
-  | type         | senlin.policy.deletion-1.0           |
+  | policy_name  | dp01                                 |
+  | policy_type  | senlin.policy.deletion-1.0           |
   +--------------+--------------------------------------+
 
 You can use the name, the ID or the "short ID" of a policy and/or a cluster to
