@@ -14,31 +14,36 @@
 Policy for batching operations on a cluster.
 
 NOTE: How update policy works
+
 Input:
-  cluster: the cluster whose nodes are to be updated.
+   cluster: the cluster whose nodes are to be updated.
 Output:
-  stored in action.data: A dictionary containing a detailed update schedule.
-  {
-    'status': 'OK',
-    'update': {
-      'pause_time': 2,
-      'plan': [{
-          'node-id-1',
-          'node-id-2',
-        }, {
-          'node-id-3',
-          'node-id-4',
-        }, {
-          'node-id-5',
-        }
-      ]
-    }
-  }
+   stored in action.data: A dictionary containing a detailed update schedule.
+   {
+     'status': 'OK',
+     'update': {
+       'pause_time': 2,
+       'plan': [{
+           'node-id-1',
+           'node-id-2',
+         }, {
+           'node-id-3',
+           'node-id-4',
+         }, {
+           'node-id-5',
+         }
+       ]
+     }
+   }
 """
+import math
 
 from senlin.common import consts
 from senlin.common.i18n import _
+from senlin.common import scaleutils as su
 from senlin.common import schema
+from senlin.engine import cluster as cm
+from senlin.objects import node as no
 from senlin.policies import base
 
 
@@ -46,6 +51,8 @@ class BatchPolicy(base.Policy):
     """Policy for batching the operations on a cluster's nodes."""
 
     VERSION = '1.0'
+
+    PRIORITY = 200
 
     TARGET = [
         ('BEFORE', consts.CLUSTER_UPDATE),
@@ -84,13 +91,89 @@ class BatchPolicy(base.Policy):
         self.max_batch_size = self.properties[self.MAX_BATCH_SIZE]
         self.pause_time = self.properties[self.PAUSE_TIME]
 
+    def _cal_batch_size(self, total):
+        batch_num = 0
+        batch_size = 0
+        diff = total - self.min_in_service
+        # max_batch_size is -1 if not specified
+        if self.max_batch_size == -1 or diff < self.max_batch_size:
+            batch_size = diff
+        else:
+            batch_size = self.max_batch_size
+        batch_num = int(math.ceil(float(total) / float(batch_size)))
+
+        return batch_size, batch_num
+
+    def _pick_nodes(self, batch_size, batch_num, candidates, good):
+        """Select nodes based on size and number of batches.
+
+        :param batch_size: the number of nodes of each batch.
+        :param batch_num: the number of batches.
+        :param candidates: a list of IDs for 'ERROR' nodes.
+        :param good: a list of active node objects.
+        :returns: a list of sets containing the nodes' IDs we
+                  selected based on the input params.
+        """
+
+        nodes_list = []
+        # NOTE: we leave the nodes known to be good (ACTIVE)
+        # at the end of the list so that we have a better
+        # chance to ensure 'min_in_service' constraint
+        for node in good:
+            candidates.append(node.id)
+
+        for start in range(0, len(candidates), batch_size):
+            end = start + batch_size
+            nodes_list.append(set(candidates[start:end]))
+
+        return nodes_list
+
+    def _create_plan(self, cluster, action):
+        current = no.Node.count_by_cluster(action.context, cluster.id)
+        plan_list = [{}]
+        plan = {
+            'pause_time': self.pause_time,
+            'min_in_service': self.min_in_service,
+        }
+        if current > 0:
+            if current < self.min_in_service:
+                msg = _('The parameter min_in_service is greater than '
+                        'current number of nodes.')
+                return False, msg
+            nodes_list = cluster.nodes
+            bad_list, good_list = su.filter_error_nodes(nodes_list)
+        else:
+            plan['plan'] = plan_list
+            return True, plan
+
+        batch_size, batch_num = self._cal_batch_size(current)
+
+        plan_list = self._pick_nodes(batch_size, batch_num, bad_list,
+                                     good_list)
+        plan['plan'] = plan_list
+
+        return True, plan
+
     def pre_op(self, cluster_id, action):
-        # TODO(anyone): compute batches
-        action.data['candidates'] = []
+        cluster = cm.Cluster.load(action.context, cluster_id)
+
+        # for updating
+        # if action.action == consts.CLUSTER_UPDATE:
+        result, value = self._create_plan(cluster, action)
+
+        if result is False:
+            pd = {
+                'status': base.CHECK_ERROR,
+                'reason': value,
+            }
+        else:
+            pd = {
+                'status': base.CHECK_OK,
+                'reason': _('Batching request validated.'),
+                'update': value,
+            }
+
+        action.data.update(pd)
         action.store(action.context)
 
-        return True
-
-    def post_op(self, cluster_id, action):
-        # TODO(anyone): handle pause_time here
-        return True
+        return
