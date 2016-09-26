@@ -22,7 +22,63 @@ FloatField = fields.FloatField
 UUIDField = fields.UUIDField
 DateTimeField = fields.DateTimeField
 ListOfStringsField = fields.ListOfStringsField
-ObjectField = fields.ObjectField
+
+
+class Object(fields.Object):
+
+    def get_schema(self):
+        from oslo_versionedobjects import base as obj_base
+        obj_classes = obj_base.VersionedObjectRegistry.obj_classes()
+        if self._obj_name in obj_classes:
+            cls = obj_classes[self._obj_name][0]
+            namespace_key = cls._obj_primitive_key('namespace')
+            name_key = cls._obj_primitive_key('name')
+            version_key = cls._obj_primitive_key('version')
+            data_key = cls._obj_primitive_key('data')
+            changes_key = cls._obj_primitive_key('changes')
+            field_schemas = {key: field.get_schema()
+                             for key, field in cls.fields.items()}
+            required_fields = [key for key, field in sorted(cls.fields.items())
+                               if not field.nullable]
+
+            schema = {
+                'type': 'object',
+                'properties': {
+                    namespace_key: {
+                        'type': 'string',
+                    },
+                    name_key: {
+                        'type': 'string',
+                    },
+                    version_key: {
+                        'type': 'string',
+                    },
+                    changes_key: {
+                        'type': 'array',
+                        'items': {
+                            'type': 'string',
+                        }
+                    },
+                    data_key: {
+                        'type': 'object',
+                        'description': 'fields of %s' % self._obj_name,
+                        'properties': field_schemas,
+                        'required': required_fields,
+                    },
+                },
+                'required': [namespace_key, name_key, version_key, data_key],
+            }
+
+            return schema
+        else:
+            return {}
+
+
+class ObjectField(fields.AutoTypedField):
+    def __init__(self, objtype, subclasses=False, **kwargs):
+        self.AUTO_TYPE = Object(objtype, subclasses)
+        self.objname = objtype
+        super(ObjectField, self).__init__(**kwargs)
 
 
 class Json(fields.FieldType):

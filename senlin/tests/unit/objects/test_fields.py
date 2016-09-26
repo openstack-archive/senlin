@@ -13,6 +13,7 @@
 from oslo_versionedobjects import fields
 import testtools
 
+from senlin.objects import base
 from senlin.objects import fields as senlin_fields
 
 
@@ -62,6 +63,72 @@ class TestField(testtools.TestCase):
 
     def test_stringify(self):
         self.assertEqual('123', self.field.stringify(123))
+
+
+class TestObject(TestField):
+
+    def setUp(self):
+        super(TestObject, self).setUp()
+
+        @base.base.VersionedObjectRegistry.register
+        class TestableObject(base.base.VersionedObject):
+            fields = {
+                'uuid': fields.StringField(),
+            }
+
+        test_inst = TestableObject()
+        self._test_cls = TestableObject
+        self.field = fields.Field(senlin_fields.Object('TestableObject'))
+        self.coerce_good_values = [(test_inst, test_inst)]
+        self.coerce_bad_values = [1, 'foo']
+        self.to_primitive_values = [(test_inst, test_inst.obj_to_primitive())]
+        self.from_primitive_values = [(test_inst.obj_to_primitive(),
+                                       test_inst),
+                                      (test_inst, test_inst)]
+
+    def test_from_primitive(self):
+        # we ignore this test case
+        pass
+
+    def test_stringify(self):
+        # and this one is ignored as well
+        pass
+
+    def test_get_schema(self):
+        self.assertEqual(
+            {
+                'properties': {
+                    'versioned_object.changes': {
+                        'items': {'type': 'string'}, 'type': 'array'
+                    },
+                    'versioned_object.data': {
+                        'description': 'fields of TestableObject',
+                        'properties': {
+                            'uuid': {'readonly': False, 'type': ['string']}
+                        },
+                        'required': ['uuid'],
+                        'type': 'object',
+                    },
+                    'versioned_object.name': {
+                        'type': 'string',
+                    },
+                    'versioned_object.namespace': {
+                        'type': 'string',
+                    },
+                    'versioned_object.version': {
+                        'type': 'string',
+                    },
+                },
+                'readonly': False,
+                'required': [
+                    'versioned_object.namespace',
+                    'versioned_object.name',
+                    'versioned_object.version',
+                    'versioned_object.data',
+                ],
+                'type': 'object',
+            },
+            self.field.get_schema())
 
 
 class TestJson(TestField):
