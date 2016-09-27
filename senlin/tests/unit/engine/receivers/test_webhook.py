@@ -30,8 +30,9 @@ class TestWebhook(base.SenlinTestCase):
         self.context = utils.dummy_context()
 
     def test_initialize_channel_host_provided(self):
-        cfg.CONF.set_override('host', 'web.com', 'receiver')
-        cfg.CONF.set_override('port', '1234', 'receiver')
+        cfg.CONF.set_override('host', 'web.com', 'receiver',
+                              enforce_type=True)
+        cfg.CONF.set_override('port', '1234', 'receiver', enforce_type=True)
         webhook = wmod.Webhook('webhook', CLUSTER_ID, 'FAKE_ACTION',
                                id=UUID1)
         channel = webhook.initialize_channel(self.context)
@@ -75,8 +76,8 @@ class TestWebhook(base.SenlinTestCase):
         self.assertEqual(expected, webhook.channel)
 
     def test_initialize_channel_with_params(self):
-        cfg.CONF.set_override('host', 'web.com', 'receiver')
-        cfg.CONF.set_override('port', '1234', 'receiver')
+        cfg.CONF.set_override('host', 'web.com', 'receiver', enforce_type=True)
+        cfg.CONF.set_override('port', '1234', 'receiver', enforce_type=True)
         webhook = wmod.Webhook(
             'webhook', CLUSTER_ID, 'FAKE_ACTION',
             id=UUID1, params={'KEY': 884, 'FOO': 'BAR'})

@@ -102,7 +102,7 @@ class SortParamTest(base.SenlinTestCase):
 class ServiceAliveTest(base.SenlinTestCase):
 
     def test_alive(self):
-        cfg.CONF.set_override('periodic_interval', 100)
+        cfg.CONF.set_override('periodic_interval', 100, enforce_type=True)
         service = mock.Mock(updated_at=timeutils.utcnow())
 
         res = utils.is_service_dead(service)
@@ -110,7 +110,7 @@ class ServiceAliveTest(base.SenlinTestCase):
         self.assertFalse(res)
 
     def test_dead(self):
-        cfg.CONF.set_override('periodic_interval', 0)
+        cfg.CONF.set_override('periodic_interval', 0, enforce_type=True)
         service = mock.Mock(updated_at=timeutils.utcnow())
 
         res = utils.is_service_dead(service)

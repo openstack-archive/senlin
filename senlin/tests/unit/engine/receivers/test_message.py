@@ -82,8 +82,8 @@ class TestMessage(base.SenlinTestCase):
         sd.message.assert_called_once_with(params)
 
     def test__generate_subscriber_url_host_provided(self):
-        cfg.CONF.set_override('host', 'web.com', 'receiver')
-        cfg.CONF.set_override('port', '1234', 'receiver')
+        cfg.CONF.set_override('host', 'web.com', 'receiver', enforce_type=True)
+        cfg.CONF.set_override('port', '1234', 'receiver', enforce_type=True)
         message = mmod.Message('message', None, None, id=UUID)
         res = message._generate_subscriber_url()
 
@@ -155,7 +155,8 @@ class TestMessage(base.SenlinTestCase):
 
     @mock.patch.object(mmod.Message, 'zaqar')
     def test__create_queue(self, mock_zaqar):
-        cfg.CONF.set_override('max_message_size', 8192, 'receiver')
+        cfg.CONF.set_override('max_message_size', 8192, 'receiver',
+                              enforce_type=True)
         mock_zc = mock.Mock()
         mock_zaqar.return_value = mock_zc
         message = mmod.Message('message', None, None, id=UUID)
@@ -173,7 +174,8 @@ class TestMessage(base.SenlinTestCase):
 
     @mock.patch.object(mmod.Message, 'zaqar')
     def test__create_queue_fail(self, mock_zaqar):
-        cfg.CONF.set_override('max_message_size', 8192, 'receiver')
+        cfg.CONF.set_override('max_message_size', 8192, 'receiver',
+                              enforce_type=True)
         mock_zc = mock.Mock()
         mock_zaqar.return_value = mock_zc
         message = mmod.Message('message', None, None, id=UUID)
