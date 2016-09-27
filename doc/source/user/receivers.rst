@@ -75,31 +75,39 @@ enables you to do pagination on the results returned from the server.
 Creating a Receiver
 ~~~~~~~~~~~~~~~~~~~
 
+Currently, we support two receiver types: ``webhook`` and ``message``. For
+the former one, a permanent webhook url is generated for users to trigger
+a specific action on a given cluster by sending a HTTP POST request. For the
+latter one, a Zaqar message queue is created for users to post a message.
+Such a message is used to notify the Senlin service to start an action on a
+specific cluster.
+
+Creating a Webhook Receiver
+-------------------------
+
 1. Create a cluster named "``test-cluster``", with its desired capacity set to
-   2, its minimum size set to 1 and its maximum size set to 5, e.g.
+   2, its minimum size set to 1 and its maximum size set to 5, e.g.::
 
-::
+      $ senlin cluster-create --profile $PROFILE_ID \
+          --desired-capacity 2 --min-size 1 --max-size 5 \
+          test-cluster
 
-  $ senlin cluster-create --profile $PROFILE_ID \
-      --desired-capacity 2 --min-size 1 --max-size 5 \
-      test-cluster
+2. Attach a ScalingPolicy to the cluster::
 
-2. Attach a ScalingPolicy to the cluster:
+      $ openstack cluster policy attach --policy $POLICY_ID test-cluster
 
-::
-
-  $ openstack cluster policy attach --policy $POLICY_ID test-cluster
-
-3. Create a receiver, use the option :option:`--cluster` to specify
+3. Create a webhook receiver, use the option :option:`--cluster` to specify
    "``test-cluster``" as the targeted cluster and use the option
    :option:`--action` to specify "``CLUSTER_SCALE_OUT``" or
    "``CLUSTER_SCALE_IN``" as the action name. By default, the
    :program:`openstack cluster receiver create` command line creates a
-   receiver of type :term:`webhook`, for example:::
+   receiver of type :term:`webhook`. User can also explicitly specify the
+   receiver type using the option :option:`--type`, for example::
 
      $ openstack cluster receiver create \
          --cluster test-cluster \
          --action CLUSTER_SCALE_OUT \
+         --type webhook \
          test-receiver
 
    Senlin service will return the receiver information with its channel ready
@@ -107,8 +115,47 @@ Creating a Receiver
    "``alarm_url``" field of the "``channel``" property. You can use this url
    to trigger the action you specified.
 
-4. Trigger the receiver by sending a ``POST`` request to its URL, for example:
+4. Trigger the receiver by sending a ``POST`` request to its URL, for example::
 
-::
+     $ curl -X POST <alarm_url>
 
-  curl -X POST <alarm_url>
+Creating a Message Receiver
+-------------------------
+
+1. Different from a webhook receiver which can only be used to trigger a
+   specific action on a specific cluster, a message receiver is designed
+   to trigger different actions on different clusters. Therefore, option
+   :option:`--cluster` and option :option:`--action` could be omitted
+   when creating a message receiver. Users need to specify the receiver
+   type ``message`` using the option :option:`--type`, for example::
+
+     $ openstack cluster receiver create \
+         --type message \
+         test-receiver
+
+   Senlin service will return the receiver information with its channel ready
+   to receive messages. For a message receiver, this means you can check the
+   "``queue_name``" field of the "``channel``" property and then send messages
+   with the following format to this Zaqar queue to request Senlin service::
+
+    {
+      "messages": [
+        {
+          "ttl": 300,
+          "body": {
+            "cluster_id": "test-cluster",
+            "action": "CLUSTER_SCALE_OUT",
+            "params": {"count": 2}
+          }
+        }
+      ]
+    }
+
+   Examples for sending message to Zaqar queue can be found here:
+
+       http://git.openstack.org/cgit/openstack/python-zaqarclient/tree/examples
+
+   Note: Users are allowed to trigger multiple actions at the same time by
+   sending more than one message to a Zaqar queue in the same request. In that
+   case, the order of actions generated depends on how Zaqar sorts those
+   messages.
