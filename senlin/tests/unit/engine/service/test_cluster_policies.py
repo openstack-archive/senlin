@@ -179,7 +179,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_policy.return_value = mock.Mock(id='87654321abcd')
         mock_action.return_value = 'ACTION_ID'
 
-        res = self.eng.cluster_policy_attach(self.ctx, 'C1', 'P1')
+        res = self.eng.cluster_policy_attach(self.ctx, 'C1', 'P1', True)
 
         self.assertEqual({'action': 'ACTION_ID'}, res)
         mock_cluster.assert_called_once_with(self.ctx, 'C1')
