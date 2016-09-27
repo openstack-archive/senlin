@@ -94,7 +94,7 @@ class EngineService(service.Service):
         self.target = None
         self._rpc_server = None
 
-        # Intialize the global environment
+        # Initialize the global environment
         environment.initialize()
 
     def init_tgm(self):
