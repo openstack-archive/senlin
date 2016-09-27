@@ -22,10 +22,12 @@ class TestNovaServerCluster(base.BaseSenlinIntegrationTest):
 
     def setUp(self):
         super(TestNovaServerCluster, self).setUp()
+        keypair_name = utils.create_a_keypair(self)
         spec = constants.spec_nova_server
-        spec['properties'].pop('key_name')
+        spec['properties']['key_name'] = keypair_name
         self.profile_id = utils.create_a_profile(self, spec)
         self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        self.addCleanup(utils.delete_a_keypair, self, keypair_name)
 
     @test.attr(type=['integration'])
     @decorators.idempotent_id('c26eae1c-5c46-4a5f-be63-954d7229c8cc')
