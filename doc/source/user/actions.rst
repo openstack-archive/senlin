@@ -57,20 +57,20 @@ Listing Actions
 The following command shows the actions known by the Senlin engine::
 
   $ openstack cluster action list
-  +----------+-------------------------+----------------+-----------+----------+------------+-------------+
-  | id       | name                    | action         | status    | target_id| depends_on | depended_by |
-  +----------+-------------------------+----------------+-----------+----------+------------+-------------+
-  | 1189f5e8 | node_create_b825fb74    | NODE_CREATE    | SUCCEEDED | b825fb74 |            |             |
-  | 2454c28a | node_delete_c035c519    | NODE_DELETE    | SUCCEEDED | c035c519 |            |             |
-  | 252b9491 | node_create_c035c519    | NODE_CREATE    | SUCCEEDED | c035c519 |            |             |
-  | 34802f3b | cluster_create_7f37e191 | CLUSTER_CREATE | SUCCEEDED | 7f37e191 |            |             |
-  | 4250bf29 | cluster_delete_7f37e191 | CLUSTER_DELETE | SUCCEEDED | 7f37e191 |            |             |
-  | 67cbcfb5 | node_delete_b825fb74    | NODE_DELETE    | SUCCEEDED | b825fb74 |            |             |
-  | 6e661db8 | cluster_create_44762dab | CLUSTER_CREATE | SUCCEEDED | 44762dab |            |             |
-  | 7bfad7ed | node_delete_b716052d    | NODE_DELETE    | SUCCEEDED | b716052d |            |             |
-  | b299cf44 | cluster_delete_44762dab | CLUSTER_DELETE | SUCCEEDED | 44762dab |            |             |
-  | e973552e | node_create_b716052d    | NODE_CREATE    | SUCCEEDED | b716052d |            |             |
-  +----------+-------------------------+----------------+-----------+----------+------------+-------------+
+  +----------+-------------------------+----------------+-----------+----------+------------+-------------+----------------------+
+  | id       | name                    | action         | status    | target_id| depends_on | depended_by | created_at           |
+  +----------+-------------------------+----------------+-----------+----------+------------+-------------+----------------------+
+  | 1189f5e8 | node_create_b825fb74    | NODE_CREATE    | SUCCEEDED | b825fb74 |            |             | 2016-09-22T10:13:24Z |
+  | 2454c28a | node_delete_c035c519    | NODE_DELETE    | SUCCEEDED | c035c519 |            |             | 2016-09-22T10:53:09Z |
+  | 252b9491 | node_create_c035c519    | NODE_CREATE    | SUCCEEDED | c035c519 |            |             | 2016-09-22T10:54:09Z |
+  | 34802f3b | cluster_create_7f37e191 | CLUSTER_CREATE | SUCCEEDED | 7f37e191 |            |             | 2016-09-22T11:04:00Z |
+  | 4250bf29 | cluster_delete_7f37e191 | CLUSTER_DELETE | SUCCEEDED | 7f37e191 |            |             | 2016-09-22T11:06:32Z |
+  | 67cbcfb5 | node_delete_b825fb74    | NODE_DELETE    | SUCCEEDED | b825fb74 |            |             | 2016-09-22T11:14:04Z |
+  | 6e661db8 | cluster_create_44762dab | CLUSTER_CREATE | SUCCEEDED | 44762dab |            |             | 2016-09-22T11:14:44Z |
+  | 7bfad7ed | node_delete_b716052d    | NODE_DELETE    | SUCCEEDED | b716052d |            |             | 2016-09-22T11:15:22Z |
+  | b299cf44 | cluster_delete_44762dab | CLUSTER_DELETE | SUCCEEDED | 44762dab |            |             | 2016-09-22T11:18:18Z |
+  | e973552e | node_create_b716052d    | NODE_CREATE    | SUCCEEDED | b716052d |            |             | 2016-09-22T11:25:58Z |
+  +----------+-------------------------+----------------+-----------+----------+------------+-------------+----------------------+
 
 The :program:`openstack cluster` command line supports various options when
 listing the actions.
@@ -90,7 +90,7 @@ command to sort actions using the ``name`` property in descending order::
 
   $ openstack cluster action list --sort name:desc
 
-When sorting the list of actions, you can use one of ``name``, ``target``,
+When sorting the list of actions, you can use one of ``name``, ``target_id``,
 ``action``, ``created_at`` and ``status``.
 
 
@@ -104,7 +104,7 @@ the following command filters the action list by the ``action`` property::
 
 The option :option:`--filters` accepts a list of key-value pairs separated by
 semicolon (``;``), where each pair is expected to be of format ``key=val``.
-The valid keys for filtering include ``name``, ``target``, ``action`` and
+The valid keys for filtering include ``name``, ``target_id``, ``action`` and
 ``status`` or any combination of them.
 
 
@@ -147,19 +147,22 @@ An example is shown below::
   +---------------+--------------------------------------+
   | action        | CLUSTER_DELETE                       |
   | cause         | RPC Request                          |
+  | created_at    | 2016-09-23T09:00:25Z                 |
   | depended_by   | []                                   |
   | depends_on    | []                                   |
   | end_time      | 1450683904.0                         |
   | id            | 8fac487f-861a-449e-9678-478133bea8de |
   | inputs        | {}                                   |
   | interval      | -1                                   |
+  | location      | None                                 |
   | name          | cluster_delete_7deb546f              |
   | outputs       | {}                                   |
   | start_time    | 1450683904.0                         |
   | status        | SUCCEEDED                            |
   | status_reason | Action completed successfully.       |
-  | target        | 7deb546f-fd1f-499a-b120-94f8f07fadfb |
+  | target_id     | 7deb546f-fd1f-499a-b120-94f8f07fadfb |
   | timeout       | 3600                                 |
+  | updated_at    | None                                 |
   +---------------+--------------------------------------+
 
 
