@@ -119,13 +119,13 @@ class Message(base.Receiver):
         subscriber = self._generate_subscriber_url()
         trust_id = self._build_trust()
 
-        # TODO(Yanyanhu): make subscription attributes configurable.
+        # FIXME(Yanyanhu): For Zaqar doesn't support to create a
+        # subscription that never expires, we specify a very large
+        # ttl value which doesn't exceed the max time of python.
         kwargs = {
-            "ttl": 3600,
+            "ttl": 2 ** 64,
             "subscriber": subscriber,
             "options": {
-                "from": "senlin and zaqar",
-                "subject": "hello, senlin",
                 "trust_id": trust_id
             }
         }
