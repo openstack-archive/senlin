@@ -107,7 +107,7 @@ class ScalingPolicy(base.Policy):
     }
 
     def __init__(self, name, spec, **kwargs):
-        """Intialize a scaling policy object.
+        """Initialize a scaling policy object.
 
         :param name: Name for the policy object.
         :param spec: A dictionary containing the detailed specification for
