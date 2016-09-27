@@ -373,7 +373,7 @@ class Profile(object):
         :param options: Keyword arguments for the recover operation.
         """
         operation = options.pop('operation', None)
-        # TODO(Qiming): The operaion input could be a list of operations.
+        # TODO(Qiming): The operation input could be a list of operations.
         if operation and not isinstance(operation, six.string_types):
             operation = operation[0]
 
