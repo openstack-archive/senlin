@@ -192,11 +192,10 @@ class EngineService(service.Service):
     def service_manage_cleanup(self):
         self._service_manage_cleanup()
         self.cleanup_count += 1
-        LOG.info(_LI('Service chean-up attempt count:%s'), self.cleanup_count)
+        LOG.info(_LI('Service chean-up attempt count: %s'), self.cleanup_count)
         if self.cleanup_count >= 2:
             self.cleanup_timer.stop()
-            LOG.info(_LI("Stopped cleaning up dead services after"
-                     " %s attempts."), self.cleanup_count)
+            LOG.info(_LI("Finished cleaning up dead services."))
 
     @request_context
     def credential_create(self, context, cred, attrs=None):
@@ -1808,7 +1807,7 @@ class EngineService(service.Service):
 
         :param context: An instance of the request context.
         :param identity: The UUID, name or short-id of the node.
-        :param params: An dictionary providing additional input parameters
+        :param params: A dictionary providing additional input parameters
                        for the checking operation.
         :return: A dictionary containing the ID of the action triggered by
                  this request.
