@@ -90,7 +90,7 @@ command to sort actions using the ``name`` property in descending order::
 
   $ openstack cluster action list --sort name:desc
 
-When sorting the list of actions, you can use one of ``name``, ``target_id``,
+When sorting the list of actions, you can use one of ``name``, ``target``,
 ``action``, ``created_at`` and ``status``.
 
 
@@ -104,7 +104,7 @@ the following command filters the action list by the ``action`` property::
 
 The option :option:`--filters` accepts a list of key-value pairs separated by
 semicolon (``;``), where each pair is expected to be of format ``key=val``.
-The valid keys for filtering include ``name``, ``target_id``, ``action`` and
+The valid keys for filtering include ``name``, ``target``, ``action`` and
 ``status`` or any combination of them.
 
 
