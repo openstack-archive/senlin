@@ -246,7 +246,7 @@ class EResourceOperation(InternalError):
     so on. And the op 'creating', 'updating' and 'deleting' we can
     use separately class `EResourceCreation`,`EResourceUpdate` and
     `EResourceDeletion`.
-    The type here is resource's dirver type.It can be 'server',
+    The type here is resource's driver type.It can be 'server',
     'stack', 'container' and so on.
     The id is resource's id.
     The message here can be message from class 'ResourceNotFound',

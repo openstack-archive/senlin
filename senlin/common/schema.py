@@ -373,7 +373,7 @@ class Map(PropertySchema):
 
         sub_schema = self.schema
         if sub_schema is not None:
-            # sub_schema shoud be a dict here.
+            # sub_schema should be a dict here.
             subspec = Spec(sub_schema, dict(values))
             subspec.validate()
 

@@ -266,7 +266,7 @@ class HealthManager(service.Service):
         """Unregister a cluster from health checking.
 
         :param ctx: The context of notify request.
-        :param cluster_id: The ID of the cluste to be unregistered.
+        :param cluster_id: The ID of the cluster to be unregistered.
         :return: None
         """
         for i in range(len(self.rt['registries']) - 1, -1, -1):
