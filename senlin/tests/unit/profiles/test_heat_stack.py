@@ -350,7 +350,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         res = profile.do_update(test_stack, new_profile)
 
         # assertions
-        self.assertEqual(True, res)
+        self.assertTrue(res)
         kwargs = {
             'template': {'Template': 'data update'},
             'parameters': {'new': 'params'},
@@ -383,7 +383,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
 
         res = profile.do_update(stack_obj, new_profile)
 
-        self.assertEqual(True, res)
+        self.assertTrue(res)
         oc.stack_update.assert_called_once_with(
             'FAKE_ID', template={"Template": "data update"})
         oc.wait_for_stack.assert_called_once_with(
@@ -547,7 +547,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         res = profile.do_check(node_obj)
 
         # assertions
-        self.assertEqual(True, res)
+        self.assertTrue(res)
         oc.stack_check.assert_called_once_with('FAKE_ID')
         oc.wait_for_stack.assert_called_once_with(
             'FAKE_ID', 'CHECK_COMPLETE', timeout=3600)
