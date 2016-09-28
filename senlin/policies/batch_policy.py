@@ -15,7 +15,7 @@ Policy for batching operations on a cluster.
 
 NOTE: How update policy works
 Input:
-  cluster: the cluste whose nodes are to be updated.
+  cluster: the cluster whose nodes are to be updated.
 Output:
   stored in action.data: A dictionary containing a detailed update schedule.
   {
