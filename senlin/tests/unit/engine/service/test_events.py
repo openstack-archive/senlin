@@ -81,15 +81,15 @@ class EventTest(base.SenlinTestCase):
     @mock.patch.object(eo.Event, 'get_all')
     def test_event_list(self, mock_load):
         obj_1 = mock.Mock()
-        obj_1.as_dict.return_value = {'k': 'v1'}
+        obj_1.as_dict.return_value = {'level': '10'}
         obj_2 = mock.Mock()
-        obj_2.as_dict.return_value = {'k': 'v2'}
+        obj_2.as_dict.return_value = {'level': '20'}
 
         mock_load.return_value = [obj_1, obj_2]
 
         result = self.eng.event_list(self.ctx)
 
-        self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
+        self.assertEqual([{'level': 'DEBUG'}, {'level': 'INFO'}], result)
         mock_load.assert_called_once_with(self.ctx, filters=None, sort=None,
                                           limit=None, marker=None,
                                           project_safe=True)
@@ -97,9 +97,9 @@ class EventTest(base.SenlinTestCase):
     @mock.patch.object(eo.Event, 'get_all')
     def test_event_list_with_params(self, mock_load):
         obj_1 = mock.Mock()
-        obj_1.as_dict.return_value = {'k': 'v1'}
+        obj_1.as_dict.return_value = {'level': '10'}
         obj_2 = mock.Mock()
-        obj_2.as_dict.return_value = {'k': 'v2'}
+        obj_2.as_dict.return_value = {'level': '20'}
 
         mock_load.return_value = [obj_1, obj_2]
 
@@ -107,7 +107,7 @@ class EventTest(base.SenlinTestCase):
                                      limit=123, marker='MMM',
                                      project_safe=True)
 
-        self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
+        self.assertEqual([{'level': 'DEBUG'}, {'level': 'INFO'}], result)
         mock_load.assert_called_once_with(self.ctx,
                                           filters='FFF', sort='level',
                                           limit=123, marker='MMM',
@@ -192,13 +192,13 @@ class EventTest(base.SenlinTestCase):
     @mock.patch.object(service.EngineService, 'event_find')
     def test_event_get(self, mock_find):
         x_event = mock.Mock()
-        x_event.as_dict.return_value = {'foo': 'bar'}
+        x_event.as_dict.return_value = {'level': '30'}
         mock_find.return_value = x_event
 
-        res = self.eng.event_get(self.ctx, 'EVENT')
+        res = self.eng.event_get(self.ctx, 'level')
 
-        self.assertEqual({'foo': 'bar'}, res)
-        mock_find.assert_called_once_with(self.ctx, 'EVENT')
+        self.assertEqual({'level': 'WARNING'}, res)
+        mock_find.assert_called_once_with(self.ctx, 'level')
 
     @mock.patch.object(service.EngineService, 'event_find')
     def test_event_get_not_found(self, mock_find):
