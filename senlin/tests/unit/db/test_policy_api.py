@@ -227,6 +227,8 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='a-different-project',
                                         is_admin=True)
         policies = db_api.policy_get_all(admin_ctx, project_safe=True)
+        self.assertEqual(0, len(policies))
+        policies = db_api.policy_get_all(admin_ctx, project_safe=False)
         self.assertEqual(2, len(policies))
 
     def test_policy_get_all_with_limit_marker(self):

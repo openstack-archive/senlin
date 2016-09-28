@@ -271,6 +271,8 @@ class DBAPIEventTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='another-project',
                                         is_admin=True)
         events = db_api.event_get_all(admin_ctx, project_safe=True)
+        self.assertEqual(0, len(events))
+        events = db_api.event_get_all(admin_ctx, project_safe=False)
         self.assertEqual(3, len(events))
 
     def test_event_get_all_by_cluster(self):

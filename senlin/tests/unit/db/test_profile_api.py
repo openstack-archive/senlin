@@ -179,6 +179,8 @@ class DBAPIProfileTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='a-different-project',
                                         is_admin=True)
         profiles = db_api.profile_get_all(admin_ctx, project_safe=True)
+        self.assertEqual(0, len(profiles))
+        profiles = db_api.profile_get_all(admin_ctx, project_safe=False)
         self.assertEqual(2, len(profiles))
 
     def test_profile_get_all_with_limit_marker(self):

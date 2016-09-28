@@ -222,6 +222,8 @@ class DBAPIClusterTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='another-project',
                                         is_admin=True)
         clusters = db_api.cluster_get_all(admin_ctx, project_safe=True)
+        self.assertEqual(0, len(clusters))
+        clusters = db_api.cluster_get_all(admin_ctx, project_safe=False)
         self.assertEqual(5, len(clusters))
 
     def test_cluster_get_all_with_filters(self):
@@ -364,8 +366,10 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
         admin_ctx = utils.dummy_context(project='another-project',
                                         is_admin=True)
-        self.assertEqual(5, db_api.cluster_count_all(admin_ctx,
+        self.assertEqual(0, db_api.cluster_count_all(admin_ctx,
                                                      project_safe=True))
+        self.assertEqual(5, db_api.cluster_count_all(admin_ctx,
+                                                     project_safe=False))
 
     def test_cluster_count_all_with_filters(self):
         shared.create_cluster(self.ctx, self.profile, name='foo')
