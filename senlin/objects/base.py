@@ -16,6 +16,7 @@ from oslo_utils import versionutils
 from oslo_versionedobjects import base
 
 from senlin import objects
+from senlin.objects import fields
 
 VersionedObjectDictCompat = base.VersionedObjectDictCompat
 
@@ -54,6 +55,17 @@ class SenlinObject(base.VersionedObject):
             value = values.pop('metadata')
             values['meta_data'] = value
         return values
+
+    @classmethod
+    def to_json_schema(cls):
+        obj_name = cls.obj_name()
+        schema = {
+            '$schema': 'http://json-schema.org/draft-04/schema#',
+            'title': obj_name,
+        }
+
+        schema.update(fields.Object(obj_name).get_schema())
+        return schema
 
 
 class SenlinObjectRegistry(base.VersionedObjectRegistry):

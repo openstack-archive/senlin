@@ -58,3 +58,11 @@ class TestBaseObject(base.SenlinTestCase):
 
         res = obj_base.SenlinObject._from_db_object(context, obj, db_obj)
         self.assertIsNone(res)
+
+    def test_to_json_schema(self):
+        obj = obj_base.SenlinObject()
+        expected = {
+            '$schema': 'http://json-schema.org/draft-04/schema#',
+            'title': 'SenlinObject'
+        }
+        self.assertEqual(expected, obj.to_json_schema())
