@@ -41,6 +41,39 @@ place for developers to perform different kinds of tests:
   *senlin-api* and *senlin-engine* under different workloads.
 
 
+Cloud Backends
+~~~~~~~~~~~~~~
+
+The senlin server is shipped with two collections of "cloud backends": one for
+interacting with a real OpenStack deployment, the other for running complex
+tests including api tests, functional tests, stress tests. The first cloud
+backend is referred to as '`openstack`' and the second is referred to as
+'`openstack_test`'. While the `openstack` cloud backend contains full featured
+drivers for senlin to talk to the OpenStack services supported, the
+`openstack_test` backend contains some "dummy" drivers that return fake
+responses for service requests. The `openstack_test` driver is located at
+:file:`senlin/tests/drivers` subdirectory. It is provided to facilitate tests
+on the senlin service itself without involving any other OpenStack services.
+Several types of tests can benefit from these "dummy" drivers because 1) they
+can save developers a lot time on debugging complex issues when interacting
+with other OpenStack services, and 2) they make running those types of tests
+much easier and quicker.
+
+Note that "Integration Tests" are designed for senlin to interact with real
+services so we should use the `openstack` backend rather than the
+`openstack_test` backend.
+
+To configure the backend to use before running tests, you can check the
+`[DEFAULT]` section in the configuration file :file:`/etc/senlin/senlin.conf`.
+
+::
+
+  [DEFAULT]
+  cloud_backend = openstack_test   # use this for api, functional tests;
+                                   # or 'openstack' for production environment
+                                   # and integration tests.
+
+
 Unit Tests
 ~~~~~~~~~~
 
