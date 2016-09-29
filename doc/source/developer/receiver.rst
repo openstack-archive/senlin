@@ -128,7 +128,7 @@ won't check if the provided credentials actually works when creating the
 receiver. The check is postponed to the moment when the receiver is triggered.
 
 If the ``credentials`` to use is not explicitly provided, Senlin will assume
-that the receiver will be triggered in the future using the the requester's
+that the receiver will be triggered in the future using the requester's
 credential. To make sure the future authentication succeeds, Senlin engine
 will extract the ``user`` ID from the invoking context and create a trust
 between the user and the ``senlin`` service account, just like the way how
