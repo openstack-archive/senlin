@@ -15,11 +15,16 @@ import socket
 from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
 from oslo_log import log as logging
+from oslo_utils import uuidutils
 
+from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.drivers import base as driver_base
+from senlin.engine.actions import base as action_mod
+from senlin.engine import dispatcher
 from senlin.engine.receivers import base
+from senlin.objects import cluster as cluster_obj
 
 LOG = logging.getLogger(__name__)
 
@@ -137,6 +142,76 @@ class Message(base.Receiver):
                                         message=ex.message)
         return subscription
 
+    def _find_cluster(self, context, identity):
+        """Find a cluster with the given identity."""
+        if uuidutils.is_uuid_like(identity):
+            cluster = cluster_obj.Cluster.get(context, identity)
+            if not cluster:
+                cluster = cluster_obj.Cluster.get_by_name(context, identity)
+        else:
+            cluster = cluster_obj.Cluster.get_by_name(context, identity)
+            # maybe it is a short form of UUID
+            if not cluster:
+                cluster = cluster_obj.Cluster.get_by_short_id(context,
+                                                              identity)
+
+        if not cluster:
+            raise exc.ResourceNotFound(type='cluster', id=identity)
+
+        return cluster
+
+    def _build_action(self, context, message):
+        body = message.get('body', None)
+        if not body:
+            msg = _('Message body is empty.')
+            raise exc.InternalError(message=msg)
+
+        # Message format check
+        cluster = body.get('cluster', None)
+        action = body.get('action', None)
+        params = body.get('params', {})
+        if not cluster or not action:
+            msg = _('Both cluster identity and action must be specified.')
+            raise exc.InternalError(message=msg)
+
+        # Cluster existence check
+        # TODO(YanyanHu): Or maybe we can relax this constraint to allow
+        # user to trigger CLUSTER_CREATE action by sending message?
+        try:
+            cluster_obj = self._find_cluster(context, cluster)
+        except exc.ResourceNotFound:
+            msg = _('Cluster (%(cid)s) cannot be found.'
+                    ) % {'cid': cluster}
+            raise exc.InternalError(message=msg)
+
+        # Permission check
+        if not context.is_admin and context.user != cluster_obj.user:
+            msg = _('%(user)s is not allowed to trigger actions on '
+                    'cluster %(cid)s.') % {'user': context.user,
+                                           'cid': cluster}
+            raise exc.InternalError(message=msg)
+
+        # Action name check
+        if action not in consts.ACTION_NAMES:
+            msg = _("Illegal action '%s' specified.") % action
+            raise exc.InternalError(message=msg)
+
+        if action.lower().split('_')[0] != 'cluster':
+            msg = _("Action '%s' is not applicable to clusters."
+                    ) % action
+            raise exc.InternalError(message=msg)
+
+        kwargs = {
+            'name': 'receiver_%s_%s' % (self.id[:8], message['id'][:8]),
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+            'inputs': params
+        }
+        action_id = action_mod.Action.create(context, cluster_obj.id,
+                                             action, **kwargs)
+
+        return action_id
+
     def initialize_channel(self, context):
         self.notifier_roles = context.roles
         queue_name = self._create_queue()
@@ -166,6 +241,34 @@ class Message(base.Receiver):
             raise exc.EResourceDeletion(type='queue',
                                         id='queue_name',
                                         message=ex.message)
+
+    def notify(self, context, params=None):
+        # Claim message(s) from queue
+        try:
+            claim = self.zaqar().claim_create(self.channel['queue_name'])
+            messages = claim.messages
+        except exc.InternalError as ex:
+            LOG.error(_('Failed in claiming message: %s') % ex.message)
+            return
+
+        # Build actions
+        actions = []
+        if messages:
+            for message in messages:
+                try:
+                    action_id = self._build_action(context, message)
+                except exc.InternalError as ex:
+                    LOG.error(_('Failed in building action: %s'
+                                ) % ex.message)
+                    continue
+                actions.append(action_id)
+            msg = _('Actions %(actions)s were successfully built.'
+                    ) % {'actions': actions}
+            LOG.info(msg)
+
+            dispatcher.start_action()
+
+        return actions
 
     def to_dict(self):
         message = super(Message, self).to_dict()

@@ -200,6 +200,9 @@ class Receiver(object):
     def release_channel(self, context):
         return
 
+    def notify(self, context, params=None):
+        return
+
     @classmethod
     def delete(cls, context, receiver_id):
         """Delete a receiver.
