@@ -671,13 +671,13 @@ class TestProfileBase(base.SenlinTestCase):
 
         self.assertRaises(NotImplementedError, profile.do_create, mock.Mock())
         self.assertRaises(NotImplementedError, profile.do_delete, mock.Mock())
-        self.assertEqual(True, profile.do_update(mock.Mock(), mock.Mock()))
-        self.assertEqual(True, profile.do_check(mock.Mock()))
+        self.assertTrue(profile.do_update(mock.Mock(), mock.Mock()))
+        self.assertTrue(profile.do_check(mock.Mock()))
         self.assertEqual({}, profile.do_get_details(mock.Mock()))
-        self.assertEqual(True, profile.do_join(mock.Mock(), mock.Mock()))
-        self.assertEqual(True, profile.do_leave(mock.Mock()))
-        self.assertEqual(True, profile.do_rebuild(mock.Mock()))
-        self.assertEqual(True, profile.do_validate(mock.Mock()))
+        self.assertTrue(profile.do_join(mock.Mock(), mock.Mock()))
+        self.assertTrue(profile.do_leave(mock.Mock()))
+        self.assertTrue(profile.do_rebuild(mock.Mock()))
+        self.assertTrue(profile.do_validate(mock.Mock()))
 
     def test_do_recover_default(self):
         profile = self._create_profile('test-profile')
