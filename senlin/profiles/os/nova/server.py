@@ -223,7 +223,7 @@ class ServerProfile(base.Profile):
         OP_REBOOT: schema.Operation(
             _("Reboot the nova server."),
             schema={
-                REBOOT_TYPE: schema.String(
+                REBOOT_TYPE: schema.StringParam(
                     _("Type of reboot which can be 'SOFT' or 'HARD'."),
                     default=REBOOT_SOFT,
                     constraints=[
@@ -235,7 +235,7 @@ class ServerProfile(base.Profile):
         OP_CHANGE_PASSWORD: schema.Operation(
             _("Change the administrator password."),
             schema={
-                ADMIN_PASSWORD: schema.String(
+                ADMIN_PASSWORD: schema.StringParam(
                     _("New password for the administrator.")
                 )
             }

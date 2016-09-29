@@ -25,13 +25,14 @@ LOG = logging.getLogger(__name__)
 
 
 class AnyIndexDict(collections.Mapping):
-    '''Convenience schema for a list.'''
+    """Convenience schema for a list."""
+
     def __init__(self, value):
         self.value = value
 
     def __getitem__(self, key):
         if key != '*' and not isinstance(key, six.integer_types):
-            raise KeyError(_('Invalid key %s') % str(key))
+            raise KeyError("Invalid key %s" % str(key))
 
         return self.value
 
@@ -64,8 +65,8 @@ class SchemaBase(collections.Mapping):
                  max_version=None):
         if schema is not None:
             if type(self) not in (List, Map, Operation):
-                msg = _('Schema valid only for List or Map, not '
-                        '"%s"') % self[self.TYPE]
+                msg = _('Schema valid only for List or Map, not %s'
+                        ) % self[self.TYPE]
                 raise exception.InvalidSchemaError(message=msg)
 
         if self[self.TYPE] == self.LIST:
@@ -92,48 +93,30 @@ class SchemaBase(collections.Mapping):
             return
 
         try:
+            # NOTE: this is the subclass's version of 'validate'
             self.validate(self.default, context)
         except (ValueError, TypeError) as exc:
             raise exception.InvalidSchemaError(
-                message=_('Invalid default %(default)s (%(exc)s)') %
+                message=_('Invalid default %(default)s: %(exc)s') %
                 dict(default=self.default, exc=exc))
 
-    def validate(self, context=None):
-        """Validates the schema.
-
-        :param context: A RequestContext instance for deep validation.
-        """
-        self._validate_default(context)
-
-        # validated nested schema: List or Map
-        if self.schema:
-            if isinstance(self.schema, AnyIndexDict):
-                self.schema.value.validate(context)
-            else:
-                for nested_schema in self.schema.values():
-                    nested_schema.validate(context)
-
-    def validate_constraints(self, value, context=None, skipped=None):
-        if not skipped:
-            skipped = []
-
+    def validate_constraints(self, value, schema=None, context=None):
         try:
             for constraint in self.constraints:
-                if type(constraint) not in skipped:
-                    constraint.validate(value, context)
+                constraint.validate(value, schema=schema, context=context)
         except ValueError as ex:
             raise exception.SpecValidationFailed(message=six.text_type(ex))
 
-    def _validate_version(self, version, key):
+    def _validate_version(self, key, version):
         if self.min_version and self.min_version > version:
-            msg = _('%(key)s(min_version=%(min)s) is not supported by '
+            msg = _('%(key)s (min_version=%(min)s) is not supported by '
                     'spec version %(version)s.'
                     ) % {'key': key, 'min': self.min_version,
                          'version': version}
             raise exception.SpecValidationFailed(message=msg)
         if self.max_version:
             if version > self.max_version:
-                msg = _('%(key)s(max_version=%(max)s) is not supported '
+                msg = _('%(key)s (max_version=%(max)s) is not supported '
                         'by spec version %(version)s.'
                         ) % {'version': version, 'max': self.max_version,
                              'key': key}
@@ -200,6 +183,8 @@ class PropertySchema(SchemaBase):
         self.updatable = updatable
 
     def __getitem__(self, key):
+        # NOTE: UPDATABLE is only applicable to some specs which may be
+        #       eligible for an update operation later
         if key == self.UPDATABLE:
             return self.updatable
 
@@ -257,7 +242,7 @@ class Integer(PropertySchema):
         if not isinstance(value, six.integer_types):
             value = self.resolve(value)
 
-        self.validate_constraints(value, self, context)
+        self.validate_constraints(value, schema=self, context=context)
 
 
 class String(PropertySchema):
@@ -282,7 +267,7 @@ class String(PropertySchema):
             raise exception.SpecValidationFailed(message=msg)
 
         self.resolve(value)
-        self.validate_constraints(value, self, context)
+        self.validate_constraints(value, schema=self, context=context)
 
 
 class Number(PropertySchema):
@@ -409,32 +394,48 @@ class Map(PropertySchema):
 
 
 class StringParam(SchemaBase):
-    def _getitem__(self, key):
+
+    def __getitem__(self, key):
         if key == self.TYPE:
             return self.STRING
+        return super(StringParam, self).__getitem__(key)
 
 
-class Operation(Map):
+class Operation(SchemaBase):
     """Class for specifying operations on profiles."""
-    pass
+    KEYS = (
+        DESCRIPTION, PARAMETERS,
+    ) = (
+        'description', 'parameters',
+    )
+
+    def __getitem__(self, key):
+        if key == self.DESCRIPTION:
+            return self.description or "Undocumented."
+        elif key == self.PARAMETERS:
+            if self.schema is None:
+                return "None."
+            return dict((n, dict(s)) for n, s in self.schema.items())
 
 
 class Spec(collections.Mapping):
-    '''A class that contains all spec items.'''
+    """A class that contains all spec items."""
+
     def __init__(self, schema, data, version=None):
         self._schema = schema
         self._data = data
         self._version = version
 
     def validate(self):
-        '''Validate the schema.'''
+        """Validate the schema."""
+
         for (k, s) in self._schema.items():
             try:
                 # Validate through resolve
                 self.resolve_value(k)
-                # Validate schema for versioned spec
+                # Validate schema for version
                 if self._version:
-                    self._schema[k]._validate_version(self._version, k)
+                    self._schema[k]._validate_version(k, self._version)
             except (TypeError, ValueError) as err:
                 msg = _('Spec validation error (%(key)s): %(err)s') % dict(
                     key=k, err=six.text_type(err))
