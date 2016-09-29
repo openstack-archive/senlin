@@ -209,6 +209,6 @@ class Name(fields.String):
         }
 
 
-class NameField(fields.StringField):
+class NameField(fields.AutoTypedField):
 
     AUTO_TYPE = Name()
