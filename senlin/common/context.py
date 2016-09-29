@@ -22,7 +22,7 @@ class RequestContext(base_context.RequestContext):
     '''Stores information about the security context.
 
     The context encapsulates information related to the user accessing the
-    the system, as well as additional request information.
+    system, as well as additional request information.
     '''
 
     def __init__(self, auth_token=None, user=None, project=None,
