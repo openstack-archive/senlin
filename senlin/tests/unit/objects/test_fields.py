@@ -148,6 +148,12 @@ class TestJson(TestField):
         self.assertRaises(ValueError,
                           self.field.stringify, self.coerce_bad_values[0])
 
+    def test_get_schema(self):
+        self.assertEqual(
+            {'type': ['object'], 'readonly': False},
+            self.field.get_schema()
+        )
+
 
 class TestNotificationPriority(TestField):
     def setUp(self):
