@@ -112,7 +112,7 @@ class Action(object):
         self.owner = kwargs.get('owner', None)
 
         # An action may need to be executed repeatitively, interval is the
-        # time in seconds between two consequtive execution.
+        # time in seconds between two consecutive execution.
         # A value of -1 indicates that this action is only to be executed once
         self.interval = kwargs.get('interval', -1)
 

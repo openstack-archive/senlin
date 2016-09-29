@@ -1909,7 +1909,7 @@ class EngineService(service.Service):
         :param policy: The ID, name or short ID of the target policy.
         :param enabled: Optional parameter specifying whether the policy is
                         enabled when attached.
-        :return: A dictionary containg the ID of the action fired.
+        :return: A dictionary contains the ID of the action fired.
         """
         LOG.info(_LI("Attaching policy (%(policy)s) to cluster "
                      "(%(cluster)s)."),
@@ -1948,7 +1948,7 @@ class EngineService(service.Service):
         :param context: An instance of request context.
         :param identity: The ID, name or short ID of the target cluster.
         :param policy: The ID, name or short ID of the target policy.
-        :return: A dictionary containg the ID of the action fired.
+        :return: A dictionary contains the ID of the action fired.
         """
         LOG.info(_LI("Detaching policy '%(policy)s' from cluster "
                      "'%(cluster)s'."),
@@ -1992,7 +1992,7 @@ class EngineService(service.Service):
         :param policy: The ID, name or short ID of the target policy.
         :param enabled: Optional parameter specifying whether the policy is
                         enabled after the update.
-        :return: A dictionary containg the ID of the action fired.
+        :return: A dictionary contains the ID of the action fired.
         """
         LOG.info(_LI("Updating policy '%(policy)s' on cluster '%(cluster)s.'"),
                  {'policy': policy, 'cluster': identity})

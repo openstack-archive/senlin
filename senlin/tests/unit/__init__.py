@@ -29,7 +29,7 @@ oslo_i18n._translate_msgid = fake_translate_msgid
 eventlet.monkey_patch(os=False)
 
 # The following has to be done after eventlet monkey patching or else the
-# threading.locl() store used in oslo_messaging will be initialized to
+# threading.local() store used in oslo_messaging will be initialized to
 # thread-local storage rather than green-thread local. This will cause context
 # sets and deletes in that storage to clobber each other.
 # Make sure we have all objects loaded. This is done at module import time,

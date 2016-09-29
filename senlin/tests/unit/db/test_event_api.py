@@ -484,7 +484,7 @@ class DBAPIEventTest(base.SenlinTestCase):
         node1_1 = shared.create_node(self.ctx, cluster1, self.profile)
         node_orphan = shared.create_node(self.ctx, None, self.profile)
 
-        # prune 1: cluste events
+        # prune 1: cluster events
         self.create_event(self.ctx, entity=cluster1)
         self.create_event(self.ctx, entity=cluster1)
 
