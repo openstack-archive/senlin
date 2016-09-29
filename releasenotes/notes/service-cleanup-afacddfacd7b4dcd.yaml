@@ -1,0 +1,4 @@
+---
+fixes:
+  - Fixed dead service clean-up logic so that the clean-up operation can be
+    retried.

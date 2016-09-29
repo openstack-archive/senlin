@@ -1,0 +1,3 @@
+---
+fixes:
+  - Fixed a bug in affinity policy where the calls to nova driver was wrong.

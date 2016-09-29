@@ -1,0 +1,6 @@
+---
+fixes:
+  - Fixed bug related to the desired_capacity calculation. The base number used
+    now is the current capacity of the cluster instead of previous 'desired'
+    capacity. This include all actions that change cluster capacity and all
+    related policies.
