@@ -127,7 +127,7 @@ option :option:`--marker <ID>` for this purpose. For example::
   +----------+------+--------+---------------------+
 
 Only 1 cluster record is returned in this example and its UUID comes after the
-the one specified from the command line.
+one specified from the command line.
 
 
 Creating a Cluster
