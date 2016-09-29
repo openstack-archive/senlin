@@ -124,9 +124,6 @@ class Response(object):
 
 
 class UrlFetchTest(base.SenlinTestCase):
-    def setUp(self):
-        super(UrlFetchTest, self).setUp()
-
     def test_file_scheme_default_behaviour(self):
         self.assertRaises(utils.URLFetchError,
                           utils.url_fetch, 'file:///etc/profile')

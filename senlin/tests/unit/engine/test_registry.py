@@ -77,9 +77,6 @@ class PluginInfoTest(base.SenlinTestCase):
 
 class RegistryTest(base.SenlinTestCase):
 
-    def setUp(self):
-        super(RegistryTest, self).setUp()
-
     def test_create(self):
         reg = registry.Registry('SENLIN', None)
         self.assertEqual('SENLIN', reg.registry_name)

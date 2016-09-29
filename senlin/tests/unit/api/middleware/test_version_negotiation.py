@@ -24,9 +24,6 @@ from senlin.tests.unit.common import base
 @mock.patch("senlin.api.openstack.versions.Controller")
 class VersionNegotiationTest(base.SenlinTestCase):
 
-    def setUp(self):
-        super(VersionNegotiationTest, self).setUp()
-
     def test__get_version_controller(self, mock_vc):
         gvc = mock_vc.return_value
         xvc = mock.Mock()

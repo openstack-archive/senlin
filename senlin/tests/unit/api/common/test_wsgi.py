@@ -29,9 +29,6 @@ CONF = cfg.CONF
 
 class RequestTest(base.SenlinTestCase):
 
-    def setUp(self):
-        super(RequestTest, self).setUp()
-
     def test_content_type_missing(self):
         request = wsgi.Request.blank('/tests/123')
         self.assertRaises(exception.InvalidContentType,
@@ -82,9 +79,6 @@ class RequestTest(base.SenlinTestCase):
 
 
 class ResourceTest(base.SenlinTestCase):
-
-    def setUp(self):
-        super(ResourceTest, self).setUp()
 
     def test_get_action_args(self):
         env = {
