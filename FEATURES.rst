@@ -201,7 +201,7 @@ example.
 AWS Compatible API
 ^^^^^^^^^^^^^^^^^^
 
-There are requirements for Senlin to provide a AWS compatible API layer so
+There are requirements for Senlin to provide an AWS compatible API layer so
 that existing workloads can be deployed to Senlin and AWS without needing to
 change a lot of code or configurations.
 
