@@ -128,7 +128,7 @@ class Message(base.Receiver):
         # subscription that never expires, we specify a very large
         # ttl value which doesn't exceed the max time of python.
         kwargs = {
-            "ttl": 2 ** 64,
+            "ttl": 2 ** 36,
             "subscriber": subscriber,
             "options": {
                 "trust_id": trust_id

@@ -207,7 +207,7 @@ class TestMessage(base.SenlinTestCase):
         message = mmod.Message('message', None, None, id=UUID)
         queue_name = 'test-queue'
         kwargs = {
-            "ttl": 2 ** 64,
+            "ttl": 2 ** 36,
             "subscriber": subscriber,
             "options": {
                 "trust_id": "123abc"
@@ -235,7 +235,7 @@ class TestMessage(base.SenlinTestCase):
         message.id = UUID
         queue_name = 'test-queue'
         kwargs = {
-            "ttl": 2 ** 64,
+            "ttl": 2 ** 36,
             "subscriber": subscriber,
             "options": {
                 "trust_id": "123abc"
