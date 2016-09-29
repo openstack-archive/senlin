@@ -12,7 +12,10 @@
 
 from oslo_serialization import jsonutils
 from oslo_versionedobjects import fields
+import re
 import six
+
+from senlin.common.i18n import _
 
 # Field alias for code readability
 BooleanField = fields.BooleanField
@@ -165,3 +168,47 @@ class NotificationPhaseField(fields.BaseEnumField):
 
 class NotificationActionField(fields.BaseEnumField):
     AUTO_TYPE = NotificationAction()
+
+
+class Name(fields.String):
+
+    def __init__(self, min_len=1, max_len=255):
+        super(Name, self).__init__()
+        self.min_len = min_len
+        self.max_len = max_len
+
+    def coerce(self, obj, attr, value):
+        err = None
+        if len(value) < self.min_len:
+            err = _("The value for the %(attr)s field must be at least "
+                    "%(count)d characters long."
+                    ) % {'attr': attr, 'count': self.min_len}
+        elif len(value) > self.max_len:
+            err = _("The value for the %(attr)s field must be less than "
+                    "%(count)d characters long."
+                    ) % {'attr': attr, 'count': self.max_len}
+        else:
+            # NOTE: This is pretty restrictive. We can relax it later when
+            # there are requests to do so
+            regex = re.compile('^[a-zA-Z\d\.\_\~-]*$', re.IGNORECASE)
+            if not regex.search(value):
+                err = _("The value for the %(attr)s: %(value)s contains "
+                        "illegal characters."
+                        ) % {'attr': attr, 'value': value}
+
+        if err:
+            raise ValueError(err)
+
+        return super(Name, self).coerce(obj, attr, value)
+
+    def get_schema(self):
+        return {
+            'type': ['string'],
+            'minLength': self.min_len,
+            'maxLength': self.max_len
+        }
+
+
+class NameField(fields.StringField):
+
+    AUTO_TYPE = Name()
