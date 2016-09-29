@@ -270,7 +270,7 @@ class StackProfile(base.Profile):
             hc.stack_check(stack_id)
             hc.wait_for_stack(stack_id, 'CHECK_COMPLETE', timeout=timeout)
         except exc.InternalError as ex:
-            LOG.error(_LE('Failed in checking stack: %s.'), six.text_type(ex))
+            LOG.error(_LE('Failed in checking stack: %s.'), ex)
             return False
 
         return True
