@@ -77,7 +77,7 @@ class NodeAction(base.Action):
             # matter the creation is a success or not because the node object
             # is # already treated as member of the cluster and the node
             # creation may have changed the cluster's status
-            cluster.eval_status(self.context, 'create_node',
+            cluster.eval_status(self.context, self.NODE_CREATE,
                                 desired_capacity=desired)
         if res:
             return self.RES_OK, _('Node created successfully.')
@@ -118,7 +118,7 @@ class NodeAction(base.Action):
                 do_reduce = pd.get('reduce_desired_capacity', True)
             if do_reduce and res:
                 params = {'desired_capacity': desired}
-            cluster.eval_status(self.context, 'delete_node', **params)
+            cluster.eval_status(self.context, self.NODE_DELETE, **params)
 
         if res:
             return self.RES_OK, _('Node deleted successfully.')
