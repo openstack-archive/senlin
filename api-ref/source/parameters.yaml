@@ -435,7 +435,7 @@ adjustment_type:
 
     This parameter is optional when a resize request is only about changing the
     ``min_size`` and/or ``max_size`` of the cluster. Otherwise, it is required.
-    When this paramter is specified, the ``number`` parameter has to be
+    When this parameter is specified, the ``number`` parameter has to be
     provided as well.
 
 attr_value:
@@ -512,7 +512,7 @@ cluster_id:
 cluster_member_nodes:
   type: array
   in: body
-  reqruied: True
+  required: True
   description: |
     The candidate nodes to be added to or removed from a cluster. The meaning
     of the parameter is depended on the action requested.
@@ -741,7 +741,7 @@ min_size:
   in: body
   required: True
   description: |
-    The minmum size of a cluster, i.e. the minimum number of nodes that can
+    The minimum size of a cluster, i.e. the minimum number of nodes that can
     be members of the cluster.
 
 min_size_req:
@@ -750,7 +750,7 @@ min_size_req:
   in: body
   required: False
   description: |
-    The minmum size of a cluster, i.e. the minimum number of nodes that can
+    The minimum size of a cluster, i.e. the minimum number of nodes that can
     be members of the cluster.
 
 name:
