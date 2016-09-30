@@ -117,6 +117,17 @@ def parse_level_values(values):
     return result
 
 
+def level_from_number(value):
+    """Parse a given level value(from number to string).
+
+    :param value: event level number.
+    :return: A translated value.
+    """
+    n = int(value)
+    levels = {value: key for key, value in consts.EVENT_LEVELS.items()}
+    return levels.get(n, None)
+
+
 def url_fetch(url, allowed_schemes=('http', 'https')):
     '''Get the data at the specified URL.
 

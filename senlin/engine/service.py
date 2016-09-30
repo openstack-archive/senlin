@@ -2421,8 +2421,13 @@ class EngineService(service.Service):
                                              limit=limit, marker=marker,
                                              sort=sort,
                                              project_safe=project_safe)
+        results = []
+        for event in all_events:
+            evt = event.as_dict()
+            level = utils.level_from_number(evt['level'])
+            evt['level'] = level
+            results.append(evt)
 
-        results = [event.as_dict() for event in all_events]
         return results
 
     @request_context
@@ -2436,4 +2441,8 @@ class EngineService(service.Service):
                  be found.
         """
         db_event = self.event_find(context, identity)
-        return db_event.as_dict()
+        evt = db_event.as_dict()
+        level = utils.level_from_number(evt['level'])
+        evt['level'] = level
+
+        return evt
