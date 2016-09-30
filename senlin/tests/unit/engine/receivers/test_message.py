@@ -503,6 +503,7 @@ class TestMessage(base.SenlinTestCase):
         mock_zc = mock.Mock()
         mock_zaqar.return_value = mock_zc
         mock_claim = mock.Mock()
+        mock_claim.id = 'claim_id'
         message1 = {
             'body': {'cluster': 'c1', 'action': 'CLUSTER_SCALE_IN'},
             'id': 'ID1'
@@ -520,6 +521,7 @@ class TestMessage(base.SenlinTestCase):
         res = message.notify(self.context)
         self.assertEqual(['action_id1', 'action_id2'], res)
         mock_zc.claim_create.assert_called_once_with('queue1')
+        mock_zc.claim_delete.assert_called_once_with('queue1', 'claim_id')
         mock_calls = [
             mock.call(self.context, message1),
             mock.call(self.context, message2)

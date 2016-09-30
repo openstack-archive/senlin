@@ -243,9 +243,12 @@ class Message(base.Receiver):
                                         message=ex.message)
 
     def notify(self, context, params=None):
+        queue_name = self.channel['queue_name']
         # Claim message(s) from queue
+        # TODO(Yanyanhu) carefully handling claim ttl to avoid
+        # potential race condition.
         try:
-            claim = self.zaqar().claim_create(self.channel['queue_name'])
+            claim = self.zaqar().claim_create(queue_name)
             messages = claim.messages
         except exc.InternalError as ex:
             LOG.error(_('Failed in claiming message: %s') % ex.message)
@@ -257,11 +260,23 @@ class Message(base.Receiver):
             for message in messages:
                 try:
                     action_id = self._build_action(context, message)
+                    actions.append(action_id)
                 except exc.InternalError as ex:
                     LOG.error(_('Failed in building action: %s'
                                 ) % ex.message)
                     continue
-                actions.append(action_id)
+
+            # Clean messages from queue
+            # FIXME(Yanyanhu): Ideally, message should be deleted just
+            # after it was successfully handled before claim expires or
+            # being deleted. However, Zaqar requires to delete message with
+            # claim_id specified as query parameter which is not supported
+            # by openstack-sdk. Therefore, we apply a workaround here
+            # by deleting claim first and then deleting all claimed messages.
+            self.zaqar().claim_delete(queue_name, claim.id)
+            for message in messages:
+                self.zaqar().message_delete(queue_name, message['id'])
+
             msg = _('Actions %(actions)s were successfully built.'
                     ) % {'actions': actions}
             LOG.info(msg)
