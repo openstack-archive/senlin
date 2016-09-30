@@ -292,4 +292,233 @@ class TestPropertySchema(base.SenlinTestCase):
 
 class TestBoolean(base.SenlinTestCase):
 
-    pass
+    def test_basic(self):
+        sot = schema.Boolean('desc')
+
+        self.assertEqual('Boolean', sot['type'])
+        self.assertEqual('desc', sot['description'])
+
+    def test_to_schema_type(self):
+        sot = schema.Boolean('desc')
+
+        res = sot.to_schema_type(True)
+        self.assertTrue(res)
+
+        res = sot.to_schema_type('true')
+        self.assertTrue(res)
+
+        res = sot.to_schema_type('trUE')
+        self.assertTrue(res)
+
+        res = sot.to_schema_type('False')
+        self.assertFalse(res)
+
+        res = sot.to_schema_type('FALSE')
+        self.assertFalse(res)
+
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               sot.to_schema_type,
+                               'bogus')
+        self.assertEqual("The value 'bogus' is not a valid Boolean",
+                         six.text_type(ex))
+
+    def test_resolve(self):
+        sot = schema.Boolean()
+
+        res = sot.resolve(True)
+        self.assertTrue(res)
+
+        res = sot.resolve(False)
+        self.assertFalse(res)
+
+        res = sot.resolve('Yes')
+        self.assertTrue(res)
+
+    def test_validate(self):
+        sot = schema.Boolean()
+
+        res = sot.validate(True)
+        self.assertIsNone(res)
+
+        res = sot.validate('No')
+        self.assertIsNone(res)
+
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               sot.validate,
+                               'bogus')
+        self.assertEqual("The value 'bogus' is not a valid Boolean",
+                         six.text_type(ex))
+
+
+class TestInteger(base.SenlinTestCase):
+
+    def test_basic(self):
+        sot = schema.Integer('desc')
+
+        self.assertEqual('Integer', sot['type'])
+        self.assertEqual('desc', sot['description'])
+
+    def test_to_schema_type(self):
+        sot = schema.Integer('desc')
+
+        res = sot.to_schema_type(123)
+        self.assertEqual(123, res)
+
+        res = sot.to_schema_type('123')
+        self.assertEqual(123, res)
+
+        res = sot.to_schema_type(False)
+        self.assertEqual(0, res)
+
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               sot.to_schema_type,
+                               '456L')
+        self.assertEqual("The value '456L' is not a valid Integer",
+                         six.text_type(ex))
+
+    def test_resolve(self):
+        sot = schema.Integer()
+
+        res = sot.resolve(1)
+        self.assertEqual(1, res)
+
+        res = sot.resolve(True)
+        self.assertEqual(1, res)
+
+        res = sot.resolve(False)
+        self.assertEqual(0, res)
+
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               sot.resolve,
+                               '456L')
+        self.assertEqual("The value '456L' is not a valid Integer",
+                         six.text_type(ex))
+
+    def test_validate(self):
+        sot = schema.Integer()
+
+        res = sot.validate(1)
+        self.assertIsNone(res)
+
+        res = sot.validate('1')
+        self.assertIsNone(res)
+
+        res = sot.validate(True)
+        self.assertIsNone(res)
+
+        mock_constraints = self.patchobject(sot, 'validate_constraints',
+                                            return_value=None)
+
+        res = sot.validate(1)
+        self.assertIsNone(res)
+        mock_constraints.assert_called_once_with(1, schema=sot, context=None)
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               sot.validate,
+                               'bogus')
+        self.assertEqual("The value 'bogus' is not a valid Integer",
+                         six.text_type(ex))
+
+
+class TestString(base.SenlinTestCase):
+
+    def test_basic(self):
+        sot = schema.String('desc')
+
+        self.assertEqual('String', sot['type'])
+        self.assertEqual('desc', sot['description'])
+
+    def test_to_schema_type(self):
+        sot = schema.String('desc')
+
+        res = sot.to_schema_type(123)
+        self.assertEqual('123', res)
+
+        res = sot.to_schema_type('123')
+        self.assertEqual('123', res)
+
+        res = sot.to_schema_type(False)
+        self.assertEqual('False', res)
+
+    def test_resolve(self):
+        sot = schema.String()
+
+        res = sot.resolve(1)
+        self.assertEqual('1', res)
+
+        res = sot.resolve(True)
+        self.assertEqual('True', res)
+
+    def test_validate(self):
+        sot = schema.String()
+
+        res = sot.validate('1')
+        self.assertIsNone(res)
+
+        res = sot.validate(u'unicode')
+        self.assertIsNone(res)
+
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               sot.validate,
+                               1)
+        self.assertEqual("The value '1' is not a valid string.",
+                         six.text_type(ex))
+
+        mock_constraints = self.patchobject(sot, 'validate_constraints',
+                                            return_value=None)
+
+        res = sot.validate("abcd")
+        self.assertIsNone(res)
+        mock_constraints.assert_called_once_with(
+            "abcd", schema=sot, context=None)
+
+
+class TestNumber(base.SenlinTestCase):
+
+    def test_basic(self):
+        sot = schema.Number('desc')
+
+        self.assertEqual('Number', sot['type'])
+        self.assertEqual('desc', sot['description'])
+
+    def test_to_schema_type(self):
+        sot = schema.Number('desc')
+
+        res = sot.to_schema_type(123)
+        self.assertEqual(123, res)
+
+        res = sot.to_schema_type(123.34)
+        self.assertEqual(123.34, res)
+
+        res = sot.to_schema_type(False)
+        self.assertEqual(False, res)
+
+    def test_resolve(self):
+        sot = schema.Number()
+        mock_convert = self.patchobject(sot, 'to_schema_type')
+
+        res = sot.resolve(1)
+        self.assertEqual(mock_convert.return_value, res)
+        mock_convert.assert_called_once_with(1)
+
+    def test_validate(self):
+        sot = schema.Number()
+
+        res = sot.validate(1)
+        self.assertIsNone(res)
+
+        res = sot.validate('1')
+        self.assertIsNone(res)
+
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               sot.validate,
+                               "bogus")
+        self.assertEqual("The value 'bogus' is not a valid number.",
+                         six.text_type(ex))
+
+        mock_constraints = self.patchobject(sot, 'validate_constraints',
+                                            return_value=None)
+
+        res = sot.validate('1234')
+        self.assertIsNone(res)
+        mock_constraints.assert_called_once_with(
+            1234, schema=sot, context=None)

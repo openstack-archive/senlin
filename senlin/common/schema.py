@@ -192,20 +192,21 @@ class PropertySchema(SchemaBase):
 
 
 class Boolean(PropertySchema):
+
     def __getitem__(self, key):
         if key == self.TYPE:
             return self.BOOLEAN
         return super(Boolean, self).__getitem__(key)
 
     def to_schema_type(self, value):
-        return strutils.bool_from_string(str(value), strict=True)
-
-    def resolve(self, value):
-        if str(value).lower() not in ('true', 'false'):
-            msg = _('The value "%s" is not a valid Boolean') % value
+        try:
+            return strutils.bool_from_string(str(value), strict=True)
+        except ValueError:
+            msg = _("The value '%s' is not a valid Boolean") % value
             raise exception.SpecValidationFailed(message=msg)
 
-        return strutils.bool_from_string(value, strict=True)
+    def resolve(self, value):
+        return self.to_schema_type(value)
 
     def validate(self, value, context=None):
         if isinstance(value, bool):
@@ -215,6 +216,7 @@ class Boolean(PropertySchema):
 
 
 class Integer(PropertySchema):
+
     def __getitem__(self, key):
         if key == self.TYPE:
             return self.INTEGER
@@ -226,17 +228,13 @@ class Integer(PropertySchema):
         try:
             num = int(value)
         except ValueError:
-            raise ValueError(_('%s is not an integer.') % num)
+            msg = _("The value '%s' is not a valid Integer") % value
+            raise exception.SpecValidationFailed(message=msg)
 
         return num
 
     def resolve(self, value):
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            msg = _('The value "%s" cannot be converted into an '
-                    'integer.') % value
-            raise exception.SpecValidationFailed(message=msg)
+        return self.to_schema_type(value)
 
     def validate(self, value, context=None):
         if not isinstance(value, six.integer_types):
@@ -246,24 +244,24 @@ class Integer(PropertySchema):
 
 
 class String(PropertySchema):
+
     def __getitem__(self, key):
         if key == self.TYPE:
             return self.STRING
         return super(String, self).__getitem__(key)
 
     def to_schema_type(self, value):
-        return str(value)
-
-    def resolve(self, value):
         try:
             return str(value)
-        except (TypeError, ValueError):
+        except Exception:
             raise
+
+    def resolve(self, value):
+        return self.to_schema_type(value)
 
     def validate(self, value, context=None):
         if not isinstance(value, six.string_types):
-            msg = _('The value "%s" cannot be converted into a '
-                    'string.') % value
+            msg = _("The value '%s' is not a valid string.") % value
             raise exception.SpecValidationFailed(message=msg)
 
         self.resolve(value)
@@ -271,6 +269,7 @@ class String(PropertySchema):
 
 
 class Number(PropertySchema):
+
     def __getitem__(self, key):
         if key == self.TYPE:
             return self.NUMBER
@@ -283,23 +282,20 @@ class Number(PropertySchema):
         try:
             return int(value)
         except ValueError:
-            return float(value)
+            try:
+                return float(value)
+            except ValueError:
+                msg = _("The value '%s' is not a valid number.") % value
+                raise exception.SpecValidationFailed(message=msg)
 
     def resolve(self, value):
-        if isinstance(value, numbers.Number):
-            return value
-
-        try:
-            return int(value)
-        except ValueError:
-            return float(value)
+        return self.to_schema_type(value)
 
     def validate(self, value, context=None):
-        if isinstance(value, numbers.Number):
-            return
+        if not isinstance(value, numbers.Number):
+            value = self.resolve(value)
 
-        self.resolve(value)
-        self.resolve_constraints(value, self, context)
+        self.validate_constraints(value, schema=self, context=context)
 
 
 class List(PropertySchema):

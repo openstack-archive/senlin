@@ -289,8 +289,7 @@ class TestConstraintsSchema(testtools.TestCase):
         spec = schema.Spec(spec_schema, data, version='1.0')
         ex = self.assertRaises(exception.SpecValidationFailed,
                                spec.validate)
-        msg = _('The value "%s" cannot be converted into an '
-                'integer.') % data['key2']
+        msg = _("The value '%s' is not a valid Integer") % data['key2']
         self.assertIn(msg, six.text_type(ex.message))
 
     def test_policy_validate_fail_unrecognizable_key(self):
