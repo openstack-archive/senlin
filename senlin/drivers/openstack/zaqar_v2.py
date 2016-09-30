@@ -43,3 +43,13 @@ class ZaqarClient(base.DriverBase):
     @sdk.translate_exception
     def claim_create(self, queue_name, **attrs):
         return self.conn.message.create_claim(queue_name, **attrs)
+
+    @sdk.translate_exception
+    def claim_delete(self, queue_name, claim, ignore_missing=True):
+        return self.conn.message.delete_claim(queue_name, claim,
+                                              ignore_missing)
+
+    @sdk.translate_exception
+    def message_delete(self, queue_name, message, ignore_missing=True):
+        return self.conn.message.delete_message(queue_name, message,
+                                                ignore_missing)

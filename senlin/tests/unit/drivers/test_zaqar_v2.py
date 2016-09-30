@@ -84,3 +84,35 @@ class TestZaqarV2(base.SenlinTestCase):
         zc.claim_create('foo', **attrs)
 
         self.message.create_claim.assert_called_once_with('foo', k1='v1')
+
+    def test_claim_delete(self):
+        zc = zaqar_v2.ZaqarClient(self.conn_params)
+        zc.claim_delete('foo', 'CLAIM_ID', True)
+        self.message.delete_claim.assert_called_once_with(
+            'foo', 'CLAIM_ID', True)
+        self.message.delete_claim.reset_mock()
+
+        zc.claim_delete('foo', 'CLAIM_ID', False)
+        self.message.delete_claim.assert_called_once_with(
+            'foo', 'CLAIM_ID', False)
+        self.message.delete_claim.reset_mock()
+
+        zc.claim_delete('foo', 'CLAIM_ID')
+        self.message.delete_claim.assert_called_once_with(
+            'foo', 'CLAIM_ID', True)
+
+    def test_message_delete(self):
+        zc = zaqar_v2.ZaqarClient(self.conn_params)
+        zc.message_delete('foo', 'MESSAGE_ID', True)
+        self.message.delete_message.assert_called_once_with(
+            'foo', 'MESSAGE_ID', True)
+        self.message.delete_message.reset_mock()
+
+        zc.message_delete('foo', 'MESSAGE_ID', False)
+        self.message.delete_message.assert_called_once_with(
+            'foo', 'MESSAGE_ID', False)
+        self.message.delete_message.reset_mock()
+
+        zc.message_delete('foo', 'MESSAGE_ID')
+        self.message.delete_message.assert_called_once_with(
+            'foo', 'MESSAGE_ID', True)
