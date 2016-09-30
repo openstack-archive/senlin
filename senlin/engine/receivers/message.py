@@ -185,11 +185,16 @@ class Message(base.Receiver):
             raise exc.InternalError(message=msg)
 
         # Permission check
-        if not context.is_admin and context.user != cluster_obj.user:
+        if not context.is_admin and self.user != cluster_obj.user:
             msg = _('%(user)s is not allowed to trigger actions on '
-                    'cluster %(cid)s.') % {'user': context.user,
+                    'cluster %(cid)s.') % {'user': self.user,
                                            'cid': cluster}
             raise exc.InternalError(message=msg)
+
+        # Use receiver owner context to build action
+        context.user = self.user
+        context.project = self.project
+        context.domain = self.domain
 
         # Action name check
         if action not in consts.ACTION_NAMES:

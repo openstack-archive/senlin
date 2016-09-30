@@ -591,7 +591,7 @@ class TestMessage(base.SenlinTestCase):
     @mock.patch.object(mmod.Message, '_find_cluster')
     def test_build_action(self, mock_find_cluster, mock_action_create):
         fake_cluster = mock.Mock()
-        fake_cluster.user = self.context.user
+        fake_cluster.user = 'user1'
         fake_cluster.id = 'cid1'
         mock_find_cluster.return_value = fake_cluster
         mock_action_create.return_value = 'action_id1'
@@ -601,6 +601,7 @@ class TestMessage(base.SenlinTestCase):
         }
         message = mmod.Message('message', None, None, id=UUID)
         message.id = 'ID654321'
+        message.user = 'user1'
         expected_kwargs = {
             'name': 'receiver_ID654321_ID123456',
             'cause': action_mod.CAUSE_RPC,
@@ -665,30 +666,32 @@ class TestMessage(base.SenlinTestCase):
     @mock.patch.object(mmod.Message, '_find_cluster')
     def test_build_action_permission_denied(self, mock_find_cluster):
         fake_cluster = mock.Mock()
-        fake_cluster.user = 'different_user_from_requester'
+        fake_cluster.user = 'user1'
         mock_find_cluster.return_value = fake_cluster
         msg = {
             'body': {'cluster': 'c1', 'action': 'CLUSTER_SCALE_IN'},
             'id': 'ID123456'
         }
         message = mmod.Message('message', None, None, id=UUID)
+        message.user = 'user2'
         ex = self.assertRaises(exception.InternalError, message._build_action,
                                self.context, msg)
         ex_msg = _('%(user)s is not allowed to trigger actions on '
-                   'cluster %(cid)s.') % {'user': self.context.user,
+                   'cluster %(cid)s.') % {'user': message.user,
                                           'cid': 'c1'}
         self.assertEqual(ex_msg, ex.message)
 
     @mock.patch.object(mmod.Message, '_find_cluster')
     def test_build_action_invalid_action_name(self, mock_find_cluster):
         fake_cluster = mock.Mock()
-        fake_cluster.user = self.context.user
+        fake_cluster.user = 'user1'
         mock_find_cluster.return_value = fake_cluster
         msg = {
             'body': {'cluster': 'c1', 'action': 'foo'},
             'id': 'ID123456'
         }
         message = mmod.Message('message', None, None, id=UUID)
+        message.user = 'user1'
         ex = self.assertRaises(exception.InternalError, message._build_action,
                                self.context, msg)
         ex_msg = _("Illegal action 'foo' specified.")
@@ -697,13 +700,14 @@ class TestMessage(base.SenlinTestCase):
     @mock.patch.object(mmod.Message, '_find_cluster')
     def test_build_action_not_cluster_action(self, mock_find_cluster):
         fake_cluster = mock.Mock()
-        fake_cluster.user = self.context.user
+        fake_cluster.user = 'user1'
         mock_find_cluster.return_value = fake_cluster
         msg = {
             'body': {'cluster': 'c1', 'action': 'NODE_CREATE'},
             'id': 'ID123456'
         }
         message = mmod.Message('message', None, None, id=UUID)
+        message.user = 'user1'
         ex = self.assertRaises(exception.InternalError, message._build_action,
                                self.context, msg)
         ex_msg = _("Action 'NODE_CREATE' is not applicable to clusters.")
