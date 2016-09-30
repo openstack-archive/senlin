@@ -425,7 +425,7 @@ class TestNode(base.SenlinTestCase):
                                             'bogus': 'foo'})
 
         self.assertTrue(res)
-        self.assertEqual(node.name, 'new_name')
+        self.assertEqual('new_name', node.name)
         mock_db.assert_has_calls([
             mock.call(self.context, node.id,
                       {'status': 'UPDATING',
