@@ -14,14 +14,10 @@
 from oslo_config import cfg
 from senlin.common.i18n import _
 
-service_available_group = cfg.OptGroup(name="service_available",
-                                       title="Available OpenStack Services")
-
-ServiceAvailableGroup = [
-    cfg.BoolOpt("senlin",
-                default=True,
-                help=_("Whether or not senlin is expected to be available")),
-]
+service_option = cfg.BoolOpt("senlin",
+                             default=True,
+                             help="Whether or not senlin is expected to be"
+                                  "available")
 
 clustering_group = cfg.OptGroup(name="clustering",
                                 title="Clustering Service Options")

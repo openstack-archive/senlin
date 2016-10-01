@@ -14,7 +14,6 @@
 
 import os
 
-from tempest import config
 from tempest.test_discover import plugins
 
 from senlin.tests.tempest import config as config_senlin
@@ -30,11 +29,13 @@ class SenlinTempestPlugin(plugins.TempestPlugin):
         return full_test_dir, base_path
 
     def register_opts(self, conf):
-        config.register_opt_group(conf, config_senlin.service_available_group,
-                                  config_senlin.ServiceAvailableGroup)
-        config.register_opt_group(conf, config_senlin.clustering_group,
-                                  config_senlin.ClusteringGroup)
+        conf.register_opt(config_senlin.service_option,
+                          group='service_available')
+        conf.register_group(config_senlin.clustering_group)
+        conf.register_opts(config_senlin.ClusteringGroup,
+                           group='clustering')
 
     def get_opt_lists(self):
         return [(config_senlin.clustering_group.name,
-                 config_senlin.ClusteringGroup)]
+                 config_senlin.ClusteringGroup),
+                ('service_available', [config_senlin.service_option])]
