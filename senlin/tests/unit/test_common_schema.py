@@ -427,6 +427,11 @@ class TestString(base.SenlinTestCase):
         self.assertEqual('String', sot['type'])
         self.assertEqual('desc', sot['description'])
 
+    def test_invalid_constructor(self):
+        self.assertRaises(exc.InvalidSchemaError,
+                          schema.String,
+                          schema=schema.String('String'))
+
     def test_to_schema_type(self):
         sot = schema.String('desc')
 
@@ -522,3 +527,107 @@ class TestNumber(base.SenlinTestCase):
         self.assertIsNone(res)
         mock_constraints.assert_called_once_with(
             1234, schema=sot, context=None)
+
+
+class TestList(base.SenlinTestCase):
+
+    def test_basic(self):
+        sot = schema.List('desc')
+
+        self.assertEqual('List', sot['type'])
+        self.assertEqual('desc', sot['description'])
+
+    def test__get_children(self):
+        sot = schema.List('desc', schema=schema.String())
+
+        res = sot._get_children(['v1', 'v2'], [0, 1])
+        self.assertEqual(['v1', 'v2'], list(res))
+
+    def test_resolve(self):
+        sot = schema.List(schema=schema.String())
+
+        res = sot.resolve(['v1', 'v2'])
+
+        self.assertEqual(['v1', 'v2'], res)
+
+        self.assertRaises(TypeError,
+                          sot.resolve,
+                          123)
+
+    def test_validate(self):
+        sot = schema.List(schema=schema.String())
+
+        res = sot.validate(['abc', 'def'])
+
+        self.assertIsNone(res)
+
+    def test_validate_failed(self):
+        sot = schema.List(schema=schema.String())
+
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               sot.validate,
+                               None)
+        self.assertEqual("'None' is not a List", six.text_type(ex))
+
+
+class TestMap(base.SenlinTestCase):
+
+    def test_basic(self):
+        sot = schema.Map('desc')
+
+        self.assertEqual('Map', sot['type'])
+        self.assertEqual('desc', sot['description'])
+
+    def test__get_children(self):
+        sot = schema.Map('desc', schema={'foo': schema.String()})
+
+        res = sot._get_children({'foo': 'bar'})
+
+        self.assertEqual({'foo': 'bar'}, dict(res))
+
+    def test_get_default(self):
+        sot = schema.Map(schema={'foo': schema.String()})
+        self.assertEqual({}, sot.get_default())
+
+        sot = schema.Map(default={'foo': 'bar'},
+                         schema={'foo': schema.String()})
+        self.assertEqual({'foo': 'bar'}, sot.get_default())
+
+        sot = schema.Map(default='bad', schema={'foo': schema.String()})
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               sot.get_default)
+        self.assertEqual("'bad' is not a Map", six.text_type(ex))
+
+    def test_resolve(self):
+        sot = schema.Map(schema={'foo': schema.String()})
+
+        res = sot.resolve({"foo": "bar"})
+        self.assertEqual({'foo': 'bar'}, res)
+
+        res = sot.resolve('{"foo": "bar"}')
+        self.assertEqual({'foo': 'bar'}, res)
+
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               sot.resolve,
+                               'plainstring')
+        self.assertEqual("'plainstring' is not a Map", six.text_type(ex))
+
+    def test_validate(self):
+        sot = schema.Map(schema={'foo': schema.String()})
+
+        res = sot.validate({"foo": "bar"})
+
+        self.assertIsNone(res)
+
+    def test_validate_failed(self):
+        sot = schema.Map(schema={'foo': schema.String()})
+
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               sot.validate,
+                               None)
+        self.assertEqual("'None' is not a Map", six.text_type(ex))
+
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               sot.validate,
+                               'bogus')
+        self.assertEqual("'bogus' is not a Map", six.text_type(ex))

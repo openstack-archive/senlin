@@ -299,56 +299,44 @@ class Number(PropertySchema):
 
 
 class List(PropertySchema):
+
     def __getitem__(self, key):
         if key == self.TYPE:
             return self.LIST
         return super(List, self).__getitem__(key)
 
-    def _get_children(self, values, keys, context):
-        sub_schema = self.schema
-        if sub_schema is not None:
-            # We have a child schema specified for list elements
-            # Fake a dict of array elements, since we have only one schema
-            schema_arr = dict((k, sub_schema[k]) for k in keys)
-            subspec = Spec(schema_arr, dict(values))
-            subspec.validate()
-
-            return ((k, subspec[k]) for k in keys)
-        else:
-            return values
-
-    def get_default(self):
-        if not isinstance(self.default, collections.Sequence):
-            raise TypeError(_('"%s" is not a List') % self.default)
-
-        return self.default
+    def _get_children(self, values, context=None):
+        res = []
+        for i in range(len(values)):
+            res.append(self.schema[i].resolve(values[i]))
+        return res
 
     def resolve(self, value, context=None):
         if not isinstance(value, collections.Sequence):
             raise TypeError(_('"%s" is not a List') % value)
 
-        return [v[1] for v in self._get_children(enumerate(value),
-                                                 list(range(len(value))),
-                                                 context)]
+        return [v for v in self._get_children(value, context=context)]
 
     def validate(self, value, context=None):
-        if not isinstance(value, collections.Mapping):
-            raise TypeError(_('"%s" is not a Map') % value)
+        # if not isinstance(value, collections.Mapping):
+        if not isinstance(value, collections.Sequence):
+            msg = _("'%s' is not a List") % value
+            raise exception.SpecValidationFailed(message=msg)
 
-        for key, child in self.schema.items():
-            item_value = value.get(key)
-            child.validate(item_value, context)
+        for v in value:
+            self.schema['*'].validate(v, context=context)
 
 
 class Map(PropertySchema):
+
     def __getitem__(self, key):
         if key == self.TYPE:
             return self.MAP
         return super(Map, self).__getitem__(key)
 
     def _get_children(self, values, context=None):
-        # There are cases where the Map is not specified to the very detailed
-        # levels, we treat them as valid specs as well.
+        # There are cases where the Map is not specified to the very
+        # detailed levels, we treat them as valid specs as well.
         if self.schema is None:
             return values
 
@@ -363,8 +351,12 @@ class Map(PropertySchema):
             return values
 
     def get_default(self):
+        if self.default is None:
+            return {}
+
         if not isinstance(self.default, collections.Mapping):
-            raise TypeError(_('"%s" is not a Map') % self.default)
+            msg = _("'%s' is not a Map") % self.default
+            raise exception.SpecValidationFailed(message=msg)
 
         return self.default
 
@@ -373,16 +365,19 @@ class Map(PropertySchema):
             try:
                 value = jsonutils.loads(value)
             except (TypeError, ValueError):
-                pass
+                msg = _("'%s' is not a Map") % value
+                raise exception.SpecValidationFailed(message=msg)
 
         if not isinstance(value, collections.Mapping):
-            raise TypeError(_('"%s" is not a Map') % value)
+            msg = _("'%s' is not a Map") % value
+            raise exception.SpecValidationFailed(message=msg)
 
         return dict(self._get_children(value.items(), context))
 
     def validate(self, value, context=None):
         if not isinstance(value, collections.Mapping):
-            raise TypeError(_('"%s" is not a Map') % value)
+            msg = _("'%s' is not a Map") % value
+            raise exception.SpecValidationFailed(message=msg)
 
         for key, child in self.schema.items():
             item_value = value.get(key)

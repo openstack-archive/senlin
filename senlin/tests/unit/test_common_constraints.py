@@ -182,15 +182,6 @@ class TestConstraintsSchema(testtools.TestCase):
         m = schema.Map('A map', schema={'Foo': s})
         self.assertEqual(d, dict(m))
 
-    def test_schema_map_resolve_json(self):
-        m = schema.Map('A map')
-        self.assertEqual({'foo': 'bar'}, m.resolve('{"foo": "bar"}'))
-
-    def test_schema_map_resolve_invalid(self):
-        m = schema.Map('A map')
-        ex = self.assertRaises(TypeError, m.resolve, 'oops')
-        self.assertEqual('"oops" is not a Map', six.text_type(ex))
-
     def test_schema_nested_schema(self):
         d = {
             'type': 'List',
@@ -225,11 +216,6 @@ class TestConstraintsSchema(testtools.TestCase):
         m = schema.Map('A map', schema={'Foo': s})
         l = schema.List('A list', schema=m)
         self.assertEqual(d, dict(l))
-
-    def test_schema_invalid_type(self):
-        self.assertRaises(exception.InvalidSchemaError,
-                          schema.String,
-                          schema=schema.String('String'))
 
     def test_schema_validate_good(self):
         c = constraints.AllowedValues(['foo', 'bar'])
