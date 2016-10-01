@@ -30,7 +30,7 @@ class BaseConstraint(collections.Mapping):
 
     def validate(self, value, schema=None, context=None):
         '''Base entry for validation.'''
-        if not self._validate(value, schema, context):
+        if not self._validate(value, schema=schema, context=context):
             raise ValueError(self._error(value))
 
     @classmethod
@@ -76,7 +76,7 @@ class AllowedValues(BaseConstraint):
         return _('"%(value)s" must be one of the allowed values: '
                  '%(allowed)s') % dict(value=value, allowed=values)
 
-    def _validate(self, value, schema, context=None):
+    def _validate(self, value, schema=None, context=None):
         if isinstance(value, list):
             return all(v in self.allowed for v in value)
 
