@@ -21,7 +21,7 @@ request_id:
   type: string
   in: header
   description: |
-    An unique ID for tracking service request. The request ID associated
+    A unique ID for tracking service request. The request ID associated
     with the request by default appears in the service logs.
 
 #### path parameters #########################################################
@@ -304,7 +304,7 @@ action_id:
   in: body
   required: True
   description: |
-    An UUID that uniquely identifies an action object.
+    A UUID that uniquely identifies an action object.
 
 action_name:
   type: string
