@@ -262,8 +262,7 @@ class PolicyTest(base.SenlinTestCase):
                                self.eng.policy_create,
                                self.ctx, 'FAKE_POLICY', self.spec)
         self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
-        self.assertEqual('Spec validation error (KEY2): Required spec item '
-                         '"KEY2" not assigned',
+        self.assertEqual("Required spec item 'KEY2' not provided",
                          six.text_type(ex.exc_info[1]))
 
     def test_policy_create_failed_validation(self):

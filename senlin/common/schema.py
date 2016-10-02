@@ -394,6 +394,7 @@ class StringParam(SchemaBase):
 
 class Operation(SchemaBase):
     """Class for specifying operations on profiles."""
+
     KEYS = (
         DESCRIPTION, PARAMETERS,
     ) = (
@@ -402,10 +403,10 @@ class Operation(SchemaBase):
 
     def __getitem__(self, key):
         if key == self.DESCRIPTION:
-            return self.description or "Undocumented."
+            return self.description or "Undocumented"
         elif key == self.PARAMETERS:
             if self.schema is None:
-                return "None."
+                return {}
             return dict((n, dict(s)) for n, s in self.schema.items())
 
 
@@ -428,18 +429,18 @@ class Spec(collections.Mapping):
                 if self._version:
                     self._schema[k]._validate_version(k, self._version)
             except (TypeError, ValueError) as err:
-                msg = _('Spec validation error (%(key)s): %(err)s') % dict(
-                    key=k, err=six.text_type(err))
-                raise exception.SpecValidationFailed(message=msg)
+                raise exception.SpecValidationFailed(
+                    message=six.text_type(err))
 
         for key in self._data:
             if key not in self._schema:
-                msg = _('Unrecognizable spec item "%s"') % key
+                msg = _("Unrecognizable spec item '%s'") % key
                 raise exception.SpecValidationFailed(message=msg)
 
     def resolve_value(self, key):
         if key not in self:
-            raise KeyError(_('Invalid spec item: "%s"') % key)
+            raise exception.SpecValidationFailed(
+                message="Invalid spec item: %s" % key)
 
         schema_item = self._schema[key]
         if key in self._data:
@@ -448,7 +449,8 @@ class Spec(collections.Mapping):
         elif schema_item.has_default():
             return schema_item.get_default()
         elif schema_item.required:
-            raise ValueError(_('Required spec item "%s" not assigned') % key)
+            msg = _("Required spec item '%s' not provided") % key
+            raise exception.SpecValidationFailed(message=msg)
 
     def __getitem__(self, key):
         '''Lazy evaluation for spec items.'''
