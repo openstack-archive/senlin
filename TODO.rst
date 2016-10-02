@@ -21,7 +21,6 @@ API
 ENGINE
 ------
   - Scaling Improvements [https://etherpad.openstack.org/p/newton-senlin-ha]
-    * Ensure all scaling operations are based on 'real' size.
     * Ensure 'desired_capacity' will be controlled by users, not senlin engine
       or policies.
     * Always do health check before any scaling actions.
@@ -41,9 +40,9 @@ API
 PROFILE
 -------
 
-  - Add support to template_url for heat stack profile. If template and template_url
-    are both specified, use template. Need to refer to heat api test for testing heat
-    profile.
+  - Add support to VM migration operations for nova server profile.
+  - Add support to snapshot/restore operations for nova server profile. The
+    possible use case is rapid scale.
 
 
 POLICY
