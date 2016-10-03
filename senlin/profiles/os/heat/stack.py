@@ -254,7 +254,7 @@ class StackProfile(base.Profile):
         """Check stack status.
 
         :param obj: Node object to operate.
-        :returns: True if check succeedes, or False otherwise.
+        :returns: True if check succeeded, or False otherwise.
         """
         stack_id = obj.physical_id
         if stack_id is None:
