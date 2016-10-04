@@ -267,7 +267,7 @@ class ProfileTest(base.SenlinTestCase):
                                self.ctx, 'FAKE_PROFILE', self.spec)
 
         self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
-        self.assertEqual('Unrecognizable spec item "KEY3"',
+        self.assertEqual("Unrecognizable spec item 'KEY3'",
                          six.text_type(ex.exc_info[1]))
 
     def test_profile_create_failed_validation(self):

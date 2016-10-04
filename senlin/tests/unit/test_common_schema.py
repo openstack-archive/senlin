@@ -631,3 +631,240 @@ class TestMap(base.SenlinTestCase):
                                sot.validate,
                                'bogus')
         self.assertEqual("'bogus' is not a Map", six.text_type(ex))
+
+
+class TestStringParam(base.SenlinTestCase):
+
+    def test_basic(self):
+        sot = schema.StringParam()
+        self.assertEqual('String', sot['type'])
+        self.assertEqual(False, sot['required'])
+
+
+class TestOperation(base.SenlinTestCase):
+
+    def test_basic(self):
+        sot = schema.Operation()
+        self.assertEqual('Undocumented', sot['description'])
+        self.assertEqual({}, sot['parameters'])
+
+    def test_initialized(self):
+        sot = schema.Operation('des', schema={'foo': schema.StringParam()})
+        self.assertEqual('des', sot['description'])
+        self.assertEqual({'foo': {'required': False, 'type': 'String'}},
+                         sot['parameters'])
+
+
+class TestSpec(base.SenlinTestCase):
+    spec_schema = {
+        'key1': schema.String('first key', default='value1'),
+        'key2': schema.Integer('second key', required=True),
+    }
+
+    def test_init(self):
+        data = {'key1': 'value1', 'key2': 2}
+        sot = schema.Spec(self.spec_schema, data)
+
+        self.assertEqual(self.spec_schema, sot._schema)
+        self.assertEqual(data, sot._data)
+        self.assertIsNone(sot._version)
+
+    def test_init_with_version(self):
+        data = {'key1': 'value1', 'key2': 2}
+        sot = schema.Spec(self.spec_schema, data, version='1.2')
+
+        self.assertEqual(self.spec_schema, sot._schema)
+        self.assertEqual(data, sot._data)
+        self.assertEqual('1.2', sot._version)
+
+    def test_validate(self):
+        data = {'key1': 'value1', 'key2': 2}
+        sot = schema.Spec(self.spec_schema, data)
+        res = sot.validate()
+        self.assertIsNone(res)
+
+        data1 = {'key2': 2}
+        sot = schema.Spec(self.spec_schema, data1)
+        res = sot.validate()
+        self.assertIsNone(res)
+
+    def test_validate_fail_unrecognizable_key(self):
+        spec_schema = {
+            'key1': schema.String('first key', default='value1'),
+        }
+        data = {'key1': 'value1', 'key2': 2}
+        sot = schema.Spec(spec_schema, data, version='1.0')
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               sot.validate)
+
+        self.assertIn("Unrecognizable spec item 'key2'",
+                      six.text_type(ex.message))
+
+    def test_validate_fail_value_type_incorrect(self):
+        spec_schema = {
+            'key1': schema.String('first key', default='value1'),
+            'key2': schema.Integer('second key', required=True),
+        }
+
+        data = {'key1': 'value1', 'key2': 'abc'}
+        spec = schema.Spec(spec_schema, data, version='1.0')
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               spec.validate)
+        self.assertIn("The value 'abc' is not a valid Integer",
+                      six.text_type(ex.message))
+
+    def test_validate_version_good(self):
+        spec_schema = {
+            'type': schema.String('Type name', required=True),
+            'version': schema.String('Version number', required=True),
+            'key1': schema.String('first key', default='value1'),
+            'key2': schema.Integer('second key', required=True,
+                                   min_version='1.0', max_version='1.2'),
+        }
+
+        data = {
+            'key1': 'value1',
+            'key2': 2,
+            'type': 'test-type',
+            'version': '1.0'
+        }
+        spec = schema.Spec(spec_schema, data)
+        self.assertIsNone(spec.validate())
+
+        data = {'key2': 2, 'type': 'test-type', 'version': '1.2'}
+        spec = schema.Spec(spec_schema, data)
+        self.assertIsNone(spec.validate())
+
+    def test_validate_version_fail_unsupported_version(self):
+        spec_schema = {
+            'type': schema.String('Type name', required=True),
+            'version': schema.String('Version number', required=True),
+            'key1': schema.String('first key', default='value1',
+                                  min_version='1.1'),
+            'key2': schema.Integer('second key', required=True),
+        }
+
+        data = {
+            'key1': 'value1',
+            'key2': 2,
+            'type': 'test-type',
+            'version': '1.0'
+        }
+        spec = schema.Spec(spec_schema, data, version='1.0')
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               spec.validate)
+        msg = 'key1 (min_version=1.1) is not supported by spec version 1.0.'
+        self.assertIn(msg, six.text_type(ex.message))
+
+    def test_validate_version_fail_version_over_max(self):
+        spec_schema = {
+            'type': schema.String('Type name', required=True),
+            'version': schema.String('Version number', required=True),
+            'key1': schema.String('first key', default='value1',
+                                  max_version='2.0'),
+            'key2': schema.Integer('second key', required=True),
+        }
+
+        data = {
+            'key1': 'value1',
+            'key2': 2,
+            'type': 'test-type',
+            'version': '3.0'
+        }
+        spec = schema.Spec(spec_schema, data, version='3.0')
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               spec.validate)
+        msg = 'key1 (max_version=2.0) is not supported by spec version 3.0.'
+        self.assertIn(msg, six.text_type(ex.message))
+
+    def test_resolve_value(self):
+        data = {'key2': 2}
+        sot = schema.Spec(self.spec_schema, data, version='1.2')
+
+        res = sot.resolve_value('key2')
+        self.assertEqual(2, res)
+
+        res = sot.resolve_value('key1')
+        self.assertEqual('value1', res)
+
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               sot.resolve_value,
+                               'key3')
+        self.assertEqual("Invalid spec item: key3", six.text_type(ex))
+
+    def test_resolve_value_required_key_missing(self):
+        data = {'key1': 'value1'}
+        sot = schema.Spec(self.spec_schema, data, version='1.0')
+
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               sot.resolve_value,
+                               'key2')
+
+        self.assertIn("Required spec item 'key2' not provided",
+                      six.text_type(ex.message))
+
+    def test___getitem__(self):
+        data = {'key2': 2}
+        sot = schema.Spec(self.spec_schema, data, version='1.2')
+
+        res = sot['key1']
+        self.assertEqual('value1', res)
+        res = sot['key2']
+        self.assertEqual(2, res)
+
+    def test___len__(self):
+        data = {'key2': 2}
+        sot = schema.Spec(self.spec_schema, data, version='1.2')
+
+        res = len(sot)
+        self.assertEqual(2, res)
+
+    def test___contains__(self):
+        data = {'key2': 2}
+        sot = schema.Spec(self.spec_schema, data, version='1.2')
+
+        self.assertIn('key1', sot)
+        self.assertIn('key2', sot)
+        self.assertNotIn('key3', sot)
+
+    def test__iter__(self):
+        data = {'key2': 2}
+        sot = schema.Spec(self.spec_schema, data, version='1.2')
+
+        res = [k for k in iter(sot)]
+
+        self.assertIn('key1', res)
+        self.assertIn('key2', res)
+
+
+class TestSpecVersionChecking(base.SenlinTestCase):
+
+    def test_spec_version_okay(self):
+        spec = {'type': 'Foo', 'version': 'version string'}
+        res = schema.get_spec_version(spec)
+        self.assertEqual(('Foo', 'version string'), res)
+
+        spec = {'type': 'Foo', 'version': 1.5}
+        res = schema.get_spec_version(spec)
+        self.assertEqual(('Foo', '1.5'), res)
+
+    def test_spec_version_not_dict(self):
+        spec = 'a string'
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               schema.get_spec_version, spec)
+        self.assertEqual('The provided spec is not a map.',
+                         six.text_type(ex))
+
+    def test_spec_version_no_type_key(self):
+        spec = {'tpye': 'a string'}
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               schema.get_spec_version, spec)
+        self.assertEqual("The 'type' key is missing from the provided "
+                         "spec map.", six.text_type(ex))
+
+    def test_spec_version_no_version_key(self):
+        spec = {'type': 'a string', 'ver': '123'}
+        ex = self.assertRaises(exc.SpecValidationFailed,
+                               schema.get_spec_version, spec)
+        self.assertEqual("The 'version' key is missing from the provided "
+                         "spec map.", six.text_type(ex))
