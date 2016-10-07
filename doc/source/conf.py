@@ -56,10 +56,11 @@ copyright = u'2015, OpenStack Foundation'
 # "version" and "release" are used by the "log-a-bug" feature
 #
 # The short X.Y version.
-version = '1.0'
-
+from senlin.version import version_info as senlin_version
 # The full version, including alpha/beta/rc tags.
-release = '1.0'
+release = senlin_version.version_string_with_vcs()
+# The short X.Y version.
+version = senlin_version.canonical_version_string()
 
 # A few variables have to be set for the log-a-bug feature.
 #   giturl: The location of conf.py on Git. Must be set manually.
