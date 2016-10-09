@@ -10,8 +10,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_config import cfg
+
 from senlin.objects import base
 from senlin.objects import fields
+
+CONF = cfg.CONF
+CONF.import_opt('default_action_timeout', 'senlin.common.config')
 
 
 @base.SenlinObjectRegistry.register
@@ -24,6 +29,8 @@ class ClusterCreateRequestBody(base.SenlinObject):
         'max_size': fields.IntegerField(nullable=True, default=-1),
         'desired_capacity': fields.IntegerField(nullable=True, default=0),
         'metadata': fields.JsonField(nullable=True, default={}),
+        'timeout': fields.IntegerField(nullable=True,
+                                       default=CONF.default_action_timeout),
     }
 
 
