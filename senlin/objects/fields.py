@@ -10,12 +10,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_config import cfg
 from oslo_serialization import jsonutils
 from oslo_versionedobjects import fields
 import re
 import six
 
 from senlin.common.i18n import _
+
+CONF = cfg.CONF
+CONF.import_opt("max_nodes_per_cluster", "senlin.common.config")
 
 # Field alias for code readability
 BooleanField = fields.BooleanField
@@ -209,6 +213,66 @@ class Name(fields.String):
         }
 
 
+class Capacity(fields.Integer):
+
+    def __init__(self, minimum=0, maximum=None):
+        super(Capacity, self).__init__()
+
+        if minimum > CONF.max_nodes_per_cluster:
+            err = _("The value of 'minimum' cannot be greater than the global "
+                    "constraint (%(m)d).") % {'m': CONF.max_nodes_per_cluster}
+            raise ValueError(err)
+        self.minimum = minimum
+
+        if maximum is not None:
+            if maximum < minimum:
+                err = _("The value of 'maximum' must be greater than or equal "
+                        "to that of the 'minimum' specified.")
+                raise ValueError(err)
+
+            if maximum > CONF.max_nodes_per_cluster:
+                err = _("The value of 'maximum' cannot be greater than the "
+                        "global constraint (%(m)d)."
+                        ) % {'m': CONF.max_nodes_per_cluster}
+                raise ValueError(err)
+
+            self.maximum = maximum
+        else:
+            self.maximum = CONF.max_nodes_per_cluster
+
+    def coerce(self, obj, attr, value):
+        value = super(Capacity, self).coerce(obj, attr, value)
+
+        err = None
+        if value < self.minimum:
+            err = _("The value for the %(a)s field must be greater than or "
+                    "equal to %(n)d.") % {'a': attr, 'n': self.minimum}
+        elif value > self.maximum:
+            err = _("The value for the %(a)s field must be less than or equal "
+                    "to %(n)d.") % {'a': attr, 'n': self.maximum}
+        if err:
+            raise ValueError(err)
+
+        return value
+
+    def get_schema(self):
+        return {
+            'type': ['integer', 'string'],
+            'minimum': self.minimum,
+            'maximum': self.maximum,
+            'pattern': '^[0-9]*$',
+        }
+
+
 class NameField(fields.AutoTypedField):
 
     AUTO_TYPE = Name()
+
+
+class CapacityField(fields.AutoTypedField):
+
+    AUTO_TYPE = None
+
+    def __init__(self, nullable=True, default=None, minimum=0, maximum=None):
+        self.AUTO_TYPE = Capacity(minimum=minimum, maximum=maximum)
+        super(CapacityField, self).__init__(nullable=nullable, default=default)
