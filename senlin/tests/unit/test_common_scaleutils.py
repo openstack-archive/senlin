@@ -12,6 +12,8 @@
 
 import mock
 
+from oslo_config import cfg
+
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import scaleutils as su
@@ -331,6 +333,14 @@ class CheckSizeParamsTest(base.SenlinTestCase):
             desired=None, min_size=None, max_size=14, strict=True,
             result='The specified max_size (14) is less than the current '
                    'desired_capacity (15) of the cluster.')),
+        ('101_x_x_x', dict(
+            desired=101, min_size=None, max_size=None, strict=True,
+            result='The target capacity (101) is greater than the '
+                   'maximum number of nodes allowed per cluster (100).')),
+        ('x_x_101_x', dict(
+            desired=None, min_size=None, max_size=101, strict=True,
+            result='The specified max_size (101) is greater than the '
+                   'maximum number of nodes allowed per cluster (100).')),
         # The following are okay cases
         ('5_x10_x_x', dict(
             desired=5, min_size=None, max_size=None, strict=False,
@@ -381,6 +391,10 @@ class CheckSizeParamsTest(base.SenlinTestCase):
             desired=None, min_size=None, max_size=-1, strict=True,
             result=None)),
     ]
+
+    def setUp(self):
+        super(CheckSizeParamsTest, self).setUp()
+        cfg.CONF.set_override('max_nodes_per_cluster', 100, enforce_type=True)
 
     def test_check_size_params(self):
         cluster = mock.Mock()
