@@ -67,7 +67,7 @@ api_opts = [
     cfg.StrOpt('key_file',
                help=_("Location of the SSL key file to use "
                       "for enabling SSL mode.")),
-    cfg.IntOpt('workers', default=0,
+    cfg.IntOpt('workers', min=0, default=0,
                help=_("Number of workers for Senlin service.")),
     cfg.IntOpt('max_header_line', default=16384,
                help=_('Maximum line size of message headers to be accepted. '
