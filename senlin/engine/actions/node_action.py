@@ -62,8 +62,7 @@ class NodeAction(base.Action):
         if cluster_id and self.cause == base.CAUSE_RPC:
             # Check cluster size constraint if target cluster is specified
             cluster = cm.Cluster.load(self.context, cluster_id)
-            current = no.Node.count_by_cluster(self.context, cluster_id)
-            desired = current + 1
+            desired = no.Node.count_by_cluster(self.context, cluster_id)
             result = su.check_size_params(cluster, desired, None, None, True)
             if result:
                 # cannot place node into the cluster
