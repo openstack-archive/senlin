@@ -68,7 +68,7 @@ class NodeActionTest(base.SenlinTestCase):
         node = mock.Mock(id='NID', cluster_id='CID')
         node.do_create = mock.Mock(return_value=True)
         mock_load.return_value = node
-        mock_count.return_value = 10
+        mock_count.return_value = 11
         mock_check.return_value = None
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
                                         cause=base_action.CAUSE_RPC)
@@ -97,7 +97,7 @@ class NodeActionTest(base.SenlinTestCase):
         node = mock.Mock(id='NID', cluster_id='CID')
         node.do_create = mock.Mock(return_value=True)
         mock_load.return_value = node
-        mock_count.return_value = 10
+        mock_count.return_value = 11
         mock_check.return_value = 'overflow'
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
                                         cause=base_action.CAUSE_RPC)
@@ -127,7 +127,7 @@ class NodeActionTest(base.SenlinTestCase):
         node = mock.Mock(id='NID', cluster_id='CID')
         node.do_create = mock.Mock(return_value=False)
         mock_load.return_value = node
-        mock_count.return_value = 10
+        mock_count.return_value = 11
         mock_check.return_value = ''
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
                                         cause=base_action.CAUSE_RPC)
