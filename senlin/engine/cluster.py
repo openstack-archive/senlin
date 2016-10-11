@@ -538,12 +538,9 @@ class Cluster(object):
                 active_count += 1
 
         # get provided desired_capacity/min_size/max_size
-        desired = params.get('desired_capacity', None)
-        desired = desired or self.desired_capacity
-        min_size = params.get('min_size', None)
-        min_size = min_size or self.min_size
-        max_size = params.get('max_size', None)
-        max_size = max_size or self.max_size
+        desired = params.get('desired_capacity', self.desired_capacity)
+        min_size = params.get('min_size', self.min_size)
+        max_size = params.get('max_size', self.max_size)
 
         values = params or {}
         if active_count < min_size:
