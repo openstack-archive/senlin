@@ -17,6 +17,7 @@ Utilities for scaling actions and related policies.
 import math
 import random
 
+from oslo_config import cfg
 from oslo_log import log as logging
 
 from senlin.common import consts
@@ -109,8 +110,14 @@ def check_size_params(cluster=None, desired=None, min_size=None, max_size=None,
         the checking.
     """
 
+    max_nodes_per_cluster = cfg.CONF.max_nodes_per_cluster
     if desired is not None:
         # recalculate/validate desired based on strict setting
+        if desired > max_nodes_per_cluster:
+            v = {'d': desired, 'm': max_nodes_per_cluster}
+            return _("The target capacity (%(d)s) is greater than the "
+                     "maximum number of nodes allowed per cluster "
+                     "(%(m)s).") % v
         if (min_size is not None and desired < min_size):
             v = {'d': desired, 'm': min_size}
             return _("The target capacity (%(d)s) is less than "
@@ -154,6 +161,11 @@ def check_size_params(cluster=None, desired=None, min_size=None, max_size=None,
                      "current desired_capacity (%(d)s) of the cluster.") % v
 
     if max_size is not None:
+        if max_size > max_nodes_per_cluster:
+            v = {'m': max_size, 'mc': max_nodes_per_cluster}
+            return _("The specified max_size (%(m)s) is greater than the "
+                     "maximum number of nodes allowed per cluster "
+                     "(%(mc)s).") % v
         if (min_size is None and cluster is not None and
                 max_size >= 0 and max_size < cluster.min_size):
             v = {'m': max_size, 'n': cluster.min_size}
