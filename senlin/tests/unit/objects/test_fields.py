@@ -10,11 +10,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
+from oslo_config import cfg
 from oslo_versionedobjects import fields
+import six
 import testtools
 
 from senlin.objects import base
 from senlin.objects import fields as senlin_fields
+
+CONF = cfg.CONF
 
 
 class FakeFieldType(fields.FieldType):
@@ -288,6 +293,131 @@ class TestName(TestField):
                 'type': ['string'],
                 'minLength': 1,
                 'maxLength': 255
+            },
+            sot.get_schema()
+        )
+
+
+class TestCapacity(TestField):
+
+    def setUp(self):
+        super(TestCapacity, self).setUp()
+
+        self.field = senlin_fields.CapacityField()
+        self.coerce_good_values = [
+            (100, 100),          # plain integer
+            ('100', 100),        # string of integer
+            ('0123', 123),       # leading zeros ignored
+        ]
+        self.coerce_bad_values = [
+            -1,              # less than 0
+            'strval',        # illegal value
+        ]
+        self.to_primitive_values = self.coerce_good_values[0:1]
+        self.from_primitive_values = self.coerce_good_values[0:1]
+
+    def test_stringify(self):
+        self.assertEqual('100', self.field.stringify(100))
+        self.assertEqual('100', self.field.stringify('100'))
+
+    def test_init(self):
+        CONF.set_override('max_nodes_per_cluster', 300, enforce_type=True)
+        sot = senlin_fields.Capacity()
+
+        self.assertEqual(0, sot.minimum)
+        self.assertEqual(300, sot.maximum)
+
+    def test_init_with_values(self):
+        CONF.set_override('max_nodes_per_cluster', 300, enforce_type=True)
+        sot = senlin_fields.Capacity(2, 200)
+
+        self.assertEqual(2, sot.minimum)
+        self.assertEqual(200, sot.maximum)
+
+    def test_init_invalid(self):
+        CONF.set_override('max_nodes_per_cluster', 100, enforce_type=True)
+
+        ex = self.assertRaises(ValueError,
+                               senlin_fields.Capacity,
+                               minimum=101)
+        self.assertEqual("The value of 'minimum' cannot be greater than the "
+                         "global constraint (100).", six.text_type(ex))
+
+        ex = self.assertRaises(ValueError,
+                               senlin_fields.Capacity,
+                               maximum=101)
+        self.assertEqual("The value of 'maximum' cannot be greater than the "
+                         "global constraint (100).", six.text_type(ex))
+
+        ex = self.assertRaises(ValueError,
+                               senlin_fields.Capacity,
+                               minimum=60, maximum=40)
+        self.assertEqual("The value of 'maximum' must be greater than or equal"
+                         " to that of the 'minimum' specified.",
+                         six.text_type(ex))
+
+    def test_coerce(self):
+        sot = senlin_fields.Capacity(minimum=2, maximum=200)
+        obj = mock.Mock()
+        res = sot.coerce(obj, 'attr', 12)
+        self.assertEqual(12, res)
+        res = sot.coerce(obj, 'attr', 2)
+        self.assertEqual(2, res)
+        res = sot.coerce(obj, 'attr', 200)
+        self.assertEqual(200, res)
+
+        sot = senlin_fields.Capacity()
+
+        res = sot.coerce(obj, 'attr', 12)
+        self.assertEqual(12, res)
+        res = sot.coerce(obj, 'attr', 0)
+        self.assertEqual(0, res)
+        res = sot.coerce(obj, 'attr', CONF.max_nodes_per_cluster)
+        self.assertEqual(CONF.max_nodes_per_cluster, res)
+
+    def test_coerce_failed(self):
+        sot = senlin_fields.Capacity(minimum=2, maximum=200)
+        obj = mock.Mock()
+
+        ex = self.assertRaises(ValueError,
+                               sot.coerce,
+                               obj, 'attr', 1)
+        self.assertEqual("The value for the attr field must be greater than "
+                         "or equal to 2.", six.text_type(ex))
+
+        ex = self.assertRaises(ValueError,
+                               sot.coerce,
+                               obj, 'attr', 201)
+        self.assertEqual("The value for the attr field must be less than "
+                         "or equal to 200.", six.text_type(ex))
+
+        ex = self.assertRaises(ValueError,
+                               sot.coerce,
+                               obj, 'attr', 'badvalue')
+        self.assertEqual("invalid literal for int() with base 10: 'badvalue'",
+                         six.text_type(ex))
+
+    def test_get_schema(self):
+        sot = senlin_fields.Capacity(minimum=2, maximum=200)
+        self.assertEqual(
+            {
+                'type': ['integer', 'string'],
+                'minimum': 2,
+                'maximum': 200,
+                'pattern': '^[0-9]*$',
+            },
+            sot.get_schema()
+        )
+
+    def test_get_schema_default(self):
+        cfg.CONF.set_override('max_nodes_per_cluster', 100, enforce_type=True)
+        sot = senlin_fields.Capacity()
+        self.assertEqual(
+            {
+                'type': ['integer', 'string'],
+                'minimum': 0,
+                'maximum': 100,
+                'pattern': '^[0-9]*$',
             },
             sot.get_schema()
         )
