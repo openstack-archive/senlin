@@ -11,8 +11,13 @@
 # under the License.
 import copy
 
+from oslo_config import cfg
+
 from senlin.objects.requests import clusters
 from senlin.tests.unit.common import base as test_base
+
+CONF = cfg.CONF
+CONF.import_opt('default_action_timeout', 'senlin.common.config')
 
 
 class TestClusterCreate(test_base.SenlinTestCase):
@@ -28,6 +33,7 @@ class TestClusterCreate(test_base.SenlinTestCase):
         self.assertEqual('test-profile', sot.profile_id)
 
         self.assertFalse(sot.obj_attr_is_set('min_size'))
+        self.assertFalse(sot.obj_attr_is_set('timeout'))
 
         sot.obj_set_defaults()
 
@@ -36,6 +42,7 @@ class TestClusterCreate(test_base.SenlinTestCase):
         self.assertEqual(-1, sot.max_size)
         self.assertEqual(0, sot.desired_capacity)
         self.assertEqual({}, sot.metadata)
+        self.assertEqual(CONF.default_action_timeout, sot.timeout)
 
     def test_cluster_create_request_body_full(self):
         body = copy.deepcopy(self.body)
@@ -43,6 +50,7 @@ class TestClusterCreate(test_base.SenlinTestCase):
         body['max_size'] = 10
         body['desired_capacity'] = 4
         body['metadata'] = {'foo': 'bar'}
+        body['timeout'] = 121
         sot = clusters.ClusterCreateRequestBody(**body)
         self.assertEqual('test-cluster', sot.name)
         self.assertEqual('test-profile', sot.profile_id)
@@ -50,6 +58,7 @@ class TestClusterCreate(test_base.SenlinTestCase):
         self.assertEqual(10, sot.max_size)
         self.assertEqual(4, sot.desired_capacity)
         self.assertEqual({'foo': 'bar'}, sot.metadata)
+        self.assertEqual(121, sot.timeout)
 
     def test_cluster_create_request_body_dump(self):
         sot = clusters.ClusterCreateRequestBody(**self.body)
