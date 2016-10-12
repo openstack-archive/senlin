@@ -19,7 +19,6 @@ import six
 from senlin.common.i18n import _
 
 CONF = cfg.CONF
-CONF.import_opt("max_nodes_per_cluster", "senlin.common.config")
 
 # Field alias for code readability
 BooleanField = fields.BooleanField
@@ -217,6 +216,7 @@ class Capacity(fields.Integer):
 
     def __init__(self, minimum=0, maximum=None):
         super(Capacity, self).__init__()
+        CONF.import_opt("max_nodes_per_cluster", "senlin.common.config")
 
         if minimum > CONF.max_nodes_per_cluster:
             err = _("The value of 'minimum' cannot be greater than the global "

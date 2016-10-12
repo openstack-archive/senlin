@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_config import cfg
 from oslo_context import context as oslo_context
 from oslo_log import log as logging
 import oslo_messaging
@@ -83,8 +84,10 @@ def notify(method, engine_id=None, **kwargs):
     :param method: remote method to call
     :param engine_id: dispatcher to notify; None implies broadcast
     '''
-
-    client = rpc_messaging.get_rpc_client(version=consts.RPC_API_VERSION)
+    # TODO(Qiming): Check if we need ovo serializer here
+    serializer = None
+    client = rpc_messaging.get_rpc_client(consts.ENGINE_TOPIC, cfg.CONF.host,
+                                          serializer=serializer)
 
     if engine_id:
         # Notify specific dispatcher identified by engine_id

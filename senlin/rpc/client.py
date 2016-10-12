@@ -18,6 +18,7 @@ from oslo_config import cfg
 
 from senlin.common import consts
 from senlin.common import messaging
+from senlin.objects import base as object_base
 
 
 class EngineClient(object):
@@ -29,13 +30,15 @@ class EngineClient(object):
       1.1 - Add cluster-collect call.
     """
 
-    BASE_RPC_API_VERSION = '1.0'
-
     def __init__(self):
-        self._client = messaging.get_rpc_client(
-            topic=consts.ENGINE_TOPIC,
-            server=cfg.CONF.host,
-            version=self.BASE_RPC_API_VERSION)
+        # TODO(Qiming): remove this when the migration is done
+        self._client = messaging.get_rpc_client(consts.ENGINE_TOPIC,
+                                                cfg.CONF.host)
+
+        serializer = object_base.VersionedObjectSerializer()
+        self.client = messaging.get_rpc_client(consts.ENGINE_TOPIC,
+                                               cfg.CONF.host,
+                                               serializer=serializer)
 
     @staticmethod
     def make_msg(method, **kwargs):

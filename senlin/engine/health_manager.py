@@ -297,21 +297,14 @@ def notify(engine_id, method, **kwargs):
     :param method: remote method to call
     """
     timeout = cfg.CONF.engine_life_check_timeout
-    client = rpc.get_rpc_client(version=consts.RPC_API_VERSION)
+    client = rpc.get_rpc_client(consts.ENGINE_HEALTH_MGR_TOPIC, None)
 
     if engine_id:
         # Notify specific dispatcher identified by engine_id
-        call_context = client.prepare(
-            version=consts.RPC_API_VERSION,
-            timeout=timeout,
-            topic=consts.ENGINE_HEALTH_MGR_TOPIC,
-            server=engine_id)
+        call_context = client.prepare(timeout=timeout, server=engine_id)
     else:
         # Broadcast to all disptachers
-        call_context = client.prepare(
-            version=consts.RPC_API_VERSION,
-            timeout=timeout,
-            topic=consts.ENGINE_HEALTH_MGR_TOPIC)
+        call_context = client.prepare(timeout=timeout)
 
     ctx = context.get_admin_context()
 

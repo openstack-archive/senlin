@@ -11,6 +11,7 @@
 # under the License.
 
 import mock
+from oslo_config import cfg
 from oslo_context import context
 import oslo_messaging
 
@@ -106,12 +107,15 @@ class TestDispatcher(base.SenlinTestCase):
     @mock.patch.object(context, 'get_current')
     @mock.patch.object(messaging, 'get_rpc_client')
     def test_notify_broadcast(self, mock_rpc, mock_get_current):
+        cfg.CONF.set_override('host', 'HOSTNAME', enforce_type=True)
         fake_ctx = mock.Mock()
         mock_get_current.return_value = fake_ctx
         mock_rpc.return_value = mock.Mock()
+
         dispatcher.notify('METHOD')
 
-        mock_rpc.assert_called_once_with(version=consts.RPC_API_VERSION)
+        mock_rpc.assert_called_once_with(consts.ENGINE_TOPIC, 'HOSTNAME',
+                                         serializer=None)
         mock_client = mock_rpc.return_value
         mock_client.prepare.assert_called_once_with(
             version=consts.RPC_API_VERSION,
@@ -124,6 +128,7 @@ class TestDispatcher(base.SenlinTestCase):
     @mock.patch.object(context, 'get_current')
     @mock.patch.object(messaging, 'get_rpc_client')
     def test_notify_single_server(self, mock_rpc, mock_get_current):
+        cfg.CONF.set_override('host', 'HOSTNAME', enforce_type=True)
         fake_ctx = mock.Mock()
         mock_get_current.return_value = fake_ctx
         mock_rpc.return_value = mock.Mock()
@@ -131,7 +136,8 @@ class TestDispatcher(base.SenlinTestCase):
 
         self.assertTrue(result)
 
-        mock_rpc.assert_called_once_with(version=consts.RPC_API_VERSION)
+        mock_rpc.assert_called_once_with(consts.ENGINE_TOPIC, 'HOSTNAME',
+                                         serializer=None)
         mock_client = mock_rpc.return_value
         mock_client.prepare.assert_called_once_with(
             version=consts.RPC_API_VERSION,
@@ -143,6 +149,7 @@ class TestDispatcher(base.SenlinTestCase):
 
     @mock.patch.object(messaging, 'get_rpc_client')
     def test_notify_timeout(self, mock_rpc):
+        cfg.CONF.set_override('host', 'HOSTNAME', enforce_type=True)
         mock_rpc.return_value = mock.Mock()
         mock_client = mock_rpc.return_value
         mock_context = mock_client.prepare.return_value
@@ -151,8 +158,8 @@ class TestDispatcher(base.SenlinTestCase):
         result = dispatcher.notify('METHOD')
 
         self.assertFalse(result)
-
-        mock_rpc.assert_called_once_with(version=consts.RPC_API_VERSION)
+        mock_rpc.assert_called_once_with(consts.ENGINE_TOPIC, 'HOSTNAME',
+                                         serializer=None)
         mock_client.prepare.assert_called_once_with(
             version=consts.RPC_API_VERSION,
             topic=consts.ENGINE_DISPATCHER_TOPIC,

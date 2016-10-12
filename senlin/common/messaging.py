@@ -14,6 +14,7 @@ import eventlet
 from oslo_config import cfg
 import oslo_messaging as messaging
 
+from senlin.common import consts
 from senlin.common import context
 
 # An alias for the default serializer
@@ -83,18 +84,23 @@ def cleanup():
     NOTIFIER = None
 
 
-def get_rpc_server(target, endpoint):
+def get_rpc_server(target, endpoint, serializer=None):
     """Return a configured oslo_messaging rpc server."""
-    serializer = RequestContextSerializer(JsonPayloadSerializer())
+    if serializer is None:
+        serializer = JsonPayloadSerializer()
+    serializer = RequestContextSerializer(serializer)
     return messaging.get_rpc_server(TRANSPORT, target, [endpoint],
                                     executor='eventlet',
                                     serializer=serializer)
 
 
-def get_rpc_client(**kwargs):
+def get_rpc_client(topic, server, serializer=None):
     """Return a configured oslo_messaging RPCClient."""
-    target = messaging.Target(**kwargs)
-    serializer = RequestContextSerializer(JsonPayloadSerializer())
+    target = messaging.Target(topic=topic, server=server,
+                              version=consts.RPC_API_VERSION_BASE)
+    if serializer is None:
+        serializer = JsonPayloadSerializer()
+    serializer = RequestContextSerializer(serializer)
     return messaging.RPCClient(TRANSPORT, target, serializer=serializer)
 
 
