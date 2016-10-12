@@ -18,6 +18,8 @@ import sys
 
 import openstackdocstheme
 
+from senlin.version import version_info as senlin_version
+
 sys.path.insert(0, os.path.abspath('../..'))
 # -- General configuration ----------------------------------------------------
 
@@ -56,7 +58,6 @@ copyright = u'2015, OpenStack Foundation'
 # "version" and "release" are used by the "log-a-bug" feature
 #
 # The short X.Y version.
-from senlin.version import version_info as senlin_version
 # The full version, including alpha/beta/rc tags.
 release = senlin_version.version_string_with_vcs()
 # The short X.Y version.
