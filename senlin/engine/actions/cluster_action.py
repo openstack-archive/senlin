@@ -204,6 +204,65 @@ class ClusterAction(base.Action):
 
         return result, reason
 
+    def _update_nodes(self, profile_id, nodes_obj):
+        # Get batching policy data if any
+        fmt = _LI("Updating cluster '%(cluster)s': profile='%(profile)s'.")
+        LOG.info(fmt, {'cluster': self.cluster.id, 'profile': profile_id})
+        pause_time = 0
+        plan = []
+
+        pd = self.data.get('update', None)
+        if pd:
+            pause_time = pd.get('pause_time')
+            plan = pd.get('plan')
+        else:
+            pause_time = 0
+            nodes_list = []
+            for node in self.cluster.nodes:
+                nodes_list.append(node.id)
+            plan.append(set(nodes_list))
+
+        nodes = []
+        for node_set in plan:
+            child = []
+            nodes = list(node_set)
+
+            for node in nodes:
+                kwargs = {
+                    'name': 'node_update_%s' % node[:8],
+                    'cause': base.CAUSE_DERIVED,
+                    'inputs': {
+                        'new_profile_id': profile_id,
+                    },
+                }
+                action_id = base.Action.create(self.context, node,
+                                               consts.NODE_UPDATE, **kwargs)
+                child.append(action_id)
+
+            if child:
+                dobj.Dependency.create(self.context, [c for c in child],
+                                       self.id)
+                for cid in child:
+                    ao.Action.update(self.context, cid,
+                                     {'status': base.Action.READY})
+
+                dispatcher.start_action()
+                # clear the action list
+                child = []
+                result, new_reason = self._wait_for_dependents()
+                if result != self.RES_OK:
+                    self.cluster.eval_status(self.context, self.CLUSTER_UPDATE)
+                    return result, _('Failed in updating nodes.')
+                # pause time
+                if pause_time != 0:
+                    self._sleep(pause_time)
+
+        self.cluster.profile_id = profile_id
+        self.cluster.eval_status(self.context, self.CLUSTER_UPDATE,
+                                 profile_id=profile_id,
+                                 updated_at=timeutils.utcnow(True))
+        return self.RES_OK, 'Cluster update completed.'
+
     @profiler.trace('ClusterAction.do_update', hide_args=False)
     def do_update(self):
         """Handler for CLUSTER_UPDATE action.
@@ -235,38 +294,9 @@ class ClusterAction(base.Action):
                                      updated_at=timeutils.utcnow(True))
             return self.RES_OK, reason
 
-        fmt = _LI("Updating cluster '%(cluster)s': profile='%(profile)s'.")
-        LOG.info(fmt, {'cluster': self.cluster.id, 'profile': profile_id})
-        child = []
-        for node in self.cluster.nodes:
-            kwargs = {
-                'name': 'node_update_%s' % node.id[:8],
-                'cause': base.CAUSE_DERIVED,
-                'inputs': {
-                    'new_profile_id': profile_id,
-                },
-            }
-            action_id = base.Action.create(self.context, node.id,
-                                           consts.NODE_UPDATE, **kwargs)
-            child.append(action_id)
-
-        if child:
-            dobj.Dependency.create(self.context, [c for c in child], self.id)
-            for cid in child:
-                ao.Action.update(self.context, cid,
-                                 {'status': base.Action.READY})
-            dispatcher.start_action()
-
-            result, new_reason = self._wait_for_dependents()
-            if result != self.RES_OK:
-                self.cluster.eval_status(self.context, self.CLUSTER_UPDATE)
-                return result, _('Failed in updating nodes.')
-
-        self.cluster.profile_id = profile_id
-        self.cluster.eval_status(self.context, self.CLUSTER_UPDATE,
-                                 profile_id=profile_id,
-                                 updated_at=timeutils.utcnow(True))
-        return self.RES_OK, reason
+        # Update nodes with new profile
+        result, reason = self._update_nodes(profile_id, self.cluster.nodes)
+        return result, reason
 
     def _delete_nodes(self, node_ids):
         action_name = consts.NODE_DELETE
