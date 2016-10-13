@@ -26,6 +26,7 @@ import six
 from senlin.api.common import wsgi
 from senlin.common.i18n import _LI
 from senlin.common import messaging
+from senlin.common import profiler
 from senlin import version
 
 _lazy.enable_lazy()
@@ -47,6 +48,7 @@ def main():
         port = cfg.CONF.senlin_api.bind_port
         LOG.info(_LI('Starting Senlin API on %(host)s:%(port)s'),
                  {'host': host, 'port': port})
+        profiler.setup('senlin-api', host)
         server = wsgi.Server('senlin-api', cfg.CONF.senlin_api)
         server.start(app, default_port=port)
         systemd.notify_once()

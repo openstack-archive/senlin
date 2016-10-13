@@ -13,6 +13,7 @@
 import eventlet
 import mock
 from oslo_config import cfg
+from oslo_context import context as oslo_context
 from oslo_service import threadgroup
 
 from senlin.db import api as db_api
@@ -42,9 +43,9 @@ class DummyThreadGroup(object):
     def stop_timers(self):
         pass
 
-    def add_thread(self, callback, *args, **kwargs):
-        callback = args[1]
-        self.threads.append(callback)
+    def add_thread(self, callback, cnxt, trace, func, *args, **kwargs):
+        # callback here is _start_with_trace, func is the 'real' callback
+        self.threads.append(func)
         return DummyThread()
 
     def stop(self, graceful=False):
@@ -84,7 +85,10 @@ class SchedulerTest(base.SenlinTestCase):
         tgm = scheduler.ThreadGroupManager()
         tgm.start(f)
 
-        mock_group.add_thread.assert_called_once_with(f)
+        mock_group.add_thread.assert_called_once_with(
+            tgm._start_with_trace,
+            oslo_context.get_current(),
+            None, f)
 
     @mock.patch.object(db_api, 'action_acquire_1st_ready')
     @mock.patch.object(db_api, 'action_acquire')
@@ -100,8 +104,11 @@ class SchedulerTest(base.SenlinTestCase):
         tgm = scheduler.ThreadGroupManager()
         tgm.start_action('4567', '0123')
 
-        mock_group.add_thread.assert_called_once_with(actionm.ActionProc,
-                                                      tgm.db_session, '0123')
+        mock_group.add_thread.assert_called_once_with(
+            tgm._start_with_trace,
+            oslo_context.get_current(),
+            None, actionm.ActionProc,
+            tgm.db_session, '0123')
         mock_thread = mock_group.add_thread.return_value
         self.assertEqual(mock_thread, tgm.workers['0123'])
         mock_thread.link.assert_called_once_with(mock.ANY, '0123')
@@ -118,8 +125,11 @@ class SchedulerTest(base.SenlinTestCase):
         tgm = scheduler.ThreadGroupManager()
         tgm.start_action('4567')
 
-        mock_group.add_thread.assert_called_once_with(actionm.ActionProc,
-                                                      tgm.db_session, '0123')
+        mock_group.add_thread.assert_called_once_with(
+            tgm._start_with_trace,
+            oslo_context.get_current(),
+            None, actionm.ActionProc,
+            tgm.db_session, '0123')
         mock_thread = mock_group.add_thread.return_value
         self.assertEqual(mock_thread, tgm.workers['0123'])
         mock_thread.link.assert_called_once_with(mock.ANY, '0123')

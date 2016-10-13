@@ -12,6 +12,8 @@
 
 import eventlet
 
+from osprofiler import profiler
+
 from senlin.common.i18n import _
 from senlin.common import scaleutils as su
 from senlin.engine.actions import base
@@ -53,6 +55,7 @@ class NodeAction(base.Action):
         except Exception:
             self.node = None
 
+    @profiler.trace('NodeAction.do_create', hide_args=False)
     def do_create(self):
         """Handler for the NODE_CREATE action.
 
@@ -83,6 +86,7 @@ class NodeAction(base.Action):
         else:
             return self.RES_ERROR, _('Node creation failed.')
 
+    @profiler.trace('NodeAction.do_delete', hide_args=False)
     def do_delete(self):
         """Handler for the NODE_DELETE action.
 
@@ -124,6 +128,7 @@ class NodeAction(base.Action):
         else:
             return self.RES_ERROR, _('Node deletion failed.')
 
+    @profiler.trace('NodeAction.do_update', hide_args=False)
     def do_update(self):
         """Handler for the NODE_UPDATE action.
 
@@ -136,6 +141,7 @@ class NodeAction(base.Action):
         else:
             return self.RES_ERROR, _('Node update failed.')
 
+    @profiler.trace('NodeAction.do_join', hide_args=False)
     def do_join(self):
         """Handler for the NODE_JOIN action.
 
@@ -160,6 +166,7 @@ class NodeAction(base.Action):
         else:
             return self.RES_ERROR, _('Node failed in joining cluster.')
 
+    @profiler.trace('NodeAction.do_leave', hide_args=False)
     def do_leave(self):
         """Handler for the NODE_LEAVE action.
 
@@ -183,6 +190,7 @@ class NodeAction(base.Action):
         else:
             return self.RES_ERROR, _('Node failed in leaving cluster.')
 
+    @profiler.trace('NodeAction.do_check', hide_args=False)
     def do_check(self):
         """Handler for the NODE_check action.
 
@@ -194,6 +202,7 @@ class NodeAction(base.Action):
         else:
             return self.RES_ERROR, _('Node status is not ACTIVE.')
 
+    @profiler.trace('NodeAction.do_recover', hide_args=False)
     def do_recover(self):
         """Handler for the NODE_RECOVER action.
 

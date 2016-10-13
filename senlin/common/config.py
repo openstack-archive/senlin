@@ -17,6 +17,7 @@ import socket
 
 from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
+from osprofiler import opts as profiler
 
 from senlin.api.common import wsgi
 from senlin.common.i18n import _
@@ -183,6 +184,10 @@ cfg.CONF.register_group(zaqar_group)
 ks_loading.register_session_conf_options(cfg.CONF, 'zaqar')
 ks_loading.register_auth_conf_options(cfg.CONF, 'zaqar')
 
+# OSProfiler
+group, opts = profiler.list_opts()[0]
+cfg.CONF.register_opts(opts, group=group)
+
 
 def list_opts():
     """Return a list of oslo.config options available.
@@ -212,3 +217,4 @@ def list_opts():
     yield revision_group.name, revision_opts
     yield receiver_group.name, receiver_opts
     yield zaqar_group.name, zaqar_opts
+    yield profiler.list_opts()[0]

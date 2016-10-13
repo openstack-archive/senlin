@@ -22,6 +22,7 @@ from oslo_service import service
 
 from senlin.common import consts
 from senlin.common import messaging
+from senlin.common import profiler
 from senlin import objects
 
 _lazy.enable_lazy()
@@ -37,6 +38,7 @@ def main():
 
     from senlin.engine import service as engine
 
+    profiler.setup('senlin-engine', cfg.CONF.host)
     srv = engine.EngineService(cfg.CONF.host, consts.ENGINE_TOPIC)
     launcher = service.launch(cfg.CONF, srv,
                               workers=cfg.CONF.num_engine_workers)
