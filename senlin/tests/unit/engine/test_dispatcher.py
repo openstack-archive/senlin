@@ -114,13 +114,9 @@ class TestDispatcher(base.SenlinTestCase):
 
         dispatcher.notify('METHOD')
 
-        mock_rpc.assert_called_once_with(consts.ENGINE_TOPIC, 'HOSTNAME',
-                                         serializer=None)
+        mock_rpc.assert_called_once_with(consts.DISPATCHER_TOPIC, 'HOSTNAME')
         mock_client = mock_rpc.return_value
-        mock_client.prepare.assert_called_once_with(
-            version=consts.RPC_API_VERSION,
-            topic=consts.ENGINE_DISPATCHER_TOPIC,
-            fanout=True)
+        mock_client.prepare.assert_called_once_with(fanout=True)
 
         mock_context = mock_client.prepare.return_value
         mock_context.cast.assert_called_once_with(fake_ctx, 'METHOD')
@@ -132,17 +128,13 @@ class TestDispatcher(base.SenlinTestCase):
         fake_ctx = mock.Mock()
         mock_get_current.return_value = fake_ctx
         mock_rpc.return_value = mock.Mock()
+
         result = dispatcher.notify('METHOD', 'FAKE_ENGINE')
 
         self.assertTrue(result)
-
-        mock_rpc.assert_called_once_with(consts.ENGINE_TOPIC, 'HOSTNAME',
-                                         serializer=None)
+        mock_rpc.assert_called_once_with(consts.DISPATCHER_TOPIC, 'HOSTNAME')
         mock_client = mock_rpc.return_value
-        mock_client.prepare.assert_called_once_with(
-            version=consts.RPC_API_VERSION,
-            topic=consts.ENGINE_DISPATCHER_TOPIC,
-            server='FAKE_ENGINE')
+        mock_client.prepare.assert_called_once_with(server='FAKE_ENGINE')
 
         mock_context = mock_client.prepare.return_value
         mock_context.cast.assert_called_once_with(fake_ctx, 'METHOD')
@@ -158,12 +150,8 @@ class TestDispatcher(base.SenlinTestCase):
         result = dispatcher.notify('METHOD')
 
         self.assertFalse(result)
-        mock_rpc.assert_called_once_with(consts.ENGINE_TOPIC, 'HOSTNAME',
-                                         serializer=None)
-        mock_client.prepare.assert_called_once_with(
-            version=consts.RPC_API_VERSION,
-            topic=consts.ENGINE_DISPATCHER_TOPIC,
-            fanout=True)
+        mock_rpc.assert_called_once_with(consts.DISPATCHER_TOPIC, 'HOSTNAME')
+        mock_client.prepare.assert_called_once_with(fanout=True)
 
         mock_context.cast.assert_called_once_with(mock.ANY, 'METHOD')
 

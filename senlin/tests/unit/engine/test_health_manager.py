@@ -230,7 +230,7 @@ class TestHealthManager(base.SenlinTestCase):
 
         mock_eng = mock.Mock()
         mock_eng.engine_id = 'ENGINE_ID'
-        topic = consts.ENGINE_HEALTH_MGR_TOPIC
+        topic = consts.HEALTH_MANAGER_TOPIC
         version = consts.RPC_API_VERSION
         self.hm = health_manager.HealthManager(mock_eng, topic, version)
 
@@ -238,7 +238,7 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual('ENGINE_ID', self.hm.engine_id)
         self.assertIsNotNone(self.hm.TG)
         self.assertIsNotNone(self.hm.rpc_client)
-        self.assertEqual(consts.ENGINE_HEALTH_MGR_TOPIC, self.hm.topic)
+        self.assertEqual(consts.HEALTH_MANAGER_TOPIC, self.hm.topic)
         self.assertEqual(consts.RPC_API_VERSION, self.hm.version)
         self.assertEqual(0, len(self.hm.rt['registries']))
 

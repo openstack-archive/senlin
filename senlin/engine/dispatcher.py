@@ -18,7 +18,7 @@ from oslo_service import service
 
 from senlin.common import consts
 from senlin.common.i18n import _LI
-from senlin.common import messaging as rpc_messaging
+from senlin.common import messaging as messaging
 
 LOG = logging.getLogger(__name__)
 
@@ -30,10 +30,10 @@ OPERATIONS = (
 
 
 class Dispatcher(service.Service):
-    '''Listen on an AMQP queue named for the engine.
+    """RPC server for dispatching actions.
 
     Receive notification from engine services and schedule actions.
-    '''
+    """
     def __init__(self, engine_service, topic, version, thread_group_mgr):
         super(Dispatcher, self).__init__()
         self.TG = thread_group_mgr
@@ -42,11 +42,17 @@ class Dispatcher(service.Service):
         self.version = version
 
     def start(self):
+        """Start the dispatcher.
+
+        Note that dispatcher is an engine-internal server, we are not using
+        versioned object for parameter passing.
+        """
         super(Dispatcher, self).start()
         self.target = oslo_messaging.Target(server=self.engine_id,
                                             topic=self.topic,
                                             version=self.version)
-        server = rpc_messaging.get_rpc_server(self.target, self)
+
+        server = messaging.get_rpc_server(self.target, self)
         server.start()
 
     def listening(self, ctxt):
@@ -79,28 +85,22 @@ class Dispatcher(service.Service):
 
 
 def notify(method, engine_id=None, **kwargs):
-    '''Send notification to dispatcher
+    """Send notification to dispatcher.
+
+    Note that dispatcher is an engine internal communication. We are not using
+    versioned object serialization at this level.
 
     :param method: remote method to call
     :param engine_id: dispatcher to notify; None implies broadcast
-    '''
-    # TODO(Qiming): Check if we need ovo serializer here
-    serializer = None
-    client = rpc_messaging.get_rpc_client(consts.ENGINE_TOPIC, cfg.CONF.host,
-                                          serializer=serializer)
+    """
+    client = messaging.get_rpc_client(consts.DISPATCHER_TOPIC, cfg.CONF.host)
 
     if engine_id:
         # Notify specific dispatcher identified by engine_id
-        call_context = client.prepare(
-            version=consts.RPC_API_VERSION,
-            topic=consts.ENGINE_DISPATCHER_TOPIC,
-            server=engine_id)
+        call_context = client.prepare(server=engine_id)
     else:
         # Broadcast to all disptachers
-        call_context = client.prepare(
-            version=consts.RPC_API_VERSION,
-            topic=consts.ENGINE_DISPATCHER_TOPIC,
-            fanout=True)
+        call_context = client.prepare(fanout=True)
 
     try:
         # We don't use ctext parameter in action progress

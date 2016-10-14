@@ -31,14 +31,13 @@ class EngineClient(object):
     """
 
     def __init__(self):
-        # TODO(Qiming): remove this when the migration is done
+        if cfg.CONF.rpc_use_object:
+            serializer = object_base.VersionedObjectSerializer()
+        else:
+            serializer = None
         self._client = messaging.get_rpc_client(consts.ENGINE_TOPIC,
-                                                cfg.CONF.host)
-
-        serializer = object_base.VersionedObjectSerializer()
-        self.client = messaging.get_rpc_client(consts.ENGINE_TOPIC,
-                                               cfg.CONF.host,
-                                               serializer=serializer)
+                                                cfg.CONF.host,
+                                                serializer=serializer)
 
     @staticmethod
     def make_msg(method, **kwargs):
