@@ -91,14 +91,14 @@ class TestNotificationBase(test_base.SenlinTestCase):
     }
 
     expected_payload = {
-        'versioned_object.name': 'TestPayload',
-        'versioned_object.data': {
+        'senlin_object.name': 'TestPayload',
+        'senlin_object.data': {
             'extra_field': 'test string',
             'field_1': 'test1',
             'field_2': 42
         },
-        'versioned_object.version': '1.0',
-        'versioned_object.namespace': 'senlin'
+        'senlin_object.version': '1.0',
+        'senlin_object.namespace': 'senlin'
     }
 
     def setUp(self):
@@ -241,9 +241,9 @@ class TestNotificationBase(test_base.SenlinTestCase):
             mock_context,
             expected_event_type='test_object.update',
             expected_payload={
-                'versioned_object.name': 'TestPayloadEmptySchema',
-                'versioned_object.data': {'extra_field': u'test string'},
-                'versioned_object.version': '1.0',
-                'versioned_object.namespace': 'senlin'
+                'senlin_object.name': 'TestPayloadEmptySchema',
+                'senlin_object.data': {'extra_field': u'test string'},
+                'senlin_object.version': '1.0',
+                'senlin_object.namespace': 'senlin'
             }
         )

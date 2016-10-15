@@ -30,7 +30,7 @@ class SenlinObject(base.VersionedObject):
     instantiatable. Objects should implement the "get" class method and the
     "save" object method.
     """
-    OBJ_SERIAL_NAMESPACE = 'versioned_object'
+    OBJ_SERIAL_NAMESPACE = 'senlin_object'
     OBJ_PROJECT_NAMESPACE = 'senlin'
     VERSION = '1.0'
 
@@ -71,15 +71,16 @@ class SenlinObject(base.VersionedObject):
     @classmethod
     def normalize_req(cls, name, req, key):
         return {
-            'versioned_object.version': cls.VERSION,
-            'versioned_object.namespace': cls.OBJ_PROJECT_NAMESPACE,
-            'versioned_object.name': name,
-            'versioned_object.data': {
+            cls.OBJ_SERIAL_NAMESPACE + '.version': cls.VERSION,
+            cls.OBJ_SERIAL_NAMESPACE + '.namespace': cls.OBJ_PROJECT_NAMESPACE,
+            cls.OBJ_SERIAL_NAMESPACE + '.name': name,
+            cls.OBJ_SERIAL_NAMESPACE + '.data': {
                 key: {
-                    'versioned_object.version': cls.VERSION,
-                    'versioned_object.namespace': cls.OBJ_PROJECT_NAMESPACE,
-                    'versioned_object.name': name + 'Body',
-                    'versioned_object.data': req[key]
+                    cls.OBJ_SERIAL_NAMESPACE + '.version': cls.VERSION,
+                    cls.OBJ_SERIAL_NAMESPACE + '.namespace':
+                        cls.OBJ_PROJECT_NAMESPACE,
+                    cls.OBJ_SERIAL_NAMESPACE + '.name': name + 'Body',
+                    cls.OBJ_SERIAL_NAMESPACE + '.data': req[key]
                 }
             }
         }

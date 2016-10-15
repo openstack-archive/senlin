@@ -76,8 +76,8 @@ def request_context2(func):
             ctx = senlin_context.RequestContext.from_dict(ctx.to_dict())
 
         obj = obj_base.SenlinObject.obj_class_from_name(
-            req['versioned_object.name'],
-            req['versioned_object.version'])
+            req['senlin_object.name'],
+            req['senlin_object.version'])
         req_obj = obj.obj_from_primitive(req)
         try:
             return func(self, ctx, req_obj)

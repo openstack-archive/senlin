@@ -410,8 +410,8 @@ class ClusterTest(base.SenlinTestCase):
     def _prepare_request(self, req):
         mock_cls = self.patchobject(obj_base.SenlinObject,
                                     'obj_class_from_name')
-        req.update({'versioned_object.name': 'RequestClass',
-                    'versioned_object.version': '1.0'})
+        req.update({'senlin_object.name': 'RequestClass',
+                    'senlin_object.version': '1.0'})
         req_base = mock.Mock()
         mock_cls.return_value = req_base
         req_obj = mock.Mock()

@@ -68,14 +68,14 @@ class TestClusterCreate(test_base.SenlinTestCase):
                 'name': u'test-cluster',
                 'profile_id': u'test-profile'
             },
-            res['versioned_object.data']
+            res['senlin_object.data']
         )
         self.assertEqual('ClusterCreateRequestBody',
-                         res['versioned_object.name'])
-        self.assertEqual('senlin', res['versioned_object.namespace'])
-        self.assertEqual('1.0', res['versioned_object.version'])
-        self.assertIn('profile_id', res['versioned_object.changes'])
-        self.assertIn('name', res['versioned_object.changes'])
+                         res['senlin_object.name'])
+        self.assertEqual('senlin', res['senlin_object.namespace'])
+        self.assertEqual('1.0', res['senlin_object.version'])
+        self.assertIn('profile_id', res['senlin_object.changes'])
+        self.assertIn('name', res['senlin_object.changes'])
 
     def test_cluster_create_request(self):
         body = clusters.ClusterCreateRequestBody(**self.body)
@@ -87,18 +87,18 @@ class TestClusterCreate(test_base.SenlinTestCase):
         self.assertEqual('test-profile', sot.cluster.profile_id)
 
         res = sot.obj_to_primitive()
-        self.assertEqual(['cluster'], res['versioned_object.changes'])
-        self.assertEqual('ClusterCreateRequest', res['versioned_object.name'])
-        self.assertEqual('senlin', res['versioned_object.namespace'])
-        self.assertEqual('1.0', res['versioned_object.version'])
-        data = res['versioned_object.data']['cluster']
-        self.assertIn('profile_id', data['versioned_object.changes'])
-        self.assertIn('name', data['versioned_object.changes'])
+        self.assertEqual(['cluster'], res['senlin_object.changes'])
+        self.assertEqual('ClusterCreateRequest', res['senlin_object.name'])
+        self.assertEqual('senlin', res['senlin_object.namespace'])
+        self.assertEqual('1.0', res['senlin_object.version'])
+        data = res['senlin_object.data']['cluster']
+        self.assertIn('profile_id', data['senlin_object.changes'])
+        self.assertIn('name', data['senlin_object.changes'])
         self.assertEqual('ClusterCreateRequestBody',
-                         data['versioned_object.name'])
-        self.assertEqual('senlin', data['versioned_object.namespace'])
-        self.assertEqual('1.0', data['versioned_object.version'])
+                         data['senlin_object.name'])
+        self.assertEqual('senlin', data['senlin_object.namespace'])
+        self.assertEqual('1.0', data['senlin_object.version'])
         self.assertEqual(
             {'name': u'test-cluster', 'profile_id': u'test-profile'},
-            data['versioned_object.data']
+            data['senlin_object.data']
         )
