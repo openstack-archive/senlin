@@ -13,6 +13,7 @@ import copy
 
 from oslo_config import cfg
 
+from senlin.common import consts
 from senlin.objects.requests import clusters
 from senlin.tests.unit.common import base as test_base
 
@@ -38,9 +39,9 @@ class TestClusterCreate(test_base.SenlinTestCase):
         sot.obj_set_defaults()
 
         self.assertTrue(sot.obj_attr_is_set('min_size'))
-        self.assertEqual(0, sot.min_size)
-        self.assertEqual(-1, sot.max_size)
-        self.assertEqual(0, sot.desired_capacity)
+        self.assertEqual(consts.CLUSTER_DEFAULT_MIN_SIZE, sot.min_size)
+        self.assertEqual(consts.CLUSTER_DEFAULT_MAX_SIZE, sot.max_size)
+        self.assertEqual(consts.CLUSTER_DEFAULT_MIN_SIZE, sot.desired_capacity)
         self.assertEqual({}, sot.metadata)
         self.assertEqual(CONF.default_action_timeout, sot.timeout)
 
