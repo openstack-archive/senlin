@@ -12,6 +12,7 @@
 
 from oslo_config import cfg
 
+from senlin.common import consts
 from senlin.objects import base
 from senlin.objects import fields
 
@@ -25,8 +26,10 @@ class ClusterCreateRequestBody(base.SenlinObject):
     fields = {
         'name': fields.NameField(),
         'profile_id': fields.StringField(),
-        'min_size': fields.IntegerField(nullable=True, default=0),
-        'max_size': fields.IntegerField(nullable=True, default=-1),
+        'min_size': fields.IntegerField(
+            nullable=True, default=consts.CLUSTER_DEFAULT_MIN_SIZE),
+        'max_size': fields.IntegerField(
+            nullable=True, default=consts.CLUSTER_DEFAULT_MAX_SIZE),
         'desired_capacity': fields.IntegerField(nullable=True, default=0),
         'metadata': fields.JsonField(nullable=True, default={}),
         'timeout': fields.IntegerField(nullable=True,

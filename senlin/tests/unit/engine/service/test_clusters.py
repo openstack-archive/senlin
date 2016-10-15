@@ -30,6 +30,7 @@ from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
 from senlin.objects import node as no
 from senlin.objects import receiver as ro
+from senlin.objects.requests import clusters as orco
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -216,6 +217,29 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, 'Bogus')
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
 
+    @mock.patch.object(co.Cluster, 'count_all')
+    def test_check_cluster_quota(self, mock_count):
+        mock_count.return_value = 10
+        cfg.CONF.set_override('max_clusters_per_project', 11,
+                              enforce_type=True)
+
+        res = self.eng.check_cluster_quota(self.ctx)
+
+        self.assertIsNone(res)
+        mock_count.assert_called_once_with(self.ctx)
+
+    @mock.patch.object(co.Cluster, 'count_all')
+    def test_check_cluster_quota_failed(self, mock_count):
+        mock_count.return_value = 11
+        cfg.CONF.set_override('max_clusters_per_project', 11,
+                              enforce_type=True)
+
+        ex = self.assertRaises(exc.Forbidden,
+                               self.eng.check_cluster_quota, self.ctx)
+        self.assertEqual("You are not authorized to complete this "
+                         "operation.",
+                         six.text_type(ex))
+
     @mock.patch.object(service.EngineService, 'check_cluster_quota')
     @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(am.Action, 'create')
@@ -252,29 +276,6 @@ class ClusterTest(base.SenlinTestCase):
             status=am.Action.READY,
         )
         notify.assert_called_once_with()
-
-    @mock.patch.object(co.Cluster, 'count_all')
-    def test_check_cluster_quota(self, mock_count):
-        mock_count.return_value = 10
-        cfg.CONF.set_override('max_clusters_per_project', 11,
-                              enforce_type=True)
-
-        res = self.eng.check_cluster_quota(self.ctx)
-
-        self.assertIsNone(res)
-        mock_count.assert_called_once_with(self.ctx)
-
-    @mock.patch.object(co.Cluster, 'count_all')
-    def test_check_cluster_quota_failed(self, mock_count):
-        mock_count.return_value = 11
-        cfg.CONF.set_override('max_clusters_per_project', 11,
-                              enforce_type=True)
-
-        ex = self.assertRaises(exc.Forbidden,
-                               self.eng.check_cluster_quota, self.ctx)
-        self.assertEqual("You are not authorized to complete this "
-                         "operation.",
-                         six.text_type(ex))
 
     @mock.patch.object(service.EngineService, 'check_cluster_quota')
     def test_cluster_create_exceeding_quota(self, mock_quota):
@@ -401,6 +402,118 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The target capacity (2) "
                          "is less than the specified min_size (3).",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'PROFILE')
+
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch("senlin.engine.cluster.Cluster")
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_create2(self, notify, mock_profile, mock_cluster,
+                             mock_action, mock_check, mock_quota):
+        x_profile = mock.Mock(id='PROFILE_ID')
+        mock_profile.return_value = x_profile
+        x_cluster = mock.Mock(id='12345678ABC')
+        x_cluster.to_dict.return_value = {'foo': 'bar'}
+        mock_cluster.return_value = x_cluster
+        mock_action.return_value = 'ACTION_ID'
+        mock_check.return_value = None
+        mock_quota.return_value = None
+        req = orco.ClusterCreateRequestBody(name='C1', profile_id='PROFILE',
+                                            desired_capacity=3)
+
+        # do it
+        result = self.eng.cluster_create2(self.ctx, req)
+
+        self.assertEqual({'action': 'ACTION_ID', 'foo': 'bar'}, result)
+        mock_profile.assert_called_once_with(self.ctx, 'PROFILE')
+        mock_check.assert_called_once_with(None, 3, None, None, True)
+        mock_cluster.assert_called_once_with(
+            'C1', 3, 'PROFILE_ID',
+            min_size=0, max_size=-1, timeout=3600, metadata={},
+            user=self.ctx.user, project=self.ctx.project,
+            domain=self.ctx.domain)
+        x_cluster.store.assert_called_once_with(self.ctx)
+        mock_action.assert_called_once_with(
+            self.ctx,
+            '12345678ABC', 'CLUSTER_CREATE',
+            name='cluster_create_12345678',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
+    def test_cluster_create2_exceeding_quota(self, mock_quota):
+        mock_quota.side_effect = exc.Forbidden()
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_create2,
+                               self.ctx, mock.Mock())
+
+        self.assertEqual(exc.Forbidden, ex.exc_info[0])
+        self.assertEqual("You are not authorized to complete this "
+                         "operation.",
+                         six.text_type(ex.exc_info[1]))
+        mock_quota.assert_called_once_with(self.ctx)
+
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
+    @mock.patch.object(co.Cluster, 'get_by_name')
+    def test_cluster_create2_duplicate_name(self, mock_get, mock_quota):
+        cfg.CONF.set_override('name_unique', True, enforce_type=True)
+        mock_quota.return_value = None
+        mock_get.return_value = mock.Mock()
+        req = mock.Mock()
+        req.name = 'CLUSTER'
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_create2,
+                               self.ctx, req)
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual(_("The request is malformed: a cluster named "
+                           "'CLUSTER' already exists."),
+                         six.text_type(ex.exc_info[1]))
+        mock_get.assert_called_once_with(self.ctx, 'CLUSTER')
+
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    def test_cluster_create2_profile_not_found(self, mock_find, mock_quota):
+        mock_quota.return_value = None
+        mock_find.side_effect = exc.ResourceNotFound(type='profile',
+                                                     id='Bogus')
+        req = mock.Mock(profile_id='Bogus')
+        req.name = 'CLUSTER'
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_create2,
+                               self.ctx, req)
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The specified profile "
+                         "(Bogus) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(su, 'check_size_params')
+    def test_cluster_create2_failed_checking(self, mock_check, mock_find,
+                                             mock_quota):
+        mock_quota.return_value = None
+        mock_find.return_value = mock.Mock()
+        mock_check.return_value = 'INVALID'
+        req = mock.Mock(profile_id='PROFILE')
+        req.name = 'CLUSTER'
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_create2,
+                               self.ctx, req)
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: INVALID.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'PROFILE')
 

@@ -52,7 +52,6 @@ from senlin.policies import base as policy_base
 from senlin.profiles import base as profile_base
 
 LOG = logging.getLogger(__name__)
-
 CONF = cfg.CONF
 
 
@@ -129,10 +128,10 @@ class EngineService(service.Service):
         self.health_mgr.start()
 
         # we may want to make the clean-up attempts configurable.
-        self.cleanup_timer = self.TG.add_timer(2 * cfg.CONF.periodic_interval,
+        self.cleanup_timer = self.TG.add_timer(2 * CONF.periodic_interval,
                                                self.service_manage_cleanup)
 
-        self.TG.add_timer(cfg.CONF.periodic_interval,
+        self.TG.add_timer(CONF.periodic_interval,
                           self.service_manage_report)
         super(EngineService, self).start()
 
@@ -180,7 +179,7 @@ class EngineService(service.Service):
 
     def _service_manage_cleanup(self):
         ctx = senlin_context.get_admin_context()
-        time_window = (2 * cfg.CONF.periodic_interval)
+        time_window = (2 * CONF.periodic_interval)
         svcs = service_obj.Service.get_all(ctx)
         for svc in svcs:
             if svc['id'] == self.engine_id:
@@ -260,7 +259,7 @@ class EngineService(service.Service):
 
     @request_context
     def get_revision(self, context):
-        return cfg.CONF.revision['senlin_engine_revision']
+        return CONF.revision['senlin_engine_revision']
 
     @request_context
     def profile_type_list(self, context):
@@ -398,7 +397,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the details of the profile object
                  created.
         """
-        if cfg.CONF.name_unique:
+        if CONF.name_unique:
             if profile_obj.Profile.get_by_name(context, name):
                 msg = _("A profile named '%(name)s' already exists."
                         ) % {"name": name}
@@ -626,7 +625,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the details of the policy object
                  created.
         """
-        if cfg.CONF.name_unique:
+        if CONF.name_unique:
             if policy_obj.Policy.get_by_name(context, name):
                 msg = _("A policy named '%(name)s' already exists."
                         ) % {"name": name}
@@ -795,7 +794,7 @@ class EngineService(service.Service):
                  `Forbbiden` if number of clusters reaches the maximum.
         """
         existing = cluster_obj.Cluster.count_all(context)
-        maximum = cfg.CONF.max_clusters_per_project
+        maximum = CONF.max_clusters_per_project
         if existing >= maximum:
             raise exception.Forbidden()
 
@@ -820,7 +819,7 @@ class EngineService(service.Service):
         """
         self.check_cluster_quota(context)
 
-        if cfg.CONF.name_unique:
+        if CONF.name_unique:
             if cluster_obj.Cluster.get_by_name(context, name):
                 msg = _("The cluster (%(name)s) already exists."
                         ) % {"name": name}
@@ -842,7 +841,7 @@ class EngineService(service.Service):
         if timeout is not None:
             timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
         else:
-            timeout = cfg.CONF.default_action_timeout
+            timeout = CONF.default_action_timeout
 
         res = su.check_size_params(None, init_size, min_size, max_size, True)
         if res:
@@ -870,6 +869,72 @@ class EngineService(service.Service):
             'status': action_mod.Action.READY,
         }
         action_id = action_mod.Action.create(context, cluster.id,
+                                             consts.CLUSTER_CREATE, **kwargs)
+        dispatcher.start_action()
+        LOG.info(_LI("Cluster create action queued: %s."), action_id)
+
+        result = cluster.to_dict()
+        result['action'] = action_id
+        return result
+
+    @request_context
+    def cluster_create2(self, ctx, req):
+        """Create a cluster.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ClusterCreateRequest object.
+        :return: A dictionary containing the details about the cluster and the
+                 ID of the action triggered by this operation.
+        """
+        self.check_cluster_quota(ctx)
+
+        if CONF.name_unique:
+            if cluster_obj.Cluster.get_by_name(ctx, req.name):
+                msg = _("a cluster named '%s' already exists.") % req.name
+                raise exception.BadRequest(msg=msg)
+
+        try:
+            db_profile = self.profile_find(ctx, req.profile_id)
+        except exception.ResourceNotFound as ex:
+            msg = ex.enhance_msg('specified', ex)
+            raise exception.BadRequest(msg=msg)
+
+        if req.obj_attr_is_set('desired_capacity'):
+            desired = req.desired_capacity
+        else:
+            desired = None
+        min_size = req.min_size if req.obj_attr_is_set('min_size') else None
+        max_size = req.max_size if req.obj_attr_is_set('max_size') else None
+        res = su.check_size_params(None, desired, min_size, max_size, True)
+        if res:
+            raise exception.BadRequest(msg=res)
+
+        # set defaults to the request object
+        req.obj_set_defaults()
+
+        LOG.info(_LI("Creating cluster '%s'."), req.name)
+
+        kwargs = {
+            'min_size': req.min_size,
+            'max_size': req.max_size,
+            'timeout': req.timeout,
+            'metadata': req.metadata,
+            'user': ctx.user,
+            'project': ctx.project,
+            'domain': ctx.domain,
+        }
+
+        cluster = cluster_mod.Cluster(req.name, req.desired_capacity,
+                                      db_profile.id, **kwargs)
+        cluster.store(ctx)
+
+        # Build an Action for cluster creation
+        kwargs = {
+            'name': 'cluster_create_%s' % cluster.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+        }
+        action_id = action_mod.Action.create(ctx, cluster.id,
                                              consts.CLUSTER_CREATE, **kwargs)
         dispatcher.start_action()
         LOG.info(_LI("Cluster create action queued: %s."), action_id)
@@ -1612,7 +1677,7 @@ class EngineService(service.Service):
                  created along with the ID of the action triggered by this
                  request.
         """
-        if cfg.CONF.name_unique:
+        if CONF.name_unique:
             if node_obj.Node.get_by_name(context, name):
                 msg = _("The node named (%(name)s) already exists."
                         ) % {"name": name}
@@ -2225,7 +2290,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the details about the receiver
                  created.
         """
-        if cfg.CONF.name_unique:
+        if CONF.name_unique:
             if receiver_obj.Receiver.get_by_name(context, name):
                 msg = _("A receiver named '%s' already exists.") % name
                 raise exception.BadRequest(msg=msg)
