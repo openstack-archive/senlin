@@ -103,7 +103,7 @@ This section contains the glossary for the Senlin service.
    Profile
      A profile is a mould used for creating objects (i.e. :term:`Node`). A
      profile is an instance of a :term:`Profile Type` with all required
-     information specified. Each profile has an unique ID. As a guideline, a
+     information specified. Each profile has a unique ID. As a guideline, a
      profile cannot be updated once created. To change a profile, you have to
      create a new instance.
 

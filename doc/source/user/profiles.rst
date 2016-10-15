@@ -23,7 +23,7 @@ Concept
 
 A :term:`Profile` is the mould used for creating a :term:`Node` to be managed
 by the Senlin service. It can be treated as an instance of a
-:term:`Profile Type` with an unique ID. A profile encodes the information
+:term:`Profile Type` with a unique ID. A profile encodes the information
 needed for node creation in a property named ``spec``.
 
 The primary job for a profile type implementation is to translate user provided
