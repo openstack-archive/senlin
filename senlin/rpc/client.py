@@ -51,6 +51,21 @@ class EngineClient(object):
             client = self._client
         return client.call(ctxt, method, **kwargs)
 
+    def call2(self, ctxt, method, req, version=None):
+        """The main entry for invoking engine service.
+
+        :param ctxt: The request context object.
+        :param method: The name of the method to be invoked.
+        :param params: A dict containing a request object.
+        :param version: The engine RPC API version requested.
+        """
+        if version is not None:
+            client = self._client.prepare(version=version)
+        else:
+            client = self._client
+
+        return client.call(ctxt, method, req=req)
+
     def cast(self, ctxt, msg, version=None):
         method, kwargs = msg
         if version is not None:
