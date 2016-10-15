@@ -275,6 +275,16 @@ class TestName(TestField):
         self.assertEqual(2, sot.min_len)
         self.assertEqual(200, sot.max_len)
 
+    def test_coerce_failed(self):
+        obj = mock.Mock()
+        sot = senlin_fields.Name()
+
+        ex = self.assertRaises(ValueError,
+                               sot.coerce,
+                               obj, 'attr', 'value/bad')
+        self.assertEqual("The value for the 'attr' (value/bad) contains "
+                         "illegal characters.", six.text_type(ex))
+
     def test_get_schema(self):
         sot = senlin_fields.Name(2, 200)
         self.assertEqual(

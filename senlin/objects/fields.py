@@ -195,7 +195,7 @@ class Name(fields.String):
             # there are requests to do so
             regex = re.compile('^[a-zA-Z\d\.\_\~-]*$', re.IGNORECASE)
             if not regex.search(value):
-                err = _("The value for the %(attr)s: %(value)s contains "
+                err = _("The value for the '%(attr)s' (%(value)s) contains "
                         "illegal characters."
                         ) % {'attr': attr, 'value': value}
 
