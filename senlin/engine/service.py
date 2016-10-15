@@ -69,6 +69,23 @@ def request_context(func):
     return wrapped
 
 
+def request_context2(func):
+    @functools.wraps(func)
+    def wrapped(self, ctx, req):
+        if ctx and not isinstance(ctx, senlin_context.RequestContext):
+            ctx = senlin_context.RequestContext.from_dict(ctx.to_dict())
+
+        obj = obj_base.SenlinObject.obj_class_from_name(
+            req['versioned_object.name'],
+            req['versioned_object.version'])
+        req_obj = obj.obj_from_primitive(req)
+        try:
+            return func(self, ctx, req_obj)
+        except exception.SenlinException:
+            raise oslo_messaging.rpc.dispatcher.ExpectedException()
+    return wrapped
+
+
 class EngineService(service.Service):
     """Lifecycle manager for a running service engine.
 
@@ -881,7 +898,7 @@ class EngineService(service.Service):
         result['action'] = action_id
         return result
 
-    @request_context
+    @request_context2
     def cluster_create2(self, ctx, req):
         """Create a cluster.
 
@@ -891,7 +908,6 @@ class EngineService(service.Service):
                  ID of the action triggered by this operation.
         """
         self.check_cluster_quota(ctx)
-
         if CONF.name_unique:
             if cluster_obj.Cluster.get_by_name(ctx, req.name):
                 msg = _("a cluster named '%s' already exists.") % req.name

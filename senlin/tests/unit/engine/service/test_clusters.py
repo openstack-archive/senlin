@@ -26,6 +26,7 @@ from senlin.engine import cluster as cm
 from senlin.engine import dispatcher
 from senlin.engine import node as nm
 from senlin.engine import service
+from senlin.objects import base as obj_base
 from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
 from senlin.objects import node as no
@@ -405,6 +406,19 @@ class ClusterTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'PROFILE')
 
+    # @mock.patch.object(obj_base.SenlinObject, 'obj_class_from_name')
+    def _prepare_request(self, req):
+        mock_cls = self.patchobject(obj_base.SenlinObject,
+                                    'obj_class_from_name')
+        req.update({'versioned_object.name': 'RequestClass',
+                    'versioned_object.version': '1.0'})
+        req_base = mock.Mock()
+        mock_cls.return_value = req_base
+        req_obj = mock.Mock()
+        for k, v in req.items():
+            setattr(req_obj, k, v)
+        req_base.obj_from_primitive.return_value = req_obj
+
     @mock.patch.object(service.EngineService, 'check_cluster_quota')
     @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(am.Action, 'create')
@@ -425,7 +439,7 @@ class ClusterTest(base.SenlinTestCase):
                                             desired_capacity=3)
 
         # do it
-        result = self.eng.cluster_create2(self.ctx, req)
+        result = self.eng.cluster_create2(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID', 'foo': 'bar'}, result)
         mock_profile.assert_called_once_with(self.ctx, 'PROFILE')
@@ -448,10 +462,12 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(service.EngineService, 'check_cluster_quota')
     def test_cluster_create2_exceeding_quota(self, mock_quota):
         mock_quota.side_effect = exc.Forbidden()
+        req = {'profile_id': 'PROFILE', 'name': 'CLUSTER'}
+        self._prepare_request(req)
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_create2,
-                               self.ctx, mock.Mock())
+                               self.ctx, req)
 
         self.assertEqual(exc.Forbidden, ex.exc_info[0])
         self.assertEqual("You are not authorized to complete this "
@@ -465,8 +481,8 @@ class ClusterTest(base.SenlinTestCase):
         cfg.CONF.set_override('name_unique', True, enforce_type=True)
         mock_quota.return_value = None
         mock_get.return_value = mock.Mock()
-        req = mock.Mock()
-        req.name = 'CLUSTER'
+        req = {'profile_id': 'PROFILE', 'name': 'CLUSTER'}
+        self._prepare_request(req)
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_create2,
@@ -484,9 +500,8 @@ class ClusterTest(base.SenlinTestCase):
         mock_quota.return_value = None
         mock_find.side_effect = exc.ResourceNotFound(type='profile',
                                                      id='Bogus')
-        req = mock.Mock(profile_id='Bogus')
-        req.name = 'CLUSTER'
-
+        req = {'profile_id': 'Bogus', 'name': 'CLUSTER'}
+        self._prepare_request(req)
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_create2,
                                self.ctx, req)
@@ -505,8 +520,8 @@ class ClusterTest(base.SenlinTestCase):
         mock_quota.return_value = None
         mock_find.return_value = mock.Mock()
         mock_check.return_value = 'INVALID'
-        req = mock.Mock(profile_id='PROFILE')
-        req.name = 'CLUSTER'
+        req = {'profile_id': 'PROFILE', 'name': 'CLUSTER'}
+        self._prepare_request(req)
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_create2,
