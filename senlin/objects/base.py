@@ -30,7 +30,7 @@ class SenlinObject(base.VersionedObject):
     instantiatable. Objects should implement the "get" class method and the
     "save" object method.
     """
-
+    OBJ_SERIAL_NAMESPACE = 'versioned_object'
     OBJ_PROJECT_NAMESPACE = 'senlin'
     VERSION = '1.0'
 
