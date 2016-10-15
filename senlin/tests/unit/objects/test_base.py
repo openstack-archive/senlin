@@ -66,3 +66,29 @@ class TestBaseObject(base.SenlinTestCase):
             'title': 'SenlinObject'
         }
         self.assertEqual(expected, obj.to_json_schema())
+
+    def test_normalize_req(self):
+        req = {'primary': {'bar': 'zoo'}}
+        name = 'reqname'
+        key = 'primary'
+        expected = {
+            'versioned_object.namespace':
+                obj_base.SenlinObject.OBJ_PROJECT_NAMESPACE,
+            'versioned_object.version': obj_base.SenlinObject.VERSION,
+            'versioned_object.name': name,
+            'versioned_object.data': {
+                'primary': {
+                    'versioned_object.namespace':
+                        obj_base.SenlinObject.OBJ_PROJECT_NAMESPACE,
+                    'versioned_object.version': obj_base.SenlinObject.VERSION,
+                    'versioned_object.name': 'reqnameBody',
+                    'versioned_object.data': {
+                        'bar': 'zoo'
+                    }
+                }
+            }
+        }
+
+        res = obj_base.SenlinObject.normalize_req(name, req, key)
+
+        self.assertEqual(expected, res)

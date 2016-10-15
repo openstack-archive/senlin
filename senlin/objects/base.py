@@ -68,6 +68,22 @@ class SenlinObject(base.VersionedObject):
         schema.update(fields.Object(obj_name).get_schema())
         return schema
 
+    @classmethod
+    def normalize_req(cls, name, req, key):
+        return {
+            'versioned_object.version': cls.VERSION,
+            'versioned_object.namespace': cls.OBJ_PROJECT_NAMESPACE,
+            'versioned_object.name': name,
+            'versioned_object.data': {
+                key: {
+                    'versioned_object.version': cls.VERSION,
+                    'versioned_object.namespace': cls.OBJ_PROJECT_NAMESPACE,
+                    'versioned_object.name': name + 'Body',
+                    'versioned_object.data': req[key]
+                }
+            }
+        }
+
 
 class SenlinObjectRegistry(base.VersionedObjectRegistry):
 
