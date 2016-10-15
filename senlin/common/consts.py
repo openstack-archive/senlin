@@ -16,11 +16,13 @@ RPC_ATTRS = (
     ENGINE_TOPIC,
     ENGINE_DISPATCHER_TOPIC,
     ENGINE_HEALTH_MGR_TOPIC,
+    RPC_API_VERSION_BASE,
     RPC_API_VERSION,
 ) = (
     'senlin-engine',
     'engine-dispatcher',
     'engine-health-mgr',
+    '1.0',
     '1.1',
 )
 

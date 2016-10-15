@@ -19,6 +19,7 @@ from senlin import objects
 from senlin.objects import fields
 
 VersionedObjectDictCompat = base.VersionedObjectDictCompat
+VersionedObjectSerializer = base.VersionedObjectSerializer
 
 
 class SenlinObject(base.VersionedObject):

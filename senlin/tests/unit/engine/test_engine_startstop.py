@@ -74,9 +74,9 @@ class EngineBasicTest(base.SenlinTestCase):
         mock_msg_cls.assert_called_once_with(version=consts.RPC_API_VERSION,
                                              server=self.eng.host,
                                              topic=self.eng.topic)
-        self.assertEqual(mock_target, self.eng.target)
 
-        self.get_rpc.assert_called_once_with(mock_target, self.eng)
+        self.get_rpc.assert_called_once_with(mock_target, self.eng,
+                                             serializer=None)
         self.assertEqual(self.fake_rpc_server, self.eng._rpc_server)
         self.fake_rpc_server.start.assert_called_once_with()
 

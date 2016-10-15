@@ -90,7 +90,6 @@ class EngineService(service.Service):
         # which happens after the fork when spawning multiple worker processes
         self.engine_id = None
         self.TG = None
-        self.target = None
         self._rpc_server = None
         self.cleanup_timer = None
         self.cleanup_count = 0
@@ -116,8 +115,12 @@ class EngineService(service.Service):
         target = oslo_messaging.Target(version=consts.RPC_API_VERSION,
                                        server=self.host,
                                        topic=self.topic)
-        self.target = target
-        self._rpc_server = rpc_messaging.get_rpc_server(target, self)
+        # TODO(Qiming): uncomment the following line to enable
+        #               new RPC server
+        # serializer = obj_base.VersionedObjectSerializer()
+        serializer = None
+        self._rpc_server = rpc_messaging.get_rpc_server(
+            target, self, serializer=serializer)
         self._rpc_server.start()
 
         # create a health manager RPC service for this engine.
