@@ -39,6 +39,7 @@ from senlin.engine import node as node_mod
 from senlin.engine.receivers import base as receiver_mod
 from senlin.engine import scheduler
 from senlin.objects import action as action_obj
+from senlin.objects import base as obj_base
 from senlin.objects import cluster as cluster_obj
 from senlin.objects import cluster_policy as cp_obj
 from senlin.objects import credential as cred_obj
@@ -69,22 +70,22 @@ def request_context(func):
 
 
 class EngineService(service.Service):
-    '''Lifecycle manager for a running service engine.
+    """Lifecycle manager for a running service engine.
 
     - All the contained methods here are called from the RPC client.
     - If a RPC call does not have a corresponding method here, an exception
       will be thrown.
     - Arguments to these calls are added dynamically and will be treated as
       keyword arguments by the RPC client.
-    '''
+    """
 
     def __init__(self, host, topic, manager=None):
 
         super(EngineService, self).__init__()
         self.host = host
         self.topic = topic
-        self.dispatcher_topic = consts.ENGINE_DISPATCHER_TOPIC
-        self.health_mgr_topic = consts.ENGINE_HEALTH_MGR_TOPIC
+        self.dispatcher_topic = consts.DISPATCHER_TOPIC
+        self.health_mgr_topic = consts.HEALTH_MANAGER_TOPIC
 
         # The following are initialized here and will be assigned in start()
         # which happens after the fork when spawning multiple worker processes
@@ -115,10 +116,10 @@ class EngineService(service.Service):
         target = oslo_messaging.Target(version=consts.RPC_API_VERSION,
                                        server=self.host,
                                        topic=self.topic)
-        # TODO(Qiming): uncomment the following line to enable
-        #               new RPC server
-        # serializer = obj_base.VersionedObjectSerializer()
-        serializer = None
+        if CONF.rpc_use_object:
+            serializer = obj_base.VersionedObjectSerializer()
+        else:
+            serializer = None
         self._rpc_server = rpc_messaging.get_rpc_server(
             target, self, serializer=serializer)
         self._rpc_server.start()

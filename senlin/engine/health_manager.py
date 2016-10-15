@@ -213,6 +213,11 @@ class HealthManager(service.Service):
                 self.rt['registries'].append(entry)
 
     def start(self):
+        """Start the health manager RPC server.
+
+        Note that the health manager server uses JSON serializer for parameter
+        passing. We should be careful when changing this interface.
+        """
         super(HealthManager, self).start()
         self.target = messaging.Target(server=self.engine_id, topic=self.topic,
                                        version=self.version)
@@ -293,11 +298,13 @@ class HealthManager(service.Service):
 def notify(engine_id, method, **kwargs):
     """Send notification to health manager service.
 
+    Note that the health manager only handles JSON type of parameter passing.
+
     :param engine_id: dispatcher to notify; broadcast if value is None
     :param method: remote method to call
     """
     timeout = cfg.CONF.engine_life_check_timeout
-    client = rpc.get_rpc_client(consts.ENGINE_HEALTH_MGR_TOPIC, None)
+    client = rpc.get_rpc_client(consts.HEALTH_MANAGER_TOPIC, None)
 
     if engine_id:
         # Notify specific dispatcher identified by engine_id
