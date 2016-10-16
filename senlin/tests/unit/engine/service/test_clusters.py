@@ -1988,14 +1988,34 @@ class ClusterTest(base.SenlinTestCase):
         x_obj_2 = mock.Mock()
         x_obj_2.to_dict.return_value = {'k': 'v2'}
         mock_load.return_value = [x_obj_1, x_obj_2]
-        req = orco.ClusterListRequestBody(name=['C1'], project_safe=True)
+        req = orco.ClusterListRequestBody(project_safe=True)
 
         result = self.eng.cluster_list2(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
+        mock_load.assert_called_once_with(self.ctx, project_safe=True)
+
+    @mock.patch.object(cm.Cluster, 'load_all')
+    def test_cluster_list2_with_params(self, mock_load):
+        mock_load.return_value = []
+        marker = uuidutils.generate_uuid()
+        req = {
+            'limit': 10,
+            'marker': marker,
+            'name': ['test_cluster'],
+            'status': ['ACTIVE'],
+            'sort': 'name:asc',
+            'project_safe': True
+        }
+        self._prepare_request(req)
+
+        result = self.eng.cluster_list2(self.ctx, req)
+
+        self.assertEqual([], result)
         mock_load.assert_called_once_with(
-            self.ctx, sort=None, project_safe=True,
-            filters={'name': ['C1'], 'status': None})
+            self.ctx, limit=10, marker=marker, sort='name:asc',
+            filters={'name': ['test_cluster'], 'status': ['ACTIVE']},
+            project_safe=True)
 
     @mock.patch.object(service.EngineService, 'check_cluster_quota')
     @mock.patch.object(su, 'check_size_params')

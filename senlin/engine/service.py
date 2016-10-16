@@ -812,11 +812,15 @@ class EngineService(service.Service):
             query['limit'] = req.limit
         if req.obj_attr_is_set('marker'):
             query['marker'] = req.marker
-        if req.obj_attr_is_set('sort'):
+        if req.obj_attr_is_set('sort') and req.sort is not None:
             query['sort'] = req.sort
-        name = req.name if req.obj_attr_is_set('name') else None
-        status = req.status if req.obj_attr_is_set('status') else None
-        query['filters'] = dict(name=name, status=status)
+        filters = {}
+        if req.obj_attr_is_set('name'):
+            filters['name'] = req.name
+        if req.obj_attr_is_set('status'):
+            filters['status'] = req.status
+        if filters:
+            query['filters'] = filters
 
         return [c.to_dict()
                 for c in cluster_mod.Cluster.load_all(ctx, **query)]
