@@ -21,6 +21,21 @@ CONF.import_opt('default_action_timeout', 'senlin.common.config')
 
 
 @base.SenlinObjectRegistry.register
+class ClusterListRequestBody(base.SenlinObject):
+
+    fields = {
+        'name': fields.ListOfStringsField(nullable=True),
+        'status': fields.ListOfEnumField(
+            valid_values=list(consts.CLUSTER_STATUSES), nullable=True),
+        'limit': fields.NonNegativeIntegerField(nullable=True),
+        'marker': fields.UUIDField(nullable=True),
+        'sort': fields.SortField(
+            valid_keys=list(consts.CLUSTER_SORT_KEYS), nullable=True),
+        'project_safe': fields.BooleanField(default=True),
+    }
+
+
+@base.SenlinObjectRegistry.register
 class ClusterCreateRequestBody(base.SenlinObject):
 
     fields = {
