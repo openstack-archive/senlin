@@ -431,3 +431,66 @@ class TestCapacity(TestField):
             },
             sot.get_schema()
         )
+
+
+class TestSort(TestField):
+
+    def setUp(self):
+        super(TestSort, self).setUp()
+
+        self.keys = ['key1', 'key2', 'key3']
+        self.field = senlin_fields.Sort(valid_keys=self.keys)
+        self.coerce_good_values = [
+            ('key1', 'key1'),               # single key
+            ('key1,key2', 'key1,key2'),     # multi keys
+            ('key1:asc', 'key1:asc'),       # key with dir
+            ('key2:desc', 'key2:desc'),     # key with different dir
+            ('key1,key2:asc', 'key1,key2:asc'),  # mixed case
+        ]
+        self.coerce_bad_values = [
+            'foo',              # unknown key
+            ':desc',            # unspecified key
+            'key1:up',          # unsupported dir
+            'key1,key2:up',     # unsupported dir
+            'foo,key2',         # unknown key
+            'key2,:asc',        # unspecified key
+            'key2,:desc',       # unspecified key
+            'key1,',            # missing key
+            ',key2',            # missing key
+        ]
+        self.to_primitive_values = self.coerce_good_values[0:1]
+        self.from_primitive_values = self.coerce_good_values[0:1]
+
+    def test_stringify(self):
+        self.assertEqual("'key1,key2'", self.field.stringify('key1,key2'))
+
+    def test_init(self):
+        keys = ['foo', 'bar']
+        sot = senlin_fields.Sort(valid_keys=keys)
+
+        self.assertEqual(keys, sot.valid_keys)
+
+    def test_coerce_failure(self):
+        obj = mock.Mock()
+        ex = self.assertRaises(ValueError,
+                               self.field.coerce,
+                               obj, 'attr', ':asc')
+        self.assertEqual("missing sort key for 'attr'.", six.text_type(ex))
+
+        ex = self.assertRaises(ValueError,
+                               self.field.coerce,
+                               obj, 'attr', 'foo:asc')
+        self.assertEqual("unsupported sort key 'foo' for 'attr'.",
+                         six.text_type(ex))
+
+        ex = self.assertRaises(ValueError,
+                               self.field.coerce,
+                               obj, 'attr', 'key1:down')
+        self.assertEqual("unsupported sort dir 'down' for 'attr'.",
+                         six.text_type(ex))
+
+    def test_get_schema(self):
+        self.assertEqual(
+            {'type': ['string']},
+            self.field.get_schema()
+        )
