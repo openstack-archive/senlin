@@ -28,8 +28,30 @@ FloatField = fields.FloatField
 UUIDField = fields.UUIDField
 DateTimeField = fields.DateTimeField
 ListOfStringsField = fields.ListOfStringsField
+ListOfEnumField = fields.ListOfEnumField
 
 
+# TODO(Qiming): remove this when oslo patch is released
+# https://review.openstack.org/#/c/360095
+class NonNegativeInteger(fields.FieldType):
+
+    @staticmethod
+    def coerce(obj, attr, value):
+        v = int(value)
+        if v < 0:
+            err = _("Value must be >= 0 for field '%s'.") % attr
+            raise ValueError(err)
+        return v
+
+    def get_schema(self):
+        return {
+            'type': ['integer'],
+            'minimum': 0
+        }
+
+
+# TODO(Qiming): remove this when oslo patch is released
+# i.e. global requirements bump to 1.17.0
 class Object(fields.Object):
 
     def get_schema(self):
@@ -173,6 +195,13 @@ class NotificationActionField(fields.BaseEnumField):
     AUTO_TYPE = NotificationAction()
 
 
+# TODO(Qiming): remove this when oslo patch is released
+# https://review.openstack.org/#/c/360095
+class NonNegativeIntegerField(fields.AutoTypedField):
+
+    AUTO_TYPE = NonNegativeInteger()
+
+
 class Name(fields.String):
 
     def __init__(self, min_len=1, max_len=255):
@@ -264,6 +293,39 @@ class Capacity(fields.Integer):
         }
 
 
+class Sort(fields.String):
+
+    def __init__(self, valid_keys):
+        super(Sort, self).__init__()
+        self.valid_keys = valid_keys
+
+    def coerce(self, obj, attr, value):
+        for s in value.split(','):
+            s_key, _sep, s_dir = s.partition(':')
+            err = None
+            if not s_key:
+                err = _("missing sort key for '%s'.") % attr
+                raise ValueError(err)
+
+            if s_key not in self.valid_keys:
+                err = _("unsupported sort key '%(value)s' for '%(attr)s'."
+                        ) % {'attr': attr, 'value': s_key}
+
+            if s_dir and s_dir not in ('asc', 'desc'):
+                err = _("unsupported sort dir '%(value)s' for '%(attr)s'."
+                        ) % {'attr': attr, 'value': s_dir}
+
+            if err:
+                raise ValueError(err)
+
+        return super(Sort, self).coerce(obj, attr, value)
+
+    def get_schema(self):
+        return {
+            'type': ['string'],
+        }
+
+
 class NameField(fields.AutoTypedField):
 
     AUTO_TYPE = Name()
@@ -276,3 +338,12 @@ class CapacityField(fields.AutoTypedField):
     def __init__(self, nullable=True, default=None, minimum=0, maximum=None):
         self.AUTO_TYPE = Capacity(minimum=minimum, maximum=maximum)
         super(CapacityField, self).__init__(nullable=nullable, default=default)
+
+
+class SortField(fields.AutoTypedField):
+
+    AUTO_TYPE = None
+
+    def __init__(self, valid_keys, nullable=True, default=None):
+        self.AUTO_TYPE = Sort(valid_keys)
+        super(SortField, self).__init__(nullable=nullable, default=default)
