@@ -56,7 +56,7 @@ class EngineClient(object):
 
         :param ctxt: The request context object.
         :param method: The name of the method to be invoked.
-        :param params: A dict containing a request object.
+        :param req: A dict containing a request object.
         :param version: The engine RPC API version requested.
         """
         if version is not None:

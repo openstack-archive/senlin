@@ -72,17 +72,15 @@ class TestBaseObject(base.SenlinTestCase):
         name = 'reqname'
         key = 'primary'
         expected = {
-            'versioned_object.namespace':
-                obj_base.SenlinObject.OBJ_PROJECT_NAMESPACE,
-            'versioned_object.version': obj_base.SenlinObject.VERSION,
-            'versioned_object.name': name,
-            'versioned_object.data': {
+            'senlin_object.namespace': 'senlin',
+            'senlin_object.version': obj_base.SenlinObject.VERSION,
+            'senlin_object.name': name,
+            'senlin_object.data': {
                 'primary': {
-                    'versioned_object.namespace':
-                        obj_base.SenlinObject.OBJ_PROJECT_NAMESPACE,
-                    'versioned_object.version': obj_base.SenlinObject.VERSION,
-                    'versioned_object.name': 'reqnameBody',
-                    'versioned_object.data': {
+                    'senlin_object.namespace': 'senlin',
+                    'senlin_object.version': obj_base.SenlinObject.VERSION,
+                    'senlin_object.name': 'reqnameBody',
+                    'senlin_object.data': {
                         'bar': 'zoo'
                     }
                 }

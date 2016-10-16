@@ -11,17 +11,18 @@
 # under the License.
 
 import mock
+from oslo_config import cfg
+from oslo_serialization import jsonutils
 import six
 import webob
 from webob import exc
-
-from oslo_serialization import jsonutils
 
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import clusters
 from senlin.common import exception as senlin_exc
 from senlin.common.i18n import _
 from senlin.common import policy
+from senlin.objects.requests import clusters as vorc
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
@@ -440,7 +441,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_create(self, mock_enforce):
+    def test_create_old(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {
             'cluster': {
@@ -488,6 +489,112 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(engine_response, resp['cluster'])
         self.assertEqual('/actions/fake_action', resp['location'])
+
+    def test_create(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        body = {
+            'cluster': {
+                'name': 'test_cluster',
+                'desired_capacity': 0,
+                'profile_id': 'xxxx-yyyy',
+                'min_size': 0,
+                'max_size': 0,
+                'metadata': {},
+                'timeout': None,
+            }
+        }
+
+        req = self._post('/clusters', jsonutils.dumps(body))
+        engine_response = {
+            'id': 'FAKE_ID',
+            'name': 'test_cluster',
+            'desired_capacity': 0,
+            'profile_id': 'xxxx-yyyy',
+            'min_size': 0,
+            'max_size': 0,
+            'metadata': {},
+            'timeout': 60,
+            'action': 'fake_action'
+        }
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
+                                     return_value=engine_response)
+
+        resp = self.controller.create(req, body=body)
+
+        mock_call.assert_called_with(req.context, 'cluster_create2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorc.ClusterCreateRequestBody)
+        self.assertEqual(0, request.desired_capacity)
+        self.assertEqual(0, request.max_size)
+        self.assertEqual(0, request.min_size)
+        self.assertEqual({}, request.metadata)
+        self.assertEqual('test_cluster', request.name)
+        self.assertEqual('xxxx-yyyy', request.profile_id)
+        self.assertIsNone(request.timeout)
+
+        self.assertEqual(engine_response, resp['cluster'])
+        self.assertEqual('/actions/fake_action', resp['location'])
+
+    def test_create_only_required(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        body = {
+            'cluster': {
+                'name': 'test_cluster',
+                'profile_id': 'xxxx-yyyy',
+            }
+        }
+
+        req = self._post('/clusters', jsonutils.dumps(body))
+        engine_response = {
+            'id': 'FAKE_ID',
+            'name': 'test_cluster',
+            'desired_capacity': 0,
+            'profile_id': 'xxxx-yyyy',
+            'min_size': 0,
+            'max_size': 0,
+            'metadata': {},
+            'timeout': 60,
+            'action': 'fake_action'
+        }
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
+                                     return_value=engine_response)
+
+        resp = self.controller.create(req, body=body)
+
+        mock_call.assert_called_with(req.context, 'cluster_create2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorc.ClusterCreateRequestBody)
+        self.assertEqual('test_cluster', request.name)
+        self.assertEqual('xxxx-yyyy', request.profile_id)
+        for attr in ('desired_capacity', 'min_size', 'max_size', 'metadata',
+                     'timeout'):
+            self.assertFalse(request.obj_attr_is_set(attr))
+
+        self.assertEqual(engine_response, resp['cluster'])
+        self.assertEqual('/actions/fake_action', resp['location'])
+
+    def test_create_bad_name(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        body = {
+            'cluster': {
+                'name': 'test/cluster',
+                'profile_id': 'xxxx-yyyy',
+            }
+        }
+        req = self._post('/clusters', jsonutils.dumps(body))
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.create,
+                               req, body=body)
+
+        self.assertEqual("The value for the 'name' (test/cluster) contains "
+                         "illegal characters.", six.text_type(ex))
+
+        self.assertEqual(0, mock_call.call_count)
 
     def test_create_maleformed_body(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
