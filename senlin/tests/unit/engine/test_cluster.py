@@ -104,6 +104,8 @@ class TestCluster(base.SenlinTestCase):
         rt = cluster.rt
         self.assertEqual(x_profile, rt['profile'])
         self.assertEqual([x_node_1, x_node_2], rt['nodes'])
+        self.assertEqual(2, len(rt['nodes']))
+        self.assertTrue(isinstance(rt['nodes'], list))
         self.assertEqual([x_policy], rt['policies'])
 
         mock_pb.assert_called_once_with(self.context, CLUSTER_ID)
@@ -119,8 +121,11 @@ class TestCluster(base.SenlinTestCase):
 
         cluster._load_runtime_data(self.context)
 
+        rt = cluster.rt
         self.assertIsNone(cluster.rt['profile'])
         self.assertEqual([], cluster.rt['nodes'])
+        self.assertEqual(0, len(rt['nodes']))
+        self.assertTrue(isinstance(rt['nodes'], list))
         self.assertEqual([], cluster.rt['policies'])
 
     def test_store_for_create(self):
@@ -845,7 +850,9 @@ class TestCluster(base.SenlinTestCase):
         mock_load.return_value = [node1, node2, node3]
 
         cluster.eval_status(self.context, 'TEST')
-
+        rt = cluster.rt
+        self.assertEqual(3, len(rt['nodes']))
+        self.assertTrue(isinstance(rt['nodes'], list))
         mock_load.assert_called_once_with(self.context, cluster_id=CLUSTER_ID)
         mock_update.assert_called_once_with(
             self.context, CLUSTER_ID,
