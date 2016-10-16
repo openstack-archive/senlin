@@ -74,7 +74,7 @@ class TestGetAllowedParams(base.SenlinTestCase):
         self.whitelist = {'foo': 'mixed'}
 
         result = util.get_allowed_params(self.params, self.whitelist)
-        self.assertEqual('foo value', result['foo'])
+        self.assertEqual(['foo value'], result['foo'])
 
     def test_ignores_bogus_whitelist_items(self):
         self.whitelist = {'foo': 'blah'}

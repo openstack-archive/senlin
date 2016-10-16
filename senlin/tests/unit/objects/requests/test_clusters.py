@@ -102,3 +102,46 @@ class TestClusterCreate(test_base.SenlinTestCase):
             {'name': u'test-cluster', 'profile_id': u'test-profile'},
             data['senlin_object.data']
         )
+
+
+class TestClusterList(test_base.SenlinTestCase):
+
+    params = {
+        'project_safe': True,
+    }
+
+    def test_init(self):
+        sot = clusters.ClusterListRequestBody()
+
+        self.assertFalse(sot.obj_attr_is_set('project_safe'))
+        self.assertFalse(sot.obj_attr_is_set('name'))
+        self.assertFalse(sot.obj_attr_is_set('status'))
+        self.assertFalse(sot.obj_attr_is_set('limit'))
+        self.assertFalse(sot.obj_attr_is_set('marker'))
+        self.assertFalse(sot.obj_attr_is_set('sort'))
+
+        sot.obj_set_defaults()
+
+        self.assertTrue(sot.project_safe)
+        self.assertFalse(sot.obj_attr_is_set('name'))
+        self.assertFalse(sot.obj_attr_is_set('status'))
+        self.assertFalse(sot.obj_attr_is_set('limit'))
+        self.assertFalse(sot.obj_attr_is_set('marker'))
+        self.assertIsNone(sot.sort)
+
+    def test_cluster_list_request_body_full(self):
+        params = {
+            'name': ['name1'],
+            'status': ['ACTIVE'],
+            'limit': 4,
+            'marker': '09013587-c1e9-4c98-9c0c-d357004363e1',
+            'sort': 'name:asc',
+            'project_safe': False,
+        }
+        sot = clusters.ClusterListRequestBody(**params)
+        self.assertEqual(['name1'], sot.name)
+        self.assertEqual(['ACTIVE'], sot.status)
+        self.assertEqual(4, sot.limit)
+        self.assertEqual('09013587-c1e9-4c98-9c0c-d357004363e1', sot.marker)
+        self.assertEqual('name:asc', sot.sort)
+        self.assertFalse(sot.project_safe)
