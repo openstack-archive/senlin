@@ -73,7 +73,7 @@ spec_scaling_policy = {
 
 spec_lb_policy = {
     "type": "senlin.policy.loadbalance",
-    "version": "1.0",
+    "version": "1.1",
     "properties": {
         "pool": {
             "protocol": "HTTP",
