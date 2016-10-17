@@ -150,21 +150,27 @@ class TestNode(base.SenlinTestCase):
         self.assertIsNotNone(res)
         self.assertEqual(x_node_id, res.id)
 
-    def test_node_load_all(self):
-        node_info = nodem.Node.load_all(self.context)
-        self.assertEqual([], [c for c in node_info])
-        x_node_id1 = 'e7ec30c4-4dbf-45ac-a6b5-6c675c58d892'
-        x_node_id2 = '9d87b415-a572-407f-ab55-21a0f0073ee4'
+    @mock.patch.object(nodem.Node, '_from_object')
+    @mock.patch.object(node_obj.Node, 'get_all')
+    def test_node_load_all(self, mock_get, mock_init):
+        x_obj_1 = mock.Mock()
+        x_obj_2 = mock.Mock()
+        mock_get.return_value = [x_obj_1, x_obj_2]
 
-        utils.create_node(self.context, x_node_id1, PROFILE_ID, CLUSTER_ID)
-        utils.create_node(self.context, x_node_id2, PROFILE_ID, CLUSTER_ID)
+        x_node_1 = mock.Mock()
+        x_node_2 = mock.Mock()
+        mock_init.side_effect = [x_node_1, x_node_2]
 
-        # NOTE: we don't test all other parameters because the db api tests
-        #       already covered that
-        nodes = nodem.Node.load_all(self.context)
-        self.assertEqual(2, len(nodes))
-        self.assertEqual(x_node_id1, nodes[0].id)
-        self.assertEqual(x_node_id2, nodes[1].id)
+        result = nodem.Node.load_all(self.context)
+
+        self.assertEqual([x_node_1, x_node_2], [n for n in result])
+        mock_get.assert_called_once_with(self.context, cluster_id=None,
+                                         limit=None, marker=None,
+                                         sort=None, filters=None,
+                                         project_safe=True)
+        mock_init.assert_has_calls([
+            mock.call(self.context, x_obj_1),
+            mock.call(self.context, x_obj_2)])
 
     def test_node_to_dict(self):
         x_node_id = '16e70db8-4f70-4883-96be-cf40264a5abd'

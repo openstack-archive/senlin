@@ -103,10 +103,11 @@ class Cluster(object):
             policy = pcb.Policy.load(context, b.policy_id)
             policies.append(policy)
 
+        nodes = node_mod.Node.load_all(context, cluster_id=self.id)
         self.rt = {
             'profile': pfb.Profile.load(context, profile_id=self.profile_id,
                                         project_safe=False),
-            'nodes': node_mod.Node.load_all(context, cluster_id=self.id),
+            'nodes': [n for n in nodes],
             'policies': policies
         }
 
@@ -531,7 +532,9 @@ class Cluster(object):
         :param operation: The operation that triggers this status evaluation.
         :returns: ``None``.
         """
-        self.rt['nodes'] = node_mod.Node.load_all(ctx, cluster_id=self.id)
+        nodes = node_mod.Node.load_all(ctx, cluster_id=self.id)
+        self.rt['nodes'] = [n for n in nodes]
+
         active_count = 0
         for node in self.nodes:
             if node.status == 'ACTIVE':

@@ -180,7 +180,9 @@ class Node(object):
                                limit=limit, marker=marker,
                                project_safe=project_safe)
 
-        return [cls._from_object(context, obj) for obj in objs]
+        for obj in objs:
+            node = cls._from_object(context, obj)
+            yield node
 
     def to_dict(self):
         if self.rt['profile']:
