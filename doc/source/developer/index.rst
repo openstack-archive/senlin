@@ -71,6 +71,24 @@ Follow the link below for the Senlin API design document.
 -  `OpenStack API Complete Reference - Clustering`_
 
 
+Reviewing Patches
+~~~~~~~~~~~~~~~~~
+
+There are many general guidelines across the community about code reviews, for
+example:
+
+- `Code review guidelines (wiki)`_
+- `OpenStack developer's guide`_
+
+Besides these guidelines, senlin has some additional amendments based on daily
+review experiences that should be practiced.
+
+.. toctree::
+
+  :maxdepth: 1
+  reviews
+
+
 Indices and tables
 ~~~~~~~~~~~~~~~~~~
 
@@ -80,3 +98,5 @@ Indices and tables
 
 
 .. _`OpenStack API Complete Reference - Clustering`: http://developer.openstack.org/api-ref/clustering/
+.. _`Code review guidelines (wiki)`: https://wiki.openstack.org/wiki/CodeReviewGuidelines
+.. _`OpenStack developer's guide`: http://docs.openstack.org/infra/manual/developers.html
