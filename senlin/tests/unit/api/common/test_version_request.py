@@ -96,14 +96,17 @@ class APIVersionRequestTests(base.SenlinTestCase):
         vers1 = vr.APIVersionRequest("1.0")
         vers2 = vr.APIVersionRequest("1.1")
         vers3 = vr.APIVersionRequest("1.2")
+        vers4 = vr.APIVersionRequest("1.3")
         v_null = vr.APIVersionRequest()
 
         self.assertTrue(vers2.matches(vers1, vers3))
+        self.assertTrue(vers2.matches(vers1, vers4))
         self.assertTrue(vers2.matches(vers1, v_null))
         self.assertFalse(vers1.matches(vers2, vers3))
-        self.assertFalse(vers2.matches(vers3, vers1))
+        self.assertFalse(vers1.matches(vers2, vers4))
+        self.assertFalse(vers2.matches(vers4, vers1))
 
-        self.assertRaises(ValueError, v_null.matches, vers1, vers3)
+        self.assertRaises(ValueError, v_null.matches, vers1, vers4)
 
     def test_as_string(self):
         vers1_string = "3.23"
