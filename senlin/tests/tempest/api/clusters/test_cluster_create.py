@@ -25,6 +25,10 @@ class TestClusterCreate(base.BaseSenlinAPITest):
 
         self.profile_id = profile_id
 
+    # TODO(Anyone): The following line is an example to use api_microversion
+    # decorator. It is not necessary for this test case. Remove it after any
+    # usage of api_microversion decorator is added.
+    @utils.api_microversion('1.0')
     @decorators.idempotent_id('61cbe340-937a-40d5-9d2f-067f2c7cafcc')
     def test_cluster_create_all_attrs_defined(self):
         # Create cluster

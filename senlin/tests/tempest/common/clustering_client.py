@@ -25,6 +25,14 @@ CONF = config.CONF
 
 class ClusteringAPIClient(rest_client.RestClient):
     version = 'v1'
+    api_microversion = 'latest'
+
+    def get_headers(self, accept_type=None, send_type=None):
+        headers = super(ClusteringAPIClient, self).get_headers(
+            accept_type=accept_type, send_type=send_type)
+        headers['openstack-api-version'] = ('clustering %s' %
+                                            self.api_microversion)
+        return headers
 
     def _parsed_resp(self, resp, body):
         # Parse status code and location
