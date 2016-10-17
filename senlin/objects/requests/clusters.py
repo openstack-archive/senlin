@@ -31,7 +31,7 @@ class ClusterListRequestBody(base.SenlinObject):
         'marker': fields.UUIDField(nullable=True),
         'sort': fields.SortField(
             valid_keys=list(consts.CLUSTER_SORT_KEYS), nullable=True),
-        'project_safe': fields.BooleanField(default=True),
+        'project_safe': fields.FlexibleBooleanField(default=True),
     }
 
 

@@ -133,10 +133,10 @@ class TestClusterList(test_base.SenlinTestCase):
         params = {
             'name': ['name1'],
             'status': ['ACTIVE'],
-            'limit': 4,
+            'limit': '4',  # a test of having string as limit
             'marker': '09013587-c1e9-4c98-9c0c-d357004363e1',
             'sort': 'name:asc',
-            'project_safe': False,
+            'project_safe': 'False',  # a test of flexible boolean
         }
         sot = clusters.ClusterListRequestBody(**params)
         self.assertEqual(['name1'], sot.name)

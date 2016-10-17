@@ -131,6 +131,37 @@ class ClusterController(wsgi.Controller):
 
     @util.policy_enforce
     def index(self, req):
+        if cfg.CONF.rpc_use_object:
+            whitelist = {
+                consts.CLUSTER_NAME: 'mixed',
+                consts.CLUSTER_STATUS: 'mixed',
+                consts.PARAM_LIMIT: 'single',
+                consts.PARAM_MARKER: 'single',
+                consts.PARAM_SORT: 'single',
+                consts.PARAM_GLOBAL_PROJECT: 'single',
+            }
+            params = util.get_allowed_params(req.params, whitelist)
+            # Note: We have to do a boolean parsing here because 1) there is
+            # a renaming, 2) the boolean is usually presented as a string.
+            is_global = params.pop(consts.PARAM_GLOBAL_PROJECT, False)
+            unsafe = utils.parse_bool_param(consts.PARAM_GLOBAL_PROJECT,
+                                            is_global)
+            params['project_safe'] = not unsafe
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ClusterListRequestBody', params, None)
+            obj = None
+            try:
+                obj = vorc.ClusterListRequestBody.obj_from_primitive(norm_req)
+                jsonschema.validate(norm_req, obj.to_json_schema())
+            except ValueError as ex:
+                raise exc.HTTPBadRequest(six.text_type(ex))
+            except jsonschema.exceptions.ValidationError as ex:
+                raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+            clusters = self.rpc_client.call2(req.context, 'cluster_list2', obj)
+            return {'clusters': clusters}
+
+        # old logic starts here
         filter_whitelist = {
             consts.CLUSTER_NAME: 'mixed',
             consts.CLUSTER_STATUS: 'mixed',

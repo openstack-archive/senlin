@@ -90,3 +90,19 @@ class TestBaseObject(base.SenlinTestCase):
         res = obj_base.SenlinObject.normalize_req(name, req, key)
 
         self.assertEqual(expected, res)
+
+    def test_normalize_req_no_key(self):
+        req = {'bar': 'zoo'}
+        name = 'reqname'
+        expected = {
+            'senlin_object.namespace': 'senlin',
+            'senlin_object.version': obj_base.SenlinObject.VERSION,
+            'senlin_object.name': name,
+            'senlin_object.data': {
+                'bar': 'zoo'
+            }
+        }
+
+        res = obj_base.SenlinObject.normalize_req(name, req, None)
+
+        self.assertEqual(expected, res)
