@@ -146,3 +146,11 @@ class TestClusterList(test_base.SenlinTestCase):
         self.assertEqual('09013587-c1e9-4c98-9c0c-d357004363e1', sot.marker)
         self.assertEqual('name:asc', sot.sort)
         self.assertFalse(sot.project_safe)
+
+
+class TestClusterGet(test_base.SenlinTestCase):
+
+    def test_init(self):
+        sot = clusters.ClusterGetRequest(identity='foo')
+
+        self.assertEqual('foo', sot.identity)
