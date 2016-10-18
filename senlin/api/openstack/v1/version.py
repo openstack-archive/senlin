@@ -21,7 +21,7 @@ class VersionController(wsgi.Controller):
     # This includes any semantic changes which may not affect the input or
     # output formats or even originate in the API code layer.
     _MIN_API_VERSION = "1.0"
-    _MAX_API_VERSION = "1.2"
+    _MAX_API_VERSION = "1.3"
 
     DEFAULT_API_VERSION = _MIN_API_VERSION
 

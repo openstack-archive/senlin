@@ -170,7 +170,7 @@ class VersionNegotiationTest(base.SenlinTestCase):
     def test__check_version_request(self, mock_vc):
         controller = mock.Mock()
         minv = vr.APIVersionRequest('1.0')
-        maxv = vr.APIVersionRequest('1.20')
+        maxv = vr.APIVersionRequest('1.3')
         controller.min_api_version = mock.Mock(return_value=minv)
         controller.max_api_version = mock.Mock(return_value=maxv)
 

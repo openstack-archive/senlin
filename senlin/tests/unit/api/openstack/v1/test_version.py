@@ -87,6 +87,7 @@ class APIVersionTest(base.SenlinTestCase):
         self.assertTrue(self.vc.is_supported(req, '1.0', '1.1'))
         self.assertTrue(self.vc.is_supported(req, '1.1', '1.1'))
         self.assertFalse(self.vc.is_supported(req, '1.2'))
+        self.assertFalse(self.vc.is_supported(req, '1.3'))
 
     def test_is_supported_max_version(self):
         req = FakeRequest.blank('/fake', version='2.5')
