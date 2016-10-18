@@ -11,10 +11,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import functools
+
 from tempest.lib.common.utils import data_utils
 from tempest.lib import exceptions
 
 from senlin.tests.tempest.common import constants
+
+
+def api_microversion(api_microversion):
+    """Decorator used to specify api_microversion for test."""
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapped(self):
+            old = self.client.api_microversion
+            self.client.api_microversion = api_microversion
+            func(self)
+            self.client.api_microversion = old
+        return wrapped
+    return decorator
 
 
 def create_a_profile(base, spec=None, name=None, metadata=None):
