@@ -795,6 +795,32 @@ class EngineService(service.Service):
 
         return [cluster.to_dict() for cluster in clusters]
 
+    @request_context2
+    def cluster_list2(self, ctx, req):
+        """List clusters matching the specified criteria.
+
+        :param ctx: An instance of request context.
+        :param req: An instance of the ClusterListRequestBody.
+        :return: A list of `Cluster` object representations.
+        """
+        req.obj_set_defaults()
+        if not req.project_safe and not ctx.is_admin:
+            raise exception.Forbidden()
+
+        query = {'project_safe': req.project_safe}
+        if req.obj_attr_is_set('limit'):
+            query['limit'] = req.limit
+        if req.obj_attr_is_set('marker'):
+            query['marker'] = req.marker
+        if req.obj_attr_is_set('sort'):
+            query['sort'] = req.sort
+        name = req.name if req.obj_attr_is_set('name') else None
+        status = req.status if req.obj_attr_is_set('status') else None
+        query['filters'] = dict(name=name, status=status)
+
+        return [c.to_dict()
+                for c in cluster_mod.Cluster.load_all(ctx, **query)]
+
     @request_context
     def cluster_get(self, context, identity):
         """Retrieve the cluster specified.
@@ -903,7 +929,7 @@ class EngineService(service.Service):
         """Create a cluster.
 
         :param ctx: An instance of the request context.
-        :param req: An instance of the ClusterCreateRequest object.
+        :param req: An instance of the ClusterCreateRequestBody object.
         :return: A dictionary containing the details about the cluster and the
                  ID of the action triggered by this operation.
         """

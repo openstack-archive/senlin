@@ -406,132 +406,6 @@ class ClusterTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'PROFILE')
 
-    # @mock.patch.object(obj_base.SenlinObject, 'obj_class_from_name')
-    def _prepare_request(self, req):
-        mock_cls = self.patchobject(obj_base.SenlinObject,
-                                    'obj_class_from_name')
-        req.update({'senlin_object.name': 'RequestClass',
-                    'senlin_object.version': '1.0'})
-        req_base = mock.Mock()
-        mock_cls.return_value = req_base
-        req_obj = mock.Mock()
-        for k, v in req.items():
-            setattr(req_obj, k, v)
-        req_base.obj_from_primitive.return_value = req_obj
-
-    @mock.patch.object(service.EngineService, 'check_cluster_quota')
-    @mock.patch.object(su, 'check_size_params')
-    @mock.patch.object(am.Action, 'create')
-    @mock.patch("senlin.engine.cluster.Cluster")
-    @mock.patch.object(service.EngineService, 'profile_find')
-    @mock.patch.object(dispatcher, 'start_action')
-    def test_cluster_create2(self, notify, mock_profile, mock_cluster,
-                             mock_action, mock_check, mock_quota):
-        x_profile = mock.Mock(id='PROFILE_ID')
-        mock_profile.return_value = x_profile
-        x_cluster = mock.Mock(id='12345678ABC')
-        x_cluster.to_dict.return_value = {'foo': 'bar'}
-        mock_cluster.return_value = x_cluster
-        mock_action.return_value = 'ACTION_ID'
-        mock_check.return_value = None
-        mock_quota.return_value = None
-        req = orco.ClusterCreateRequestBody(name='C1', profile_id='PROFILE',
-                                            desired_capacity=3)
-
-        # do it
-        result = self.eng.cluster_create2(self.ctx, req.obj_to_primitive())
-
-        self.assertEqual({'action': 'ACTION_ID', 'foo': 'bar'}, result)
-        mock_profile.assert_called_once_with(self.ctx, 'PROFILE')
-        mock_check.assert_called_once_with(None, 3, None, None, True)
-        mock_cluster.assert_called_once_with(
-            'C1', 3, 'PROFILE_ID',
-            min_size=0, max_size=-1, timeout=3600, metadata={},
-            user=self.ctx.user, project=self.ctx.project,
-            domain=self.ctx.domain)
-        x_cluster.store.assert_called_once_with(self.ctx)
-        mock_action.assert_called_once_with(
-            self.ctx,
-            '12345678ABC', 'CLUSTER_CREATE',
-            name='cluster_create_12345678',
-            cause=am.CAUSE_RPC,
-            status=am.Action.READY,
-        )
-        notify.assert_called_once_with()
-
-    @mock.patch.object(service.EngineService, 'check_cluster_quota')
-    def test_cluster_create2_exceeding_quota(self, mock_quota):
-        mock_quota.side_effect = exc.Forbidden()
-        req = {'profile_id': 'PROFILE', 'name': 'CLUSTER'}
-        self._prepare_request(req)
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_create2,
-                               self.ctx, req)
-
-        self.assertEqual(exc.Forbidden, ex.exc_info[0])
-        self.assertEqual("You are not authorized to complete this "
-                         "operation.",
-                         six.text_type(ex.exc_info[1]))
-        mock_quota.assert_called_once_with(self.ctx)
-
-    @mock.patch.object(service.EngineService, 'check_cluster_quota')
-    @mock.patch.object(co.Cluster, 'get_by_name')
-    def test_cluster_create2_duplicate_name(self, mock_get, mock_quota):
-        cfg.CONF.set_override('name_unique', True, enforce_type=True)
-        mock_quota.return_value = None
-        mock_get.return_value = mock.Mock()
-        req = {'profile_id': 'PROFILE', 'name': 'CLUSTER'}
-        self._prepare_request(req)
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_create2,
-                               self.ctx, req)
-
-        self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual(_("The request is malformed: a cluster named "
-                           "'CLUSTER' already exists."),
-                         six.text_type(ex.exc_info[1]))
-        mock_get.assert_called_once_with(self.ctx, 'CLUSTER')
-
-    @mock.patch.object(service.EngineService, 'check_cluster_quota')
-    @mock.patch.object(service.EngineService, 'profile_find')
-    def test_cluster_create2_profile_not_found(self, mock_find, mock_quota):
-        mock_quota.return_value = None
-        mock_find.side_effect = exc.ResourceNotFound(type='profile',
-                                                     id='Bogus')
-        req = {'profile_id': 'Bogus', 'name': 'CLUSTER'}
-        self._prepare_request(req)
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_create2,
-                               self.ctx, req)
-
-        self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: The specified profile "
-                         "(Bogus) could not be found.",
-                         six.text_type(ex.exc_info[1]))
-        mock_find.assert_called_once_with(self.ctx, 'Bogus')
-
-    @mock.patch.object(service.EngineService, 'check_cluster_quota')
-    @mock.patch.object(service.EngineService, 'profile_find')
-    @mock.patch.object(su, 'check_size_params')
-    def test_cluster_create2_failed_checking(self, mock_check, mock_find,
-                                             mock_quota):
-        mock_quota.return_value = None
-        mock_find.return_value = mock.Mock()
-        mock_check.return_value = 'INVALID'
-        req = {'profile_id': 'PROFILE', 'name': 'CLUSTER'}
-        self._prepare_request(req)
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_create2,
-                               self.ctx, req)
-
-        self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: INVALID.",
-                         six.text_type(ex.exc_info[1]))
-        mock_find.assert_called_once_with(self.ctx, 'PROFILE')
-
     @mock.patch.object(am.Action, 'create')
     @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(service.EngineService, 'profile_find')
@@ -2094,3 +1968,144 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual('The cluster (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    def _prepare_request(self, req):
+        mock_cls = self.patchobject(obj_base.SenlinObject,
+                                    'obj_class_from_name')
+        req.update({'senlin_object.name': 'RequestClass',
+                    'senlin_object.version': '1.0'})
+        req_base = mock.Mock()
+        mock_cls.return_value = req_base
+        req_obj = mock.Mock()
+        for k, v in req.items():
+            setattr(req_obj, k, v)
+        req_base.obj_from_primitive.return_value = req_obj
+
+    @mock.patch.object(cm.Cluster, 'load_all')
+    def test_cluster_list2(self, mock_load):
+        x_obj_1 = mock.Mock()
+        x_obj_1.to_dict.return_value = {'k': 'v1'}
+        x_obj_2 = mock.Mock()
+        x_obj_2.to_dict.return_value = {'k': 'v2'}
+        mock_load.return_value = [x_obj_1, x_obj_2]
+        req = orco.ClusterListRequestBody(name=['C1'], project_safe=True)
+
+        result = self.eng.cluster_list2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
+        mock_load.assert_called_once_with(
+            self.ctx, sort=None, project_safe=True,
+            filters={'name': ['C1'], 'status': None})
+
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch("senlin.engine.cluster.Cluster")
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_create2(self, notify, mock_profile, mock_cluster,
+                             mock_action, mock_check, mock_quota):
+        x_profile = mock.Mock(id='PROFILE_ID')
+        mock_profile.return_value = x_profile
+        x_cluster = mock.Mock(id='12345678ABC')
+        x_cluster.to_dict.return_value = {'foo': 'bar'}
+        mock_cluster.return_value = x_cluster
+        mock_action.return_value = 'ACTION_ID'
+        mock_check.return_value = None
+        mock_quota.return_value = None
+        req = orco.ClusterCreateRequestBody(name='C1', profile_id='PROFILE',
+                                            desired_capacity=3)
+
+        # do it
+        result = self.eng.cluster_create2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID', 'foo': 'bar'}, result)
+        mock_profile.assert_called_once_with(self.ctx, 'PROFILE')
+        mock_check.assert_called_once_with(None, 3, None, None, True)
+        mock_cluster.assert_called_once_with(
+            'C1', 3, 'PROFILE_ID',
+            min_size=0, max_size=-1, timeout=3600, metadata={},
+            user=self.ctx.user, project=self.ctx.project,
+            domain=self.ctx.domain)
+        x_cluster.store.assert_called_once_with(self.ctx)
+        mock_action.assert_called_once_with(
+            self.ctx,
+            '12345678ABC', 'CLUSTER_CREATE',
+            name='cluster_create_12345678',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
+    def test_cluster_create2_exceeding_quota(self, mock_quota):
+        mock_quota.side_effect = exc.Forbidden()
+        req = {'profile_id': 'PROFILE', 'name': 'CLUSTER'}
+        self._prepare_request(req)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_create2,
+                               self.ctx, req)
+
+        self.assertEqual(exc.Forbidden, ex.exc_info[0])
+        self.assertEqual("You are not authorized to complete this "
+                         "operation.",
+                         six.text_type(ex.exc_info[1]))
+        mock_quota.assert_called_once_with(self.ctx)
+
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
+    @mock.patch.object(co.Cluster, 'get_by_name')
+    def test_cluster_create2_duplicate_name(self, mock_get, mock_quota):
+        cfg.CONF.set_override('name_unique', True, enforce_type=True)
+        mock_quota.return_value = None
+        mock_get.return_value = mock.Mock()
+        req = {'profile_id': 'PROFILE', 'name': 'CLUSTER'}
+        self._prepare_request(req)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_create2,
+                               self.ctx, req)
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual(_("The request is malformed: a cluster named "
+                           "'CLUSTER' already exists."),
+                         six.text_type(ex.exc_info[1]))
+        mock_get.assert_called_once_with(self.ctx, 'CLUSTER')
+
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    def test_cluster_create2_profile_not_found(self, mock_find, mock_quota):
+        mock_quota.return_value = None
+        mock_find.side_effect = exc.ResourceNotFound(type='profile',
+                                                     id='Bogus')
+        req = {'profile_id': 'Bogus', 'name': 'CLUSTER'}
+        self._prepare_request(req)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_create2,
+                               self.ctx, req)
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The specified profile "
+                         "(Bogus) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(su, 'check_size_params')
+    def test_cluster_create2_failed_checking(self, mock_check, mock_find,
+                                             mock_quota):
+        mock_quota.return_value = None
+        mock_find.return_value = mock.Mock()
+        mock_check.return_value = 'INVALID'
+        req = {'profile_id': 'PROFILE', 'name': 'CLUSTER'}
+        self._prepare_request(req)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_create2,
+                               self.ctx, req)
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: INVALID.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'PROFILE')
