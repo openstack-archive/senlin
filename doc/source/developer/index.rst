@@ -42,6 +42,7 @@ Understanding the Design
    testing
    plugin_guide
    api_microversion
+   osprofiler
 
 
 Built-in Policy Types
