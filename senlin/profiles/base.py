@@ -15,6 +15,7 @@ import copy
 from oslo_context import context as oslo_context
 from oslo_log import log as logging
 from oslo_utils import timeutils
+from osprofiler import profiler
 import six
 
 from senlin.common import consts
@@ -197,16 +198,19 @@ class Profile(object):
         return self.id
 
     @classmethod
+    @profiler.trace('Profile.create_object', hide_args=False)
     def create_object(cls, ctx, obj):
         profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_create(obj)
 
     @classmethod
+    @profiler.trace('Profile.delete_object', hide_args=False)
     def delete_object(cls, ctx, obj, **params):
         profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_delete(obj, **params)
 
     @classmethod
+    @profiler.trace('Profile.update_object', hide_args=False)
     def update_object(cls, ctx, obj, new_profile_id=None, **params):
         profile = cls.load(ctx, profile_id=obj.profile_id)
         new_profile = None
@@ -215,26 +219,31 @@ class Profile(object):
         return profile.do_update(obj, new_profile, **params)
 
     @classmethod
+    @profiler.trace('Profile.get_details', hide_args=False)
     def get_details(cls, ctx, obj):
         profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_get_details(obj)
 
     @classmethod
+    @profiler.trace('Profile.join_cluster', hide_args=False)
     def join_cluster(cls, ctx, obj, cluster_id):
         profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_join(obj, cluster_id)
 
     @classmethod
+    @profiler.trace('Profile.leave_cluster', hide_args=False)
     def leave_cluster(cls, ctx, obj):
         profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_leave(obj)
 
     @classmethod
+    @profiler.trace('Profile.check_object', hide_args=False)
     def check_object(cls, ctx, obj):
         profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_check(obj)
 
     @classmethod
+    @profiler.trace('Profile.recover_object', hide_args=False)
     def recover_object(cls, ctx, obj, **options):
         profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_recover(obj, **options)

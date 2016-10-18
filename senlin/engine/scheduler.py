@@ -14,8 +14,10 @@ import time
 
 import eventlet
 from oslo_config import cfg
+from oslo_context import context as oslo_context
 from oslo_log import log as logging
 from oslo_service import threadgroup
+from osprofiler import profiler
 
 from senlin.common import context
 from senlin.common.i18n import _
@@ -56,10 +58,31 @@ class ThreadGroupManager(object):
         # TODO(Yanyan): have this task call dbapi purge events
         pass
 
+    def _serialize_profile_info(self):
+        prof = profiler.get()
+        trace_info = None
+        if prof:
+            trace_info = {
+                "hmac_key": prof.hmac_key,
+                "base_id": prof.get_base_id(),
+                "parent_id": prof.get_id()
+            }
+        return trace_info
+
+    def _start_with_trace(self, cnxt, trace, func, *args, **kwargs):
+        if trace:
+            profiler.init(**trace)
+        if cnxt is not None:
+            cnxt.update_store()
+        return func(*args, **kwargs)
+
     def start(self, func, *args, **kwargs):
         '''Run the given method in a thread.'''
 
-        return self.group.add_thread(func, *args, **kwargs)
+        req_cnxt = oslo_context.get_current()
+        return self.group.add_thread(self._start_with_trace, req_cnxt,
+                                     self._serialize_profile_info(),
+                                     func, *args, **kwargs)
 
     def start_action(self, worker_id, action_id=None):
         '''Run action(s) in sub-thread(s).

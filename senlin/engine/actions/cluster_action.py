@@ -15,6 +15,7 @@ import eventlet
 
 from oslo_log import log as logging
 from oslo_utils import timeutils
+from osprofiler import profiler
 
 from senlin.common import consts
 from senlin.common import exception
@@ -180,6 +181,7 @@ class ClusterAction(base.Action):
 
         return self.RES_OK, ''
 
+    @profiler.trace('ClusterAction.do_create', hide_args=False)
     def do_create(self):
         """Handler for CLUSTER_CREATE action.
 
@@ -202,6 +204,7 @@ class ClusterAction(base.Action):
 
         return result, reason
 
+    @profiler.trace('ClusterAction.do_update', hide_args=False)
     def do_update(self):
         """Handler for CLUSTER_UPDATE action.
 
@@ -304,6 +307,7 @@ class ClusterAction(base.Action):
 
         return self.RES_OK, ''
 
+    @profiler.trace('ClusterAction.do_delete', hide_args=False)
     def do_delete(self):
         """Handler for the CLUSTER_DELETE action.
 
@@ -332,6 +336,7 @@ class ClusterAction(base.Action):
 
         return result, reason
 
+    @profiler.trace('ClusterAction.do_add_nodes', hide_args=False)
     def do_add_nodes(self):
         """Handler for the CLUSTER_ADD_NODES action.
 
@@ -401,6 +406,7 @@ class ClusterAction(base.Action):
 
         return result, reason
 
+    @profiler.trace('ClusterAction.do_del_nodes', hide_args=False)
     def do_del_nodes(self):
         """Handler for the CLUSTER_DEL_NODES action.
 
@@ -463,6 +469,7 @@ class ClusterAction(base.Action):
 
         return result, reason
 
+    @profiler.trace('ClusterAction.do_replace_nodes', hide_args=False)
     def do_replace_nodes(self):
         """Handler for the CLUSTER_REPLACE_NODES action.
 
@@ -553,6 +560,7 @@ class ClusterAction(base.Action):
         self.cluster.eval_status(self.context, self.CLUSTER_REPLACE_NODES)
         return result, reason
 
+    @profiler.trace('ClusterAction.do_check', hide_args=False)
     def do_check(self):
         """Handler for CLUSTER_CHECK action.
 
@@ -587,6 +595,7 @@ class ClusterAction(base.Action):
         self.cluster.eval_status(self.context, self.CLUSTER_CHECK)
         return res, reason
 
+    @profiler.trace('ClusterAction.do_recover', hide_args=False)
     def do_recover(self):
         """Handler for the CLUSTER_RECOVER action.
 
@@ -646,6 +655,7 @@ class ClusterAction(base.Action):
         self.cluster.set_status(self.context, self.cluster.RESIZING,
                                 _('Cluster resize started.'), **kwargs)
 
+    @profiler.trace('ClusterAction.do_resize', hide_args=False)
     def do_resize(self):
         """Handler for the CLUSTER_RESIZE action.
 
@@ -690,6 +700,7 @@ class ClusterAction(base.Action):
         self.cluster.eval_status(self.context, self.CLUSTER_RESIZE)
         return result, reason
 
+    @profiler.trace('ClusterAction.do_scale_out', hide_args=False)
     def do_scale_out(self):
         """Handler for the CLUSTER_SCALE_OUT action.
 
@@ -729,6 +740,7 @@ class ClusterAction(base.Action):
 
         return result, reason
 
+    @profiler.trace('ClusterAction.do_scale_in', hide_args=False)
     def do_scale_in(self):
         """Handler for the CLUSTER_SCALE_IN action.
 
@@ -789,6 +801,7 @@ class ClusterAction(base.Action):
 
         return result, reason
 
+    @profiler.trace('ClusterAction.do_attach_policy', hide_args=False)
     def do_attach_policy(self):
         """Handler for the CLUSTER_ATTACH_POLICY action.
 
@@ -809,6 +822,7 @@ class ClusterAction(base.Action):
 
         return result, reason
 
+    @profiler.trace('ClusterAction.do_detach_policy', hide_args=False)
     def do_detach_policy(self):
         """Handler for the CLUSTER_DETACH_POLICY action.
 
@@ -827,6 +841,7 @@ class ClusterAction(base.Action):
 
         return result, reason
 
+    @profiler.trace('ClusterAction.do_update_policy', hide_args=False)
     def do_update_policy(self):
         """Handler for the CLUSTER_UPDATE_POLICY action.
 

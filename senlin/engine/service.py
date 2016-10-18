@@ -19,6 +19,7 @@ import oslo_messaging
 from oslo_service import service
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
+from osprofiler import profiler
 import six
 
 from senlin.common import consts
@@ -86,6 +87,7 @@ def request_context2(func):
     return wrapped
 
 
+@profiler.trace_cls("rpc")
 class EngineService(service.Service):
     """Lifecycle manager for a running service engine.
 

@@ -18,12 +18,15 @@ import six
 import sys
 import threading
 
+from oslo_config import cfg
 from oslo_db import api as oslo_db_api
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy import utils as sa_utils
 from oslo_log import log as logging
 from oslo_utils import timeutils
+import osprofiler.sqlalchemy
+import sqlalchemy
 from sqlalchemy.orm import joinedload_all
 
 from senlin.common import consts
@@ -43,6 +46,11 @@ def _get_main_context_manager():
     global _main_context_manager
     if not _main_context_manager:
         _main_context_manager = enginefacade.transaction_context()
+        cfg.CONF.import_group('profiler', 'senlin.common.config')
+        if cfg.CONF.profiler.enabled:
+            if cfg.CONF.profiler.trace_sqlalchemy:
+                eng = _main_context_manager.get_legacy_facade().get_engine()
+                osprofiler.sqlalchemy.add_tracing(sqlalchemy, eng, "db")
     return _main_context_manager
 
 
