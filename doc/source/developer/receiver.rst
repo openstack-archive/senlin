@@ -24,19 +24,24 @@ on a cluster on behalf of a user when some external alarms or events are
 fired.
 
 A receiver can be of different types. The ``type`` of a receiver is specified
-when being created. For example, the most common type of receiver is
-``webhook``, where a :term:`Webhook` is a URI that can be accessed from any
-user or program.
+when being created. Currently, two receiver types are supported: ``webhook``
+and ``message``. For a ``webhook`` receiver, a :term:`Webhook` URI is generated
+for users or programs to trigger a cluster action by send a HTTP POST request.
+For a ``message`` receiver,  a Zaqar queue is created for users or programs to
+trigger a cluster action by sending a message.
 
 A receiver encapsulates the information needed for triggering an action. These
-information include:
+information may include:
 
 * ``actor``: the credential of a user on whose behalf the action will be
   triggered. This is usually the user who created the receiver, but it can be
   any other valid user explicitly specified when the receiver is created.
-* ``cluster_id``: the ID of the targeted cluster.
-* ``action``: the name of an action that is applicable on a cluster.
-* ``params``: a dictionary feeding argument values (if any) to the action.
+* ``cluster_id``: the ID of the targeted cluster. It is required only for
+  ``webhook`` receivers.
+* ``action``: the name of an action that is applicable on a cluster. It is
+  required only for ``webhook`` receivers.
+* ``params``: a dictionary feeding argument values (if any) to the action. It
+  is optional for all types of receivers.
 
 In the long term, senlin may support user-defined actions where ``action``
 will be interpreted as the UUID or name of a user-defined action.
@@ -45,36 +50,74 @@ will be interpreted as the UUID or name of a user-defined action.
 Creating a Receiver
 ~~~~~~~~~~~~~~~~~~~
 
-When a user requests the creation of a receiver by invoking :program:`senlin`
-command line tool, the request comes with at least two parameters: the
-targeted cluster and the intended action to invoke when the receiver is
-triggered. Optionally, the user can provide some additional parameters to use
-and/or the credentials of a different user. By default, a receiver of type
-"``webhook``" is created. In future, we may support more receiver types.
+Creating a webhook receiver
+---------------------------
+
+When a user requests to create a webhook receiver by invoking the
+:program:`senlin` command line tool or the equivalent :program:`openstack`
+command, the request comes with at least three parameters: the
+receiver type which should be ``webhook``, the targeted cluster and the
+intended action to invoke when the receiver is triggered. Optionally, the
+user can provide some additional parameters to use and/or the credentials of
+a different user.
 
 When the Senlin API service receives the request, it does three things:
 
-* Validates the request and rejects it if any of the following conditions is
-  met:
+* Validating the request and rejects it if any one of the following conditions
+  is met:
 
-  - the targeted cluster could not be found;
   - the receiver type specified is not supported;
+  - the targeted cluster can not be found;
   - the targeted cluster is not owned by the requester and the requester does
     not have an "``admin``" role in the project;
   - the provided action is not applicable on a cluster.
 
-* Creates a receiver object that contains all necessary information that will
+* Creating a receiver object that contains all necessary information that will
   be used to trigger the specified action on the specified cluster.
 
-* Creates a "channel" which is specific to the receiver type. For example, a
-  receiver of type "``webhook``" will contain a key named "``alarm_url``" in
-  its channel which looks like::
+* Creating a "channel" which contains information users can use to trigger
+  a cluster action. For the ``webhook`` receiver, this is a URL stored in
+  the ``alarm_url`` field and it looks like::
 
     http://{host:port}/v1/webhooks/{webhook_id}/trigger?V=1
 
   **NOTE**: The ``V=1`` above is used to encode the current webhook triggering
   protocol. When the protocol changes in future, the value will be changed
   accordingly.
+
+Finally, Senlin engine returns a dictionary containing the properties of the
+receiver object.
+
+Creating a message receiver
+---------------------------
+
+When a user requests to create a message receiver by invoking :program:`senlin`
+command line tool or the equivalent :program:`openstack` command, the receiver
+type ``message`` is the only parameter need to be specified.
+
+When the Senlin API service receives the request, it does the following things:
+
+* Validating the request and rejecting it if the receiver type specified is not
+  supported;
+
+* Creating a receiver object whose cluster_id and action properties are `None`;
+
+* Creating a "channel" which contains information users can use to trigger
+  a cluster action. For a ``message`` receiver, the following steps are
+  followed:
+
+  - Creating a Zaqar queue whose name has the ``senlin-receiver-`` prefix.
+  - Building a trust between the requester (trustor) and the Zaqar trustee
+    user (trustee) if this trust relationship has not been created yet.
+    The ``trust_id`` will be used to create message subscriptions in the next
+    step.
+  - Creating a Zaqar subscription targeting on the queue just created and
+    specifying the HTTP subscriber to the following URL::
+
+    http://{host:port}/v1/v1/receivers/{receiver_id}/notify
+
+  - Storing the name of queue into the ``queue_name`` field of the receiver's
+    channel.
 
 Finally, Senlin engine returns a dictionary containing the properties of the
 receiver object.
@@ -112,11 +155,41 @@ creates an action based on the information stored in the receiver object.
 The newly created action is then dispatched and scheduled by a scheduler to
 perform the expected operation.
 
+Triggering a Message Receiver
+-----------------------------
+
+When triggering a message receiver, a user or a software needs to send
+message(s) to the Zaqar queue whose name can be found from the channel data of
+the receiver. Then the Zaqar service will notify the Senlin service for the
+message(s) by sending a HTTP POST request to the Senlin subscriber URL.
+Note: this POST request is sent using the Zaqar trustee user credential
+and the ``trust_id`` defined in the subscriber. Therefore, Senlin will
+recognize the requester as the receiver owner rather than the Zaqar service
+user.
+
+Then Senlin API then receives this POST request, parses the authentication
+information and then makes a ``receiver_notify`` RPC call to the senlin engine.
+
+The Senlin engine receives the RPC call, claims message(s) from Zaqar and then
+builds action(s) based on payload contained in the message body. A message will
+be ignored if any one of the following conditions is met:
+
+  - the ``cluster`` or the ``action`` field cannot be found in message body;
+  - the targeted cluster cannot be found;
+  - the targeted cluster is not owned by the receiver owner and the receiver
+    owner does not have "``admin``" role in the project;
+  - the provided action is not applicable on a cluster.
+
+Then those newly created action(s) will be scheduled to run to perform the
+expected operation.
 
 Credentials
 ~~~~~~~~~~~
 
-When requesting the creation of a receiver, the requester can choose to
+Webhook Receiver
+----------------
+
+When requesting to create a ``webhook`` receiver, the requester can choose to
 provide some credentials by specifying the ``actor`` property of the receiver.
 This information will be used for invoking the webhook in the future. There
 are several options to provide these credentials.
@@ -138,3 +211,18 @@ The requester must be either the owner of the targeted cluster or he/she has
 the ``admin`` role in the project. This is enforced by the policy middleware.
 If the requester is the ``admin`` of the project, Senlin engine will use the
 cluster owner's credentials (i.e. a trust with the Senlin user in this case).
+
+
+Message Receiver
+----------------
+
+When requesting to create a ``message`` receiver, the requester does not need
+to provide any extra credentials. However, to enable token based authentication
+for Zaqar message notifications, Zaqar trustee user information like
+``auth_type``, ``auth_url``, ``username``, ``password``, ``project_name``,
+``user_domain_name``, ``project_domain_name``, etc. must be configured in the
+Senlin configuration file. By default, Zaqar trustee user is the same as Zaqar
+service user, for example "zaqar". However, operators are also allowed to
+specify other dedicated user as Zaqar trustee user for message notifying.
+Therefore, please ensure Zaqar trustee user information defined in senlin.conf
+are identical to the ones defined in zaqar.conf.
