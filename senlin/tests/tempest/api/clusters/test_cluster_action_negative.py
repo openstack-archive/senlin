@@ -1001,3 +1001,258 @@ class TestClusterPolicyUpdateNegativeNotFound(base.BaseSenlinAPITest):
         self.assertRaises(exceptions.NotFound,
                           self.client.trigger_action, 'clusters',
                           'c7605959-3bc9-41e2-9685-7e11fa03b9e6', params)
+
+
+class TestClusterReplaceNodesNegativeInvalidParams(base.BaseSenlinAPITest):
+
+    @utils.api_microversion('1.3')
+    @decorators.idempotent_id('fbfb0819-6a15-4926-a21f-44fda6960bed')
+    def test_cluster_replace_nodes_params_not_map(self):
+        params = {
+            'replace_nodes': {
+                'nodes': []
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.cluster_replace_nodes,
+                          'clusters', 'cluster_id', params)
+
+    @utils.api_microversion('1.3')
+    @decorators.idempotent_id('600baf2f-e74f-467d-9883-3dcf1c357b57')
+    def test_cluster_replace_nodes_params_empty_map(self):
+        params = {
+            'replace_nodes': {
+                'nodes': {}
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.cluster_replace_nodes,
+                          'clusters', 'cluster_id', params)
+
+    @utils.api_microversion('1.3')
+    @decorators.idempotent_id('9d10612e-bfb9-4ac5-bc92-107c95c54adf')
+    def test_cluster_replace_nodes_missing_old_node(self):
+        params = {
+            'replace_nodes': {
+                'nodes': {
+                    '': 'new_node'
+                }
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.cluster_replace_nodes,
+                          'clusters', 'cluster_id', params)
+
+    @utils.api_microversion('1.3')
+    @decorators.idempotent_id('3e227f8f-7da3-4dc1-b647-68ed8fbdd111')
+    def test_cluster_replace_nodes_missing_new_node(self):
+        params = {
+            'replace_nodes': {
+                'nodes': {
+                    'old_node': ''
+                }
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.cluster_replace_nodes,
+                          'clusters', 'cluster_id', params)
+
+    @utils.api_microversion('1.3')
+    @decorators.idempotent_id('82ebbd5a-47fc-4d32-be3c-7bf3262dd574')
+    def test_cluster_replace_nodes_duplicated_node(self):
+        params = {
+            'replace_nodes': {
+                'nodes': {
+                    'old_node1': 'new_node',
+                    'old_node2': 'new_node'
+                }
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.cluster_replace_nodes,
+                          'clusters', 'cluster_id', params)
+
+
+class TestClusterReplaceNodesNegativeOldNotFound(base.BaseSenlinAPITest):
+    def setUp(self):
+        super(TestClusterReplaceNodesNegativeOldNotFound, self).setUp()
+        self.profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        self.cluster_id = utils.create_a_cluster(self, self.profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+        self.new_node = utils.create_a_node(self, self.profile_id)
+        self.addCleanup(utils.delete_a_node, self, self.new_node)
+
+    @utils.api_microversion('1.3')
+    @decorators.idempotent_id('911d6e85-220f-4208-9a0b-b91e83c5e787')
+    def test_cluster_replace_nodes_old_node_not_found(self):
+        params = {
+            'replace_nodes': {
+                'nodes': {
+                    'old_node': self.new_node
+                }
+            }
+        }
+
+        # Verify not found badrequest is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.cluster_replace_nodes,
+                          'clusters', self.cluster_id, params)
+
+
+class TestClusterReplaceNodesNegativeNewNotFound(base.BaseSenlinAPITest):
+    def setUp(self):
+        super(TestClusterReplaceNodesNegativeNewNotFound, self).setUp()
+        self.profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        self.cluster_id = utils.create_a_cluster(self, self.profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+        self.old_node = utils.create_a_node(self, self.profile_id,
+                                            cluster_id=self.cluster_id)
+        self.addCleanup(utils.delete_a_node, self, self.old_node)
+
+    @utils.api_microversion('1.3')
+    @decorators.idempotent_id('1282c521-c479-42f3-b375-8d6d62b1d5dc')
+    def test_cluster_replace_nodes_old_node_not_found(self):
+        params = {
+            'replace_nodes': {
+                'nodes': {
+                    self.old_node: 'new_node'
+                }
+            }
+        }
+
+        # Verify badrequest exception is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.cluster_replace_nodes,
+                          'clusters', self.cluster_id, params)
+
+
+class TestClusterReplaceNodesNegativeNewNotOrphan(base.BaseSenlinAPITest):
+    def setUp(self):
+        super(TestClusterReplaceNodesNegativeNewNotOrphan, self).setUp()
+        self.profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        self.cluster_id = utils.create_a_cluster(self, self.profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+        self.old_node = utils.create_a_node(self, self.profile_id,
+                                            cluster_id=self.cluster_id)
+        self.addCleanup(utils.delete_a_node, self, self.old_node)
+
+        self.cluster_id2 = utils.create_a_cluster(self, self.profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id2)
+        self.new_node = utils.create_a_node(self, self.profile_id,
+                                            self.cluster_id2)
+        self.addCleanup(utils.delete_a_node, self, self.new_node)
+
+    @utils.api_microversion('1.3')
+    @decorators.idempotent_id('e001ba28-f7ad-4af5-a281-5652ca040c65')
+    def test_cluster_replace_nodes_new_node_not_orphan(self):
+        params = {
+            'replace_nodes': {
+                'nodes': {
+                    self.old_node: self.new_node
+                }
+            }
+        }
+
+        # Verify conflict exception(409) is raised.
+        self.assertRaises(exceptions.Conflict,
+                          self.client.cluster_replace_nodes,
+                          'clusters', self.cluster_id, params)
+
+
+class TestClusterReplaceNodeNegativeProfileUnmatch(base.BaseSenlinAPITest):
+
+    def setUp(self):
+        super(TestClusterReplaceNodeNegativeProfileUnmatch, self).setUp()
+        self.profile_id = utils.create_a_profile(
+            self, spec=constants.spec_nova_server)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        self.cluster_id = utils.create_a_cluster(self, self.profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+        self.old_node = utils.create_a_node(self, self.profile_id,
+                                            self.cluster_id)
+        self.addCleanup(utils.delete_a_node, self, self.old_node)
+
+        self.profile_id2 = utils.create_a_profile(
+            self, spec=constants.spec_heat_stack)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id2)
+        self.new_node = utils.create_a_node(self, self.profile_id2)
+        self.addCleanup(utils.delete_a_node, self, self.new_node)
+
+    @utils.api_microversion('1.3')
+    @decorators.idempotent_id('d1cb2068-b23c-4023-ad25-271f8e5b1bfa')
+    def test_cluster_replace_nodes_profile_type_unmatch(self):
+        params = {
+            'replace_nodes': {
+                'nodes': {
+                    self.old_node: self.new_node
+                }
+            }
+        }
+
+        # Verify badrequest exception is raised
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.cluster_replace_nodes, 'clusters',
+                          self.cluster_id, params)
+
+
+class TestClusterReplaceNodeNegativeOldOrphan(base.BaseSenlinAPITest):
+
+    def setUp(self):
+        super(TestClusterReplaceNodeNegativeOldOrphan, self).setUp()
+        self.profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.profile_id)
+        self.cluster_id = utils.create_a_cluster(self, self.profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+
+        self.old_node = utils.create_a_node(self, self.profile_id)
+        self.addCleanup(utils.delete_a_node, self, self.old_node)
+        self.new_node = utils.create_a_node(self, self.profile_id)
+        self.addCleanup(utils.delete_a_node, self, self.new_node)
+
+    @utils.api_microversion('1.3')
+    @decorators.idempotent_id('ca0afe22-e758-477c-8ca5-cd1b686747dc')
+    def test_cluster_replace_nodes_old_node_orphan(self):
+        params = {
+            'replace_nodes': {
+                'nodes': {
+                    self.old_node: self.new_node
+                }
+            }
+        }
+
+        # Versify badrequest exeception is raised
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.cluster_replace_nodes, 'clusters',
+                          self.cluster_id, params)
+
+
+class TestClusterReplaceNodeNegativeClusterNotFound(base.BaseSenlinAPITest):
+
+    @utils.api_microversion('1.3')
+    @decorators.idempotent_id('086c0657-f7a1-4722-a585-ac281725bcfc')
+    def test_cluster_replace_nodes_cluster_not_found(self):
+        params = {
+            'replace_nodes': {
+                'nodes': {
+                    'old_node': 'new_node'
+                }
+            }
+        }
+
+        # Verify notfound exception(404) is raised.
+        self.assertRaises(exceptions.NotFound,
+                          self.client.cluster_replace_nodes, 'clusters',
+                          'db0faadf-9cd2-457f-b434-4891b77938ab', params)

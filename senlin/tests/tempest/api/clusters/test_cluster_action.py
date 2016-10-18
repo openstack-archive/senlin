@@ -322,3 +322,37 @@ class TestClusterActionPolicyUpdate(base.BaseSenlinAPITest):
 
         action_id = res['location'].split('/actions/')[1]
         self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
+
+
+class TestClusterActionReplaceNodes(base.BaseSenlinAPITest):
+
+    def setUp(self):
+        super(TestClusterActionReplaceNodes, self).setUp()
+        profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, profile_id)
+        self.cluster_id = utils.create_a_cluster(self, profile_id)
+        self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+        self.origin_node = utils.create_a_node(
+            self, profile_id, cluster_id=self.cluster_id)
+        self.addCleanup(utils.delete_a_node, self, self.origin_node)
+        self.replace_node = utils.create_a_node(self, profile_id)
+
+    @utils.api_microversion('1.3')
+    @decorators.idempotent_id('a17c2bff-eab7-4d02-a49f-9388eb53aa14')
+    def test_cluster_action_replace(self):
+        params = {
+            "replace_nodes": {
+                'nodes': {
+                    self.origin_node: self.replace_node
+                }
+            }
+        }
+        # Trigger cluster action
+        res = self.client.cluster_replace_nodes('clusters', self.cluster_id,
+                                                params=params)
+
+        # Verify resp code, body and location in headers
+        self.assertEqual(202, res['status'])
+        self.assertIn('action', res['location'])
+        action_id = res['location'].split('/actions/')[1]
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')

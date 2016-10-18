@@ -271,6 +271,23 @@ def cluster_detach_policy(base, cluster_id, policy_id,
     return res['body']['status_reason']
 
 
+def cluster_replace_nodes(base, cluster_id, nodes,
+                          expected_status='SUCCEEDED', wait_timeout=None):
+    """Utility function that replace nodes of cluster."""
+
+    params = {
+        'replace_nodes': {
+            'nodes': nodes
+        }
+    }
+    res = base.client.cluster_replace_nodes('clusters', cluster_id,
+                                            params=params)
+    action_id = res['location'].split('/actions/')[1]
+    res = base.client.wait_for_status('actions', action_id, expected_status,
+                                      wait_timeout)
+    return res['body']['status_reason']
+
+
 def cluster_add_nodes(base, cluster_id, nodes, expected_status='SUCCEEDED',
                       wait_timeout=None):
     """Utility function that add nodes to cluster."""
