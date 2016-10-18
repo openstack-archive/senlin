@@ -857,6 +857,55 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
+    def test_get2(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'get', True)
+        cid = 'cid'
+        req = self._get('/clusters/%s' % cid)
+        engine_resp = {'foo': 'bar'}
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
+                                     return_value=engine_resp)
+
+        response = self.controller.get(req, cluster_id=cid)
+
+        mock_call.assert_called_once_with(req.context, 'cluster_get2',
+                                          mock.ANY)
+
+        expected = {'cluster': engine_resp}
+        self.assertEqual(expected, response)
+        request = mock_call.call_args[0][2]
+        self.assertEqual('cid', request.identity)
+
+    def test_get2_not_found(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'get', True)
+        cid = 'non-existent-cluster'
+        req = self._get('/clusters/%s' % cid)
+
+        error = senlin_exc.ResourceNotFound(type='cluster', id=cid)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.get,
+                                              req, cluster_id=cid)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+
+    def test_get2_denied_policy(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'get', False)
+        cid = 'cid'
+        req = self._get('/clusters/%s' % cid)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.get,
+                                              req, cluster_id=cid)
+
+        self.assertEqual(403, resp.status_int)
+        self.assertIn('403 Forbidden', six.text_type(resp))
+
     def test_cluster_delete(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         cid = 'aaaa-bbbb-cccc'
