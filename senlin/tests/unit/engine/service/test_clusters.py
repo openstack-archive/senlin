@@ -2129,3 +2129,31 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual("The request is malformed: INVALID.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'PROFILE')
+
+    @mock.patch.object(cm.Cluster, 'load')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_get2(self, mock_find, mock_load):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        x_cluster = mock.Mock()
+        x_cluster.to_dict.return_value = {'foo': 'bar'}
+        mock_load.return_value = x_cluster
+        req = orco.ClusterGetRequest(identity='C1')
+
+        result = self.eng.cluster_get2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'foo': 'bar'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'C1')
+        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_get2_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='Bogus')
+        req = {'identity': 'CLUSTER'}
+        self._prepare_request(req)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_get2,
+                               self.ctx, req)
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
