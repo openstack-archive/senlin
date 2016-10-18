@@ -22,6 +22,7 @@ CONF = cfg.CONF
 
 # Field alias for code readability
 BooleanField = fields.BooleanField
+FlexibleBooleanField = fields.FlexibleBooleanField
 StringField = fields.StringField
 IntegerField = fields.IntegerField
 FloatField = fields.FloatField
@@ -45,7 +46,7 @@ class NonNegativeInteger(fields.FieldType):
 
     def get_schema(self):
         return {
-            'type': ['integer'],
+            'type': ['integer', 'string'],
             'minimum': 0
         }
 

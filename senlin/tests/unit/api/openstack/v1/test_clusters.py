@@ -13,6 +13,7 @@
 import mock
 from oslo_config import cfg
 from oslo_serialization import jsonutils
+from oslo_utils import uuidutils
 import six
 import webob
 from webob import exc
@@ -441,7 +442,109 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_create_old(self, mock_enforce):
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_index2(self, mock_call, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        req = self._get('/clusters')
+
+        engine_resp = [{'foo': 'bar'}]
+        mock_call.return_value = engine_resp
+
+        result = self.controller.index(req)
+
+        expected = {u'clusters': engine_resp}
+        self.assertEqual(expected, result)
+
+        mock_call.assert_called_once_with(req.context, 'cluster_list2',
+                                          mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorc.ClusterListRequestBody)
+        self.assertTrue(request.project_safe)
+        self.assertFalse(request.obj_attr_is_set('name'))
+        self.assertFalse(request.obj_attr_is_set('status'))
+        self.assertFalse(request.obj_attr_is_set('limit'))
+        self.assertFalse(request.obj_attr_is_set('marker'))
+        self.assertFalse(request.obj_attr_is_set('sort'))
+
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_index2_with_params(self, mock_call, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        fake_id = uuidutils.generate_uuid()
+        params = {
+            'name': 'name1',
+            'status': 'ACTIVE',
+            'limit': '3',
+            'marker': fake_id,
+            'sort': 'name:asc',
+            'global_project': 'True',
+        }
+        req = self._get('/clusters', params=params)
+
+        engine_resp = [{'foo': 'bar'}]
+        mock_call.return_value = engine_resp
+
+        result = self.controller.index(req)
+
+        expected = {u'clusters': engine_resp}
+        self.assertEqual(expected, result)
+
+        mock_call.assert_called_once_with(req.context, 'cluster_list2',
+                                          mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorc.ClusterListRequestBody)
+        self.assertFalse(request.project_safe)
+        self.assertEqual(['name1'], request.name)
+        self.assertEqual(['ACTIVE'], request.status)
+        self.assertEqual(3, request.limit)
+        self.assertEqual(fake_id, request.marker)
+        self.assertEqual('name:asc', request.sort)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_index2_with_bad_param(self, mock_call, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {'limit': -1}
+        req = self._get('/clusters', params=params)
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index,
+                               req)
+
+        self.assertEqual("Value must be >= 0 for field 'limit'.",
+                         six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_index2_with_bad_schema(self, mock_call, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {'status': 'fake'}
+        req = self._get('/clusters', params=params)
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index,
+                               req)
+
+        self.assertEqual("Field value fake is invalid",
+                         six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    def test_index2_error_denied_policy(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'index', False)
+
+        req = self._get('/clusters')
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.index,
+                                              req)
+
+        self.assertEqual(403, resp.status_int)
+        self.assertIn('403 Forbidden', six.text_type(resp))
+
+    def test_create(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {
             'cluster': {
@@ -490,7 +593,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(engine_response, resp['cluster'])
         self.assertEqual('/actions/fake_action', resp['location'])
 
-    def test_create(self, mock_enforce):
+    def test_create2(self, mock_enforce):
         cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {
@@ -522,7 +625,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         resp = self.controller.create(req, body=body)
 
-        mock_call.assert_called_with(req.context, 'cluster_create2', mock.ANY)
+        mock_call.assert_called_once_with(req.context, 'cluster_create2',
+                                          mock.ANY)
         request = mock_call.call_args[0][2]
         self.assertIsInstance(request, vorc.ClusterCreateRequestBody)
         self.assertEqual(0, request.desired_capacity)
@@ -536,7 +640,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(engine_response, resp['cluster'])
         self.assertEqual('/actions/fake_action', resp['location'])
 
-    def test_create_only_required(self, mock_enforce):
+    def test_create2_only_required(self, mock_enforce):
         cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {
@@ -575,7 +679,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(engine_response, resp['cluster'])
         self.assertEqual('/actions/fake_action', resp['location'])
 
-    def test_create_bad_name(self, mock_enforce):
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_create2_bad_name(self, mock_call, mock_enforce):
         cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {
@@ -585,7 +690,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
         req = self._post('/clusters', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
@@ -595,6 +699,24 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                          "illegal characters.", six.text_type(ex))
 
         self.assertEqual(0, mock_call.call_count)
+
+    def test_create2_err_denied_policy(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'create', False)
+        body = {
+            'cluster': {
+                'name': 'test_cluster',
+                'profile_id': 'xxxx-yyyy',
+            }
+        }
+        req = self._post('/clusters', jsonutils.dumps(body))
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.create,
+                                              req, body=body)
+
+        self.assertEqual(403, resp.status_int)
+        self.assertIn('403 Forbidden', six.text_type(resp))
 
     def test_create_maleformed_body(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -619,28 +741,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                       "in request body.", six.text_type(ex))
 
         self.assertFalse(mock_call.called)
-
-    def test_create_err_denied_policy(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'create', False)
-        body = {
-            'cluster': {
-                'name': 'test_cluster',
-                'profile_id': 'xxxx-yyyy',
-                'min_size': 0,
-                'max_size': 0,
-                'desired_capacity': 0,
-                'metadata': {},
-                'timeout': None,
-            }
-        }
-        req = self._post('/clusters', jsonutils.dumps(body))
-
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.create,
-                                              req, body=body)
-
-        self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
 
     def test_create_err_engine(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)

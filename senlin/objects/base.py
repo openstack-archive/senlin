@@ -70,11 +70,14 @@ class SenlinObject(base.VersionedObject):
 
     @classmethod
     def normalize_req(cls, name, req, key):
-        return {
+        result = {
             cls.OBJ_SERIAL_NAMESPACE + '.version': cls.VERSION,
             cls.OBJ_SERIAL_NAMESPACE + '.namespace': cls.OBJ_PROJECT_NAMESPACE,
             cls.OBJ_SERIAL_NAMESPACE + '.name': name,
-            cls.OBJ_SERIAL_NAMESPACE + '.data': {
+        }
+
+        if key is not None:
+            result[cls.OBJ_SERIAL_NAMESPACE + '.data'] = {
                 key: {
                     cls.OBJ_SERIAL_NAMESPACE + '.version': cls.VERSION,
                     cls.OBJ_SERIAL_NAMESPACE + '.namespace':
@@ -83,7 +86,10 @@ class SenlinObject(base.VersionedObject):
                     cls.OBJ_SERIAL_NAMESPACE + '.data': req[key]
                 }
             }
-        }
+        else:
+            result[cls.OBJ_SERIAL_NAMESPACE + '.data'] = req
+
+        return result
 
 
 class SenlinObjectRegistry(base.VersionedObjectRegistry):
