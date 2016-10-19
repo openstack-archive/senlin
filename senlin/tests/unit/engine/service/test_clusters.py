@@ -2202,9 +2202,8 @@ class ClusterTest(base.SenlinTestCase):
                 },
                 'timeout': 120,
                 'name': 'new_name',
-            },
+            }
         )
-        notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_update2_cluster_not_found(self, mock_find):
@@ -2385,3 +2384,200 @@ class ClusterTest(base.SenlinTestCase):
                                self.eng.cluster_update,
                                self.ctx, req)
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_add_nodes2_cluster_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='Bogus')
+        req = {'identity': 'Bogus', 'nodes': ['n1', 'n2']}
+        self._prepare_request(req)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_add_nodes2,
+                               self.ctx, req)
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual('The cluster (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_add_nodes2(self, notify, mock_find, mock_profile,
+                                mock_node, mock_action, mock_check):
+        x_cluster = mock.Mock(id='12345678AB', profile_id='FAKE_ID',
+                              desired_capacity=4)
+        mock_find.return_value = x_cluster
+        mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
+        x_node_1 = mock.Mock(id='NODE1', cluster_id='', status='ACTIVE',
+                             profile_id='FAKE_ID_1')
+        x_node_2 = mock.Mock(id='NODE2', cluster_id='', status='ACTIVE',
+                             profile_id='FAKE_ID_1')
+        mock_node.side_effect = [x_node_1, x_node_2]
+        mock_action.return_value = 'ACTION_ID'
+        mock_check.return_value = None
+        req = orco.ClusterAddNodesRequest(identity='C1',
+                                          nodes=['NODE_A', 'NODE_B'])
+
+        result = self.eng.cluster_add_nodes2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'C1')
+        mock_node.assert_has_calls([
+            mock.call(self.ctx, 'NODE_A'),
+            mock.call(self.ctx, 'NODE_B'),
+        ])
+        mock_check.assert_called_once_with(x_cluster, 6, strict=True)
+        mock_action.assert_called_once_with(
+            self.ctx, '12345678AB', consts.CLUSTER_ADD_NODES,
+            name='cluster_add_nodes_12345678',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={'nodes': ['NODE1', 'NODE2']},
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_add_nodes2_nodes_not_found(self, mock_find, mock_profile,
+                                                mock_node):
+        mock_find.return_value = mock.Mock(id='1234', profile_id='FAKE_ID')
+        mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
+        mock_node.side_effect = exc.ResourceNotFound(type='node', id='NODE1')
+        req = {'identity': 'CLUSTER', 'nodes': ['NODE1']}
+        self._prepare_request(req)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_add_nodes2,
+                               self.ctx, req)
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Nodes not found: "
+                         "['NODE1'].", six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_profile.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_node.assert_called_once_with(self.ctx, 'NODE1')
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_add_nodes2_bad_status(self, mock_find, mock_profile,
+                                           mock_node):
+        mock_find.return_value = mock.Mock(id='1234', profile_id='FAKE_ID')
+        mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
+        mock_node.return_value = mock.Mock(id='NODE2', status='ERROR')
+        req = {'identity': 'CLUSTER', 'nodes': ['NODE2']}
+        self._prepare_request(req)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_add_nodes2,
+                               self.ctx, req)
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Nodes are not ACTIVE: "
+                         "['NODE2'].",
+                         six.text_type(ex.exc_info[1]))
+
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_profile.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_node.assert_called_once_with(self.ctx, 'NODE2')
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_add_nodes2_node_already_owned(self, mock_find,
+                                                   mock_profile, mock_node):
+
+        mock_find.return_value = mock.Mock(id='1234', profile_id='FAKE_ID')
+        mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
+        mock_node.return_value = mock.Mock(id='NODE3', status='ACTIVE',
+                                           cluster_id='OTHER')
+        req = {'identity': 'CLUSTER', 'nodes': ['NODE3']}
+        self._prepare_request(req)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_add_nodes2,
+                               self.ctx, req)
+
+        self.assertEqual(exc.NodeNotOrphan, ex.exc_info[0])
+        self.assertEqual("Nodes ['NODE3'] already owned by some cluster.",
+                         six.text_type(ex.exc_info[1]))
+
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_profile.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_node.assert_called_once_with(self.ctx, 'NODE3')
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_add_nodes2_node_profile_type_not_match(
+            self, mock_find, mock_profile, mock_node):
+
+        mock_find.return_value = mock.Mock(id='1234', profile_id='FAKE_ID')
+        mock_profile.side_effect = [
+            mock.Mock(type='FAKE_TYPE_1'),
+            mock.Mock(type='FAKE_TYPE_2'),
+        ]
+        mock_node.return_value = mock.Mock(id='NODE4', status='ACTIVE',
+                                           cluster_id='', profile_id='DIFF')
+        req = {'identity': 'CLUSTER', 'nodes': ['NODE4']}
+        self._prepare_request(req)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_add_nodes2,
+                               self.ctx, req)
+
+        self.assertEqual(exc.ProfileTypeNotMatch, ex.exc_info[0])
+        self.assertEqual("Profile type of nodes ['NODE4'] does not match "
+                         "that of the cluster.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_profile.assert_has_calls([
+            mock.call(self.ctx, 'FAKE_ID'),
+            mock.call(self.ctx, 'DIFF'),
+        ])
+        mock_node.assert_called_once_with(self.ctx, 'NODE4')
+
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_add_nodes2_failed_checking(self, mock_find, mock_profile,
+                                                mock_node, mock_check):
+        x_cluster = mock.Mock(id='12345678AB', profile_id='FAKE_PROFILE',
+                              desired_capacity=2)
+        mock_find.return_value = x_cluster
+        mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
+        x_node_1 = mock.Mock(id='NODE1', cluster_id='', status='ACTIVE',
+                             profile_id='FAKE_PROFILE_1')
+        x_node_2 = mock.Mock(id='NODE2', cluster_id='', status='ACTIVE',
+                             profile_id='FAKE_PROFILE_2')
+        mock_node.side_effect = [x_node_1, x_node_2]
+        mock_check.return_value = 'Failed size checking.'
+        req = {'identity': 'C1', 'nodes': ['NODE_A', 'NODE_B']}
+        self._prepare_request(req)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_add_nodes2,
+                               self.ctx, req)
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Failed size checking.",
+                         six.text_type(ex.exc_info[1]))
+
+        mock_find.assert_called_once_with(self.ctx, 'C1')
+        mock_profile.assert_has_calls([
+            mock.call(self.ctx, 'FAKE_PROFILE'),
+            mock.call(self.ctx, 'FAKE_PROFILE_1'),
+            mock.call(self.ctx, 'FAKE_PROFILE_2'),
+        ])
+        mock_node.assert_has_calls([
+            mock.call(self.ctx, 'NODE_A'),
+            mock.call(self.ctx, 'NODE_B'),
+        ])
+        mock_check.assert_called_once_with(x_cluster, 4, strict=True)

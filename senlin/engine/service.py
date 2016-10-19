@@ -1284,6 +1284,89 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
+    @request_context2
+    def cluster_add_nodes2(self, context, req):
+        """Add specified nodes to the specified cluster.
+
+        :param context: An instance of the request context.
+        :param req: An instance of the ClusterCreateRequestBody object.
+        :return: A dictionary containing the ID of the action triggered.
+        """
+        LOG.info(_LI("Adding nodes '%(nodes)s' to cluster '%(cluster)s'."),
+                 {'cluster': req.identity, 'nodes': req.nodes})
+
+        db_cluster = self.cluster_find(context, req.identity)
+        db_cluster_profile = self.profile_find(context,
+                                               db_cluster.profile_id)
+        cluster_profile_type = db_cluster_profile.type
+
+        found = []
+        not_found = []
+        bad_nodes = []
+        owned_nodes = []
+        not_match_nodes = []
+        for node in req.nodes:
+            try:
+                db_node = self.node_find(context, node)
+                # Skip node in the same cluster already
+                if db_node.status != node_mod.Node.ACTIVE:
+                    bad_nodes.append(db_node.id)
+                elif len(db_node.cluster_id) != 0:
+                    owned_nodes.append(db_node.id)
+                else:
+                    # check profile type matching
+                    db_node_profile = self.profile_find(context,
+                                                        db_node.profile_id)
+                    node_profile_type = db_node_profile.type
+                    if node_profile_type != cluster_profile_type:
+                        not_match_nodes.append(db_node.id)
+                    else:
+                        found.append(db_node.id)
+            except exception.ResourceNotFound:
+                not_found.append(node)
+                pass
+
+        error = None
+        if len(not_match_nodes) > 0:
+            error = _("Profile type of nodes %s does not match that of the "
+                      "cluster.") % not_match_nodes
+            LOG.error(error)
+            raise exception.ProfileTypeNotMatch(message=error)
+        elif len(owned_nodes) > 0:
+            error = _("Nodes %s already owned by some cluster.") % owned_nodes
+            LOG.error(error)
+            raise exception.NodeNotOrphan(message=error)
+        elif len(bad_nodes) > 0:
+            error = _("Nodes are not ACTIVE: %s.") % bad_nodes
+        elif len(not_found) > 0:
+            error = _("Nodes not found: %s.") % not_found
+        elif len(found) == 0:
+            error = _("No nodes to add: %s.") % req.nodes
+
+        if error is not None:
+            LOG.error(error)
+            raise exception.BadRequest(msg=error)
+
+        target_size = db_cluster.desired_capacity + len(found)
+        error = su.check_size_params(db_cluster, target_size, strict=True)
+        if error:
+            LOG.error(error)
+            raise exception.BadRequest(msg=error)
+
+        params = {
+            'name': 'cluster_add_nodes_%s' % db_cluster.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+            'inputs': {'nodes': found},
+        }
+        action_id = action_mod.Action.create(context, db_cluster.id,
+                                             consts.CLUSTER_ADD_NODES,
+                                             **params)
+        dispatcher.start_action()
+        LOG.info(_LI("Cluster add nodes action queued: %s."), action_id)
+
+        return {'action': action_id}
+
     @request_context
     def cluster_del_nodes(self, context, identity, nodes):
         """Delete specified nodes from the named cluster.
