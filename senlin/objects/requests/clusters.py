@@ -59,3 +59,11 @@ class ClusterCreateRequest(base.SenlinObject):
     fields = {
         'cluster': fields.ObjectField('ClusterCreateRequestBody')
     }
+
+
+@base.SenlinObjectRegistry.register
+class ClusterGetRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField()
+    }
