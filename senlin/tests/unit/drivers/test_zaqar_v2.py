@@ -103,16 +103,21 @@ class TestZaqarV2(base.SenlinTestCase):
 
     def test_message_delete(self):
         zc = zaqar_v2.ZaqarClient(self.conn_params)
-        zc.message_delete('foo', 'MESSAGE_ID', True)
+        zc.message_delete('foo', 'MESSAGE_ID', None, True)
         self.message.delete_message.assert_called_once_with(
-            'foo', 'MESSAGE_ID', True)
+            'foo', 'MESSAGE_ID', None, True)
         self.message.delete_message.reset_mock()
 
-        zc.message_delete('foo', 'MESSAGE_ID', False)
+        zc.message_delete('foo', 'MESSAGE_ID', None, False)
         self.message.delete_message.assert_called_once_with(
-            'foo', 'MESSAGE_ID', False)
+            'foo', 'MESSAGE_ID', None, False)
         self.message.delete_message.reset_mock()
 
         zc.message_delete('foo', 'MESSAGE_ID')
         self.message.delete_message.assert_called_once_with(
-            'foo', 'MESSAGE_ID', True)
+            'foo', 'MESSAGE_ID', None, True)
+        self.message.delete_message.reset_mock()
+
+        zc.message_delete('foo', 'MESSAGE_ID', 'CLAIM_ID')
+        self.message.delete_message.assert_called_once_with(
+            'foo', 'MESSAGE_ID', 'CLAIM_ID', True)
