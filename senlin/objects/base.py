@@ -15,6 +15,7 @@
 from oslo_utils import versionutils
 from oslo_versionedobjects import base
 
+from senlin.common.i18n import _
 from senlin import objects
 from senlin.objects import fields
 
@@ -77,6 +78,9 @@ class SenlinObject(base.VersionedObject):
         }
 
         if key is not None:
+            if key not in req:
+                raise ValueError(_("Request body missing '%s' key.") % key)
+
             result[cls.OBJ_SERIAL_NAMESPACE + '.data'] = {
                 key: {
                     cls.OBJ_SERIAL_NAMESPACE + '.version': cls.VERSION,

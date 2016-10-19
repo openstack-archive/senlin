@@ -196,11 +196,11 @@ class ClusterController(wsgi.Controller):
     def create(self, req, body):
         """Create a new cluster."""
         if cfg.CONF.rpc_use_object:
-            normal_req = obj_base.SenlinObject.normalize_req(
-                'ClusterCreateRequest', body, 'cluster')
             try:
-                obj = vorc.ClusterCreateRequest.obj_from_primitive(normal_req)
-                jsonschema.validate(normal_req, obj.to_json_schema())
+                norm_req = obj_base.SenlinObject.normalize_req(
+                    'ClusterCreateRequest', body, 'cluster')
+                obj = vorc.ClusterCreateRequest.obj_from_primitive(norm_req)
+                jsonschema.validate(norm_req, obj.to_json_schema())
             except (ValueError) as ex:
                 raise exc.HTTPBadRequest(six.text_type(ex))
 
