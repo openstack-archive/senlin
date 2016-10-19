@@ -107,6 +107,7 @@ class TestObject(TestField):
                         'items': {'type': 'string'}, 'type': 'array'
                     },
                     'versioned_object.data': {
+                        'additionalProperties': False,
                         'description': 'fields of TestableObject',
                         'properties': {
                             'uuid': {'readonly': False, 'type': ['string']}
