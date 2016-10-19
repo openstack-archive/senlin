@@ -229,8 +229,22 @@ class ClusterController(wsgi.Controller):
     @util.policy_enforce
     def get(self, req, cluster_id):
         """Gets detailed information for a cluster."""
+        if cfg.CONF.rpc_use_object:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ClusterGetRequest', {'identity': cluster_id}, None)
+            obj = None
+            try:
+                obj = vorc.ClusterGetRequest.obj_from_primitive(norm_req)
+                jsonschema.validate(norm_req, obj.to_json_schema())
+            except ValueError as ex:
+                raise exc.HTTPBadRequest(six.text_type(ex))
+            except jsonschema.exceptions.ValidationError as ex:
+                raise exc.HTTPBadRequest(six.text_type(ex.message))
 
-        cluster = self.rpc_client.cluster_get(req.context, cluster_id)
+            cluster = self.rpc_client.call2(req.context, 'cluster_get2', obj)
+        else:
+            cluster = self.rpc_client.cluster_get(req.context, cluster_id)
+
         return {'cluster': cluster}
 
     @util.policy_enforce
