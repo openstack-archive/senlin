@@ -680,6 +680,27 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('/actions/fake_action', resp['location'])
 
     @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_create2_missing_cluster_key(self, mock_call, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        body = {
+            'what_the_hell': {
+                'name': 'test/cluster',
+                'profile_id': 'xxxx-yyyy',
+            }
+        }
+        req = self._post('/clusters', jsonutils.dumps(body))
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.create,
+                               req, body=body)
+
+        self.assertEqual("Request body missing 'cluster' key.",
+                         six.text_type(ex))
+
+        self.assertEqual(0, mock_call.call_count)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_create2_bad_name(self, mock_call, mock_enforce):
         cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'create', True)

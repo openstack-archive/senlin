@@ -11,6 +11,7 @@
 # under the License.
 
 import mock
+import six
 
 from senlin.objects import base as obj_base
 from senlin.objects import fields as obj_fields
@@ -106,3 +107,13 @@ class TestBaseObject(base.SenlinTestCase):
         res = obj_base.SenlinObject.normalize_req(name, req, None)
 
         self.assertEqual(expected, res)
+
+    def test_normalize_req_missing_key(self):
+        req = {'bar': 'zoo'}
+        name = 'reqname'
+
+        ex = self.assertRaises(ValueError,
+                               obj_base.SenlinObject.normalize_req,
+                               name, req, 'foo')
+
+        self.assertEqual("Request body missing 'foo' key.", six.text_type(ex))
