@@ -839,6 +839,18 @@ class EngineService(service.Service):
         cluster = cluster_mod.Cluster.load(context, dbcluster=db_cluster)
         return cluster.to_dict()
 
+    @request_context2
+    def cluster_get2(self, context, req):
+        """Retrieve the cluster specified.
+
+        :param context: An instance of the request context.
+        :param req: An instance of the ClusterGetRequest.
+        :return: A dictionary containing the details about a cluster.
+        """
+        db_cluster = self.cluster_find(context, req.identity)
+        cluster = cluster_mod.Cluster.load(context, dbcluster=db_cluster)
+        return cluster.to_dict()
+
     def check_cluster_quota(self, context):
         """Validate the number of clusters created in a project.
 
