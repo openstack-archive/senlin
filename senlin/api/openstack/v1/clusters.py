@@ -390,6 +390,28 @@ class ClusterController(wsgi.Controller):
         res.update(location)
         return res
 
+    def _add_nodes(self, ctx, cid, nodes):
+        if cfg.CONF.rpc_use_object:
+            params = {'identity': cid, 'nodes': nodes}
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ClusterAddNodesRequest', params, None)
+            obj = None
+            try:
+                obj = vorc.ClusterAddNodesRequest.obj_from_primitive(norm_req)
+                jsonschema.validate(norm_req, obj.to_json_schema())
+            except ValueError as ex:
+                raise exc.HTTPBadRequest(six.text_type(ex))
+            except jsonschema.exceptions.ValidationError as ex:
+                raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+            res = self.rpc_client.call2(ctx, 'cluster_add_nodes2', obj)
+        else:
+            if (not nodes or not isinstance(nodes, list)):
+                raise exc.HTTPBadRequest(_('No node to add'))
+            res = self.rpc_client.cluster_add_nodes(ctx, cid, nodes)
+
+        return res
+
     @util.policy_enforce
     def action(self, req, cluster_id, body=None):
         """Perform specified action on a cluster."""
@@ -406,11 +428,9 @@ class ClusterController(wsgi.Controller):
             raise exc.HTTPBadRequest(msg)
 
         if this_action == self.ADD_NODES:
-            nodes = body.get(this_action).get('nodes')
-            if nodes is None or not isinstance(nodes, list) or len(nodes) == 0:
-                raise exc.HTTPBadRequest(_('No node to add'))
-            res = self.rpc_client.cluster_add_nodes(
-                req.context, cluster_id, nodes)
+            nodes = body.get(this_action).get('nodes', [])
+            res = self._add_nodes(req.context, cluster_id, nodes)
+
         elif this_action == self.DEL_NODES:
             nodes = body.get(this_action).get('nodes')
             if nodes is None or not isinstance(nodes, list) or len(nodes) == 0:
