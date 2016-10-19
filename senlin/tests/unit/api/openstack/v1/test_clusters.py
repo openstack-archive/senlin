@@ -2372,3 +2372,90 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
         self.assertEqual(0, mock_call.call_count)
+
+    def test_cluster_action_add_nodes2(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'FAKE_ID'
+        body = {'add_nodes': {'nodes': ['NODE1']}}
+        eng_resp = {'action': 'action-id'}
+
+        req = self._post('/clusters/%(cluster_id)s/action' % {
+                         'cluster_id': cid}, jsonutils.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
+                                     return_value=eng_resp)
+
+        resp = self.controller.action(req, cluster_id=cid, body=body)
+
+        mock_call.assert_called_once_with(req.context, 'cluster_add_nodes2',
+                                          mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorc.ClusterAddNodesRequest)
+        self.assertEqual('FAKE_ID', request.identity)
+        self.assertEqual(['NODE1'], request.nodes)
+        result = {
+            'action': 'action-id',
+            'location': '/actions/action-id',
+        }
+        self.assertEqual(result, resp)
+
+    def test_cluster_action_add_nodes2_none(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'add_nodes': {'somearg': 'somevalue'}}
+
+        req = self._put('/clusters/%(cluster_id)s/action' % {
+                        'cluster_id': cid}, jsonutils.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, cluster_id=cid, body=body)
+
+        self.assertEqual("Value for 'nodes' must have at least 1 item(s).",
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
+    def test_cluster_action_add_nodes2_empty(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'add_nodes': {'nodes': []}}
+
+        req = self._put('/clusters/%(cluster_id)s/action' % {
+                        'cluster_id': cid}, jsonutils.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, cluster_id=cid, body=body)
+
+        self.assertEqual("Value for 'nodes' must have at least 1 item(s).",
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
+    def test_cluster_action_add_nodes2_bad_requests(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'add_nodes': {'nodes': ['bad-node-1']}}
+
+        req = self._post('/clusters/%(cluster_id)s/action' % {
+                         'cluster_id': cid}, jsonutils.dumps(body))
+
+        error = senlin_exc.ResourceNotFound(type='Node', id='bad-node-1')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.action,
+                                              req, cluster_id=cid, body=body)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+        self.assertIn('The Node (bad-node-1) could not be found.',
+                      resp.json['error']['message'])
