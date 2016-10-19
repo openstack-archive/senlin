@@ -250,18 +250,33 @@ class ClusterController(wsgi.Controller):
     @util.policy_enforce
     def update(self, req, cluster_id, body):
         """Update an existing cluster with new parameters."""
-
-        cluster_data = body.get('cluster')
-        if cluster_data is None:
+        data = body.get('cluster')
+        if data is None:
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'cluster' key in request body."))
+        if cfg.CONF.rpc_use_object:
+            params = body['cluster']
+            params['identity'] = cluster_id
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ClusterUpdateRequest', params, None)
+            try:
+                obj = vorc.ClusterUpdateRequest.obj_from_primitive(norm_req)
+                jsonschema.validate(norm_req, obj.to_json_schema())
+            except ValueError as ex:
+                raise exc.HTTPBadRequest(six.text_type(ex))
+            except jsonschema.exceptions.ValidationError as ex:
+                raise exc.HTTPBadRequest(six.text_type(ex.message))
 
-        data = ClusterData(cluster_data)
-        data.validate_for_update()
+            cluster = self.rpc_client.call2(req.context, 'cluster_update2',
+                                            obj)
+        else:
+            data = ClusterData(data)
+            data.validate_for_update()
+            cluster = self.rpc_client.cluster_update(req.context, cluster_id,
+                                                     data.name, data.profile,
+                                                     data.metadata,
+                                                     data.timeout)
 
-        cluster = self.rpc_client.cluster_update(
-            req.context, cluster_id, data.name, data.profile, data.metadata,
-            data.timeout)
         action_id = cluster.pop('action')
         result = {
             'cluster': cluster,

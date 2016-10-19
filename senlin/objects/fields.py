@@ -116,6 +116,7 @@ class Json(fields.FieldType):
             try:
                 return jsonutils.loads(value)
             except Exception:
+                # TODO(Anyone): emit a useful message here.
                 raise ValueError
         return value
 

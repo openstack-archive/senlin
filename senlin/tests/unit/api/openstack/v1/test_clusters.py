@@ -1114,6 +1114,152 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
+    def test_update2(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {
+            'cluster': {
+                'profile_id': 'xxxx-yyyy-zzzz',
+            }
+        }
+        engine_resp = {
+            'id': cid,
+            'action': 'fake_action',
+        }
+        req = self._patch('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                          jsonutils.dumps(body))
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
+                                     return_value=engine_resp)
+
+        res = self.controller.update(req, cluster_id=cid, body=body)
+
+        mock_call.assert_called_once_with(req.context, 'cluster_update2',
+                                          mock.ANY)
+        self.assertEqual(engine_resp, res['cluster'])
+        self.assertEqual('/actions/fake_action', res['location'])
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorc.ClusterUpdateRequest)
+        self.assertEqual(cid, request.identity)
+        self.assertEqual('xxxx-yyyy-zzzz', request.profile_id)
+        self.assertFalse(request.obj_attr_is_set('name'))
+        self.assertFalse(request.obj_attr_is_set('metadata'))
+        self.assertFalse(request.obj_attr_is_set('timeout'))
+
+    def test_update2_missing_cluster_key(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+
+        cid = 'aaaa-bbbb-cccc'
+        body = {'profile_id': 'xxxx-yyyy-zzzz'}
+
+        req = self._patch('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                          jsonutils.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.update,
+                               req, cluster_id=cid, body=body)
+
+        self.assertIn("Malformed request data, missing 'cluster' key "
+                      "in request body.", six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
+    def test_update2_bad_name(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'cluster': {'name': 'foo bar'}}
+
+        req = self._patch('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                          jsonutils.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.update,
+                               req, cluster_id=cid, body=body)
+
+        self.assertEqual(_("The value for the 'name' (foo bar) contains "
+                           "illegal characters."),
+                         six.text_type(ex))
+
+        self.assertFalse(mock_call.called)
+
+    def test_update2_timeout_non_int(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'cluster': {'timeout': '10min'}}
+
+        req = self._patch('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                          jsonutils.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.update,
+                               req, cluster_id=cid, body=body)
+
+        self.assertEqual(_("invalid literal for int() with base 10: '10min'"),
+                         six.text_type(ex))
+
+        self.assertFalse(mock_call.called)
+
+    def test_update2_bad_metadata(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'cluster': {'metadata': 'what?'}}
+
+        req = self._patch('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                          jsonutils.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.update,
+                               req, cluster_id=cid, body=body)
+
+        self.assertEqual(_("The server could not comply with the request "
+                           "since it is either malformed or otherwise "
+                           "incorrect."),
+                         six.text_type(ex))
+
+        self.assertFalse(mock_call.called)
+
+    def test_update2_engine_error(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        cid = 'non-existent-cluster'
+        body = {'cluster': {'profile_id': 'xxxx-yyyy-zzzz'}}
+        req = self._patch('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                          jsonutils.dumps(body))
+
+        error = senlin_exc.ResourceNotFound(type='cluster', id=cid)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.update,
+                                              req, cluster_id=cid, body=body)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+
+    def test_update2_err_denied_policy(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'update', False)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'cluster': {'profile_id': 'xxxx-yyyy-zzzz'}}
+
+        req = self._patch('/clusters/%(cluster_id)s' % {'cluster_id': cid},
+                          jsonutils.dumps(body))
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.update,
+                                              req, cluster_id=cid, body=body)
+
+        self.assertEqual(403, resp.status_int)
+        self.assertIn('403 Forbidden', six.text_type(resp))
+
     def test_cluster_action_replace_nodes(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
