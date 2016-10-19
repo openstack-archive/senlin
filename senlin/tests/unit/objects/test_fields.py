@@ -494,3 +494,93 @@ class TestSort(TestField):
             {'type': ['string']},
             self.field.get_schema()
         )
+
+
+class TestIdentityList(TestField):
+
+    def setUp(self):
+        super(TestIdentityList, self).setUp()
+
+        self.field = senlin_fields.IdentityList(fields.String())
+
+        self.coerce_good_values = [
+            (['abc'], ['abc'])
+        ]
+        self.coerce_bad_values = [
+            123
+        ]
+        self.to_primitive_values = self.coerce_good_values[0:1]
+        self.from_primitive_values = self.coerce_good_values[0:1]
+
+    def test_stringify(self):
+        self.assertEqual("['abc','def']",
+                         self.field.stringify(['abc', 'def']))
+
+    def test_init_with_params(self):
+        sot = senlin_fields.IdentityList(fields.String(), min_items=1,
+                                         unique=False)
+
+        self.assertEqual(1, sot.min_items)
+        self.assertFalse(sot.unique_items)
+
+    def test_coerce_not_unique_okay(self):
+        sot = senlin_fields.IdentityList(fields.String(), min_items=1,
+                                         unique=False)
+        obj = mock.Mock()
+
+        # not unique is okay
+        res = sot.coerce(obj, 'attr', ['abc', 'abc'])
+        self.assertEqual(['abc', 'abc'], res)
+
+    def test_coerce_too_short(self):
+        sot = senlin_fields.IdentityList(fields.String(), min_items=2,
+                                         unique=False)
+        obj = mock.Mock()
+
+        # violating min_items
+        ex = self.assertRaises(ValueError,
+                               sot.coerce,
+                               obj, 'attr', [])
+
+        self.assertEqual("Value for 'attr' must have at least 2 item(s).",
+                         six.text_type(ex))
+
+    def test_coerce_not_unique_bad(self):
+        obj = mock.Mock()
+
+        # violating min_items
+        ex = self.assertRaises(ValueError,
+                               self.field.coerce,
+                               obj, 'attr', ['abc', 'abc'])
+
+        self.assertEqual("Items for 'attr' must be unique",
+                         six.text_type(ex))
+
+    def test_get_schema(self):
+        self.assertEqual(
+            {
+                'type': ['array'],
+                'items': {
+                    'readonly': False,
+                    'type': ['string'],
+                },
+                'minItems': 0,
+                'uniqueItems': True
+            },
+            self.field.get_schema()
+        )
+
+        sot = senlin_fields.IdentityList(fields.String(), min_items=2,
+                                         unique=False, nullable=True)
+        self.assertEqual(
+            {
+                'type': ['array', 'null'],
+                'items': {
+                    'readonly': False,
+                    'type': ['string'],
+                },
+                'minItems': 2,
+                'uniqueItems': False
+            },
+            sot.get_schema()
+        )
