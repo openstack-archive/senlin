@@ -79,3 +79,12 @@ class ClusterUpdateRequest(base.SenlinObject):
         'metadata': fields.JsonField(nullable=True),
         'timeout': fields.IntegerField(nullable=True),
     }
+
+
+@base.SenlinObjectRegistry.register
+class ClusterAddNodesRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'nodes': fields.IdentityListField(min_items=1)
+    }
