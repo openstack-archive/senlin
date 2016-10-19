@@ -87,7 +87,7 @@ engine_opts = [
                 help=_('Flag to indicate whether to enforce unique names for '
                        'Senlin objects belonging to the same project.')),
     cfg.BoolOpt('rpc_use_object',
-                default=False,
+                default=True,
                 help=_("!!!Temporary!!! This is a temporary flag indicating "
                        "whether senlin RPC will use the versionedobjects "
                        "based parameter passing")),
