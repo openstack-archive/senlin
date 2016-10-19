@@ -93,6 +93,7 @@ class Object(fields.Object):
                         'description': 'fields of %s' % self._obj_name,
                         'properties': field_schemas,
                         'required': required_fields,
+                        'additionalProperties': False,
                     },
                 },
                 'required': [namespace_key, name_key, version_key, data_key],
