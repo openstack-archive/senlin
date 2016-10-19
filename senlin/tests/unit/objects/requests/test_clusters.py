@@ -12,6 +12,7 @@
 import copy
 
 from oslo_config import cfg
+import six
 
 from senlin.common import consts
 from senlin.objects.requests import clusters
@@ -178,3 +179,19 @@ class TestClusterUpdate(test_base.SenlinTestCase):
         self.assertEqual('new-profile', sot.profile_id)
         self.assertEqual({'newkey': 'newvalue'}, sot.metadata)
         self.assertEqual(4567, sot.timeout)
+
+
+class TestClusterAddNodes(test_base.SenlinTestCase):
+
+    def test_init(self):
+        sot = clusters.ClusterAddNodesRequest(identity='foo', nodes=['abc'])
+
+        self.assertEqual('foo', sot.identity)
+        self.assertEqual(['abc'], sot.nodes)
+
+    def test_init_failed(self):
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterAddNodesRequest,
+                               identity='foo', nodes=[])
+        self.assertEqual("Value for 'nodes' must have at least 1 item(s).",
+                         six.text_type(ex))
