@@ -328,6 +328,35 @@ class Sort(fields.String):
         }
 
 
+class IdentityList(fields.List):
+
+    def __init__(self, element_type, min_items=0, unique=True, nullable=False,
+                 **kwargs):
+        super(IdentityList, self).__init__(element_type, **kwargs)
+        self.min_items = min_items
+        self.unique_items = unique
+        self.nullable = nullable
+
+    def coerce(self, obj, attr, value):
+        res = super(IdentityList, self).coerce(obj, attr, value)
+        if len(res) < self.min_items:
+            raise ValueError(_("Value for '%(attr)s' must have at least "
+                               "%(num)s item(s).") %
+                             {'attr': attr, 'num': self.min_items})
+        if len(set(res)) != len(res) and self.unique_items:
+            raise ValueError(_("Items for '%(attr)s' must be unique") %
+                             {'attr': attr})
+        return res
+
+    def get_schema(self):
+        schema = super(IdentityList, self).get_schema()
+        if self.nullable:
+            schema['type'].append('null')
+        schema['minItems'] = self.min_items
+        schema['uniqueItems'] = self.unique_items
+        return schema
+
+
 class NameField(fields.AutoTypedField):
 
     AUTO_TYPE = Name()
@@ -337,7 +366,7 @@ class CapacityField(fields.AutoTypedField):
 
     AUTO_TYPE = None
 
-    def __init__(self, nullable=True, default=None, minimum=0, maximum=None):
+    def __init__(self, nullable=False, default=None, minimum=0, maximum=None):
         self.AUTO_TYPE = Capacity(minimum=minimum, maximum=maximum)
         super(CapacityField, self).__init__(nullable=nullable, default=default)
 
@@ -346,6 +375,19 @@ class SortField(fields.AutoTypedField):
 
     AUTO_TYPE = None
 
-    def __init__(self, valid_keys, nullable=True, default=None):
+    def __init__(self, valid_keys, nullable=False, default=None):
         self.AUTO_TYPE = Sort(valid_keys)
         super(SortField, self).__init__(nullable=nullable, default=default)
+
+
+class IdentityListField(fields.AutoTypedField):
+
+    AUTO_TYPE = None
+
+    def __init__(self, min_items=0, unique=True, nullable=False, default=None):
+        if default is None:
+            default = []
+        self.AUTO_TYPE = IdentityList(fields.String(), min_items=min_items,
+                                      unique=unique)
+        super(IdentityListField, self).__init__(nullable=nullable,
+                                                default=default)
