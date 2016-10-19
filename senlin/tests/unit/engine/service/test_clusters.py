@@ -2157,3 +2157,231 @@ class ClusterTest(base.SenlinTestCase):
                                self.eng.cluster_get2,
                                self.ctx, req)
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(cm.Cluster, 'load')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_update2(self, notify, mock_find, mock_profile, mock_load,
+                             mock_action):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        x_cluster = mock.Mock(id='12345678AB', status='ACTIVE',
+                              profile_id='OLD_PROFILE',
+                              metadata={'A': 'B'})
+        x_cluster.to_dict.return_value = {'foo': 'bar'}
+        mock_load.return_value = x_cluster
+        old_profile = mock.Mock(type='FAKE_TYPE', id='ID_OLD')
+        new_profile = mock.Mock(type='FAKE_TYPE', id='ID_NEW')
+        mock_profile.side_effect = [old_profile, new_profile]
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterUpdateRequest(identity='FAKE_ID', name='new_name',
+                                        profile_id='NEW_PROFILE',
+                                        metadata={'B': 'A'}, timeout=120)
+
+        # do it
+        result = self.eng.cluster_update2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID', 'foo': 'bar'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
+        mock_profile.assert_has_calls([
+            mock.call(self.ctx, 'OLD_PROFILE'),
+            mock.call(self.ctx, 'NEW_PROFILE'),
+        ])
+        mock_action.assert_called_once_with(
+            self.ctx, '12345678AB', 'CLUSTER_UPDATE',
+            name='cluster_update_12345678',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={
+                'new_profile_id': 'ID_NEW',
+                'metadata': {
+                    'B': 'A',
+                },
+                'timeout': 120,
+                'name': 'new_name',
+            },
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_update2_cluster_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='Bogus')
+        req = {'identity': 'Bogus', 'name': 'new-name'}
+        self._prepare_request(req)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_update2,
+                               self.ctx, req)
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+
+    @mock.patch.object(cm.Cluster, 'load')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_update2_cluster_bad_status(self, mock_find, mock_load):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        mock_load.return_value = mock.Mock(status='ERROR', ERROR='ERROR')
+        req = {'identity': 'CLUSTER', 'name': 'new-name'}
+        self._prepare_request(req)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_update2,
+                               self.ctx, req)
+
+        self.assertEqual(exc.FeatureNotSupported, ex.exc_info[0])
+        self.assertEqual('Updating a cluster in error state is not supported.',
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
+
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(cm.Cluster, 'load')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_update2_profile_not_found(self, mock_find, mock_load,
+                                               mock_profile):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        mock_load.return_value = mock.Mock(status='ACTIVE', ERROR='ERROR',
+                                           profile_id='OLD_ID')
+        mock_profile.side_effect = [
+            mock.Mock(type='FAKE_TYPE', id='OLD_ID'),
+            exc.ResourceNotFound(type='profile', id='Bogus')
+        ]
+        req = orco.ClusterUpdateRequest(identity='CLUSTER', profile_id='Bogus')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_update2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: "
+                         "The specified profile (Bogus) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
+        mock_profile.assert_has_calls([
+            mock.call(self.ctx, 'OLD_ID'),
+            mock.call(self.ctx, 'Bogus'),
+        ])
+
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(cm.Cluster, 'load')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_update2_diff_profile_type(self, mock_find, mock_load,
+                                               mock_profile):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        mock_load.return_value = mock.Mock(status='ACTIVE', ERROR='ERROR',
+                                           profile_id='OLD_ID')
+        mock_profile.side_effect = [
+            mock.Mock(type='FAKE_TYPE', id='OLD_ID'),
+            mock.Mock(type='DIFF_TYPE', id='NEW_ID'),
+        ]
+        req = orco.ClusterUpdateRequest(identity='CLUSTER',
+                                        profile_id='NEW_PROFILE')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_update2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ProfileTypeNotMatch, ex.exc_info[0])
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
+        mock_profile.assert_has_calls([
+            mock.call(self.ctx, 'OLD_ID'),
+            mock.call(self.ctx, 'NEW_PROFILE'),
+        ])
+
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(cm.Cluster, 'load')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_update2_same_profile(self, notify, mock_find,
+                                          mock_profile, mock_load,
+                                          mock_action):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        x_cluster = mock.Mock(id='12345678AB', status='ACTIVE',
+                              profile_id='OLD_PROFILE')
+        x_cluster.to_dict.return_value = {'foo': 'bar'}
+        mock_load.return_value = x_cluster
+        old_profile = mock.Mock(type='FAKE_TYPE', id='ID_OLD')
+        new_profile = mock.Mock(type='FAKE_TYPE', id='ID_OLD')
+        mock_profile.side_effect = [old_profile, new_profile]
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterUpdateRequest(identity='FAKE_ID', name='NEW_NAME',
+                                        profile_id='NEW_PROFILE')
+
+        # do it
+        result = self.eng.cluster_update2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID', 'foo': 'bar'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
+        mock_profile.assert_has_calls([
+            mock.call(self.ctx, 'OLD_PROFILE'),
+            mock.call(self.ctx, 'NEW_PROFILE'),
+        ])
+        mock_action.assert_called_once_with(
+            self.ctx, '12345678AB', 'CLUSTER_UPDATE',
+            name='cluster_update_12345678',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={
+                # Note profile_id is not shown in the inputs
+                'name': 'NEW_NAME',
+            },
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(cm.Cluster, 'load')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_update2_same_metadata(self, notify, mock_find, mock_load,
+                                           mock_action):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        x_cluster = mock.Mock(id='12345678AB', status='ACTIVE',
+                              metadata={'K': 'V'})
+        x_cluster.to_dict.return_value = {'foo': 'bar'}
+        mock_load.return_value = x_cluster
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterUpdateRequest(identity='FAKE_ID', name='NEW_NAME',
+                                        metadata={'K': 'V'})
+
+        # do it
+        result = self.eng.cluster_update2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID', 'foo': 'bar'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
+        mock_action.assert_called_once_with(
+            self.ctx, '12345678AB', 'CLUSTER_UPDATE',
+            name='cluster_update_12345678',
+            status=am.Action.READY,
+            cause=am.CAUSE_RPC,
+            inputs={
+                # Note metadata is not included in the inputs
+                'name': 'NEW_NAME',
+            },
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(cm.Cluster, 'load')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_update2_no_property_updated(self, mock_find, mock_load):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        mock_load.return_value = mock.Mock(status='ACTIVE', ERROR='ERROR',
+                                           profile_id='OLD_ID')
+        req = {'identity': 'CLUSTER'}
+        self._prepare_request(req)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_update,
+                               self.ctx, req)
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])

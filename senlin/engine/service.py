@@ -1079,6 +1079,69 @@ class EngineService(service.Service):
         resp['action'] = action_id
         return resp
 
+    @request_context2
+    def cluster_update2(self, ctx, req):
+        """Update a cluster.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ClusterUpdateRequest object.
+        :return: A dictionary containing the details about the cluster and the
+                 ID of the action triggered by this operation.
+        """
+        db_cluster = self.cluster_find(ctx, req.identity)
+        cluster = cluster_mod.Cluster.load(ctx, dbcluster=db_cluster)
+        if cluster.status == cluster.ERROR:
+            msg = _('Updating a cluster in error state')
+            LOG.error(msg)
+            raise exception.FeatureNotSupported(feature=msg)
+
+        LOG.info(_LI("Updating cluster '%s'."), req.identity)
+
+        inputs = {}
+        if req.obj_attr_is_set(consts.CLUSTER_PROFILE):
+            old_profile = self.profile_find(ctx, cluster.profile_id)
+            try:
+                new_profile = self.profile_find(ctx, req.profile_id)
+            except exception.ResourceNotFound as ex:
+                msg = ex.enhance_msg('specified', ex)
+                raise exception.BadRequest(msg=msg)
+
+            if new_profile.type != old_profile.type:
+                msg = _('Cannot update a cluster to a different profile type, '
+                        'operation aborted.')
+                raise exception.ProfileTypeNotMatch(message=msg)
+            if old_profile.id != new_profile.id:
+                inputs['new_profile_id'] = new_profile.id
+
+        if (req.obj_attr_is_set(consts.CLUSTER_METADATA) and
+                req.metadata != cluster.metadata):
+            inputs['metadata'] = copy.deepcopy(req.metadata)
+
+        if req.obj_attr_is_set(consts.CLUSTER_TIMEOUT):
+            inputs['timeout'] = req.timeout
+
+        if req.obj_attr_is_set(consts.CLUSTER_NAME):
+            inputs['name'] = req.name
+
+        if not inputs:
+            msg = _("No property needs an update.")
+            raise exception.BadRequest(msg=msg)
+
+        kwargs = {
+            'name': 'cluster_update_%s' % cluster.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+            'inputs': inputs,
+        }
+        action_id = action_mod.Action.create(ctx, cluster.id,
+                                             consts.CLUSTER_UPDATE, **kwargs)
+        dispatcher.start_action()
+        LOG.info(_LI("Cluster update action queued: %s."), action_id)
+
+        resp = cluster.to_dict()
+        resp['action'] = action_id
+        return resp
+
     @request_context
     def cluster_delete(self, context, identity):
         """Delete the specified cluster.
