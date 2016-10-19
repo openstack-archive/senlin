@@ -254,3 +254,50 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
                                                     'test_policy',
                                                     filters=filters)
         self.assertEqual(0, len(results))
+
+    def test_policy_get_all_with_all_filters(self):
+        for pid in ['policy1', 'policy2']:
+            self.create_policy(id=pid)
+            db_api.cluster_policy_attach(self.ctx, self.cluster.id, pid,
+                                         {'enabled': True})
+
+        filters = {'enabled': True,
+                   'policy_name': 'test_policy',
+                   'policy_type': 'ScalingPolicy'}
+        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
+                                                filters=filters)
+        self.assertEqual(2, len(results))
+
+        filters = {'enabled': True,
+                   'policy_type': 'ScalingPolicy'}
+        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
+                                                filters=filters)
+        self.assertEqual(2, len(results))
+
+        filters = {'enabled': True,
+                   'policy_name': 'test_policy'}
+        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
+                                                filters=filters)
+        self.assertEqual(2, len(results))
+
+        filters = {'enabled': True,
+                   'policy_name': 'wrong_name',
+                   'policy_type': 'wrong_type'}
+        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
+                                                filters=filters)
+        self.assertEqual(0, len(results))
+
+        filters = {'policy_name': 'test_policy'}
+        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
+                                                filters=filters)
+        self.assertEqual(2, len(results))
+
+        filters = {'policy_type': 'ScalingPolicy'}
+        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
+                                                filters=filters)
+        self.assertEqual(2, len(results))
+
+        filters = {'enabled': False}
+        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
+                                                filters=filters)
+        self.assertEqual(0, len(results))
