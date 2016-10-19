@@ -67,3 +67,15 @@ class ClusterGetRequest(base.SenlinObject):
     fields = {
         'identity': fields.StringField()
     }
+
+
+@base.SenlinObjectRegistry.register
+class ClusterUpdateRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'name': fields.NameField(nullable=True),
+        'profile_id': fields.StringField(nullable=True),
+        'metadata': fields.JsonField(nullable=True),
+        'timeout': fields.IntegerField(nullable=True),
+    }

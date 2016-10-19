@@ -154,3 +154,27 @@ class TestClusterGet(test_base.SenlinTestCase):
         sot = clusters.ClusterGetRequest(identity='foo')
 
         self.assertEqual('foo', sot.identity)
+
+
+class TestClusterUpdate(test_base.SenlinTestCase):
+
+    def test_init(self):
+        sot = clusters.ClusterUpdateRequest(identity='foo')
+
+        self.assertEqual('foo', sot.identity)
+        self.assertFalse(sot.obj_attr_is_set('name'))
+        self.assertFalse(sot.obj_attr_is_set('profile_id'))
+        self.assertFalse(sot.obj_attr_is_set('metadata'))
+        self.assertFalse(sot.obj_attr_is_set('timeout'))
+
+    def test_init_with_params(self):
+        sot = clusters.ClusterUpdateRequest(identity='foo', name='new-name',
+                                            profile_id='new-profile',
+                                            metadata={'newkey': 'newvalue'},
+                                            timeout=4567)
+
+        self.assertEqual('foo', sot.identity)
+        self.assertEqual('new-name', sot.name)
+        self.assertEqual('new-profile', sot.profile_id)
+        self.assertEqual({'newkey': 'newvalue'}, sot.metadata)
+        self.assertEqual(4567, sot.timeout)
