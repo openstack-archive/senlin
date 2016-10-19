@@ -1289,7 +1289,7 @@ class EngineService(service.Service):
         """Add specified nodes to the specified cluster.
 
         :param context: An instance of the request context.
-        :param req: An instance of the ClusterCreateRequestBody object.
+        :param req: An instance of the ClusterAddNodesRequest object.
         :return: A dictionary containing the ID of the action triggered.
         """
         LOG.info(_LI("Adding nodes '%(nodes)s' to cluster '%(cluster)s'."),
