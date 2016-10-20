@@ -1098,7 +1098,8 @@ class EngineService(service.Service):
         LOG.info(_LI("Updating cluster '%s'."), req.identity)
 
         inputs = {}
-        if req.obj_attr_is_set(consts.CLUSTER_PROFILE):
+        if (req.obj_attr_is_set(consts.CLUSTER_PROFILE) and
+                req.profile_id is not None):
             old_profile = self.profile_find(ctx, cluster.profile_id)
             try:
                 new_profile = self.profile_find(ctx, req.profile_id)
