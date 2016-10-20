@@ -242,6 +242,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index(self, mock_call, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/clusters')
 
@@ -287,6 +288,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_whitelists_pagination_params(self, mock_call, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
             'name': 'whatever',
@@ -311,6 +313,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_whitelists_pagination_invalid_params(self, mock_call,
                                                         mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
             'balrog': 'you shall not pass!'
@@ -326,6 +329,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_whitelist_filter_params(self, mock_call, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
             'status': 'fake status',
@@ -348,6 +352,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_whitelist_filter_invalid_params(self, mock_call,
                                                    mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
             'balrog': 'you shall not pass!'
@@ -362,6 +367,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_global_project_true(self, mock_call, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'global_project': 'True'}
         req = self._get('/clusters', params=params)
@@ -375,6 +381,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_global_project_false(self, mock_call, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'global_project': 'False'}
         req = self._get('/clusters', params=params)
@@ -388,6 +395,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_index_global_project_not_bool(self, mock_call, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'global_project': 'No'}
         req = self._get('/clusters', params=params)
@@ -401,6 +409,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_remote_attribute_error(self, mock_call, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/clusters')
 
@@ -416,6 +425,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_remote_internal_error(self, mock_call, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/clusters')
 
@@ -431,6 +441,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, ('cluster_list', mock.ANY))
 
     def test_index_error_denied_policy(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'index', False)
 
         req = self._get('/clusters')
@@ -502,7 +513,21 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('name:asc', request.sort)
 
     @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_index2_with_bad_param(self, mock_call, mock_enforce):
+    def test_index2_with_bad_param_name(self, mock_call, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {'foo': 'bar'}
+        req = self._get('/clusters', params=params)
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index,
+                               req)
+
+        self.assertEqual("Invalid parameter 'foo'", six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_index2_with_bad_param_value(self, mock_call, mock_enforce):
         cfg.CONF.set_override('rpc_use_object', True, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'limit': -1}
@@ -545,6 +570,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     def test_create(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {
             'cluster': {
@@ -740,6 +766,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     def test_create_maleformed_body(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {
             'name': 'test_cluster',
@@ -764,6 +791,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     def test_create_err_engine(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {
             'cluster': {
@@ -789,6 +817,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('InvalidParameter', resp.json['error']['type'])
 
     def test_create_err_cluster_bad_request(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         body = {
             'cluster': {
                 'name': 'test_cluster',
@@ -813,6 +842,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('HTTPBadRequest', resp.json['error']['type'])
 
     def test_cluster_get(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'get', True)
         cid = 'aaaa-bbbb-cccc'
         req = self._get('/clusters/%(cluster_id)s' % {'cluster_id': cid})
@@ -851,6 +881,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(expected, response)
 
     def test_cluster_get_notfound(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'get', True)
         cid = 'non-existent-cluster'
         req = self._get('/clusters/%(cluster_id)s' % {'cluster_id': cid})
@@ -867,6 +898,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_cluster_get_denied_policy(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'get', False)
         cid = 'aaaa-bbbb-cccc'
         req = self._get('/clusters/%(cluster_id)s' % {'cluster_id': cid})
@@ -969,6 +1001,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     def test_cluster_update(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'update', True)
         cid = 'aaaa-bbbb-cccc'
         body = {
@@ -1011,6 +1044,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('/actions/fake_action', res['location'])
 
     def test_cluster_update_missing_cluster_key(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'update', True)
 
         cid = 'aaaa-bbbb-cccc'
@@ -1030,6 +1064,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     def test_cluster_update_timeout_non_int(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'update', True)
 
         cid = 'aaaa-bbbb-cccc'
@@ -1049,6 +1084,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     def test_cluster_update_cluster_notfound(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'update', True)
         cid = 'non-existent-cluster'
         body = {'cluster': {'profile_id': 'xxxx-yyyy-zzzz'}}
@@ -1067,6 +1103,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_cluster_update_unsupported_status(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'update', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'cluster': {'profile_id': 'xxxx-yyyy-zzzz'}}
@@ -1085,6 +1122,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('FeatureNotSupported', resp.json['error']['type'])
 
     def test_cluster_update_profile_notfound(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'update', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'cluster': {'profile_id': 'not-a-profile'}}
@@ -1103,6 +1141,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_cluster_update_profile_type_mismatch(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'update', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'cluster': {'profile_id': 'profile-of-diff-type'}}
@@ -1121,6 +1160,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('ProfileTypeNotMatch', resp.json['error']['type'])
 
     def test_update_err_denied_policy(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'update', False)
         cid = 'aaaa-bbbb-cccc'
         body = {'cluster': {'profile_id': 'xxxx-yyyy-zzzz'}}
@@ -1405,6 +1445,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     def test_cluster_action_add_nodes(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
         body = {
@@ -1436,6 +1477,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(result, resp)
 
     def test_cluster_action_add_nodes_none(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'add_nodes': {'somearg': 'somevalue'}}
@@ -1453,6 +1495,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     def test_cluster_action_add_nodes_empty(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'add_nodes': {'nodes': []}}
@@ -1470,6 +1513,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     def test_cluster_action_add_nodes_bad_requests(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'add_nodes': {'nodes': ['bad-node-1']}}
@@ -2246,7 +2290,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
-    def test_cluster_action_cluster_notfound(self, mock_enforce):
+    def test_cluster_action_add_nodes_cluster_notfound(self, mock_enforce):
+        cfg.CONF.set_override('rpc_use_object', False, enforce_type=True)
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'non-existent-cluster'
         body = {'add_nodes': {'nodes': ['xxxx-yyyy-zzzz']}}

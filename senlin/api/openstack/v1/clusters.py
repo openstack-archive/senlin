@@ -140,6 +140,10 @@ class ClusterController(wsgi.Controller):
                 consts.PARAM_SORT: 'single',
                 consts.PARAM_GLOBAL_PROJECT: 'single',
             }
+            for key in req.params.keys():
+                if key not in whitelist:
+                    raise exc.HTTPBadRequest(_("Invalid parameter '%s'") % key)
+
             params = util.get_allowed_params(req.params, whitelist)
             # Note: We have to do a boolean parsing here because 1) there is
             # a renaming, 2) the boolean is usually presented as a string.
