@@ -70,6 +70,43 @@ class TestField(testtools.TestCase):
         self.assertEqual('123', self.field.stringify(123))
 
 
+class TestBoolean(TestField):
+
+    def setUp(self):
+        super(TestBoolean, self).setUp()
+
+        self.field = senlin_fields.BooleanField()
+        self.coerce_good_values = [
+            ('True', True),
+            ('T', True),
+            ('t', True),
+            ('1', True),
+            ('yes', True),
+            ('on', True),
+            ('False', False),
+            ('F', False),
+            ('f', False),
+            ('0', False),
+            ('no', False),
+            ('off', False)
+        ]
+        self.coerce_bad_values = ['BOGUS']
+
+        self.to_primitive_values = [
+            (True, True),
+            (False, False)
+        ]
+
+        self.from_primitive_values = [
+            ('True', 'True'),
+            ('False', 'False')
+        ]
+
+    def test_stringify(self):
+        self.assertEqual('True', self.field.stringify(True))
+        self.assertEqual('False', self.field.stringify(False))
+
+
 class TestObject(TestField):
 
     def setUp(self):
@@ -585,3 +622,27 @@ class TestIdentityList(TestField):
             },
             sot.get_schema()
         )
+
+
+class TestAdjustmentType(TestField):
+
+    def setUp(self):
+        super(TestAdjustmentType, self).setUp()
+
+        self.field = senlin_fields.AdjustmentTypeField()
+        self.coerce_good_values = [
+            ('EXACT_CAPACITY', 'EXACT_CAPACITY'),
+            ('CHANGE_IN_CAPACITY', 'CHANGE_IN_CAPACITY'),
+            ('CHANGE_IN_PERCENTAGE', 'CHANGE_IN_PERCENTAGE')
+        ]
+        self.coerce_bad_values = ['BOGUS']
+
+        self.to_primitive_values = self.coerce_good_values[0:1]
+        self.from_primitive_values = self.coerce_good_values[0:1]
+
+    def test_stringify(self):
+        self.assertEqual("'EXACT_CAPACITY'",
+                         self.field.stringify('EXACT_CAPACITY'))
+
+    def test_stingify_invalid(self):
+        self.assertRaises(ValueError, self.field.stringify, 'BOGUS')
