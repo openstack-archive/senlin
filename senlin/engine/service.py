@@ -1090,68 +1090,6 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context
-    def cluster_del_nodes(self, context, identity, nodes):
-        """Delete specified nodes from the named cluster.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of the cluster.
-        :param nodes: A list containing the identities of the nodes to delete.
-        :return: A dictionary containing the ID of the action triggered.
-        """
-        LOG.info(_LI("Deleting nodes '%(nodes)s' from cluster '%(cluster)s'."),
-                 {'cluster': identity, 'nodes': nodes})
-        db_cluster = self.cluster_find(context, identity)
-        found = []
-        not_found = []
-        bad_nodes = []
-        for node in nodes:
-            try:
-                db_node = self.node_find(context, node)
-                if db_node.cluster_id != db_cluster.id:
-                    bad_nodes.append(db_node.id)
-                else:
-                    found.append(db_node.id)
-            except exception.ResourceNotFound:
-                not_found.append(node)
-                pass
-
-        error = None
-        if len(not_found):
-            error = _("Nodes not found: %s.") % not_found
-        elif len(bad_nodes):
-            error = _("Nodes not members of specified cluster: "
-                      "%s.") % bad_nodes
-        elif len(found) == 0:
-            error = _("No nodes specified.")
-
-        if error is not None:
-            LOG.error(error)
-            raise exception.BadRequest(msg=error)
-
-        target_size = db_cluster.desired_capacity - len(found)
-        error = su.check_size_params(db_cluster, target_size, strict=True)
-        if error:
-            LOG.error(error)
-            raise exception.BadRequest(msg=error)
-
-        params = {
-            'name': 'cluster_del_nodes_%s' % db_cluster.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'status': action_mod.Action.READY,
-            'inputs': {
-                'candidates': found,
-                'count': len(found),
-            },
-        }
-        action_id = action_mod.Action.create(context, db_cluster.id,
-                                             consts.CLUSTER_DEL_NODES,
-                                             **params)
-        dispatcher.start_action()
-        LOG.info(_LI("Cluster delete nodes action queued: %s."), action_id)
-
-        return {'action': action_id}
-
     @request_context2
     def cluster_del_nodes2(self, ctx, req):
         """Delete specified nodes from the named cluster.
