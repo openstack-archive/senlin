@@ -1872,3 +1872,128 @@ class ClusterTest(base.SenlinTestCase):
             mock.call(self.ctx, 'NODE_B'),
         ])
         mock_check.assert_called_once_with(x_cluster, 4, strict=True)
+
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_del_nodes2(self, notify, mock_find, mock_node,
+                                mock_action, mock_check):
+        x_cluster = mock.Mock(id='1234', desired_capacity=2)
+        mock_find.return_value = x_cluster
+        mock_node.return_value = mock.Mock(id='NODE2', cluster_id='1234')
+        mock_check.return_value = None
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterDelNodesRequest(identity='CLUSTER', nodes=['NODE1'])
+
+        result = self.eng.cluster_del_nodes2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_node.assert_called_once_with(self.ctx, 'NODE1')
+        mock_check.asset_called_once_with(x_cluster, 1, strict=True)
+        mock_action.assert_called_once_with(
+            self.ctx, '1234', consts.CLUSTER_DEL_NODES,
+            name='cluster_del_nodes_1234',
+            status=am.Action.READY,
+            cause=am.CAUSE_RPC,
+            inputs={
+                'count': 1,
+                'candidates': ['NODE2'],
+            },
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_del_nodes2_cluster_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='Bogus')
+        req = orco.ClusterDelNodesRequest(identity='Bogus', nodes=['NODE1'])
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_del_nodes2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual('The cluster (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_del_nodes2_node_not_found(self, mock_find, mock_node):
+        mock_find.return_value = mock.Mock()
+        mock_node.side_effect = exc.ResourceNotFound(type='node', id='NODE1')
+        req = orco.ClusterDelNodesRequest(identity='CLUSTER', nodes=['NODE1'])
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_del_nodes2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertIn("The request is malformed: Nodes not found",
+                      six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_node.assert_called_once_with(self.ctx, 'NODE1')
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_del_nodes2_node_in_other_cluster(self, mock_find,
+                                                      mock_node):
+        mock_find.return_value = mock.Mock(id='1234')
+        mock_node.return_value = mock.Mock(id='NODE2', cluster_id='5678')
+        req = orco.ClusterDelNodesRequest(identity='CLUSTER', nodes=['NODE2'])
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_del_nodes2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Nodes not members of "
+                         "specified cluster: ['NODE2'].",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_node.assert_called_once_with(self.ctx, 'NODE2')
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_del_nodes2_orphan_nodes(self, mock_find, mock_node):
+        mock_find.return_value = mock.Mock(id='1234')
+        mock_node.return_value = mock.Mock(id='NODE3', cluster_id='')
+        req = orco.ClusterDelNodesRequest(identity='CLUSTER', nodes=['NODE3'])
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_del_nodes2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Nodes not members of "
+                         "specified cluster: ['NODE3'].",
+                         six.text_type(ex.exc_info[1]))
+
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_node.assert_called_once_with(self.ctx, 'NODE3')
+
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_del_nodes2_failed_checking(self, mock_find, mock_node,
+                                                mock_check):
+        x_cluster = mock.Mock(id='1234', desired_capacity=2)
+        mock_find.return_value = x_cluster
+        mock_node.return_value = mock.Mock(id='NODE2', cluster_id='1234')
+        mock_check.return_value = 'Failed size checking.'
+        req = orco.ClusterDelNodesRequest(identity='CLUSTER', nodes=['NODE3'])
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_del_nodes2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Failed size checking.",
+                         six.text_type(ex.exc_info[1]))
+
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_node.assert_called_once_with(self.ctx, 'NODE3')
+        mock_check.assert_called_once_with(x_cluster, 1, strict=True)
