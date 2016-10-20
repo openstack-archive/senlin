@@ -16,6 +16,7 @@ from tempest import config
 
 from senlin.tests.tempest import base
 from senlin.tests.tempest.common import clustering_client
+from senlin.tests.tempest.common import messaging_client
 
 CONF = config.CONF
 
@@ -30,6 +31,13 @@ class BaseSenlinIntegrationTest(base.BaseSenlinTest):
         cls.client = clustering_client.ClusteringIntegrationClient(
             cls.os_adm.auth_provider,
             CONF.clustering.catalog_type,
+            CONF.identity.region,
+            **cls.os_adm.default_params_with_timeout_values
+        )
+
+        cls.messaging_client = messaging_client.V2MessagingClient(
+            cls.os_adm.auth_provider,
+            CONF.messaging.catalog_type,
             CONF.identity.region,
             **cls.os_adm.default_params_with_timeout_values
         )

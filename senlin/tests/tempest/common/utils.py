@@ -420,3 +420,11 @@ def create_a_keypair(base, name=None):
 def delete_a_keypair(base, name):
     """Utility function that deletes a Nova keypair."""
     base.admin_manager.keypairs_client.delete_keypair(name)
+
+
+def post_messages(base, queue_name, messages):
+    """Utility function that posts message(s) to Zaqar queue."""
+    res = base.messaging_client.post_messages(queue_name, messages)
+    if res['status'] != 201:
+        msg = 'Failed in posting messages to Zaqar queue %s' % queue_name
+        raise Exception(msg)
