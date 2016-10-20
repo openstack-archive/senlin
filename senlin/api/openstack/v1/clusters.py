@@ -16,7 +16,6 @@ Cluster endpoint for Senlin v1 ReST API.
 """
 
 import jsonschema
-from oslo_config import cfg
 import six
 from webob import exc
 
@@ -28,89 +27,6 @@ from senlin.common.i18n import _
 from senlin.common import utils
 from senlin.objects import base as obj_base
 from senlin.objects.requests import clusters as vorc
-
-
-class ClusterData(object):
-    """The data accompanying a POST/PUT request to create/update a cluster."""
-
-    def __init__(self, data):
-        self.name = data.get(consts.CLUSTER_NAME, None)
-        self.profile = data.get(consts.CLUSTER_PROFILE, None)
-        self.metadata = data.get(consts.CLUSTER_METADATA, None)
-
-        self.desired_capacity = data.get(consts.CLUSTER_DESIRED_CAPACITY, None)
-        self.min_size = data.get(consts.CLUSTER_MIN_SIZE, None)
-        self.max_size = data.get(consts.CLUSTER_MAX_SIZE, None)
-        self.timeout = data.get(consts.CLUSTER_TIMEOUT, None)
-
-    def _enforce_data_types(self):
-        if self.desired_capacity is not None:
-            self.desired_capacity = utils.parse_int_param(
-                consts.CLUSTER_DESIRED_CAPACITY, self.desired_capacity,
-                allow_zero=True)
-
-        if self.min_size is not None:
-            self.min_size = utils.parse_int_param(
-                consts.CLUSTER_MIN_SIZE, self.min_size, allow_zero=True)
-
-        if self.max_size is not None:
-            self.max_size = utils.parse_int_param(
-                consts.CLUSTER_MAX_SIZE, self.max_size, allow_zero=True,
-                allow_negative=True)
-
-        if self.timeout is not None:
-            self.timeout = utils.parse_int_param(
-                consts.CLUSTER_TIMEOUT, self.timeout, allow_zero=True)
-
-    def validate_for_create(self):
-        self._enforce_data_types()
-
-        if self.name is None:
-            raise exc.HTTPBadRequest(_("No cluster name specified."))
-
-        if self.desired_capacity is None:
-            raise exc.HTTPBadRequest(_("No cluster desired capacity "
-                                       "provided."))
-
-        if self.profile is None:
-            raise exc.HTTPBadRequest(_("No cluster profile provided."))
-
-        if self.min_size is not None and self.min_size > self.desired_capacity:
-            msg = _("Cluster min_size, if specified, must be less than or "
-                    "equal to its desired capacity.")
-            raise exc.HTTPBadRequest(msg)
-
-        if self.max_size is not None and self.max_size >= 0:
-            if self.max_size < self.desired_capacity:
-                msg = _("Cluster max_size, if specified, must be greater than "
-                        "or equal to its desired capacity. Setting max_size "
-                        "to -1 means no upper limit on cluster size.")
-                raise exc.HTTPBadRequest(msg)
-
-    def validate_for_update(self):
-        self._enforce_data_types()
-
-        if self.min_size is not None and self.desired_capacity is not None:
-            if self.min_size > self.desired_capacity:
-                msg = _("Cluster min_size, if specified, must be less than"
-                        " or equal to its desired capacity.")
-                raise exc.HTTPBadRequest(msg)
-
-        if self.max_size is not None and self.desired_capacity is not None:
-            if self.max_size >= 0 and self.max_size < self.desired_capacity:
-                msg = _("Cluster max_size, if specified, must be greater than "
-                        "or equal to its desired capacity. Setting max_size "
-                        "to -1 means no upper limit on cluster size.")
-                raise exc.HTTPBadRequest(msg)
-
-        # The following checking is necessary because desired_capacity may
-        # be not specified in an update request
-        if self.min_size is not None and self.max_size is not None:
-            if self.max_size >= 0 and self.max_size < self.min_size:
-                msg = _("Cluster max_size, if specified, must be greater than "
-                        "or equal to its min_size. Setting max_size to -1 "
-                        "means no upper limit on cluster size.")
-                raise exc.HTTPBadRequest(msg)
 
 
 class ClusterController(wsgi.Controller):
@@ -131,98 +47,52 @@ class ClusterController(wsgi.Controller):
 
     @util.policy_enforce
     def index(self, req):
-        if cfg.CONF.rpc_use_object:
-            whitelist = {
-                consts.CLUSTER_NAME: 'mixed',
-                consts.CLUSTER_STATUS: 'mixed',
-                consts.PARAM_LIMIT: 'single',
-                consts.PARAM_MARKER: 'single',
-                consts.PARAM_SORT: 'single',
-                consts.PARAM_GLOBAL_PROJECT: 'single',
-            }
-            for key in req.params.keys():
-                if key not in whitelist:
-                    raise exc.HTTPBadRequest(_("Invalid parameter '%s'") % key)
-
-            params = util.get_allowed_params(req.params, whitelist)
-            # Note: We have to do a boolean parsing here because 1) there is
-            # a renaming, 2) the boolean is usually presented as a string.
-            is_global = params.pop(consts.PARAM_GLOBAL_PROJECT, False)
-            unsafe = utils.parse_bool_param(consts.PARAM_GLOBAL_PROJECT,
-                                            is_global)
-            params['project_safe'] = not unsafe
-            norm_req = obj_base.SenlinObject.normalize_req(
-                'ClusterListRequestBody', params, None)
-            obj = None
-            try:
-                obj = vorc.ClusterListRequestBody.obj_from_primitive(norm_req)
-                jsonschema.validate(norm_req, obj.to_json_schema())
-            except ValueError as ex:
-                raise exc.HTTPBadRequest(six.text_type(ex))
-            except jsonschema.exceptions.ValidationError as ex:
-                raise exc.HTTPBadRequest(six.text_type(ex.message))
-
-            clusters = self.rpc_client.call2(req.context, 'cluster_list2', obj)
-            return {'clusters': clusters}
-
-        # old logic starts here
-        filter_whitelist = {
+        whitelist = {
             consts.CLUSTER_NAME: 'mixed',
             consts.CLUSTER_STATUS: 'mixed',
-        }
-        param_whitelist = {
             consts.PARAM_LIMIT: 'single',
             consts.PARAM_MARKER: 'single',
             consts.PARAM_SORT: 'single',
             consts.PARAM_GLOBAL_PROJECT: 'single',
         }
         for key in req.params.keys():
-            if (key not in param_whitelist.keys() and key not in
-                    filter_whitelist.keys()):
-                raise exc.HTTPBadRequest(_('Invalid parameter %s') % key)
-        params = util.get_allowed_params(req.params, param_whitelist)
-        filters = util.get_allowed_params(req.params, filter_whitelist)
+            if key not in whitelist:
+                raise exc.HTTPBadRequest(_("Invalid parameter '%s'") % key)
 
-        key = consts.PARAM_GLOBAL_PROJECT
-        if key in params:
-            project_safe = not utils.parse_bool_param(key, params[key])
-            del params[key]
-            params['project_safe'] = project_safe
+        params = util.get_allowed_params(req.params, whitelist)
+        # Note: We have to do a boolean parsing here because 1) there is
+        # a renaming, 2) the boolean is usually presented as a string.
+        is_global = params.pop(consts.PARAM_GLOBAL_PROJECT, False)
+        unsafe = utils.parse_bool_param(consts.PARAM_GLOBAL_PROJECT,
+                                        is_global)
+        params['project_safe'] = not unsafe
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'ClusterListRequestBody', params, None)
+        obj = None
+        try:
+            obj = vorc.ClusterListRequestBody.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
-        if not filters:
-            filters = None
-
-        clusters = self.rpc_client.cluster_list(req.context, filters=filters,
-                                                **params)
+        clusters = self.rpc_client.call2(req.context, 'cluster_list2', obj)
         return {'clusters': clusters}
 
     @util.policy_enforce
     def create(self, req, body):
         """Create a new cluster."""
-        if cfg.CONF.rpc_use_object:
-            try:
-                norm_req = obj_base.SenlinObject.normalize_req(
-                    'ClusterCreateRequest', body, 'cluster')
-                obj = vorc.ClusterCreateRequest.obj_from_primitive(norm_req)
-                jsonschema.validate(norm_req, obj.to_json_schema())
-            except (ValueError) as ex:
-                raise exc.HTTPBadRequest(six.text_type(ex))
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ClusterCreateRequest', body, 'cluster')
+            obj = vorc.ClusterCreateRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except (ValueError) as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
 
-            cluster = self.rpc_client.call2(req.context, 'cluster_create2',
-                                            obj.cluster)
-        else:
-            cluster_data = body.get('cluster')
-            if cluster_data is None:
-                raise exc.HTTPBadRequest(_("Malformed request data, missing "
-                                           "'cluster' key in request body."))
-
-            data = ClusterData(cluster_data)
-            data.validate_for_create()
-
-            cluster = self.rpc_client.cluster_create(
-                req.context, data.name, data.desired_capacity, data.profile,
-                data.min_size, data.max_size, data.metadata, data.timeout)
-
+        cluster = self.rpc_client.call2(req.context, 'cluster_create2',
+                                        obj.cluster)
         action_id = cluster.pop('action')
         result = {
             'cluster': cluster,
@@ -233,21 +103,18 @@ class ClusterController(wsgi.Controller):
     @util.policy_enforce
     def get(self, req, cluster_id):
         """Gets detailed information for a cluster."""
-        if cfg.CONF.rpc_use_object:
-            norm_req = obj_base.SenlinObject.normalize_req(
-                'ClusterGetRequest', {'identity': cluster_id}, None)
-            obj = None
-            try:
-                obj = vorc.ClusterGetRequest.obj_from_primitive(norm_req)
-                jsonschema.validate(norm_req, obj.to_json_schema())
-            except ValueError as ex:
-                raise exc.HTTPBadRequest(six.text_type(ex))
-            except jsonschema.exceptions.ValidationError as ex:
-                raise exc.HTTPBadRequest(six.text_type(ex.message))
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'ClusterGetRequest', {'identity': cluster_id}, None)
+        obj = None
+        try:
+            obj = vorc.ClusterGetRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
-            cluster = self.rpc_client.call2(req.context, 'cluster_get2', obj)
-        else:
-            cluster = self.rpc_client.cluster_get(req.context, cluster_id)
+        cluster = self.rpc_client.call2(req.context, 'cluster_get2', obj)
 
         return {'cluster': cluster}
 
@@ -258,28 +125,19 @@ class ClusterController(wsgi.Controller):
         if data is None:
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'cluster' key in request body."))
-        if cfg.CONF.rpc_use_object:
-            params = body['cluster']
-            params['identity'] = cluster_id
-            norm_req = obj_base.SenlinObject.normalize_req(
-                'ClusterUpdateRequest', params, None)
-            try:
-                obj = vorc.ClusterUpdateRequest.obj_from_primitive(norm_req)
-                jsonschema.validate(norm_req, obj.to_json_schema())
-            except ValueError as ex:
-                raise exc.HTTPBadRequest(six.text_type(ex))
-            except jsonschema.exceptions.ValidationError as ex:
-                raise exc.HTTPBadRequest(six.text_type(ex.message))
+        params = body['cluster']
+        params['identity'] = cluster_id
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'ClusterUpdateRequest', params, None)
+        try:
+            obj = vorc.ClusterUpdateRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
-            cluster = self.rpc_client.call2(req.context, 'cluster_update2',
-                                            obj)
-        else:
-            data = ClusterData(data)
-            data.validate_for_update()
-            cluster = self.rpc_client.cluster_update(req.context, cluster_id,
-                                                     data.name, data.profile,
-                                                     data.metadata,
-                                                     data.timeout)
+        cluster = self.rpc_client.call2(req.context, 'cluster_update2', obj)
 
         action_id = cluster.pop('action')
         result = {
@@ -395,26 +253,19 @@ class ClusterController(wsgi.Controller):
         return res
 
     def _add_nodes(self, ctx, cid, nodes):
-        if cfg.CONF.rpc_use_object:
-            params = {'identity': cid, 'nodes': nodes}
-            norm_req = obj_base.SenlinObject.normalize_req(
-                'ClusterAddNodesRequest', params, None)
-            obj = None
-            try:
-                obj = vorc.ClusterAddNodesRequest.obj_from_primitive(norm_req)
-                jsonschema.validate(norm_req, obj.to_json_schema())
-            except ValueError as ex:
-                raise exc.HTTPBadRequest(six.text_type(ex))
-            except jsonschema.exceptions.ValidationError as ex:
-                raise exc.HTTPBadRequest(six.text_type(ex.message))
+        params = {'identity': cid, 'nodes': nodes}
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'ClusterAddNodesRequest', params, None)
+        obj = None
+        try:
+            obj = vorc.ClusterAddNodesRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
-            res = self.rpc_client.call2(ctx, 'cluster_add_nodes2', obj)
-        else:
-            if (not nodes or not isinstance(nodes, list)):
-                raise exc.HTTPBadRequest(_('No node to add'))
-            res = self.rpc_client.cluster_add_nodes(ctx, cid, nodes)
-
-        return res
+        return self.rpc_client.call2(ctx, 'cluster_add_nodes2', obj)
 
     @util.policy_enforce
     def action(self, req, cluster_id, body=None):
