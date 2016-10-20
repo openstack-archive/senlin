@@ -88,3 +88,12 @@ class ClusterAddNodesRequest(base.SenlinObject):
         'identity': fields.StringField(),
         'nodes': fields.IdentityListField(min_items=1)
     }
+
+
+@base.SenlinObjectRegistry.register
+class ClusterDelNodesRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'nodes': fields.IdentityListField(min_items=1)
+    }

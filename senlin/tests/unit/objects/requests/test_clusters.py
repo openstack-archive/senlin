@@ -195,3 +195,19 @@ class TestClusterAddNodes(test_base.SenlinTestCase):
                                identity='foo', nodes=[])
         self.assertEqual("Value for 'nodes' must have at least 1 item(s).",
                          six.text_type(ex))
+
+
+class TestClusterDelNodes(test_base.SenlinTestCase):
+
+    def test_init(self):
+        sot = clusters.ClusterDelNodesRequest(identity='foo', nodes=['abc'])
+
+        self.assertEqual('foo', sot.identity)
+        self.assertEqual(['abc'], sot.nodes)
+
+    def test_init_failed(self):
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterDelNodesRequest,
+                               identity='foo', nodes=[])
+        self.assertEqual("Value for 'nodes' must have at least 1 item(s).",
+                         six.text_type(ex))
