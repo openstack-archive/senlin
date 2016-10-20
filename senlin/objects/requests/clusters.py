@@ -97,3 +97,17 @@ class ClusterDelNodesRequest(base.SenlinObject):
         'identity': fields.StringField(),
         'nodes': fields.IdentityListField(min_items=1)
     }
+
+
+@base.SenlinObjectRegistry.register
+class ClusterResizeRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'adjustment_type': fields.AdjustmentTypeField(nullable=True),
+        'number': fields.FloatField(nullable=True),
+        'min_size': fields.CapacityField(nullable=True, minimum=0),
+        'max_size': fields.CapacityField(nullable=True, minimum=-1),
+        'min_step': fields.NonNegativeIntegerField(nullable=True),
+        'strict': fields.BooleanField(nullable=True, default=True)
+    }

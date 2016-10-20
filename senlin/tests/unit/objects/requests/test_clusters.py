@@ -211,3 +211,75 @@ class TestClusterDelNodes(test_base.SenlinTestCase):
                                identity='foo', nodes=[])
         self.assertEqual("Value for 'nodes' must have at least 1 item(s).",
                          six.text_type(ex))
+
+
+class TestClusterResize(test_base.SenlinTestCase):
+
+    def test_init(self):
+        sot = clusters.ClusterResizeRequest(identity='foo')
+
+        self.assertEqual('foo', sot.identity)
+        self.assertFalse(sot.obj_attr_is_set('adjustment_type'))
+        self.assertFalse(sot.obj_attr_is_set('number'))
+        self.assertFalse(sot.obj_attr_is_set('min_size'))
+        self.assertFalse(sot.obj_attr_is_set('max_size'))
+        self.assertFalse(sot.obj_attr_is_set('min_step'))
+        self.assertFalse(sot.obj_attr_is_set('strict'))
+
+    def test_init_with_params(self):
+        sot = clusters.ClusterResizeRequest(identity='foo',
+                                            adjustment_type='EXACT_CAPACITY',
+                                            number=100,
+                                            min_size=10,
+                                            max_size=100,
+                                            min_step=1,
+                                            strict=False)
+
+        self.assertEqual('foo', sot.identity)
+        self.assertEqual('EXACT_CAPACITY', sot.adjustment_type)
+        self.assertEqual(100, sot.number)
+        self.assertEqual(10, sot.min_size)
+        self.assertEqual(100, sot.max_size)
+        self.assertEqual(1, sot.min_step)
+        self.assertFalse(sot.strict)
+
+    def test_init_failed_type(self):
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterResizeRequest,
+                               identity='foo', adjustment_type='BOGUS')
+        self.assertEqual("Field value BOGUS is invalid", six.text_type(ex))
+
+    def test_init_failed_number(self):
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterResizeRequest,
+                               identity='foo', number='foo')
+        self.assertIn("could not convert string to float", six.text_type(ex))
+
+    def test_init_failed_min_size(self):
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterResizeRequest,
+                               identity='foo', min_size=-1)
+        self.assertEqual("The value for the min_size field must be greater "
+                         "than or equal to 0.",
+                         six.text_type(ex))
+
+    def test_init_failed_max_size(self):
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterResizeRequest,
+                               identity='foo', max_size=-2)
+        self.assertEqual("The value for the max_size field must be greater "
+                         "than or equal to -1.",
+                         six.text_type(ex))
+
+    def test_init_failed_min_step(self):
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterResizeRequest,
+                               identity='foo', min_step=-3)
+        self.assertEqual("Value must be >= 0 for field 'min_step'.",
+                         six.text_type(ex))
+
+    def test_init_failed_strict(self):
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterResizeRequest,
+                               identity='foo', strict='fake')
+        self.assertIn("Unrecognized value 'fake'", six.text_type(ex))
