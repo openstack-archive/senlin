@@ -767,36 +767,6 @@ class EngineService(service.Service):
 
         return cluster
 
-    @request_context
-    def cluster_list(self, context, limit=None, marker=None, sort=None,
-                     filters=None, project_safe=True):
-        """List clusters matching the specified criteria.
-
-        :param context: An instance of request context.
-        :param limit: An integer specifying the maximum number of objects to
-                      return in a response.
-        :param marker: An UUID specifying the cluster after which the result
-                       list starts.
-        :param sort: A list of sorting keys (each optionally attached with a
-                     sorting direction) separated by commas.
-        :param filters: A dictionary of key-value pairs for filtering out the
-                        result list.
-        :param project_safe: A boolean indicating whether clusters from all
-                             projects will be returned.
-        :return: A list of `Cluster` object representations.
-        """
-        limit = utils.parse_int_param('limit', limit)
-        utils.validate_sort_param(sort, consts.CLUSTER_SORT_KEYS)
-        project_safe = utils.parse_bool_param('project_safe', project_safe)
-        if not project_safe and not context.is_admin:
-            raise exception.Forbidden()
-        clusters = cluster_mod.Cluster.load_all(context, limit=limit,
-                                                marker=marker, sort=sort,
-                                                filters=filters,
-                                                project_safe=project_safe)
-
-        return [cluster.to_dict() for cluster in clusters]
-
     @request_context2
     def cluster_list2(self, ctx, req):
         """List clusters matching the specified criteria.
@@ -827,18 +797,6 @@ class EngineService(service.Service):
         return [c.to_dict()
                 for c in cluster_mod.Cluster.load_all(ctx, **query)]
 
-    @request_context
-    def cluster_get(self, context, identity):
-        """Retrieve the cluster specified.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-ID of a cluster.
-        :return: A dictionary containing the details about a cluster.
-        """
-        db_cluster = self.cluster_find(context, identity)
-        cluster = cluster_mod.Cluster.load(context, dbcluster=db_cluster)
-        return cluster.to_dict()
-
     @request_context2
     def cluster_get2(self, context, req):
         """Retrieve the cluster specified.
@@ -862,85 +820,6 @@ class EngineService(service.Service):
         maximum = CONF.max_clusters_per_project
         if existing >= maximum:
             raise exception.Forbidden()
-
-    @request_context
-    def cluster_create(self, context, name, desired_capacity, profile_id,
-                       min_size=None, max_size=None, metadata=None,
-                       timeout=None):
-        """Create a cluster.
-
-        :param context: An instance of the request context.
-        :param name: A string specifying the name of the cluster to be created.
-        :param desired_capacity: The desired capacity of the cluster.
-        :param profile_ID: The UUID, name or short-ID of the profile to use.
-        :param min_size: An integer specifying the minimum size of the cluster.
-        :param max_size: An integer specifying the maximum size of the cluster.
-        :param metadata: A dictionary containing key-value pairs to be
-                         associated with the cluster.
-        :param timeout: An optional integer specifying the operation timeout
-                        value in seconds.
-        :return: A dictionary containing the details about the cluster and the
-                 ID of the action triggered by this operation.
-        """
-        self.check_cluster_quota(context)
-
-        if CONF.name_unique:
-            if cluster_obj.Cluster.get_by_name(context, name):
-                msg = _("The cluster (%(name)s) already exists."
-                        ) % {"name": name}
-                raise exception.BadRequest(msg=msg)
-
-        try:
-            db_profile = self.profile_find(context, profile_id)
-        except exception.ResourceNotFound as ex:
-            msg = ex.enhance_msg('specified', ex)
-            raise exception.BadRequest(msg=msg)
-
-        init_size = utils.parse_int_param(consts.CLUSTER_DESIRED_CAPACITY,
-                                          desired_capacity)
-        if min_size is not None:
-            min_size = utils.parse_int_param(consts.CLUSTER_MIN_SIZE, min_size)
-        if max_size is not None:
-            max_size = utils.parse_int_param(consts.CLUSTER_MAX_SIZE, max_size,
-                                             allow_negative=True)
-        if timeout is not None:
-            timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
-        else:
-            timeout = CONF.default_action_timeout
-
-        res = su.check_size_params(None, init_size, min_size, max_size, True)
-        if res:
-            raise exception.BadRequest(msg=res)
-
-        LOG.info(_LI("Creating cluster '%s'."), name)
-
-        kwargs = {
-            'min_size': min_size,
-            'max_size': max_size,
-            'timeout': timeout,
-            'metadata': metadata,
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
-        }
-
-        cluster = cluster_mod.Cluster(name, init_size, db_profile.id, **kwargs)
-        cluster.store(context)
-
-        # Build an Action for cluster creation
-        kwargs = {
-            'name': 'cluster_create_%s' % cluster.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'status': action_mod.Action.READY,
-        }
-        action_id = action_mod.Action.create(context, cluster.id,
-                                             consts.CLUSTER_CREATE, **kwargs)
-        dispatcher.start_action()
-        LOG.info(_LI("Cluster create action queued: %s."), action_id)
-
-        result = cluster.to_dict()
-        result['action'] = action_id
-        return result
 
     @request_context2
     def cluster_create2(self, ctx, req):
@@ -1006,78 +885,6 @@ class EngineService(service.Service):
         result = cluster.to_dict()
         result['action'] = action_id
         return result
-
-    @request_context
-    def cluster_update(self, context, identity, name=None, profile_id=None,
-                       metadata=None, timeout=None):
-        """Update a cluster.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name, or short-ID or the target cluster.
-        :param name: A string specifying the new name of the cluster.
-        :param profile_id: The UUID, name or short-ID of the new profile.
-        :param metadata: A dictionary containing key-value pairs to be
-                         associated with the cluster.
-        :param timeout: An optional integer specifying the new operation
-                        timeout value in seconds.
-        :return: A dictionary containing the details about the cluster and the
-                 ID of the action triggered by this operation.
-        """
-
-        # Get the database representation of the existing cluster
-        db_cluster = self.cluster_find(context, identity)
-        cluster = cluster_mod.Cluster.load(context, dbcluster=db_cluster)
-        if cluster.status == cluster.ERROR:
-            msg = _('Updating a cluster in error state')
-            LOG.error(msg)
-            raise exception.FeatureNotSupported(feature=msg)
-
-        LOG.info(_LI("Updating cluster '%s'."), identity)
-
-        inputs = {}
-        if profile_id is not None:
-            old_profile = self.profile_find(context, cluster.profile_id)
-            try:
-                new_profile = self.profile_find(context, profile_id)
-            except exception.ResourceNotFound as ex:
-                msg = ex.enhance_msg('specified', ex)
-                raise exception.BadRequest(msg=msg)
-
-            if new_profile.type != old_profile.type:
-                msg = _('Cannot update a cluster to a different profile type, '
-                        'operation aborted.')
-                raise exception.ProfileTypeNotMatch(message=msg)
-            if old_profile.id != new_profile.id:
-                inputs['new_profile_id'] = new_profile.id
-
-        if metadata is not None and metadata != cluster.metadata:
-            inputs['metadata'] = metadata
-
-        if timeout is not None:
-            timeout = utils.parse_int_param(consts.CLUSTER_TIMEOUT, timeout)
-            inputs['timeout'] = timeout
-
-        if name is not None:
-            inputs['name'] = name
-
-        if not inputs:
-            msg = _("No property needs an update.")
-            raise exception.BadRequest(msg=msg)
-
-        kwargs = {
-            'name': 'cluster_update_%s' % cluster.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'status': action_mod.Action.READY,
-            'inputs': inputs,
-        }
-        action_id = action_mod.Action.create(context, cluster.id,
-                                             consts.CLUSTER_UPDATE, **kwargs)
-        dispatcher.start_action()
-        LOG.info(_LI("Cluster update action queued: %s."), action_id)
-
-        resp = cluster.to_dict()
-        resp['action'] = action_id
-        return resp
 
     @request_context2
     def cluster_update2(self, ctx, req):
@@ -1197,91 +1004,6 @@ class EngineService(service.Service):
                                              consts.CLUSTER_DELETE, **params)
         dispatcher.start_action()
         LOG.info(_LI("Cluster delete action queued: %s"), action_id)
-
-        return {'action': action_id}
-
-    @request_context
-    def cluster_add_nodes(self, context, identity, nodes):
-        """Add specified nodes to the specified cluster.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of the target cluster.
-        :param nodes: A list of node identities where each item is the UUID,
-                      name or short-id of a node.
-        :return: A dictionary containing the ID of the action triggered.
-        """
-        LOG.info(_LI("Adding nodes '%(nodes)s' to cluster '%(cluster)s'."),
-                 {'cluster': identity, 'nodes': nodes})
-
-        db_cluster = self.cluster_find(context, identity)
-        db_cluster_profile = self.profile_find(context,
-                                               db_cluster.profile_id)
-        cluster_profile_type = db_cluster_profile.type
-
-        found = []
-        not_found = []
-        bad_nodes = []
-        owned_nodes = []
-        not_match_nodes = []
-        for node in nodes:
-            try:
-                db_node = self.node_find(context, node)
-                # Skip node in the same cluster already
-                if db_node.status != node_mod.Node.ACTIVE:
-                    bad_nodes.append(db_node.id)
-                elif len(db_node.cluster_id) != 0:
-                    owned_nodes.append(db_node.id)
-                else:
-                    # check profile type matching
-                    db_node_profile = self.profile_find(context,
-                                                        db_node.profile_id)
-                    node_profile_type = db_node_profile.type
-                    if node_profile_type != cluster_profile_type:
-                        not_match_nodes.append(db_node.id)
-                    else:
-                        found.append(db_node.id)
-            except exception.ResourceNotFound:
-                not_found.append(node)
-                pass
-
-        error = None
-        if len(not_match_nodes) > 0:
-            error = _("Profile type of nodes %s does not match that of the "
-                      "cluster.") % not_match_nodes
-            LOG.error(error)
-            raise exception.ProfileTypeNotMatch(message=error)
-        elif len(owned_nodes) > 0:
-            error = _("Nodes %s already owned by some cluster.") % owned_nodes
-            LOG.error(error)
-            raise exception.NodeNotOrphan(message=error)
-        elif len(bad_nodes) > 0:
-            error = _("Nodes are not ACTIVE: %s.") % bad_nodes
-        elif len(not_found) > 0:
-            error = _("Nodes not found: %s.") % not_found
-        elif len(found) == 0:
-            error = _("No nodes to add: %s.") % nodes
-
-        if error is not None:
-            LOG.error(error)
-            raise exception.BadRequest(msg=error)
-
-        target_size = db_cluster.desired_capacity + len(found)
-        error = su.check_size_params(db_cluster, target_size, strict=True)
-        if error:
-            LOG.error(error)
-            raise exception.BadRequest(msg=error)
-
-        params = {
-            'name': 'cluster_add_nodes_%s' % db_cluster.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'status': action_mod.Action.READY,
-            'inputs': {'nodes': found},
-        }
-        action_id = action_mod.Action.create(context, db_cluster.id,
-                                             consts.CLUSTER_ADD_NODES,
-                                             **params)
-        dispatcher.start_action()
-        LOG.info(_LI("Cluster add nodes action queued: %s."), action_id)
 
         return {'action': action_id}
 
