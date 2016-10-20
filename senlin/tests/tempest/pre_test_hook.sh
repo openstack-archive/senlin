@@ -18,6 +18,7 @@ set -x
 
 export localconf=$BASE/new/devstack/local.conf
 export SENLIN_CONF=/etc/senlin/senlin.conf
+export ZAQAR_CONF=/etc/zaqar/zaqar.conf
 export SENLIN_BACKEND=${SENLIN_BACKEND:-'openstack_test'}
 
 _LOG_CFG='default_log_levels ='
@@ -35,3 +36,10 @@ echo -e '[[post-config|$SENLIN_CONF]]\n[DEFAULT]\n' >> $localconf
 echo -e 'num_engine_workers=2\n' >> $localconf
 echo -e "cloud_backend=$SENLIN_BACKEND\n" >> $localconf
 echo -e $_LOG_CFG >> $localconf
+
+if [[ "$SENLIN_BACKEND" == "openstack" ]]; then
+  echo -e "[[post-config|$ZAQAR_CONF]]\n[DEFAULT]\n" >> $localconf
+  echo -e "auth_strategy=keystone\n" >> $localconf
+  echo -e "[storage]\n" >> $localconf
+  echo -e "message_pipeline=zaqar.notification.notifier" >> $localconf
+fi
