@@ -247,7 +247,9 @@ class TestClusterResize(test_base.SenlinTestCase):
         ex = self.assertRaises(ValueError,
                                clusters.ClusterResizeRequest,
                                identity='foo', adjustment_type='BOGUS')
-        self.assertEqual("Field value BOGUS is invalid", six.text_type(ex))
+        self.assertEqual("Value 'BOGUS' is not acceptable for field "
+                         "'adjustment_type'.",
+                         six.text_type(ex))
 
     def test_init_failed_number(self):
         ex = self.assertRaises(ValueError,

@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
+
 from oslo_config import cfg
 from oslo_serialization import jsonutils
 from oslo_utils import strutils
@@ -342,18 +344,46 @@ class IdentityList(fields.List):
         return schema
 
 
-class BaseEnum(fields.Enum):
+class BaseEnum(fields.FieldType):
+    # NOTE: We are not basing Enum on String because String is not working
+    # correctly when handling None value.
+    def __init__(self, nullable=False):
+        valid_values = list(self.__class__.ALL)
+        if not valid_values:
+            raise ValueError(_("No list of valid values provided for enum."))
 
-    def __init__(self, **kwargs):
-        super(BaseEnum, self).__init__(valid_values=self.__class__.ALL)
+        for value in valid_values:
+            if not isinstance(value, six.string_types):
+                raise ValueError(_("Enum field only support string values."))
+
+        self._valid_values = list(valid_values)
+        self._nullable = nullable
+        super(BaseEnum, self).__init__()
+
+    def coerce(self, obj, attr, value):
+        value = six.text_type(value)
+        if value not in self._valid_values:
+            raise ValueError(_("Value '%(value)s' is not acceptable for "
+                               "field '%(attr)s'.") %
+                             {'value': value, 'attr': attr})
+        return value
+
+    def stringify(self, value):
+        if value is None:
+            return None
+        return '\'%s\'' % value
 
     def get_schema(self):
         # TODO(Anyone): remove this override when the following patch is
         # merged and released.
         # https://review.openstack.org/389061
+        valid_values = copy.deepcopy(self._valid_values)
+        if self._nullable:
+            valid_values.append(None)
+
         schema = {
             'type': ['string'],
-            'enum': self._valid_values
+            'enum': valid_values,
         }
         return schema
 
@@ -447,6 +477,11 @@ class IdentityListField(fields.AutoTypedField):
                                                 default=default)
 
 
-class AdjustmentTypeField(fields.BaseEnumField):
+class AdjustmentTypeField(fields.AutoTypedField):
 
-    AUTO_TYPE = AdjustmentType()
+    AUTO_TYPE = None
+
+    def __init__(self, **kwargs):
+        nullable = kwargs.get('nullable', False)
+        self.AUTO_TYPE = AdjustmentType(nullable=nullable)
+        super(AdjustmentTypeField, self).__init__(**kwargs)

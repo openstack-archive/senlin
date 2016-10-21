@@ -643,6 +643,3 @@ class TestAdjustmentType(TestField):
     def test_stringify(self):
         self.assertEqual("'EXACT_CAPACITY'",
                          self.field.stringify('EXACT_CAPACITY'))
-
-    def test_stingify_invalid(self):
-        self.assertRaises(ValueError, self.field.stringify, 'BOGUS')
