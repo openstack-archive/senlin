@@ -125,6 +125,15 @@ function configure_senlin {
     iniset $SENLIN_CONF authentication service_username senlin
     iniset $SENLIN_CONF authentication service_password $SERVICE_PASSWORD
     iniset $SENLIN_CONF authentication service_project_name $SERVICE_TENANT_NAME
+
+    # Zaqar options for message receiver
+    iniset $SENLIN_CONF zaqar auth_type password
+    iniset $SENLIN_CONF zaqar username zaqar
+    iniset $SENLIN_CONF zaqar password $SERVICE_PASSWORD
+    iniset $SENLIN_CONF zaqar project_name $SERVICE_TENANT_NAME
+    iniset $SENLIN_CONF zaqar auth_url $KEYSTONE_AUTH_URI/v3
+    iniset $SENLIN_CONF zaqar user_domain_name Default
+    iniset $SENLIN_CONF zaqar project_domain_name Default
 }
 
 # init_senlin() - Initialize database
