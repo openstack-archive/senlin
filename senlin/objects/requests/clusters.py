@@ -41,15 +41,18 @@ class ClusterCreateRequestBody(base.SenlinObject):
     fields = {
         'name': fields.NameField(),
         'profile_id': fields.StringField(),
-        'min_size': fields.IntegerField(
-            nullable=True, default=consts.CLUSTER_DEFAULT_MIN_SIZE),
-        'max_size': fields.IntegerField(
-            nullable=True, default=consts.CLUSTER_DEFAULT_MAX_SIZE),
-        'desired_capacity': fields.IntegerField(
-            nullable=True, default=consts.CLUSTER_DEFAULT_MIN_SIZE),
+        'min_size': fields.CapacityField(
+            nullable=True, minimum=0,
+            default=consts.CLUSTER_DEFAULT_MIN_SIZE),
+        'max_size': fields.CapacityField(
+            nullable=True, minimum=-1,
+            default=consts.CLUSTER_DEFAULT_MAX_SIZE),
+        'desired_capacity': fields.CapacityField(
+            nullable=True, minimum=0,
+            default=consts.CLUSTER_DEFAULT_MIN_SIZE),
         'metadata': fields.JsonField(nullable=True, default={}),
-        'timeout': fields.IntegerField(nullable=True,
-                                       default=CONF.default_action_timeout),
+        'timeout': fields.NonNegativeIntegerField(
+            nullable=True, default=CONF.default_action_timeout),
     }
 
 
