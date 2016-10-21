@@ -1356,6 +1356,93 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
+    @request_context2
+    def cluster_resize2(self, ctx, req):
+        """Adjust cluster size parameters.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ClusterResizeRequest object.
+
+        :return: A dict containing the ID of an action fired.
+        """
+        adj_type = None
+        number = None
+        min_size = None
+        max_size = None
+        min_step = None
+        strict = True
+
+        if req.obj_attr_is_set(consts.ADJUSTMENT_TYPE):
+            if not req.obj_attr_is_set(consts.ADJUSTMENT_NUMBER):
+                msg = _('Missing number value for size adjustment.')
+                raise exception.BadRequest(msg=msg)
+
+            if (req.adjustment_type == consts.EXACT_CAPACITY and
+                    req.number <= 0):
+                msg = _("The 'number' must be positive integer for adjustment "
+                        "type '%s'.") % req.adjustment_type
+                raise exception.BadRequest(msg=msg)
+
+            if req.adjustment_type == consts.CHANGE_IN_PERCENTAGE:
+                # min_step is only used (so checked) for this case
+                if req.obj_attr_is_set(consts.ADJUSTMENT_MIN_STEP):
+                    min_step = req.min_step
+
+            adj_type = req.adjustment_type
+            number = req.number
+        else:
+            if req.obj_attr_is_set(consts.ADJUSTMENT_NUMBER):
+                msg = _('Missing adjustment_type value for size adjustment.')
+                raise exception.BadRequest(msg=msg)
+
+        if req.obj_attr_is_set(consts.ADJUSTMENT_MIN_SIZE):
+            min_size = req.min_size
+        if req.obj_attr_is_set(consts.ADJUSTMENT_MAX_SIZE):
+            max_size = req.max_size
+        if req.obj_attr_is_set(consts.ADJUSTMENT_STRICT):
+            strict = req.strict
+
+        db_cluster = self.cluster_find(ctx, req.identity)
+        current = node_obj.Node.count_by_cluster(ctx, db_cluster.id)
+        if adj_type is not None:
+            desired = su.calculate_desired(current, adj_type, number, min_step)
+        else:
+            desired = None
+
+        res = su.check_size_params(db_cluster, desired, min_size, max_size,
+                                   strict)
+        if res:
+            raise exception.BadRequest(msg=res)
+
+        fmt = _LI("Resizing cluster '%(cluster)s': type=%(adj_type)s, "
+                  "number=%(number)s, min_size=%(min_size)s, "
+                  "max_size=%(max_size)s, min_step=%(min_step)s, "
+                  "strict=%(strict)s.")
+        LOG.info(fmt, {'cluster': req.identity, 'adj_type': adj_type,
+                       'number': number, 'min_size': min_size,
+                       'max_size': max_size, 'min_step': min_step,
+                       'strict': strict})
+
+        params = {
+            'name': 'cluster_resize_%s' % db_cluster.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+            'inputs': {
+                consts.ADJUSTMENT_TYPE: adj_type,
+                consts.ADJUSTMENT_NUMBER: number,
+                consts.ADJUSTMENT_MIN_SIZE: min_size,
+                consts.ADJUSTMENT_MAX_SIZE: max_size,
+                consts.ADJUSTMENT_MIN_STEP: min_step,
+                consts.ADJUSTMENT_STRICT: strict
+            }
+        }
+        action_id = action_mod.Action.create(
+            ctx, db_cluster.id, consts.CLUSTER_RESIZE, **params)
+        dispatcher.start_action()
+        LOG.info(_LI("Cluster resize action queued: %s."), action_id)
+
+        return {'action': action_id}
+
     @request_context
     def cluster_scale_out(self, context, identity, count=None):
         """Inflate the size of a cluster by then given number (optional).
