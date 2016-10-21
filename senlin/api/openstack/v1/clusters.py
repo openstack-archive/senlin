@@ -146,58 +146,6 @@ class ClusterController(wsgi.Controller):
         }
         return result
 
-    def _do_resize(self, req, cluster_id, this_action, body):
-        data = body.get(this_action)
-        adj_type = data.get(consts.ADJUSTMENT_TYPE)
-        number = data.get(consts.ADJUSTMENT_NUMBER)
-        min_size = data.get(consts.ADJUSTMENT_MIN_SIZE)
-        max_size = data.get(consts.ADJUSTMENT_MAX_SIZE)
-        min_step = data.get(consts.ADJUSTMENT_MIN_STEP)
-        strict = data.get(consts.ADJUSTMENT_STRICT)
-        if adj_type is not None:
-            if adj_type not in consts.ADJUSTMENT_TYPES:
-                raise senlin_exc.InvalidParameter(name='adjustment_type',
-                                                  value=adj_type)
-            if number is None:
-                msg = _("Missing number value for resize operation.")
-                raise exc.HTTPBadRequest(msg)
-
-        if number is not None:
-            if adj_type is None:
-                msg = _("Missing adjustment_type value for resize "
-                        "operation.")
-                raise exc.HTTPBadRequest(msg)
-            number = utils.parse_int_param(consts.ADJUSTMENT_NUMBER, number,
-                                           allow_negative=True)
-
-        if min_size is not None:
-            min_size = utils.parse_int_param(consts.ADJUSTMENT_MIN_SIZE,
-                                             min_size)
-        if max_size is not None:
-            max_size = utils.parse_int_param(consts.ADJUSTMENT_MAX_SIZE,
-                                             max_size, allow_negative=True)
-        if (min_size is not None and max_size is not None and
-                max_size > 0 and min_size > max_size):
-            msg = _("The specified min_size (%(n)s) is greater than the "
-                    "specified max_size (%(m)s).") % {'m': max_size,
-                                                      'n': min_size}
-            raise exc.HTTPBadRequest(msg)
-
-        if min_step is not None:
-            min_step = utils.parse_int_param(consts.ADJUSTMENT_MIN_STEP,
-                                             min_step)
-        if strict is not None:
-            strict = utils.parse_bool_param(consts.ADJUSTMENT_STRICT, strict)
-        else:
-            strict = True
-
-        result = self.rpc_client.cluster_resize(req.context, cluster_id,
-                                                adj_type, number, min_size,
-                                                max_size, min_step, strict)
-        location = {'location': '/actions/%s' % result['action']}
-        result.update(location)
-        return result
-
     def _sanitize_policy(self, data):
         """Validate dict body of policy attach or update.
 
@@ -282,6 +230,54 @@ class ClusterController(wsgi.Controller):
 
         return self.rpc_client.call2(ctx, 'cluster_del_nodes2', obj)
 
+    def _do_resize(self, context, cluster_id, this_action, body):
+        data = body.get(this_action)
+        params = {'identity': cluster_id}
+        if consts.ADJUSTMENT_TYPE in data:
+            params['adjustment_type'] = data.get(consts.ADJUSTMENT_TYPE)
+        if consts.ADJUSTMENT_NUMBER in data:
+            params['number'] = data.get(consts.ADJUSTMENT_NUMBER)
+        if consts.ADJUSTMENT_MIN_SIZE in data:
+            params['min_size'] = data.get(consts.ADJUSTMENT_MIN_SIZE)
+        if consts.ADJUSTMENT_MAX_SIZE in data:
+            params['max_size'] = data.get(consts.ADJUSTMENT_MAX_SIZE)
+        if consts.ADJUSTMENT_MIN_STEP in data:
+            params['min_step'] = data.get(consts.ADJUSTMENT_MIN_STEP)
+        if consts.ADJUSTMENT_STRICT in data:
+            params['strict'] = data.get(consts.ADJUSTMENT_STRICT)
+
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'ClusterResizeRequest', params, None)
+
+        obj = None
+        try:
+            obj = vorc.ClusterResizeRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        if (obj.obj_attr_is_set('adjustment_type') and
+                not obj.obj_attr_is_set('number')):
+            msg = _("Missing number value for size adjustment.")
+            raise exc.HTTPBadRequest(msg)
+
+        if (obj.obj_attr_is_set('number') and
+                not obj.obj_attr_is_set('adjustment_type')):
+            msg = _("Missing adjustment_type value for size adjustment.")
+            raise exc.HTTPBadRequest(msg)
+
+        if (obj.obj_attr_is_set('min_size') and
+                obj.obj_attr_is_set('max_size')):
+            if obj.max_size > 0 and obj.min_size > obj.max_size:
+                msg = _("The specified min_size (%(n)s) is greater than the "
+                        "specified max_size (%(m)s)."
+                        ) % {'m': obj.max_size, 'n': obj.min_size}
+                raise exc.HTTPBadRequest(msg)
+
+        return self.rpc_client.call2(context, 'cluster_resize2', obj)
+
     @util.policy_enforce
     def action(self, req, cluster_id, body=None):
         """Perform specified action on a cluster."""
@@ -304,7 +300,7 @@ class ClusterController(wsgi.Controller):
             nodes = body.get(this_action).get('nodes', [])
             res = self._del_nodes(req.context, cluster_id, nodes)
         elif this_action == self.RESIZE:
-            return self._do_resize(req, cluster_id, this_action, body)
+            res = self._do_resize(req.context, cluster_id, this_action, body)
         elif this_action == self.SCALE_OUT:
             count = body.get(this_action).get('count')
             res = self.rpc_client.cluster_scale_out(req.context, cluster_id,

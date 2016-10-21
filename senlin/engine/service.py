@@ -1372,7 +1372,9 @@ class EngineService(service.Service):
         min_step = None
         strict = True
 
-        if req.obj_attr_is_set(consts.ADJUSTMENT_TYPE):
+        if (req.obj_attr_is_set(consts.ADJUSTMENT_TYPE) and
+                req.adjustment_type is not None):
+            adj_type = req.adjustment_type
             if not req.obj_attr_is_set(consts.ADJUSTMENT_NUMBER):
                 msg = _('Missing number value for size adjustment.')
                 raise exception.BadRequest(msg=msg)
@@ -1380,19 +1382,21 @@ class EngineService(service.Service):
             if (req.adjustment_type == consts.EXACT_CAPACITY and
                     req.number <= 0):
                 msg = _("The 'number' must be positive integer for adjustment "
-                        "type '%s'.") % req.adjustment_type
+                        "type '%s'.") % adj_type
                 raise exception.BadRequest(msg=msg)
 
-            if req.adjustment_type == consts.CHANGE_IN_PERCENTAGE:
+            if adj_type == consts.CHANGE_IN_PERCENTAGE:
                 # min_step is only used (so checked) for this case
                 if req.obj_attr_is_set(consts.ADJUSTMENT_MIN_STEP):
                     min_step = req.min_step
-
-            adj_type = req.adjustment_type
-            number = req.number
+                number = req.number
+            else:
+                number = int(req.number)
         else:
-            if req.obj_attr_is_set(consts.ADJUSTMENT_NUMBER):
+            if (req.obj_attr_is_set(consts.ADJUSTMENT_NUMBER) and
+                    req.number is not None):
                 msg = _('Missing adjustment_type value for size adjustment.')
+                LOG.error(msg)
                 raise exception.BadRequest(msg=msg)
 
         if req.obj_attr_is_set(consts.ADJUSTMENT_MIN_SIZE):
