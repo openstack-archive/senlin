@@ -20,6 +20,7 @@ from senlin.tests.unit.common import base as test_base
 
 CONF = cfg.CONF
 CONF.import_opt('default_action_timeout', 'senlin.common.config')
+CONF.import_opt('max_nodes_per_cluster', 'senlin.common.config')
 
 
 class TestClusterCreate(test_base.SenlinTestCase):
@@ -62,7 +63,7 @@ class TestClusterCreate(test_base.SenlinTestCase):
         self.assertEqual({'foo': 'bar'}, sot.metadata)
         self.assertEqual(121, sot.timeout)
 
-    def test_cluster_create_request_body_dump(self):
+    def test_request_body_to_primitive(self):
         sot = clusters.ClusterCreateRequestBody(**self.body)
         res = sot.obj_to_primitive()
         self.assertEqual(
@@ -79,7 +80,7 @@ class TestClusterCreate(test_base.SenlinTestCase):
         self.assertIn('profile_id', res['senlin_object.changes'])
         self.assertIn('name', res['senlin_object.changes'])
 
-    def test_cluster_create_request(self):
+    def test_request_to_primitive(self):
         body = clusters.ClusterCreateRequestBody(**self.body)
         request = {'cluster': body}
         sot = clusters.ClusterCreateRequest(**request)
@@ -104,6 +105,90 @@ class TestClusterCreate(test_base.SenlinTestCase):
             {'name': u'test-cluster', 'profile_id': u'test-profile'},
             data['senlin_object.data']
         )
+
+    def test_init_body_err_min_size_too_low(self):
+        body = copy.deepcopy(self.body)
+        body['min_size'] = -1
+
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterCreateRequestBody,
+                               **body)
+
+        self.assertEqual("The value for the min_size field must be greater "
+                         "than or equal to 0.",
+                         six.text_type(ex))
+
+    def test_init_body_err_min_size_too_high(self):
+        body = copy.deepcopy(self.body)
+        body['min_size'] = CONF.max_nodes_per_cluster + 1
+
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterCreateRequestBody,
+                               **body)
+
+        self.assertEqual("The value for the min_size field must be less than "
+                         "or equal to %s." % CONF.max_nodes_per_cluster,
+                         six.text_type(ex))
+
+    def test_init_body_err_max_size_too_low(self):
+        body = copy.deepcopy(self.body)
+        body['max_size'] = -2
+
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterCreateRequestBody,
+                               **body)
+
+        self.assertEqual("The value for the max_size field must be greater "
+                         "than or equal to -1.",
+                         six.text_type(ex))
+
+    def test_init_body_err_max_size_too_high(self):
+        body = copy.deepcopy(self.body)
+        body['max_size'] = CONF.max_nodes_per_cluster + 1
+
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterCreateRequestBody,
+                               **body)
+
+        self.assertEqual("The value for the max_size field must be less than "
+                         "or equal to %s." % CONF.max_nodes_per_cluster,
+                         six.text_type(ex))
+
+    def test_init_body_err_desired_too_low(self):
+        body = copy.deepcopy(self.body)
+        body['desired_capacity'] = -1
+
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterCreateRequestBody,
+                               **body)
+
+        self.assertEqual("The value for the desired_capacity field must be "
+                         "greater than or equal to 0.",
+                         six.text_type(ex))
+
+    def test_init_body_err_desired_too_high(self):
+        body = copy.deepcopy(self.body)
+        body['desired_capacity'] = CONF.max_nodes_per_cluster + 1
+
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterCreateRequestBody,
+                               **body)
+
+        self.assertEqual(("The value for the desired_capacity field must be "
+                          "less than or equal to %s." %
+                          CONF.max_nodes_per_cluster),
+                         six.text_type(ex))
+
+    def test_init_body_err_timeout_negative(self):
+        body = copy.deepcopy(self.body)
+        body['timeout'] = -1
+
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterCreateRequestBody,
+                               **body)
+
+        self.assertEqual("Value must be >= 0 for field 'timeout'.",
+                         six.text_type(ex))
 
 
 class TestClusterList(test_base.SenlinTestCase):
