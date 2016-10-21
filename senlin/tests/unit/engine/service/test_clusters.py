@@ -1865,3 +1865,225 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_node.assert_called_once_with(self.ctx, 'NODE3')
         mock_check.assert_called_once_with(x_cluster, 1, strict=True)
+
+    @mock.patch.object(no.Node, 'count_by_cluster')
+    @mock.patch.object(su, 'calculate_desired')
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_resize2_exact_capacity(self, mock_find, mock_action,
+                                            notify, mock_check, mock_calc,
+                                            mock_count):
+        x_cluster = mock.Mock(id='12345678ABCDEFGH')
+        mock_find.return_value = x_cluster
+        mock_count.return_value = 3
+        mock_calc.return_value = 5
+        mock_check.return_value = None
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterResizeRequest(
+            identity='CLUSTER',
+            adjustment_type=consts.EXACT_CAPACITY,
+            number=5
+        )
+
+        res = self.eng.cluster_resize2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, res)
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_calc.assert_called_once_with(3, consts.EXACT_CAPACITY, 5, None)
+        mock_check.assert_called_once_with(x_cluster, 5, None, None, True)
+        mock_action.assert_called_once_with(
+            self.ctx, '12345678ABCDEFGH', consts.CLUSTER_RESIZE,
+            name='cluster_resize_12345678',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={
+                consts.ADJUSTMENT_TYPE: consts.EXACT_CAPACITY,
+                consts.ADJUSTMENT_NUMBER: 5,
+                consts.ADJUSTMENT_MIN_SIZE: None,
+                consts.ADJUSTMENT_MAX_SIZE: None,
+                consts.ADJUSTMENT_MIN_STEP: None,
+                consts.ADJUSTMENT_STRICT: True
+            },
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(no.Node, 'count_by_cluster')
+    @mock.patch.object(su, 'calculate_desired')
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_resize2_change_in_capacity(self, mock_find, mock_action,
+                                                notify, mock_check, mock_calc,
+                                                mock_count):
+        x_cluster = mock.Mock(id='12345678ABCDEFGH')
+        mock_find.return_value = x_cluster
+        mock_count.return_value = 2
+        mock_calc.return_value = 7
+        mock_check.return_value = None
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterResizeRequest(
+            identity='CLUSTER',
+            adjustment_type=consts.CHANGE_IN_CAPACITY,
+            number=5
+        )
+
+        res = self.eng.cluster_resize2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, res)
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_calc.assert_called_once_with(2, consts.CHANGE_IN_CAPACITY, 5,
+                                          None)
+        mock_check.assert_called_once_with(x_cluster, 7, None, None, True)
+        mock_action.assert_called_once_with(
+            self.ctx, '12345678ABCDEFGH', consts.CLUSTER_RESIZE,
+            name='cluster_resize_12345678',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={
+                consts.ADJUSTMENT_TYPE: consts.CHANGE_IN_CAPACITY,
+                consts.ADJUSTMENT_NUMBER: 5,
+                consts.ADJUSTMENT_MIN_SIZE: None,
+                consts.ADJUSTMENT_MAX_SIZE: None,
+                consts.ADJUSTMENT_MIN_STEP: None,
+                consts.ADJUSTMENT_STRICT: True
+            },
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(no.Node, 'count_by_cluster')
+    @mock.patch.object(su, 'calculate_desired')
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_resize2_change_in_percentage(self, mock_find, mock_action,
+                                                  notify, mock_check,
+                                                  mock_calc, mock_count):
+        x_cluster = mock.Mock(id='12345678ABCDEFGH')
+        mock_find.return_value = x_cluster
+        mock_count.return_value = 10
+        mock_calc.return_value = 8
+        mock_check.return_value = None
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterResizeRequest(
+            identity='CLUSTER',
+            adjustment_type=consts.CHANGE_IN_PERCENTAGE,
+            number=15.81
+        )
+
+        res = self.eng.cluster_resize2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, res)
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_calc.assert_called_once_with(10, consts.CHANGE_IN_PERCENTAGE,
+                                          15.81, None)
+        mock_check.assert_called_once_with(x_cluster, 8, None, None, True)
+        mock_action.assert_called_once_with(
+            self.ctx, '12345678ABCDEFGH', consts.CLUSTER_RESIZE,
+            name='cluster_resize_12345678',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={
+                consts.ADJUSTMENT_TYPE: consts.CHANGE_IN_PERCENTAGE,
+                consts.ADJUSTMENT_NUMBER: 15.81,
+                consts.ADJUSTMENT_MIN_SIZE: None,
+                consts.ADJUSTMENT_MAX_SIZE: None,
+                consts.ADJUSTMENT_MIN_STEP: None,
+                consts.ADJUSTMENT_STRICT: True
+            },
+        )
+        notify.assert_called_once_with()
+
+    def test_cluster_resize2_type_missing_number(self):
+        req = orco.ClusterResizeRequest(
+            identity='CLUSTER',
+            adjustment_type=consts.EXACT_CAPACITY
+        )
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Missing number value for "
+                         "size adjustment.", six.text_type(ex.exc_info[1]))
+
+    def test_cluster_resize2_number_without_type(self):
+        req = orco.ClusterResizeRequest(
+            identity='CLUSTER',
+            number=10
+        )
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize2,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Missing adjustment_type "
+                         "value for size adjustment.",
+                         six.text_type(ex.exc_info[1]))
+
+    def test_cluster_resize2_bad_number_for_exact_capacity(self):
+        req = orco.ClusterResizeRequest(
+            identity='CLUSTER',
+            adjustment_type=consts.EXACT_CAPACITY,
+            number=-5
+        )
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The 'number' must be "
+                         "positive integer for adjustment type "
+                         "'EXACT_CAPACITY'.",
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_resize2_cluster_not_found(self, mock_find):
+        req = orco.ClusterResizeRequest(
+            identity='CLUSTER',
+            adjustment_type=consts.EXACT_CAPACITY,
+            number=10
+        )
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='CLUSTER')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize2,
+                               self.ctx, req.obj_to_primitive())
+
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual("The cluster (CLUSTER) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(no.Node, 'count_by_cluster')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_resize2_failing_size_check(self, mock_find, mock_count,
+                                                mock_check):
+        x_cluster = mock.Mock(id='CID')
+        mock_find.return_value = x_cluster
+        mock_count.return_value = 5
+        mock_check.return_value = 'size check.'
+        req = orco.ClusterResizeRequest(
+            identity='CLUSTER',
+            adjustment_type=consts.EXACT_CAPACITY,
+            number=5
+        )
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_resize2,
+                               self.ctx, req.obj_to_primitive())
+
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_count.assert_called_once_with(self.ctx, 'CID')
+        mock_check.assert_called_once_with(x_cluster, 5, None, None, True)
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: size check.",
+                         six.text_type(ex.exc_info[1]))
