@@ -317,6 +317,12 @@ Request Parameters
   - profile: profile
   - spec: profile_spec
 
+Request Example
+---------------
+
+.. literalinclude:: samples/profile-validate-request.json
+   :language: javascript
+
 Response Parameters
 -------------------
 
@@ -335,3 +341,9 @@ The response contains properties as if the profile is created.
   - type: profile_type_name
   - updated_at: updated_at
   - user: user
+
+Response Example
+----------------
+
+.. literalinclude:: samples/profile-validate-response.json
+   :language: javascript

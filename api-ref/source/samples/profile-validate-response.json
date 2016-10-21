@@ -1,0 +1,31 @@
+{
+    "profile": {
+        "created_at": null,
+        "domain": null,
+        "id": null,
+        "metadata": null,
+        "name": "validated_profile",
+        "project": "1d567ed4ef51453a85545f018b68c26d",
+        "spec": {
+            "properties": {
+                "flavor": "m1.small",
+                "image": "F20",
+                "key_name": "oskey",
+                "name": "F20_server",
+                "networks": [
+                    {
+                        "network": "private"
+                    }
+                ],
+                "security_groups": [
+                    "default"
+                ]
+            },
+            "type": "os.nova.server",
+            "version": 1.0
+        },
+        "type": "os.nova.server-1.0",
+        "updated_at": null,
+        "user": "990e4c1f4a414f74990b17d16f2540b5"
+    }
+}
