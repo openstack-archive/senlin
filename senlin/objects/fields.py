@@ -12,6 +12,7 @@
 
 from oslo_config import cfg
 from oslo_serialization import jsonutils
+from oslo_utils import strutils
 from oslo_versionedobjects import fields
 import re
 import six
@@ -21,7 +22,6 @@ from senlin.common.i18n import _
 CONF = cfg.CONF
 
 # Field alias for code readability
-BooleanField = fields.BooleanField
 FlexibleBooleanField = fields.FlexibleBooleanField
 StringField = fields.StringField
 IntegerField = fields.IntegerField
@@ -30,6 +30,24 @@ UUIDField = fields.UUIDField
 DateTimeField = fields.DateTimeField
 ListOfStringsField = fields.ListOfStringsField
 ListOfEnumField = fields.ListOfEnumField
+
+
+class Boolean(fields.FieldType):
+    # NOTE: The following definition is much more stricter than the oslo
+    #       version. Also note that the treatment of default values here:
+    #       we are using the user specified default value when invoking
+    #       the 'bool_from_string' until function.
+
+    def __init__(self, default=False):
+        super(Boolean, self).__init__()
+        self._default = default
+
+    def coerce(self, obj, attr, value):
+        return strutils.bool_from_string(value, strict=True,
+                                         default=self._default)
+
+    def get_schema(self):
+        return {'type': ['boolean']}
 
 
 # TODO(Qiming): remove this when oslo patch is released
@@ -104,13 +122,6 @@ class Object(fields.Object):
             return {}
 
 
-class ObjectField(fields.AutoTypedField):
-    def __init__(self, objtype, subclasses=False, **kwargs):
-        self.AUTO_TYPE = Object(objtype, subclasses)
-        self.objname = objtype
-        super(ObjectField, self).__init__(**kwargs)
-
-
 class Json(fields.FieldType):
     def coerce(self, obj, attr, value):
         if isinstance(value, six.string_types):
@@ -137,14 +148,6 @@ class Json(fields.FieldType):
 
     def get_schema(self):
         return {'type': ['object']}
-
-
-class JsonField(fields.AutoTypedField):
-    AUTO_TYPE = Json()
-
-
-class ListField(fields.AutoTypedField):
-    AUTO_TYPE = fields.List(fields.FieldType())
 
 
 class NotificationPriority(fields.Enum):
@@ -184,25 +187,6 @@ class NotificationAction(fields.Enum):
     def __init__(self):
         super(NotificationAction, self).__init__(
             valid_values=NotificationAction.ALL)
-
-
-class NotificationPriorityField(fields.BaseEnumField):
-    AUTO_TYPE = NotificationPriority()
-
-
-class NotificationPhaseField(fields.BaseEnumField):
-    AUTO_TYPE = NotificationPhase()
-
-
-class NotificationActionField(fields.BaseEnumField):
-    AUTO_TYPE = NotificationAction()
-
-
-# TODO(Qiming): remove this when oslo patch is released
-# https://review.openstack.org/#/c/360095
-class NonNegativeIntegerField(fields.AutoTypedField):
-
-    AUTO_TYPE = NonNegativeInteger()
 
 
 class Name(fields.String):
@@ -358,6 +342,75 @@ class IdentityList(fields.List):
         return schema
 
 
+class BaseEnum(fields.Enum):
+
+    def __init__(self, **kwargs):
+        super(BaseEnum, self).__init__(valid_values=self.__class__.ALL)
+
+    def get_schema(self):
+        # TODO(Anyone): remove this override when the following patch is
+        # merged and released.
+        # https://review.openstack.org/389061
+        schema = {
+            'type': ['string'],
+            'enum': self._valid_values
+        }
+        return schema
+
+
+class AdjustmentType(BaseEnum):
+
+    ALL = (
+        EXACT_CAPACITY, CHANGE_IN_CAPACITY, CHANGE_IN_PERCENTAGE,
+    ) = (
+        'EXACT_CAPACITY', 'CHANGE_IN_CAPACITY', 'CHANGE_IN_PERCENTAGE',
+    )
+
+
+class BooleanField(fields.AutoTypedField):
+
+    AUTO_TYPE = None
+
+    def __init__(self, default=False, **kwargs):
+        self.AUTO_TYPE = Boolean(default=default)
+        super(BooleanField, self).__init__(**kwargs)
+
+
+# TODO(Qiming): remove this when oslo patch is released
+# https://review.openstack.org/#/c/360095
+class NonNegativeIntegerField(fields.AutoTypedField):
+
+    AUTO_TYPE = NonNegativeInteger()
+
+
+class ObjectField(fields.AutoTypedField):
+
+    def __init__(self, objtype, subclasses=False, **kwargs):
+        self.AUTO_TYPE = Object(objtype, subclasses)
+        self.objname = objtype
+        super(ObjectField, self).__init__(**kwargs)
+
+
+class JsonField(fields.AutoTypedField):
+    AUTO_TYPE = Json()
+
+
+class ListField(fields.AutoTypedField):
+    AUTO_TYPE = fields.List(fields.FieldType())
+
+
+class NotificationPriorityField(fields.BaseEnumField):
+    AUTO_TYPE = NotificationPriority()
+
+
+class NotificationPhaseField(fields.BaseEnumField):
+    AUTO_TYPE = NotificationPhase()
+
+
+class NotificationActionField(fields.BaseEnumField):
+    AUTO_TYPE = NotificationAction()
+
+
 class NameField(fields.AutoTypedField):
 
     AUTO_TYPE = Name()
@@ -392,3 +445,8 @@ class IdentityListField(fields.AutoTypedField):
                                       unique=unique)
         super(IdentityListField, self).__init__(nullable=nullable,
                                                 default=default)
+
+
+class AdjustmentTypeField(fields.BaseEnumField):
+
+    AUTO_TYPE = AdjustmentType()
