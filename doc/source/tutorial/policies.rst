@@ -37,14 +37,14 @@ To create a policy object using this specification (``spec`` for short):
 .. code-block:: console
 
   $ cd $SENLIN_ROOT/examples/policies
-  $ senlin policy-create -s deletion_policy.yaml dp01
+  $ openstack cluster policy create --spec-file deletion_policy.yaml dp01
 
 To verify the policy creation, you can do:
 
 .. code-block:: console
 
-  $ senlin policy-list
-  $ senlin policy-show dp01
+  $ openstack cluster policy list
+  $ openstack cluster policy show dp01
 
 Attaching a Policy
 ~~~~~~~~~~~~~~~~~~
@@ -53,14 +53,14 @@ The enforce a policy on a cluster, attach a policy to it:
 
 .. code-block:: console
 
-  $ senlin cluster-policy-attach -p dp01 mycluster
+  $ openstack cluster policy attach --policy dp01 mycluster
 
 To verify the policy attach operation, do the following:
 
 .. code-block:: console
 
-  $ senlin cluster-policy-list mycluster
-  $ senlin cluster-policy-show -p dp01 mycluster
+  $ openstack cluster policy binding list mycluster
+  $ openstack cluster policy binding show --policy dp01 mycluster
 
 Verifying a Policy
 ~~~~~~~~~~~~~~~~~~
