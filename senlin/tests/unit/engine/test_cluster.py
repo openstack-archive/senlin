@@ -122,11 +122,11 @@ class TestCluster(base.SenlinTestCase):
         cluster._load_runtime_data(self.context)
 
         rt = cluster.rt
-        self.assertIsNone(cluster.rt['profile'])
-        self.assertEqual([], cluster.rt['nodes'])
+        self.assertIsNone(rt['profile'])
+        self.assertEqual([], rt['nodes'])
         self.assertEqual(0, len(rt['nodes']))
         self.assertTrue(isinstance(rt['nodes'], list))
-        self.assertEqual([], cluster.rt['policies'])
+        self.assertEqual([], rt['policies'])
 
     def test_store_for_create(self):
         cluster = cm.Cluster('test-cluster', 0, PROFILE_ID,
