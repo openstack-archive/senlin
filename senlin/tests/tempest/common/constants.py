@@ -104,3 +104,14 @@ spec_lb_policy = {
         "lb_status_timeout": 300
     }
 }
+
+
+spec_batch_policy = {
+    "type": "senlin.policy.batch",
+    "version": "1.0",
+    "properties": {
+        "min_in_service": 1,
+        "max_batch_size": 1,
+        "pause_time": 3
+    }
+}
