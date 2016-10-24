@@ -25,6 +25,7 @@ from senlin.engine import node as node_mod
 from senlin.engine import service
 from senlin.objects import cluster as co
 from senlin.objects import node as no
+from senlin.objects.requests import nodes as orno
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -254,10 +255,10 @@ class NodeTest(base.SenlinTestCase):
         mock_node.return_value = x_node
         mock_action.return_value = 'ACTION_ID'
 
-        result = self.eng.node_create(self.ctx, 'NODE1', 'FAKE_PROFILE')
+        result = self.eng.node_create(self.ctx, 'NODE1', 'PROFILE_NAME')
 
         self.assertEqual({'foo': 'bar', 'action': 'ACTION_ID'}, result)
-        mock_profile.assert_called_once_with(self.ctx, 'FAKE_PROFILE')
+        mock_profile.assert_called_once_with(self.ctx, 'PROFILE_NAME')
         mock_node.assert_called_once_with(
             'NODE1', 'PROFILE_ID', '', self.ctx,
             index=-1, role=None, metadata={},
@@ -290,12 +291,12 @@ class NodeTest(base.SenlinTestCase):
         mock_node.return_value = x_node
         mock_action.return_value = 'ACTION_ID'
 
-        result = self.eng.node_create(self.ctx, 'NODE1', 'FAKE_PROFILE',
+        result = self.eng.node_create(self.ctx, 'NODE1', 'PROFILE_NAME',
                                       cluster_id='FAKE_CLUSTER')
 
         self.assertEqual({'foo': 'bar', 'action': 'ACTION_ID'}, result)
         mock_cluster.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
-        mock_profile.assert_called_once_with(self.ctx, 'FAKE_PROFILE')
+        mock_profile.assert_called_once_with(self.ctx, 'PROFILE_NAME')
         mock_index.assert_called_once_with(self.ctx, 'CLUSTER_ID')
         mock_node.assert_called_once_with(
             'NODE1', 'PROFILE_ID', 'CLUSTER_ID', self.ctx,
@@ -332,13 +333,13 @@ class NodeTest(base.SenlinTestCase):
         mock_node.return_value = x_node
         mock_action.return_value = 'ACTION_ID'
 
-        result = self.eng.node_create(self.ctx, 'NODE1', 'FAKE_PROFILE',
+        result = self.eng.node_create(self.ctx, 'NODE1', 'PROFILE_NAME',
                                       cluster_id='FAKE_CLUSTER')
 
         self.assertEqual({'foo': 'bar', 'action': 'ACTION_ID'}, result)
         mock_cluster.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
         mock_profile.assert_has_calls([
-            mock.call(self.ctx, 'FAKE_PROFILE'),  # for node
+            mock.call(self.ctx, 'PROFILE_NAME'),  # for node
             mock.call(self.ctx, 'CLUSTER_PROFILE_ID'),  # for cluster
         ])
         mock_index.assert_called_once_with(self.ctx, 'CLUSTER_ID')
@@ -363,7 +364,7 @@ class NodeTest(base.SenlinTestCase):
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_create,
-                               self.ctx, 'node-1', 'FAKE_PROFILE')
+                               self.ctx, 'node-1', 'PROFILE_NAME')
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual(_("The request is malformed: The node named "
@@ -393,14 +394,14 @@ class NodeTest(base.SenlinTestCase):
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_create,
-                               self.ctx, 'node-1', 'FAKE_PROFILE',
+                               self.ctx, 'node-1', 'PROFILE_NAME',
                                cluster_id='Bogus')
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: The specified cluster "
                          "(Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
-        mock_profile.assert_called_once_with(self.ctx, 'FAKE_PROFILE')
+        mock_profile.assert_called_once_with(self.ctx, 'PROFILE_NAME')
         mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(service.EngineService, 'cluster_find')
@@ -418,6 +419,207 @@ class NodeTest(base.SenlinTestCase):
                                self.eng.node_create,
                                self.ctx, 'node-1', 'NODE_PROFILE',
                                cluster_id='FAKE_CLUSTER')
+
+        self.assertEqual(exc.ProfileTypeNotMatch, ex.exc_info[0])
+        self.assertEqual("Node and cluster have different profile type, "
+                         "operation aborted.",
+                         six.text_type(ex.exc_info[1]))
+        mock_profile.assert_has_calls([
+            mock.call(self.ctx, 'NODE_PROFILE'),
+            mock.call(self.ctx, 'CLUSTER_PROFILE_ID'),
+        ])
+        mock_cluster.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
+
+    @mock.patch.object(action_mod.Action, 'create')
+    @mock.patch('senlin.engine.node.Node')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_node_create2(self, notify, mock_profile, mock_node, mock_action):
+        mock_profile.return_value = mock.Mock(id='PROFILE_ID')
+        x_node = mock.Mock(id='NODE_ID')
+        x_node.to_dict.return_value = {'foo': 'bar'}
+        mock_node.return_value = x_node
+        mock_action.return_value = 'ACTION_ID'
+        req = orno.NodeCreateRequestBody(name='NODE1',
+                                         profile_id='PROFILE_NAME')
+
+        result = self.eng.node_create2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'foo': 'bar', 'action': 'ACTION_ID'}, result)
+        mock_profile.assert_called_once_with(self.ctx, 'PROFILE_NAME')
+        mock_node.assert_called_once_with(
+            'NODE1', 'PROFILE_ID', '', self.ctx,
+            index=-1, role='', metadata={},
+            user=self.ctx.user,
+            project=self.ctx.project,
+            domain=self.ctx.domain)
+        x_node.store.assert_called_once_with(self.ctx)
+        mock_action.assert_called_once_with(
+            self.ctx, 'NODE_ID', consts.NODE_CREATE,
+            name='node_create_NODE_ID',
+            cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY)
+        notify.assert_called_once_with()
+
+    @mock.patch.object(action_mod.Action, 'create')
+    @mock.patch('senlin.engine.node.Node')
+    @mock.patch.object(co.Cluster, 'get_next_index')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_node_create2_same_profile(self, notify, mock_profile,
+                                       mock_cluster, mock_index,
+                                       mock_node, mock_action):
+        mock_profile.return_value = mock.Mock(id='PROFILE_ID',
+                                              type='PROFILE_TYPE')
+        x_cluster = mock.Mock(id='CLUSTER_ID', profile_id='PROFILE_ID')
+        mock_cluster.return_value = x_cluster
+        mock_index.return_value = 12345
+        x_node = mock.Mock(id='NODE_ID')
+        x_node.to_dict.return_value = {'foo': 'bar'}
+        mock_node.return_value = x_node
+        mock_action.return_value = 'ACTION_ID'
+        req = orno.NodeCreateRequestBody(name='NODE1',
+                                         profile_id='PROFILE_NAME',
+                                         cluster_id='FAKE_CLUSTER')
+
+        result = self.eng.node_create2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'foo': 'bar', 'action': 'ACTION_ID'}, result)
+        mock_cluster.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
+        mock_profile.assert_called_once_with(self.ctx, 'PROFILE_NAME')
+        mock_index.assert_called_once_with(self.ctx, 'CLUSTER_ID')
+        mock_node.assert_called_once_with(
+            'NODE1', 'PROFILE_ID', 'CLUSTER_ID', self.ctx,
+            index=12345, role='', metadata={},
+            user=self.ctx.user,
+            project=self.ctx.project,
+            domain=self.ctx.domain)
+        x_node.store.assert_called_once_with(self.ctx)
+        mock_action.assert_called_once_with(
+            self.ctx, 'NODE_ID', consts.NODE_CREATE,
+            name='node_create_NODE_ID',
+            cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY)
+        notify.assert_called_once_with()
+
+    @mock.patch.object(action_mod.Action, 'create')
+    @mock.patch('senlin.engine.node.Node')
+    @mock.patch.object(co.Cluster, 'get_next_index')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_node_create2_same_profile_type(self, notify, mock_profile,
+                                            mock_cluster, mock_index,
+                                            mock_node, mock_action):
+        mock_profile.side_effect = [
+            mock.Mock(id='NODE_PROFILE_ID', type='PROFILE_TYPE'),
+            mock.Mock(id='CLUSTER_PROFILE_ID', type='PROFILE_TYPE'),
+        ]
+        x_cluster = mock.Mock(id='CLUSTER_ID', profile_id='CLUSTER_PROFILE_ID')
+        mock_cluster.return_value = x_cluster
+        mock_index.return_value = 12345
+        x_node = mock.Mock(id='NODE_ID')
+        x_node.to_dict.return_value = {'foo': 'bar'}
+        mock_node.return_value = x_node
+        mock_action.return_value = 'ACTION_ID'
+        req = orno.NodeCreateRequestBody(name='NODE1',
+                                         profile_id='PROFILE_NAME',
+                                         cluster_id='FAKE_CLUSTER')
+
+        result = self.eng.node_create2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'foo': 'bar', 'action': 'ACTION_ID'}, result)
+        mock_cluster.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
+        mock_profile.assert_has_calls([
+            mock.call(self.ctx, 'PROFILE_NAME'),  # for node
+            mock.call(self.ctx, 'CLUSTER_PROFILE_ID'),  # for cluster
+        ])
+        mock_index.assert_called_once_with(self.ctx, 'CLUSTER_ID')
+        mock_node.assert_called_once_with(
+            'NODE1', 'NODE_PROFILE_ID', 'CLUSTER_ID', self.ctx,
+            index=12345, role='', metadata={},
+            user=self.ctx.user,
+            project=self.ctx.project,
+            domain=self.ctx.domain)
+        x_node.store.assert_called_once_with(self.ctx)
+        mock_action.assert_called_once_with(
+            self.ctx, 'NODE_ID', consts.NODE_CREATE,
+            name='node_create_NODE_ID',
+            cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY)
+        notify.assert_called_once_with()
+
+    @mock.patch.object(no.Node, 'get_by_name')
+    def test_node_create2_name_conflict(self, mock_get):
+        cfg.CONF.set_override('name_unique', True, enforce_type=True)
+        mock_get.return_value = mock.Mock()
+        req = orno.NodeCreateRequestBody(name='NODE1',
+                                         profile_id='PROFILE_NAME')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_create2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual(_("The request is malformed: The node named "
+                           "(NODE1) already exists."),
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(service.EngineService, 'profile_find')
+    def test_node_create2_profile_not_found(self, mock_profile):
+        mock_profile.side_effect = exc.ResourceNotFound(type='profile',
+                                                        id='Bogus')
+        req = orno.NodeCreateRequestBody(name='NODE1',
+                                         profile_id='Bogus')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_create2,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The specified profile "
+                         "(Bogus) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_profile.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    def test_node_create2_cluster_not_found(self, mock_profile, mock_cluster):
+        mock_profile.return_value = mock.Mock()
+        mock_cluster.side_effect = exc.ResourceNotFound(type='cluster',
+                                                        id='Bogus')
+        req = orno.NodeCreateRequestBody(name='NODE1',
+                                         profile_id='PROFILE_NAME',
+                                         cluster_id='Bogus')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_create2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The specified cluster "
+                         "(Bogus) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_profile.assert_called_once_with(self.ctx, 'PROFILE_NAME')
+        mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    def test_node_create2_profile_type_not_match(self, mock_profile,
+                                                 mock_cluster):
+        mock_profile.side_effect = [
+            mock.Mock(id='NODE_PROFILE_ID', type='TYPE-A'),
+            mock.Mock(id='CLUSTER_PROFILE_ID', type='TYPE-B'),
+        ]
+        mock_cluster.return_value = mock.Mock(id='CLUSTER_ID',
+                                              profile_id='CLUSTER_PROFILE_ID')
+        req = orno.NodeCreateRequestBody(name='NODE1',
+                                         profile_id='NODE_PROFILE',
+                                         cluster_id='FAKE_CLUSTER')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_create2,
+                               self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ProfileTypeNotMatch, ex.exc_info[0])
         self.assertEqual("Node and cluster have different profile type, "
