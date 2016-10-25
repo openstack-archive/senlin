@@ -244,6 +244,110 @@ class NodeTest(base.SenlinTestCase):
                                           limit=None, marker=None,
                                           project_safe=True)
 
+    @mock.patch.object(node_mod.Node, 'load_all')
+    def test_node_list2(self, mock_load):
+        obj_1 = mock.Mock()
+        obj_1.to_dict.return_value = {'k': 'v1'}
+        obj_2 = mock.Mock()
+        obj_2.to_dict.return_value = {'k': 'v2'}
+        mock_load.return_value = [obj_1, obj_2]
+
+        req = orno.NodeListRequestBody()
+        result = self.eng.node_list2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
+        mock_load.assert_called_once_with(self.ctx, project_safe=True)
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(node_mod.Node, 'load_all')
+    def test_node_list2_with_cluster_id(self, mock_load, mock_find):
+        obj_1 = mock.Mock()
+        obj_1.to_dict.return_value = {'k': 'v1'}
+        obj_2 = mock.Mock()
+        obj_2.to_dict.return_value = {'k': 'v2'}
+        mock_load.return_value = [obj_1, obj_2]
+        mock_find.return_value = mock.Mock(id='CLUSTER_ID')
+
+        req = orno.NodeListRequestBody(cluster_id='MY_CLUSTER_NAME',
+                                       project_safe=True)
+        result = self.eng.node_list2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
+        mock_find.assert_called_once_with(self.ctx, 'MY_CLUSTER_NAME')
+        mock_load.assert_called_once_with(self.ctx, cluster_id='CLUSTER_ID',
+                                          project_safe=True)
+
+    @mock.patch.object(node_mod.Node, 'load_all')
+    def test_node_list2_with_params(self, mock_load):
+        obj_1 = mock.Mock()
+        obj_1.to_dict.return_value = {'k': 'v1'}
+        obj_2 = mock.Mock()
+        obj_2.to_dict.return_value = {'k': 'v2'}
+        mock_load.return_value = [obj_1, obj_2]
+
+        MARKER_UUID = '2fd5b45f-bae4-4cdb-b283-a71e9f9805c7'
+        req = orno.NodeListRequestBody(status=['ACTIVE'], sort='status',
+                                       limit=123,
+                                       marker=MARKER_UUID,
+                                       project_safe=True)
+        result = self.eng.node_list2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
+        mock_load.assert_called_once_with(self.ctx, sort='status', limit=123,
+                                          marker=MARKER_UUID,
+                                          project_safe=True,
+                                          filters={'status': ['ACTIVE']})
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_node_list2_cluster_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='BOGUS')
+
+        req = orno.NodeListRequestBody(cluster_id='BOGUS',
+                                       project_safe=True)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_list2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual("The cluster (BOGUS) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'BOGUS')
+
+    @mock.patch.object(node_mod.Node, 'load_all')
+    def test_node_list2_with_project_safe(self, mock_load):
+        mock_load.return_value = []
+
+        req = orno.NodeListRequestBody(project_safe=True)
+        result = self.eng.node_list2(self.ctx, req.obj_to_primitive())
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, project_safe=True)
+        mock_load.reset_mock()
+
+        req = orno.NodeListRequestBody(project_safe=False)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_list2,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.Forbidden, ex.exc_info[0])
+
+        self.ctx.is_admin = True
+        req = orno.NodeListRequestBody(project_safe=False)
+        result = self.eng.node_list2(self.ctx, req.obj_to_primitive())
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, project_safe=False)
+        mock_load.reset_mock()
+
+    @mock.patch.object(node_mod.Node, 'load_all')
+    def test_node_list2_empty(self, mock_load):
+        mock_load.return_value = []
+
+        req = orno.NodeListRequestBody()
+        result = self.eng.node_list2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, project_safe=True)
+
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch('senlin.engine.node.Node')
     @mock.patch.object(service.EngineService, 'profile_find')

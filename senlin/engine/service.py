@@ -1575,6 +1575,40 @@ class EngineService(service.Service):
         return [node.to_dict() for node in nodes]
 
     @request_context2
+    def node_list2(self, ctx, req):
+        """List node records matching the specified criteria.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the NodeListRequestBody object.
+        :return: A list of `Node` object representations.
+        """
+        req.obj_set_defaults()
+        if not req.project_safe and not ctx.is_admin:
+            raise exception.Forbidden()
+
+        query = {'project_safe': req.project_safe}
+        if req.obj_attr_is_set('limit'):
+            query['limit'] = req.limit
+        if req.obj_attr_is_set('marker'):
+            query['marker'] = req.marker
+        if req.obj_attr_is_set('sort') and req.sort is not None:
+            query['sort'] = req.sort
+        if req.obj_attr_is_set('cluster_id') and req.cluster_id:
+            db_cluster = self.cluster_find(ctx, req.cluster_id)
+            query['cluster_id'] = db_cluster.id
+
+        filters = {}
+        if req.obj_attr_is_set('name'):
+            filters['name'] = req.name
+        if req.obj_attr_is_set('status'):
+            filters['status'] = req.status
+        if filters:
+            query['filters'] = filters
+
+        nodes = node_mod.Node.load_all(ctx, **query)
+        return [node.to_dict() for node in nodes]
+
+    @request_context2
     def node_create2(self, ctx, req):
         """Create a node.
 
