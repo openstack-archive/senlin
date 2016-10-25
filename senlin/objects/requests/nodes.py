@@ -49,3 +49,13 @@ class NodeListRequestBody(base.SenlinObject):
             valid_keys=list(consts.NODE_SORT_KEYS), nullable=True),
         'project_safe': fields.FlexibleBooleanField(default=True)
     }
+
+
+@base.SenlinObjectRegistry.register
+class NodeGetRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'show_details': fields.FlexibleBooleanField(nullable=True,
+                                                    default=False)
+    }

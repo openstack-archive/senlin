@@ -1667,6 +1667,24 @@ class EngineService(service.Service):
             res['details'] = node.get_details(context)
         return res
 
+    @request_context2
+    def node_get2(self, ctx, req):
+        """Retrieve the node specified.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the NodeGetRequestBody object.
+        :return: A dictionary containing the detailed information about a node
+                 or an exception of `ResourceNotFound` if no matching node
+                 could be found.
+        """
+        req.obj_set_defaults()
+        db_node = self.node_find(ctx, req.identity)
+        node = node_mod.Node.load(ctx, db_node=db_node)
+        res = node.to_dict()
+        if req.show_details and node.physical_id:
+            res['details'] = node.get_details(ctx)
+        return res
+
     @request_context
     def node_update(self, context, identity, name=None, profile_id=None,
                     role=None, metadata=None):

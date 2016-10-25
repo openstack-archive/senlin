@@ -509,6 +509,75 @@ class NodeTest(base.SenlinTestCase):
         x_node.to_dict.assert_called_once_with()
         self.assertEqual(0, x_node.get_details.call_count)
 
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(service.EngineService, 'node_find')
+    def test_node_get2(self, mock_find, mock_load):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        x_node = mock.Mock(physical_id='PHYSICAL_ID')
+        x_node.to_dict.return_value = {'foo': 'bar'}
+        mock_load.return_value = x_node
+
+        req = orno.NodeGetRequest(identity='NODE1', show_details=False)
+        result = self.eng.node_get2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'foo': 'bar'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'NODE1')
+        mock_load.assert_called_once_with(self.ctx, db_node=x_obj)
+        x_node.to_dict.assert_called_once_with()
+
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(service.EngineService, 'node_find')
+    def test_node_get2_with_details(self, mock_find, mock_load):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        x_node = mock.Mock(physical_id='PHYSICAL_ID')
+        x_node.to_dict.return_value = {'foo': 'bar'}
+        x_node.get_details.return_value = {'info': 'blahblah'}
+        mock_load.return_value = x_node
+
+        req = orno.NodeGetRequest(identity='NODE1', show_details=True)
+        result = self.eng.node_get2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'foo': 'bar', 'details': {'info': 'blahblah'}},
+                         result)
+        mock_find.assert_called_once_with(self.ctx, 'NODE1')
+        mock_load.assert_called_once_with(self.ctx, db_node=x_obj)
+        x_node.to_dict.assert_called_once_with()
+        x_node.get_details.assert_called_once_with(self.ctx)
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    def test_node_get2_node_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='node', id='Bogus')
+
+        req = orno.NodeGetRequest(identity='Bogus', show_details=False)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_get2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual("The node (Bogus) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(service.EngineService, 'node_find')
+    def test_node_get2_no_physical_id(self, mock_find, mock_load):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        x_node = mock.Mock(physical_id=None)
+        x_node.to_dict.return_value = {'foo': 'bar'}
+        mock_load.return_value = x_node
+
+        req = orno.NodeGetRequest(identity='NODE1', show_details=True)
+        result = self.eng.node_get2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'foo': 'bar'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'NODE1')
+        mock_load.assert_called_once_with(self.ctx, db_node=x_obj)
+        x_node.to_dict.assert_called_once_with()
+        self.assertEqual(0, x_node.get_details.call_count)
+
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(node_mod.Node, 'load')

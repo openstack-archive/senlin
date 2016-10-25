@@ -120,3 +120,20 @@ class TestNodeList(test_base.SenlinTestCase):
         sot = nodes.NodeListRequestBody()
         sot.obj_set_defaults()
         self.assertTrue(sot.project_safe)
+
+
+class TestNodeGet(test_base.SenlinTestCase):
+
+    def test_node_get_request_full(self):
+        params = {
+            'identity': 'node-001',
+            'show_details': True,
+        }
+        sot = nodes.NodeGetRequest(**params)
+        self.assertEqual('node-001', sot.identity)
+        self.assertTrue(sot.show_details)
+
+    def test_node_get_request_default(self):
+        sot = nodes.NodeGetRequest()
+        sot.obj_set_defaults()
+        self.assertFalse(sot.show_details)
