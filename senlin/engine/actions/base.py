@@ -19,8 +19,7 @@ from oslo_utils import timeutils
 
 from senlin.common import context as req_context
 from senlin.common import exception
-from senlin.common.i18n import _
-from senlin.common.i18n import _LE
+from senlin.common.i18n import _, _LE
 from senlin.common import utils
 from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import event as EVENT
@@ -520,10 +519,10 @@ def ActionProc(context, action_id):
         # executed.
         result = action.RES_ERROR
         reason = six.text_type(ex)
-        LOG.exception(_('Unexpected exception occurred during action '
-                        '%(action)s (%(id)s) execution: %(reason)s'),
+        LOG.exception(_LE('Unexpected exception occurred during action '
+                          '%(action)s (%(id)s) execution: %(reason)s'),
                       {'action': action.action, 'id': action.id,
-                       'reason': reason})
+                      'reason': reason})
         success = False
     finally:
         # NOTE: locks on action is eventually released here by status update
