@@ -1761,6 +1761,80 @@ class EngineService(service.Service):
         result['action'] = action_id
         return result
 
+    @request_context2
+    def node_create2(self, ctx, req):
+        """Create a node.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the NodeCreateRequestBody object.
+        :return: A dictionary containing the details about the node and the
+                 ID of the action triggered by this operation.
+        """
+        if CONF.name_unique:
+            if node_obj.Node.get_by_name(ctx, req.name):
+                msg = _("The node named (%(name)s) already exists."
+                        ) % {"name": req.name}
+                raise exception.BadRequest(msg=msg)
+
+        LOG.info(_LI("Creating node '%s'."), req.name)
+
+        try:
+            node_profile = self.profile_find(ctx, req.profile_id)
+        except exception.ResourceNotFound as ex:
+            msg = ex.enhance_msg('specified', ex)
+            raise exception.BadRequest(msg=msg)
+
+        req.obj_set_defaults()
+        if req.cluster_id:
+            try:
+                db_cluster = self.cluster_find(ctx, req.cluster_id)
+            except exception.ResourceNotFound as ex:
+                msg = ex.enhance_msg('specified', ex)
+
+                raise exception.BadRequest(msg=msg)
+
+            cluster_id = db_cluster.id
+            if node_profile.id != db_cluster.profile_id:
+                cluster_profile = self.profile_find(ctx,
+                                                    db_cluster.profile_id)
+                if node_profile.type != cluster_profile.type:
+                    msg = _('Node and cluster have different profile type, '
+                            'operation aborted.')
+                    LOG.error(msg)
+                    raise exception.ProfileTypeNotMatch(message=msg)
+            index = cluster_obj.Cluster.get_next_index(ctx, cluster_id)
+        else:
+            cluster_id = ''
+            index = -1
+
+        # Create a node instance
+        kwargs = {
+            'index': index,
+            'role': req.role,
+            'metadata': req.metadata,
+            'user': ctx.user,
+            'project': ctx.project,
+            'domain': ctx.domain,
+        }
+
+        node = node_mod.Node(req.name, node_profile.id, cluster_id, ctx,
+                             **kwargs)
+        node.store(ctx)
+
+        params = {
+            'name': 'node_create_%s' % node.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+        }
+        action_id = action_mod.Action.create(ctx, node.id,
+                                             consts.NODE_CREATE, **params)
+        dispatcher.start_action()
+        LOG.info(_LI("Node create action queued: %s."), action_id)
+
+        result = node.to_dict()
+        result['action'] = action_id
+        return result
+
     @request_context
     def node_get(self, context, identity, show_details=False):
         """Get the details about a node.
