@@ -31,10 +31,6 @@ def get_engine():
     return IMPL.get_engine()
 
 
-def get_session():
-    return IMPL.get_session()
-
-
 # Clusters
 def cluster_create(context, values):
     return IMPL.cluster_create(context, values)

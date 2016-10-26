@@ -58,10 +58,6 @@ def get_engine():
     return _get_main_context_manager().get_legacy_facade().get_engine()
 
 
-def get_session():
-    return _get_main_context_manager().get_legacy_facade().get_session()
-
-
 def session_for_read():
     return _get_main_context_manager().reader.using(_CONTEXT)
 

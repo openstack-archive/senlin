@@ -14,7 +14,6 @@ from oslo_context import context as base_context
 from oslo_utils import encodeutils
 
 from senlin.common import policy
-from senlin.db import api as db_api
 from senlin.drivers import base as driver_base
 
 
@@ -50,9 +49,6 @@ class RequestContext(base_context.RequestContext):
         # we save an additional 'project' internally for use
         self.project = project
 
-        # Session for DB access
-        self._session = None
-
         self.auth_url = auth_url
         self.trusts = trusts
 
@@ -73,12 +69,6 @@ class RequestContext(base_context.RequestContext):
                                            do_raise=False)
         else:
             self.is_admin = is_admin
-
-    @property
-    def session(self):
-        if self._session is None:
-            self._session = db_api.get_session()
-        return self._session
 
     def to_dict(self):
         d = super(RequestContext, self).to_dict()
