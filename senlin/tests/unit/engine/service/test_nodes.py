@@ -877,8 +877,8 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_delete_improper_status(self, mock_find):
-        for bad_status in [node_mod.Node.CREATING, node_mod.Node.UPDATING,
-                           node_mod.Node.DELETING, node_mod.Node.RECOVERING]:
+        for bad_status in [consts.NS_CREATING, consts.NS_UPDATING,
+                           consts.NS_DELETING, consts.NS_RECOVERING]:
             fake_node = mock.Mock(id='12345678AB', status=bad_status)
             mock_find.return_value = fake_node
             ex = self.assertRaises(rpc.ExpectedException,
