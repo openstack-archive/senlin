@@ -32,7 +32,7 @@ class Node(object):
     executed.
     """
 
-    statuses = (
+    STATUSES = (
         INIT, ACTIVE, ERROR, WARNING, CREATING, UPDATING, DELETING,
         RECOVERING
     ) = (
