@@ -189,7 +189,6 @@ class Action(object):
     def _from_object(cls, obj):
         """Construct an action from database object.
 
-        :param context: the context used for DB operations;
         :param obj: a DB action object that contains all fields.
         :return: An `Action` object deserialized from the DB action object.
         """
