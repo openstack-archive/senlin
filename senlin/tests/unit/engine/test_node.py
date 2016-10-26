@@ -14,6 +14,7 @@ import mock
 from oslo_utils import uuidutils
 import six
 
+from senlin.common import consts
 from senlin.common import exception
 from senlin.common import utils as common_utils
 from senlin.engine import node as nodem
@@ -237,20 +238,20 @@ class TestNode(base.SenlinTestCase):
     def test_node_set_status(self):
         node = nodem.Node('node1', PROFILE_ID, CLUSTER_ID, self.context)
         node.store(self.context)
-        self.assertEqual(nodem.Node.INIT, node.status)
+        self.assertEqual(nodem.consts.NS_INIT, node.status)
         self.assertIsNotNone(node.init_at)
         self.assertIsNone(node.created_at)
         self.assertIsNone(node.updated_at)
 
         # create
-        node.set_status(self.context, node.CREATING,
+        node.set_status(self.context, consts.NS_CREATING,
                         reason='Creation in progress')
         self.assertEqual('CREATING', node.status)
         self.assertEqual('Creation in progress', node.status_reason)
         self.assertIsNone(node.created_at)
         self.assertIsNone(node.updated_at)
 
-        node.set_status(self.context, node.ACTIVE,
+        node.set_status(self.context, consts.NS_ACTIVE,
                         reason='Creation succeeded')
         self.assertEqual('ACTIVE', node.status)
         self.assertEqual('Creation succeeded', node.status_reason)
@@ -258,27 +259,27 @@ class TestNode(base.SenlinTestCase):
         self.assertIsNone(node.updated_at)
 
         # update
-        node.set_status(self.context, node.UPDATING,
+        node.set_status(self.context, consts.NS_UPDATING,
                         reason='Update in progress')
         self.assertEqual('UPDATING', node.status)
         self.assertEqual('Update in progress', node.status_reason)
         self.assertIsNotNone(node.created_at)
         self.assertIsNone(node.updated_at)
 
-        node.set_status(self.context, node.ACTIVE,
+        node.set_status(self.context, consts.NS_ACTIVE,
                         reason='Update succeeded')
         self.assertEqual('ACTIVE', node.status)
         self.assertEqual('Update succeeded', node.status_reason)
         self.assertIsNotNone(node.created_at)
         self.assertIsNotNone(node.updated_at)
 
-        node.set_status(self.context, node.ACTIVE)
+        node.set_status(self.context, consts.NS_ACTIVE)
         self.assertEqual('ACTIVE', node.status)
         self.assertIsNotNone(node.created_at)
         self.assertIsNotNone(node.updated_at)
 
         # delete
-        node.set_status(self.context, node.DELETING,
+        node.set_status(self.context, consts.NS_DELETING,
                         reason='Deletion in progress')
         self.assertEqual('DELETING', node.status)
         self.assertEqual('Deletion in progress', node.status_reason)
@@ -316,9 +317,9 @@ class TestNode(base.SenlinTestCase):
         mock_create.return_value = physical_id
         res = node.do_create(self.context)
         self.assertTrue(res)
-        mock_status.assert_any_call(self.context, node.CREATING,
+        mock_status.assert_any_call(self.context, consts.NS_CREATING,
                                     'Creation in progress')
-        mock_status.assert_any_call(self.context, node.ACTIVE,
+        mock_status.assert_any_call(self.context, consts.NS_ACTIVE,
                                     'Creation succeeded',
                                     physical_id=physical_id)
 
@@ -339,9 +340,9 @@ class TestNode(base.SenlinTestCase):
         res = node.do_create(self.context)
 
         self.assertFalse(res)
-        mock_status.assert_any_call(self.context, node.CREATING,
+        mock_status.assert_any_call(self.context, consts.NS_CREATING,
                                     'Creation in progress')
-        mock_status.assert_any_call(self.context, node.ERROR,
+        mock_status.assert_any_call(self.context, consts.NS_ERROR,
                                     'Failed in creating PROFILE: Boom.')
 
     @mock.patch.object(node_obj.Node, 'delete')
@@ -357,7 +358,7 @@ class TestNode(base.SenlinTestCase):
         self.assertTrue(res)
         mock_delete.assert_called_once_with(self.context, node)
         mock_db_delete.assert_called_once_with(mock.ANY, node.id)
-        mock_status.assert_called_once_with(self.context, node.DELETING,
+        mock_status.assert_called_once_with(self.context, consts.NS_DELETING,
                                             'Deletion in progress')
 
     @mock.patch.object(node_obj.Node, 'delete')
@@ -384,8 +385,9 @@ class TestNode(base.SenlinTestCase):
         self.assertFalse(res)
         mock_delete.assert_called_once_with(self.context, node)
         mock_status.assert_has_calls([
-            mock.call(self.context, node.DELETING, 'Deletion in progress'),
-            mock.call(self.context, node.ERROR,
+            mock.call(self.context, consts.NS_DELETING,
+                      'Deletion in progress'),
+            mock.call(self.context, consts.NS_ERROR,
                       'Failed in deleting PROFILE NODE_ID: Too Bad.')
         ])
 
@@ -407,10 +409,10 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(new_id, node.rt['profile'].id)
         mock_db.assert_has_calls([
             mock.call(self.context, node.id,
-                      {'status': node.UPDATING,
+                      {'status': consts.NS_UPDATING,
                        'status_reason': 'Update in progress'}),
             mock.call(self.context, node.id,
-                      {'status': node.ACTIVE,
+                      {'status': consts.NS_ACTIVE,
                        'status_reason': 'Update succeeded',
                        'profile_id': new_id,
                        'updated_at': mock.ANY})
@@ -572,7 +574,7 @@ class TestNode(base.SenlinTestCase):
 
         self.assertTrue(res)
         mock_check.assert_called_once_with(self.context, node)
-        mock_status.assert_called_once_with(self.context, node.ACTIVE,
+        mock_status.assert_called_once_with(self.context, consts.NS_ACTIVE,
                                             'Check: Node is ACTIVE.')
 
     @mock.patch.object(nodem.Node, 'set_status')
@@ -585,7 +587,7 @@ class TestNode(base.SenlinTestCase):
         res = node.do_check(self.context)
 
         self.assertFalse(res)
-        mock_status.assert_called_once_with(self.context, node.ERROR,
+        mock_status.assert_called_once_with(self.context, consts.NS_ERROR,
                                             'Check: Node is not ACTIVE.')
 
     @mock.patch.object(nodem.Node, 'set_status')
@@ -603,7 +605,7 @@ class TestNode(base.SenlinTestCase):
         self.assertFalse(res)
         mock_status.assert_called_once_with(
             self.context,
-            node.ERROR,
+            consts.NS_ERROR,
             'Failed in checking server %s: failed get.' % node.physical_id)
 
     def test_node_check_no_physical_id(self):
@@ -637,7 +639,8 @@ class TestNode(base.SenlinTestCase):
         mock_status.assert_has_calls([
             mock.call(self.context, 'RECOVERING',
                       reason='Recover in progress'),
-            mock.call(self.context, node.ACTIVE, reason='Recover succeeded',
+            mock.call(self.context, consts.NS_ACTIVE,
+                      reason='Recover succeeded',
                       physical_id=new_id)])
 
     @mock.patch.object(nodem.Node, 'set_status')
@@ -656,7 +659,7 @@ class TestNode(base.SenlinTestCase):
         mock_status.assert_has_calls([
             mock.call(self.context, 'RECOVERING',
                       reason='Recover in progress'),
-            mock.call(self.context, node.ACTIVE,
+            mock.call(self.context, consts.NS_ACTIVE,
                       reason='Recover succeeded')])
 
     @mock.patch.object(nodem.Node, 'set_status')
@@ -672,7 +675,7 @@ class TestNode(base.SenlinTestCase):
         mock_status.assert_has_calls([
             mock.call(self.context, 'RECOVERING',
                       reason='Recover in progress'),
-            mock.call(self.context, node.ERROR,
+            mock.call(self.context, consts.NS_ERROR,
                       reason='Recover failed')])
 
     def test_node_recover_no_physical_id(self):

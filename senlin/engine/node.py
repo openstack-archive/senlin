@@ -14,6 +14,7 @@ from oslo_log import log as logging
 from oslo_utils import timeutils
 import six
 
+from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.common.i18n import _LE
@@ -31,14 +32,6 @@ class Node(object):
     checkings are supposed to be done before/after/during an action is
     executed.
     """
-
-    STATUSES = (
-        INIT, ACTIVE, ERROR, WARNING, CREATING, UPDATING, DELETING,
-        RECOVERING
-    ) = (
-        'INIT', 'ACTIVE', 'ERROR', 'WARNING', 'CREATING', 'UPDATING',
-        'DELETING', 'RECOVERING'
-    )
 
     def __init__(self, name, profile_id, cluster_id=None, context=None,
                  **kwargs):
@@ -66,7 +59,7 @@ class Node(object):
         self.created_at = kwargs.get('created_at', None)
         self.updated_at = kwargs.get('updated_at', None)
 
-        self.status = kwargs.get('status', self.INIT)
+        self.status = kwargs.get('status', consts.NS_INIT)
         self.status_reason = kwargs.get('status_reason', 'Initializing')
         self.data = kwargs.get('data', {})
         self.metadata = kwargs.get('metadata', {})
@@ -223,9 +216,9 @@ class Node(object):
         """
         values = {}
         now = timeutils.utcnow(True)
-        if status == self.ACTIVE and self.status == self.CREATING:
+        if status == consts.NS_ACTIVE and self.status == consts.NS_CREATING:
             self.created_at = values['created_at'] = now
-        elif status == self.ACTIVE and self.status == self.UPDATING:
+        elif status == consts.NS_ACTIVE and self.status == consts.NS_UPDATING:
             # TODO(Qiming): update_at should be changed unconditionally
             self.updated_at = values['updated_at'] = now
 
@@ -255,18 +248,18 @@ class Node(object):
         no.Node.update(context, self.id, values)
 
     def do_create(self, context):
-        if self.status != self.INIT:
+        if self.status != consts.NS_INIT:
             LOG.error(_LE('Node is in status "%s"'), self.status)
             return False
 
-        self.set_status(context, self.CREATING, _('Creation in progress'))
+        self.set_status(context, consts.NS_CREATING, _('Creation in progress'))
         try:
             physical_id = pb.Profile.create_object(context, self)
         except exc.EResourceCreation as ex:
-            self.set_status(context, self.ERROR, six.text_type(ex))
+            self.set_status(context, consts.NS_ERROR, six.text_type(ex))
             return False
 
-        self.set_status(context, self.ACTIVE, _('Creation succeeded'),
+        self.set_status(context, consts.NS_ACTIVE, _('Creation succeeded'),
                         physical_id=physical_id)
         return True
 
@@ -276,7 +269,7 @@ class Node(object):
             return True
 
         # TODO(Qiming): check if actions are working on it and can be canceled
-        self.set_status(context, self.DELETING, 'Deletion in progress')
+        self.set_status(context, consts.NS_DELETING, 'Deletion in progress')
         try:
             # The following operation always return True unless exception
             # is thrown
@@ -284,7 +277,7 @@ class Node(object):
             no.Node.delete(context, self.id)
             return True
         except exc.EResourceDeletion as ex:
-            self.set_status(context, self.ERROR, six.text_type(ex))
+            self.set_status(context, consts.NS_ERROR, six.text_type(ex))
             return False
 
     def do_update(self, context, params):
@@ -297,7 +290,7 @@ class Node(object):
         if not self.physical_id:
             return False
 
-        self.set_status(context, self.UPDATING, 'Update in progress')
+        self.set_status(context, consts.NS_UPDATING, 'Update in progress')
 
         new_profile_id = params.pop('new_profile_id', None)
         res = True
@@ -306,7 +299,7 @@ class Node(object):
                 res = pb.Profile.update_object(context, self, new_profile_id,
                                                **params)
             except exc.EResourceUpdate as ex:
-                self.set_status(context, self.ERROR, six.text_type(ex))
+                self.set_status(context, consts.NS_ERROR, six.text_type(ex))
                 return False
 
         # update was not successful
@@ -320,7 +313,7 @@ class Node(object):
             self.rt['profile'] = pb.Profile.load(context,
                                                  profile_id=new_profile_id)
 
-        self.set_status(context, self.ACTIVE, 'Update succeeded', **props)
+        self.set_status(context, consts.NS_ACTIVE, 'Update succeeded', **props)
 
         return True
 
@@ -369,14 +362,14 @@ class Node(object):
         try:
             res = pb.Profile.check_object(context, self)
         except exc.EResourceOperation as ex:
-            self.set_status(context, self.ERROR, six.text_type(ex))
+            self.set_status(context, consts.NS_ERROR, six.text_type(ex))
             return False
 
         if res:
-            self.set_status(context, self.ACTIVE,
+            self.set_status(context, consts.NS_ACTIVE,
                             _("Check: Node is ACTIVE."))
         else:
-            self.set_status(context, self.ERROR,
+            self.set_status(context, consts.NS_ERROR,
                             _("Check: Node is not ACTIVE."))
 
         return res
@@ -389,23 +382,24 @@ class Node(object):
         if not self.physical_id:
             return False
 
-        self.set_status(context, self.RECOVERING,
+        self.set_status(context, consts.NS_RECOVERING,
                         reason=_('Recover in progress'))
 
         try:
             physical_id = pb.Profile.recover_object(context, self, **options)
         except exc.EResourceOperation as ex:
-            self.set_status(context, self.ERROR, reason=six.text_type(ex))
+            self.set_status(context, consts.NS_ERROR, reason=six.text_type(ex))
             return False
 
         if not physical_id:
-            self.set_status(context, self.ERROR, reason=_('Recover failed'))
+            self.set_status(context, consts.NS_ERROR,
+                            reason=_('Recover failed'))
             return False
 
         params = {}
         if self.physical_id != physical_id:
             params['physical_id'] = physical_id
-        self.set_status(context, self.ACTIVE, reason=_('Recover succeeded'),
-                        **params)
+        self.set_status(context, consts.NS_ACTIVE,
+                        reason=_('Recover succeeded'), **params)
 
         return True

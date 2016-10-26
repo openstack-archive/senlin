@@ -533,7 +533,7 @@ class ClusterAction(base.Action):
                                 ) % {'r': replacement,
                                      'c': replacement_node.cluster_id})
                 continue
-            if replacement_node.status != node_mod.Node.ACTIVE:
+            if replacement_node.status != consts.NS_ACTIVE:
                 errors.append(_('Node %s is not in ACTIVE status.'
                                 ) % replacement)
                 continue

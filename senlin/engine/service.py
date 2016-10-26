@@ -1032,7 +1032,7 @@ class EngineService(service.Service):
             try:
                 db_node = self.node_find(context, node)
                 # Skip node in the same cluster already
-                if db_node.status != node_mod.Node.ACTIVE:
+                if db_node.status != node_mod.consts.NS_ACTIVE:
                     bad_nodes.append(db_node.id)
                 elif len(db_node.cluster_id) != 0:
                     owned_nodes.append(db_node.id)
@@ -1179,7 +1179,7 @@ class EngineService(service.Service):
                 not_member.append(old_node)
             elif db_new_node.cluster_id:
                 owned_nodes.append(new_node)
-            elif db_new_node.status != node_mod.Node.ACTIVE:
+            elif db_new_node.status != node_mod.consts.NS_ACTIVE:
                 bad_nodes.append(new_node)
             else:
                 # check the profile type
@@ -1936,8 +1936,10 @@ class EngineService(service.Service):
 
         node = self.node_find(context, identity)
 
-        if node.status in [node_mod.Node.CREATING, node_mod.Node.UPDATING,
-                           node_mod.Node.DELETING, node_mod.Node.RECOVERING]:
+        if node.status in [node_mod.consts.NS_CREATING,
+                           node_mod.consts.NS_UPDATING,
+                           node_mod.consts.NS_DELETING,
+                           node_mod.consts.NS_RECOVERING]:
             raise exception.ActionInProgress(type='node', id=identity,
                                              status=node.status)
 
