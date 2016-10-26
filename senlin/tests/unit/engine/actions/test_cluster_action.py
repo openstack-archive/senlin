@@ -12,6 +12,7 @@
 
 import mock
 
+from senlin.common import consts
 from senlin.common import scaleutils
 from senlin.engine.actions import base as ab
 from senlin.engine.actions import cluster_action as ca
@@ -312,7 +313,7 @@ class ClusterActionTest(base.SenlinTestCase):
             action.context, action.CLUSTER_CREATE, created_at=mock.ANY)
 
     def test_do_create_failed_create_cluster(self, mock_load):
-        cluster = mock.Mock(id='FAKE_CLUSTER', ERROR='ERROR')
+        cluster = mock.Mock(id='FAKE_CLUSTER')
         cluster.do_create.return_value = False
         mock_load.return_value = cluster
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
@@ -326,7 +327,7 @@ class ClusterActionTest(base.SenlinTestCase):
             action.context, 'ERROR', 'Cluster creation failed.')
 
     def test_do_create_failed_create_nodes(self, mock_load):
-        cluster = mock.Mock(id='FAKE_ID', ERROR='ERROR')
+        cluster = mock.Mock(id='FAKE_ID',)
         cluster.do_create.return_value = True
         mock_load.return_value = cluster
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
@@ -1716,7 +1717,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action._update_cluster_size(15)
 
         cluster.set_status.assert_called_once_with(
-            action.context, cluster.RESIZING, 'Cluster resize started.',
+            action.context, consts.CS_RESIZING, 'Cluster resize started.',
             desired_capacity=15, min_size=1, max_size=20)
 
     def test__update_cluster_size_minimum(self, mock_load):
@@ -1728,7 +1729,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action._update_cluster_size(15)
 
         cluster.set_status.assert_called_once_with(
-            action.context, cluster.RESIZING, 'Cluster resize started.',
+            action.context, consts.CS_RESIZING, 'Cluster resize started.',
             desired_capacity=15)
 
     @mock.patch.object(no.Node, 'count_by_cluster')
@@ -1962,7 +1963,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_count.assert_called_once_with(action.context, 'CID')
         mock_create.assert_called_once_with(1)
         cluster.set_status.assert_called_once_with(
-            action.context, cluster.RESIZING, 'Cluster scale out started.',
+            action.context, consts.CS_RESIZING, 'Cluster scale out started.',
             desired_capacity=6)
         cluster.eval_status.assert_called_once_with(
             action.context, action.CLUSTER_SCALE_OUT)
@@ -1989,7 +1990,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_count.assert_called_once_with(action.context, 'CID')
         mock_create.assert_called_once_with(3)
         cluster.set_status.assert_called_once_with(
-            action.context, cluster.RESIZING, 'Cluster scale out started.',
+            action.context, consts.CS_RESIZING, 'Cluster scale out started.',
             desired_capacity=10)
         cluster.eval_status.assert_called_once_with(
             action.context, action.CLUSTER_SCALE_OUT)
@@ -2017,7 +2018,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_count.assert_called_once_with(action.context, 'CID')
         mock_create.assert_called_once_with(2)
         cluster.set_status.assert_called_once_with(
-            action.context, cluster.RESIZING, 'Cluster scale out started.',
+            action.context, consts.CS_RESIZING, 'Cluster scale out started.',
             desired_capacity=10)
         cluster.eval_status.assert_called_once_with(
             action.context, action.CLUSTER_SCALE_OUT)
@@ -2095,7 +2096,8 @@ class ClusterActionTest(base.SenlinTestCase):
             self.assertEqual('Too hot to work!', res_msg)
 
             cluster.set_status.assert_called_once_with(
-                action.context, cluster.RESIZING, 'Cluster scale out started.',
+                action.context, consts.CS_RESIZING,
+                'Cluster scale out started.',
                 desired_capacity=6)
             cluster.set_status.reset_mock()
             cluster.eval_status.assert_called_once_with(
@@ -2141,7 +2143,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_delete.assert_called_once_with(mock.ANY)
         mock_select.assert_called_once_with(cluster.nodes, 1)
         cluster.set_status.assert_called_once_with(
-            action.context, cluster.RESIZING, 'Cluster scale in started.',
+            action.context, consts.CS_RESIZING, 'Cluster scale in started.',
             desired_capacity=9)
         cluster.eval_status.assert_called_once_with(
             action.context, action.CLUSTER_SCALE_IN)
@@ -2179,7 +2181,7 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertIn('NODE_ID_3', mock_delete.call_args[0][0])
         self.assertIn('NODE_ID_4', mock_delete.call_args[0][0])
         cluster.set_status.assert_called_once_with(
-            action.context, cluster.RESIZING, 'Cluster scale in started.',
+            action.context, consts.CS_RESIZING, 'Cluster scale in started.',
             desired_capacity=3)
         cluster.eval_status.assert_called_once_with(
             action.context, action.CLUSTER_SCALE_IN)
@@ -2209,7 +2211,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_delete.assert_called_once_with(mock.ANY)
         mock_select.assert_called_once_with(cluster.nodes, 3)
         cluster.set_status.assert_called_once_with(
-            action.context, cluster.RESIZING, 'Cluster scale in started.',
+            action.context, consts.CS_RESIZING, 'Cluster scale in started.',
             desired_capacity=8)
         cluster.eval_status.assert_called_once_with(
             action.context, action.CLUSTER_SCALE_IN)
@@ -2285,7 +2287,8 @@ class ClusterActionTest(base.SenlinTestCase):
             self.assertEqual(result, res_code)
             self.assertEqual('Too cold to work!', res_msg)
             cluster.set_status.assert_called_once_with(
-                action.context, cluster.RESIZING, 'Cluster scale in started.',
+                action.context, consts.CS_RESIZING,
+                'Cluster scale in started.',
                 desired_capacity=3)
             cluster.eval_status.assert_called_once_with(
                 action.context, action.CLUSTER_SCALE_IN)

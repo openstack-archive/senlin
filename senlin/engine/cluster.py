@@ -39,14 +39,6 @@ class Cluster(object):
     executed.
     """
 
-    STATUSES = (
-        INIT, ACTIVE, CREATING, UPDATING, RESIZING, DELETING,
-        CHECKING, RECOVERING, CRITICAL, ERROR, WARNING,
-    ) = (
-        'INIT', 'ACTIVE', 'CREATING', 'UPDATING', 'RESIZING', 'DELETING',
-        'CHECKING', 'RECOVERING', 'CRITICAL', 'ERROR', 'WARNING',
-    )
-
     def __init__(self, name, desired_capacity, profile_id,
                  context=None, **kwargs):
         '''Initialize a cluster object.
@@ -76,7 +68,7 @@ class Cluster(object):
         self.timeout = (kwargs.get('timeout') or
                         cfg.CONF.default_action_timeout)
 
-        self.status = kwargs.get('status', self.INIT)
+        self.status = kwargs.get('status', consts.CS_INIT)
         self.status_reason = kwargs.get('status_reason', 'Initializing')
         self.data = kwargs.get('data', {})
         self.metadata = kwargs.get('metadata') or {}
@@ -247,11 +239,11 @@ class Cluster(object):
 
         values = {}
         now = timeutils.utcnow(True)
-        if status == self.ACTIVE and self.status == self.CREATING:
+        if status == consts.CS_ACTIVE and self.status == consts.CS_CREATING:
             self.created_at = now
             values['created_at'] = now
-        elif (status == self.ACTIVE and
-              self.status in (self.UPDATING, self.RESIZING)):
+        elif (status == consts.CS_ACTIVE and
+              self.status in (consts.CS_UPDATING, consts.CS_RESIZING)):
             self.updated_at = now
             values['updated_at'] = now
 
@@ -288,11 +280,11 @@ class Cluster(object):
 
         Set cluster status to CREATING.
         '''
-        if self.status != self.INIT:
+        if self.status != consts.CS_INIT:
             LOG.error(_LE('Cluster is in status "%s"'), self.status)
             return False
 
-        self.set_status(context, self.CREATING, _('Creation in progress'))
+        self.set_status(context, consts.CS_CREATING, _('Creation in progress'))
         return True
 
     def do_delete(self, context, **kwargs):
@@ -306,7 +298,7 @@ class Cluster(object):
 
         This method is intended to be called only from an action.
         '''
-        self.set_status(context, self.UPDATING, _('Update in progress'))
+        self.set_status(context, consts.CS_UPDATING, _('Update in progress'))
         return True
 
     def do_check(self, context, **kwargs):
@@ -314,7 +306,7 @@ class Cluster(object):
 
         Set cluster status to CHECKING.
         """
-        self.set_status(context, self.CHECKING, _('Check in progress'))
+        self.set_status(context, consts.CS_CHECKING, _('Check in progress'))
         return True
 
     def do_recover(self, context, **kwargs):
@@ -322,7 +314,8 @@ class Cluster(object):
 
         Set cluster status to RECOVERING.
         '''
-        self.set_status(context, self.RECOVERING, _('Recovery in progress'))
+        self.set_status(context, consts.CS_RECOVERING,
+                        _('Recovery in progress'))
         return True
 
     def attach_policy(self, ctx, policy_id, values):
@@ -547,21 +540,21 @@ class Cluster(object):
 
         values = params or {}
         if active_count < min_size:
-            status = self.ERROR
+            status = consts.CS_ERROR
             reason = _("%(o)s: number of active nodes is below min_size "
                        "(%(n)d).") % {'o': operation, 'n': min_size}
         elif active_count < desired:
-            status = self.WARNING
+            status = consts.CS_WARNING
             reason = _("%(o)s: number of active nodes is below "
                        "desired_capacity "
                        "(%(n)d).") % {'o': operation, 'n': desired}
         elif max_size < 0 or active_count <= max_size:
-            status = self.ACTIVE
+            status = consts.CS_ACTIVE
             reason = _("%(o)s: number of active nodes is above "
                        "desired_capacity "
                        "(%(n)d).") % {'o': operation, 'n': desired}
         else:
-            status = self.WARNING
+            status = consts.CS_WARNING
             reason = _("%(o)s: number of active nodes is above max_size "
                        "(%(n)d).") % {'o': operation, 'n': max_size}
 

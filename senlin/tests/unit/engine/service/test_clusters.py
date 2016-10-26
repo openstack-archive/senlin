@@ -190,8 +190,8 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_node_delete_improper_status(self, mock_find):
-        for bad_status in [cm.Cluster.CREATING, cm.Cluster.UPDATING,
-                           cm.Cluster.DELETING, cm.Cluster.RECOVERING]:
+        for bad_status in [consts.CS_CREATING, consts.CS_UPDATING,
+                           consts.CS_DELETING, consts.CS_RECOVERING]:
             fake_cluster = mock.Mock(id='12345678AB', status=bad_status)
             mock_find.return_value = fake_cluster
             ex = self.assertRaises(rpc.ExpectedException,
@@ -1111,7 +1111,7 @@ class ClusterTest(base.SenlinTestCase):
     def test_cluster_update2_cluster_bad_status(self, mock_find, mock_load):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
-        x_cluster = mock.Mock(status='ERROR', ERROR='ERROR')
+        x_cluster = mock.Mock(status='ERROR')
         mock_load.return_value = x_cluster
         req = {'identity': 'CLUSTER', 'name': 'new-name'}
         self._prepare_request(req)
@@ -1134,7 +1134,7 @@ class ClusterTest(base.SenlinTestCase):
                                                mock_profile):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
-        mock_load.return_value = mock.Mock(status='ACTIVE', ERROR='ERROR',
+        mock_load.return_value = mock.Mock(status='ACTIVE',
                                            profile_id='OLD_ID')
         mock_profile.side_effect = [
             mock.Mock(type='FAKE_TYPE', id='OLD_ID'),
@@ -1164,7 +1164,7 @@ class ClusterTest(base.SenlinTestCase):
                                                mock_profile):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
-        mock_load.return_value = mock.Mock(status='ACTIVE', ERROR='ERROR',
+        mock_load.return_value = mock.Mock(status='ACTIVE',
                                            profile_id='OLD_ID')
         mock_profile.side_effect = [
             mock.Mock(type='FAKE_TYPE', id='OLD_ID'),
@@ -1267,7 +1267,7 @@ class ClusterTest(base.SenlinTestCase):
     def test_cluster_update2_no_property_updated(self, mock_find, mock_load):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
-        mock_load.return_value = mock.Mock(status='ACTIVE', ERROR='ERROR',
+        mock_load.return_value = mock.Mock(status='ACTIVE',
                                            profile_id='OLD_ID')
         req = orco.ClusterUpdateRequest(identity='CLUSTER')
 

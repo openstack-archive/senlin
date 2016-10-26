@@ -15,6 +15,7 @@ from oslo_config import cfg
 from oslo_utils import timeutils
 import six
 
+from senlin.common import consts
 from senlin.common import exception
 from senlin.engine import cluster as cm
 from senlin.engine import cluster_policy as cpm
@@ -304,9 +305,9 @@ class TestCluster(base.SenlinTestCase):
         cluster = cm.Cluster('test-cluster', 0, PROFILE_ID,
                              id=CLUSTER_ID, status='CREATING')
 
-        cluster.set_status(self.context, cluster.ACTIVE, 'Cluster created')
+        cluster.set_status(self.context, consts.CS_ACTIVE, 'Cluster created')
 
-        self.assertEqual(cluster.ACTIVE, cluster.status)
+        self.assertEqual(consts.CS_ACTIVE, cluster.status)
         self.assertEqual('Cluster created', cluster.status_reason)
         self.assertIsNotNone(cluster.created_at)
         self.assertIsNone(cluster.updated_at)
@@ -315,7 +316,7 @@ class TestCluster(base.SenlinTestCase):
             self.context, CLUSTER_ID,
             {
                 'created_at': mock.ANY,
-                'status': cluster.ACTIVE,
+                'status': consts.CS_ACTIVE,
                 'status_reason': 'Cluster created'
             }
         )
@@ -325,9 +326,9 @@ class TestCluster(base.SenlinTestCase):
         cluster = cm.Cluster('test-cluster', 0, PROFILE_ID,
                              id=CLUSTER_ID, status='UPDATING')
 
-        cluster.set_status(self.context, cluster.ACTIVE, 'Cluster updated')
+        cluster.set_status(self.context, consts.CS_ACTIVE, 'Cluster updated')
 
-        self.assertEqual(cluster.ACTIVE, cluster.status)
+        self.assertEqual(consts.CS_ACTIVE, cluster.status)
         self.assertEqual('Cluster updated', cluster.status_reason)
         self.assertIsNotNone(cluster.updated_at)
 
@@ -336,9 +337,9 @@ class TestCluster(base.SenlinTestCase):
         cluster = cm.Cluster('test-cluster', 0, PROFILE_ID,
                              id=CLUSTER_ID, status='RESIZING')
 
-        cluster.set_status(self.context, cluster.ACTIVE, 'Cluster resized')
+        cluster.set_status(self.context, consts.CS_ACTIVE, 'Cluster resized')
 
-        self.assertEqual(cluster.ACTIVE, cluster.status)
+        self.assertEqual(consts.CS_ACTIVE, cluster.status)
         self.assertEqual('Cluster resized', cluster.status_reason)
         self.assertIsNotNone(cluster.updated_at)
 
@@ -352,10 +353,10 @@ class TestCluster(base.SenlinTestCase):
                              status='UPDATING')
 
         new_profile_id = 'a64f0b03-4b77-49d5-89e0-7bcc77c4ce67'
-        cluster.set_status(self.context, cluster.ACTIVE, 'Cluster updated',
+        cluster.set_status(self.context, consts.CS_ACTIVE, 'Cluster updated',
                            profile_id=new_profile_id)
 
-        self.assertEqual(cluster.ACTIVE, cluster.status)
+        self.assertEqual(consts.CS_ACTIVE, cluster.status)
         self.assertEqual('Cluster updated', cluster.status_reason)
         self.assertIsNotNone(cluster.updated_at)
         self.assertEqual(x_profile, cluster.rt['profile'])
@@ -365,7 +366,7 @@ class TestCluster(base.SenlinTestCase):
         mock_update.assert_called_once_with(
             self.context, CLUSTER_ID,
             {
-                'status': cluster.ACTIVE,
+                'status': consts.CS_ACTIVE,
                 'status_reason': 'Cluster updated',
                 'profile_id': new_profile_id,
                 'updated_at': mock.ANY,
@@ -378,12 +379,12 @@ class TestCluster(base.SenlinTestCase):
                              status='UPDATING',
                              status_reason='Update in progress')
 
-        cluster.set_status(self.context, cluster.WARNING)
+        cluster.set_status(self.context, consts.CS_WARNING)
 
-        self.assertEqual(cluster.WARNING, cluster.status)
+        self.assertEqual(consts.CS_WARNING, cluster.status)
         self.assertEqual('Update in progress', cluster.status_reason)
         mock_update.assert_called_once_with(self.context, CLUSTER_ID,
-                                            {'status': cluster.WARNING})
+                                            {'status': consts.CS_WARNING})
 
     @mock.patch.object(co.Cluster, 'update')
     def test_update_dependents(self, mock_update):
@@ -402,11 +403,11 @@ class TestCluster(base.SenlinTestCase):
 
         self.assertTrue(res)
         mock_status.assert_called_once_with(
-            self.context, cluster.CREATING, 'Creation in progress')
+            self.context, consts.CS_CREATING, 'Creation in progress')
 
     def test_do_create_wrong_status(self):
         cluster = cm.Cluster('test-cluster', 0, PROFILE_ID)
-        cluster.status = cluster.ACTIVE
+        cluster.status = consts.CS_ACTIVE
 
         res = cluster.do_create(self.context)
 
@@ -430,7 +431,7 @@ class TestCluster(base.SenlinTestCase):
 
         res = cluster.do_update(self.context)
 
-        mock_status.assert_called_once_with(self.context, cluster.UPDATING,
+        mock_status.assert_called_once_with(self.context, consts.CS_UPDATING,
                                             'Update in progress')
         self.assertTrue(res)
 
@@ -440,7 +441,7 @@ class TestCluster(base.SenlinTestCase):
 
         res = cluster.do_check(self.context)
 
-        mock_status.assert_called_once_with(self.context, cluster.CHECKING,
+        mock_status.assert_called_once_with(self.context, consts.CS_CHECKING,
                                             'Check in progress')
         self.assertTrue(res)
 
@@ -450,7 +451,7 @@ class TestCluster(base.SenlinTestCase):
 
         res = cluster.do_recover(self.context)
 
-        mock_status.assert_called_once_with(self.context, cluster.RECOVERING,
+        mock_status.assert_called_once_with(self.context, consts.CS_RECOVERING,
                                             'Recovery in progress')
         self.assertTrue(res)
 
@@ -856,7 +857,7 @@ class TestCluster(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.context, cluster_id=CLUSTER_ID)
         mock_update.assert_called_once_with(
             self.context, CLUSTER_ID,
-            {'status': cluster.ERROR,
+            {'status': consts.CS_ERROR,
              'status_reason': 'TEST: number of active nodes is below '
                               'min_size (2).'})
 
@@ -875,7 +876,7 @@ class TestCluster(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.context, cluster_id=CLUSTER_ID)
         mock_update.assert_called_once_with(
             self.context, CLUSTER_ID,
-            {'status': cluster.WARNING,
+            {'status': consts.CS_WARNING,
              'status_reason': 'TEST: number of active nodes is below '
                               'desired_capacity (5).'})
 
@@ -894,7 +895,7 @@ class TestCluster(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.context, cluster_id=CLUSTER_ID)
         mock_update.assert_called_once_with(
             self.context, CLUSTER_ID,
-            {'status': cluster.ACTIVE,
+            {'status': consts.CS_ACTIVE,
              'status_reason': 'TEST: number of active nodes is above '
                               'desired_capacity (2).'})
 
@@ -913,7 +914,7 @@ class TestCluster(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.context, cluster_id=CLUSTER_ID)
         mock_update.assert_called_once_with(
             self.context, CLUSTER_ID,
-            {'status': cluster.WARNING,
+            {'status': consts.CS_WARNING,
              'status_reason': 'TEST: number of active nodes is above '
                               'max_size (2).'})
 
@@ -932,7 +933,7 @@ class TestCluster(base.SenlinTestCase):
         mock_update.assert_called_once_with(
             self.context, CLUSTER_ID,
             {'desired_capacity': 2,
-             'status': cluster.WARNING,
+             'status': consts.CS_WARNING,
              'status_reason': 'TEST: number of active nodes is below '
                               'desired_capacity (2).'})
 
@@ -951,7 +952,7 @@ class TestCluster(base.SenlinTestCase):
         mock_update.assert_called_once_with(
             self.context, CLUSTER_ID,
             {'desired_capacity': 0,
-             'status': cluster.ACTIVE,
+             'status': consts.CS_ACTIVE,
              'status_reason': 'TEST: number of active nodes is above '
                               'desired_capacity (0).'})
 
@@ -971,7 +972,7 @@ class TestCluster(base.SenlinTestCase):
         mock_update.assert_called_once_with(
             self.context, CLUSTER_ID,
             {'min_size': 2,
-             'status': cluster.ERROR,
+             'status': consts.CS_ERROR,
              'status_reason': 'TEST: number of active nodes is below '
                               'min_size (2).'})
 
@@ -991,6 +992,6 @@ class TestCluster(base.SenlinTestCase):
         mock_update.assert_called_once_with(
             self.context, CLUSTER_ID,
             {'max_size': 6,
-             'status': cluster.ACTIVE,
+             'status': consts.CS_ACTIVE,
              'status_reason': 'TEST: number of active nodes is above '
                               'desired_capacity (2).'})

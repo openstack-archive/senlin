@@ -191,7 +191,7 @@ class ClusterAction(base.Action):
 
         if not res:
             reason = _('Cluster creation failed.')
-            self.cluster.set_status(self.context, self.cluster.ERROR, reason)
+            self.cluster.set_status(self.context, consts.CS_ERROR, reason)
             return self.RES_ERROR, reason
 
         result, reason = self._create_nodes(self.cluster.desired_capacity)
@@ -272,7 +272,7 @@ class ClusterAction(base.Action):
         res = self.cluster.do_update(self.context)
         if not res:
             reason = _('Cluster update failed.')
-            self.cluster.set_status(self.context, self.cluster.ERROR, reason)
+            self.cluster.set_status(self.context, consts.CS_ERROR, reason)
             return self.RES_ERROR, reason
 
         name = self.inputs.get('name')
@@ -344,7 +344,7 @@ class ClusterAction(base.Action):
         :returns: A tuple containing the result and the corresponding reason.
         """
         reason = _('Deletion in progress.')
-        self.cluster.set_status(self.context, self.cluster.DELETING, reason)
+        self.cluster.set_status(self.context, consts.CS_DELETING, reason)
         node_ids = [node.id for node in self.cluster.nodes]
 
         # For cluster delete, we delete the nodes
@@ -682,7 +682,7 @@ class ClusterAction(base.Action):
             kwargs['min_size'] = min_size
         if max_size is not None:
             kwargs['max_size'] = max_size
-        self.cluster.set_status(self.context, self.cluster.RESIZING,
+        self.cluster.set_status(self.context, consts.CS_RESIZING,
                                 _('Cluster resize started.'), **kwargs)
 
     @profiler.trace('ClusterAction.do_resize', hide_args=False)
@@ -759,7 +759,7 @@ class ClusterAction(base.Action):
         if result:
             return self.RES_ERROR, result
 
-        self.cluster.set_status(self.context, self.cluster.RESIZING,
+        self.cluster.set_status(self.context, consts.CS_RESIZING,
                                 _('Cluster scale out started.'),
                                 desired_capacity=new_size)
 
@@ -811,7 +811,7 @@ class ClusterAction(base.Action):
         if result:
             return self.RES_ERROR, result
 
-        self.cluster.set_status(self.context, self.cluster.RESIZING,
+        self.cluster.set_status(self.context, consts.CS_RESIZING,
                                 _('Cluster scale in started.'),
                                 desired_capacity=new_size)
 

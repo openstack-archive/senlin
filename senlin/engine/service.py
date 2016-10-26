@@ -897,7 +897,7 @@ class EngineService(service.Service):
         """
         db_cluster = self.cluster_find(ctx, req.identity)
         cluster = cluster_mod.Cluster.load(ctx, dbcluster=db_cluster)
-        if cluster.status == cluster.ERROR:
+        if cluster.status == consts.CS_ERROR:
             msg = _('Updating a cluster in error state')
             LOG.error(msg)
             raise exception.FeatureNotSupported(feature=msg)
@@ -963,10 +963,10 @@ class EngineService(service.Service):
         # 'cluster' below is a DB object.
         cluster = self.cluster_find(context, identity)
 
-        if cluster.status in [cluster_mod.Cluster.CREATING,
-                              cluster_mod.Cluster.UPDATING,
-                              cluster_mod.Cluster.DELETING,
-                              cluster_mod.Cluster.RECOVERING]:
+        if cluster.status in [consts.CS_CREATING,
+                              consts.CS_UPDATING,
+                              consts.CS_DELETING,
+                              consts.CS_RECOVERING]:
             raise exception.ActionInProgress(type='cluster', id=identity,
                                              status=cluster.status)
 
