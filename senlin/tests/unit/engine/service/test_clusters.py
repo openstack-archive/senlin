@@ -1111,10 +1111,12 @@ class ClusterTest(base.SenlinTestCase):
     def test_cluster_update2_cluster_bad_status(self, mock_find, mock_load):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
-        mock_load.return_value = mock.Mock(status='ERROR', ERROR='ERROR')
+        x_cluster = mock.Mock(status='ERROR', ERROR='ERROR')
+        mock_load.return_value = x_cluster
         req = {'identity': 'CLUSTER', 'name': 'new-name'}
         self._prepare_request(req)
 
+        self.assertEqual(consts.CS_ERROR, x_cluster.status)
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_update2,
                                self.ctx, req)
