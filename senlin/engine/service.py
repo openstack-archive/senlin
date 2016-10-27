@@ -1648,25 +1648,6 @@ class EngineService(service.Service):
         result['action'] = action_id
         return result
 
-    @request_context
-    def node_get(self, context, identity, show_details=False):
-        """Get the details about a node.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a node.
-        :param show_details: Optional parameter indicating whether the details
-                             about the physical object should be returned.
-        :return: A dictionary containing the detailed information about a node
-                 or an exception of `ResourceNotFound` if no matching node
-                 could be found.
-        """
-        db_node = self.node_find(context, identity)
-        node = node_mod.Node.load(context, db_node=db_node)
-        res = node.to_dict()
-        if show_details and node.physical_id:
-            res['details'] = node.get_details(context)
-        return res
-
     @request_context2
     def node_get2(self, ctx, req):
         """Retrieve the node specified.
