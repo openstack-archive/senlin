@@ -97,13 +97,20 @@ class NodeController(wsgi.Controller):
 
     @util.policy_enforce
     def get(self, req, node_id):
+        params = {'identity': node_id}
         key = consts.PARAM_SHOW_DETAILS
-        show_details = False
         if key in req.params:
-            show_details = utils.parse_bool_param(key, req.params[key])
+            params['show_details'] = utils.parse_bool_param(
+                key, req.params[key])
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'NodeGetRequest', params, None)
+            obj = vorn.NodeGetRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except (ValueError) as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
 
-        node = self.rpc_client.node_get(req.context, node_id,
-                                        show_details=show_details)
+        node = self.rpc_client.call2(req.context, 'node_get2', obj)
         return {'node': node}
 
     @util.policy_enforce
