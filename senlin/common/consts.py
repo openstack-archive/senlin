@@ -157,8 +157,10 @@ POLICY_SORT_KEYS = [
 
 CLUSTER_POLICY_ATTRS = (
     CP_POLICY_ID, CP_ENABLED, CP_PRIORITY,
+    CP_POLICY_NAME, CP_POLICY_TYPE,
 ) = (
-    'policy_id', 'enabled', 'priority'
+    'policy_id', 'enabled', 'priority',
+    'policy_name', 'policy_type',
 )
 
 CLUSTER_POLICY_SORT_KEYS = [
