@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from senlin.common import consts
 from senlin.objects import base
 from senlin.objects import fields
 
@@ -31,4 +32,20 @@ class NodeCreateRequest(base.SenlinObject):
 
     fields = {
         'node': fields.ObjectField('NodeCreateRequestBody')
+    }
+
+
+@base.SenlinObjectRegistry.register
+class NodeListRequestBody(base.SenlinObject):
+
+    fields = {
+        'cluster_id': fields.StringField(nullable=True),
+        'name': fields.ListOfStringsField(nullable=True),
+        'status': fields.ListOfEnumField(
+            valid_values=list(consts.NODE_STATUSES), nullable=True),
+        'limit': fields.NonNegativeIntegerField(nullable=True),
+        'marker': fields.UUIDField(nullable=True),
+        'sort': fields.SortField(
+            valid_keys=list(consts.NODE_SORT_KEYS), nullable=True),
+        'project_safe': fields.FlexibleBooleanField(default=True)
     }

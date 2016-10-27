@@ -38,7 +38,7 @@ class TestNodeCreate(test_base.SenlinTestCase):
         self.assertEqual('', sot.role)
         self.assertEqual({}, sot.metadata)
 
-    def test_cluster_create_request_body_full(self):
+    def test_node_create_request_body_full(self):
         body = copy.deepcopy(self.body)
         body['role'] = 'master'
         body['cluster_id'] = 'cluster-01'
@@ -92,3 +92,31 @@ class TestNodeCreate(test_base.SenlinTestCase):
             {'name': u'test-node', 'profile_id': u'test-profile'},
             data['senlin_object.data']
         )
+
+
+class TestNodeList(test_base.SenlinTestCase):
+
+    def test_node_list_request_body_full(self):
+        params = {
+            'cluster_id': '8c3c9af7-d768-4c5a-a21e-5261b22d749d',
+            'name': ['node01'],
+            'status': ['ACTIVE'],
+            'limit': 3,
+            'marker': 'f1ed0d50-7651-4599-a8cb-c86e9c7123f5',
+            'sort': 'name:asc',
+            'project_safe': False,
+        }
+        sot = nodes.NodeListRequestBody(**params)
+        self.assertEqual('8c3c9af7-d768-4c5a-a21e-5261b22d749d',
+                         sot.cluster_id)
+        self.assertEqual(['node01'], sot.name)
+        self.assertEqual(['ACTIVE'], sot.status)
+        self.assertEqual(3, sot.limit)
+        self.assertEqual('f1ed0d50-7651-4599-a8cb-c86e9c7123f5', sot.marker)
+        self.assertEqual('name:asc', sot.sort)
+        self.assertFalse(sot.project_safe)
+
+    def test_node_list_request_body_default(self):
+        sot = nodes.NodeListRequestBody()
+        sot.obj_set_defaults()
+        self.assertTrue(sot.project_safe)
