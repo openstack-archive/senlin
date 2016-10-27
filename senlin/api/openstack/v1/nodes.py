@@ -13,7 +13,8 @@
 """
 Node endpoint for Senlin v1 ReST API.
 """
-
+import jsonschema
+import six
 from webob import exc
 
 from senlin.api.common import util
@@ -21,36 +22,8 @@ from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import utils
-
-
-class NodeData(object):
-    """The data accompanying a PUT/POST request to create/update a node."""
-
-    PARAMS = (consts.NODE_NAME, consts.NODE_CLUSTER_ID,
-              consts.NODE_PROFILE_ID, consts.NODE_ROLE,
-              consts.NODE_METADATA)
-
-    def __init__(self, data):
-        self.data = data
-
-    def name(self):
-        if consts.NODE_NAME not in self.data:
-            raise exc.HTTPBadRequest(_("No node name specified."))
-        return self.data[consts.NODE_NAME]
-
-    def cluster_id(self):
-        return self.data.get(consts.NODE_CLUSTER_ID, None)
-
-    def profile_id(self):
-        if consts.NODE_PROFILE_ID not in self.data:
-            raise exc.HTTPBadRequest(_("No profile ID provided."))
-        return self.data[consts.NODE_PROFILE_ID]
-
-    def role(self):
-        return self.data.get(consts.NODE_ROLE, None)
-
-    def metadata(self):
-        return self.data.get(consts.NODE_METADATA, None)
+from senlin.objects import base as obj_base
+from senlin.objects.requests import nodes as vorn
 
 
 class NodeController(wsgi.Controller):
@@ -104,21 +77,21 @@ class NodeController(wsgi.Controller):
 
     @util.policy_enforce
     def create(self, req, body):
-        node_data = body.get('node')
-        if node_data is None:
-            raise exc.HTTPBadRequest(_("Malformed request data, missing "
-                                       "'node' key in request body."))
+        """Create a new node."""
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'NodeCreateRequest', body, 'node')
+            obj = vorn.NodeCreateRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except (ValueError) as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
 
-        data = NodeData(node_data)
-
-        node = self.rpc_client.node_create(req.context, data.name(),
-                                           data.cluster_id(),
-                                           data.profile_id(),
-                                           data.role(), data.metadata())
+        node = self.rpc_client.call2(req.context, 'node_create2',
+                                     obj.node)
         action_id = node.pop('action')
         result = {
             'node': node,
-            'location': '/actions/%s' % action_id
+            'location': '/actions/%s' % action_id,
         }
         return result
 

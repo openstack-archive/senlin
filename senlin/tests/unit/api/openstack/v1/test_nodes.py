@@ -20,37 +20,10 @@ from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import nodes
 from senlin.common import exception as senlin_exc
 from senlin.common import policy
+from senlin.objects.requests import nodes as vorn
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
-
-
-class NodeDataTest(base.SenlinTestCase):
-    def test_node_name(self):
-        body = {'name': 'test_node'}
-        data = nodes.NodeData(body)
-        self.assertEqual('test_node', data.name())
-
-    def test_required_fields_missing(self):
-        body = {'not a node name': 'wibble'}
-        data = nodes.NodeData(body)
-        self.assertRaises(exc.HTTPBadRequest, data.name)
-        self.assertRaises(exc.HTTPBadRequest, data.profile_id)
-        self.assertIsNone(data.cluster_id())
-        self.assertIsNone(data.role())
-        self.assertIsNone(data.metadata())
-
-    def test_with_cluster_id(self):
-        body = {'cluster_id': 'cluster-1', 'name': 'test_node'}
-        data = nodes.NodeData(body)
-        self.assertEqual('test_node', data.name())
-        self.assertEqual('cluster-1', data.cluster_id())
-
-    def test_with_profile_id(self):
-        body = {'profile_id': 'my-stack', 'name': 'test_node'}
-        data = nodes.NodeData(body)
-        self.assertEqual('test_node', data.name())
-        self.assertEqual('my-stack', data.profile_id())
 
 
 @mock.patch.object(policy, 'enforce')
@@ -281,27 +254,23 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._post('/nodes', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_response)
 
         resp = self.controller.create(req, body=body)
-
-        mock_call.assert_called_with(
-            req.context,
-            ('node_create', {
-                'name': 'test_node',
-                'profile_id': 'xxxx-yyyy',
-                'cluster_id': None,
-                'role': None,
-                'metadata': {},
-            })
-        )
-
         expected = {
             'node': engine_response,
             'location': '/actions/fake_action'
         }
         self.assertEqual(expected, resp)
+        mock_call.assert_called_with(req.context, 'node_create2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorn.NodeCreateRequestBody)
+        self.assertEqual('test_node', request.name)
+        self.assertEqual('xxxx-yyyy', request.profile_id)
+        self.assertIsNone(request.cluster_id)
+        self.assertIsNone(request.role)
+        self.assertEqual({}, request.metadata)
 
     def test_node_create_with_bad_body(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -311,8 +280,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
                                req, body=body)
-        self.assertEqual("Malformed request data, missing 'node' key in "
-                         "request body.", six.text_type(ex))
+        self.assertEqual("Request body missing 'node' key.", six.text_type(ex))
 
     def test_node_create_with_bad_profile(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -328,14 +296,11 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/nodes', jsonutils.dumps(body))
 
         error = senlin_exc.ResourceNotFound(type='profile', id='bad-profile')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     side_effect=error)
+        self.patchobject(rpc_client.EngineClient, 'call2', side_effect=error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
                                               req, body=body)
-        mock_call.assert_called_once_with(req.context,
-                                          ('node_create', body['node']))
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
@@ -354,15 +319,12 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         error = senlin_exc.ResourceNotFound(type='cluster',
                                             id='non-existent-cluster')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     side_effect=error)
+        self.patchobject(rpc_client.EngineClient, 'call2', side_effect=error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
                                               req, body=body)
 
-        mock_call.assert_called_once_with(req.context,
-                                          ('node_create', body['node']))
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
