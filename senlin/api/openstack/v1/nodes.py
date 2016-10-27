@@ -39,40 +39,34 @@ class NodeController(wsgi.Controller):
 
     @util.policy_enforce
     def index(self, req):
-        filter_whitelist = {
+        whitelist = {
+            consts.NODE_CLUSTER_ID: 'single',
             consts.NODE_NAME: 'mixed',
             consts.NODE_STATUS: 'mixed',
-        }
-        param_whitelist = {
-            consts.NODE_CLUSTER_ID: 'single',
             consts.PARAM_LIMIT: 'single',
             consts.PARAM_MARKER: 'single',
             consts.PARAM_SORT: 'single',
-            consts.PARAM_GLOBAL_PROJECT: 'single',
+            consts.PARAM_GLOBAL_PROJECT: 'single'
         }
         for key in req.params.keys():
-            if (key not in param_whitelist.keys() and key not in
-                    filter_whitelist.keys()):
+            if key not in whitelist.keys():
                 raise exc.HTTPBadRequest(_('Invalid parameter %s') % key)
-        params = util.get_allowed_params(req.params, param_whitelist)
-        filters = util.get_allowed_params(req.params, filter_whitelist)
+        params = util.get_allowed_params(req.params, whitelist)
 
-        key = consts.PARAM_LIMIT
-        if key in params:
-            params[key] = utils.parse_int_param(key, params[key])
+        project_safe = not utils.parse_bool_param(
+            consts.PARAM_GLOBAL_PROJECT,
+            params.pop(consts.PARAM_GLOBAL_PROJECT, False))
+        params['project_safe'] = project_safe
 
-        key = consts.PARAM_GLOBAL_PROJECT
-        if key in params:
-            project_safe = not utils.parse_bool_param(key, params[key])
-            del params[key]
-            params['project_safe'] = project_safe
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'NodeListRequestBody', params, None)
+            obj = vorn.NodeListRequestBody.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except (ValueError) as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
 
-        if not filters:
-            filters = None
-
-        nodes = self.rpc_client.node_list(req.context, filters=filters,
-                                          **params)
-
+        nodes = self.rpc_client.call2(req.context, 'node_list2', obj)
         return {'nodes': nodes}
 
     @util.policy_enforce
