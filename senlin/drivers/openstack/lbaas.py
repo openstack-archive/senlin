@@ -69,7 +69,7 @@ class LoadBalancerDriver(base.DriverBase):
             if lb_ready is True:
                 return True
 
-            LOG.debug(_('Waiting for loadbalancer %(lb)s to become ready'),
+            LOG.debug('Waiting for loadbalancer %(lb)s to become ready',
                       {'lb': lb_id})
 
             eventlet.sleep(10)

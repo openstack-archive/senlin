@@ -14,7 +14,7 @@ from oslo_log import log as logging
 from oslo_utils import reflection
 from oslo_utils import timeutils
 
-from senlin.common.i18n import _, _LC, _LE, _LW, _LI
+from senlin.common.i18n import _LC, _LE, _LW, _LI
 from senlin.objects import event as eo
 
 LOG = logging.getLogger(__name__)
@@ -173,7 +173,7 @@ def debug(context, entity, action, status=None, status_reason=None,
                   action=action, status=status, status_reason=status_reason,
                   user=context.user, project=context.project)
     event.store(context)
-    LOG.debug(_('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s'),
+    LOG.debug('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s',
               {'name': event.oname,
                'id': event.oid and event.oid[:8],
                'action': action,

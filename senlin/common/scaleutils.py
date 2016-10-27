@@ -68,24 +68,24 @@ def truncate_desired(cluster, desired, min_size, max_size):
 
     if min_size is not None and desired < min_size:
         desired = min_size
-        LOG.debug(_("Truncating shrinkage to specified min_size (%s).")
-                  % desired)
+        LOG.debug("Truncating shrinkage to specified min_size (%s).",
+                  desired)
 
     if min_size is None and desired < cluster.min_size:
         desired = cluster.min_size
-        LOG.debug(_("Truncating shrinkage to cluster's min_size (%s).")
-                  % desired)
+        LOG.debug("Truncating shrinkage to cluster's min_size (%s).",
+                  desired)
 
     if max_size is not None and max_size > 0 and desired > max_size:
         desired = max_size
-        LOG.debug(_("Truncating growth to specified max_size (%s).")
-                  % desired)
+        LOG.debug("Truncating growth to specified max_size (%s).",
+                  desired)
 
     if (max_size is None and desired > cluster.max_size and
             cluster.max_size > 0):
         desired = cluster.max_size
-        LOG.debug(_("Truncating growth to cluster's max_size (%s).")
-                  % desired)
+        LOG.debug("Truncating growth to cluster's max_size (%s).",
+                  desired)
 
     return desired
 

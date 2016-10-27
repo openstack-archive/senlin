@@ -205,7 +205,7 @@ class HealthManager(service.Service):
                 'enabled': True,
             }
 
-            LOG.info("Loading cluster %s for health monitoring",
+            LOG.info(_LI("Loading cluster %s for health monitoring"),
                      cluster.cluster_id)
 
             entry = self._start_check(entry)

@@ -81,7 +81,7 @@ class Node(object):
             profile = pb.Profile.load(context, profile_id=self.profile_id,
                                       project_safe=False)
         except exc.ResourceNotFound:
-            LOG.debug(_('Profile not found: %s'), self.profile_id)
+            LOG.debug('Profile not found: %s', self.profile_id)
 
         self.rt = {'profile': profile}
 
