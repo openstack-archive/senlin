@@ -14,6 +14,7 @@ import eventlet
 
 from osprofiler import profiler
 
+from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import scaleutils as su
 from senlin.engine.actions import base
@@ -27,16 +28,6 @@ from senlin.policies import base as pb
 
 class NodeAction(base.Action):
     """An action that can be performed on a cluster member (node)."""
-
-    ACTIONS = (
-        NODE_CREATE, NODE_DELETE, NODE_UPDATE,
-        NODE_JOIN, NODE_LEAVE,
-        NODE_CHECK, NODE_RECOVER
-    ) = (
-        'NODE_CREATE', 'NODE_DELETE', 'NODE_UPDATE',
-        'NODE_JOIN', 'NODE_LEAVE',
-        'NODE_CHECK', 'NODE_RECOVER'
-    )
 
     def __init__(self, target, action, context, **kwargs):
         """Constructor for a node action object.
@@ -79,7 +70,7 @@ class NodeAction(base.Action):
             # matter the creation is a success or not because the node object
             # is # already treated as member of the cluster and the node
             # creation may have changed the cluster's status
-            cluster.eval_status(self.context, self.NODE_CREATE,
+            cluster.eval_status(self.context, consts.NODE_CREATE,
                                 desired_capacity=desired)
         if res:
             return self.RES_OK, _('Node created successfully.')
@@ -121,7 +112,7 @@ class NodeAction(base.Action):
                 do_reduce = pd.get('reduce_desired_capacity', True)
             if do_reduce and res:
                 params = {'desired_capacity': desired}
-            cluster.eval_status(self.context, self.NODE_DELETE, **params)
+            cluster.eval_status(self.context, consts.NODE_DELETE, **params)
 
         if res:
             return self.RES_OK, _('Node deleted successfully.')

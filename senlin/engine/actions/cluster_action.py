@@ -42,22 +42,6 @@ LOG = logging.getLogger(__name__)
 class ClusterAction(base.Action):
     """An action that can be performed on a cluster."""
 
-    ACTIONS = (
-        CLUSTER_CREATE, CLUSTER_DELETE, CLUSTER_UPDATE,
-        CLUSTER_ADD_NODES, CLUSTER_DEL_NODES,
-        CLUSTER_RESIZE, CLUSTER_CHECK, CLUSTER_RECOVER,
-        CLUSTER_SCALE_OUT, CLUSTER_SCALE_IN,
-        CLUSTER_ATTACH_POLICY, CLUSTER_DETACH_POLICY, CLUSTER_UPDATE_POLICY,
-        CLUSTER_REPLACE_NODES
-    ) = (
-        consts.CLUSTER_CREATE, consts.CLUSTER_DELETE, consts.CLUSTER_UPDATE,
-        consts.CLUSTER_ADD_NODES, consts.CLUSTER_DEL_NODES,
-        consts.CLUSTER_RESIZE, consts.CLUSTER_CHECK, consts.CLUSTER_RECOVER,
-        consts.CLUSTER_SCALE_OUT, consts.CLUSTER_SCALE_IN,
-        consts.CLUSTER_ATTACH_POLICY, consts.CLUSTER_DETACH_POLICY,
-        consts.CLUSTER_UPDATE_POLICY, consts.CLUSTER_REPLACE_NODES
-    )
-
     def __init__(self, target, action, context, **kwargs):
         """Constructor for cluster action.
 
@@ -200,7 +184,7 @@ class ClusterAction(base.Action):
         if result == self.RES_OK:
             reason = _('Cluster creation succeeded.')
             params = {'created_at': timeutils.utcnow(True)}
-        self.cluster.eval_status(self.context, self.CLUSTER_CREATE, **params)
+        self.cluster.eval_status(self.context, consts.CLUSTER_CREATE, **params)
 
         return result, reason
 
@@ -251,14 +235,15 @@ class ClusterAction(base.Action):
                 child = []
                 result, new_reason = self._wait_for_dependents()
                 if result != self.RES_OK:
-                    self.cluster.eval_status(self.context, self.CLUSTER_UPDATE)
+                    self.cluster.eval_status(self.context,
+                                             consts.CLUSTER_UPDATE)
                     return result, _('Failed in updating nodes.')
                 # pause time
                 if pause_time != 0:
                     self._sleep(pause_time)
 
         self.cluster.profile_id = profile_id
-        self.cluster.eval_status(self.context, self.CLUSTER_UPDATE,
+        self.cluster.eval_status(self.context, consts.CLUSTER_UPDATE,
                                  profile_id=profile_id,
                                  updated_at=timeutils.utcnow(True))
         return self.RES_OK, 'Cluster update completed.'
@@ -290,7 +275,7 @@ class ClusterAction(base.Action):
 
         reason = _('Cluster update completed.')
         if profile_id is None:
-            self.cluster.eval_status(self.context, self.CLUSTER_UPDATE,
+            self.cluster.eval_status(self.context, consts.CLUSTER_UPDATE,
                                      updated_at=timeutils.utcnow(True))
             return self.RES_OK, reason
 
@@ -359,10 +344,10 @@ class ClusterAction(base.Action):
         if result == self.RES_OK:
             res = self.cluster.do_delete(self.context)
             if not res:
-                self.cluster.eval_status(self.context, self.CLUSTER_DELETE)
+                self.cluster.eval_status(self.context, consts.CLUSTER_DELETE)
                 return self.RES_ERROR, _('Cannot delete cluster object.')
         else:
-            self.cluster.eval_status(self.context, self.CLUSTER_DELETE)
+            self.cluster.eval_status(self.context, consts.CLUSTER_DELETE)
 
         return result, reason
 
@@ -424,7 +409,7 @@ class ClusterAction(base.Action):
             reason = new_reason
         else:
             desired = current + len(node_ids)
-            self.cluster.eval_status(self.context, self.CLUSTER_ADD_NODES,
+            self.cluster.eval_status(self.context, consts.CLUSTER_ADD_NODES,
                                      desired_capacity=desired)
             self.outputs['nodes_added'] = node_ids
             creation = self.data.get('creation', {})
@@ -495,7 +480,7 @@ class ClusterAction(base.Action):
             params['desired_capacity'] = current - len(nodes)
 
         self.cluster.eval_status(self.context,
-                                 self.CLUSTER_DEL_NODES, **params)
+                                 consts.CLUSTER_DEL_NODES, **params)
 
         return result, reason
 
@@ -587,7 +572,7 @@ class ClusterAction(base.Action):
                     self.cluster.remove_node(original_nodes[n])
                     self.cluster.add_node(replacement_nodes[n])
 
-        self.cluster.eval_status(self.context, self.CLUSTER_REPLACE_NODES)
+        self.cluster.eval_status(self.context, consts.CLUSTER_REPLACE_NODES)
         return result, reason
 
     @profiler.trace('ClusterAction.do_check', hide_args=False)
@@ -622,7 +607,7 @@ class ClusterAction(base.Action):
             if res != self.RES_OK:
                 reason = new_reason
 
-        self.cluster.eval_status(self.context, self.CLUSTER_CHECK)
+        self.cluster.eval_status(self.context, consts.CLUSTER_CHECK)
         return res, reason
 
     @profiler.trace('ClusterAction.do_recover', hide_args=False)
@@ -670,7 +655,7 @@ class ClusterAction(base.Action):
             if res != self.RES_OK:
                 reason = new_reason
 
-        self.cluster.eval_status(self.context, self.CLUSTER_RECOVER)
+        self.cluster.eval_status(self.context, consts.CLUSTER_RECOVER)
         return res, reason
 
     def _update_cluster_size(self, desired):
@@ -727,7 +712,7 @@ class ClusterAction(base.Action):
         if result != self.RES_OK:
             reason = new_reason
 
-        self.cluster.eval_status(self.context, self.CLUSTER_RESIZE)
+        self.cluster.eval_status(self.context, consts.CLUSTER_RESIZE)
         return result, reason
 
     @profiler.trace('ClusterAction.do_scale_out', hide_args=False)
@@ -766,7 +751,7 @@ class ClusterAction(base.Action):
         result, reason = self._create_nodes(count)
         if result == self.RES_OK:
             reason = _('Cluster scaling succeeded.')
-        self.cluster.eval_status(self.context, self.CLUSTER_SCALE_OUT)
+        self.cluster.eval_status(self.context, consts.CLUSTER_SCALE_OUT)
 
         return result, reason
 
@@ -827,7 +812,7 @@ class ClusterAction(base.Action):
         if result == self.RES_OK:
             reason = _('Cluster scaling succeeded.')
 
-        self.cluster.eval_status(self.context, self.CLUSTER_SCALE_IN)
+        self.cluster.eval_status(self.context, consts.CLUSTER_SCALE_IN)
 
         return result, reason
 
@@ -934,7 +919,7 @@ class ClusterAction(base.Action):
                  was a success and why if it wasn't a success.
         """
         # Try to lock cluster before do real operation
-        forced = True if self.action == self.CLUSTER_DELETE else False
+        forced = True if self.action == consts.CLUSTER_DELETE else False
         res = senlin_lock.cluster_lock_acquire(self.context, self.target,
                                                self.id, self.owner,
                                                senlin_lock.CLUSTER_SCOPE,
