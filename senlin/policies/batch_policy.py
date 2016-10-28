@@ -56,6 +56,7 @@ class BatchPolicy(base.Policy):
 
     TARGET = [
         ('BEFORE', consts.CLUSTER_UPDATE),
+        ('BEFORE', consts.CLUSTER_DELETE),
     ]
 
     PROFILE_TYPE = [
@@ -91,15 +92,24 @@ class BatchPolicy(base.Policy):
         self.max_batch_size = self.properties[self.MAX_BATCH_SIZE]
         self.pause_time = self.properties[self.PAUSE_TIME]
 
-    def _cal_batch_size(self, total):
+    def _cal_batch_size(self, total, action_name):
         batch_num = 0
         batch_size = 0
-        diff = total - self.min_in_service
+        diff = 0
+
+        # if the action is CLUSTER_DELETE or number of nodes less than
+        # min_in_service, we divided it to 2 batches
+        diff = int(math.ceil(float(total) / 2))
+        if (action_name == consts.CLUSTER_UPDATE and
+                total > self.min_in_service):
+            diff = total - self.min_in_service
+
         # max_batch_size is -1 if not specified
         if self.max_batch_size == -1 or diff < self.max_batch_size:
             batch_size = diff
         else:
             batch_size = self.max_batch_size
+
         batch_num = int(math.ceil(float(total) / float(batch_size)))
 
         return batch_size, batch_num
@@ -130,24 +140,26 @@ class BatchPolicy(base.Policy):
 
     def _create_plan(self, cluster, action):
         current = no.Node.count_by_cluster(action.context, cluster.id)
+        action_name = action.action
         plan_list = [{}]
         plan = {
             'pause_time': self.pause_time,
-            'min_in_service': self.min_in_service,
         }
-        if current > 0:
-            if current < self.min_in_service:
-                msg = _('The parameter min_in_service is greater than '
-                        'current number of nodes.')
-                return False, msg
-            nodes_list = cluster.nodes
-            bad_list, good_list = su.filter_error_nodes(nodes_list)
-        else:
-            plan['plan'] = plan_list
+        if current == 0:
+            if action_name == consts.CLUSTER_UPDATE:
+                plan['plan'] = plan_list
+                return True, plan
+            else:
+                plan['batch_size'] = 0
+                return True, plan
+
+        batch_size, batch_num = self._cal_batch_size(current, action_name)
+        if action_name == consts.CLUSTER_DELETE:
+            plan['batch_size'] = batch_size
             return True, plan
 
-        batch_size, batch_num = self._cal_batch_size(current)
-
+        nodes_list = cluster.nodes
+        bad_list, good_list = su.filter_error_nodes(nodes_list)
         plan_list = self._pick_nodes(batch_size, batch_num, bad_list,
                                      good_list)
         plan['plan'] = plan_list
@@ -156,9 +168,11 @@ class BatchPolicy(base.Policy):
 
     def pre_op(self, cluster_id, action):
         cluster = cm.Cluster.load(action.context, cluster_id)
-
-        # for updating
-        # if action.action == consts.CLUSTER_UPDATE:
+        pd = {
+            'status': base.CHECK_OK,
+            'reason': _('Batching request validated.'),
+        }
+        # for updating and deleting
         result, value = self._create_plan(cluster, action)
 
         if result is False:
@@ -167,11 +181,10 @@ class BatchPolicy(base.Policy):
                 'reason': value,
             }
         else:
-            pd = {
-                'status': base.CHECK_OK,
-                'reason': _('Batching request validated.'),
-                'update': value,
-            }
+            if action.action == consts.CLUSTER_UPDATE:
+                pd['update'] = value
+            else:
+                pd['delete'] = value
 
         action.data.update(pd)
         action.store(action.context)
