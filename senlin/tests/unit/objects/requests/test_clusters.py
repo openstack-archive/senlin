@@ -198,7 +198,7 @@ class TestClusterList(test_base.SenlinTestCase):
     }
 
     def test_init(self):
-        sot = clusters.ClusterListRequestBody()
+        sot = clusters.ClusterListRequest()
 
         self.assertFalse(sot.obj_attr_is_set('project_safe'))
         self.assertFalse(sot.obj_attr_is_set('name'))
@@ -225,7 +225,7 @@ class TestClusterList(test_base.SenlinTestCase):
             'sort': 'name:asc',
             'project_safe': 'False',  # a test of flexible boolean
         }
-        sot = clusters.ClusterListRequestBody(**params)
+        sot = clusters.ClusterListRequest(**params)
         self.assertEqual(['name1'], sot.name)
         self.assertEqual(['ACTIVE'], sot.status)
         self.assertEqual(4, sot.limit)

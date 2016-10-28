@@ -772,7 +772,7 @@ class EngineService(service.Service):
         """List clusters matching the specified criteria.
 
         :param ctx: An instance of request context.
-        :param req: An instance of the ClusterListRequestBody.
+        :param req: An instance of the ClusterListRequest.
         :return: A list of `Cluster` object representations.
         """
         req.obj_set_defaults()
@@ -1542,7 +1542,7 @@ class EngineService(service.Service):
         """List node records matching the specified criteria.
 
         :param ctx: An instance of the request context.
-        :param req: An instance of the NodeListRequestBody object.
+        :param req: An instance of the NodeListRequest object.
         :return: A list of `Node` object representations.
         """
         req.obj_set_defaults()

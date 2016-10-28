@@ -56,7 +56,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'cluster_list2',
                                           mock.ANY)
         request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorc.ClusterListRequestBody)
+        self.assertIsInstance(request, vorc.ClusterListRequest)
         self.assertTrue(request.project_safe)
         self.assertFalse(request.obj_attr_is_set('name'))
         self.assertFalse(request.obj_attr_is_set('status'))
@@ -89,7 +89,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'cluster_list2',
                                           mock.ANY)
         request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorc.ClusterListRequestBody)
+        self.assertIsInstance(request, vorc.ClusterListRequest)
         self.assertFalse(request.project_safe)
         self.assertEqual(['name1'], request.name)
         self.assertEqual(['ACTIVE'], request.status)

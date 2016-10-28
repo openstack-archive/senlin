@@ -67,7 +67,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         result = self.controller.index(req)
         mock_call.assert_called_with(req.context, 'node_list2', mock.ANY)
         request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorn.NodeListRequestBody)
+        self.assertIsInstance(request, vorn.NodeListRequest)
         self.assertTrue(request.project_safe)
         expected = {'nodes': engine_resp}
         self.assertEqual(expected, result)
@@ -90,7 +90,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.controller.index(req)
         mock_call.assert_called_with(req.context, 'node_list2', mock.ANY)
         request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorn.NodeListRequestBody)
+        self.assertIsInstance(request, vorn.NodeListRequest)
         self.assertEqual(['node01'], request.name)
         self.assertEqual(['ACTIVE'], request.status)
         self.assertEqual('id or name of a cluster', request.cluster_id)

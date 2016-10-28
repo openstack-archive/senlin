@@ -106,7 +106,7 @@ class TestNodeList(test_base.SenlinTestCase):
             'sort': 'name:asc',
             'project_safe': False,
         }
-        sot = nodes.NodeListRequestBody(**params)
+        sot = nodes.NodeListRequest(**params)
         self.assertEqual('8c3c9af7-d768-4c5a-a21e-5261b22d749d',
                          sot.cluster_id)
         self.assertEqual(['node01'], sot.name)
@@ -117,7 +117,7 @@ class TestNodeList(test_base.SenlinTestCase):
         self.assertFalse(sot.project_safe)
 
     def test_node_list_request_body_default(self):
-        sot = nodes.NodeListRequestBody()
+        sot = nodes.NodeListRequest()
         sot.obj_set_defaults()
         self.assertTrue(sot.project_safe)
 
