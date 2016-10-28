@@ -67,7 +67,7 @@ class ClusterController(wsgi.Controller):
                                         is_global)
         params['project_safe'] = not unsafe
         norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterListRequestBody', params, None)
+            'ClusterListRequestBody', params)
         obj = None
         try:
             obj = vorc.ClusterListRequestBody.obj_from_primitive(norm_req)
@@ -104,7 +104,7 @@ class ClusterController(wsgi.Controller):
     def get(self, req, cluster_id):
         """Gets detailed information for a cluster."""
         norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterGetRequest', {'identity': cluster_id}, None)
+            'ClusterGetRequest', {'identity': cluster_id})
         obj = None
         try:
             obj = vorc.ClusterGetRequest.obj_from_primitive(norm_req)
@@ -128,7 +128,7 @@ class ClusterController(wsgi.Controller):
         params = body['cluster']
         params['identity'] = cluster_id
         norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterUpdateRequest', params, None)
+            'ClusterUpdateRequest', params)
         try:
             obj = vorc.ClusterUpdateRequest.obj_from_primitive(norm_req)
             jsonschema.validate(norm_req, obj.to_json_schema())
@@ -203,7 +203,7 @@ class ClusterController(wsgi.Controller):
     def _add_nodes(self, ctx, cid, nodes):
         params = {'identity': cid, 'nodes': nodes}
         norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterAddNodesRequest', params, None)
+            'ClusterAddNodesRequest', params)
         obj = None
         try:
             obj = vorc.ClusterAddNodesRequest.obj_from_primitive(norm_req)
@@ -218,7 +218,7 @@ class ClusterController(wsgi.Controller):
     def _del_nodes(self, ctx, cid, nodes):
         params = {'identity': cid, 'nodes': nodes}
         norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterDelNodesRequest', params, None)
+            'ClusterDelNodesRequest', params)
         obj = None
         try:
             obj = vorc.ClusterDelNodesRequest.obj_from_primitive(norm_req)
@@ -247,7 +247,7 @@ class ClusterController(wsgi.Controller):
             params['strict'] = data.get(consts.ADJUSTMENT_STRICT)
 
         norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterResizeRequest', params, None)
+            'ClusterResizeRequest', params)
 
         obj = None
         try:

@@ -104,7 +104,7 @@ class TestBaseObject(base.SenlinTestCase):
             }
         }
 
-        res = obj_base.SenlinObject.normalize_req(name, req, None)
+        res = obj_base.SenlinObject.normalize_req(name, req)
 
         self.assertEqual(expected, res)
 

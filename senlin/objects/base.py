@@ -70,7 +70,7 @@ class SenlinObject(base.VersionedObject):
         return schema
 
     @classmethod
-    def normalize_req(cls, name, req, key):
+    def normalize_req(cls, name, req, key=None):
         result = {
             cls.OBJ_SERIAL_NAMESPACE + '.version': cls.VERSION,
             cls.OBJ_SERIAL_NAMESPACE + '.namespace': cls.OBJ_PROJECT_NAMESPACE,
