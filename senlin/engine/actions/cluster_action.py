@@ -328,6 +328,8 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
+        pause = 0
+        batch = 0
         reason = _('Deletion in progress.')
         self.cluster.set_status(self.context, consts.CS_DELETING, reason)
         node_ids = [node.id for node in self.cluster.nodes]
@@ -339,17 +341,32 @@ class ClusterAction(base.Action):
             }
         }
         self.data.update(data)
-        result, reason = self._delete_nodes(node_ids)
-
-        if result == self.RES_OK:
-            res = self.cluster.do_delete(self.context)
-            if not res:
-                self.cluster.eval_status(self.context, consts.CLUSTER_DELETE)
-                return self.RES_ERROR, _('Cannot delete cluster object.')
+        bp = self.data.get('delete', None)
+        # use policy data if any, or we specify batch as the length of
+        # nodes' list which means we treat is as one batch.
+        if bp is not None:
+            pause = bp.get('pause_time', 0)
+            batch = bp.get('batch_size', 0)
         else:
-            self.cluster.eval_status(self.context, consts.CLUSTER_DELETE)
+            batch = len(node_ids)
 
-        return result, reason
+        if batch != 0:
+            # sleep if needed
+            self._sleep(pause)
+            for start in range(0, len(node_ids), batch):
+                end = start + batch
+                result, reason = self._delete_nodes(node_ids[start:end])
+                if result != self.RES_OK:
+                    self.cluster.eval_status(self.context,
+                                             consts.CLUSTER_DELETE)
+                    return result, reason
+
+        res = self.cluster.do_delete(self.context)
+        if not res:
+            self.cluster.eval_status(self.context, consts.CLUSTER_DELETE)
+            return self.RES_ERROR, _('Cannot delete cluster object.')
+
+        return self.RES_OK, reason
 
     @profiler.trace('ClusterAction.do_add_nodes', hide_args=False)
     def do_add_nodes(self):
