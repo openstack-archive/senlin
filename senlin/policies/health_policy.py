@@ -55,14 +55,6 @@ class HealthPolicy(base.Policy):
         'type', 'options'
     )
 
-    DETECTION_TYPES = (
-        VM_LIFECYCLE_EVENTS, NODE_STATUS_POLLING,
-        # LB_STATUS_POLLING,
-    ) = (
-        'VM_LIFECYCLE_EVENTS', 'NODE_STATUS_POLLING',
-        # 'LB_STATUS_POLLING',
-    )
-
     _DETECTION_OPTIONS = (
         DETECTION_INTERVAL,
     ) = (
@@ -98,7 +90,7 @@ class HealthPolicy(base.Policy):
                 DETECTION_TYPE: schema.String(
                     _('Type of node failure detection.'),
                     constraints=[
-                        constraints.AllowedValues(DETECTION_TYPES),
+                        constraints.AllowedValues(consts.DETECTION_TYPES),
                     ],
                     required=True,
                 ),
