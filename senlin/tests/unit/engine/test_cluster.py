@@ -882,6 +882,25 @@ class TestCluster(base.SenlinTestCase):
 
     @mock.patch.object(co.Cluster, 'update')
     @mock.patch.object(node_mod.Node, 'load_all')
+    def test_eval_status_equal_desired_capacity(self, mock_load, mock_update):
+        cluster = cm.Cluster('test-cluster', 3, PROFILE_ID,
+                             min_size=1, id=CLUSTER_ID)
+        node1 = mock.Mock(status='ACTIVE')
+        node2 = mock.Mock(status='ACTIVE')
+        node3 = mock.Mock(status='ACTIVE')
+        mock_load.return_value = [node1, node2, node3]
+
+        cluster.eval_status(self.context, 'TEST')
+
+        mock_load.assert_called_once_with(self.context, cluster_id=CLUSTER_ID)
+        mock_update.assert_called_once_with(
+            self.context, CLUSTER_ID,
+            {'status': consts.CS_ACTIVE,
+             'status_reason': 'TEST: number of active nodes is equal or above '
+                              'desired_capacity (3).'})
+
+    @mock.patch.object(co.Cluster, 'update')
+    @mock.patch.object(node_mod.Node, 'load_all')
     def test_eval_status_above_desired_capacity(self, mock_load, mock_update):
         cluster = cm.Cluster('test-cluster', 2, PROFILE_ID,
                              min_size=1, id=CLUSTER_ID)
@@ -896,7 +915,7 @@ class TestCluster(base.SenlinTestCase):
         mock_update.assert_called_once_with(
             self.context, CLUSTER_ID,
             {'status': consts.CS_ACTIVE,
-             'status_reason': 'TEST: number of active nodes is above '
+             'status_reason': 'TEST: number of active nodes is equal or above '
                               'desired_capacity (2).'})
 
     @mock.patch.object(co.Cluster, 'update')
@@ -953,7 +972,7 @@ class TestCluster(base.SenlinTestCase):
             self.context, CLUSTER_ID,
             {'desired_capacity': 0,
              'status': consts.CS_ACTIVE,
-             'status_reason': 'TEST: number of active nodes is above '
+             'status_reason': 'TEST: number of active nodes is equal or above '
                               'desired_capacity (0).'})
 
     @mock.patch.object(co.Cluster, 'update')
@@ -993,5 +1012,5 @@ class TestCluster(base.SenlinTestCase):
             self.context, CLUSTER_ID,
             {'max_size': 6,
              'status': consts.CS_ACTIVE,
-             'status_reason': 'TEST: number of active nodes is above '
+             'status_reason': 'TEST: number of active nodes is equal or above '
                               'desired_capacity (2).'})

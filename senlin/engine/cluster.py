@@ -550,7 +550,7 @@ class Cluster(object):
                        "(%(n)d).") % {'o': operation, 'n': desired}
         elif max_size < 0 or active_count <= max_size:
             status = consts.CS_ACTIVE
-            reason = _("%(o)s: number of active nodes is above "
+            reason = _("%(o)s: number of active nodes is equal or above "
                        "desired_capacity "
                        "(%(n)d).") % {'o': operation, 'n': desired}
         else:
