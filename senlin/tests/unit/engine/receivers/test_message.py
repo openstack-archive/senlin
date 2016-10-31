@@ -528,6 +528,11 @@ class TestMessage(base.SenlinTestCase):
         ]
         mock_build_action.assert_has_calls(mock_calls)
         mock_start_action.assert_called_once_with()
+        mock_calls2 = [
+            mock.call('queue1', 'ID1', 'claim_id'),
+            mock.call('queue1', 'ID2', 'claim_id')
+        ]
+        mock_zc.message_delete.assert_has_calls(mock_calls2)
 
     @mock.patch.object(mmod.Message, 'zaqar')
     def test_notify_no_message(self, mock_zaqar):
@@ -552,6 +557,7 @@ class TestMessage(base.SenlinTestCase):
         mock_zc = mock.Mock()
         mock_zaqar.return_value = mock_zc
         mock_claim = mock.Mock()
+        mock_claim.id = 'claim_id'
         message1 = {
             'body': {'cluster': 'c1', 'action': 'CLUSTER_SCALE_IN'},
             'id': 'ID1'
@@ -576,6 +582,11 @@ class TestMessage(base.SenlinTestCase):
         ]
         mock_build_action.assert_has_calls(mock_calls)
         mock_start_action.assert_called_once_with()
+        mock_calls2 = [
+            mock.call('queue1', 'ID1', 'claim_id'),
+            mock.call('queue1', 'ID2', 'claim_id')
+        ]
+        mock_zc.message_delete.assert_has_calls(mock_calls2)
 
     @mock.patch.object(mmod.Message, 'zaqar')
     def test_notify_claiming_message_failed(self, mock_zaqar):

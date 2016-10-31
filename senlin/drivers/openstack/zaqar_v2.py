@@ -50,6 +50,7 @@ class ZaqarClient(base.DriverBase):
                                               ignore_missing)
 
     @sdk.translate_exception
-    def message_delete(self, queue_name, message, ignore_missing=True):
+    def message_delete(self, queue_name, message, claim_id=None,
+                       ignore_missing=True):
         return self.conn.message.delete_message(queue_name, message,
-                                                ignore_missing)
+                                                claim_id, ignore_missing)
