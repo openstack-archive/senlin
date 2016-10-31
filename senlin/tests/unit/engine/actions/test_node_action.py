@@ -13,6 +13,7 @@
 import eventlet
 import mock
 
+from senlin.common import consts
 from senlin.common import scaleutils
 from senlin.engine.actions import base as base_action
 from senlin.engine.actions import node_action
@@ -83,7 +84,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_check.assert_called_once_with(cluster, 11, None, None, True)
         node.do_create.assert_called_once_with(action.context)
         cluster.eval_status.assert_called_once_with(
-            action.context, action.NODE_CREATE, desired_capacity=11)
+            action.context, consts.NODE_CREATE, desired_capacity=11)
 
     @mock.patch.object(node_obj.Node, 'update')
     @mock.patch.object(scaleutils, 'check_size_params')
@@ -143,7 +144,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_check.assert_called_once_with(cluster, 11, None, None, True)
         node.do_create.assert_called_once_with(action.context)
         cluster.eval_status.assert_called_once_with(
-            action.context, action.NODE_CREATE, desired_capacity=11)
+            action.context, consts.NODE_CREATE, desired_capacity=11)
 
     def test_do_delete_okay(self, mock_load):
         node = mock.Mock(id='NID')
@@ -197,7 +198,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_count.assert_called_once_with(action.context, 'CID')
         mock_check.assert_called_once_with(cluster, 1, None, None, True)
         cluster.eval_status.assert_called_once_with(
-            action.context, action.NODE_DELETE, desired_capacity=1)
+            action.context, consts.NODE_DELETE, desired_capacity=1)
 
     @mock.patch.object(scaleutils, 'check_size_params')
     @mock.patch.object(node_obj.Node, 'count_by_cluster')
@@ -253,7 +254,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_check.assert_called_once_with(cluster, 1, None, None, True)
         node.do_delete.assert_called_once_with(action.context)
         cluster.eval_status.assert_called_once_with(
-            action.context, action.NODE_DELETE)
+            action.context, consts.NODE_DELETE)
 
     @mock.patch.object(eventlet, 'sleep')
     @mock.patch.object(scaleutils, 'check_size_params')
@@ -286,7 +287,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_sleep.assert_called_once_with(10)
         node.do_delete.assert_called_once_with(action.context)
         cluster.eval_status.assert_called_once_with(
-            action.context, action.NODE_DELETE, desired_capacity=1)
+            action.context, consts.NODE_DELETE, desired_capacity=1)
 
     @mock.patch.object(eventlet, 'sleep')
     @mock.patch.object(scaleutils, 'check_size_params')
@@ -317,7 +318,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_check.assert_called_once_with(cluster, 1, None, None, True)
         node.do_delete.assert_called_once_with(action.context)
         cluster.eval_status.assert_called_once_with(
-            action.context, action.NODE_DELETE, desired_capacity=1)
+            action.context, consts.NODE_DELETE, desired_capacity=1)
 
     @mock.patch.object(eventlet, 'sleep')
     @mock.patch.object(scaleutils, 'check_size_params')
@@ -348,7 +349,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_check.assert_called_once_with(cluster, 1, None, None, True)
         node.do_delete.assert_called_once_with(action.context)
         cluster.eval_status.assert_called_once_with(
-            action.context, action.NODE_DELETE)
+            action.context, consts.NODE_DELETE)
 
     def test_do_delete_derived_success(self, mock_load):
 
