@@ -107,7 +107,7 @@ class NodeTest(base.SenlinTestCase):
         obj_2.to_dict.return_value = {'k': 'v2'}
         mock_load.return_value = [obj_1, obj_2]
 
-        req = orno.NodeListRequestBody()
+        req = orno.NodeListRequest()
         result = self.eng.node_list2(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
@@ -123,8 +123,8 @@ class NodeTest(base.SenlinTestCase):
         mock_load.return_value = [obj_1, obj_2]
         mock_find.return_value = mock.Mock(id='CLUSTER_ID')
 
-        req = orno.NodeListRequestBody(cluster_id='MY_CLUSTER_NAME',
-                                       project_safe=True)
+        req = orno.NodeListRequest(cluster_id='MY_CLUSTER_NAME',
+                                   project_safe=True)
         result = self.eng.node_list2(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
@@ -141,10 +141,9 @@ class NodeTest(base.SenlinTestCase):
         mock_load.return_value = [obj_1, obj_2]
 
         MARKER_UUID = '2fd5b45f-bae4-4cdb-b283-a71e9f9805c7'
-        req = orno.NodeListRequestBody(status=['ACTIVE'], sort='status',
-                                       limit=123,
-                                       marker=MARKER_UUID,
-                                       project_safe=True)
+        req = orno.NodeListRequest(status=['ACTIVE'], sort='status',
+                                   limit=123, marker=MARKER_UUID,
+                                   project_safe=True)
         result = self.eng.node_list2(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
@@ -158,8 +157,7 @@ class NodeTest(base.SenlinTestCase):
         mock_find.side_effect = exc.ResourceNotFound(type='cluster',
                                                      id='BOGUS')
 
-        req = orno.NodeListRequestBody(cluster_id='BOGUS',
-                                       project_safe=True)
+        req = orno.NodeListRequest(cluster_id='BOGUS', project_safe=True)
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_list2,
@@ -174,20 +172,20 @@ class NodeTest(base.SenlinTestCase):
     def test_node_list2_with_project_safe(self, mock_load):
         mock_load.return_value = []
 
-        req = orno.NodeListRequestBody(project_safe=True)
+        req = orno.NodeListRequest(project_safe=True)
         result = self.eng.node_list2(self.ctx, req.obj_to_primitive())
         self.assertEqual([], result)
         mock_load.assert_called_once_with(self.ctx, project_safe=True)
         mock_load.reset_mock()
 
-        req = orno.NodeListRequestBody(project_safe=False)
+        req = orno.NodeListRequest(project_safe=False)
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_list2,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.Forbidden, ex.exc_info[0])
 
         self.ctx.is_admin = True
-        req = orno.NodeListRequestBody(project_safe=False)
+        req = orno.NodeListRequest(project_safe=False)
         result = self.eng.node_list2(self.ctx, req.obj_to_primitive())
         self.assertEqual([], result)
         mock_load.assert_called_once_with(self.ctx, project_safe=False)
@@ -197,7 +195,7 @@ class NodeTest(base.SenlinTestCase):
     def test_node_list2_empty(self, mock_load):
         mock_load.return_value = []
 
-        req = orno.NodeListRequestBody()
+        req = orno.NodeListRequest()
         result = self.eng.node_list2(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([], result)

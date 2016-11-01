@@ -878,7 +878,7 @@ class ClusterTest(base.SenlinTestCase):
         x_obj_2 = mock.Mock()
         x_obj_2.to_dict.return_value = {'k': 'v2'}
         mock_load.return_value = [x_obj_1, x_obj_2]
-        req = orco.ClusterListRequestBody(project_safe=True)
+        req = orco.ClusterListRequest(project_safe=True)
 
         result = self.eng.cluster_list2(self.ctx, req.obj_to_primitive())
 

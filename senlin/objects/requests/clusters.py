@@ -21,7 +21,7 @@ CONF.import_opt('default_action_timeout', 'senlin.common.config')
 
 
 @base.SenlinObjectRegistry.register
-class ClusterListRequestBody(base.SenlinObject):
+class ClusterListRequest(base.SenlinObject):
 
     fields = {
         'name': fields.ListOfStringsField(nullable=True),

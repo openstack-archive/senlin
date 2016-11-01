@@ -67,10 +67,10 @@ class ClusterController(wsgi.Controller):
                                         is_global)
         params['project_safe'] = not unsafe
         norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterListRequestBody', params)
+            'ClusterListRequest', params, None)
         obj = None
         try:
-            obj = vorc.ClusterListRequestBody.obj_from_primitive(norm_req)
+            obj = vorc.ClusterListRequest.obj_from_primitive(norm_req)
             jsonschema.validate(norm_req, obj.to_json_schema())
         except ValueError as ex:
             raise exc.HTTPBadRequest(six.text_type(ex))

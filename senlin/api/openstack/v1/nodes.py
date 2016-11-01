@@ -60,8 +60,8 @@ class NodeController(wsgi.Controller):
 
         try:
             norm_req = obj_base.SenlinObject.normalize_req(
-                'NodeListRequestBody', params, None)
-            obj = vorn.NodeListRequestBody.obj_from_primitive(norm_req)
+                'NodeListRequest', params)
+            obj = vorn.NodeListRequest.obj_from_primitive(norm_req)
             jsonschema.validate(norm_req, obj.to_json_schema())
         except (ValueError) as ex:
             raise exc.HTTPBadRequest(six.text_type(ex))

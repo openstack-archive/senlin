@@ -36,7 +36,7 @@ class NodeCreateRequest(base.SenlinObject):
 
 
 @base.SenlinObjectRegistry.register
-class NodeListRequestBody(base.SenlinObject):
+class NodeListRequest(base.SenlinObject):
 
     fields = {
         'cluster_id': fields.StringField(nullable=True),
