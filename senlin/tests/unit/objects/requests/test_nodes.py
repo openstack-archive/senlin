@@ -137,3 +137,22 @@ class TestNodeGet(test_base.SenlinTestCase):
         sot = nodes.NodeGetRequest()
         sot.obj_set_defaults()
         self.assertFalse(sot.show_details)
+
+
+class TestNodeUpdate(test_base.SenlinTestCase):
+
+    body = {
+        'identity': 'test-node',
+        'name': 'test-node-newname',
+        'profile_id': 'test-profile',
+        'metadata': {'foo': 'bar'},
+        'role': 'master'
+    }
+
+    def test_node_update_request(self):
+        sot = nodes.NodeUpdateRequest(**self.body)
+        self.assertEqual('test-node', sot.identity)
+        self.assertEqual('test-node-newname', sot.name)
+        self.assertEqual('test-profile', sot.profile_id)
+        self.assertEqual('master', sot.role)
+        self.assertEqual({'foo': 'bar'}, sot.metadata)

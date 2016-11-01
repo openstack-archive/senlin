@@ -59,3 +59,15 @@ class NodeGetRequest(base.SenlinObject):
         'show_details': fields.FlexibleBooleanField(nullable=True,
                                                     default=False)
     }
+
+
+@base.SenlinObjectRegistry.register
+class NodeUpdateRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'metadata': fields.JsonField(nullable=True),
+        'name': fields.NameField(nullable=True),
+        'profile_id': fields.StringField(nullable=True),
+        'role': fields.fields.StringField(nullable=True)
+    }
