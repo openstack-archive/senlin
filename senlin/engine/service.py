@@ -1732,6 +1732,69 @@ class EngineService(service.Service):
 
         return resp
 
+    @request_context2
+    def node_update2(self, ctx, req):
+        """Update a node with new propertye values.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the NodeUpdateRequest object.
+        :return: A dictionary containing the updated representation of the
+                 node along with the ID of the action triggered by this
+                 request.
+        """
+        LOG.info(_LI("Updating node '%s'."), req.identity)
+
+        db_node = self.node_find(ctx, req.identity)
+        if req.obj_attr_is_set('profile_id') and req.profile_id is not None:
+            try:
+                db_profile = self.profile_find(ctx, req.profile_id)
+            except exception.ResourceNotFound as ex:
+                msg = ex.enhance_msg('specified', ex)
+                raise exception.BadRequest(msg=msg)
+            profile_id = db_profile.id
+
+            # check if profile_type matches
+            old_profile = self.profile_find(ctx, db_node.profile_id)
+            if old_profile.type != db_profile.type:
+                msg = _('Cannot update a node to a different profile type, '
+                        'operation aborted.')
+                LOG.error(msg)
+                raise exception.ProfileTypeNotMatch(message=msg)
+
+            inputs = {'new_profile_id': profile_id}
+        else:
+            inputs = {}
+
+        if req.obj_attr_is_set('name') and req.name:
+            if req.name != db_node.name:
+                inputs['name'] = req.name
+        if req.obj_attr_is_set('role') and req.role != db_node.role:
+            inputs['role'] = req.role
+        if req.obj_attr_is_set('metadata'):
+            if req.metadata != db_node.metadata:
+                inputs['metadata'] = req.metadata
+
+        if not inputs:
+            msg = _("No property needs an update.")
+            raise exception.BadRequest(msg=msg)
+
+        params = {
+            'name': 'node_update_%s' % db_node.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+            'inputs': inputs,
+        }
+        action_id = action_mod.Action.create(ctx, db_node.id,
+                                             consts.NODE_UPDATE, **params)
+        dispatcher.start_action()
+        LOG.info(_LI("Node update action is queued: %s."), action_id)
+
+        node = node_mod.Node.load(ctx, db_node=db_node)
+        resp = node.to_dict()
+        resp['action'] = action_id
+
+        return resp
+
     @request_context
     def node_delete(self, context, identity):
         """Delete the specified node.

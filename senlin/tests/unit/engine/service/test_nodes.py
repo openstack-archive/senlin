@@ -624,6 +624,168 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(service.EngineService, 'node_find')
+    def test_node_update2(self, mock_find, mock_load, mock_action, mock_start):
+        x_obj = mock.Mock(id='FAKE_NODE_ID', name='NODE1', role='ROLE1',
+                          metadata={'KEY': 'VALUE'})
+        mock_find.return_value = x_obj
+        x_node = mock.Mock()
+        x_node.to_dict.return_value = {'foo': 'bar'}
+        mock_load.return_value = x_node
+        mock_action.return_value = 'ACTION_ID'
+
+        req = orno.NodeUpdateRequest(identity='FAKE_NODE',
+                                     name='NODE2',
+                                     role='NEW_ROLE',
+                                     metadata={'foo1': 'bar1'})
+
+        # all properties changed except profile id
+        result = self.eng.node_update2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'foo': 'bar', 'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
+        mock_action.assert_called_once_with(
+            self.ctx, 'FAKE_NODE_ID', consts.NODE_UPDATE,
+            name='node_update_FAKE_NOD',
+            cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
+            inputs={
+                'name': 'NODE2',
+                'role': 'NEW_ROLE',
+                'metadata': {
+                    'foo1': 'bar1',
+                }
+            })
+        mock_start.assert_called_once_with()
+        mock_load.assert_called_once_with(self.ctx, db_node=x_obj)
+
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(action_mod.Action, 'create')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(service.EngineService, 'node_find')
+    def test_node_update2_new_profile(self, mock_find, mock_load, mock_profile,
+                                      mock_action, mock_start):
+        x_obj = mock.Mock(id='FAKE_NODE_ID', role='ROLE1',
+                          metadata={'KEY': 'VALUE'},
+                          profile_id='OLD_PROFILE_ID')
+        x_obj.name = 'NODE1'
+        mock_find.return_value = x_obj
+        # Same profile type
+        mock_profile.side_effect = [
+            mock.Mock(id='NEW_PROFILE_ID', type='PROFILE_TYPE'),
+            mock.Mock(id='OLD_PROFILE_ID', type='PROFILE_TYPE'),
+        ]
+        x_node = mock.Mock()
+        x_node.to_dict.return_value = {'foo': 'bar'}
+        mock_load.return_value = x_node
+        mock_action.return_value = 'ACTION_ID'
+
+        # all properties are filtered out except for profile_id
+        req = orno.NodeUpdateRequest(identity='FAKE_NODE',
+                                     name='NODE1',
+                                     role='ROLE1',
+                                     metadata={'KEY': 'VALUE'},
+                                     profile_id='NEW_PROFILE')
+        result = self.eng.node_update2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'foo': 'bar', 'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
+        mock_profile.assert_has_calls([
+            mock.call(self.ctx, 'NEW_PROFILE'),
+            mock.call(self.ctx, 'OLD_PROFILE_ID'),
+        ])
+        mock_action.assert_called_once_with(
+            self.ctx, 'FAKE_NODE_ID', consts.NODE_UPDATE,
+            name='node_update_FAKE_NOD',
+            cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
+            inputs={
+                'new_profile_id': 'NEW_PROFILE_ID',
+            })
+        mock_start.assert_called_once_with()
+        mock_load.assert_called_once_with(self.ctx, db_node=x_obj)
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    def test_node_update2_node_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='node', id='Bogus')
+
+        req = orno.NodeUpdateRequest(identity='Bogus')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_update2, self.ctx,
+                               req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual('The node (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'node_find')
+    def test_node_update2_profile_not_found(self, mock_find, mock_profile):
+        mock_find.return_value = mock.Mock()
+        mock_profile.side_effect = exc.ResourceNotFound(type='profile',
+                                                        id='Bogus')
+
+        req = orno.NodeUpdateRequest(identity='FAKE_NODE',
+                                     profile_id='Bogus')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_update2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual('The request is malformed: The specified profile '
+                         '(Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
+        mock_profile.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(service.EngineService, 'node_find')
+    def test_node_update2_diff_profile_type(self, mock_find, mock_profile):
+        mock_find.return_value = mock.Mock(profile_id='OLD_PROFILE_ID')
+        mock_profile.side_effect = [
+            mock.Mock(id='NEW_PROFILE_ID', type='NEW_PROFILE_TYPE'),
+            mock.Mock(id='OLD_PROFILE_ID', type='OLD_PROFILE_TYPE'),
+        ]
+
+        req = orno.NodeUpdateRequest(identity='FAKE_NODE',
+                                     profile_id='NEW_PROFILE')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_update2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ProfileTypeNotMatch, ex.exc_info[0])
+        self.assertEqual('Cannot update a node to a different profile type, '
+                         'operation aborted.',
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
+        mock_profile.assert_has_calls([
+            mock.call(self.ctx, 'NEW_PROFILE'),
+            mock.call(self.ctx, 'OLD_PROFILE_ID'),
+        ])
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    def test_node_update2_no_property_for_update(self, mock_find):
+        x_obj = mock.Mock(id='FAKE_NODE_ID', name='NODE1', role='ROLE1',
+                          metadata={'KEY': 'VALUE'})
+        mock_find.return_value = x_obj
+
+        # no property has been specified for update
+        req = orno.NodeUpdateRequest(identity='FAKE_NODE')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_update2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual('The request is malformed: No property needs an '
+                         'update.',
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
+
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'node_find')
     def test_node_delete(self, mock_find, mock_action, mock_start):
         mock_find.return_value = mock.Mock(id='12345678AB', status='ACTIVE',
