@@ -34,7 +34,7 @@ class ClusteringAPIClient(rest_client.RestClient):
                                             self.api_microversion)
         return headers
 
-    def _parsed_resp(self, resp, body):
+    def get_resp(self, resp, body):
         # Parse status code and location
         res = {
             'status': int(resp.pop('status')),
@@ -57,13 +57,13 @@ class ClusteringAPIClient(rest_client.RestClient):
             uri += '?{0}'.format(urllib.urlencode(params))
         resp, body = self.get(uri)
 
-        return self._parsed_resp(resp, body)
+        return self.get_resp(resp, body)
 
     def create_obj(self, obj_type, attrs):
         uri = '{0}/{1}'.format(self.version, obj_type)
         resp, body = self.post(uri, body=jsonutils.dumps(attrs))
 
-        return self._parsed_resp(resp, body)
+        return self.get_resp(resp, body)
 
     def list_objs(self, obj_type, params=None):
         uri = '{0}/{1}'.format(self.version, obj_type)
@@ -71,19 +71,19 @@ class ClusteringAPIClient(rest_client.RestClient):
             uri += '?{0}'.format(urllib.urlencode(params))
         resp, body = self.get(uri)
 
-        return self._parsed_resp(resp, body)
+        return self.get_resp(resp, body)
 
     def update_obj(self, obj_type, obj_id, attrs):
         uri = '{0}/{1}/{2}'.format(self.version, obj_type, obj_id)
         resp, body = self.patch(uri, body=jsonutils.dumps(attrs))
 
-        return self._parsed_resp(resp, body)
+        return self.get_resp(resp, body)
 
     def delete_obj(self, obj_type, obj_id):
         uri = '{0}/{1}/{2}'.format(self.version, obj_type, obj_id)
         resp, body = self.delete(uri)
 
-        return self._parsed_resp(resp, body)
+        return self.get_resp(resp, body)
 
     def validate_obj(self, obj_type, attrs):
         uri = '{0}/{1}/validate'.format(self.version, obj_type)
@@ -91,13 +91,13 @@ class ClusteringAPIClient(rest_client.RestClient):
         resp, body = self.post(uri, body=jsonutils.dumps(attrs),
                                headers=headers)
 
-        return self._parsed_resp(resp, body)
+        return self.get_resp(resp, body)
 
     def trigger_webhook(self, webhook_url, params=None):
         if params is not None:
             params = jsonutils.dumps(params)
         resp, body = self.raw_request(webhook_url, 'POST', body=params)
-        return self._parsed_resp(resp, body)
+        return self.get_resp(resp, body)
 
     def trigger_action(self, obj_type, obj_id, params=None):
         uri = '{0}/{1}/{2}/actions'.format(self.version, obj_type, obj_id)
@@ -105,7 +105,7 @@ class ClusteringAPIClient(rest_client.RestClient):
             params = jsonutils.dumps(params)
         resp, body = self.post(uri, body=params)
 
-        return self._parsed_resp(resp, body)
+        return self.get_resp(resp, body)
 
     def cluster_replace_nodes(self, obj_type, obj_id, params=None):
         uri = '{0}/{1}/{2}/actions'.format(self.version, obj_type, obj_id)
@@ -114,7 +114,7 @@ class ClusteringAPIClient(rest_client.RestClient):
         headers = self.get_headers()
         resp, body = self.post(uri, body=params, headers=headers)
 
-        return self._parsed_resp(resp, body)
+        return self.get_resp(resp, body)
 
     def list_cluster_policies(self, cluster_id, params=None):
         uri = '{0}/clusters/{1}/policies'.format(self.version, cluster_id)
@@ -123,14 +123,14 @@ class ClusteringAPIClient(rest_client.RestClient):
 
         resp, body = self.get(uri)
 
-        return self._parsed_resp(resp, body)
+        return self.get_resp(resp, body)
 
     def get_cluster_policy(self, cluster_id, policy_id):
         uri = '{0}/clusters/{1}/policies/{2}'.format(self.version, cluster_id,
                                                      policy_id)
         resp, body = self.get(uri)
 
-        return self._parsed_resp(resp, body)
+        return self.get_resp(resp, body)
 
     def wait_for_status(self, obj_type, obj_id, expected_status, timeout=None):
         if timeout is None:

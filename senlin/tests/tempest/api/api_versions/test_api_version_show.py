@@ -20,7 +20,7 @@ class TestAPIVersionShow(base.BaseSenlinAPITest):
     @decorators.idempotent_id('4a270caa-9917-4acd-98ef-6636f9618037')
     def test_API_version_show(self):
         resp, body = self.client.request('GET', '/v1/')
-        res = self.client._parsed_resp(resp, body)
+        res = self.client.get_resp(resp, body)
 
         # Verify resp of API version show
         self.assertEqual(200, res['status'])
