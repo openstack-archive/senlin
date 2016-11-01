@@ -1820,3 +1820,194 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: size check.",
                          six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_scale_out2(self, mock_find, mock_check, mock_action,
+                                notify):
+        x_cluster = mock.Mock(id='12345678ABCDEFGH', desired_capacity=4)
+        mock_find.return_value = x_cluster
+        mock_check.return_value = None
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterScaleOutRequest(identity='CLUSTER', count=1)
+
+        result = self.eng.cluster_scale_out2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_check.assert_called_once_with(x_cluster, 5)
+        mock_action.assert_called_once_with(
+            self.ctx, '12345678ABCDEFGH', consts.CLUSTER_SCALE_OUT,
+            name='cluster_scale_out_12345678',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={'count': 1},
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_scale_out2_cluster_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='Bogus')
+        req = orco.ClusterScaleOutRequest(identity='Bogus', count=1)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_scale_out2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual('The cluster (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_scale_out2_count_is_none(self, mock_find, mock_action,
+                                              notify):
+        mock_find.return_value = mock.Mock(id='12345678ABCDEFGH',
+                                           desired_capacity=4)
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterScaleOutRequest(identity='CLUSTER')
+
+        result = self.eng.cluster_scale_out2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_action.assert_called_once_with(
+            self.ctx, '12345678ABCDEFGH', consts.CLUSTER_SCALE_OUT,
+            name='cluster_scale_out_12345678',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={},
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_scale_out2_count_zero(self, mock_find):
+        mock_find.return_value = mock.Mock(desired_capacity=4)
+        req = orco.ClusterScaleOutRequest(identity='CLUSTER', count=0)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_scale_out2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Count for scale-out "
+                         "request cannot be 0.",
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_scale_out2_failed_size_check(self, mock_find, mock_check):
+        x_cluster = mock.Mock(desired_capacity=4)
+        mock_find.return_value = x_cluster
+        mock_check.return_value = 'size limit'
+        req = orco.ClusterScaleOutRequest(identity='CLUSTER', count=2)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_scale_out2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: size limit.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_check.assert_called_once_with(x_cluster, 6)
+
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_scale_in2(self, mock_find, mock_check, mock_action,
+                               notify):
+        x_cluster = mock.Mock(id='12345678ABCD', desired_capacity=4)
+        mock_find.return_value = x_cluster
+        mock_check.return_value = None
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterScaleInRequest(identity='CLUSTER', count=2)
+
+        result = self.eng.cluster_scale_in2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_check.assert_called_once_with(x_cluster, 2)
+        mock_action.assert_called_once_with(
+            self.ctx, '12345678ABCD', consts.CLUSTER_SCALE_IN,
+            name='cluster_scale_in_12345678',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={'count': 2},
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_scale_in2_cluster_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='Bogus')
+        req = orco.ClusterScaleInRequest(identity='Bogus', count=2)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_scale_in2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual('The cluster (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_scale_in2_count_is_none(self, mock_find, mock_action,
+                                             notify):
+        mock_find.return_value = mock.Mock(id='FOO', desired_capacity=4)
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterScaleInRequest(identity='CLUSTER')
+
+        result = self.eng.cluster_scale_in2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_action.assert_called_once_with(
+            self.ctx, 'FOO', consts.CLUSTER_SCALE_IN,
+            name='cluster_scale_in_FOO',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={},
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_scale_in2_count_zero(self, mock_find):
+        mock_find.return_value = mock.Mock(desired_capacity=4)
+        req = orco.ClusterScaleInRequest(identity='CLUSTER', count=0)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_scale_in2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Count for scale-in "
+                         "request cannot be 0.",
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_scale_in2_failed_size_check(self, mock_find, mock_check):
+        x_cluster = mock.Mock(desired_capacity=4)
+        mock_find.return_value = x_cluster
+        mock_check.return_value = 'size limit'
+        req = orco.ClusterScaleInRequest(identity='FAKE_CLUSTER', count=2)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_scale_in2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: size limit.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
+        mock_check.assert_called_once_with(x_cluster, 2)
