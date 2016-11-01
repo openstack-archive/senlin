@@ -206,6 +206,19 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
                                                     'UnknownPolicy')
         self.assertEqual(0, len(results))
 
+    def test_policy_get_all_by_policy_name(self):
+        for pid in ['policy1', 'policy2']:
+            self.create_policy(id=pid)
+            db_api.cluster_policy_attach(self.ctx, self.cluster.id, pid, {})
+
+        results = db_api.cluster_policy_get_by_name(self.ctx, self.cluster.id,
+                                                    'test_policy')
+        self.assertEqual(2, len(results))
+
+        results = db_api.cluster_policy_get_by_name(self.ctx, self.cluster.id,
+                                                    'unknown_policy')
+        self.assertEqual(0, len(results))
+
     def test_policy_get_all_by_policy_type_with_filter(self):
         for pid in ['policy1', 'policy2']:
             self.create_policy(id=pid)
@@ -221,5 +234,23 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
         filters = {'enabled': False}
         results = db_api.cluster_policy_get_by_type(self.ctx, self.cluster.id,
                                                     'ScalingPolicy',
+                                                    filters=filters)
+        self.assertEqual(0, len(results))
+
+    def test_policy_get_all_by_policy_name_with_filter(self):
+        for pid in ['policy1', 'policy2']:
+            self.create_policy(id=pid)
+            db_api.cluster_policy_attach(self.ctx, self.cluster.id, pid,
+                                         {'enabled': True})
+
+        filters = {'enabled': True}
+        results = db_api.cluster_policy_get_by_name(self.ctx, self.cluster.id,
+                                                    'test_policy',
+                                                    filters=filters)
+        self.assertEqual(2, len(results))
+
+        filters = {'enabled': False}
+        results = db_api.cluster_policy_get_by_name(self.ctx, self.cluster.id,
+                                                    'test_policy',
                                                     filters=filters)
         self.assertEqual(0, len(results))

@@ -551,6 +551,22 @@ def cluster_policy_get_by_type(context, cluster_id, policy_type, filters=None):
     return query.all()
 
 
+def cluster_policy_get_by_name(context, cluster_id, policy_name, filters=None):
+
+    query = model_query(context, models.ClusterPolicies)
+    query = query.filter_by(cluster_id=cluster_id)
+
+    key_enabled = consts.CP_ENABLED
+    if filters and key_enabled in filters:
+        filter_enabled = {key_enabled: filters[key_enabled]}
+        query = utils.exact_filter(query, models.ClusterPolicies,
+                                   filter_enabled)
+
+    query = query.join(models.Policy).filter(models.Policy.name == policy_name)
+
+    return query.all()
+
+
 def cluster_policy_attach(context, cluster_id, policy_id, values):
     with session_for_write() as session:
         binding = models.ClusterPolicies()
