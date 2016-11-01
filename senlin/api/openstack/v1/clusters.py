@@ -230,8 +230,7 @@ class ClusterController(wsgi.Controller):
 
         return self.rpc_client.call2(ctx, 'cluster_del_nodes2', obj)
 
-    def _do_resize(self, context, cluster_id, this_action, body):
-        data = body.get(this_action)
+    def _do_resize(self, context, cluster_id, data):
         params = {'identity': cluster_id}
         if consts.ADJUSTMENT_TYPE in data:
             params['adjustment_type'] = data.get(consts.ADJUSTMENT_TYPE)
@@ -278,6 +277,42 @@ class ClusterController(wsgi.Controller):
 
         return self.rpc_client.call2(context, 'cluster_resize2', obj)
 
+    def _do_scale_out(self, context, cid, count):
+        params = {'identity': cid}
+        if count is not None:
+            params['count'] = count
+
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'ClusterScaleOutRequest', params, None)
+        obj = None
+        try:
+            obj = vorc.ClusterScaleOutRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        return self.rpc_client.call2(context, 'cluster_scale_out2', obj)
+
+    def _do_scale_in(self, context, cid, count):
+        params = {'identity': cid}
+        if count is not None:
+            params['count'] = count
+
+        norm_req = obj_base.SenlinObject.normalize_req('ClusterScaleInRequest',
+                                                       params, None)
+        obj = None
+        try:
+            obj = vorc.ClusterScaleInRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        return self.rpc_client.call2(context, 'cluster_scale_in2', obj)
+
     @util.policy_enforce
     def action(self, req, cluster_id, body=None):
         """Perform specified action on a cluster."""
@@ -300,15 +335,14 @@ class ClusterController(wsgi.Controller):
             nodes = body.get(this_action).get('nodes', [])
             res = self._del_nodes(req.context, cluster_id, nodes)
         elif this_action == self.RESIZE:
-            res = self._do_resize(req.context, cluster_id, this_action, body)
+            data = body.get(this_action)
+            res = self._do_resize(req.context, cluster_id, data)
         elif this_action == self.SCALE_OUT:
             count = body.get(this_action).get('count')
-            res = self.rpc_client.cluster_scale_out(req.context, cluster_id,
-                                                    count)
+            res = self._do_scale_out(req.context, cluster_id, count)
         elif this_action == self.SCALE_IN:
             count = body.get(this_action).get('count')
-            res = self.rpc_client.cluster_scale_in(req.context, cluster_id,
-                                                   count)
+            res = self._do_scale_in(req.context, cluster_id, count)
         elif this_action == self.POLICY_ATTACH:
             raw_data = body.get(this_action)
             data = self._sanitize_policy(raw_data)
