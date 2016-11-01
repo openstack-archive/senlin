@@ -109,23 +109,24 @@ class NodeController(wsgi.Controller):
 
     @util.policy_enforce
     def update(self, req, node_id, body):
-        node_data = body.get('node')
-        if node_data is None:
+        data = body.get('node')
+        if data is None:
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'node' key in request body."))
-        cluster_id = node_data.get(consts.NODE_CLUSTER_ID)
-        if cluster_id is not None:
-            raise exc.HTTPBadRequest(_("Updating cluster_id is not allowed, "
-                                       "please invoke cluster add/remove "
-                                       "node actions if needed."))
+        params = data
+        params['identity'] = node_id
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req('NodeUpdateRequest',
+                                                           params, None)
+            obj = vorn.NodeUpdateRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
-        name = node_data.get(consts.NODE_NAME, None)
-        profile_id = node_data.get(consts.NODE_PROFILE_ID, None)
-        role = node_data.get(consts.NODE_ROLE, None)
-        metadata = node_data.get(consts.NODE_METADATA, None)
+        node = self.rpc_client.call2(req.context, 'node_update2', obj)
 
-        node = self.rpc_client.node_update(req.context, node_id, name,
-                                           profile_id, role, metadata)
         action_id = node.pop('action')
         result = {
             'node': node,

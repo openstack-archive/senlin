@@ -367,7 +367,6 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         nid = 'aaaa-bbbb-cccc'
         body = {
             'node': {
-                'id': nid,
                 'name': 'test_node',
                 'profile_id': 'xxxx-yyyy',
                 'role': None,
@@ -382,23 +381,21 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._patch('/nodes/%(node_id)s' % {'node_id': nid},
                           jsonutils.dumps(body))
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_response)
 
         res = self.controller.update(req, node_id=nid, body=body)
 
-        mock_call.assert_called_with(
-            req.context,
-            ('node_update', {
-                'identity': nid,
-                'name': 'test_node',
-                'profile_id': 'xxxx-yyyy',
-                'role': None,
-                'metadata': {},
-            })
-        )
+        mock_call.assert_called_with(req.context, 'node_update2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorn.NodeUpdateRequest)
+        self.assertEqual(nid, request.identity)
+        self.assertEqual('test_node', request.name)
+        self.assertEqual('xxxx-yyyy', request.profile_id)
+        self.assertIsNone(request.role)
+        self.assertEqual({}, request.metadata)
         result = {
-            'node': body['node'],
+            'node': engine_response,
             'location': '/actions/%s' % aid,
         }
         self.assertEqual(result, res)
@@ -411,7 +408,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._patch('/nodes/%(node_id)s' % {'node_id': nid},
                           jsonutils.dumps(body))
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update, req,
                                node_id=nid, body=body)
@@ -435,26 +432,19 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                           jsonutils.dumps(body))
 
         error = senlin_exc.ResourceNotFound(type='node', id=nid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      side_effect=shared.to_remote_error(error))
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
                                               req, node_id=nid, body=body)
 
-        mock_call.assert_called_with(
-            req.context,
-            ('node_update', {
-                'identity': nid,
-                'name': 'test_node',
-                'profile_id': 'xxxx-yyyy',
-                'role': None,
-                'metadata': {},
-            })
-        )
+        mock_call.assert_called_with(req.context, 'node_update2', mock.ANY)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+        msg = 'The node (non-exist-node) could not be found.'
+        self.assertEqual(msg, resp.json['error']['message'])
 
     def test_node_update_invalid_profile(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -472,24 +462,17 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                           jsonutils.dumps(body))
 
         error = senlin_exc.ResourceNotFound(type='profile', id=nid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      side_effect=shared.to_remote_error(error))
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.update,
                                               req, node_id=nid, body=body)
-        mock_call.assert_called_with(
-            req.context,
-            ('node_update', {
-                'identity': nid,
-                'name': 'test_node',
-                'profile_id': 'profile-not-exist',
-                'role': None,
-                'metadata': {},
-            })
-        )
+        mock_call.assert_called_with(req.context, 'node_update2', mock.ANY)
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+        msg = 'The profile (aaaa-bbbb-cccc) could not be found.'
+        self.assertEqual(msg, resp.json['error']['message'])
 
     def test_node_update_cluster_id_specified(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -499,13 +482,13 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._patch('/nodes/%(node_id)s' % {'node_id': nid},
                           jsonutils.dumps(body))
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
                                req, node_id=nid, body=body)
-        self.assertEqual('Updating cluster_id is not allowed, please invoke '
-                         'cluster add/remove node actions if needed.',
-                         six.text_type(ex))
+        msg = ' '.join(["Additional properties are not allowed",
+                        "('cluster_id' was unexpected)"])
+        self.assertEqual(msg, six.text_type(ex))
         self.assertFalse(mock_call.called)
 
     def test_node_update_denied_policy(self, mock_enforce):
