@@ -1382,6 +1382,46 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
+    @request_context2
+    def cluster_scale_out2(self, ctx, req):
+        """Inflate the size of a cluster by then given number (optional).
+
+        :param ctx: Request context for the call.
+        :param req: An instance of the ClusterScaleOutRequest object.
+        :return: A dict with the ID of the action fired.
+        """
+        db_cluster = self.cluster_find(ctx, req.identity)
+        if req.obj_attr_is_set('count'):
+            if req.count == 0:
+                err = _("Count for scale-out request cannot be 0.")
+                raise exception.BadRequest(msg=err)
+
+            err = su.check_size_params(db_cluster,
+                                       db_cluster.desired_capacity + req.count)
+            if err:
+                raise exception.BadRequest(msg=err)
+
+            LOG.info(_LI('Scaling out cluster %(name)s by %(delta)s nodes'),
+                     {'name': req.identity, 'delta': req.count})
+            inputs = {'count': req.count}
+        else:
+            LOG.info(_LI('Scaling out cluster %s'), db_cluster.name)
+            inputs = {}
+
+        params = {
+            'name': 'cluster_scale_out_%s' % db_cluster.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+            'inputs': inputs,
+        }
+        action_id = action_mod.Action.create(ctx, db_cluster.id,
+                                             consts.CLUSTER_SCALE_OUT,
+                                             **params)
+        dispatcher.start_action()
+        LOG.info(_LI("Cluster Scale out action queued: %s"), action_id)
+
+        return {'action': action_id}
+
     @request_context
     def cluster_scale_in(self, context, identity, count=None):
         """Deflate the size of a cluster by given number (optional).
@@ -1418,6 +1458,46 @@ class EngineService(service.Service):
             'inputs': inputs,
         }
         action_id = action_mod.Action.create(context, db_cluster.id,
+                                             consts.CLUSTER_SCALE_IN,
+                                             **params)
+        dispatcher.start_action()
+        LOG.info(_LI("Cluster Scale in action queued: %s."), action_id)
+
+        return {'action': action_id}
+
+    @request_context2
+    def cluster_scale_in2(self, ctx, req):
+        """Deflate the size of a cluster by given number (optional).
+
+        :param ctx: Request context for the call.
+        :param req: An instance of the ClusterScaleOutRequest object.
+        :return: A dict with the ID of the action fired.
+        """
+        db_cluster = self.cluster_find(ctx, req.identity)
+        if req.obj_attr_is_set('count'):
+            if req.count == 0:
+                err = _("Count for scale-in request cannot be 0.")
+                raise exception.BadRequest(msg=err)
+
+            err = su.check_size_params(db_cluster,
+                                       db_cluster.desired_capacity - req.count)
+            if err:
+                raise exception.BadRequest(msg=err)
+
+            LOG.info(_LI('Scaling in cluster %(name)s by %(delta)s nodes'),
+                     {'name': req.identity, 'delta': req.count})
+            inputs = {'count': req.count}
+        else:
+            LOG.info(_LI('Scaling in cluster %s'), db_cluster.name)
+            inputs = {}
+
+        params = {
+            'name': 'cluster_scale_in_%s' % db_cluster.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+            'inputs': inputs,
+        }
+        action_id = action_mod.Action.create(ctx, db_cluster.id,
                                              consts.CLUSTER_SCALE_IN,
                                              **params)
         dispatcher.start_action()
