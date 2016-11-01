@@ -307,18 +307,18 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'details': {}
         }
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_resp)
         response = self.controller.get(req, node_id=node_id)
 
-        mock_call.assert_called_once_with(
-            req.context, ('node_get', {'identity': node_id,
-                                       'show_details': False}))
-
+        mock_call.assert_called_with(req.context, 'node_get2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorn.NodeGetRequest)
+        self.assertEqual(node_id, request.identity)
         expected = {'node': engine_resp}
         self.assertEqual(expected, response)
 
-    @mock.patch.object(rpc_client.EngineClient, 'call')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_node_get_show_details_not_bool(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         node_id = 'aaaa-bbbb-cccc'
@@ -340,7 +340,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/nodes/%(node_id)s' % {'node_id': node_id})
 
         error = senlin_exc.ResourceNotFound(type='node', id=node_id)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
