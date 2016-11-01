@@ -1339,49 +1339,6 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context
-    def cluster_scale_out(self, context, identity, count=None):
-        """Inflate the size of a cluster by then given number (optional).
-
-        :param context: Request context for the call.
-        :param identity: The name, ID or short ID of a cluster.
-        :param count: The number of nodes to add to the cluster. When omitted,
-            a policy gets a chance to decide the count number. When specified,
-            a policy would have to respect this input.
-
-        :return: A dict with the ID of the action fired.
-        """
-
-        # Validation
-        db_cluster = self.cluster_find(context, identity)
-        if count is not None:
-            count = utils.parse_int_param('count', count, allow_zero=False)
-            err = su.check_size_params(db_cluster,
-                                       db_cluster.desired_capacity + count)
-            if err:
-                raise exception.BadRequest(msg=err)
-
-            LOG.info(_LI('Scaling out cluster %(name)s by %(delta)s nodes'),
-                     {'name': identity, 'delta': count})
-            inputs = {'count': count}
-        else:
-            LOG.info(_LI('Scaling out cluster %s'), db_cluster.name)
-            inputs = {}
-
-        params = {
-            'name': 'cluster_scale_out_%s' % db_cluster.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'status': action_mod.Action.READY,
-            'inputs': inputs,
-        }
-        action_id = action_mod.Action.create(context, db_cluster.id,
-                                             consts.CLUSTER_SCALE_OUT,
-                                             **params)
-        dispatcher.start_action()
-        LOG.info(_LI("Cluster Scale out action queued: %s"), action_id)
-
-        return {'action': action_id}
-
     @request_context2
     def cluster_scale_out2(self, ctx, req):
         """Inflate the size of a cluster by then given number (optional).
@@ -1419,49 +1376,6 @@ class EngineService(service.Service):
                                              **params)
         dispatcher.start_action()
         LOG.info(_LI("Cluster Scale out action queued: %s"), action_id)
-
-        return {'action': action_id}
-
-    @request_context
-    def cluster_scale_in(self, context, identity, count=None):
-        """Deflate the size of a cluster by given number (optional).
-
-        :param context: Request context for the call.
-        :param identity: The name, ID or short ID of a cluster.
-        :param count: The number of nodes to remove from the cluster. When
-            omitted, a policy gets a chance to decide the count number. When
-            specified, a policy would have to respect this input.
-
-        :return: A dict with the ID of the action fired.
-        """
-
-        db_cluster = self.cluster_find(context, identity)
-
-        if count is not None:
-            count = utils.parse_int_param('count', count, allow_zero=False)
-            err = su.check_size_params(db_cluster,
-                                       db_cluster.desired_capacity - count)
-            if err:
-                raise exception.BadRequest(msg=err)
-
-            LOG.info(_LI('Scaling in cluster %(name)s by %(delta)s nodes'),
-                     {'name': identity, 'delta': count})
-            inputs = {'count': count}
-        else:
-            LOG.info(_LI('Scaling in cluster %s'), db_cluster.name)
-            inputs = {}
-
-        params = {
-            'name': 'cluster_scale_in_%s' % db_cluster.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'status': action_mod.Action.READY,
-            'inputs': inputs,
-        }
-        action_id = action_mod.Action.create(context, db_cluster.id,
-                                             consts.CLUSTER_SCALE_IN,
-                                             **params)
-        dispatcher.start_action()
-        LOG.info(_LI("Cluster Scale in action queued: %s."), action_id)
 
         return {'action': action_id}
 
