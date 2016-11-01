@@ -114,3 +114,21 @@ class ClusterResizeRequest(base.SenlinObject):
         'min_step': fields.NonNegativeIntegerField(nullable=True),
         'strict': fields.BooleanField(nullable=True, default=True)
     }
+
+
+@base.SenlinObjectRegistry.register
+class ClusterScaleInRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'count': fields.NonNegativeIntegerField(nullable=True)
+    }
+
+
+@base.SenlinObjectRegistry.register
+class ClusterScaleOutRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'count': fields.NonNegativeIntegerField(nullable=True)
+    }

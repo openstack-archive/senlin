@@ -767,11 +767,14 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('could not convert string to float', r)
 
     def test_action_resize_min_size_not_int(self, mock_enforce):
-        self._test_resize_param_not_int('min_size', mock_enforce)
+        r = self._test_resize_param_not_int('min_size', mock_enforce)
+        self.assertEqual("The value for min_size must be an integer: 'BOGUS'.",
+                         r)
 
     def test_action_resize_max_size_not_int(self, mock_enforce):
         r = self._test_resize_param_not_int('max_size', mock_enforce)
-        self.assertEqual("invalid literal for int() with base 10: 'BOGUS'", r)
+        self.assertEqual("The value for max_size must be an integer: 'BOGUS'.",
+                         r)
 
     def test_action_resize_min_step_not_int(self, mock_enforce):
         r = self._test_resize_param_not_int('min_step', mock_enforce)

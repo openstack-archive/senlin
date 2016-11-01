@@ -370,3 +370,35 @@ class TestClusterResize(test_base.SenlinTestCase):
                                clusters.ClusterResizeRequest,
                                identity='foo', strict='fake')
         self.assertIn("Unrecognized value 'fake'", six.text_type(ex))
+
+
+class TestClusterScaleIn(test_base.SenlinTestCase):
+
+    def test_init(self):
+        sot = clusters.ClusterScaleInRequest(identity='foo', count=5)
+
+        self.assertEqual('foo', sot.identity)
+        self.assertEqual(5, sot.count)
+
+    def test_init_failed(self):
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterScaleInRequest,
+                               identity='foo', count=-1)
+        self.assertEqual("Value must be >= 0 for field 'count'.",
+                         six.text_type(ex))
+
+
+class TestClusterScaleOut(test_base.SenlinTestCase):
+
+    def test_init(self):
+        sot = clusters.ClusterScaleOutRequest(identity='foo', count=5)
+
+        self.assertEqual('foo', sot.identity)
+        self.assertEqual(5, sot.count)
+
+    def test_init_failed(self):
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterScaleOutRequest,
+                               identity='foo', count=-1)
+        self.assertEqual("Value must be >= 0 for field 'count'.",
+                         six.text_type(ex))
