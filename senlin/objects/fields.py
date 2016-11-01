@@ -259,19 +259,21 @@ class Capacity(fields.Integer):
             self.maximum = CONF.max_nodes_per_cluster
 
     def coerce(self, obj, attr, value):
-        value = super(Capacity, self).coerce(obj, attr, value)
-
-        err = None
-        if value < self.minimum:
-            err = _("The value for the %(a)s field must be greater than or "
-                    "equal to %(n)d.") % {'a': attr, 'n': self.minimum}
-        elif value > self.maximum:
-            err = _("The value for the %(a)s field must be less than or equal "
-                    "to %(n)d.") % {'a': attr, 'n': self.maximum}
-        if err:
-            raise ValueError(err)
-
-        return value
+        try:
+            v = int(value)
+        except Exception:
+            raise ValueError(_("The value for %(attr)s must be an integer: "
+                               "'%(value)s'.") %
+                             {'attr': attr, 'value': value})
+        if v < self.minimum:
+            raise ValueError(_("The value for the %(a)s field must be greater "
+                               "than or equal to %(n)d.") %
+                             {'a': attr, 'n': self.minimum})
+        elif v > self.maximum:
+            raise ValueError(_("The value for the %(a)s field must be less "
+                               "than or equal to %(n)d.") %
+                             {'a': attr, 'n': self.maximum})
+        return super(Capacity, self).coerce(obj, attr, v)
 
     def get_schema(self):
         return {

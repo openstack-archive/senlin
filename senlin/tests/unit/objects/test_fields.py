@@ -442,7 +442,7 @@ class TestCapacity(TestField):
         ex = self.assertRaises(ValueError,
                                sot.coerce,
                                obj, 'attr', 'badvalue')
-        self.assertEqual("invalid literal for int() with base 10: 'badvalue'",
+        self.assertEqual("The value for attr must be an integer: 'badvalue'.",
                          six.text_type(ex))
 
     def test_get_schema(self):
