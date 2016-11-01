@@ -543,8 +543,11 @@ def cluster_policy_get_by_type(context, cluster_id, policy_type, filters=None):
     query = model_query(context, models.ClusterPolicies)
     query = query.filter_by(cluster_id=cluster_id)
 
-    if filters:
-        query = utils.exact_filter(query, models.ClusterPolicies, filters)
+    key_enabled = consts.CP_ENABLED
+    if filters and key_enabled in filters:
+        filter_enabled = {key_enabled: filters[key_enabled]}
+        query = utils.exact_filter(query, models.ClusterPolicies,
+                                   filter_enabled)
 
     query = query.join(models.Policy).filter(models.Policy.type == policy_type)
 
