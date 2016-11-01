@@ -1537,43 +1537,6 @@ class EngineService(service.Service):
 
         return node
 
-    @request_context
-    def node_list(self, context, cluster_id=None, filters=None, sort=None,
-                  limit=None, marker=None, project_safe=True):
-        """List node records matching the specified criteria.
-
-        :param context: An instance of the request context.
-        :param cluster_id: An optional parameter specifying the ID of the
-                           cluster from which nodes are chosen.
-        :param filters: A dictionary of key-value pairs for filtering out the
-                        result list.
-        :param sort: A list of sorting keys (each optionally attached with a
-                     sorting direction) separated by commas.
-        :param limit: An integer specifying the maximum number of objects to
-                      return in a response.
-        :param marker: An UUID specifying the node after which the result
-                       list starts.
-        :param project_safe: A boolean indicating whether nodes from all
-                             projects will be returned.
-        :return: A list of `Node` object representations.
-        """
-        limit = utils.parse_int_param('limit', limit)
-        utils.validate_sort_param(sort, consts.NODE_SORT_KEYS)
-        project_safe = utils.parse_bool_param('project_safe', project_safe)
-        if not project_safe and not context.is_admin:
-            raise exception.Forbidden()
-
-        # Maybe the cluster_id is a name or a short ID
-        if cluster_id:
-            db_cluster = self.cluster_find(context, cluster_id)
-            cluster_id = db_cluster.id
-        nodes = node_mod.Node.load_all(context, cluster_id=cluster_id,
-                                       limit=limit, marker=marker, sort=sort,
-                                       filters=filters,
-                                       project_safe=project_safe)
-
-        return [node.to_dict() for node in nodes]
-
     @request_context2
     def node_list2(self, ctx, req):
         """List node records matching the specified criteria.
