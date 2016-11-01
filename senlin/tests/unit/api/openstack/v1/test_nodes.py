@@ -62,48 +62,44 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         ]
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_resp)
-
         result = self.controller.index(req)
-
-        default_args = {'cluster_id': None, 'limit': None, 'marker': None,
-                        'sort': None, 'filters': None, 'project_safe': True}
-
-        mock_call.assert_called_with(req.context, ('node_list', default_args))
-
+        mock_call.assert_called_with(req.context, 'node_list2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorn.NodeListRequestBody)
+        self.assertTrue(request.project_safe)
         expected = {'nodes': engine_resp}
         self.assertEqual(expected, result)
 
-    @mock.patch.object(rpc_client.EngineClient, 'call')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_node_index_whitelists_params(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
+        marker_uuid = '69814221-5013-4cb6-a943-6bfe9837547d'
         params = {
-            'name': 'node111',
-            'status': 'active',
+            'name': 'node01',
+            'status': 'ACTIVE',
             'cluster_id': 'id or name of a cluster',
-            'limit': 10,
-            'marker': 'fake marker',
-            'sort': 'fake sorting string',
-            'global_project': False,
+            'limit': '10',
+            'marker': marker_uuid,
+            'sort': 'name:asc',
+            'global_project': 'True',
         }
         req = self._get('/nodes', params=params)
         mock_call.return_value = []
-
         self.controller.index(req)
+        mock_call.assert_called_with(req.context, 'node_list2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorn.NodeListRequestBody)
+        self.assertEqual(['node01'], request.name)
+        self.assertEqual(['ACTIVE'], request.status)
+        self.assertEqual('id or name of a cluster', request.cluster_id)
+        self.assertEqual(10, request.limit)
+        self.assertEqual(marker_uuid, request.marker)
+        self.assertEqual('name:asc', request.sort)
+        self.assertFalse(request.project_safe)
 
-        rpc_call_args, _ = mock_call.call_args
-        engine_args = rpc_call_args[1][1]
-
-        self.assertEqual(6, len(engine_args))
-        self.assertIn('cluster_id', engine_args)
-        self.assertIn('limit', engine_args)
-        self.assertIn('marker', engine_args)
-        self.assertIn('sort', engine_args)
-        self.assertIn('filters', engine_args)
-        self.assertIn('project_safe', engine_args)
-
-    @mock.patch.object(rpc_client.EngineClient, 'call')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_node_index_whitelists_invalid_params(self, mock_call,
                                                   mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -118,7 +114,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                          str(ex))
         self.assertFalse(mock_call.called)
 
-    @mock.patch.object(rpc_client.EngineClient, 'call')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_node_index_global_project_true(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'global_project': 'True'}
@@ -126,12 +122,10 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.controller.index(req)
 
-        call_args, w = mock_call.call_args
-        call_args = call_args[1][1]
-        self.assertIn('project_safe', call_args)
-        self.assertFalse(call_args['project_safe'])
+        request = mock_call.call_args[0][2]
+        self.assertFalse(request.project_safe)
 
-    @mock.patch.object(rpc_client.EngineClient, 'call')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_node_index_global_project_false(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'global_project': 'False'}
@@ -139,12 +133,10 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.controller.index(req)
 
-        call_args, w = mock_call.call_args
-        call_args = call_args[1][1]
-        self.assertIn('project_safe', call_args)
-        self.assertTrue(call_args['project_safe'])
+        request = mock_call.call_args[0][2]
+        self.assertTrue(request.project_safe)
 
-    @mock.patch.object(rpc_client.EngineClient, 'call')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_node_index_global_project_not_bool(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'global_project': 'No'}
@@ -157,54 +149,17 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                          six.text_type(ex))
         self.assertFalse(mock_call.called)
 
-    @mock.patch.object(rpc_client.EngineClient, 'call')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_node_index_limit_not_int(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'limit': 'not-int'}
         req = self._get('/nodes', params=params)
 
-        ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.index, req)
-
-        self.assertEqual("Invalid value 'not-int' specified for 'limit'",
-                         six.text_type(ex))
-        self.assertFalse(mock_call.called)
-
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_node_index_whitelist_filter_params(self, mock_call, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {
-            'status': 'fake status',
-            'name': 'fake name',
-        }
-        req = self._get('/nodes', params=params)
-        mock_call.return_value = []
-
-        self.controller.index(req)
-
-        rpc_call_args, _ = mock_call.call_args
-        engine_args = rpc_call_args[1][1]
-        self.assertIn('filters', engine_args)
-
-        filters = engine_args['filters']
-        self.assertEqual(2, len(filters))
-        self.assertIn('status', filters)
-        self.assertIn('name', filters)
-
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_node_index_whitelist_filter_invalid_params(self, mock_call,
-                                                        mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {
-            'balrog': 'you shall not pass!'
-        }
-        req = self._get('/nodes', params=params)
-
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
-        self.assertEqual("Invalid parameter balrog",
-                         str(ex))
+        self.assertEqual("invalid literal for int() with base 10: 'not-int'",
+                         six.text_type(ex))
         self.assertFalse(mock_call.called)
 
     def test_node_index_cluster_not_found(self, mock_enforce):
@@ -213,7 +168,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/nodes', {'cluster_id': cluster_id})
 
         error = senlin_exc.ResourceNotFound(type='cluster', id=cluster_id)
-        self.patchobject(rpc_client.EngineClient, 'call',
+        self.patchobject(rpc_client.EngineClient, 'call2',
                          side_effect=shared.to_remote_error(error))
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
