@@ -1815,3 +1815,124 @@ class ClusterTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
         mock_check.assert_called_once_with(x_cluster, 2)
+
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_check2(self, notify, mock_find, mock_action):
+        x_cluster = mock.Mock(id='CID', user='USER', project='PROJECT')
+        mock_find.return_value = x_cluster
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterCheckRequest(identity='C1', params={'foo': 'bar'})
+
+        res = self.eng.cluster_check2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, res)
+        mock_find.assert_called_once_with(self.ctx, 'C1')
+        mock_action.assert_called_once_with(
+            self.ctx, 'CID', consts.CLUSTER_CHECK,
+            name='cluster_check_CID',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={'foo': 'bar'},
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_check2_user_is_none(self, notify, mock_find, mock_action):
+        x_cluster = mock.Mock(id='CID', project='PROJECT')
+        mock_find.return_value = x_cluster
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterCheckRequest(identity='C1')
+
+        result = self.eng.cluster_check2(self.ctx, req.obj_to_primitive())
+
+        self.assertIsNotNone(x_cluster.user)
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'C1')
+        mock_action.assert_called_once_with(
+            self.ctx, 'CID', consts.CLUSTER_CHECK,
+            name='cluster_check_CID',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={},
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_check2_cluster_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='Bogus')
+        req = orco.ClusterCheckRequest(identity='C1', params={'foo': 'bar'})
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_check2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual('The cluster (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'C1')
+
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_recover2(self, notify, mock_find, mock_action):
+        x_cluster = mock.Mock(id='CID')
+        mock_find.return_value = x_cluster
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterRecoverRequest(identity='C1', params={'foo': 'bar'})
+
+        result = self.eng.cluster_recover2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'C1')
+        mock_action.assert_called_once_with(
+            self.ctx, 'CID', consts.CLUSTER_RECOVER,
+            name='cluster_recover_CID',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={'foo': 'bar'},
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_recover2_cluster_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='Bogus')
+        req = orco.ClusterRecoverRequest(identity='Bogus')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_recover2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual('The cluster (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_recover2_user_is_none(self, notify, mock_find,
+                                           mock_action):
+        x_cluster = mock.Mock(id='CID', project='PROJECT')
+        mock_find.return_value = x_cluster
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterRecoverRequest(identity='C1')
+
+        result = self.eng.cluster_recover2(self.ctx, req.obj_to_primitive())
+
+        self.assertIsNotNone(x_cluster.user)
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'C1')
+        mock_action.assert_called_once_with(
+            self.ctx, 'CID', consts.CLUSTER_RECOVER,
+            name='cluster_recover_CID',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={},
+        )
+        notify.assert_called_once_with()
