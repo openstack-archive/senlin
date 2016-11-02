@@ -1896,6 +1896,46 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
+    @request_context2
+    def cluster_policy_attach2(self, ctx, req):
+        """Attach a policy to the specified cluster.
+
+        This is done via an action because a cluster lock is needed.
+
+        :param ctx: An instance of request context.
+        :param req: An instance of the ClusterAttachPolicyRequest object.
+        :return: A dictionary contains the ID of the action fired.
+        """
+        LOG.info(_LI("Attaching policy (%(policy)s) to cluster "
+                     "(%(cluster)s)."),
+                 {'policy': req.policy_id, 'cluster': req.identity})
+
+        db_cluster = self.cluster_find(ctx, req.identity)
+        try:
+            db_policy = self.policy_find(ctx, req.policy_id)
+        except exception.ResourceNotFound as ex:
+            msg = ex.enhance_msg('specified', ex)
+            raise exception.BadRequest(msg=msg)
+
+        req.obj_set_defaults()
+
+        params = {
+            'name': 'attach_policy_%s' % db_cluster.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+            'inputs': {
+                'policy_id': db_policy.id,
+                'enabled': utils.parse_bool_param('enabled', req.enabled),
+            }
+        }
+        action_id = action_mod.Action.create(ctx, db_cluster.id,
+                                             consts.CLUSTER_ATTACH_POLICY,
+                                             **params)
+        dispatcher.start_action()
+        LOG.info(_LI("Policy attach action queued: %s."), action_id)
+
+        return {'action': action_id}
+
     @request_context
     def cluster_policy_detach(self, context, identity, policy):
         """Detach a policy from the specified cluster.
