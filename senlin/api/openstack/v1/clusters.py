@@ -313,6 +313,27 @@ class ClusterController(wsgi.Controller):
 
         return self.rpc_client.call2(context, 'cluster_scale_in2', obj)
 
+    def _do_policy_attach(self, context, cid, data):
+        params = {'identity': cid}
+        if not isinstance(data, dict):
+            msg = _("The data provided is not a map.")
+            raise exc.HTTPBadRequest(msg)
+        params.update(data)
+
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'ClusterAttachPolicyRequest', params, None)
+
+        obj = None
+        try:
+            obj = vorc.ClusterAttachPolicyRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        return self.rpc_client.call2(context, 'cluster_policy_attach2', obj)
+
     @util.policy_enforce
     def action(self, req, cluster_id, body=None):
         """Perform specified action on a cluster."""
@@ -344,11 +365,8 @@ class ClusterController(wsgi.Controller):
             count = body.get(this_action).get('count')
             res = self._do_scale_in(req.context, cluster_id, count)
         elif this_action == self.POLICY_ATTACH:
-            raw_data = body.get(this_action)
-            data = self._sanitize_policy(raw_data)
-            res = self.rpc_client.cluster_policy_attach(req.context,
-                                                        cluster_id,
-                                                        **data)
+            data = body.get(this_action)
+            res = self._do_policy_attach(req.context, cluster_id, data)
         elif this_action == self.POLICY_DETACH:
             data = body.get(this_action)
             policy_id = data.get('policy_id', None)

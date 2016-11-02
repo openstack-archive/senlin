@@ -140,5 +140,5 @@ class ClusterAttachPolicyRequest(base.SenlinObject):
     fields = {
         'identity': fields.StringField(),
         'policy_id': fields.StringField(),
-        'enabled': fields.BooleanField(default=True),
+        'enabled': fields.BooleanField(nullable=True, default=True),
     }
