@@ -1895,49 +1895,6 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context
-    def cluster_policy_detach(self, context, identity, policy):
-        """Detach a policy from the specified cluster.
-
-        This is done via an action because cluster lock is needed.
-
-        :param context: An instance of request context.
-        :param identity: The ID, name or short ID of the target cluster.
-        :param policy: The ID, name or short ID of the target policy.
-        :return: A dictionary contains the ID of the action fired.
-        """
-        LOG.info(_LI("Detaching policy '%(policy)s' from cluster "
-                     "'%(cluster)s'."),
-                 {'policy': policy, 'cluster': identity})
-
-        db_cluster = self.cluster_find(context, identity)
-        try:
-            db_policy = self.policy_find(context, policy)
-        except exception.ResourceNotFound as ex:
-            msg = ex.enhance_msg('specified', ex)
-            raise exception.BadRequest(msg=msg)
-
-        binding = cp_obj.ClusterPolicy.get(context, db_cluster.id,
-                                           db_policy.id)
-        if binding is None:
-            msg = _("The policy (%(p)s) is not attached to the specified "
-                    "cluster (%(c)s).") % {'p': policy, 'c': identity}
-            raise exception.BadRequest(msg=msg)
-
-        params = {
-            'name': 'detach_policy_%s' % db_cluster.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'status': action_mod.Action.READY,
-            'inputs': {'policy_id': db_policy.id},
-        }
-        action_id = action_mod.Action.create(context, db_cluster.id,
-                                             consts.CLUSTER_DETACH_POLICY,
-                                             **params)
-        dispatcher.start_action()
-        LOG.info(_LI("Policy dettach action queued: %s."), action_id)
-
-        return {'action': action_id}
-
     @request_context2
     def cluster_policy_detach2(self, ctx, req):
         """Detach a policy from the specified cluster.
@@ -1977,53 +1934,6 @@ class EngineService(service.Service):
                                              **params)
         dispatcher.start_action()
         LOG.info(_LI("Policy dettach action queued: %s."), action_id)
-
-        return {'action': action_id}
-
-    @request_context
-    def cluster_policy_update(self, context, identity, policy, enabled=None):
-        """Update an existing policy binding on a cluster.
-
-        This is done via an action because cluster lock is needed.
-        :param context: An instance of request context.
-        :param identity: The ID, name or short ID of the target cluster.
-        :param policy: The ID, name or short ID of the target policy.
-        :param enabled: Optional parameter specifying whether the policy is
-                        enabled after the update.
-        :return: A dictionary contains the ID of the action fired.
-        """
-        LOG.info(_LI("Updating policy '%(policy)s' on cluster '%(cluster)s.'"),
-                 {'policy': policy, 'cluster': identity})
-
-        db_cluster = self.cluster_find(context, identity)
-        try:
-            db_policy = self.policy_find(context, policy)
-        except exception.ResourceNotFound as ex:
-            msg = ex.enhance_msg('specified', ex)
-            raise exception.BadRequest(msg=msg)
-
-        binding = cp_obj.ClusterPolicy.get(context, db_cluster.id,
-                                           db_policy.id)
-        if binding is None:
-            msg = _("The policy (%(p)s) is not attached to the specified "
-                    "cluster (%(c)s).") % {'p': policy, 'c': identity}
-            raise exception.BadRequest(msg=msg)
-
-        inputs = {'policy_id': db_policy.id}
-        if enabled is not None:
-            inputs['enabled'] = utils.parse_bool_param('enabled', enabled)
-
-        params = {
-            'name': 'update_policy_%s' % db_cluster.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'status': action_mod.Action.READY,
-            'inputs': inputs
-        }
-        action_id = action_mod.Action.create(context, db_cluster.id,
-                                             consts.CLUSTER_UPDATE_POLICY,
-                                             **params)
-        dispatcher.start_action()
-        LOG.info(_LI("Policy update action queued: %s."), action_id)
 
         return {'action': action_id}
 
