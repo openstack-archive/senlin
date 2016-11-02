@@ -136,7 +136,18 @@ class NodeController(wsgi.Controller):
 
     @util.policy_enforce
     def delete(self, req, node_id):
-        res = self.rpc_client.node_delete(req.context, node_id, cast=False)
+        params = {'identity': node_id}
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req('NodeDeleteRequest',
+                                                           params)
+            obj = vorn.NodeDeleteRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        res = self.rpc_client.call2(req.context, 'node_delete2', obj)
         action_id = res.pop('action')
         result = {'location': '/actions/%s' % action_id}
         return result
