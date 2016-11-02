@@ -92,7 +92,8 @@ def create_a_cluster(base, profile_id, desired_capacity=0, min_size=0,
 
 
 def update_a_cluster(base, cluster_id, profile_id=None, name=None,
-                     metadata=None, timeout=None, wait_timeout=None):
+                     expected_status='SUCCEEDED', metadata=None,
+                     timeout=None, wait_timeout=None):
     """Utility function that updates a Senlin cluster.
 
     Update a cluster and return it after it is ACTIVE.
@@ -107,7 +108,7 @@ def update_a_cluster(base, cluster_id, profile_id=None, name=None,
     }
     res = base.client.update_obj('clusters', cluster_id, params)
     action_id = res['location'].split('/actions/')[1]
-    base.client.wait_for_status('actions', action_id, 'SUCCEEDED',
+    base.client.wait_for_status('actions', action_id, expected_status,
                                 wait_timeout)
     return res['body']
 
@@ -196,7 +197,7 @@ def update_a_node(base, node_id, profile_id=None, name=None,
     base.client.wait_for_status('actions', action_id, 'SUCCEEDED',
                                 wait_timeout)
 
-    return res['body']
+    return res['body']['status_reason']
 
 
 def delete_a_node(base, node_id, wait_timeout=None):
