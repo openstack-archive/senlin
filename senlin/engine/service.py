@@ -1855,47 +1855,6 @@ class EngineService(service.Service):
 
         return binding.to_dict()
 
-    @request_context
-    def cluster_policy_attach(self, context, identity, policy, enabled=True):
-        """Attach a policy to the specified cluster.
-
-        This is done via an action because a cluster lock is needed.
-
-        :param context: An instance of request context.
-        :param identity: The ID, name or short ID of the target cluster.
-        :param policy: The ID, name or short ID of the target policy.
-        :param enabled: Optional parameter specifying whether the policy is
-                        enabled when attached.
-        :return: A dictionary contains the ID of the action fired.
-        """
-        LOG.info(_LI("Attaching policy (%(policy)s) to cluster "
-                     "(%(cluster)s)."),
-                 {'policy': policy, 'cluster': identity})
-
-        db_cluster = self.cluster_find(context, identity)
-        try:
-            db_policy = self.policy_find(context, policy)
-        except exception.ResourceNotFound as ex:
-            msg = ex.enhance_msg('specified', ex)
-            raise exception.BadRequest(msg=msg)
-
-        params = {
-            'name': 'attach_policy_%s' % db_cluster.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'status': action_mod.Action.READY,
-            'inputs': {
-                'policy_id': db_policy.id,
-                'enabled': utils.parse_bool_param('enabled', enabled),
-            }
-        }
-        action_id = action_mod.Action.create(context, db_cluster.id,
-                                             consts.CLUSTER_ATTACH_POLICY,
-                                             **params)
-        dispatcher.start_action()
-        LOG.info(_LI("Policy attach action queued: %s."), action_id)
-
-        return {'action': action_id}
-
     @request_context2
     def cluster_policy_attach2(self, ctx, req):
         """Attach a policy to the specified cluster.
