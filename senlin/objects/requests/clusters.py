@@ -142,3 +142,22 @@ class ClusterAttachPolicyRequest(base.SenlinObject):
         'policy_id': fields.StringField(),
         'enabled': fields.BooleanField(nullable=True, default=True),
     }
+
+
+@base.SenlinObjectRegistry.register
+class ClusterUpdatePolicyRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'policy_id': fields.StringField(),
+        'enabled': fields.BooleanField(nullable=True, default=True),
+    }
+
+
+@base.SenlinObjectRegistry.register
+class ClusterDetachPolicyRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'policy_id': fields.StringField(),
+    }
