@@ -71,3 +71,11 @@ class NodeUpdateRequest(base.SenlinObject):
         'profile_id': fields.StringField(nullable=True),
         'role': fields.fields.StringField(nullable=True)
     }
+
+
+@base.SenlinObjectRegistry.register
+class NodeDeleteRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField()
+    }

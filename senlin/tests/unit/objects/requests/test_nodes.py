@@ -156,3 +156,14 @@ class TestNodeUpdate(test_base.SenlinTestCase):
         self.assertEqual('test-profile', sot.profile_id)
         self.assertEqual('master', sot.role)
         self.assertEqual({'foo': 'bar'}, sot.metadata)
+
+
+class TestNodeDelete(test_base.SenlinTestCase):
+
+    body = {
+        'identity': 'test-node'
+    }
+
+    def test_node_delete_request(self):
+        sot = nodes.NodeDeleteRequest(**self.body)
+        self.assertEqual('test-node', sot.identity)
