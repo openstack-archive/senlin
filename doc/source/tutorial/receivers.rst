@@ -33,15 +33,15 @@ cluster:
 
 .. code-block:: console
 
-  $ senlin receiver-create -c mycluster -a CLUSTER_SCALE_IN w_scale_in
+  $ openstack cluster receiver create --cluster mycluster --action CLUSTER_SCALE_IN w_scale_in
 
 The output from the command will be something like this:
 
 .. code-block:: console
 
-  $ senlin receiver-create -c mycluster -a CLUSTER_SCALE_IN w_scale_in
+  $ openstack cluster receiver create --cluster mycluster --action CLUSTER_SCALE_IN w_scale_in
   +------------+-------------------------------------------------------------------------+
-  | Property   | Value                                                                   |
+  | Field      | Value                                                                   |
   +------------+-------------------------------------------------------------------------+
   | action     | CLUSTER_SCALE_IN                                                        |
   | actor      | {                                                                       |
@@ -62,7 +62,8 @@ The output from the command will be something like this:
   | user       | ab79b9647d074e46ac223a8fa297b846                                        |
   +------------+-------------------------------------------------------------------------+
 
-From the output of the ``receiver-create`` command, you can see:
+From the output of the ``openstack cluster receiver create`` command,
+you can see:
 
 - There is a ``type`` property whose value is set to ``webhook`` which is the
   only receiver type senlin supports today.
