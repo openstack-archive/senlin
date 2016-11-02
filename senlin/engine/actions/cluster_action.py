@@ -400,7 +400,14 @@ class ClusterAction(base.Action):
             return self.RES_ERROR, '\n'.join(errors)
 
         reason = _('Completed adding nodes.')
+        # check the size constraint
         current = no.Node.count_by_cluster(self.context, self.target)
+        desired = current + len(node_ids)
+        res = scaleutils.check_size_params(self.cluster, desired, None,
+                                           None, True)
+        if res:
+            return self.RES_ERROR, res
+
         child = []
         for node in nodes:
             nid = node.id
@@ -425,7 +432,6 @@ class ClusterAction(base.Action):
         if result != self.RES_OK:
             reason = new_reason
         else:
-            desired = current + len(node_ids)
             self.cluster.eval_status(self.context, consts.CLUSTER_ADD_NODES,
                                      desired_capacity=desired)
             self.outputs['nodes_added'] = node_ids
@@ -484,17 +490,23 @@ class ClusterAction(base.Action):
         if len(nodes) == 0:
             return self.RES_OK, reason
 
+        # check the size constraint
+        current = no.Node.count_by_cluster(self.context, self.target)
+        desired = current - len(nodes)
+        res = scaleutils.check_size_params(self.cluster, desired, None,
+                                           None, True)
+        if res:
+            return self.RES_ERROR, res
+
         # sleep period
         self._sleep(grace_period)
-
-        current = no.Node.count_by_cluster(self.context, self.target)
         result, new_reason = self._delete_nodes(nodes)
 
         params = {}
         if result != self.RES_OK:
             reason = new_reason
         if reduce_desired_capacity:
-            params['desired_capacity'] = current - len(nodes)
+            params['desired_capacity'] = desired
 
         self.cluster.eval_status(self.context,
                                  consts.CLUSTER_DEL_NODES, **params)
