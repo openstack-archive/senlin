@@ -132,3 +132,13 @@ class ClusterScaleOutRequest(base.SenlinObject):
         'identity': fields.StringField(),
         'count': fields.NonNegativeIntegerField(nullable=True)
     }
+
+
+@base.SenlinObjectRegistry.register
+class ClusterAttachPolicyRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'policy_id': fields.StringField(),
+        'enabled': fields.BooleanField(default=True),
+    }

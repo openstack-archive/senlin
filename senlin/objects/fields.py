@@ -24,6 +24,7 @@ from senlin.common.i18n import _
 CONF = cfg.CONF
 
 # Field alias for code readability
+# BooleanField = fields.BooleanField
 FlexibleBooleanField = fields.FlexibleBooleanField
 StringField = fields.StringField
 IntegerField = fields.IntegerField
@@ -399,20 +400,16 @@ class AdjustmentType(BaseEnum):
     )
 
 
-class BooleanField(fields.AutoTypedField):
-
-    AUTO_TYPE = None
-
-    def __init__(self, default=False, **kwargs):
-        self.AUTO_TYPE = Boolean(default=default)
-        super(BooleanField, self).__init__(**kwargs)
-
-
 # TODO(Qiming): remove this when oslo patch is released
 # https://review.openstack.org/#/c/360095
 class NonNegativeIntegerField(fields.AutoTypedField):
 
     AUTO_TYPE = NonNegativeInteger()
+
+
+class BooleanField(fields.AutoTypedField):
+
+    AUTO_TYPE = Boolean()
 
 
 class ObjectField(fields.AutoTypedField):
