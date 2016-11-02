@@ -340,10 +340,9 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_cluster_delete(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         cid = 'aaaa-bbbb-cccc'
-        req = self._delete('/clusters/%(cluster_id)s' % {'cluster_id': cid})
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        mock_call.return_value = {'action': 'FAKE_ID'}
+        req = self._delete('/clusters/%s' % cid)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value={'action': 'FAKE_ID'})
 
         res = self.controller.delete(req, cluster_id=cid)
         result = {'location': '/actions/FAKE_ID'}
@@ -354,7 +353,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_cluster_delete_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         cid = 'aaaa-bbbb-cccc'
-        req = self._delete('/clusters/%(cluster_id)s' % {'cluster_id': cid})
+        req = self._delete('/clusters/%s' % cid)
 
         error = senlin_exc.ResourceNotFound(type='cluster', id=cid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
@@ -370,7 +369,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_cluster_delete_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', False)
         cid = 'aaaa-bbbb-cccc'
-        req = self._delete('/clusters/%(cluster_id)s' % {'cluster_id': cid})
+        req = self._delete('/clusters/%s' % cid)
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.delete,
                                               req, cluster_id=cid)
@@ -390,8 +389,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'id': cid,
             'action': 'fake_action',
         }
-        req = self._patch('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                          jsonutils.dumps(body))
+        req = self._patch('/clusters/%s' % cid, jsonutils.dumps(body))
         mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_resp)
 
@@ -411,14 +409,11 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     def test_update_missing_cluster_key(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
-
         cid = 'aaaa-bbbb-cccc'
         body = {'profile_id': 'xxxx-yyyy-zzzz'}
-
-        req = self._patch('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                          jsonutils.dumps(body))
-
+        req = self._patch('/clusters/%s' % cid, jsonutils.dumps(body))
         mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
                                req, cluster_id=cid, body=body)
@@ -431,11 +426,9 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'cluster': {'name': 'foo bar'}}
-
-        req = self._patch('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                          jsonutils.dumps(body))
-
+        req = self._patch('/clusters/%s' % cid, jsonutils.dumps(body))
         mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
                                req, cluster_id=cid, body=body)
@@ -443,25 +436,21 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(_("The value for the 'name' (foo bar) contains "
                            "illegal characters."),
                          six.text_type(ex))
-
         self.assertFalse(mock_call.called)
 
     def test_update_timeout_non_int(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'cluster': {'timeout': '10min'}}
-
-        req = self._patch('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                          jsonutils.dumps(body))
-
+        req = self._patch('/clusters/%s' % cid, jsonutils.dumps(body))
         mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
                                req, cluster_id=cid, body=body)
 
         self.assertEqual(_("invalid literal for int() with base 10: '10min'"),
                          six.text_type(ex))
-
         self.assertFalse(mock_call.called)
 
     def test_update_bad_metadata(self, mock_enforce):
@@ -469,8 +458,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'aaaa-bbbb-cccc'
         body = {'cluster': {'metadata': 'what?'}}
 
-        req = self._patch('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                          jsonutils.dumps(body))
+        req = self._patch('/clusters/%s' % cid, jsonutils.dumps(body))
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -488,8 +476,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         cid = 'non-existent-cluster'
         body = {'cluster': {'profile_id': 'xxxx-yyyy-zzzz'}}
-        req = self._patch('/clusters/%(cluster_id)s' % {'cluster_id': cid},
-                          jsonutils.dumps(body))
+        req = self._patch('/clusters/%s' % cid, jsonutils.dumps(body))
 
         error = senlin_exc.ResourceNotFound(type='cluster', id=cid)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
@@ -599,8 +586,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'CID'
         body = {'replace_nodes': {'nodes': {'origin_node': ''}}}
 
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-                         'cluster_id': cid}, jsonutils.dumps(body),
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body),
                          version='1.3')
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
@@ -625,11 +611,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 }
             }
         }
-
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-                         'cluster_id': cid}, jsonutils.dumps(body),
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body),
                          version='1.3')
-
         mock_call = self.patchobject(rpc_client.EngineClient, 'call')
 
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -797,8 +780,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     def test_action_resize_strict_non_bool(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         cid = 'aaaa-bbbb-cccc'
         body = {'resize': {'strict': 'FOO'}}
         req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
@@ -835,11 +817,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'scale_in': {'count': 1}}
-
         eng_resp = {'action': {'id': 'action-id', 'target': cid}}
-
         req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-
         mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=eng_resp)
 
@@ -853,13 +832,11 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(cid, request.identity)
         self.assertEqual(1, request.count)
 
-    def _cluster_action_scale_non_int(self, action, mock_enforce):
+    def _action_scale_non_int(self, action, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
         body = {action: {'count': 'abc'}}
-
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-                         'cluster_id': cid}, jsonutils.dumps(body))
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
@@ -867,164 +844,11 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertIn("invalid literal", six.text_type(ex))
 
-    def test_cluster_action_scale_out_non_int(self, mock_enforce):
-        self._cluster_action_scale_non_int('scale_out', mock_enforce)
+    def test_action_scale_out_non_int(self, mock_enforce):
+        self._action_scale_non_int('scale_out', mock_enforce)
 
-    def test_cluster_action_scale_in_non_int(self, mock_enforce):
-        self._cluster_action_scale_non_int('scale_in', mock_enforce)
-
-    def test_cluster_action_check(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'aaaa-bbbb-cccc'
-        body = {'check': {}}
-
-        eng_resp = {'action': 'action-id'}
-
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-            'cluster_id': cid}, jsonutils.dumps(body))
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     return_value=eng_resp)
-
-        resp = self.controller.action(req, cluster_id=cid, body=body)
-
-        mock_call.assert_called_once_with(
-            req.context,
-            ('cluster_check', {
-                'identity': cid,
-                'params': {}
-            })
-        )
-
-        self.assertEqual(eng_resp, resp)
-
-    def test_cluster_action_check_not_found(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'unknown-cluster'
-        body = {'check': {}}
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-            'cluster_id': cid}, jsonutils.dumps(body))
-
-        error = senlin_exc.ResourceNotFound(type='cluster', id=cid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        mock_call.side_effect = shared.to_remote_error(error)
-
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.action,
-                                              req, cluster_id=cid, body=body)
-
-        self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
-
-    def test_cluster_action_recover(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'aaaa-bbbb-cccc'
-        body = {'recover': {}}
-
-        eng_resp = {'action': 'action-id'}
-
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-            'cluster_id': cid}, jsonutils.dumps(body))
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     return_value=eng_resp)
-
-        resp = self.controller.action(req, cluster_id=cid, body=body)
-
-        mock_call.assert_called_once_with(
-            req.context,
-            ('cluster_recover', {
-                'identity': cid,
-                'params': {}
-            })
-        )
-
-        self.assertEqual(eng_resp, resp)
-
-    def test_cluster_action_recover_with_ops(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'aaaa-bbbb-cccc'
-        body = {
-            'recover': {
-                'operation': 'REBUILD'
-            }
-        }
-
-        eng_resp = {'action': 'action-id'}
-
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-            'cluster_id': cid}, jsonutils.dumps(body))
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     return_value=eng_resp)
-
-        resp = self.controller.action(req, cluster_id=cid, body=body)
-
-        mock_call.assert_called_once_with(
-            req.context,
-            ('cluster_recover', {
-                'identity': cid,
-                'params': {
-                    'operation': 'REBUILD'
-                }
-            })
-        )
-
-        self.assertEqual(eng_resp, resp)
-
-    def test_cluster_action_recover_not_found(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'unknown-cluster'
-        body = {'recover': {}}
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-            'cluster_id': cid}, jsonutils.dumps(body))
-
-        error = senlin_exc.ResourceNotFound(type='cluster', id=cid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        mock_call.side_effect = shared.to_remote_error(error)
-
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.action,
-                                              req, cluster_id=cid, body=body)
-
-        self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
-
-    def test__sanitize_policy(self, mock_enforce):
-        data = {
-            'policy_id': 'FOO',
-            'enabled': True
-        }
-        res = self.controller._sanitize_policy(data)
-        self.assertEqual(res, data)
-
-    def test__sanitize_policy_not_dict(self, mock_enforce):
-        data = ['aha, bad data']
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller._sanitize_policy, data)
-        self.assertEqual("The data provided is not a map.",
-                         six.text_type(ex))
-
-    def test__sanitize_policy_missing_policy_id(self, mock_enforce):
-        data = {
-            'Foo': 'Bar'
-        }
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller._sanitize_policy, data)
-        self.assertEqual("The 'policy_id' field is missing in the request.",
-                         six.text_type(ex))
-
-    def test__sanitize_policy_bad_enabled_value(self, mock_enforce):
-        data = {
-            'policy_id': 'FAKE',
-        }
-
-        for value in ['yes', '1', 1]:
-            data['enabled'] = value
-            ex = self.assertRaises(exc.HTTPBadRequest,
-                                   self.controller._sanitize_policy, data)
-            expected = "Invalid value '%s' specified for 'enabled'" % value
-            self.assertEqual(expected, six.text_type(ex))
+    def test_action_scale_in_non_int(self, mock_enforce):
+        self._action_scale_non_int('scale_in', mock_enforce)
 
     def test_action_attach_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -1404,10 +1228,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cid = 'FAKE_ID'
         body = {'add_nodes': {'nodes': ['NODE1']}}
         eng_resp = {'action': 'action-id'}
-
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-                         'cluster_id': cid}, jsonutils.dumps(body))
-
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
         mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=eng_resp)
 
@@ -1429,10 +1250,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'add_nodes': {'somearg': 'somevalue'}}
-
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-                         'cluster_id': cid}, jsonutils.dumps(body))
-
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
         mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
 
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -1447,11 +1265,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'add_nodes': {'nodes': []}}
-
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-                         'cluster_id': cid}, jsonutils.dumps(body))
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
@@ -1465,9 +1280,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'add_nodes': {'nodes': ['bad-node-1']}}
-
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-                         'cluster_id': cid}, jsonutils.dumps(body))
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
 
         error = senlin_exc.ResourceNotFound(type='Node', id='bad-node-1')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
@@ -1486,11 +1299,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'del_nodes': {'nodes': ['NODE1', ]}}
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
         eng_resp = {'action': 'action-id'}
-
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-                         'cluster_id': cid}, jsonutils.dumps(body))
-
         mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=eng_resp)
 
@@ -1512,10 +1322,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'del_nodes': {'somearg': 'somevalue'}}
-
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-                         'cluster_id': cid}, jsonutils.dumps(body))
-
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
         mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
 
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -1530,10 +1337,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'del_nodes': {'nodes': []}}
-
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-                         'cluster_id': cid}, jsonutils.dumps(body))
-
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
         mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
 
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -1548,9 +1352,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'del_nodes': {'nodes': ['bad-node-1']}}
-
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-                         'cluster_id': cid}, jsonutils.dumps(body))
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
 
         error = senlin_exc.BadRequest(msg='Nodes not found: bad-node-1')
         mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
@@ -1564,3 +1366,96 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('BadRequest', resp.json['error']['type'])
         self.assertIn('Nodes not found: bad-node-1',
                       resp.json['error']['message'])
+
+    def test_action_check(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'check': {}}
+        eng_resp = {'action': 'action-id'}
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
+                                     return_value=eng_resp)
+
+        resp = self.controller.action(req, cluster_id=cid, body=body)
+
+        mock_call.assert_called_once_with(req.context, 'cluster_check2',
+                                          mock.ANY)
+        self.assertEqual(eng_resp, resp)
+        request = mock_call.call_args[0][2]
+        self.assertEqual(cid, request.identity)
+        self.assertEqual({}, request.params)
+
+    def test_action_check_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'unknown-cluster'
+        body = {'check': {}}
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
+
+        error = senlin_exc.ResourceNotFound(type='cluster', id=cid)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.action,
+                                              req, cluster_id=cid, body=body)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+
+    def test_action_recover(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'recover': {}}
+        eng_resp = {'action': 'action-id'}
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
+                                     return_value=eng_resp)
+
+        resp = self.controller.action(req, cluster_id=cid, body=body)
+
+        mock_call.assert_called_once_with(req.context, 'cluster_recover2',
+                                          mock.ANY)
+
+        self.assertEqual(eng_resp, resp)
+        request = mock_call.call_args[0][2]
+        self.assertEqual(cid, request.identity)
+        self.assertEqual({}, request.params)
+
+    def test_action_recover_with_ops(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {
+            'recover': {
+                'operation': 'REBUILD'
+            }
+        }
+        eng_resp = {'action': 'action-id'}
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
+                                     return_value=eng_resp)
+
+        resp = self.controller.action(req, cluster_id=cid, body=body)
+
+        self.assertEqual(eng_resp, resp)
+        mock_call.assert_called_once_with(req.context, 'cluster_recover2',
+                                          mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertEqual(cid, request.identity)
+        self.assertEqual({'operation': 'REBUILD'}, request.params)
+
+    def test_action_recover_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'unknown-cluster'
+        body = {'recover': {}}
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
+
+        error = senlin_exc.ResourceNotFound(type='cluster', id=cid)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.action,
+                                              req, cluster_id=cid, body=body)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
