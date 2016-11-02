@@ -421,3 +421,182 @@ class ClusterPolicyTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_policy.assert_called_once_with(self.ctx, 'BOGUS')
+
+    @mock.patch.object(action_mod.Action, 'create')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(service.EngineService, 'policy_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_policy_detach2(self, notify, mock_policy, mock_cluster,
+                                    mock_cp, mock_action):
+        mock_cluster.return_value = mock.Mock(id='12345678abcd')
+        mock_policy.return_value = mock.Mock(id='87654321abcd')
+        mock_action.return_value = 'ACTION_ID'
+        mock_cp.return_value = mock.Mock()
+        req = orco.ClusterDetachPolicyRequest(identity='C1', policy_id='P1')
+
+        res = self.eng.cluster_policy_detach2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, res)
+        mock_cluster.assert_called_once_with(self.ctx, 'C1')
+        mock_policy.assert_called_once_with(self.ctx, 'P1')
+        mock_cp.assert_called_once_with(self.ctx, '12345678abcd',
+                                        '87654321abcd')
+        mock_action.assert_called_once_with(
+            self.ctx, '12345678abcd', consts.CLUSTER_DETACH_POLICY,
+            name='detach_policy_12345678',
+            cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
+            inputs={'policy_id': '87654321abcd'},
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_policy_detach2_cluster_not_found(self, mock_cluster):
+        mock_cluster.side_effect = exc.ResourceNotFound(type='cluster',
+                                                        id='Bogus')
+        req = orco.ClusterDetachPolicyRequest(identity='Bogus',
+                                              policy_id='POLICY_ID')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_policy_detach2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual("The cluster (Bogus) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(service.EngineService, 'policy_find')
+    def test_cluster_policy_detach2_policy_not_found(self, mock_policy,
+                                                     mock_cluster):
+        mock_cluster.return_value = mock.Mock()
+        mock_policy.side_effect = exc.ResourceNotFound(type='policy',
+                                                       id='Bogus')
+        req = orco.ClusterDetachPolicyRequest(identity='CLUSTER',
+                                              policy_id='Bogus')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_policy_detach2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The specified policy "
+                         "(Bogus) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_cluster.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_policy.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(service.EngineService, 'policy_find')
+    def test_cluster_policy_detach2_binding_not_found(self, mock_policy,
+                                                      mock_cluster, mock_cp):
+        mock_cluster.return_value = mock.Mock(id='X_CLUSTER')
+        mock_policy.return_value = mock.Mock(id='X_POLICY')
+        mock_cp.return_value = None
+        req = orco.ClusterDetachPolicyRequest(identity='C1', policy_id='P1')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_policy_detach2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The policy (P1) is "
+                         "not attached to the specified cluster (C1).",
+                         six.text_type(ex.exc_info[1]))
+        mock_cluster.assert_called_once_with(self.ctx, 'C1')
+        mock_policy.assert_called_once_with(self.ctx, 'P1')
+        mock_cp.assert_called_once_with(self.ctx, 'X_CLUSTER', 'X_POLICY')
+
+    @mock.patch.object(action_mod.Action, 'create')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(service.EngineService, 'policy_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_policy_update2(self, notify, mock_policy, mock_cluster,
+                                    mock_cp, mock_action):
+        mock_cluster.return_value = mock.Mock(id='12345678abcd')
+        mock_policy.return_value = mock.Mock(id='87654321abcd')
+        mock_action.return_value = 'ACTION_ID'
+        mock_cp.return_value = mock.Mock()
+        req = orco.ClusterUpdatePolicyRequest(identity='C1', policy_id='P1',
+                                              enabled=False)
+
+        res = self.eng.cluster_policy_update2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, res)
+        mock_cluster.assert_called_once_with(self.ctx, 'C1')
+        mock_policy.assert_called_once_with(self.ctx, 'P1')
+        mock_cp.assert_called_once_with(self.ctx, '12345678abcd',
+                                        '87654321abcd')
+        mock_action.assert_called_once_with(
+            self.ctx, '12345678abcd', consts.CLUSTER_UPDATE_POLICY,
+            name='update_policy_12345678',
+            cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
+            inputs={'policy_id': '87654321abcd', 'enabled': False},
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_policy_update2_cluster_not_found(self, mock_cluster):
+        mock_cluster.side_effect = exc.ResourceNotFound(type='cluster',
+                                                        id='Bogus')
+        req = orco.ClusterUpdatePolicyRequest(identity='Bogus', policy_id='P1',
+                                              enabled=True)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_policy_update2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual("The cluster (Bogus) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(service.EngineService, 'policy_find')
+    def test_cluster_policy_update2_policy_not_found(self, mock_policy,
+                                                     mock_cluster):
+        mock_cluster.return_value = mock.Mock()
+        mock_policy.side_effect = exc.ResourceNotFound(type='policy',
+                                                       id='Bogus')
+        req = orco.ClusterUpdatePolicyRequest(identity='C1', policy_id='Bogus',
+                                              enabled=True)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_policy_update2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The specified policy "
+                         "(Bogus) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_cluster.assert_called_once_with(self.ctx, 'C1')
+        mock_policy.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(service.EngineService, 'policy_find')
+    def test_cluster_policy_update2_binding_not_found(self, mock_policy,
+                                                      mock_cluster, mock_cp):
+        mock_cluster.return_value = mock.Mock(id='CLUSTER_ID1')
+        mock_policy.return_value = mock.Mock(id='POLICY_ID1')
+        mock_cp.return_value = None
+        req = orco.ClusterUpdatePolicyRequest(identity='C1', policy_id='P1',
+                                              enabled=True)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_policy_update2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The policy (P1) is "
+                         "not attached to the specified cluster (C1).",
+                         six.text_type(ex.exc_info[1]))
+
+        mock_cluster.assert_called_once_with(self.ctx, 'C1')
+        mock_policy.assert_called_once_with(self.ctx, 'P1')
+        mock_cp.assert_called_once_with(self.ctx, 'CLUSTER_ID1', 'POLICY_ID1')
