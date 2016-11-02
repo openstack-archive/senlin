@@ -1026,79 +1026,108 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             expected = "Invalid value '%s' specified for 'enabled'" % value
             self.assertEqual(expected, six.text_type(ex))
 
-    def test_cluster_action_attach_policy(self, mock_enforce):
+    def test_action_attach_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'policy_attach': {'policy_id': 'xxxx-yyyy'}}
-
         eng_resp = {'action': 'action-id'}
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
 
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-                         'cluster_id': cid}, jsonutils.dumps(body))
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=eng_resp)
 
         resp = self.controller.action(req, cluster_id=cid, body=body)
 
-        mock_call.assert_called_once_with(
-            req.context,
-            ('cluster_policy_attach', {
-                'identity': cid, 'policy': 'xxxx-yyyy', 'enabled': True,
-            })
-        )
+        mock_call.assert_called_once_with(req.context,
+                                          'cluster_policy_attach2', mock.ANY)
         result = {
             'action': 'action-id',
             'location': '/actions/action-id',
         }
         self.assertEqual(result, resp)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorc.ClusterAttachPolicyRequest)
+        self.assertEqual(cid, request.identity)
+        self.assertEqual('xxxx-yyyy', request.policy_id)
+        self.assertFalse(request.obj_attr_is_set('enabled'))
 
-    def test_cluster_action_attach_policy_with_fields(self, mock_enforce):
+    def test_action_attach_policy_disabled(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
         body = {'policy_attach': {
             'policy_id': 'xxxx-yyyy',
             'enabled': False,
         }}
-
         eng_resp = {'action': 'action-id'}
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
 
-        req = self._post('/clusters/%(cluster_id)s/actions' % {
-                         'cluster_id': cid}, jsonutils.dumps(body))
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=eng_resp)
 
         resp = self.controller.action(req, cluster_id=cid, body=body)
 
-        mock_call.assert_called_once_with(
-            req.context,
-            ('cluster_policy_attach', {
-                'identity': cid, 'policy': 'xxxx-yyyy', 'enabled': False,
-            })
-        )
+        mock_call.assert_called_once_with(req.context,
+                                          'cluster_policy_attach2', mock.ANY)
         result = {
             'action': 'action-id',
             'location': '/actions/action-id',
         }
         self.assertEqual(result, resp)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorc.ClusterAttachPolicyRequest)
+        self.assertEqual(cid, request.identity)
+        self.assertEqual('xxxx-yyyy', request.policy_id)
+        self.assertFalse(request.enabled)
 
-    def test_cluster_action_attach_policy_not_found(self, mock_enforce):
+    def test_action_attach_policy_missing_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
-        body = {'policy_attach': {'policy_id': 'not-a-policy'}}
+        body = {'policy_attach': {}}
         req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
 
-        error = senlin_exc.ResourceNotFound(type='policy', id='not-a-policy')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        mock_call.side_effect = shared.to_remote_error(error)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
 
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.action,
-                                              req, cluster_id=cid, body=body)
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, cluster_id=cid, body=body)
 
-        self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+        self.assertEqual("'policy_id' is a required property",
+                         six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    def test_action_attach_policy_additional_properties(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'policy_attach': {'foo': 'bar', 'policy_id': 'fake'}}
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, cluster_id=cid, body=body)
+
+        self.assertEqual("Additional properties are not allowed ('foo' was "
+                         "unexpected)", six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    def test_action_attach_policy_enabled_not_boolean(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'policy_attach': {
+            'policy_id': 'not-a-policy',
+            'enabled': 'who knows'
+        }}
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, cluster_id=cid, body=body)
+
+        self.assertIn("Unrecognized value 'who knows'", six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
 
     def test_cluster_action_detach_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
