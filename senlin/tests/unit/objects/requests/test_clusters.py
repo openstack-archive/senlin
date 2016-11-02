@@ -424,3 +424,34 @@ class TestClusterAttachPolicy(test_base.SenlinTestCase):
                                identity='foo', enabled='Bogus')
 
         self.assertIn("Unrecognized value 'Bogus'", six.text_type(ex))
+
+
+class TestClusterUpdatePolicy(test_base.SenlinTestCase):
+
+    def test_init(self):
+        sot = clusters.ClusterUpdatePolicyRequest(identity='foo',
+                                                  policy_id='bar')
+
+        self.assertEqual('foo', sot.identity)
+        self.assertEqual('bar', sot.policy_id)
+        self.assertFalse(sot.obj_attr_is_set('enabled'))
+
+        sot.obj_set_defaults()
+        self.assertTrue(sot.obj_attr_is_set('enabled'))
+        self.assertEqual(True, sot.enabled)
+
+    def test_init_failed(self):
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterUpdatePolicyRequest,
+                               identity='foo', enabled='Bogus')
+
+        self.assertIn("Unrecognized value 'Bogus'", six.text_type(ex))
+
+
+class TestClusterDetachPolicy(test_base.SenlinTestCase):
+
+    def test_init(self):
+        sot = clusters.ClusterDetachPolicyRequest(identity='foo',
+                                                  policy_id='bar')
+        self.assertEqual('foo', sot.identity)
+        self.assertEqual('bar', sot.policy_id)
