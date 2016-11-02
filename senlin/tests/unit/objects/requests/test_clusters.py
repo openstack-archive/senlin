@@ -455,3 +455,31 @@ class TestClusterDetachPolicy(test_base.SenlinTestCase):
                                                   policy_id='bar')
         self.assertEqual('foo', sot.identity)
         self.assertEqual('bar', sot.policy_id)
+
+
+class TestClusterCheck(test_base.SenlinTestCase):
+
+    def test_init(self):
+        sot = clusters.ClusterCheckRequest(identity='cluster',
+                                           params={'foo': 'bar'})
+        self.assertEqual('cluster', sot.identity)
+        self.assertEqual({'foo': 'bar'}, sot.params)
+
+    def test_init_partial(self):
+        sot = clusters.ClusterCheckRequest(identity='cluster')
+        self.assertEqual('cluster', sot.identity)
+        self.assertFalse(sot.obj_attr_is_set('params'))
+
+
+class TestClusterRecover(test_base.SenlinTestCase):
+
+    def test_init(self):
+        sot = clusters.ClusterRecoverRequest(identity='cluster',
+                                             params={'foo': 'bar'})
+        self.assertEqual('cluster', sot.identity)
+        self.assertEqual({'foo': 'bar'}, sot.params)
+
+    def test_init_partial(self):
+        sot = clusters.ClusterRecoverRequest(identity='cluster')
+        self.assertEqual('cluster', sot.identity)
+        self.assertFalse(sot.obj_attr_is_set('params'))
