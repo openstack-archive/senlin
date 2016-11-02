@@ -993,7 +993,7 @@ class TestClusterPolicyUpdateNegativeNotFound(base.BaseSenlinAPITest):
         params = {
             'policy_update': {
                 'policy_id': 'POLICY_ID',
-                'enabled': 'false'
+                'enabled': False
             }
         }
 

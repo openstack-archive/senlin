@@ -334,6 +334,48 @@ class ClusterController(wsgi.Controller):
 
         return self.rpc_client.call2(context, 'cluster_policy_attach2', obj)
 
+    def _do_policy_detach(self, context, cid, data):
+        params = {'identity': cid}
+        if not isinstance(data, dict):
+            msg = _("The data provided is not a map.")
+            raise exc.HTTPBadRequest(msg)
+        params.update(data)
+
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'ClusterDetachPolicyRequest', params, None)
+
+        obj = None
+        try:
+            obj = vorc.ClusterDetachPolicyRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        return self.rpc_client.call2(context, 'cluster_policy_detach2', obj)
+
+    def _do_policy_update(self, context, cid, data):
+        params = {'identity': cid}
+        if not isinstance(data, dict):
+            msg = _("The data provided is not a map.")
+            raise exc.HTTPBadRequest(msg)
+        params.update(data)
+
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'ClusterUpdatePolicyRequest', params, None)
+
+        obj = None
+        try:
+            obj = vorc.ClusterUpdatePolicyRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        return self.rpc_client.call2(context, 'cluster_policy_update2', obj)
+
     @util.policy_enforce
     def action(self, req, cluster_id, body=None):
         """Perform specified action on a cluster."""
@@ -369,18 +411,10 @@ class ClusterController(wsgi.Controller):
             res = self._do_policy_attach(req.context, cluster_id, data)
         elif this_action == self.POLICY_DETACH:
             data = body.get(this_action)
-            policy_id = data.get('policy_id', None)
-            if not policy_id:
-                raise exc.HTTPBadRequest(_('No policy specified for detach.'))
-            res = self.rpc_client.cluster_policy_detach(req.context,
-                                                        cluster_id, policy_id)
+            res = self._do_policy_detach(req.context, cluster_id, data)
         elif this_action == self.POLICY_UPDATE:
-            # this_action == self.POLICY_UPDATE:
-            # Note the POLICY_UPDATE action includes policy-enable/disable
-            raw_data = body.get(this_action)
-            data = self._sanitize_policy(raw_data)
-            res = self.rpc_client.cluster_policy_update(req.context,
-                                                        cluster_id, **data)
+            data = body.get(this_action)
+            res = self._do_policy_update(req.context, cluster_id, data)
         elif this_action == self.CHECK:
             params = body.get(this_action)
             if not isinstance(params, dict):
