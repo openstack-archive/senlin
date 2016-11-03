@@ -515,16 +515,29 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_node_delete_success(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         nid = 'aaaa-bbbb-cccc'
-        req = self._delete('/node/%(node_id)s' % {'node_id': nid})
+        req = self._delete('/nodes/%(node_id)s' % {'node_id': nid})
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.return_value = {'action': 'FAKE_ID'}
 
         res = self.controller.delete(req, node_id=nid)
+        mock_call.assert_called_with(req.context, 'node_delete2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorn.NodeDeleteRequest)
+        self.assertEqual(nid, request.identity)
         result = {'location': '/actions/FAKE_ID'}
         self.assertEqual(res, result)
-        mock_call.assert_called_with(
-            req.context, ('node_delete', {'identity': nid}))
+
+    def test_node_delete_err_malformed_node_id(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete', True)
+        nid = {'k1': 'v1'}
+        req = self._delete('/nodes/%(node_id)s' % {'node_id': nid})
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.delete, req,
+                               node_id=nid)
+        self.assertEqual("A string is required in field identity, "
+                         "not a dict", six.text_type(ex))
 
     def test_node_delete_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', False)
@@ -537,6 +550,22 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
+
+    def test_node_delete_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete', True)
+        nid = 'aaaa-bbbb-cccc'
+        req = self._delete('/nodes/%(node_id)s' % {'node_id': nid})
+
+        error = senlin_exc.ResourceNotFound(type='node', id=nid)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.delete,
+                                              req, node_id=nid)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     def test_node_action_check_success(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -670,19 +699,3 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(
             req.context,
             ('node_recover', {'identity': node_id, 'params': {}}))
-
-    def test_node_delete_not_found(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'delete', True)
-        nid = 'aaaa-bbbb-cccc'
-        req = self._delete('/nodes/%(node_id)s' % {'node_id': nid})
-
-        error = senlin_exc.ResourceNotFound(type='node', id=nid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        mock_call.side_effect = shared.to_remote_error(error)
-
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.delete,
-                                              req, node_id=nid)
-
-        self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
