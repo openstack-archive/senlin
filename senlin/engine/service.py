@@ -1760,34 +1760,6 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context
-    def node_check(self, context, identity, params=None):
-        """Check the health status of specified node.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of the node.
-        :param params: A dictionary providing additional input parameters
-                       for the checking operation.
-        :return: A dictionary containing the ID of the action triggered by
-                 this request.
-        """
-        LOG.info(_LI("Checking node '%s'."), identity)
-
-        db_node = self.node_find(context, identity)
-
-        kwargs = {
-            'name': 'node_check_%s' % db_node.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'status': action_mod.Action.READY,
-            'inputs': params,
-        }
-        action_id = action_mod.Action.create(context, db_node.id,
-                                             consts.NODE_CHECK, **kwargs)
-        dispatcher.start_action()
-        LOG.info(_LI("Node check action is queued: %s."), action_id)
-
-        return {'action': action_id}
-
     @request_context2
     def node_check2(self, ctx, req):
         """Check the health status of specified node.
@@ -1812,34 +1784,6 @@ class EngineService(service.Service):
                                              consts.NODE_CHECK, **kwargs)
         dispatcher.start_action()
         LOG.info(_LI("Node check action is queued: %s."), action_id)
-
-        return {'action': action_id}
-
-    @request_context
-    def node_recover(self, context, identity, params=None):
-        """Recover the specified node.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a node.
-        :param params: A dictionary containing the optional parameters for
-                       the requested recover operation.
-        :return: A dictionary containing the ID of the action triggered by the
-                 recover request.
-        """
-        LOG.info(_LI("Recovering node '%s'."), identity)
-
-        db_node = self.node_find(context, identity)
-
-        kwargs = {
-            'name': 'node_recover_%s' % db_node.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'status': action_mod.Action.READY,
-            'inputs': params
-        }
-        action_id = action_mod.Action.create(context, db_node.id,
-                                             consts.NODE_RECOVER, **kwargs)
-        dispatcher.start_action()
-        LOG.info(_LI("Node recover action is queued: %s."), action_id)
 
         return {'action': action_id}
 
