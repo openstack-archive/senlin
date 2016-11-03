@@ -179,3 +179,12 @@ class ClusterRecoverRequest(base.SenlinObject):
         'identity': fields.StringField(),
         'params': fields.JsonField(nullable=True),
     }
+
+
+@base.SenlinObjectRegistry.register
+class ClusterReplaceNodesRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'nodes': fields.NodeReplaceMapField(),
+    }

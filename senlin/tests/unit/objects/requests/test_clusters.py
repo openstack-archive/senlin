@@ -483,3 +483,31 @@ class TestClusterRecover(test_base.SenlinTestCase):
         sot = clusters.ClusterRecoverRequest(identity='cluster')
         self.assertEqual('cluster', sot.identity)
         self.assertFalse(sot.obj_attr_is_set('params'))
+
+
+class TestClusterReplaceNodes(test_base.SenlinTestCase):
+
+    def test_init(self):
+        sot = clusters.ClusterReplaceNodesRequest(
+            identity='foo', nodes={'old1': 'new1', 'old2': 'new2'})
+
+        self.assertEqual('foo', sot.identity)
+        self.assertEqual({'old1': 'new1', 'old2': 'new2'}, sot.nodes)
+
+    def test_init_missing_value(self):
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterReplaceNodesRequest,
+                               identity='foo',
+                               nodes={'old1': None, 'old2': 'new2'})
+
+        self.assertEqual("Field `nodes[old1]' cannot be None",
+                         six.text_type(ex))
+
+    def test_init_duplicated_nodes(self):
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterReplaceNodesRequest,
+                               identity='foo',
+                               nodes={'old1': 'new2', 'old2': 'new2'})
+
+        self.assertEqual("Map contains duplicated values",
+                         six.text_type(ex))
