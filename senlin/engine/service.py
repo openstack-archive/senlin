@@ -1502,6 +1502,63 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
+    @request_context2
+    def cluster_check2(self, ctx, req):
+        """Check the status of a cluster.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ClusterCheckRequest object.
+        :return: A dictionary containing the ID of the action triggered.
+        """
+        LOG.info(_LI("Checking cluster '%s'."), req.identity)
+        db_cluster = self.cluster_find(ctx, req.identity)
+        # cope with cluster check request from engine internal
+        if not ctx.user or not ctx.project:
+            ctx.user = db_cluster.user
+            ctx.project = db_cluster.project
+
+        params = {
+            'name': 'cluster_check_%s' % db_cluster.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+            'inputs': req.params if req.obj_attr_is_set('params') else {}
+        }
+        action_id = action_mod.Action.create(ctx, db_cluster.id,
+                                             consts.CLUSTER_CHECK, **params)
+        dispatcher.start_action()
+        LOG.info(_LI("Cluster check action queued: %s."), action_id)
+
+        return {'action': action_id}
+
+    @request_context2
+    def cluster_recover2(self, ctx, req):
+        """Recover a cluster to a healthy status.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of a ClusterRecoverRequest object.
+        :return: A dictionary containing the ID of the action triggered.
+        """
+        LOG.info(_LI("Recovering cluster '%s'."), req.identity)
+        db_cluster = self.cluster_find(ctx, req.identity)
+
+        # cope with cluster check request from engine internal
+        if not ctx.user or not ctx.project:
+            ctx.user = db_cluster.user
+            ctx.project = db_cluster.project
+
+        params = {
+            'name': 'cluster_recover_%s' % db_cluster.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+            'inputs': req.params if req.obj_attr_is_set('params') else {}
+        }
+        action_id = action_mod.Action.create(ctx, db_cluster.id,
+                                             consts.CLUSTER_RECOVER, **params)
+        dispatcher.start_action()
+        LOG.info(_LI("Cluster recover action queued: %s."), action_id)
+
+        return {'action': action_id}
+
     def node_find(self, context, identity, project_safe=True):
         """Find a node with the given identity.
 
