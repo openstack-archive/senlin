@@ -1,0 +1,25 @@
+{
+    "policy": {
+        "created_at": null,
+        "data": {},
+        "domain": null,
+        "id": null,
+        "name": "validated_policy",
+        "project": "1d567ed4ef51453a85545f018b68c26d",
+        "spec": {
+            "properties": {
+                "adjustment": {
+                    "min_step": 1,
+                    "number": 1,
+                    "type": "CHANGE_IN_CAPACITY"
+                },
+                "event": "CLUSTER_SCALE_IN"
+            },
+            "type": "senlin.policy.scaling",
+            "version": "1.0"
+        },
+        "type": "senlin.policy.scaling-1.0",
+        "updated_at": null,
+        "user": "990e4c1f4a414f74990b17d16f2540b5"
+    }
+}

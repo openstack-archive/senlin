@@ -320,6 +320,12 @@ Request Parameters
   - policy: policy
   - spec: policy_spec
 
+Request Example
+---------------
+
+.. literalinclude:: samples/policy-validate-request.json
+   :language: javascript
+
 Response Parameters
 -------------------
 
@@ -339,3 +345,9 @@ The response contains properties as if the policy has been created.
   - type: policy_type_name
   - updated_at: updated_at
   - user: user
+
+Response Example
+----------------
+
+.. literalinclude:: samples/policy-validate-response.json
+   :language: javascript
