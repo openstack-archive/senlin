@@ -22,7 +22,6 @@ from webob import exc
 from senlin.api.common import util
 from senlin.api.common import wsgi
 from senlin.common import consts
-from senlin.common import exception as senlin_exc
 from senlin.common.i18n import _
 from senlin.common import utils
 from senlin.objects import base as obj_base
@@ -145,33 +144,6 @@ class ClusterController(wsgi.Controller):
             'location': '/actions/%s' % action_id,
         }
         return result
-
-    def _sanitize_policy(self, data):
-        """Validate dict body of policy attach or update.
-
-        :param dict data: A dictionary containing the properties of the policy
-                          to be attached/updated including the policy ID.
-        :returns: A sanitized dict containing the policy properties.
-        :raises: :class:`~webob.exception.HTTPBadRequest` if the policy dict
-                 contains invalid property values.
-        """
-        if not isinstance(data, dict):
-            msg = _("The data provided is not a map.")
-            raise exc.HTTPBadRequest(msg)
-
-        if consts.CP_POLICY_ID not in data:
-            msg = _("The 'policy_id' field is missing in the request.")
-            raise exc.HTTPBadRequest(msg)
-
-        if consts.CP_ENABLED in data:
-            enabled = data.get(consts.CP_ENABLED)
-            try:
-                enabled = utils.parse_bool_param(consts.CP_ENABLED, enabled)
-            except senlin_exc.InvalidParameter as ex:
-                raise exc.HTTPBadRequest(six.text_type(ex))
-            data[consts.CP_ENABLED] = enabled
-
-        return data
 
     @wsgi.Controller.api_version('1.3')
     def _replace_nodes(self, req, cluster_id, this_action, body):
@@ -376,6 +348,48 @@ class ClusterController(wsgi.Controller):
 
         return self.rpc_client.call2(context, 'cluster_policy_update2', obj)
 
+    def _do_check(self, context, cid, data):
+        params = {'identity': cid}
+        if not isinstance(data, dict):
+            msg = _("The params provided is not a map.")
+            raise exc.HTTPBadRequest(msg)
+        params['params'] = data
+
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'ClusterCheckRequest', params, None)
+
+        obj = None
+        try:
+            obj = vorc.ClusterCheckRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        return self.rpc_client.call2(context, 'cluster_check2', obj)
+
+    def _do_recover(self, context, cid, data):
+        params = {'identity': cid}
+        if not isinstance(data, dict):
+            msg = _("The params provided is not a map.")
+            raise exc.HTTPBadRequest(msg)
+        params['params'] = data
+
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'ClusterRecoverRequest', params, None)
+
+        obj = None
+        try:
+            obj = vorc.ClusterRecoverRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        return self.rpc_client.call2(context, 'cluster_recover2', obj)
+
     @util.policy_enforce
     def action(self, req, cluster_id, body=None):
         """Perform specified action on a cluster."""
@@ -416,22 +430,13 @@ class ClusterController(wsgi.Controller):
             data = body.get(this_action)
             res = self._do_policy_update(req.context, cluster_id, data)
         elif this_action == self.CHECK:
-            params = body.get(this_action)
-            if not isinstance(params, dict):
-                msg = _("The params provided is not a map.")
-                raise exc.HTTPBadRequest(msg)
-            res = self.rpc_client.cluster_check(req.context, cluster_id,
-                                                params=params)
-        elif this_action == self.REPLACE_NODES:
+            data = body.get(this_action)
+            res = self._do_check(req.context, cluster_id, data)
+        elif this_action == self.RECOVER:
+            data = body.get(this_action)
+            res = self._do_recover(req.context, cluster_id, data)
+        else:  # this_action == self.REPLACE_NODES:
             return self._replace_nodes(req, cluster_id, this_action, body)
-        else:
-            # this_action == self.RECOVER:
-            params = body.get(this_action)
-            if not isinstance(params, dict):
-                msg = _("The params provided is not a map.")
-                raise exc.HTTPBadRequest(msg)
-            res = self.rpc_client.cluster_recover(req.context, cluster_id,
-                                                  params=params)
 
         location = {'location': '/actions/%s' % res['action']}
         res.update(location)
