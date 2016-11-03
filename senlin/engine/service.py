@@ -1231,35 +1231,6 @@ class EngineService(service.Service):
 
         return found
 
-    @request_context
-    def cluster_replace_nodes(self, context, identity, nodes=None):
-        """Replace the nodes in cluster with specified nodes
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of the target cluster.
-        :param nodes: A dictionary contains the original nodes and the nodes
-                      used to replace. The key is the original nodes' UUID,
-                      the value is the specified node's UUID
-        :return: A dictionary containing the ID of the action triggered.
-        """
-        LOG.info(_LI("Replace nodes of the cluster '%s'."), identity)
-        db_cluster = self.cluster_find(context, identity)
-
-        nodes_dict = self._validate_replace_nodes(context, db_cluster, nodes)
-        kwargs = {
-            'name': 'cluster_replace_nodes_%s' % db_cluster.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'status': action_mod.Action.READY,
-            'inputs': nodes_dict,
-        }
-        action_id = action_mod.Action.create(context, db_cluster.id,
-                                             consts.CLUSTER_REPLACE_NODES,
-                                             **kwargs)
-        dispatcher.start_action()
-        LOG.info(_LI("Cluster replace nodes action queued: %s."), action_id)
-
-        return {'action': action_id}
-
     @request_context2
     def cluster_replace_nodes2(self, ctx, req):
         """Replace the nodes in cluster with specified nodes
