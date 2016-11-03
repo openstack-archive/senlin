@@ -28,6 +28,7 @@ from senlin.common import context
 from senlin.common.i18n import _LI, _LW
 from senlin.common import messaging as rpc
 from senlin import objects
+from senlin.objects.requests import clusters as vorc
 from senlin.rpc import client as rpc_client
 
 LOG = logging.getLogger(__name__)
@@ -130,7 +131,8 @@ class HealthManager(service.Service):
         :param cluster_id: The UUID of the cluster to be checked.
         :returns: Nothing.
         """
-        self.rpc_client.cluster_check(self.ctx, cluster_id)
+        req = vorc.ClusterCheckRequest(identity=cluster_id)
+        self.rpc_client.call2(self.ctx, 'cluster_check2', req)
 
     def _add_listener(self, cluster_id):
         """Routine to be executed for adding cluster listener.
