@@ -1447,61 +1447,6 @@ class EngineService(service.Service):
 
         return {'cluster_attributes': attrs}
 
-    @request_context
-    def cluster_check(self, context, identity, params=None):
-        """Check the status of a cluster.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a cluster.
-        :param params: A dictionary containing additional parameters for
-                       the check operation.
-        :return: A dictionary containing the ID of the action triggered.
-        """
-        LOG.info(_LI("Checking Cluster '%(cluster)s'."),
-                 {'cluster': identity})
-        db_cluster = self.cluster_find(context, identity)
-        if not context.user or not context.project:
-            context.user = db_cluster.user
-            context.project = db_cluster.project
-        params = {
-            'name': 'cluster_check_%s' % db_cluster.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'status': action_mod.Action.READY,
-            'inputs': params,
-        }
-        action_id = action_mod.Action.create(context, db_cluster.id,
-                                             consts.CLUSTER_CHECK, **params)
-        dispatcher.start_action()
-        LOG.info(_LI("Cluster check action queued: %s."), action_id)
-
-        return {'action': action_id}
-
-    @request_context
-    def cluster_recover(self, context, identity, params=None):
-        """Recover a cluster to a healthy status.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a cluster.
-        :param params: A dictionary containing additional parameters for
-                       the check operation.
-        :return: A dictionary containing the ID of the action triggered.
-        """
-        LOG.info(_LI("Recovering cluster '%s'."), identity)
-        db_cluster = self.cluster_find(context, identity)
-
-        params = {
-            'name': 'cluster_recover_%s' % db_cluster.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'status': action_mod.Action.READY,
-            'inputs': params,
-        }
-        action_id = action_mod.Action.create(context, db_cluster.id,
-                                             consts.CLUSTER_RECOVER, **params)
-        dispatcher.start_action()
-        LOG.info(_LI("Cluster recover action queued: %s."), action_id)
-
-        return {'action': action_id}
-
     @request_context2
     def cluster_check2(self, ctx, req):
         """Check the status of a cluster.
