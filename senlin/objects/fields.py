@@ -31,6 +31,7 @@ IntegerField = fields.IntegerField
 FloatField = fields.FloatField
 UUIDField = fields.UUIDField
 DateTimeField = fields.DateTimeField
+DictOfStringsField = fields.DictOfStringsField
 ListOfStringsField = fields.ListOfStringsField
 ListOfEnumField = fields.ListOfEnumField
 
@@ -400,6 +401,16 @@ class AdjustmentType(BaseEnum):
     )
 
 
+class UniqueDict(fields.Dict):
+
+    def coerce(self, obj, attr, value):
+        res = super(UniqueDict, self).coerce(obj, attr, value)
+        new_nodes = res.values()
+        if len(new_nodes) != len(set(new_nodes)):
+            raise ValueError(_("Map contains duplicated values"))
+        return res
+
+
 # TODO(Qiming): remove this when oslo patch is released
 # https://review.openstack.org/#/c/360095
 class NonNegativeIntegerField(fields.AutoTypedField):
@@ -484,3 +495,8 @@ class AdjustmentTypeField(fields.AutoTypedField):
         nullable = kwargs.get('nullable', False)
         self.AUTO_TYPE = AdjustmentType(nullable=nullable)
         super(AdjustmentTypeField, self).__init__(**kwargs)
+
+
+class NodeReplaceMapField(fields.AutoTypedField):
+
+    AUTO_TYPE = UniqueDict(fields.String())

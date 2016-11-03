@@ -198,6 +198,33 @@ class TestJson(TestField):
         )
 
 
+class TestUniqueDict(TestField):
+
+    def setUp(self):
+        super(TestUniqueDict, self).setUp()
+
+        self.field = senlin_fields.UniqueDict(fields.String())
+        self.coerce_good_values = [({"k": "v"}, {"k": "v"})]
+        self.coerce_bad_values = ['{"K": "v"]']
+        self.to_primitive_values = [({"k": "v"}, {"k": "v"})]
+        self.from_primitive_values = [({"k": "v"}, {"k": "v"})]
+
+    def test_stringify(self):
+        self.assertEqual("{k='v'}", self.field.stringify({"k": "v"}))
+
+    def test_coerce(self):
+        res = self.field.coerce(None, 'attr', {'k1': 'v1'})
+        self.assertEqual({'k1': 'v1'}, res)
+
+    def test_coerce_failed_duplicate(self):
+        ex = self.assertRaises(ValueError,
+                               self.field.coerce,
+                               None, 'attr', {'k1': 'v1', 'k2': 'v1'})
+
+        self.assertEqual('Map contains duplicated values',
+                         six.text_type(ex))
+
+
 class TestNotificationPriority(TestField):
     def setUp(self):
         super(TestNotificationPriority, self).setUp()
