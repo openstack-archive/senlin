@@ -33,6 +33,8 @@ class ClusterPolicyController(wsgi.Controller):
     def index(self, req, cluster_id):
         filter_whitelist = {
             consts.CP_ENABLED: 'single',
+            consts.CP_POLICY_NAME: 'single',
+            consts.CP_POLICY_TYPE: 'single',
         }
         param_whitelist = {
             consts.PARAM_SORT: 'single',
