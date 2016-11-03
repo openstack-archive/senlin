@@ -167,3 +167,27 @@ class TestNodeDelete(test_base.SenlinTestCase):
     def test_node_delete_request(self):
         sot = nodes.NodeDeleteRequest(**self.body)
         self.assertEqual('test-node', sot.identity)
+
+
+class TestNodeCheck(test_base.SenlinTestCase):
+
+    body = {
+        'identity': 'test-node',
+        'params': {'foo': 'bar'},
+    }
+
+    def test_node_check_request(self):
+        sot = nodes.NodeCheckRequest(**self.body)
+        self.assertEqual({'foo': 'bar'}, sot.params)
+
+
+class TestNodeRecover(test_base.SenlinTestCase):
+
+    body = {
+        'identity': 'test-node',
+        'params': {'foo': 'bar'},
+    }
+
+    def test_node_recover_request(self):
+        sot = nodes.NodeRecoverRequest(**self.body)
+        self.assertEqual({'foo': 'bar'}, sot.params)
