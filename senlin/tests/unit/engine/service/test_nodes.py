@@ -636,65 +636,6 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'node_find')
-    def test_node_delete(self, mock_find, mock_action, mock_start):
-        mock_find.return_value = mock.Mock(id='12345678AB', status='ACTIVE',
-                                           dependents={})
-        mock_action.return_value = 'ACTION_ID'
-
-        result = self.eng.node_delete(self.ctx, 'FAKE_NODE')
-
-        self.assertEqual({'action': 'ACTION_ID'}, result)
-        mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
-        mock_action.assert_called_once_with(
-            self.ctx, '12345678AB', consts.NODE_DELETE,
-            name='node_delete_12345678',
-            cause=action_mod.CAUSE_RPC,
-            status=action_mod.Action.READY)
-        mock_start.assert_called_once_with()
-
-    @mock.patch.object(service.EngineService, 'node_find')
-    def test_node_delete_node_not_found(self, mock_find):
-        mock_find.side_effect = exc.ResourceNotFound(type='node', id='Bogus')
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_delete, self.ctx, 'Bogus')
-
-        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The node (Bogus) could not be found.',
-                         six.text_type(ex.exc_info[1]))
-        mock_find.assert_called_once_with(self.ctx, 'Bogus')
-
-    @mock.patch.object(service.EngineService, 'node_find')
-    def test_node_delete_improper_status(self, mock_find):
-        for bad_status in [consts.NS_CREATING, consts.NS_UPDATING,
-                           consts.NS_DELETING, consts.NS_RECOVERING]:
-            fake_node = mock.Mock(id='12345678AB', status=bad_status)
-            mock_find.return_value = fake_node
-            ex = self.assertRaises(rpc.ExpectedException,
-                                   self.eng.node_delete,
-                                   self.ctx, 'BUSY')
-
-            self.assertEqual(exc.ActionInProgress, ex.exc_info[0])
-            self.assertEqual("The node BUSY is in status %s." % bad_status,
-                             six.text_type(ex.exc_info[1]))
-            # skipping assertion on mock_find
-
-    @mock.patch.object(service.EngineService, 'node_find')
-    def test_node_delete_contain_container(self, mock_find):
-        dependents = {'containers': ['container1']}
-        node = mock.Mock(id='NODE_ID', status='ACTIVE', dependents=dependents)
-        mock_find.return_value = node
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_delete,
-                               self.ctx, 'node1')
-        self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
-        self.assertEqual("The node node1 cannot be deleted: still depended "
-                         "by other clusters and/or nodes.",
-                         six.text_type(ex.exc_info[1]))
-
-    @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch.object(action_mod.Action, 'create')
-    @mock.patch.object(service.EngineService, 'node_find')
     def test_node_delete2(self, mock_find, mock_action, mock_start):
         mock_find.return_value = mock.Mock(id='12345678AB', status='ACTIVE',
                                            dependents={})

@@ -1720,44 +1720,6 @@ class EngineService(service.Service):
 
         return resp
 
-    @request_context
-    def node_delete(self, context, identity):
-        """Delete the specified node.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of the node.
-        :return: A dictionary containing the ID of the action triggered by
-                 this request.
-        """
-        LOG.info(_LI('Deleting node %s'), identity)
-
-        node = self.node_find(context, identity)
-
-        if node.status in [consts.NS_CREATING,
-                           consts.NS_UPDATING,
-                           consts.NS_DELETING,
-                           consts.NS_RECOVERING]:
-            raise exception.ActionInProgress(type='node', id=identity,
-                                             status=node.status)
-
-        containers = node.dependents.get('containers', None)
-        if containers is not None and len(containers) > 0:
-            reason = _("still depended by other clusters and/or nodes")
-            raise exception.ResourceInUse(type='node', id=identity,
-                                          reason=reason)
-
-        params = {
-            'name': 'node_delete_%s' % node.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'status': action_mod.Action.READY,
-        }
-        action_id = action_mod.Action.create(context, node.id,
-                                             consts.NODE_DELETE, **params)
-        dispatcher.start_action()
-        LOG.info(_LI("Node delete action is queued: %s."), action_id)
-
-        return {'action': action_id}
-
     @request_context2
     def node_delete2(self, ctx, req):
         """Delete the specified node.
