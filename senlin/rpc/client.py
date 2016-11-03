@@ -161,69 +161,6 @@ class EngineClient(object):
         return self.call(ctxt,
                          self.make_msg('policy_validate', spec=spec))
 
-    def cluster_list(self, ctxt, limit=None, marker=None, sort=None,
-                     filters=None, project_safe=True):
-        return self.call(ctxt,
-                         self.make_msg('cluster_list', filters=filters,
-                                       limit=limit, marker=marker, sort=sort,
-                                       project_safe=project_safe))
-
-    def cluster_get(self, ctxt, identity):
-        return self.call(ctxt,
-                         self.make_msg('cluster_get', identity=identity))
-
-    def cluster_create(self, ctxt, name, desired_capacity, profile_id,
-                       min_size=None, max_size=None, metadata=None,
-                       timeout=None):
-        return self.call(ctxt, self.make_msg('cluster_create',
-                                             name=name,
-                                             desired_capacity=desired_capacity,
-                                             profile_id=profile_id,
-                                             min_size=min_size,
-                                             max_size=max_size,
-                                             metadata=metadata,
-                                             timeout=timeout))
-
-    def cluster_add_nodes(self, ctxt, identity, nodes):
-        return self.call(ctxt, self.make_msg('cluster_add_nodes',
-                                             identity=identity,
-                                             nodes=nodes))
-
-    def cluster_del_nodes(self, ctxt, identity, nodes):
-        return self.call(ctxt, self.make_msg('cluster_del_nodes',
-                                             identity=identity,
-                                             nodes=nodes))
-
-    def cluster_resize(self, ctxt, identity, adj_type=None, number=None,
-                       min_size=None, max_size=None, min_step=None,
-                       strict=True):
-        return self.call(ctxt, self.make_msg('cluster_resize',
-                                             identity=identity,
-                                             adj_type=adj_type,
-                                             number=number,
-                                             min_size=min_size,
-                                             max_size=max_size,
-                                             min_step=min_step,
-                                             strict=strict))
-
-    def cluster_scale_out(self, ctxt, identity, count=None):
-        return self.call(ctxt, self.make_msg('cluster_scale_out',
-                                             identity=identity,
-                                             count=count))
-
-    def cluster_scale_in(self, ctxt, identity, count=None):
-        return self.call(ctxt, self.make_msg('cluster_scale_in',
-                                             identity=identity,
-                                             count=count))
-
-    def cluster_update(self, ctxt, identity, name=None, profile_id=None,
-                       metadata=None, timeout=None):
-        return self.call(ctxt, self.make_msg('cluster_update',
-                                             identity=identity, name=name,
-                                             profile_id=profile_id,
-                                             metadata=metadata,
-                                             timeout=timeout))
-
     def cluster_delete(self, ctxt, identity, cast=True):
         rpc_method = self.cast if cast else self.call
         return rpc_method(ctxt,
@@ -236,46 +173,10 @@ class EngineClient(object):
                                              project_safe=project_safe),
                          version='1.1')
 
-    def cluster_check(self, ctxt, identity, params=None):
-        return self.call(ctxt, self.make_msg('cluster_check',
-                                             identity=identity,
-                                             params=params))
-
-    def cluster_recover(self, ctxt, identity, params=None):
-        return self.call(ctxt, self.make_msg('cluster_recover',
-                                             identity=identity,
-                                             params=params))
-
     def cluster_replace_nodes(self, ctxt, identity, nodes=None):
         return self.call(ctxt, self.make_msg('cluster_replace_nodes',
                                              identity=identity,
                                              nodes=nodes))
-
-    def node_list(self, ctxt, cluster_id=None, limit=None, marker=None,
-                  sort=None, filters=None, project_safe=True):
-        return self.call(ctxt,
-                         self.make_msg('node_list', cluster_id=cluster_id,
-                                       limit=limit, marker=marker, sort=sort,
-                                       filters=filters,
-                                       project_safe=project_safe))
-
-    def node_create(self, ctxt, name, cluster_id, profile_id, role, metadata):
-        return self.call(ctxt,
-                         self.make_msg('node_create', name=name,
-                                       profile_id=profile_id,
-                                       cluster_id=cluster_id,
-                                       role=role, metadata=metadata))
-
-    def node_get(self, ctxt, identity, show_details=False):
-        return self.call(ctxt,
-                         self.make_msg('node_get', identity=identity,
-                                       show_details=show_details))
-
-    def node_update(self, ctxt, identity, name, profile_id, role, metadata):
-        return self.call(ctxt,
-                         self.make_msg('node_update', identity=identity,
-                                       name=name, profile_id=profile_id,
-                                       role=role, metadata=metadata))
 
     def node_delete(self, ctxt, identity, cast=True):
         rpc_method = self.cast if cast else self.call
@@ -304,27 +205,10 @@ class EngineClient(object):
                                              identity=cluster_id,
                                              filters=filters, sort=sort))
 
-    def cluster_policy_attach(self, ctxt, cluster_id, policy_id, enabled=True):
-        return self.call(ctxt, self.make_msg('cluster_policy_attach',
-                                             identity=cluster_id,
-                                             policy=policy_id,
-                                             enabled=enabled))
-
-    def cluster_policy_detach(self, ctxt, cluster_id, policy_id):
-        return self.call(ctxt, self.make_msg('cluster_policy_detach',
-                                             identity=cluster_id,
-                                             policy=policy_id))
-
     def cluster_policy_get(self, ctxt, cluster_id, policy_id):
         return self.call(ctxt, self.make_msg('cluster_policy_get',
                                              identity=cluster_id,
                                              policy_id=policy_id))
-
-    def cluster_policy_update(self, ctxt, cluster_id, policy_id, enabled=None):
-        return self.call(ctxt, self.make_msg('cluster_policy_update',
-                                             identity=cluster_id,
-                                             policy=policy_id,
-                                             enabled=enabled))
 
     def action_create(self, ctxt, name, cluster, action, params):
         return self.call(ctxt,

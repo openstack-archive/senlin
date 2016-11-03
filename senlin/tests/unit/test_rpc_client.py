@@ -258,62 +258,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_policy_validate(self):
         self._test_engine_api('policy_validate', 'call', spec=mock.ANY)
 
-    def test_cluster_list(self):
-        default_args = {
-            'limit': mock.ANY,
-            'marker': mock.ANY,
-            'sort': mock.ANY,
-            'filters': mock.ANY,
-            'project_safe': mock.ANY,
-        }
-        self._test_engine_api('cluster_list', 'call', **default_args)
-
-    def test_cluster_create(self):
-        kwargs = {
-            'name': 'mycluster',
-            'desired_capacity': 0,
-            'profile_id': 'aaaa-bbbb-cccc',
-            'min_size': 0,
-            'max_size': 0,
-            'metadata': None,
-            'timeout': None
-        }
-
-        self._test_engine_api('cluster_create', 'call', **kwargs)
-
-    def test_cluster_get(self):
-        self._test_engine_api('cluster_get', 'call', identity='a-cluster')
-
-    def test_cluster_add_nodes(self):
-        self._test_engine_api('cluster_add_nodes', 'call',
-                              identity='a-cluster',
-                              nodes=['node1', 'node2'])
-
-    def test_cluster_del_nodes(self):
-        self._test_engine_api('cluster_del_nodes', 'call',
-                              identity='a-cluster',
-                              nodes=['node3', 'node4'])
-
-    def test_cluster_scale_out(self):
-        self._test_engine_api('cluster_scale_out', 'call',
-                              identity='a-cluster',
-                              count=1)
-
-    def test_cluster_scale_in(self):
-        self._test_engine_api('cluster_scale_in', 'call',
-                              identity='a-cluster',
-                              count=1)
-
-    def test_cluster_update(self):
-        kwargs = {
-            'identity': 'a-cluster',
-            'name': 'new-name',
-            'profile_id': 'new_profile',
-            'metadata': {'key': 'value'},
-            'timeout': 120
-        }
-        self._test_engine_api('cluster_update', 'call', **kwargs)
-
     def test_cluster_delete_cast(self):
         self._test_engine_api('cluster_delete', 'cast', identity='a-cluster')
 
@@ -325,59 +269,10 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
                               path='astring', project_safe=True,
                               version='1.1')
 
-    def test_cluster_check(self):
-        self._test_engine_api('cluster_check', 'call', identity='a-cluster',
-                              params=None)
-
-    def test_cluster_recover(self):
-        self._test_engine_api('cluster_recover', 'call', identity='a-cluster',
-                              params=None)
-
-    def test_cluster_recover_with_params(self):
-        params = {'operation': 'REBUILD'}
-        self._test_engine_api('cluster_recover', 'call', identity='a-cluster',
-                              params=params)
-
     def test_cluster_replace_nodes(self):
         self._test_engine_api('cluster_replace_nodes', 'call',
                               identity='a-cluster',
                               nodes={'o_node': 'r_node'})
-
-    def test_node_list(self):
-        default_args = {
-            'cluster_id': mock.ANY,
-            'limit': mock.ANY,
-            'marker': mock.ANY,
-            'sort': mock.ANY,
-            'filters': mock.ANY,
-            'project_safe': mock.ANY,
-        }
-        self._test_engine_api('node_list', 'call', **default_args)
-
-    def test_node_create(self):
-        kwargs = {
-            'name': 'mynode',
-            'profile_id': 'aaaa-bbbb-cccc',
-            'cluster_id': 'xxxx-yyyy-zzzz',
-            'role': None,
-            'metadata': None
-        }
-
-        self._test_engine_api('node_create', 'call', **kwargs)
-
-    def test_node_get(self):
-        self._test_engine_api('node_get', 'call', identity='a-node',
-                              show_details=mock.ANY)
-
-    def test_node_update(self):
-        kwargs = {
-            'identity': 'a-cluster',
-            'name': 'new-name',
-            'profile_id': 'new_profile',
-            'role': 'master',
-            'metadata': {'key': 'value'}
-        }
-        self._test_engine_api('node_update', 'call', **kwargs)
 
     def test_node_delete_cast(self):
         self._test_engine_api('node_delete', 'cast', identity='a-node')
@@ -422,38 +317,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         kwargs['expected_message'] = expected_message
         self._test_engine_api('cluster_policy_list', 'call', **kwargs)
 
-    def test_cluster_policy_attach(self):
-        kwargs = {
-            'cluster_id': 'a-cluster',
-            'policy_id': 'a-policy',
-            'enabled': mock.ANY,
-        }
-
-        call_kwargs = {
-            'identity': 'a-cluster',
-            'policy': 'a-policy',
-            'enabled': mock.ANY,
-        }
-        expected_message = self.rpcapi.make_msg('cluster_policy_attach',
-                                                **call_kwargs)
-        kwargs['expected_message'] = expected_message
-        self._test_engine_api('cluster_policy_attach', 'call', **kwargs)
-
-    def test_cluster_policy_detach(self):
-        kwargs = {
-            'cluster_id': 'a-cluster',
-            'policy_id': 'a-policy',
-        }
-
-        call_kwargs = {
-            'identity': 'a-cluster',
-            'policy': 'a-policy',
-        }
-        expected_message = self.rpcapi.make_msg('cluster_policy_detach',
-                                                **call_kwargs)
-        kwargs['expected_message'] = expected_message
-        self._test_engine_api('cluster_policy_detach', 'call', **kwargs)
-
     def test_cluster_policy_get(self):
         kwargs = {
             'cluster_id': 'a-cluster',
@@ -468,23 +331,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
                                                 **call_kwargs)
         kwargs['expected_message'] = expected_message
         self._test_engine_api('cluster_policy_get', 'call', **kwargs)
-
-    def test_cluster_policy_update(self):
-        kwargs = {
-            'cluster_id': 'a-cluster',
-            'policy_id': 'a-policy',
-            'enabled': True
-        }
-
-        call_kwargs = copy.deepcopy(kwargs)
-        call_kwargs['identity'] = 'a-cluster'
-        call_kwargs['policy'] = 'a-policy'
-        del call_kwargs['cluster_id']
-        del call_kwargs['policy_id']
-        expected_message = self.rpcapi.make_msg('cluster_policy_update',
-                                                **call_kwargs)
-        kwargs['expected_message'] = expected_message
-        self._test_engine_api('cluster_policy_update', 'call', **kwargs)
 
     def test_action_create(self):
         kwargs = {
