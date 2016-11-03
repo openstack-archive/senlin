@@ -161,3 +161,21 @@ class ClusterDetachPolicyRequest(base.SenlinObject):
         'identity': fields.StringField(),
         'policy_id': fields.StringField(),
     }
+
+
+@base.SenlinObjectRegistry.register
+class ClusterCheckRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'params': fields.JsonField(nullable=True),
+    }
+
+
+@base.SenlinObjectRegistry.register
+class ClusterRecoverRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'params': fields.JsonField(nullable=True),
+    }
