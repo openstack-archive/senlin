@@ -1041,17 +1041,19 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         engine_response = {
             'cluster_attributes': [{'key': 'value'}],
         }
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_response)
 
         resp = self.controller.collect(req, cluster_id=cid, path=path)
 
         self.assertEqual(engine_response, resp)
-        mock_call.assert_called_once_with(
-            req.context,
-            ('cluster_collect', {'identity': cid, 'path': path,
-                                 'project_safe': True}),
-            version='1.1')
+        mock_call.assert_called_once_with(req.context, 'cluster_collect2',
+                                          mock.ANY)
+
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorc.ClusterCollectRequest)
+        self.assertEqual(cid, request.identity)
+        self.assertEqual(path, request.path)
 
     def test_cluster_collect_version_mismatch(self, mock_enforce):
         # NOTE: we skip the mock_enforce setup below because api version check
@@ -1062,7 +1064,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         path = 'foo.bar'
         req = self._get('/clusters/%(cid)s/attrs/%(path)s' %
                         {'cid': cid, 'path': path}, version='1.1')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
 
         ex = self.assertRaises(senlin_exc.MethodVersionNotFound,
                                self.controller.collect,
@@ -1078,7 +1080,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         path = '    '
         req = self._get('/clusters/%(cid)s/attrs/%(path)s' %
                         {'cid': cid, 'path': path}, version='1.2')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.collect,
@@ -1094,7 +1096,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         path = 'foo.bar'
         req = self._get('/clusters/%(cid)s/attrs/%(path)s' %
                         {'cid': cid, 'path': path}, version='1.2')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.collect,
