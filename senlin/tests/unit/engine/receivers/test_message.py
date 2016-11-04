@@ -707,21 +707,5 @@ class TestMessage(base.SenlinTestCase):
         message.user = 'user1'
         ex = self.assertRaises(exception.InternalError, message._build_action,
                                self.context, msg)
-        ex_msg = _("Illegal action 'foo' specified.")
-        self.assertEqual(ex_msg, ex.message)
-
-    @mock.patch.object(mmod.Message, '_find_cluster')
-    def test_build_action_not_cluster_action(self, mock_find_cluster):
-        fake_cluster = mock.Mock()
-        fake_cluster.user = 'user1'
-        mock_find_cluster.return_value = fake_cluster
-        msg = {
-            'body': {'cluster': 'c1', 'action': 'NODE_CREATE'},
-            'id': 'ID123456'
-        }
-        message = mmod.Message('message', None, None, id=UUID)
-        message.user = 'user1'
-        ex = self.assertRaises(exception.InternalError, message._build_action,
-                               self.context, msg)
-        ex_msg = _("Action 'NODE_CREATE' is not applicable to clusters.")
+        ex_msg = _("Illegal cluster action 'foo' specified.")
         self.assertEqual(ex_msg, ex.message)
