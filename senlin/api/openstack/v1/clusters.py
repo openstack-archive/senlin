@@ -449,8 +449,23 @@ class ClusterController(wsgi.Controller):
         if stripped_path == '':
             raise exc.HTTPBadRequest(_("Required path attribute is missing."))
 
-        return self.rpc_client.cluster_collect(req.context, cluster_id,
-                                               stripped_path)
+        params = {
+            'identity': cluster_id,
+            'path': stripped_path,
+        }
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'ClusterCollectRequest', params, None)
+
+        obj = None
+        try:
+            obj = vorc.ClusterCollectRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        return self.rpc_client.call2(req.context, 'cluster_collect2', obj)
 
     @util.policy_enforce
     def delete(self, req, cluster_id):
