@@ -145,33 +145,6 @@ class ClusterController(wsgi.Controller):
         }
         return result
 
-    @wsgi.Controller.api_version('1.3')
-    def _replace_nodes(self, req, cluster_id, this_action, body):
-        params = body.get(this_action).get('nodes')
-        if not params or not isinstance(params, dict):
-            msg = _("The data provided is not a map.")
-            raise exc.HTTPBadRequest(msg)
-
-        new_nodes = params.values()
-        if len(new_nodes) != len(list(set(new_nodes))):
-            msg = _("The data provided contains duplicated nodes.")
-            raise exc.HTTPBadRequest(msg)
-
-        for (old_node, new_node) in params.items():
-            if not old_node:
-                msg = _("The original node id could not be empty.")
-                raise exc.HTTPBadRequest(msg)
-            if not new_node:
-                msg = _("The replacement node id could not be empty.")
-                raise exc.HTTPBadRequest(msg)
-
-        res = self.rpc_client.cluster_replace_nodes(req.context,
-                                                    cluster_id,
-                                                    nodes=params)
-        location = {'location': '/actions/%s' % res['action']}
-        res.update(location)
-        return res
-
     def _add_nodes(self, ctx, cid, nodes):
         params = {'identity': cid, 'nodes': nodes}
         norm_req = obj_base.SenlinObject.normalize_req(
@@ -201,6 +174,31 @@ class ClusterController(wsgi.Controller):
             raise exc.HTTPBadRequest(six.text_type(ex.message))
 
         return self.rpc_client.call2(ctx, 'cluster_del_nodes2', obj)
+
+    @wsgi.Controller.api_version('1.3')
+    def _replace_nodes(self, req, cluster_id, data):
+        nodes = data.get('nodes')
+        if not nodes or not isinstance(nodes, dict):
+            msg = _("The data provided is not a map.")
+            raise exc.HTTPBadRequest(msg)
+
+        params = {
+            'identity': cluster_id,
+            'nodes': nodes
+        }
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'ClusterReplaceNodesRequest', params)
+        obj = None
+        try:
+            obj = vorc.ClusterReplaceNodesRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        return self.rpc_client.call2(req.context, 'cluster_replace_nodes2',
+                                     obj)
 
     def _do_resize(self, context, cluster_id, data):
         params = {'identity': cluster_id}
@@ -436,7 +434,8 @@ class ClusterController(wsgi.Controller):
             data = body.get(this_action)
             res = self._do_recover(req.context, cluster_id, data)
         else:  # this_action == self.REPLACE_NODES:
-            return self._replace_nodes(req, cluster_id, this_action, body)
+            data = body.get(this_action)
+            res = self._replace_nodes(req, cluster_id, data)
 
         location = {'location': '/actions/%s' % res['action']}
         res.update(location)

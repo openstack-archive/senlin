@@ -1034,28 +1034,12 @@ class TestClusterReplaceNodesNegativeInvalidParams(base.BaseSenlinAPITest):
                           'clusters', 'cluster_id', params)
 
     @utils.api_microversion('1.3')
-    @decorators.idempotent_id('9d10612e-bfb9-4ac5-bc92-107c95c54adf')
-    def test_cluster_replace_nodes_missing_old_node(self):
-        params = {
-            'replace_nodes': {
-                'nodes': {
-                    '': 'new_node'
-                }
-            }
-        }
-
-        # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.cluster_replace_nodes,
-                          'clusters', 'cluster_id', params)
-
-    @utils.api_microversion('1.3')
     @decorators.idempotent_id('3e227f8f-7da3-4dc1-b647-68ed8fbdd111')
     def test_cluster_replace_nodes_missing_new_node(self):
         params = {
             'replace_nodes': {
                 'nodes': {
-                    'old_node': ''
+                    'old_node': None
                 }
             }
         }
