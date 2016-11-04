@@ -1428,34 +1428,6 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context
-    def cluster_collect(self, context, identity, path, project_safe=True):
-        """Collect a certain attribute across a cluster.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a cluster.
-        :param path: A JSONPath-alike string containing path for a particular
-                     attribute to aggregate.
-        :return: A list containing values of attribute collected from all
-                 nodes.
-        """
-        # validate 'path' string and return a parser,
-        # The function may raise a BadRequest exception.
-        parser = utils.get_path_parser(path)
-        cluster = self.cluster_find(context, identity)
-        nodes = node_mod.Node.load_all(context, cluster_id=cluster.id,
-                                       project_safe=project_safe)
-        attrs = []
-        for node in nodes:
-            info = node.to_dict()
-            if node.physical_id:
-                info['details'] = node.get_details(context)
-            matches = [m.value for m in parser.find(info)]
-            if matches:
-                attrs.append({'id': node.id, 'value': matches[0]})
-
-        return {'cluster_attributes': attrs}
-
     @request_context2
     def cluster_collect2(self, ctx, req):
         """Collect a certain attribute across a cluster.
