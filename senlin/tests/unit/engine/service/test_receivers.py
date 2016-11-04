@@ -291,16 +291,8 @@ class ReceiverTest(base.SenlinTestCase):
                                self.eng.receiver_create,
                                self.ctx, 'r1', 'webhook', 'C1', 'DANCE')
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Illegal action 'DANCE' "
-                         "specified.",
-                         six.text_type(ex.exc_info[1]))
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_create,
-                               self.ctx, 'r1', 'webhook', 'C1', 'NODE_JOIN')
-        self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Action 'NODE_JOIN' is "
-                         "not applicable to clusters.",
+        self.assertEqual("The request is malformed: Illegal cluster action "
+                         "'DANCE' specified.",
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(rb.Receiver, 'create')

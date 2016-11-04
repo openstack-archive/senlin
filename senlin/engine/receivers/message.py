@@ -197,13 +197,8 @@ class Message(base.Receiver):
         context.domain = self.domain
 
         # Action name check
-        if action not in consts.ACTION_NAMES:
-            msg = _("Illegal action '%s' specified.") % action
-            raise exc.InternalError(message=msg)
-
-        if action.lower().split('_')[0] != 'cluster':
-            msg = _("Action '%s' is not applicable to clusters."
-                    ) % action
+        if action not in consts.CLUSTER_ACTION_NAMES:
+            msg = _("Illegal cluster action '%s' specified.") % action
             raise exc.InternalError(message=msg)
 
         kwargs = {

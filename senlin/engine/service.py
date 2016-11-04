@@ -2209,13 +2209,8 @@ class EngineService(service.Service):
                 raise exception.Forbidden()
 
             # Check action name
-            if action not in consts.ACTION_NAMES:
-                msg = _("Illegal action '%s' specified.") % action
-                raise exception.BadRequest(msg=msg)
-
-            if action.lower().split('_')[0] != 'cluster':
-                msg = _("Action '%s' is not applicable to clusters."
-                        ) % action
+            if action not in consts.CLUSTER_ACTION_NAMES:
+                msg = _("Illegal cluster action '%s' specified.") % action
                 raise exception.BadRequest(msg=msg)
 
         if not params:
