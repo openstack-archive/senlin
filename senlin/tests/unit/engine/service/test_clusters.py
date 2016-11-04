@@ -162,6 +162,19 @@ class ClusterTest(base.SenlinTestCase):
         notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_delete_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='Bogus')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_delete,
+                               self.ctx, 'Bogus')
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual('The cluster (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_delete_contain_container(self, mock_find):
         dependents = {'containers': ['container1']}
         cluster = mock.Mock(id='cluster1', status='ACTIVE',
@@ -174,19 +187,6 @@ class ClusterTest(base.SenlinTestCase):
                 "by other clusters and/or nodes.")
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
         self.assertEqual(msg, six.text_type(ex.exc_info[1]))
-
-    @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_cluster_delete_not_found(self, mock_find):
-        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
-                                                     id='Bogus')
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_delete,
-                               self.ctx, 'Bogus')
-
-        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The cluster (Bogus) could not be found.',
-                         six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_node_delete_improper_status(self, mock_find):
@@ -1851,3 +1851,122 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(0, x_node_1.get_details.call_count)
         x_node_2.to_dict.assert_called_once_with()
         self.assertEqual(0, x_node_2.get_details.call_count)
+
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(ro.Receiver, 'get_all')
+    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_delete2(self, notify, mock_find, mock_policies,
+                             mock_receivers, mock_action):
+        x_obj = mock.Mock(id='12345678AB', status='ACTIVE', dependents={})
+        mock_find.return_value = x_obj
+        mock_policies.return_value = []
+        mock_receivers.return_value = []
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterDeleteRequest(identity='IDENTITY')
+
+        result = self.eng.cluster_delete2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'IDENTITY')
+        mock_policies.assert_called_once_with(self.ctx, '12345678AB')
+        mock_receivers.assert_called_once_with(
+            self.ctx, filters={'cluster_id': '12345678AB'})
+        mock_action.assert_called_once_with(
+            self.ctx, '12345678AB', 'CLUSTER_DELETE',
+            name='cluster_delete_12345678',
+            cause=am.CAUSE_RPC,
+            status=am.Action.READY)
+
+        notify.assert_called_once_with()
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_delete2_with_containers(self, mock_find):
+        dependents = {'containers': ['container1']}
+        cluster = mock.Mock(id='cluster1', status='ACTIVE',
+                            dependents=dependents)
+        mock_find.return_value = cluster
+        req = orco.ClusterDeleteRequest(identity='FAKE_CLUSTER')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_delete2,
+                               self.ctx, req.obj_to_primitive())
+
+        msg = _("The cluster FAKE_CLUSTER cannot be deleted: still depended "
+                "by other clusters and/or nodes.")
+        self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
+        self.assertEqual(msg, six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_delete2_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='Bogus')
+        req = orco.ClusterDeleteRequest(identity='Bogus')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_delete2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual('The cluster (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_delete2_improper_status(self, mock_find):
+        for bad_status in [consts.CS_CREATING, consts.CS_UPDATING,
+                           consts.CS_DELETING, consts.CS_RECOVERING]:
+            fake_cluster = mock.Mock(id='12345678AB', status=bad_status)
+            mock_find.return_value = fake_cluster
+            req = orco.ClusterDeleteRequest(identity='BUSY')
+
+            ex = self.assertRaises(rpc.ExpectedException,
+                                   self.eng.cluster_delete2,
+                                   self.ctx, req.obj_to_primitive())
+
+            self.assertEqual(exc.ActionInProgress, ex.exc_info[0])
+            self.assertEqual("The cluster BUSY is in status %s." % bad_status,
+                             six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_delete2_policy_attached(self, mock_find, mock_policies):
+        x_obj = mock.Mock(id='12345678AB', dependents={})
+        mock_find.return_value = x_obj
+        mock_policies.return_value = [mock.Mock()]
+        req = orco.ClusterDeleteRequest(identity='IDENTITY')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_delete2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
+        expected_msg = _('The cluster IDENTITY cannot be deleted: '
+                         'there is still policy(s) attached to it.')
+        self.assertEqual(expected_msg, six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'IDENTITY')
+        mock_policies.assert_called_once_with(self.ctx, '12345678AB')
+
+    @mock.patch.object(ro.Receiver, 'get_all')
+    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_delete2_with_receiver(self, mock_find, mock_policies,
+                                           mock_receivers):
+        x_obj = mock.Mock(id='12345678AB', dependents={})
+        mock_find.return_value = x_obj
+        mock_policies.return_value = []
+        mock_receivers.return_value = [mock.Mock()]
+        req = orco.ClusterDeleteRequest(identity='IDENTITY')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_delete2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
+        expected_msg = _('The cluster IDENTITY cannot be deleted: '
+                         'there is still receiver(s) associated with it.')
+        self.assertEqual(expected_msg, six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'IDENTITY')
+        mock_policies.assert_called_once_with(self.ctx, '12345678AB')
+        mock_receivers.assert_called_once_with(
+            self.ctx, filters={'cluster_id': '12345678AB'})

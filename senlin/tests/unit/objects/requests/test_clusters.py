@@ -521,3 +521,10 @@ class TestClusterCollect(test_base.SenlinTestCase):
 
         self.assertEqual('foo', sot.identity)
         self.assertEqual('path/to/attr', sot.path)
+
+
+class TestClusterDelete(test_base.SenlinTestCase):
+
+    def test_init(self):
+        sot = clusters.ClusterDeleteRequest(identity='foo')
+        self.assertEqual('foo', sot.identity)
