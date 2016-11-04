@@ -1457,6 +1457,31 @@ class EngineService(service.Service):
         return {'cluster_attributes': attrs}
 
     @request_context2
+    def cluster_collect2(self, ctx, req):
+        """Collect a certain attribute across a cluster.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ClusterCollectRequest object.
+        :return: A list containing values of attribute collected from all
+                 nodes.
+        """
+        # validate 'path' string and return a parser,
+        # The function may raise a BadRequest exception.
+        parser = utils.get_path_parser(req.path)
+        cluster = self.cluster_find(ctx, req.identity)
+        nodes = node_mod.Node.load_all(ctx, cluster_id=cluster.id)
+        attrs = []
+        for node in nodes:
+            info = node.to_dict()
+            if node.physical_id:
+                info['details'] = node.get_details(ctx)
+            matches = [m.value for m in parser.find(info)]
+            if matches:
+                attrs.append({'id': node.id, 'value': matches[0]})
+
+        return {'cluster_attributes': attrs}
+
+    @request_context2
     def cluster_check2(self, ctx, req):
         """Check the status of a cluster.
 
