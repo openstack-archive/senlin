@@ -700,39 +700,6 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(service.EngineService, 'node_find')
-    def test_node_check(self, mock_find, mock_action, mock_start):
-        mock_find.return_value = mock.Mock(id='12345678AB')
-        mock_action.return_value = 'ACTION_ID'
-
-        params = {}
-        result = self.eng.node_check(self.ctx, 'FAKE_NODE', params)
-
-        self.assertEqual({'action': 'ACTION_ID'}, result)
-        mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
-        mock_action.assert_called_once_with(
-            self.ctx, '12345678AB', consts.NODE_CHECK,
-            name='node_check_12345678',
-            cause=action_mod.CAUSE_RPC,
-            status=action_mod.Action.READY,
-            inputs={})
-        mock_start.assert_called_once_with()
-
-    @mock.patch.object(service.EngineService, 'node_find')
-    def test_node_check_not_found(self, mock_find):
-        mock_find.side_effect = exc.ResourceNotFound(type='node', id='Bogus')
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_check,
-                               self.ctx, 'Bogus')
-
-        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The node (Bogus) could not be found.',
-                         six.text_type(ex.exc_info[1]))
-        mock_find.assert_called_once_with(self.ctx, 'Bogus')
-
-    @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch.object(action_mod.Action, 'create')
-    @mock.patch.object(service.EngineService, 'node_find')
     def test_node_check2(self, mock_find, mock_action, mock_start):
         mock_find.return_value = mock.Mock(id='12345678AB')
         mock_action.return_value = 'ACTION_ID'
@@ -759,39 +726,6 @@ class NodeTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_check2,
                                self.ctx, req.obj_to_primitive())
-
-        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The node (Bogus) could not be found.',
-                         six.text_type(ex.exc_info[1]))
-        mock_find.assert_called_once_with(self.ctx, 'Bogus')
-
-    @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch.object(action_mod.Action, 'create')
-    @mock.patch.object(service.EngineService, 'node_find')
-    def test_node_recover(self, mock_find, mock_action, mock_start):
-        mock_find.return_value = mock.Mock(id='12345678AB')
-        mock_action.return_value = 'ACTION_ID'
-        params = {'foo': 'bar'}
-
-        result = self.eng.node_recover(self.ctx, 'FAKE_NODE', params)
-
-        self.assertEqual({'action': 'ACTION_ID'}, result)
-        mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
-        mock_action.assert_called_once_with(
-            self.ctx, '12345678AB', consts.NODE_RECOVER,
-            name='node_recover_12345678',
-            cause=action_mod.CAUSE_RPC,
-            status=action_mod.Action.READY,
-            inputs={'foo': 'bar'})
-        mock_start.assert_called_once_with()
-
-    @mock.patch.object(service.EngineService, 'node_find')
-    def test_node_recover_not_found(self, mock_find):
-        mock_find.side_effect = exc.ResourceNotFound(type='node', id='Bogus')
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_recover,
-                               self.ctx, 'Bogus')
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual('The node (Bogus) could not be found.',
