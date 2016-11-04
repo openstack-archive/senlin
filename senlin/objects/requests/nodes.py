@@ -79,3 +79,21 @@ class NodeDeleteRequest(base.SenlinObject):
     fields = {
         'identity': fields.StringField()
     }
+
+
+@base.SenlinObjectRegistry.register
+class NodeCheckRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'params': fields.JsonField(nullable=True)
+    }
+
+
+@base.SenlinObjectRegistry.register
+class NodeRecoverRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'params': fields.JsonField(nullable=True)
+    }
