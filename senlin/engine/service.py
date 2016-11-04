@@ -1797,6 +1797,33 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
+    @request_context2
+    def node_check2(self, ctx, req):
+        """Check the health status of specified node.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the NodeCheckRequest object.
+        :return: A dictionary containing the ID of the action triggered by
+                 this request.
+        """
+        LOG.info(_LI("Checking node '%s'."), req.identity)
+
+        db_node = self.node_find(ctx, req.identity)
+
+        kwargs = {
+            'name': 'node_check_%s' % db_node.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY
+        }
+        if req.obj_attr_is_set('params') and req.params:
+            kwargs['inputs'] = req.params
+        action_id = action_mod.Action.create(ctx, db_node.id,
+                                             consts.NODE_CHECK, **kwargs)
+        dispatcher.start_action()
+        LOG.info(_LI("Node check action is queued: %s."), action_id)
+
+        return {'action': action_id}
+
     @request_context
     def node_recover(self, context, identity, params=None):
         """Recover the specified node.
@@ -1819,6 +1846,33 @@ class EngineService(service.Service):
             'inputs': params
         }
         action_id = action_mod.Action.create(context, db_node.id,
+                                             consts.NODE_RECOVER, **kwargs)
+        dispatcher.start_action()
+        LOG.info(_LI("Node recover action is queued: %s."), action_id)
+
+        return {'action': action_id}
+
+    @request_context2
+    def node_recover2(self, ctx, req):
+        """Recover the specified node.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the NodeRecoverRequest object.
+        :return: A dictionary containing the ID of the action triggered by the
+                 recover request.
+        """
+        LOG.info(_LI("Recovering node '%s'."), req.identity)
+
+        db_node = self.node_find(ctx, req.identity)
+
+        kwargs = {
+            'name': 'node_recover_%s' % db_node.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY
+        }
+        if req.obj_attr_is_set('params') and req.params:
+            kwargs['inputs'] = req.params
+        action_id = action_mod.Action.create(ctx, db_node.id,
                                              consts.NODE_RECOVER, **kwargs)
         dispatcher.start_action()
         LOG.info(_LI("Node recover action is queued: %s."), action_id)
