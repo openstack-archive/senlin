@@ -1027,13 +1027,13 @@ project:
 receiver:
   type: object
   in: body
+  required: True
   description: |
     The structured definition of a receiver object.
 
 receiver_action:
   type: string
   in: body
-  required: True
   description: |
     The action to initiate when the receiver is triggered. A valid value
     should be the name of an action that can be applied on a cluster.
@@ -1041,7 +1041,7 @@ receiver_action:
 receiver_actor:
   type: object
   in: body
-  required: True
+  required: False
   description: |
     A map of key and value pairs to use for authentication.
 
@@ -1056,7 +1056,6 @@ receiver_channel:
 receiver_cluster_identity:
   type: string
   in: body
-  required: True
   description: |
     The name, short-ID or UUID of the cluster object a node belongs to.
 
@@ -1077,7 +1076,7 @@ receiver_params:
 receiver_params_req:
   type: object
   in: body
-  required: True
+  required: False
   description: |
     A map of key and value pairs to use for action creation. Some actions
     might require certain input parameters.
@@ -1092,9 +1091,10 @@ receiver_type:
 receiver_type_req:
   type: string
   in: body
-  required: False
+  required: True
   description: |
-    The type of the receiver. The only valid value is ``webhook`` currently.
+    The type of the receiver. The valid values include ``webhook`` and
+    ``message``.
 
 receivers:
   type: array
