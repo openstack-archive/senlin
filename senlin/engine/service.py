@@ -950,63 +950,6 @@ class EngineService(service.Service):
         resp['action'] = action_id
         return resp
 
-    @request_context
-    def cluster_delete(self, context, identity):
-        """Delete the specified cluster.
-
-        :param identity: The UUID, name or short-ID of the target cluster.
-        :return: A dictionary containing the ID of the action triggered.
-        """
-
-        LOG.info(_LI('Deleting cluster %s'), identity)
-
-        # 'cluster' below is a DB object.
-        cluster = self.cluster_find(context, identity)
-
-        if cluster.status in [consts.CS_CREATING,
-                              consts.CS_UPDATING,
-                              consts.CS_DELETING,
-                              consts.CS_RECOVERING]:
-            raise exception.ActionInProgress(type='cluster', id=identity,
-                                             status=cluster.status)
-
-        containers = cluster.dependents.get('containers', None)
-        if containers is not None and len(containers) > 0:
-            reason = _("still depended by other clusters and/or nodes")
-            raise exception.ResourceInUse(type='cluster', id=identity,
-                                          reason=reason)
-
-        policies = cp_obj.ClusterPolicy.get_all(context, cluster.id)
-        if len(policies) > 0:
-            msg = _('Cluster %(id)s cannot be deleted without having all '
-                    'policies detached.') % {'id': identity}
-            LOG.error(msg)
-            reason = _("there is still policy(s) attached to it.")
-            raise exception.ResourceInUse(type='cluster', id=identity,
-                                          reason=reason)
-
-        receivers = receiver_obj.Receiver.get_all(
-            context, filters={'cluster_id': cluster.id})
-        if len(receivers) > 0:
-            msg = _('Cluster %(id)s cannot be deleted without having all '
-                    'receivers deleted.') % {'id': identity}
-            LOG.error(msg)
-            reason = _("there is still receiver(s) associated with it.")
-            raise exception.ResourceInUse(type='cluster', id=identity,
-                                          reason=reason)
-
-        params = {
-            'name': 'cluster_delete_%s' % cluster.id[:8],
-            'cause': action_mod.CAUSE_RPC,
-            'status': action_mod.Action.READY,
-        }
-        action_id = action_mod.Action.create(context, cluster.id,
-                                             consts.CLUSTER_DELETE, **params)
-        dispatcher.start_action()
-        LOG.info(_LI("Cluster delete action queued: %s"), action_id)
-
-        return {'action': action_id}
-
     @request_context2
     def cluster_delete2(self, ctx, req):
         """Delete the specified cluster.
