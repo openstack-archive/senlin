@@ -576,14 +576,16 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         engine_response = {'action': 'action-id'}
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_response)
 
         response = self.controller.action(req, node_id=node_id, body=body)
 
-        mock_call.assert_called_once_with(
-            req.context,
-            ('node_check', {'identity': node_id, 'params': {}}))
+        mock_call.assert_called_once_with(req.context, 'node_check2', mock.ANY)
+        req = mock_call.call_args[0][2]
+        self.assertIsInstance(req, vorn.NodeCheckRequest)
+        self.assertEqual(node_id, req.identity)
+        self.assertEqual({}, req.params)
 
         location = {'location': '/actions/action-id'}
         engine_response.update(location)
@@ -597,7 +599,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                          jsonutils.dumps(body))
 
         error = senlin_exc.ResourceNotFound(type='node', id=node_id)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
@@ -616,18 +618,57 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         engine_response = {'action': 'action-id'}
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_response)
 
         response = self.controller.action(req, node_id=node_id, body=body)
 
-        mock_call.assert_called_once_with(
-            req.context,
-            ('node_recover', {'identity': node_id, 'params': {}}))
+        mock_call.assert_called_once_with(req.context,
+                                          'node_recover2', mock.ANY)
+        req = mock_call.call_args[0][2]
+        self.assertIsInstance(req, vorn.NodeRecoverRequest)
+        self.assertEqual(node_id, req.identity)
+        self.assertEqual({}, req.params)
 
         location = {'location': '/actions/action-id'}
         engine_response.update(location)
         self.assertEqual(engine_response, response)
+
+    def test_node_action_recover_node_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        node_id = 'xxxx-yyyy'
+        body = {'recover': {}}
+        req = self._post('/nodes/%(node_id)s/actions' % {'node_id': node_id},
+                         jsonutils.dumps(body))
+
+        error = senlin_exc.ResourceNotFound(type='node', id=node_id)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.action,
+                                              req, node_id=node_id, body=body)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+
+    def test_node_action_invalid_params(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        node_id = 'unknown-node'
+        body = {'check': 'foo'}
+        req = self._post('/nodes/%(node_id)s/actions' % {'node_id': node_id},
+                         jsonutils.dumps(body))
+
+        error = senlin_exc.ResourceNotFound(type='node', id=node_id)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, node_id=node_id, body=body)
+        self.assertEqual("The params provided is not a map.",
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     def test_node_action_missing_action(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -677,25 +718,3 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(400, ex.code)
         self.assertIn('Unrecognized action "eat" specified',
                       six.text_type(ex))
-
-    def test_node_action_recover_node_not_found(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        node_id = 'xxxx-yyyy'
-        body = {'recover': {}}
-        req = self._post('/nodes/%(node_id)s/actions' % {'node_id': node_id},
-                         jsonutils.dumps(body))
-
-        error = senlin_exc.ResourceNotFound(type='node', id=node_id)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        mock_call.side_effect = shared.to_remote_error(error)
-
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.action,
-                                              req, node_id=node_id, body=body)
-
-        self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
-
-        mock_call.assert_called_once_with(
-            req.context,
-            ('node_recover', {'identity': node_id, 'params': {}}))

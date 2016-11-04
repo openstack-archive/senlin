@@ -168,21 +168,60 @@ class NodeController(wsgi.Controller):
             msg = _('Unrecognized action "%s" specified') % this_action
             raise exc.HTTPBadRequest(msg)
 
+        params = body.get(this_action)
         if this_action == self.NODE_CHECK:
-            params = body.get(this_action)
-            if not isinstance(params, dict):
-                msg = _("The params provided is not a map.")
-                raise exc.HTTPBadRequest(msg)
-            res = self.rpc_client.node_check(req.context, node_id,
-                                             params=params)
+            res = self._do_check(req.context, node_id, params)
         else:    # self.NODE_RECOVER
-            params = body.get(this_action)
-            if not isinstance(params, dict):
-                msg = _("The params provided is not a map.")
-                raise exc.HTTPBadRequest(msg)
-            res = self.rpc_client.node_recover(req.context, node_id,
-                                               params=params)
+            res = self._do_recover(req.context, node_id, params)
 
         location = {'location': '/actions/%s' % res['action']}
         res.update(location)
+        return res
+
+    def _do_check(self, context, node_id, params):
+        if not isinstance(params, dict):
+            msg = _("The params provided is not a map.")
+            raise exc.HTTPBadRequest(msg)
+
+        kwargs = {
+            'identity': node_id,
+            'params': params
+        }
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'NodeCheckRequest', kwargs)
+
+        try:
+            obj = vorn.NodeCheckRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        res = self.rpc_client.call2(context, 'node_check2', obj)
+
+        return res
+
+    def _do_recover(self, context, node_id, params):
+        if not isinstance(params, dict):
+            msg = _("The params provided is not a map.")
+            raise exc.HTTPBadRequest(msg)
+
+        kwargs = {
+            'identity': node_id,
+            'params': params
+        }
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'NodeRecoverRequest', kwargs)
+
+        try:
+            obj = vorn.NodeRecoverRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        res = self.rpc_client.call2(context, 'node_recover2', obj)
+
         return res
