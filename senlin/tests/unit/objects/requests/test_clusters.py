@@ -511,3 +511,13 @@ class TestClusterReplaceNodes(test_base.SenlinTestCase):
 
         self.assertEqual("Map contains duplicated values",
                          six.text_type(ex))
+
+
+class TestClusterCollect(test_base.SenlinTestCase):
+
+    def test_init(self):
+        sot = clusters.ClusterCollectRequest(identity='foo',
+                                             path='path/to/attr')
+
+        self.assertEqual('foo', sot.identity)
+        self.assertEqual('path/to/attr', sot.path)

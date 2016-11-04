@@ -103,6 +103,15 @@ class ClusterDelNodesRequest(base.SenlinObject):
 
 
 @base.SenlinObjectRegistry.register
+class ClusterReplaceNodesRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'nodes': fields.NodeReplaceMapField(),
+    }
+
+
+@base.SenlinObjectRegistry.register
 class ClusterResizeRequest(base.SenlinObject):
 
     fields = {
@@ -182,9 +191,9 @@ class ClusterRecoverRequest(base.SenlinObject):
 
 
 @base.SenlinObjectRegistry.register
-class ClusterReplaceNodesRequest(base.SenlinObject):
+class ClusterCollectRequest(base.SenlinObject):
 
     fields = {
         'identity': fields.StringField(),
-        'nodes': fields.NodeReplaceMapField(),
+        'path': fields.StringField(),
     }
