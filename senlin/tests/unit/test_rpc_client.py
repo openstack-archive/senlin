@@ -258,28 +258,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_policy_validate(self):
         self._test_engine_api('policy_validate', 'call', spec=mock.ANY)
 
-    def test_cluster_delete_cast(self):
-        self._test_engine_api('cluster_delete', 'cast', identity='a-cluster')
-
-    def test_cluster_delete_call(self):
-        self._test_engine_api('cluster_delete', 'call', identity='a-cluster')
-
-    def test_cluster_collect(self):
-        self._test_engine_api('cluster_collect', 'call', identity='a-cluster',
-                              path='astring', project_safe=True,
-                              version='1.1')
-
-    def test_cluster_replace_nodes(self):
-        self._test_engine_api('cluster_replace_nodes', 'call',
-                              identity='a-cluster',
-                              nodes={'o_node': 'r_node'})
-
-    def test_node_delete_cast(self):
-        self._test_engine_api('node_delete', 'cast', identity='a-node')
-
-    def test_node_delete_call(self):
-        self._test_engine_api('node_delete', 'call', identity='a-node')
-
     def test_node_check(self):
         self._test_engine_api('node_check', 'call', identity='a-node',
                               params=None)
