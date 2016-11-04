@@ -341,22 +341,24 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         cid = 'aaaa-bbbb-cccc'
         req = self._delete('/clusters/%s' % cid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value={'action': 'FAKE_ID'})
 
         res = self.controller.delete(req, cluster_id=cid)
+
         result = {'location': '/actions/FAKE_ID'}
         self.assertEqual(result, res)
-        mock_call.assert_called_with(req.context,
-                                     ('cluster_delete', {'identity': cid}))
+        mock_call.assert_called_with(req.context, 'cluster_delete2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorc.ClusterDeleteRequest)
+        self.assertEqual(cid, request.identity)
 
     def test_cluster_delete_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         cid = 'aaaa-bbbb-cccc'
         req = self._delete('/clusters/%s' % cid)
-
         error = senlin_exc.ResourceNotFound(type='cluster', id=cid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,

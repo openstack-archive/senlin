@@ -469,8 +469,9 @@ class ClusterController(wsgi.Controller):
 
     @util.policy_enforce
     def delete(self, req, cluster_id):
-        res = self.rpc_client.cluster_delete(req.context, cluster_id,
-                                             cast=False)
+        obj = vorc.ClusterDeleteRequest(identity=cluster_id)
+        res = self.rpc_client.call2(req.context, 'cluster_delete2', obj)
+
         action_id = res.pop('action')
         result = {'location': '/actions/%s' % action_id}
         return result
