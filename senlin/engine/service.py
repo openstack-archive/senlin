@@ -1151,10 +1151,19 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    def _validate_replace_node(self, context, db_cluster, nodes):
-        db_cluster_profile = self.profile_find(context,
-                                               db_cluster.profile_id)
-        cluster_profile_type = db_cluster_profile.type
+    def _validate_replace_nodes(self, ctx, cluster, nodes):
+        """Validate the nodes specified in a replacement operation.
+
+        :param ctx: The request context.
+        :param cluster: The cluster object from the DB layer.
+        :param nodes: A dictionary wherein each key is the identity of a node
+                      to be replaced and the corresponding value is the
+                      identity of a node as replacement.
+        :returns: A dict containing the validated map of node substitutions.
+        """
+        # TODO(anyone): This should use profile_get
+        profile = self.profile_find(ctx, cluster.profile_id)
+        cluster_profile_type = profile.type
 
         found = {}
         not_member = []
@@ -1165,17 +1174,19 @@ class EngineService(service.Service):
         not_match_nodes = []
         for (old_node, new_node) in nodes.items():
             try:
-                db_old_node = self.node_find(context, old_node)
+                db_old_node = self.node_find(ctx, old_node)
             except exception.ResourceNotFound:
                 not_found_old.append(old_node)
                 continue
+
             try:
-                db_new_node = self.node_find(context, new_node)
+                db_new_node = self.node_find(ctx, new_node)
             except exception.ResourceNotFound:
                 not_found_new.append(new_node)
                 continue
 
-            if db_old_node.cluster_id != db_cluster.id:
+            # TODO(anyone): replace the 'elif' below with 'if' directly
+            if db_old_node.cluster_id != cluster.id:
                 not_member.append(old_node)
             elif db_new_node.cluster_id:
                 owned_nodes.append(new_node)
@@ -1183,21 +1194,23 @@ class EngineService(service.Service):
                 bad_nodes.append(new_node)
             else:
                 # check the profile type
-                db_new_profile = self.profile_find(context,
-                                                   db_new_node.profile_id)
-                if cluster_profile_type != db_new_profile.type:
+                # TODO(anyone): This should use profile_get
+                node_profile = self.profile_find(ctx, db_new_node.profile_id)
+                if cluster_profile_type != node_profile.type:
                     not_match_nodes.append(new_node)
                 else:
                     found[db_old_node.id] = db_new_node.id
 
+        # TODO(Anyone): since the above checking is already aggregating all
+        # illegal node specifications, we should combine the error message
+        # into a single one.
         msg = None
         if len(not_member) > 0:
             msg = _("The specified nodes %(n)s to be replaced are not "
                     "members of the cluster %(c)s.") % {'n': not_member,
-                                                        'c': db_cluster.id}
+                                                        'c': cluster.id}
         elif len(owned_nodes) > 0:
-            msg = _("Nodes %s already member of a cluster."
-                    ) % owned_nodes
+            msg = _("Nodes %s already member of a cluster.") % owned_nodes
             LOG.error(msg)
             raise exception.NodeNotOrphan(message=msg)
         elif len(bad_nodes) > 0:
@@ -1232,8 +1245,7 @@ class EngineService(service.Service):
         LOG.info(_LI("Replace nodes of the cluster '%s'."), identity)
         db_cluster = self.cluster_find(context, identity)
 
-        nodes_dict = self._validate_replace_node(context, db_cluster,
-                                                 nodes)
+        nodes_dict = self._validate_replace_nodes(context, db_cluster, nodes)
         kwargs = {
             'name': 'cluster_replace_nodes_%s' % db_cluster.id[:8],
             'cause': action_mod.CAUSE_RPC,
@@ -1241,6 +1253,32 @@ class EngineService(service.Service):
             'inputs': nodes_dict,
         }
         action_id = action_mod.Action.create(context, db_cluster.id,
+                                             consts.CLUSTER_REPLACE_NODES,
+                                             **kwargs)
+        dispatcher.start_action()
+        LOG.info(_LI("Cluster replace nodes action queued: %s."), action_id)
+
+        return {'action': action_id}
+
+    @request_context2
+    def cluster_replace_nodes2(self, ctx, req):
+        """Replace the nodes in cluster with specified nodes
+
+        :param ctx: An instance of the request context.
+        :param req: An object of ClusterReplaceNodesRequest.
+        :return: A dictionary containing the ID of the action triggered.
+        """
+        LOG.info(_LI("Replace nodes of the cluster '%s'."), req.identity)
+        db_cluster = self.cluster_find(ctx, req.identity)
+
+        nodes = self._validate_replace_nodes(ctx, db_cluster, req.nodes)
+        kwargs = {
+            'name': 'cluster_replace_nodes_%s' % db_cluster.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+            'inputs': nodes,
+        }
+        action_id = action_mod.Action.create(ctx, db_cluster.id,
                                              consts.CLUSTER_REPLACE_NODES,
                                              **kwargs)
         dispatcher.start_action()
