@@ -16,6 +16,7 @@ from oslo_versionedobjects import fields
 import six
 import testtools
 
+from senlin.common import consts
 from senlin.objects import base
 from senlin.objects import fields as senlin_fields
 
@@ -670,3 +671,37 @@ class TestAdjustmentType(TestField):
     def test_stringify(self):
         self.assertEqual("'EXACT_CAPACITY'",
                          self.field.stringify('EXACT_CAPACITY'))
+
+
+class TestClusterActionName(TestField):
+
+    def setUp(self):
+        super(TestClusterActionName, self).setUp()
+        self.field = senlin_fields.ClusterActionNameField()
+        self.coerce_good_values = [
+            (action, action) for action in consts.CLUSTER_ACTION_NAMES]
+        self.coerce_bad_values = ['BOGUS']
+
+        self.to_primitive_values = self.coerce_good_values[0:1]
+        self.from_primitive_values = self.coerce_good_values[0:1]
+
+    def test_stringify(self):
+        self.assertEqual("'CLUSTER_RESIZE'",
+                         self.field.stringify('CLUSTER_RESIZE'))
+
+
+class TestReceiverType(TestField):
+
+    def setUp(self):
+        super(TestReceiverType, self).setUp()
+        self.field = senlin_fields.ReceiverTypeField()
+        self.coerce_good_values = [
+            (action, action) for action in consts.RECEIVER_TYPES]
+        self.coerce_bad_values = ['BOGUS']
+
+        self.to_primitive_values = self.coerce_good_values[0:1]
+        self.from_primitive_values = self.coerce_good_values[0:1]
+
+    def test_stringify(self):
+        self.assertEqual("'message'",
+                         self.field.stringify('message'))
