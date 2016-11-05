@@ -14,6 +14,8 @@
 Policy endpoint for Senlin v1 ReST API.
 """
 
+import jsonschema
+import six
 from webob import exc
 
 from senlin.api.common import util
@@ -21,6 +23,8 @@ from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import utils
+from senlin.objects import base as obj_base
+from senlin.objects.requests import policies as vorp
 
 
 class PolicyController(wsgi.Controller):
@@ -31,40 +35,36 @@ class PolicyController(wsgi.Controller):
 
     @util.policy_enforce
     def index(self, req):
-        filter_whitelist = {
+        whitelist = {
             consts.POLICY_NAME: 'mixed',
             consts.POLICY_TYPE: 'mixed',
-        }
-        param_whitelist = {
             consts.PARAM_LIMIT: 'single',
             consts.PARAM_MARKER: 'single',
             consts.PARAM_SORT: 'single',
             consts.PARAM_GLOBAL_PROJECT: 'single',
         }
         for key in req.params.keys():
-            if (key not in param_whitelist.keys() and key not in
-                    filter_whitelist.keys()):
+            if key not in whitelist:
                 raise exc.HTTPBadRequest(_('Invalid parameter %s') % key)
 
-        params = util.get_allowed_params(req.params, param_whitelist)
-        filters = util.get_allowed_params(req.params, filter_whitelist)
+        params = util.get_allowed_params(req.params, whitelist)
+        is_global = params.pop(consts.PARAM_GLOBAL_PROJECT, False)
 
-        key = consts.PARAM_LIMIT
-        if key in params:
-            params[key] = utils.parse_int_param(key, params[key])
+        unsafe = utils.parse_bool_param(consts.PARAM_GLOBAL_PROJECT,
+                                        is_global)
+        params['project_safe'] = not unsafe
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'PolicyListRequest', params, None)
+        obj = None
+        try:
+            obj = vorp.PolicyListRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
-        key = consts.PARAM_GLOBAL_PROJECT
-        if key in params:
-            project_safe = not utils.parse_bool_param(key, params[key])
-            del params[key]
-            params['project_safe'] = project_safe
-
-        if not filters:
-            filters = None
-
-        policies = self.rpc_client.policy_list(req.context, filters=filters,
-                                               **params)
-
+        policies = self.rpc_client.call2(req.context, 'policy_list2', obj)
         return {'policies': policies}
 
     @util.policy_enforce
