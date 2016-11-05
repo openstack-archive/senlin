@@ -20,6 +20,7 @@ from senlin.common import exception as exc
 from senlin.engine import environment
 from senlin.engine import service
 from senlin.objects import policy as po
+from senlin.objects.requests import policies as orpo
 from senlin.policies import base as pb
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -114,6 +115,42 @@ class PolicyTest(base.SenlinTestCase):
                          six.text_type(ex))
         mock_get_name.assert_called_once_with(self.ctx, 'Bogus',
                                               project_safe=True)
+
+    @mock.patch.object(pb.Policy, 'load_all')
+    def test_policy_list2(self, mock_load):
+        x_obj_1 = mock.Mock()
+        x_obj_1.to_dict.return_value = {'k': 'v1'}
+        x_obj_2 = mock.Mock()
+        x_obj_2.to_dict.return_value = {'k': 'v2'}
+        mock_load.return_value = [x_obj_1, x_obj_2]
+        req = orpo.PolicyListRequest(project_safe=True)
+
+        result = self.eng.policy_list2(self.ctx, req.obj_to_primitive())
+        self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
+        mock_load.assert_called_once_with(self.ctx, project_safe=True)
+
+    @mock.patch.object(pb.Policy, 'load_all')
+    def test_policy_list2_with_params(self, mock_load):
+        mock_load.return_value = []
+        marker = uuidutils.generate_uuid()
+        params = {
+            'limit': 10,
+            'marker': marker,
+            'name': ['test-policy'],
+            'type': ['senlin.policy.scaling-1.0'],
+            'sort': 'name:asc',
+            'project_safe': True
+        }
+        req = orpo.PolicyListRequest(**params)
+
+        result = self.eng.policy_list2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(
+            self.ctx, limit=10, marker=marker, sort='name:asc',
+            filters={'name': ['test-policy'],
+                     'type': ['senlin.policy.scaling-1.0']},
+            project_safe=True)
 
     @mock.patch.object(pb.Policy, 'load_all')
     def test_policy_list(self, mock_load):

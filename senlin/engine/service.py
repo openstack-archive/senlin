@@ -572,6 +572,36 @@ class EngineService(service.Service):
 
         return policy
 
+    @request_context2
+    def policy_list2(self, ctx, req):
+        """List policies matching the specified criteria
+
+        :param ctx: An instance of request context.
+        :param req: An instance of the PolicyListRequest.
+        :return: A List of `Policy` object representations.
+        """
+        req.obj_set_defaults()
+        if not req.project_safe and not ctx.is_admin:
+            raise exception.Forbidden()
+
+        query = {'project_safe': req.project_safe}
+        if req.obj_attr_is_set('limit'):
+            query['limit'] = req.limit
+        if req.obj_attr_is_set('marker'):
+            query['marker'] = req.marker
+        if req.obj_attr_is_set('sort') and req.sort is not None:
+            query['sort'] = req.sort
+        filters = {}
+        if req.obj_attr_is_set('name'):
+            filters['name'] = req.name
+        if req.obj_attr_is_set('type'):
+            filters['type'] = req.type
+        if filters:
+            query['filters'] = filters
+
+        return [p.to_dict()
+                for p in policy_base.Policy.load_all(ctx, **query)]
+
     @request_context
     def policy_list(self, context, limit=None, marker=None, sort=None,
                     filters=None, project_safe=True):
