@@ -82,8 +82,8 @@ def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
             'a': owners[0]
         })
         reason = _('Engine died when executing this action.')
-        ao.Action.mark_failed(context, action.id, time.time(), reason)
         owners = cl_obj.ClusterLock.steal(cluster_id, action_id)
+        ao.Action.mark_failed(context, action.id, time.time(), reason)
         return action_id in owners
 
     LOG.error(_LE('Cluster is already locked by action %(old)s, '
@@ -148,8 +148,8 @@ def node_lock_acquire(context, node_id, action_id, engine=None,
             'a': owner
         })
         reason = _('Engine died when executing this action.')
-        ao.Action.mark_failed(context, action.id, time.time(), reason)
         nl_obj.NodeLock.steal(node_id, action_id)
+        ao.Action.mark_failed(context, action.id, time.time(), reason)
         return True
 
     LOG.error(_LE('Node is already locked by action %(old)s, '
