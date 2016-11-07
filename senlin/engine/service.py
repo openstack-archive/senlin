@@ -707,19 +707,6 @@ class EngineService(service.Service):
         return policy.to_dict()
 
     @request_context
-    def policy_get(self, context, identity):
-        """Retrieve the details about a policy.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a policy.
-        :return: A dictionary containing the policy details, or an exception
-                 of type `ResourceNotFound` if no matching object is found.
-        """
-        db_policy = self.policy_find(context, identity)
-        policy = policy_base.Policy.load(context, db_policy=db_policy)
-        return policy.to_dict()
-
-    @request_context
     def policy_update(self, context, identity, name):
         """Update the properties of a given policy.
 

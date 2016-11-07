@@ -383,33 +383,6 @@ class PolicyTest(base.SenlinTestCase):
 
     @mock.patch.object(pb.Policy, 'load')
     @mock.patch.object(service.EngineService, 'policy_find')
-    def test_policy_get(self, mock_find, mock_load):
-        x_obj = mock.Mock()
-        mock_find.return_value = x_obj
-        x_policy = mock.Mock()
-        x_policy.to_dict.return_value = {'foo': 'bar'}
-        mock_load.return_value = x_policy
-
-        result = self.eng.policy_get(self.ctx, 'FAKE_POLICY')
-
-        self.assertEqual({'foo': 'bar'}, result)
-        mock_find.assert_called_once_with(self.ctx, 'FAKE_POLICY')
-        mock_load.assert_called_once_with(self.ctx, db_policy=x_obj)
-
-    @mock.patch.object(service.EngineService, 'policy_find')
-    def test_policy_get_not_found(self, mock_find):
-        mock_find.side_effect = exc.ResourceNotFound(type='policy', id='Bogus')
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_get, self.ctx, 'Bogus')
-
-        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The policy (Bogus) could not be found.',
-                         six.text_type(ex.exc_info[1]))
-        mock_find.assert_called_once_with(self.ctx, 'Bogus')
-
-    @mock.patch.object(pb.Policy, 'load')
-    @mock.patch.object(service.EngineService, 'policy_find')
     def test_policy_update(self, mock_find, mock_load):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
