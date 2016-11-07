@@ -2230,6 +2230,65 @@ class EngineService(service.Service):
 
         return receiver.to_dict()
 
+    @request_context2
+    def receiver_create2(self, ctx, req):
+        """Create a receiver.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ReceiverCreateRequestBody object.
+        :return: A dictionary containing the details about the receiver
+                 created.
+        """
+        if CONF.name_unique:
+            if receiver_obj.Receiver.get_by_name(ctx, req.name):
+                msg = _("A receiver named '%s' already exists.") % req.name
+                raise exception.BadRequest(msg=msg)
+
+        LOG.info(_LI("Creating %(t)s receiver %(n)s."),
+                 {'n': req.name, 't': req.type})
+
+        req.obj_set_defaults()
+        # Sanity check for webhook target
+        cluster = None
+        action = None
+        if req.type == consts.RECEIVER_WEBHOOK:
+            if not req.obj_attr_is_set('cluster_id') or req.cluster_id is None:
+                msg = _("Cluster identity is required for creating "
+                        "webhook receiver.")
+                raise exception.BadRequest(msg=msg)
+
+            if not req.obj_attr_is_set('action') or req.action is None:
+                msg = _("Action name is required for creating webhook "
+                        "receiver.")
+                raise exception.BadRequest(msg=msg)
+            action = req.action
+
+            # Check whether cluster identified by cluster_id does exist
+            try:
+                cluster = self.cluster_find(ctx, req.cluster_id)
+            except exception.ResourceNotFound as ex:
+                msg = ex.enhance_msg('referenced', ex)
+                raise exception.BadRequest(msg=msg)
+
+            # permission checking
+            if not ctx.is_admin and ctx.user != cluster.user:
+                raise exception.Forbidden()
+
+        kwargs = {
+            'name': req.name,
+            'user': ctx.user,
+            'project': ctx.project,
+            'domain': ctx.domain,
+            'params': req.params
+        }
+
+        receiver = receiver_mod.Receiver.create(ctx, req.type, cluster,
+                                                action, **kwargs)
+        LOG.info(_LI("Receiver (%(n)s) is created: %(i)s."),
+                 {'n': req.name, 'i': receiver.id})
+
+        return receiver.to_dict()
+
     @request_context
     def receiver_get(self, context, identity, project_safe=True):
         """Get the details about a receiver.

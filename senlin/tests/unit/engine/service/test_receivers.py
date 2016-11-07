@@ -21,6 +21,7 @@ from senlin.common import exception as exc
 from senlin.engine.receivers import base as rb
 from senlin.engine import service
 from senlin.objects import receiver as ro
+from senlin.objects.requests import receivers as orro
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -313,6 +314,159 @@ class ReceiverTest(base.SenlinTestCase):
         self.assertEqual('FAKE_RECEIVER', result['id'])
         mock_create.assert_called_once_with(
             self.ctx, 'foo', None, None, name='r1', user=self.ctx.user,
+            project=self.ctx.project, domain=self.ctx.domain, params={})
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(rb.Receiver, 'create')
+    def test_receiver_create2_webhook_succeed(self, mock_create, mock_find):
+        fake_cluster = mock.Mock()
+        fake_cluster.user = self.ctx.user
+        mock_find.return_value = fake_cluster
+
+        fake_receiver = mock.Mock(id='FAKE_RECIEVER')
+        fake_receiver.to_dict.return_value = {
+            'id': 'FAKE_RECEIVER',
+            'foo': 'bar'
+        }
+        mock_create.return_value = fake_receiver
+
+        req = orro.ReceiverCreateRequestBody(name='r1', type='webhook',
+                                             cluster_id='C1',
+                                             action='CLUSTER_RESIZE')
+        result = self.eng.receiver_create2(self.ctx, req.obj_to_primitive())
+
+        self.assertIsInstance(result, dict)
+        self.assertEqual('FAKE_RECEIVER', result['id'])
+        mock_find.assert_called_once_with(self.ctx, 'C1')
+        mock_create.assert_called_once_with(
+            self.ctx, 'webhook', fake_cluster, 'CLUSTER_RESIZE',
+            name='r1', user=self.ctx.user, project=self.ctx.project,
+            domain=self.ctx.domain, params={})
+
+        # test params passed
+        mock_create.reset_mock()
+        req = orro.ReceiverCreateRequestBody(name='r1', type='webhook',
+                                             cluster_id='C1',
+                                             action='CLUSTER_RESIZE',
+                                             params={'FOO': 'BAR'})
+        self.eng.receiver_create2(self.ctx, req.obj_to_primitive())
+        mock_create.assert_called_once_with(
+            self.ctx, 'webhook', fake_cluster, 'CLUSTER_RESIZE',
+            name='r1', user=self.ctx.user, project=self.ctx.project,
+            domain=self.ctx.domain, params={'FOO': 'BAR'})
+
+    @mock.patch.object(ro.Receiver, 'get_by_name')
+    def test_receiver_create2_name_duplicated(self, mock_get):
+        cfg.CONF.set_override('name_unique', True, enforce_type=True)
+        # Return an existing instance
+        mock_get.return_value = mock.Mock()
+
+        req = orro.ReceiverCreateRequestBody(name='r1', type='message')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.receiver_create2,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: A receiver named 'r1' "
+                         "already exists.",
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_receiver_create2_webhook_cluster_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster', id='C1')
+        req = orro.ReceiverCreateRequestBody(name='r1', type='webhook',
+                                             cluster_id='C1',
+                                             action='CLUSTER_RESIZE')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.receiver_create2,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The referenced cluster "
+                         "(C1) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(rb.Receiver, 'create')
+    def test_receiver_create2_webhook_forbidden(self, mock_create, mock_find):
+        fake_cluster = mock.Mock()
+        fake_cluster.user = 'someone'
+        mock_find.return_value = fake_cluster
+        req = orro.ReceiverCreateRequestBody(name='r1', type='webhook',
+                                             cluster_id='C1',
+                                             action='CLUSTER_RESIZE')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.receiver_create2,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.Forbidden, ex.exc_info[0])
+
+        fake_receiver = mock.Mock(id='FAKE_RECIEVER')
+        fake_receiver.to_dict.return_value = {
+            'id': 'FAKE_RECEIVER',
+            'foo': 'bar'
+        }
+        mock_create.return_value = fake_receiver
+
+        # an admin can do this
+        self.ctx.is_admin = True
+        result = self.eng.receiver_create2(self.ctx, req.obj_to_primitive())
+        self.assertIsInstance(result, dict)
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_receiver_create2_webhook_cluster_not_specified(self, mock_find):
+        fake_cluster = mock.Mock()
+        fake_cluster.user = self.ctx.user
+        mock_find.return_value = fake_cluster
+        req1 = orro.ReceiverCreateRequestBody(name='r1', type='webhook',
+                                              action='CLUSTER_RESIZE')
+        req2 = orro.ReceiverCreateRequestBody(name='r1', type='webhook',
+                                              cluster_id=None,
+                                              action='CLUSTER_RESIZE')
+
+        for req in [req1, req2]:
+            ex = self.assertRaises(rpc.ExpectedException,
+                                   self.eng.receiver_create2,
+                                   self.ctx, req.obj_to_primitive())
+            self.assertEqual(exc.BadRequest, ex.exc_info[0])
+            self.assertEqual("The request is malformed: Cluster identity is "
+                             "required for creating webhook receiver.",
+                             six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_receiver_create2_webhook_action_not_specified(self, mock_find):
+        fake_cluster = mock.Mock()
+        fake_cluster.user = self.ctx.user
+        mock_find.return_value = fake_cluster
+        req1 = orro.ReceiverCreateRequestBody(name='r1', type='webhook',
+                                              cluster_id='C1')
+        req2 = orro.ReceiverCreateRequestBody(name='r1', type='webhook',
+                                              cluster_id='C1', action=None)
+
+        for req in [req1, req2]:
+            ex = self.assertRaises(rpc.ExpectedException,
+                                   self.eng.receiver_create2,
+                                   self.ctx, req.obj_to_primitive())
+            self.assertEqual(exc.BadRequest, ex.exc_info[0])
+            self.assertEqual("The request is malformed: Action name is "
+                             "required for creating webhook receiver.",
+                             six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(rb.Receiver, 'create')
+    def test_receiver_create2_message_succeed(self, mock_create):
+        fake_receiver = mock.Mock(id='FAKE_RECIEVER')
+        fake_receiver.to_dict.return_value = {
+            'id': 'FAKE_RECEIVER',
+            'foo': 'bar'
+        }
+        mock_create.return_value = fake_receiver
+
+        req = orro.ReceiverCreateRequestBody(name='r1', type='message')
+        result = self.eng.receiver_create2(self.ctx, req.obj_to_primitive())
+
+        self.assertIsInstance(result, dict)
+        self.assertEqual('FAKE_RECEIVER', result['id'])
+        mock_create.assert_called_once_with(
+            self.ctx, 'message', None, None, name='r1', user=self.ctx.user,
             project=self.ctx.project, domain=self.ctx.domain, params={})
 
     @mock.patch.object(rb.Receiver, 'load')
