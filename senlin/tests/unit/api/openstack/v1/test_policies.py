@@ -285,43 +285,31 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     def test_policy_get_normal(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
-        pid = 'aaaa-bbbb-cccc'
-        req = self._get('/policies/%(policy_id)s' % {'policy_id': pid})
+        pid = 'pid'
+        req = self._get('/policies/%s' % pid)
 
-        engine_resp = {
-            u'id': u'aaaa-bbbb-cccc',
-            u'name': u'policy-1',
-            u'type': u'test_policy_type-1.0',
-            u'spec': {
-                u'type': u'test_policy_type',
-                u'version': u'1.0',
-                u'properties': {
-                    u'param_1': u'value1',
-                    u'param_2': u'value2',
-                }
-            },
-            u'created_time': u'2015-02-24T19:17:22Z',
-            u'updated_time': None,
-        }
+        engine_resp = {'foo': 'bar'}
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_resp)
 
         result = self.controller.get(req, policy_id=pid)
 
-        mock_call.assert_called_with(req.context,
-                                     ('policy_get', {'identity': pid}))
+        mock_call.assert_called_with(req.context, 'policy_get2',
+                                     mock.ANY)
 
         expected = {'policy': engine_resp}
         self.assertEqual(expected, result)
+        request = mock_call.call_args[0][2]
+        self.assertEqual('pid', request.identity)
 
     def test_policy_get_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         pid = 'non-existent-policy'
-        req = self._get('/policies/%(policy_id)s' % {'policy_id': pid})
+        req = self._get('/policies/%s' % pid)
 
         error = senlin_exc.ResourceNotFound(type='policy', id=pid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
@@ -334,7 +322,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_policy_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)
         pid = 'non-existent-policy'
-        req = self._get('/policies/%(policy_id)s' % {'policy_id': pid})
+        req = self._get('/policies/%s' % pid)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,

@@ -86,7 +86,20 @@ class PolicyController(wsgi.Controller):
 
     @util.policy_enforce
     def get(self, req, policy_id):
-        policy = self.rpc_client.policy_get(req.context, policy_id)
+        """Gets detailed information for a policy"""
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'PolicyGetRequest', {'identity': policy_id})
+        obj = None
+        try:
+            obj = vorp.PolicyGetRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        policy = self.rpc_client.call2(req.context, 'policy_get2', obj)
+
         return {'policy': policy}
 
     @util.policy_enforce
