@@ -694,6 +694,18 @@ class EngineService(service.Service):
                  {'name': name, 'id': policy.id})
         return policy.to_dict()
 
+    @request_context2
+    def policy_get2(self, ctx, req):
+        """Retrieve the details about a policy.
+
+        :param ctx: An instance of request context.
+        :param req: An instance of the PolicyGetRequest.
+        :return: A dictionary containing the policy details.
+        """
+        db_policy = self.policy_find(ctx, req.identity)
+        policy = policy_base.Policy.load(ctx, db_policy=db_policy)
+        return policy.to_dict()
+
     @request_context
     def policy_get(self, context, identity):
         """Retrieve the details about a policy.
