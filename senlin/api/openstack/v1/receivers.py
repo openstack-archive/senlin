@@ -14,6 +14,8 @@
 Webhook endpoint for Senlin v1 ReST API.
 """
 
+import jsonschema
+import six
 from webob import exc
 
 from senlin.api.common import util
@@ -21,45 +23,8 @@ from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import utils
-
-
-class ReceiverData(object):
-    """The data accompanying a POST request to create a receiver."""
-
-    PARAMS = (consts.RECEIVER_NAME, consts.RECEIVER_TYPE,
-              consts.RECEIVER_CLUSTER, consts.RECEIVER_ACTION,
-              consts.RECEIVER_ACTOR, consts.RECEIVER_PARAMS)
-
-    def __init__(self, data):
-        self.data = data
-
-    def name(self):
-        if consts.RECEIVER_NAME not in self.data:
-            raise exc.HTTPBadRequest(_("Missing 'name' in request."))
-        return self.data.get(consts.RECEIVER_NAME, None)
-
-    def type_name(self):
-        if consts.RECEIVER_TYPE not in self.data:
-            raise exc.HTTPBadRequest(_("Missing 'type' in request."))
-        return self.data[consts.RECEIVER_TYPE]
-
-    def cluster_id(self):
-        if self.data.get(consts.RECEIVER_TYPE) == consts.RECEIVER_WEBHOOK:
-            if consts.RECEIVER_CLUSTER_ID not in self.data:
-                raise exc.HTTPBadRequest(_("Missing 'cluster_id' in request."))
-        return self.data.get(consts.RECEIVER_CLUSTER_ID, None)
-
-    def action(self):
-        if self.data.get(consts.RECEIVER_TYPE) == consts.RECEIVER_WEBHOOK:
-            if consts.RECEIVER_ACTION not in self.data:
-                raise exc.HTTPBadRequest(_("Missing 'action' in request."))
-        return self.data.get(consts.RECEIVER_ACTION, None)
-
-    def actor(self):
-        return self.data.get(consts.RECEIVER_ACTOR, None)
-
-    def params(self):
-        return self.data.get(consts.RECEIVER_PARAMS, None)
+from senlin.objects import base as obj_base
+from senlin.objects.requests import receivers as vorr
 
 
 class ReceiverController(wsgi.Controller):
@@ -108,20 +73,19 @@ class ReceiverController(wsgi.Controller):
 
     @util.policy_enforce
     def create(self, req, body):
-        data = body.get('receiver')
-        if data is None:
-            raise exc.HTTPBadRequest(_("Malformed request data, missing "
-                                       "'receiver' key in request body."))
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ReceiverCreateRequest', body, 'receiver')
+            obj = vorr.ReceiverCreateRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except (ValueError) as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
-        data = ReceiverData(data)
+        result = self.rpc_client.call2(req.context, 'receiver_create2',
+                                       obj.receiver)
 
-        result = self.rpc_client.receiver_create(req.context,
-                                                 data.name(),
-                                                 data.type_name(),
-                                                 data.cluster_id(),
-                                                 data.action(),
-                                                 data.actor(),
-                                                 data.params())
         return {'receiver': result}
 
     @util.policy_enforce

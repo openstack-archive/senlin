@@ -19,47 +19,11 @@ from oslo_serialization import jsonutils
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import receivers
 from senlin.common import exception as senlin_exc
-from senlin.common.i18n import _
 from senlin.common import policy
+from senlin.objects.requests import receivers as vorr
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
-
-
-class ReceiverDataTest(base.SenlinTestCase):
-    def test_receiver_data(self):
-        body = {
-            'name': 'test_receiver',
-            'type': 'webhook',
-            'cluster_id': 'FAKE_CLUSTER',
-            'action': 'test_action',
-            'actor': {
-                'user_id': 'test_user_id',
-                'password': 'test_pass',
-            },
-            'params': {
-                'test_param': 'test_value'
-            },
-        }
-        data = receivers.ReceiverData(body)
-        self.assertEqual(body['name'], data.name())
-        self.assertEqual(body['type'], data.type_name())
-        self.assertEqual(body['cluster_id'], data.cluster_id())
-        self.assertEqual(body['action'], data.action())
-        self.assertEqual(body['actor'], data.actor())
-        self.assertEqual(body['params'], data.params())
-
-    def test_name_type_name_missing(self):
-        body = {'fake_field': 'fake_value'}
-        data = receivers.ReceiverData(body)
-        self.assertRaises(exc.HTTPBadRequest, data.name)
-        self.assertRaises(exc.HTTPBadRequest, data.type_name)
-
-    def test_webhook_target_params_missing(self):
-        body = {'name': 'test-receiver', 'type': 'webhook'}
-        data = receivers.ReceiverData(body)
-        self.assertRaises(exc.HTTPBadRequest, data.cluster_id)
-        self.assertRaises(exc.HTTPBadRequest, data.action)
 
 
 @mock.patch.object(policy, 'enforce')
@@ -224,14 +188,14 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_receiver_create_success_webhook(self, mock_enforce):
+    def test_receiver_create_success(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {
             'receiver': {
                 'name': 'test_receiver',
                 'type': 'webhook',
                 'cluster_id': 'FAKE_ID',
-                'action': 'test_action',
+                'action': 'CLUSTER_RESIZE',
                 'actor': {
                     'user_id': 'test_user_id',
                     'password': 'test_pass',
@@ -247,7 +211,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'name': 'test_receiver',
             'type': 'webhook',
             'cluster_id': 'FAKE_ID',
-            'action': 'test_action',
+            'action': 'CLUSTER_RESIZE',
             'actor': {
                 'user_id': 'test_user_id',
                 'password': 'test_pass',
@@ -261,85 +225,21 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._post('/receivers', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_response)
 
         resp = self.controller.create(req, body=body)
 
-        mock_call.assert_called_with(
-            req.context,
-            ('receiver_create', {
-                'name': 'test_receiver',
-                'type_name': 'webhook',
-                'cluster_id': 'FAKE_ID',
-                'action': 'test_action',
-                'actor': {
-                    'user_id': 'test_user_id',
-                    'password': 'test_pass'
-                },
-                'params': {'test_param': 'test_value'},
-            })
-        )
-
-        expected = {'receiver': engine_response}
-        self.assertEqual(expected, resp)
-
-    def test_receiver_create_success_message(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'create', True)
-        body = {
-            'receiver': {
-                'name': 'test_receiver',
-                'type': 'message',
-                'actor': {
-                    'user_id': 'test_user_id',
-                    'password': 'test_pass',
-                },
-                'params': {
-                    'test_param': 'test_value'
-                },
-            }
-        }
-
-        engine_response = {
-            'id': 'xxxx-yyyy-zzzz',
-            'name': 'test_receiver',
-            'type': 'message',
-            'cluster_id': None,
-            'action': None,
-            'actor': {
-                'user_id': 'test_user_id',
-                'password': 'test_pass',
-            },
-            'params': {
-                'test_param': 'test_value'
-            },
-            'channel': {
-                'alarm_url': 'http://somewhere/on/earth',
-            },
-        }
-
-        req = self._post('/receivers', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     return_value=engine_response)
-
-        resp = self.controller.create(req, body=body)
-
-        mock_call.assert_called_with(
-            req.context,
-            ('receiver_create', {
-                'name': 'test_receiver',
-                'type_name': 'message',
-                'cluster_id': None,
-                'action': None,
-                'actor': {
-                    'user_id': 'test_user_id',
-                    'password': 'test_pass'
-                },
-                'params': {
-                    'test_param': 'test_value'
-                },
-            })
-        )
+        mock_call.assert_called_with(req.context, 'receiver_create2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorr.ReceiverCreateRequestBody)
+        self.assertEqual('test_receiver', request.name)
+        self.assertEqual('webhook', request.type)
+        self.assertEqual('FAKE_ID', request.cluster_id)
+        self.assertEqual('CLUSTER_RESIZE', request.action)
+        self.assertEqual({'user_id': 'test_user_id',
+                          'password': 'test_pass'}, request.actor)
+        self.assertEqual({'test_param': 'test_value'}, request.params)
 
         expected = {'receiver': engine_response}
         self.assertEqual(expected, resp)
@@ -349,14 +249,33 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {'name': 'test_receiver'}
 
         req = self._post('/receivers', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("Malformed request data, missing 'receiver' key "
-                         "in request body.", six.text_type(ex))
+        self.assertEqual("Request body missing 'receiver' key.",
+                         six.text_type(ex))
 
+        self.assertFalse(mock_call.called)
+
+    def test_receiver_create_missing_required_field(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        body = {
+            'receiver': {
+                'name': 'test_receiver',
+                'cluster_id': 'FAKE_CLUSTER',
+                'action': 'CLUSTER_RESIZE',
+            }
+        }
+
+        req = self._post('/receivers', jsonutils.dumps(body))
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.create,
+                               req, body=body)
+
+        self.assertEqual("'type' is a required property", six.text_type(ex))
         self.assertFalse(mock_call.called)
 
     def test_receiver_create_with_bad_type(self, mock_enforce):
@@ -367,60 +286,19 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'name': 'test_receiver',
                 'type': r_type,
                 'cluster_id': 'FAKE_CLUSTER',
-                'action': 'test_action',
+                'action': 'CLUSTER_RESIZE',
             }
         }
+
         req = self._post('/receivers', jsonutils.dumps(body))
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.create,
+                               req, body=body)
 
-        msg = _('receiver obj_type (%s) is unsupported.') % r_type
-        error = senlin_exc.BadRequest(msg=msg)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     side_effect=error)
-
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.create,
-                                              req, body=body)
-
-        expected_args = body['receiver']
-        type_name = expected_args.pop('type')
-        expected_args['type_name'] = type_name
-        expected_args['actor'] = None
-        expected_args['params'] = None
-        mock_call.assert_called_once_with(req.context,
-                                          ('receiver_create', expected_args))
-        self.assertEqual(400, resp.json['code'])
-        self.assertEqual('BadRequest', resp.json['error']['type'])
-
-    def test_receiver_create_with_cluster_id_notfound(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'create', True)
-        cluster_id = 'FAKE_ID'
-        body = {
-            'receiver': {
-                'name': 'test_receiver',
-                'type': 'webhook',
-                'cluster_id': cluster_id,
-                'action': 'test_action',
-            }
-        }
-        req = self._post('/receivers', jsonutils.dumps(body))
-
-        error = senlin_exc.ResourceNotFound(type='cluster', id=cluster_id)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     side_effect=error)
-
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.create,
-                                              req, body=body)
-
-        expected_args = body['receiver']
-        type_name = expected_args.pop('type')
-        expected_args['type_name'] = type_name
-        expected_args['actor'] = None
-        expected_args['params'] = None
-        mock_call.assert_called_once_with(req.context,
-                                          ('receiver_create', expected_args))
-        self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+        self.assertEqual("Value 'unsupported' is not acceptable for field "
+                         "'type'.", six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     def test_receiver_create_illegal_action(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -434,57 +312,14 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
         req = self._post('/receivers', jsonutils.dumps(body))
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.create,
+                               req, body=body)
 
-        msg = _('Illegal action (%s) specified.') % action
-        error = senlin_exc.BadRequest(msg=msg)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     side_effect=error)
-
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.create,
-                                              req, body=body)
-
-        expected = body['receiver']
-        type_name = expected.pop('type')
-        expected['type_name'] = type_name
-        expected['actor'] = None
-        expected['params'] = None
-        mock_call.assert_called_once_with(req.context,
-                                          ('receiver_create', expected))
-        self.assertEqual(400, resp.json['code'])
-        self.assertEqual('BadRequest', resp.json['error']['type'])
-
-    def test_receiver_create_unapplicable_action(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'create', True)
-        action = 'BAD'
-        body = {
-            'receiver': {
-                'name': 'test_receiver',
-                'type': 'webhook',
-                'cluster_id': 'FAKE_CLUSTER',
-                'action': action,
-            }
-        }
-        req = self._post('/receivers', jsonutils.dumps(body))
-
-        msg = 'Action BAD is not applicable clusters.'
-        error = senlin_exc.BadRequest(msg=msg)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     side_effect=error)
-
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.create,
-                                              req, body=body)
-
-        expected = body['receiver']
-        type_name = expected.pop('type')
-        expected['type_name'] = type_name
-        expected['actor'] = None
-        expected['params'] = None
-        mock_call.assert_called_once_with(req.context,
-                                          ('receiver_create', expected))
-        self.assertEqual(400, resp.json['code'])
-        self.assertEqual('BadRequest', resp.json['error']['type'])
+        self.assertEqual("Value 'illegal_action' is not acceptable for field "
+                         "'action'.", six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     def test_receiver_get_normal(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
