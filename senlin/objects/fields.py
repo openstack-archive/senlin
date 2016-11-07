@@ -19,6 +19,7 @@ from oslo_versionedobjects import fields
 import re
 import six
 
+from senlin.common import consts
 from senlin.common.i18n import _
 
 CONF = cfg.CONF
@@ -401,6 +402,16 @@ class AdjustmentType(BaseEnum):
     )
 
 
+class ClusterActionName(BaseEnum):
+
+    ALL = consts.CLUSTER_ACTION_NAMES
+
+
+class ReceiverType(BaseEnum):
+
+    ALL = consts.RECEIVER_TYPES
+
+
 class UniqueDict(fields.Dict):
 
     def coerce(self, obj, attr, value):
@@ -495,6 +506,26 @@ class AdjustmentTypeField(fields.AutoTypedField):
         nullable = kwargs.get('nullable', False)
         self.AUTO_TYPE = AdjustmentType(nullable=nullable)
         super(AdjustmentTypeField, self).__init__(**kwargs)
+
+
+class ClusterActionNameField(fields.AutoTypedField):
+
+    AUTO_TYPE = None
+
+    def __init__(self, **kwargs):
+        nullable = kwargs.get('nullable', False)
+        self.AUTO_TYPE = ClusterActionName(nullable=nullable)
+        super(ClusterActionNameField, self).__init__(**kwargs)
+
+
+class ReceiverTypeField(fields.AutoTypedField):
+
+    AUTO_TYPE = None
+
+    def __init__(self, **kwargs):
+        nullable = kwargs.get('nullable', False)
+        self.AUTO_TYPE = ReceiverType(nullable=nullable)
+        super(ReceiverTypeField, self).__init__(**kwargs)
 
 
 class NodeReplaceMapField(fields.AutoTypedField):
