@@ -161,16 +161,6 @@ class EngineClient(object):
         return self.call(ctxt,
                          self.make_msg('policy_validate', spec=spec))
 
-    def node_check(self, ctxt, identity, params=None):
-        return self.call(ctxt, self.make_msg('node_check',
-                                             identity=identity,
-                                             params=params))
-
-    def node_recover(self, ctxt, identity, params=None):
-        return self.call(ctxt, self.make_msg('node_recover',
-                                             identity=identity,
-                                             params=params))
-
     def action_list(self, ctxt, filters=None, limit=None, marker=None,
                     sort=None, project_safe=True):
         return self.call(ctxt,
