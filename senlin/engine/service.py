@@ -2167,6 +2167,41 @@ class EngineService(service.Service):
         return [r.to_dict() for r in receivers]
 
     @request_context2
+    def receiver_list2(self, ctx, req):
+        """List receivers matching the specified criteria.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ReceiverListRequestBody object.
+        :return: A list of `Receiver` object representations.
+        """
+        req.obj_set_defaults()
+        if not req.project_safe and not ctx.is_admin:
+            raise exception.Forbidden()
+
+        query = {'project_safe': req.project_safe}
+        if req.obj_attr_is_set('limit'):
+            query['limit'] = req.limit
+        if req.obj_attr_is_set('marker'):
+            query['marker'] = req.marker
+        if req.obj_attr_is_set('sort') and req.sort is not None:
+            query['sort'] = req.sort
+
+        filters = {}
+        if req.obj_attr_is_set('name'):
+            filters['name'] = req.name
+        if req.obj_attr_is_set('type'):
+            filters['type'] = req.type
+        if req.obj_attr_is_set('action'):
+            filters['action'] = req.action
+        if req.obj_attr_is_set('cluster_id'):
+            filters['cluster_id'] = req.cluster_id
+        if filters:
+            query['filters'] = filters
+
+        receivers = receiver_mod.Receiver.load_all(ctx, **query)
+        return [r.to_dict() for r in receivers]
+
+    @request_context2
     def receiver_create2(self, ctx, req):
         """Create a receiver.
 

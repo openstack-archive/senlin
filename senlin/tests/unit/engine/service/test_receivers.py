@@ -184,6 +184,65 @@ class ReceiverTest(base.SenlinTestCase):
                                           sort=None, marker=None,
                                           project_safe=False)
 
+    @mock.patch.object(rb.Receiver, 'load_all')
+    def test_receiver_list2(self, mock_load):
+        fake_obj = mock.Mock()
+        fake_obj.to_dict.return_value = {'FOO': 'BAR'}
+        # NOTE: actual return value is a generator
+        mock_load.return_value = [fake_obj]
+
+        req = orro.ReceiverListRequest()
+        result = self.eng.receiver_list2(self.ctx, req.obj_to_primitive())
+
+        self.assertIsInstance(result, list)
+        self.assertEqual([{'FOO': 'BAR'}], result)
+        mock_load.assert_called_once_with(self.ctx, project_safe=True)
+
+    @mock.patch.object(rb.Receiver, 'load_all')
+    def test_receiver_list2_with_params(self, mock_load):
+        fake_obj = mock.Mock()
+        fake_obj.to_dict.return_value = {'FOO': 'BAR'}
+        mock_load.return_value = [fake_obj]
+
+        marker = '7445519f-e9db-409f-82f4-187fb8334317'
+        req = orro.ReceiverListRequest(limit=1, marker=marker, sort='name',
+                                       type='webhook',
+                                       action='CLUSTER_RESIZE',
+                                       cluster_id='123abc')
+        result = self.eng.receiver_list2(self.ctx, req.obj_to_primitive())
+
+        self.assertIsInstance(result, list)
+        self.assertEqual([{'FOO': 'BAR'}], result)
+        mock_load.assert_called_once_with(self.ctx, limit=1, marker=marker,
+                                          sort='name',
+                                          filters={'type': 'webhook',
+                                                   'action': 'CLUSTER_RESIZE',
+                                                   'cluster_id': '123abc'},
+                                          project_safe=True)
+
+    @mock.patch.object(rb.Receiver, 'load_all')
+    def test_receiver_list2_with_project_safe(self, mock_load):
+        mock_load.return_value = []
+
+        req = orro.ReceiverListRequest(project_safe=False)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.receiver_list2,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.Forbidden, ex.exc_info[0])
+
+        self.ctx.is_admin = True
+
+        result = self.eng.receiver_list2(self.ctx, req.obj_to_primitive())
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, project_safe=False)
+        mock_load.reset_mock()
+
+        req = orro.ReceiverListRequest(project_safe=True)
+        result = self.eng.receiver_list2(self.ctx, req.obj_to_primitive())
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, project_safe=True)
+        mock_load.reset_mock()
+
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(rb.Receiver, 'create')
     def test_receiver_create2_webhook_succeed(self, mock_create, mock_find):
