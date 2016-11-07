@@ -16,12 +16,14 @@ import six
 from webob import exc
 
 from oslo_serialization import jsonutils
+from oslo_utils import uuidutils
 
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import policies
 from senlin.common import exception as senlin_exc
 from senlin.common.i18n import _
 from senlin.common import policy
+from senlin.objects.requests import policies as vorp
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
@@ -38,7 +40,8 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cfgopts = DummyConfig()
         self.controller = policies.PolicyController(options=cfgopts)
 
-    def test_policy_index_normal(self, mock_enforce):
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_index_normal(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/policies')
 
@@ -56,109 +59,104 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         ]
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     return_value=engine_resp)
+        mock_call.return_value = engine_resp
 
         result = self.controller.index(req)
 
-        default_args = {'limit': None, 'marker': None, 'sort': None,
-                        'filters': None, 'project_safe': True}
-
-        mock_call.assert_called_with(req.context,
-                                     ('policy_list', default_args))
-
-        expected = {'policies': engine_resp}
+        expected = {u'policies': engine_resp}
         self.assertEqual(expected, result)
 
-    def test_policy_index_whitelists_params(self, mock_enforce):
+        mock_call.assert_called_with(req.context, 'policy_list2',
+                                     mock.ANY)
+
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorp.PolicyListRequest)
+        self.assertTrue(request.project_safe)
+        self.assertFalse(request.obj_attr_is_set('name'))
+        self.assertFalse(request.obj_attr_is_set('type'))
+        self.assertFalse(request.obj_attr_is_set('limit'))
+        self.assertFalse(request.obj_attr_is_set('marker'))
+        self.assertFalse(request.obj_attr_is_set('sort'))
+
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_index_whitelists_params(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
+        fake_id = uuidutils.generate_uuid()
         params = {
             'name': 'FAKE',
             'type': 'TYPE',
             'limit': 20,
-            'marker': 'fake marker',
-            'sort': 'fake sorting string',
+            'marker': fake_id,
+            'sort': 'name:asc',
             'global_project': True,
         }
         req = self._get('/policies', params=params)
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        mock_call.return_value = []
+        engine_resp = [{'foo': 'bar'}]
+        mock_call.return_value = engine_resp
 
-        self.controller.index(req)
+        result = self.controller.index(req)
 
-        rpc_call_args, w = mock_call.call_args
-        engine_args = rpc_call_args[1][1]
+        expected = {u'policies': engine_resp}
+        self.assertEqual(expected, result)
 
-        self.assertEqual(5, len(engine_args))
-        self.assertIn('limit', engine_args)
-        self.assertIn('marker', engine_args)
-        self.assertIn('sort', engine_args)
-        self.assertIn('filters', engine_args)
-        self.assertIn('project_safe', engine_args)
+        mock_call.assert_called_once_with(req.context, 'policy_list2',
+                                          mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorp.PolicyListRequest)
+        self.assertFalse(request.project_safe)
+        self.assertEqual(['FAKE'], request.name)
+        self.assertEqual(['TYPE'], request.type)
+        self.assertEqual(20, request.limit)
+        self.assertEqual(fake_id, request.marker)
+        self.assertEqual('name:asc', request.sort)
 
-    def test_policy_index_whitelist_bad_params(self, mock_enforce):
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_index_whitelist_bad_params(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
             'balrog': 'fake_value'
         }
         req = self._get('/policies', params=params)
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        mock_call.return_value = []
-
         ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.index, req)
-        self.assertEqual("Invalid parameter balrog", six.text_type(ex))
-        self.assertFalse(mock_call.called)
+                               self.controller.index,
+                               req)
 
-    def test_policy_index_whitelist_filter_params(self, mock_enforce):
+        self.assertEqual("Invalid parameter balrog", six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_index_gloable_project_invalid(self, mock_call,
+                                                  mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
-            'type': 'some_type',
-            'name': 'fake name',
+            'global_project': 'No',
         }
         req = self._get('/policies', params=params)
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        mock_call.return_value = []
+        ex = self.assertRaises(senlin_exc.InvalidParameter,
+                               self.controller.index,
+                               req)
 
-        self.controller.index(req)
+        self.assertEqual("Invalid value 'No' specified for 'global_project'",
+                         six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
 
-        rpc_call_args, w = mock_call.call_args
-        engine_args = rpc_call_args[1][1]
-        self.assertIn('filters', engine_args)
-
-        filters = engine_args['filters']
-        self.assertEqual(2, len(filters))
-        self.assertIn('name', filters)
-        self.assertIn('type', filters)
-
-    def test_policy_index_whitelist_filter_bad_params(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {
-            'balrog': 'fake_value'
-        }
-        req = self._get('/policies', params=params)
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.index, req)
-        self.assertEqual("Invalid parameter balrog", six.text_type(ex))
-        self.assertFalse(mock_call.called)
-
-    def test_policy_index_limit_non_int(self, mock_enforce):
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_index_limit_non_int(self, mock_call, mock_enforce):
         mock_call = self.patchobject(rpc_client.EngineClient, 'policy_list',
                                      return_value=[])
 
         params = {'limit': 'abc'}
         req = self._get('/policies', params=params)
-        ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.index, req)
-        self.assertIn("Invalid value 'abc' specified for 'limit'",
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index,
+                               req)
+
+        self.assertIn("invalid literal for int() with base 10: 'abc'",
                       six.text_type(ex))
-        self.assertFalse(mock_call.called)
+        self.assertEqual(0, mock_call.call_count)
 
     def test_policy_index_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
@@ -167,6 +165,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.index,
                                               req)
+
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
