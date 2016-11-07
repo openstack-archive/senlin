@@ -84,3 +84,33 @@ class TestReceiverCreate(test_base.SenlinTestCase):
                               receivers.ReceiverCreateRequestBody)
         self.assertEqual('test-receiver', sot.receiver.name)
         self.assertEqual('message', sot.receiver.type)
+
+
+class TestReceiverList(test_base.SenlinTestCase):
+
+    def test_receiver_list_request_full(self):
+        params = {
+            'name': ['receiver01'],
+            'type': 'webhook',
+            'action': 'CLUSTER_RESIZE',
+            'cluster_id': '8c3c9af7-d768-4c5a-a21e-5261b22d749d',
+            'limit': 3,
+            'marker': 'f1ed0d50-7651-4599-a8cb-c86e9c7123f5',
+            'sort': 'name:asc',
+            'project_safe': False,
+        }
+        sot = receivers.ReceiverListRequest(**params)
+        self.assertEqual(['receiver01'], sot.name)
+        self.assertEqual('webhook', sot.type)
+        self.assertEqual('CLUSTER_RESIZE', sot.action)
+        self.assertEqual('8c3c9af7-d768-4c5a-a21e-5261b22d749d',
+                         sot.cluster_id)
+        self.assertEqual(3, sot.limit)
+        self.assertEqual('f1ed0d50-7651-4599-a8cb-c86e9c7123f5', sot.marker)
+        self.assertEqual('name:asc', sot.sort)
+        self.assertFalse(sot.project_safe)
+
+    def test_receiver_list_request_default(self):
+        sot = receivers.ReceiverListRequest()
+        sot.obj_set_defaults()
+        self.assertTrue(sot.project_safe)

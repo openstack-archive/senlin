@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from senlin.common import consts
 from senlin.objects import base
 from senlin.objects import fields
 
@@ -32,4 +33,20 @@ class ReceiverCreateRequest(base.SenlinObject):
 
     fields = {
         'receiver': fields.ObjectField('ReceiverCreateRequestBody')
+    }
+
+
+@base.SenlinObjectRegistry.register
+class ReceiverListRequest(base.SenlinObject):
+
+    fields = {
+        'name': fields.ListOfStringsField(nullable=True),
+        'type': fields.ReceiverTypeField(nullable=True),
+        'action': fields.ClusterActionNameField(nullable=True),
+        'cluster_id': fields.StringField(nullable=True),
+        'limit': fields.NonNegativeIntegerField(nullable=True),
+        'marker': fields.UUIDField(nullable=True),
+        'sort': fields.SortField(
+            valid_keys=list(consts.NODE_SORT_KEYS), nullable=True),
+        'project_safe': fields.FlexibleBooleanField(default=True)
     }
