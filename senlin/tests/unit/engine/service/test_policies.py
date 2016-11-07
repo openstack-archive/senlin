@@ -355,6 +355,34 @@ class PolicyTest(base.SenlinTestCase):
 
     @mock.patch.object(pb.Policy, 'load')
     @mock.patch.object(service.EngineService, 'policy_find')
+    def test_policy_get2(self, mock_find, mock_load):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        x_policy = mock.Mock()
+        x_policy.to_dict.return_value = {'foo': 'bar'}
+        mock_load.return_value = x_policy
+        req = orpo.PolicyGetRequest(identity='FAKE_POLICY')
+
+        result = self.eng.policy_get2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'foo': 'bar'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_POLICY')
+        mock_load.assert_called_once_with(self.ctx, db_policy=x_obj)
+
+    @mock.patch.object(service.EngineService, 'policy_find')
+    def test_policy_get2_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='policy',
+                                                     id='Fake')
+        req = orpo.PolicyGetRequest(identity='POLICY')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_get2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+
+    @mock.patch.object(pb.Policy, 'load')
+    @mock.patch.object(service.EngineService, 'policy_find')
     def test_policy_get(self, mock_find, mock_load):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
