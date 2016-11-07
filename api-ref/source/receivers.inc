@@ -38,7 +38,6 @@ Request Parameters
   - global_project: global_project
   - name: name_query
   - type: receiver_type_query
-  - user: user_query
   - cluster_id: cluster_identity_query
   - action: receiver_action_query
 
