@@ -603,35 +603,6 @@ class EngineService(service.Service):
                 for p in policy_base.Policy.load_all(ctx, **query)]
 
     @request_context
-    def policy_list(self, context, limit=None, marker=None, sort=None,
-                    filters=None, project_safe=True):
-        """List policies matching the specified criteria.
-
-        :param context: An instance of request context.
-        :param limit: An integer specifying the maximum number of policies to
-                      return in a response.
-        :param marker: An UUID specifying the policy after which the result
-                       list starts.
-        :param sort: A list of sorting keys (each optionally attached with a
-                     sorting direction) separated by commas.
-        :param filters: A dictionary of key-value pairs for filtering out the
-                        result list.
-        :param project_safe: A boolean indicating whether policies from all
-                             projects will be returned.
-        :return: A list of `Policy` object representations.
-        """
-        limit = utils.parse_int_param('limit', limit)
-        utils.validate_sort_param(sort, consts.POLICY_SORT_KEYS)
-        project_safe = utils.parse_bool_param('project_safe', project_safe)
-        if not project_safe and not context.is_admin:
-            raise exception.Forbidden()
-        policies = policy_base.Policy.load_all(context,
-                                               limit=limit, marker=marker,
-                                               sort=sort, filters=filters,
-                                               project_safe=project_safe)
-        return [p.to_dict() for p in policies]
-
-    @request_context
     def _validate_policy(self, context, spec, name=None, validate_props=False):
         """Validate a policy.
 
