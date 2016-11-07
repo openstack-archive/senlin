@@ -197,3 +197,11 @@ class ClusterCollectRequest(base.SenlinObject):
         'identity': fields.StringField(),
         'path': fields.StringField(),
     }
+
+
+@base.SenlinObjectRegistry.register
+class ClusterDeleteRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+    }
