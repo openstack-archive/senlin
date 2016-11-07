@@ -79,6 +79,8 @@ class NodeController(wsgi.Controller):
             jsonschema.validate(norm_req, obj.to_json_schema())
         except (ValueError) as ex:
             raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
         node = self.rpc_client.call2(req.context, 'node_create2',
                                      obj.node)
