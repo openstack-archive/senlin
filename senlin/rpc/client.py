@@ -161,28 +161,6 @@ class EngineClient(object):
         return self.call(ctxt,
                          self.make_msg('policy_validate', spec=spec))
 
-    def cluster_delete(self, ctxt, identity, cast=True):
-        rpc_method = self.cast if cast else self.call
-        return rpc_method(ctxt,
-                          self.make_msg('cluster_delete',
-                                        identity=identity))
-
-    def cluster_collect(self, ctxt, identity, path, project_safe=True):
-        return self.call(ctxt, self.make_msg('cluster_collect',
-                                             identity=identity, path=path,
-                                             project_safe=project_safe),
-                         version='1.1')
-
-    def cluster_replace_nodes(self, ctxt, identity, nodes=None):
-        return self.call(ctxt, self.make_msg('cluster_replace_nodes',
-                                             identity=identity,
-                                             nodes=nodes))
-
-    def node_delete(self, ctxt, identity, cast=True):
-        rpc_method = self.cast if cast else self.call
-        return rpc_method(ctxt,
-                          self.make_msg('node_delete', identity=identity))
-
     def node_check(self, ctxt, identity, params=None):
         return self.call(ctxt, self.make_msg('node_check',
                                              identity=identity,
