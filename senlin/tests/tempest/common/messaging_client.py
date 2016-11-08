@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import uuid
-
 from oslo_serialization import jsonutils
+from oslo_utils import uuidutils
 from tempest import config
 from tempest.lib.common import rest_client
 
@@ -28,7 +27,7 @@ class V2MessagingClient(rest_client.RestClient):
 
         self.uri_prefix = 'v2'
 
-        client_id = uuid.uuid4().hex
+        client_id = uuidutils.generate_uuid().hex
         self.headers = {'Client-ID': client_id}
 
     def get_resp(self, resp, body):
