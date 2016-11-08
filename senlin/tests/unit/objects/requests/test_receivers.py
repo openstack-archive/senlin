@@ -91,9 +91,9 @@ class TestReceiverList(test_base.SenlinTestCase):
     def test_receiver_list_request_full(self):
         params = {
             'name': ['receiver01'],
-            'type': 'webhook',
-            'action': 'CLUSTER_RESIZE',
-            'cluster_id': '8c3c9af7-d768-4c5a-a21e-5261b22d749d',
+            'type': ['webhook'],
+            'action': ['CLUSTER_RESIZE', 'CLUSTER_SCALE_IN'],
+            'cluster_id': ['8c3c9af7-d768-4c5a-a21e-5261b22d749d'],
             'limit': 3,
             'marker': 'f1ed0d50-7651-4599-a8cb-c86e9c7123f5',
             'sort': 'name:asc',
@@ -101,9 +101,9 @@ class TestReceiverList(test_base.SenlinTestCase):
         }
         sot = receivers.ReceiverListRequest(**params)
         self.assertEqual(['receiver01'], sot.name)
-        self.assertEqual('webhook', sot.type)
-        self.assertEqual('CLUSTER_RESIZE', sot.action)
-        self.assertEqual('8c3c9af7-d768-4c5a-a21e-5261b22d749d',
+        self.assertEqual(['webhook'], sot.type)
+        self.assertEqual(['CLUSTER_RESIZE', 'CLUSTER_SCALE_IN'], sot.action)
+        self.assertEqual(['8c3c9af7-d768-4c5a-a21e-5261b22d749d'],
                          sot.cluster_id)
         self.assertEqual(3, sot.limit)
         self.assertEqual('f1ed0d50-7651-4599-a8cb-c86e9c7123f5', sot.marker)

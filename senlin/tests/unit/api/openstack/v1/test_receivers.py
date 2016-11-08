@@ -63,41 +63,48 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         ]
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_resp)
 
         result = self.controller.index(req)
 
-        default_args = {'limit': None, 'marker': None, 'sort': None,
-                        'filters': None, 'project_safe': True}
-
-        mock_call.assert_called_with(req.context,
-                                     ('receiver_list', default_args))
+        mock_call.assert_called_with(req.context, 'receiver_list2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorr.ReceiverListRequest)
+        self.assertTrue(request.project_safe)
 
         expected = {'receivers': engine_resp}
         self.assertEqual(expected, result)
 
     def test_receiver_index_whitelists_params(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
+        marker = 'cac6d9c1-cb4e-4884-ba2a-3cbc72d84aaf'
         params = {
             'limit': 20,
-            'marker': 'fake marker',
-            'sort': 'fake sorting string',
+            'marker': marker,
+            'sort': 'name:desc',
+            'name': 'receiver01',
+            'type': 'webhook',
+            'cluster_id': '123abc',
+            'action': 'CLUSTER_RESIZE'
         }
         req = self._get('/receivers', params=params)
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.return_value = []
 
         self.controller.index(req)
-
-        rpc_call_args, _ = mock_call.call_args
-        engine_args = rpc_call_args[1][1]
-
-        self.assertEqual(5, len(engine_args))
-        self.assertIn('limit', engine_args)
-        self.assertIn('marker', engine_args)
-        self.assertIn('sort', engine_args)
+        mock_call.assert_called_with(req.context, 'receiver_list2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorr.ReceiverListRequest)
+        self.assertTrue(request.project_safe)
+        self.assertEqual(20, request.limit)
+        self.assertEqual(marker, request.marker)
+        self.assertEqual('name:desc', request.sort)
+        self.assertEqual(['receiver01'], request.name)
+        self.assertEqual(['webhook'], request.type)
+        self.assertEqual(['123abc'], request.cluster_id)
+        self.assertEqual(['CLUSTER_RESIZE'], request.action)
 
     def test_receiver_index_whitelists_invalid_params(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -105,7 +112,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'balrog': 'you shall not pass!'
         }
         req = self._get('/receivers', params=params)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
@@ -114,46 +121,28 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                          str(ex))
         self.assertFalse(mock_call.called)
 
-    def test_receiver_index_whitelist_filter_params(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {
-            'name': 'test',
-            'type': 'webhook',
-            'cluster_id': 'test-id',
-            'action': 'fake-action',
-        }
+    def test_receiver_index_invalid_type(self, mock_enforce):
+        mock_call = self.patchobject(rpc_client.EngineClient, 'receiver_list',
+                                     return_value=[])
+
+        params = {'type': 'bogus'}
         req = self._get('/receivers', params=params)
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        mock_call.return_value = []
-
-        self.controller.index(req)
-
-        rpc_call_args, _ = mock_call.call_args
-        engine_args = rpc_call_args[1][1]
-        self.assertIn('filters', engine_args)
-
-        filters = engine_args['filters']
-        self.assertEqual(4, len(filters))
-        self.assertIn('name', filters)
-        self.assertIn('type', filters)
-        self.assertIn('cluster_id', filters)
-        self.assertIn('action', filters)
-
-    def test_receiver_index_whitelist_filter_invalid_params(self,
-                                                            mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {
-            'balrog': 'you shall not pass!'
-        }
-        req = self._get('/receivers', params=params)
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
+        self.assertIn("Field value bogus is invalid",
+                      six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
-        self.assertEqual("Invalid parameter balrog",
-                         str(ex))
+    def test_receiver_index_invalid_action(self, mock_enforce):
+        mock_call = self.patchobject(rpc_client.EngineClient, 'receiver_list',
+                                     return_value=[])
+
+        params = {'action': 'bogus'}
+        req = self._get('/receivers', params=params)
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index, req)
+        self.assertIn("Field value bogus is invalid",
+                      six.text_type(ex))
         self.assertFalse(mock_call.called)
 
     def test_receiver_index_limit_non_int(self, mock_enforce):
@@ -162,22 +151,34 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         params = {'limit': 'abc'}
         req = self._get('/receivers', params=params)
-        ex = self.assertRaises(senlin_exc.InvalidParameter,
+        ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
-        self.assertIn("Invalid value 'abc' specified for 'limit'",
+        self.assertIn("invalid literal for int() with base 10: 'abc'",
+                      six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
+    def test_receiver_index_invalid_sort(self, mock_enforce):
+        mock_call = self.patchobject(rpc_client.EngineClient, 'receiver_list',
+                                     return_value=[])
+
+        params = {'sort': 'bogus:foo'}
+        req = self._get('/receivers', params=params)
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index, req)
+        self.assertIn("unsupported sort dir 'foo' for 'sort'.",
                       six.text_type(ex))
         self.assertFalse(mock_call.called)
 
     def test_receiver_index_global_project(self, mock_enforce):
-        mock_call = self.patchobject(rpc_client.EngineClient, 'receiver_list',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=[])
 
         params = {'global_project': True}
         req = self._get('/receivers', params=params)
         self.controller.index(req)
-        mock_call.assert_called_once_with(mock.ANY,
-                                          filters=mock.ANY,
-                                          project_safe=False)
+        mock_call.assert_called_once_with(req.context,
+                                          'receiver_list2',
+                                          mock.ANY)
 
     def test_receiver_index_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)

@@ -206,18 +206,19 @@ class ReceiverTest(base.SenlinTestCase):
 
         marker = '7445519f-e9db-409f-82f4-187fb8334317'
         req = orro.ReceiverListRequest(limit=1, marker=marker, sort='name',
-                                       type='webhook',
-                                       action='CLUSTER_RESIZE',
-                                       cluster_id='123abc')
+                                       type=['webhook'],
+                                       action=['CLUSTER_RESIZE'],
+                                       cluster_id=['123abc'])
         result = self.eng.receiver_list2(self.ctx, req.obj_to_primitive())
 
         self.assertIsInstance(result, list)
         self.assertEqual([{'FOO': 'BAR'}], result)
         mock_load.assert_called_once_with(self.ctx, limit=1, marker=marker,
                                           sort='name',
-                                          filters={'type': 'webhook',
-                                                   'action': 'CLUSTER_RESIZE',
-                                                   'cluster_id': '123abc'},
+                                          filters={
+                                              'type': ['webhook'],
+                                              'action': ['CLUSTER_RESIZE'],
+                                              'cluster_id': ['123abc']},
                                           project_safe=True)
 
     @mock.patch.object(rb.Receiver, 'load_all')

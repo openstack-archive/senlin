@@ -34,40 +34,36 @@ class ReceiverController(wsgi.Controller):
 
     @util.policy_enforce
     def index(self, req):
-        filter_whitelist = {
+        whitelist = {
             consts.RECEIVER_NAME: 'mixed',
             consts.RECEIVER_TYPE: 'mixed',
             consts.RECEIVER_CLUSTER_ID: 'mixed',
             consts.RECEIVER_ACTION: 'mixed',
-        }
-        param_whitelist = {
             consts.PARAM_LIMIT: 'single',
             consts.PARAM_MARKER: 'single',
             consts.PARAM_SORT: 'single',
             consts.PARAM_GLOBAL_PROJECT: 'single',
         }
         for key in req.params.keys():
-            if (key not in param_whitelist.keys() and key not in
-                    filter_whitelist.keys()):
+            if key not in whitelist.keys():
                 raise exc.HTTPBadRequest(_('Invalid parameter %s') % key)
-        params = util.get_allowed_params(req.params, param_whitelist)
-        filters = util.get_allowed_params(req.params, filter_whitelist)
 
-        key = consts.PARAM_LIMIT
-        if key in params:
-            params[key] = utils.parse_int_param(key, params[key])
+        params = util.get_allowed_params(req.params, whitelist)
 
-        key = consts.PARAM_GLOBAL_PROJECT
-        if key in params:
-            show_global = utils.parse_bool_param(key, params[key])
-            del params[key]
-            params['project_safe'] = not show_global
+        project_safe = not utils.parse_bool_param(
+            consts.PARAM_GLOBAL_PROJECT,
+            params.pop(consts.PARAM_GLOBAL_PROJECT, False))
+        params['project_safe'] = project_safe
 
-        if not filters:
-            filters = None
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ReceiverListRequest', params)
+            obj = vorr.ReceiverListRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except (ValueError) as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
 
-        receivers = self.rpc_client.receiver_list(req.context, filters=filters,
-                                                  **params)
+        receivers = self.rpc_client.call2(req.context, 'receiver_list2', obj)
 
         return {'receivers': receivers}
 
