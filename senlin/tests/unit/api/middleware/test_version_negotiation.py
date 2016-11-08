@@ -108,6 +108,30 @@ class VersionNegotiationTest(base.SenlinTestCase):
         self.assertIsNone(response)
         self.assertEqual(expected_path, request.path_info_peek())
 
+    def test_simple_version_on_request_path(self, mock_vc):
+        vnf = vn.VersionNegotiationFilter(None, None)
+        self.patchobject(vnf, '_check_version_request')
+        fake_vc = mock.Mock(return_value={'foo': 'bar'})
+        self.patchobject(vnf.versions_app, 'get_controller',
+                         return_value=fake_vc)
+        request = webob.Request({'PATH_INFO': 'v1'})
+
+        response = vnf.process_request(request)
+
+        self.assertEqual({'foo': 'bar'}, response)
+
+    def test_full_version_on_request_path(self, mock_vc):
+        vnf = vn.VersionNegotiationFilter(None, None)
+        self.patchobject(vnf, '_check_version_request')
+        fake_vc = mock.Mock(return_value={'foo': 'bar'})
+        self.patchobject(vnf.versions_app, 'get_controller',
+                         return_value=fake_vc)
+        request = webob.Request({'PATH_INFO': 'v1.0'})
+
+        response = vnf.process_request(request)
+
+        self.assertEqual({'foo': 'bar'}, response)
+
     def test_request_path_contains_unknown_version(self, mock_vc):
         vnf = vn.VersionNegotiationFilter(None, None)
         gvc = mock_vc.return_value
@@ -134,6 +158,23 @@ class VersionNegotiationTest(base.SenlinTestCase):
         self.assertIsNone(response)
         self.assertEqual(major, request.environ['api.major'])
         self.assertEqual(minor, request.environ['api.minor'])
+
+    def test_accept_header_contains_simple_version(self, mock_vc):
+        vnf = vn.VersionNegotiationFilter(None, None)
+        self.patchobject(vnf, '_check_version_request')
+        fake_vc = mock.Mock(return_value={'foo': 'bar'})
+        self.patchobject(vnf.versions_app, 'get_controller',
+                         return_value=fake_vc)
+        major = 1
+        minor = 0
+        request = webob.Request({'PATH_INFO': ''})
+        request.headers['Accept'] = 'application/vnd.openstack.clustering-v1.0'
+
+        response = vnf.process_request(request)
+
+        self.assertEqual(major, request.environ['api.major'])
+        self.assertEqual(minor, request.environ['api.minor'])
+        self.assertEqual({'foo': 'bar'}, response)
 
     def test_accept_header_contains_unknown_version(self, mock_vc):
         vnf = vn.VersionNegotiationFilter(None, None)

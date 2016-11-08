@@ -10,11 +10,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_serialization import jsonutils
+from oslo_utils import encodeutils
+import webob.dec
+
 from senlin.api.common import version_request as vr
-from senlin.api.common import wsgi
 
 
-class VersionController(wsgi.Controller):
+class VersionController(object):
     """WSGI controller for version in Senlin v1 API."""
 
     # NOTE: A version change is required when you make any change to the API.
@@ -27,6 +30,15 @@ class VersionController(wsgi.Controller):
 
     def __init__(self, conf):
         self.conf = conf
+
+    @webob.dec.wsgify
+    def __call__(self, req):
+        info = self.version(req)
+        body = jsonutils.dumps(info)
+        response = webob.Response(request=req, content_type='application/json')
+        response.body = encodeutils.safe_encode(body)
+
+        return response
 
     @classmethod
     def version_info(cls):
