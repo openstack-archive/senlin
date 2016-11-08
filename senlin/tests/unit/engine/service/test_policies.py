@@ -300,6 +300,73 @@ class PolicyTest(base.SenlinTestCase):
 
     @mock.patch.object(pb.Policy, 'load')
     @mock.patch.object(service.EngineService, 'policy_find')
+    def test_policy_update2(self, mock_find, mock_load):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        x_policy = mock.Mock()
+        x_policy.name = 'OLD_NAME'
+        x_policy.to_dict.return_value = {'foo': 'bar'}
+        mock_load.return_value = x_policy
+        p_req = orpo.PolicyUpdateRequestBody(name='NEW_NAME')
+        request = {
+            'identity': 'FAKE',
+            'policy': p_req
+        }
+
+        req = orpo.PolicyUpdateRequest(**request)
+
+        result = self.eng.policy_update2(self.ctx, req.obj_to_primitive())
+        self.assertEqual({'foo': 'bar'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'FAKE')
+        mock_load.assert_called_once_with(self.ctx, db_policy=x_obj)
+
+    @mock.patch.object(service.EngineService, 'policy_find')
+    def test_policy_update2_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='policy',
+                                                     id='Fake')
+        p_req = orpo.PolicyUpdateRequestBody(name='NEW_NAME')
+        request = {
+            'identity': 'Fake',
+            'policy': p_req
+        }
+
+        req = orpo.PolicyUpdateRequest(**request)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_update2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+
+    @mock.patch.object(pb.Policy, 'load')
+    @mock.patch.object(service.EngineService, 'policy_find')
+    def test_policy_update2_no_change(self, mock_find, mock_load):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        x_policy = mock.Mock()
+        x_policy.name = 'OLD_NAME'
+        x_policy.to_dict.return_value = {'foo': 'bar'}
+        mock_load.return_value = x_policy
+        body = {
+            'name': 'OLD_NAME',
+        }
+        p_req = orpo.PolicyUpdateRequestBody(**body)
+        request = {
+            'identity': 'FAKE',
+            'policy': p_req
+        }
+
+        req = orpo.PolicyUpdateRequest(**request)
+
+        result = self.eng.policy_update2(self.ctx, req.obj_to_primitive())
+        self.assertEqual({'foo': 'bar'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'FAKE')
+        mock_load.assert_called_once_with(self.ctx, db_policy=x_obj)
+        self.assertEqual(0, x_policy.store.call_count)
+        self.assertEqual('OLD_NAME', x_policy.name)
+
+    @mock.patch.object(pb.Policy, 'load')
+    @mock.patch.object(service.EngineService, 'policy_find')
     def test_policy_update(self, mock_find, mock_load):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
