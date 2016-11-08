@@ -365,67 +365,6 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual(0, x_policy.store.call_count)
         self.assertEqual('OLD_NAME', x_policy.name)
 
-    @mock.patch.object(pb.Policy, 'load')
-    @mock.patch.object(service.EngineService, 'policy_find')
-    def test_policy_update(self, mock_find, mock_load):
-        x_obj = mock.Mock()
-        mock_find.return_value = x_obj
-        x_policy = mock.Mock()
-        x_policy.name = 'OLD_NAME'
-        x_policy.to_dict.return_value = {'foo': 'bar'}
-        mock_load.return_value = x_policy
-
-        result = self.eng.policy_update(self.ctx, 'FAKE_POLICY',
-                                        name='NEW_NAME')
-        self.assertEqual({'foo': 'bar'}, result)
-        mock_find.assert_called_once_with(self.ctx, 'FAKE_POLICY')
-        mock_load.assert_called_once_with(self.ctx, db_policy=x_obj)
-        self.assertEqual('NEW_NAME', x_policy.name)
-        x_policy.store.assert_called_once_with(self.ctx)
-
-    def test_policy_update_name_not_specified(self):
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_update,
-                               self.ctx, 'FAKE_POLICY', None)
-
-        self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual('The request is malformed: Policy name not '
-                         'specified.',
-                         six.text_type(ex.exc_info[1]))
-
-    @mock.patch.object(service.EngineService, 'policy_find')
-    def test_policy_update_not_found(self, mock_find):
-
-        mock_find.side_effect = exc.ResourceNotFound(type='policy', id='Bogus')
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_update,
-                               self.ctx, 'Bogus', name='NEW_NAME')
-
-        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The policy (Bogus) could not be found.',
-                         six.text_type(ex.exc_info[1]))
-        mock_find.assert_called_once_with(self.ctx, 'Bogus')
-
-    @mock.patch.object(pb.Policy, 'load')
-    @mock.patch.object(service.EngineService, 'policy_find')
-    def test_policy_update_no_change(self, mock_find, mock_load):
-        x_obj = mock.Mock()
-        mock_find.return_value = x_obj
-        x_policy = mock.Mock()
-        x_policy.name = 'OLD_NAME'
-        x_policy.to_dict.return_value = {'foo': 'bar'}
-        mock_load.return_value = x_policy
-
-        result = self.eng.policy_update(self.ctx, 'FAKE_POLICY',
-                                        name='OLD_NAME')
-
-        self.assertEqual({'foo': 'bar'}, result)
-        mock_find.assert_called_once_with(self.ctx, 'FAKE_POLICY')
-        mock_load.assert_called_once_with(self.ctx, db_policy=x_obj)
-        self.assertEqual(0, x_policy.store.call_count)
-        self.assertEqual('OLD_NAME', x_policy.name)
-
     @mock.patch.object(pb.Policy, 'delete')
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_policy_delete(self, mock_find, mock_delete):
