@@ -703,6 +703,25 @@ class EngineService(service.Service):
 
         return policy.to_dict()
 
+    @request_context2
+    def policy_delete2(self, ctx, req):
+        """Delete the specified policy.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the PolicyDeleteRequest.
+        :return: None if succeeded or an exception of `ResourceInUse` if
+                 policy is still attached to certain clusters.
+        """
+        db_policy = self.policy_find(ctx, req.identity)
+        LOG.info(_LI("Deleting policy '%s'."), req.identity)
+        try:
+            policy_base.Policy.delete(ctx, db_policy.id)
+        except exception.EResourceBusy:
+            reason = _("still attached to some clusters")
+            raise exception.ResourceInUse(type='policy', id=req.identity,
+                                          reason=reason)
+        LOG.info(_LI("Policy '%s' is deleted."), req.identity)
+
     @request_context
     def policy_delete(self, context, identity):
         """Delete the specified policy.

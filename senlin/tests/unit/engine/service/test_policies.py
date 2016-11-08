@@ -17,6 +17,7 @@ from oslo_utils import uuidutils
 import six
 
 from senlin.common import exception as exc
+from senlin.common.i18n import _
 from senlin.engine import environment
 from senlin.engine import service
 from senlin.objects import policy as po
@@ -358,6 +359,57 @@ class PolicyTest(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.ctx, db_policy=x_obj)
         self.assertEqual(0, x_policy.store.call_count)
         self.assertEqual('OLD_NAME', x_policy.name)
+
+    @mock.patch.object(pb.Policy, 'delete')
+    @mock.patch.object(service.EngineService, 'policy_find')
+    def test_policy_delete2(self, mock_find, mock_delete):
+        x_obj = mock.Mock(id='POLICY_ID')
+        mock_find.return_value = x_obj
+        mock_delete.return_value = None
+
+        req = orpo.PolicyDeleteRequest(identity='POLICY_ID')
+        result = self.eng.policy_delete2(self.ctx, req.obj_to_primitive())
+
+        self.assertIsNone(result)
+        self.assertEqual('POLICY_ID', req.identity)
+        mock_find.assert_called_once_with(self.ctx, 'POLICY_ID')
+        mock_delete.assert_called_once_with(self.ctx, 'POLICY_ID')
+
+    @mock.patch.object(service.EngineService, 'policy_find')
+    def test_policy_delete_not_found2(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='policy', id='Bogus')
+
+        req = orpo.PolicyDeleteRequest(identity='Bogus')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_delete2, self.ctx,
+                               req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual('The policy (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(pb.Policy, 'delete')
+    @mock.patch.object(service.EngineService, 'policy_find')
+    def test_policy_delete_policy_in_use2(self, mock_find, mock_delete):
+        x_obj = mock.Mock(id='POLICY_ID')
+        mock_find.return_value = x_obj
+        err = exc.EResourceBusy(type='policy', id='POLICY_ID')
+        mock_delete.side_effect = err
+
+        req = orpo.PolicyDeleteRequest(identity='POLICY_ID')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_delete2, self.ctx,
+                               req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
+        self.assertEqual(_("The policy POLICY_ID cannot be deleted: still "
+                         "attached to some clusters."),
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'POLICY_ID')
+        mock_delete.assert_called_once_with(self.ctx, 'POLICY_ID')
 
     @mock.patch.object(pb.Policy, 'delete')
     @mock.patch.object(service.EngineService, 'policy_find')
