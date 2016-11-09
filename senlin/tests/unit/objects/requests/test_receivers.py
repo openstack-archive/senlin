@@ -114,3 +114,13 @@ class TestReceiverList(test_base.SenlinTestCase):
         sot = receivers.ReceiverListRequest()
         sot.obj_set_defaults()
         self.assertTrue(sot.project_safe)
+
+
+class TestReceiverGet(test_base.SenlinTestCase):
+
+    def test_receiver_get_request_full(self):
+        params = {
+            'identity': 'receiver-001'
+        }
+        sot = receivers.ReceiverGetRequest(**params)
+        self.assertEqual('receiver-001', sot.identity)
