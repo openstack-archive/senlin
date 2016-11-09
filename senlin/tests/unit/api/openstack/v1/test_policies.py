@@ -462,25 +462,27 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     def test_policy_delete_success(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
-        pid = 'aaaa-bbbb-cccc'
-        req = self._delete('/policies/%(policy_id)s' % {'policy_id': pid})
+        pid = 'FAKE_ID'
+        req = self._delete('/policies/%s' % pid)
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=None)
 
         self.assertRaises(exc.HTTPNoContent,
                           self.controller.delete, req, policy_id=pid)
 
         mock_call.assert_called_with(
-            req.context, ('policy_delete', {'identity': pid}))
+            req.context, 'policy_delete2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertEqual('FAKE_ID', request.identity)
 
     def test_policy_delete_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
-        pid = 'aaaa-bbbb-cccc'
-        req = self._delete('/policies/%(policy_id)s' % {'policy_id': pid})
+        pid = 'FAKE_ID'
+        req = self._delete('/policies/%s' % pid)
 
         error = senlin_exc.ResourceNotFound(type='policy', id=pid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
@@ -492,8 +494,8 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     def test_policy_delete_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', False)
-        pid = 'aaaa-bbbb-cccc'
-        req = self._delete('/policies/%(policy_id)s' % {'policy_id': pid})
+        pid = 'FAKE_ID'
+        req = self._delete('/policies/%s' % pid)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.delete,
