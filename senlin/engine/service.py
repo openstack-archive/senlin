@@ -749,19 +749,6 @@ class EngineService(service.Service):
 
         return policy.to_dict()
 
-    @request_context
-    def policy_validate(self, context, spec):
-        """Validate a policy with the given properties.
-
-        :param context: An instance of the request context.
-        :param spec: A dictionary containing the spec for the policy.
-        :return: A dictionary containing the details of the policy object
-                 validated.
-        """
-        policy = self._validate_policy(context, spec, validate_props=True)
-
-        return policy.to_dict()
-
     def cluster_find(self, context, identity, project_safe=True):
         """Find a cluster with the given identity.
 

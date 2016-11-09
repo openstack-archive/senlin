@@ -274,44 +274,6 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual('BOOM',
                          six.text_type(ex.exc_info[1]))
 
-    def test_policy_validate_pass(self):
-        self._setup_fakes()
-
-        expected_resp = {
-            'created_at': None,
-            'domain': '',
-            'id': None,
-            'data': {},
-            'name': 'validated_policy',
-            'project': 'policy_test_project',
-            'type': 'TestPolicy-1.0',
-            'updated_at': None,
-            'user': 'test_user_id',
-            'spec': {
-                'type': 'TestPolicy',
-                'version': '1.0',
-                'properties': {
-                    'KEY2': 6
-                }
-            }
-        }
-
-        resp = self.eng.policy_validate(self.ctx, self.spec)
-        self.assertEqual(expected_resp, resp)
-
-    def test_policy_validate_failed(self):
-        self._setup_fakes()
-
-        mock_validate = self.patchobject(fakes.TestPolicy, 'validate')
-        mock_validate.side_effect = exc.SpecValidationFailed(message='BOOM')
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_validate,
-                               self.ctx, self.spec)
-        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
-        self.assertEqual('BOOM',
-                         six.text_type(ex.exc_info[1]))
-
     @mock.patch.object(pb.Policy, 'load')
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_policy_get2(self, mock_find, mock_load):
