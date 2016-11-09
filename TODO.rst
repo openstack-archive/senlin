@@ -15,8 +15,6 @@ HIGH PRIORITY
 API
 ---
   - Find and fill gaps with API-WG besides the one we already identified.
-  - Validate API request for unexpected attributes. Such attributes should
-    result in a 400 error. [https://review.openstack.org/#/c/260292]
 
 ENGINE
 ------
@@ -33,13 +31,9 @@ API
   - Support advanced filters as suggested by the API WG:
     `Filtering Guidelines`_
   - Support to ``os-request-id`` when serving api requests.
-  - Add profile-validate and policy-validate APIs:
-    https://etherpad.openstack.org/p/newton-senlin-validation
-
 
 PROFILE
 -------
-
   - Add support to VM migration operations for nova server profile.
   - Add support to snapshot/restore operations for nova server profile. The
     possible use case is rapid scale.
@@ -51,7 +45,6 @@ POLICY
     loadbalancer which is created when attaching lb policy.
   - Leverage other monitoring service for object health status monitoring.
 
-
 DB
 --
   - Add db purge (senlin-manage) for deleting events and actions because they
@@ -61,11 +54,6 @@ DB
 LOW PRIORITY
 ============
 
-API
----
-  - Add support to osprofiler which is a common library across all openstack
-    projects for tracing and profiling.
-
 ENGINE
 ------
   - Allow actions to be paused and resumed. This is important for some background
@@ -73,14 +61,9 @@ ENGINE
   - Provide support to oslo.notification and allow nodes to receive and react
     to those notifications accordingly: `Autoscaling Notifications`_
 
-POLICY
-------
-  - Batching policy: create batches for node creation/deletion/update.
-
 PROFILE
 -------
   - Support disk property update for os.nova.server profile
-
 
 DOC
 -----
