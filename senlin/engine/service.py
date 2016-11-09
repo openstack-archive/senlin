@@ -2055,6 +2055,42 @@ class EngineService(service.Service):
 
         return [a.to_dict() for a in results]
 
+    @request_context2
+    def action_list2(self, ctx, req):
+        """List action records matching the specified criteria.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ActionListRequest object.
+        :return: A list of `Action` object representations.
+        """
+
+        req.obj_set_defaults()
+        if not req.project_safe and not ctx.is_admin:
+            raise exception.Forbidden()
+
+        query = {'project_safe': req.project_safe}
+        if req.obj_attr_is_set('limit'):
+            query['limit'] = req.limit
+        if req.obj_attr_is_set('marker'):
+            query['marker'] = req.marker
+        if req.obj_attr_is_set('sort') and req.sort is not None:
+            query['sort'] = req.sort
+
+        filters = {}
+        if req.obj_attr_is_set('name'):
+            filters['name'] = req.name
+        if req.obj_attr_is_set('action'):
+            filters['action'] = req.action
+        if req.obj_attr_is_set('target'):
+            filters['target'] = req.target
+        if req.obj_attr_is_set('status'):
+            filters['status'] = req.status
+        if filters:
+            query['filters'] = filters
+        results = action_mod.Action.load_all(ctx, **query)
+
+        return [a.to_dict() for a in results]
+
     @request_context
     def action_create(self, context, name, cluster, action, inputs=None):
         """Create an action with given details.
