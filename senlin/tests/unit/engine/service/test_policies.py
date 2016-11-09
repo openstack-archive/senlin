@@ -233,6 +233,47 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual('BOOM',
                          six.text_type(ex.exc_info[1]))
 
+    def test_policy_validate2_pass(self):
+        self._setup_fakes()
+
+        expected_resp = {
+            'created_at': None,
+            'domain': '',
+            'id': None,
+            'data': {},
+            'name': 'validated_policy',
+            'project': 'policy_test_project',
+            'type': 'TestPolicy-1.0',
+            'updated_at': None,
+            'user': 'test_user_id',
+            'spec': {
+                'type': 'TestPolicy',
+                'version': '1.0',
+                'properties': {
+                    'KEY2': 6
+                }
+            }
+        }
+
+        body = orpo.PolicyValidateRequestBody(spec=self.spec)
+
+        resp = self.eng.policy_validate2(self.ctx, body.obj_to_primitive())
+        self.assertEqual(expected_resp, resp)
+
+    def test_policy_validate2_failed(self):
+        self._setup_fakes()
+        mock_validate = self.patchobject(fakes.TestPolicy, 'validate')
+        mock_validate.side_effect = exc.SpecValidationFailed(message='BOOM')
+
+        body = orpo.PolicyValidateRequestBody(spec=self.spec)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_validate2,
+                               self.ctx, body.obj_to_primitive())
+        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
+        self.assertEqual('BOOM',
+                         six.text_type(ex.exc_info[1]))
+
     def test_policy_validate_pass(self):
         self._setup_fakes()
 

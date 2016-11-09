@@ -735,6 +735,20 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Policy '%s' is deleted."), identity)
 
+    @request_context2
+    def policy_validate2(self, ctx, req):
+        """Validate a policy with the given properties.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the PolicyValidateRequestBody.
+        :return: A dictionary containing the details of the policy object
+                 validated.
+        """
+
+        policy = self._validate_policy(ctx, req.spec, validate_props=True)
+
+        return policy.to_dict()
+
     @request_context
     def policy_validate(self, context, spec):
         """Validate a policy with the given properties.
