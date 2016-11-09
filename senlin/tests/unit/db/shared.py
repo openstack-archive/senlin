@@ -10,10 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import uuid
 
 from oslo_serialization import jsonutils
 from oslo_utils import timeutils as tu
+from oslo_utils import uuidutils
 
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import parser
@@ -47,7 +47,7 @@ sample_action = '''
 '''
 
 
-UUIDs = (UUID1, UUID2, UUID3) = sorted([str(uuid.uuid4())
+UUIDs = (UUID1, UUID2, UUID3) = sorted([uuidutils.generate_uuid()
                                         for x in range(3)])
 
 
