@@ -108,19 +108,20 @@ class PolicyController(wsgi.Controller):
         if data is None:
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'policy' key in request body."))
+        try:
+            body_req = obj_base.SenlinObject.normalize_req(
+                'PolicyUpdateRequestBody', body['policy'])
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'PolicyUpdateRequest', {'identity': policy_id,
+                                        'policy': body_req})
+            obj = vorp.PolicyUpdateRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
-        spec = data.get(consts.POLICY_SPEC)
-        if spec is not None:
-            msg = _("Updating the spec of a policy is not supported because "
-                    "it may cause state conflicts in engine.")
-            raise exc.HTTPBadRequest(msg)
-
-        # Name is the only property that can be updated
-        name = data.get(consts.POLICY_NAME, None)
-        if not name:
-            raise exc.HTTPBadRequest(_("Policy name not specified."))
-
-        policy = self.rpc_client.policy_update(req.context, policy_id, name)
+        policy = self.rpc_client.call2(req.context, 'policy_update2', obj)
 
         return {'policy': policy}
 

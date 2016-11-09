@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import copy
 import mock
 import six
 from webob import exc
@@ -355,14 +354,16 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'updated_time': None,
         }
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_resp)
         result = self.controller.update(req, policy_id=pid, body=body)
-
-        args = copy.deepcopy(body['policy'])
-        args['identity'] = pid
-        mock_call.assert_called_with(req.context, ('policy_update', args))
-
+        mock_call.assert_called_with(req.context, 'policy_update2',
+                                     mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorp.PolicyUpdateRequest)
+        self.assertIsInstance(request.policy, vorp.PolicyUpdateRequestBody)
+        self.assertEqual(pid, request.identity)
+        self.assertEqual('policy-2', request.policy.name)
         expected = {'policy': engine_resp}
         self.assertEqual(expected, result)
 
@@ -375,13 +376,13 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                         jsonutils.dumps(body))
 
         engine_resp = mock.Mock()
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_resp)
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
                                req, policy_id=pid, body=body)
 
-        self.assertEqual("Policy name not specified.",
+        self.assertEqual("'name' is a required property",
                          six.text_type(ex))
         self.assertFalse(mock_call.called)
 
@@ -392,7 +393,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._patch('/policies/%(pid)s' % {'pid': pid},
                           jsonutils.dumps(body))
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
                                req, policy_id=pid, body=body)
@@ -411,13 +412,13 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._patch('/policies/%(policy_id)s' % {'policy_id': pid},
                           jsonutils.dumps(body))
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
                                req, policy_id=pid, body=body)
 
-        msg = _("Updating the spec of a policy is not supported because "
-                "it may cause state conflicts in engine.")
+        msg = _("Additional properties are not allowed"
+                " ('spec' was unexpected)")
 
         self.assertEqual(msg, six.text_type(ex))
         self.assertFalse(mock_call.called)
@@ -434,7 +435,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                           jsonutils.dumps(body))
 
         error = senlin_exc.ResourceNotFound(type='policy', id=pid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
