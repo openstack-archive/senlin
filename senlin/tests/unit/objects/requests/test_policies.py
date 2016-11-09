@@ -264,62 +264,60 @@ class TestPolicyValidate(test_base.SenlinTestCase):
 
     def test_validate_request_body(self):
         spec = copy.deepcopy(self.spec)
-        sot = policies.PolicySpec(**spec)
+        body = policies.PolicyValidateRequestBody(spec=spec)
 
-        self.assertEqual('senlin.policy.scaling', sot.type)
-        self.assertEqual('1.0', sot.version)
+        self.assertEqual(spec['type'], body.spec['type'])
+        self.assertEqual(spec['version'], body.spec['version'])
 
     def test_validate_request(self):
         spec = copy.deepcopy(self.spec)
-        policy = policies.PolicySpec(**spec)
+        body = policies.PolicyValidateRequestBody(spec=spec)
+        policy = policies.PolicyValidateRequest(policy=body)
 
-        request = {'policy': policy}
-        sot = policies.PolicyValidateRequest(**request)
-        self.assertIsInstance(sot.policy, policies.PolicySpec)
+        self.assertIsInstance(
+            policy.policy, policies.PolicyValidateRequestBody)
 
     def test_request_body_to_primitive(self):
         spec = copy.deepcopy(self.spec)
-        sot = policies.PolicySpec(**spec)
+
+        sot = policies.PolicyValidateRequestBody(spec=spec)
         res = sot.obj_to_primitive()
 
-        changes = res['senlin_object.changes']
-        self.assertIn('version', changes)
-        self.assertIn('type', changes)
-        self.assertIn('properties', changes)
-        self.assertEqual('PolicySpec', res['senlin_object.name'])
+        self.assertIn('spec', res['senlin_object.changes'])
+        self.assertEqual(
+            'PolicyValidateRequestBody', res['senlin_object.name'])
         self.assertEqual('senlin', res['senlin_object.namespace'])
         self.assertEqual('1.0', res['senlin_object.version'])
 
-        data = res['senlin_object.data']
-        self.assertEqual(u'senlin.policy.scaling', data['type'])
-        self.assertEqual(u'1.0', data['version'])
+        pd = res['senlin_object.data']['spec']
+        data = jsonutils.loads(pd)
+        self.assertEqual('senlin.policy.scaling', data['type'])
+        self.assertEqual('1.0', data['version'])
 
     def test_request_to_primitive(self):
         spec = copy.deepcopy(self.spec)
-        policy = policies.PolicySpec(**spec)
+        body = policies.PolicyValidateRequestBody(spec=spec)
+        policy = policies.PolicyValidateRequest(policy=body)
 
-        request = {'policy': policy}
-        sot = policies.PolicyValidateRequest(**request)
-        res = sot.obj_to_primitive()
+        res = policy.obj_to_primitive()
 
         self.assertIn('policy', res['senlin_object.changes'])
         self.assertEqual('PolicyValidateRequest', res['senlin_object.name'])
         self.assertEqual('senlin', res['senlin_object.namespace'])
         self.assertEqual('1.0', res['senlin_object.version'])
 
-        pd = res['senlin_object.data']['policy']
-        pd_change = pd['senlin_object.changes']
-        self.assertIn('version', pd_change)
-        self.assertIn('type', pd_change)
-        self.assertIn('properties', pd_change)
+        body = res['senlin_object.data']['policy']
 
-        self.assertEqual('PolicySpec', pd['senlin_object.name'])
-        self.assertEqual('senlin', pd['senlin_object.namespace'])
-        self.assertEqual('1.0', pd['senlin_object.version'])
+        self.assertIn('spec', body['senlin_object.changes'])
+        self.assertEqual(
+            'PolicyValidateRequestBody', body['senlin_object.name'])
+        self.assertEqual('senlin', body['senlin_object.namespace'])
+        self.assertEqual('1.0', body['senlin_object.version'])
 
-        pd_data = pd['senlin_object.data']
-        self.assertEqual(u'senlin.policy.scaling', pd_data['type'])
-        self.assertEqual(u'1.0', pd_data['version'])
+        pd = body['senlin_object.data']['spec']
+        data = jsonutils.loads(pd)
+        self.assertEqual('senlin.policy.scaling', data['type'])
+        self.assertEqual('1.0', data['version'])
 
 
 class TestPolicyDelete(test_base.SenlinTestCase):

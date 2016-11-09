@@ -89,8 +89,16 @@ class PolicyDeleteRequest(base.SenlinObject):
 
 
 @base.SenlinObjectRegistry.register
+class PolicyValidateRequestBody(base.SenlinObject):
+
+    fields = {
+        'spec': fields.JsonField()
+    }
+
+
+@base.SenlinObjectRegistry.register
 class PolicyValidateRequest(base.SenlinObject):
 
     fields = {
-        'policy': fields.ObjectField('PolicySpec')
+        'policy': fields.ObjectField('PolicyValidateRequestBody')
     }
