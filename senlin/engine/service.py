@@ -697,32 +697,6 @@ class EngineService(service.Service):
         return policy.to_dict()
 
     @request_context
-    def policy_update(self, context, identity, name):
-        """Update the properties of a given policy.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a policy.
-        :param name: The new name for the policy.
-        :returns: A dictionary containing the details of the updated policy or
-                  an exception `ResourceNotFound` if no matching poicy is
-                  found, or an exception `BadRequest` if name is not provided.
-        """
-        if not name:
-            msg = _('Policy name not specified.')
-            raise exception.BadRequest(msg=msg)
-
-        db_policy = self.policy_find(context, identity)
-        policy = policy_base.Policy.load(context, db_policy=db_policy)
-
-        if name != policy.name:
-            LOG.info(_LI("Updating policy '%s'."), identity)
-            policy.name = name
-            policy.store(context)
-            LOG.info(_LI("Policy '%s' is updated."), identity)
-
-        return policy.to_dict()
-
-    @request_context
     def policy_delete(self, context, identity):
         """Delete the specified policy.
 
