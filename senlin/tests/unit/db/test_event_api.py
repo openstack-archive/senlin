@@ -14,6 +14,7 @@ from oslo_log import log as logging
 from oslo_utils import reflection
 from oslo_utils import timeutils as tu
 
+from senlin.common import utils as common_utils
 from senlin.db.sqlalchemy import api as db_api
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -75,8 +76,8 @@ class DBAPIEventTest(base.SenlinTestCase):
         tst_timestamp = tu.parse_strtime('2014-12-19 11:51:54.670244',
                                          '%Y-%m-%d %H:%M:%S.%f')
 
-        self.assertEqual(tu.isotime(tst_timestamp),
-                         tu.isotime(ret_event.timestamp))
+        self.assertEqual(common_utils.isotime(tst_timestamp),
+                         common_utils.isotime(ret_event.timestamp))
         self.assertEqual('20', ret_event.level)
         self.assertEqual('', ret_event.oid)
         self.assertEqual('', ret_event.otype)
