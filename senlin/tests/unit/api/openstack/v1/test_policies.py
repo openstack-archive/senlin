@@ -556,13 +556,54 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.validate,
                                req, body=body)
-        self.assertEqual("Malformed request data, missing 'policy' key in "
-                         "request body.", six.text_type(ex))
+        self.assertEqual("Request body missing 'policy' key.",
+                         six.text_type(ex))
+
+    def test_policy_validate_no_spec(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'validate', True)
+        body = {
+            'policy': {'foo': 'bar'}
+        }
+        req = self._post('/policies/validate', jsonutils.dumps(body),
+                         version='1.2')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.validate,
+                               req, body=body)
+        self.assertEqual("Additional properties are not allowed "
+                         "('foo' was unexpected)", six.text_type(ex))
+
+    def test_policy_validate_invalide_spec(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'validate', True)
+        body = {
+            'policy': {
+                'spec': {
+                    'type': 'senlin.policy.deletion',
+                    'version': '1.0'
+                }
+            }
+        }
+
+        req = self._post('/policies/validate', jsonutils.dumps(body),
+                         version='1.2')
+
+        msg = 'Spec validation error'
+        error = senlin_exc.SpecValidationFailed(message=msg)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.validate,
+                                              req, body=body)
+
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('SpecValidationFailed', resp.json['error']['type'])
 
     def test_policy_validate_success(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
         spec = {
             'spec': {
+                'properties': {'foo': 'bar'},
                 'type': 'senlin.policy.deletion',
                 'version': '1.0'
             }
@@ -574,10 +615,10 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/policies/validate', jsonutils.dumps(body),
                          version='1.2')
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=spec)
         result = self.controller.validate(req, body=body)
         mock_call.assert_called_with(req.context,
-                                     ('policy_validate', spec))
+                                     'policy_validate2', mock.ANY)
         expected = {'policy': spec}
         self.assertEqual(expected, result)
