@@ -677,6 +677,25 @@ class EngineService(service.Service):
         policy = policy_base.Policy.load(ctx, db_policy=db_policy)
         return policy.to_dict()
 
+    @request_context2
+    def policy_update2(self, ctx, req):
+        """Update the properties of a given policy
+
+        :param ctx: An instance of request context.
+        :param req: An instance of the PolicyUpdateRequest.
+        :return: A dictionary containing the policy details.
+        """
+        db_policy = self.policy_find(ctx, req.identity)
+        policy = policy_base.Policy.load(ctx, db_policy=db_policy)
+
+        if req.policy.name != policy.name:
+            LOG.info(_LI("Updating policy '%s'."), req.identity)
+            policy.name = req.policy.name
+            policy.store(ctx)
+            LOG.info(_LI("Policy '%s' is updated."), req.identity)
+
+        return policy.to_dict()
+
     @request_context
     def policy_update(self, context, identity, name):
         """Update the properties of a given policy.
