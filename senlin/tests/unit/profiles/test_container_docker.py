@@ -298,7 +298,6 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         obj = mock.Mock(id='fake_con_id')
         ret_container_id = profile.do_create(obj)
         mock_add.assert_any_call(host, 'fake_con_id')
-        mock_add.assert_any_call(cluster, 'fake_con_id')
         self.assertEqual(container_id, ret_container_id)
         params = {
             'image': 'hello-world',
@@ -317,14 +316,14 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         profile.host = host
         profile._add_dependents_to_host(host, container)
         dependents = {'containers': [container]}
-        profile.host.add_dependents.assert_any_call(ctx, dependents)
+        profile.host.update_dependents.assert_any_call(ctx, dependents)
 
         dep = {'containers': ['container1']}
         host = mock.Mock(dependents=dep, id='fake_host')
         profile.host = host
         dependents = {'containers': ['container1', container]}
         profile._add_dependents_to_host(host, container)
-        profile.host.add_dependents.assert_any_call(ctx, dependents)
+        profile.host.update_dependents.assert_any_call(ctx, dependents)
 
     @mock.patch.object(docker_profile.DockerProfile, 'docker')
     def test_do_create_failed(self, mock_docker):
@@ -337,7 +336,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
     @mock.patch.object(docker_profile.DockerProfile,
                        '_remove_dependents_from_host')
     @mock.patch.object(docker_profile.DockerProfile, 'docker')
-    def test_do_delete(self, mock_docker, mock_dep):
+    def test_do_delete(self, mock_docker, mock_remove):
         obj = mock.Mock(id='container1')
         physical_id = mock.Mock()
         obj.physical_id = physical_id
@@ -349,12 +348,6 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         profile.cluster = None
         self.assertIsNone(profile.do_delete(obj))
         dockerclient.container_delete.assert_any_call(physical_id)
-        mock_dep.assert_any_call(host, 'container1')
-
-        cluster = mock.Mock()
-        profile.cluster = cluster
-        self.assertIsNone(profile.do_delete(obj))
-        mock_dep.assert_any_call(cluster, 'container1')
 
     def test_do_delete_no_physical_id(self):
         obj = mock.Mock()

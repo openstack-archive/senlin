@@ -222,7 +222,7 @@ class DockerProfile(base.Profile):
     def _add_dependents_to_host(self, host, container):
         """Add container node id to host property.
 
-        :param host: The host(node or cluster) to host the container
+        :param host: The host node to host the container
         :param container: The id of the container node
         """
 
@@ -234,7 +234,7 @@ class DockerProfile(base.Profile):
             containers.append(container)
             dependents = {'containers': containers}
 
-        host.add_dependents(ctx, dependents)
+        host.update_dependents(ctx, dependents)
 
     def do_create(self, obj):
         """Create a container instance using the given profile.
@@ -256,8 +256,6 @@ class DockerProfile(base.Profile):
         try:
             dockerclient = self.docker(obj)
             self._add_dependents_to_host(self.host, obj.id)
-            if self.cluster is not None:
-                self._add_dependents_to_host(self.cluster, obj.id)
             container = dockerclient.container_create(**params)
         except exc.InternalError as ex:
             raise exc.EResourceCreation(type='container',
@@ -269,7 +267,7 @@ class DockerProfile(base.Profile):
     def _remove_dependents_from_host(self, host, container):
         """Remove dependency record of host
 
-        :param host: The host(node or cluster) to host the container
+        :param host: The host node to host the container
         :param container: The id of the container node
         """
         ctx = context.get_admin_context()
@@ -294,6 +292,4 @@ class DockerProfile(base.Profile):
                                         id=obj.physical_id,
                                         message=six.text_type(ex))
         self._remove_dependents_from_host(self.host, obj.id)
-        if self.cluster is not None:
-            self._remove_dependents_from_host(self.cluster, obj.id)
         return
