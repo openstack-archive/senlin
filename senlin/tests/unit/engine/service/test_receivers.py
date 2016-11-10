@@ -423,6 +423,34 @@ class ReceiverTest(base.SenlinTestCase):
                                self.eng.receiver_get, self.ctx, 'Bogus')
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
 
+    @mock.patch.object(rb.Receiver, 'load')
+    def test_receiver_get2(self, mock_load):
+        fake_obj = mock.Mock()
+        mock_find = self.patchobject(self.eng, 'receiver_find',
+                                     return_value=fake_obj)
+        fake_receiver = mock.Mock()
+        fake_receiver.to_dict.return_value = {'FOO': 'BAR'}
+        mock_load.return_value = fake_receiver
+
+        req = orro.ReceiverGetRequest(identity='FAKE_ID')
+        res = self.eng.receiver_get2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'FOO': 'BAR'}, res)
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_load.assert_called_once_with(self.ctx,
+                                          receiver_obj=fake_obj)
+
+    @mock.patch.object(service.EngineService, 'receiver_find')
+    def test_receiver_get2_not_found(self, mock_find):
+
+        mock_find.side_effect = exc.ResourceNotFound(type='receiver', id='RR')
+
+        req = orro.ReceiverGetRequest(identity='Bogus')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.receiver_get2, self.ctx,
+                               req.obj_to_primitive())
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+
     @mock.patch.object(service.EngineService, 'receiver_find')
     @mock.patch.object(rb.Receiver, 'delete')
     def test_receiver_delete(self, mock_delete, mock_find):

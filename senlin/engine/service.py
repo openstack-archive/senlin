@@ -2290,6 +2290,20 @@ class EngineService(service.Service):
                                               project_safe=project_safe)
         return receiver.to_dict()
 
+    @request_context2
+    def receiver_get2(self, ctx, req):
+        """Get the details about a receiver.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ReceiverGetRequestBody object.
+        :return: A dictionary containing the details about a receiver or
+                 an exception `ResourceNotFound` if no matching object found.
+        """
+        db_receiver = self.receiver_find(ctx, req.identity)
+        receiver = receiver_mod.Receiver.load(ctx,
+                                              receiver_obj=db_receiver)
+        return receiver.to_dict()
+
     @request_context
     def receiver_delete(self, context, identity):
         """Delete the specified receiver.
