@@ -237,16 +237,6 @@ class Node(object):
             return {}
         return pb.Profile.get_details(context, self)
 
-    def update_dependents(self, context, dependents):
-        """Update dependency information of node's property.
-
-        :param context: An instance of request context.
-        :param dependents: The dependency information.
-        """
-
-        values = {'dependents': dependents}
-        no.Node.update(context, self.id, values)
-
     def do_create(self, context):
         if self.status != consts.NS_INIT:
             LOG.error(_LE('Node is in status "%s"'), self.status)

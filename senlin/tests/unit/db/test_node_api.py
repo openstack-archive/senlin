@@ -162,6 +162,25 @@ class DBAPINodeTest(base.SenlinTestCase):
         names = [node.name for node in nodes]
         [self.assertIn(val['name'], names) for val in values]
 
+    def test_node_add_dependents(self):
+        node_id = 'container_host'
+        node = shared.create_node(self.ctx, None, self.profile,
+                                  id=node_id, name='node-1')
+        db_api.node_add_dependents(self.ctx, node_id, 'container1')
+        node = db_api.node_get(self.ctx, node_id)
+        container = node.dependents['containers']
+        self.assertEqual(['container1'], container)
+
+    def test_node_remove_dependents(self):
+        node_id = 'container_host'
+        dependents = {'containers': ['container1']}
+        node = shared.create_node(self.ctx, None, self.profile,
+                                  id=node_id, dependents=dependents)
+        db_api.node_remove_dependents(self.ctx, node_id, 'container1')
+        node = db_api.node_get(self.ctx, node_id)
+        dependents = node.dependents
+        self.assertEqual({}, dependents)
+
     def test_node_get_all_with_cluster_id(self):
         values = [{'name': 'node1'}, {'name': 'node2'}, {'name': 'node3'}]
         for v in values:

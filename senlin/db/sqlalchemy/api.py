@@ -310,6 +310,52 @@ def node_update(context, node_id, values):
                 cluster.save(session)
 
 
+def node_add_dependents(context, node_id, container_id):
+    '''Add ID of container node to 'dependents' property of host node.
+
+    :param node_id: ID of the host node.
+    :param container_id: ID of the container node.
+    :raises ResourceNotFound: The specified node does not exist in database.
+    '''
+    with session_for_write() as session:
+        node = session.query(models.Node).get(node_id)
+        if not node:
+            raise exception.ResourceNotFound(type='node', id=node_id)
+
+        containers = node.dependents.get('containers', None)
+        if not containers:
+            dependents = {'containers': [container_id]}
+        else:
+            containers.append(container_id)
+            dependents = {'containers': dependents}
+        values = {'dependents': dependents}
+        node.update(values)
+        node.save(session)
+
+
+def node_remove_dependents(context, node_id, container_id):
+    '''Remove ID of container node from 'dependents' property of host node.
+
+    :param node_id: ID of the host node.
+    :param container_id: ID of the container node.
+    :raises ResourceNotFound: The specified node does not exist in database.
+    '''
+    with session_for_write() as session:
+        node = session.query(models.Node).get(node_id)
+        if not node:
+            raise exception.ResourceNotFound(type='node', id=node_id)
+
+        containers = node.dependents['containers']
+        containers.remove(container_id)
+        if len(containers) > 0:
+            dependents = {'containers': containers}
+        else:
+            dependents = {}
+        values = {'dependents': dependents}
+        node.update(values)
+        node.save(session)
+
+
 def node_migrate(context, node_id, to_cluster, timestamp, role=None):
     with session_for_write() as session:
         node = session.query(models.Node).get(node_id)

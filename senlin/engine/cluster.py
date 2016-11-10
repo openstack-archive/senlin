@@ -265,16 +265,6 @@ class Cluster(object):
         co.Cluster.update(context, self.id, values)
         return
 
-    def update_dependents(self, context, dependents):
-        """Update dependency information of cluster's property.
-
-        :param context: An instance of request context.
-        :param dependents: The dependency information.
-        """
-
-        values = {'dependents': dependents}
-        co.Cluster.update(context, self.id, values)
-
     def do_create(self, context, **kwargs):
         '''Additional logic at the beginning of cluster creation process.
 
