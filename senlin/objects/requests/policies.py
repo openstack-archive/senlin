@@ -30,20 +30,11 @@ class PolicyListRequest(base.SenlinObject):
 
 
 @base.SenlinObjectRegistry.register
-class PolicySpec(base.SenlinObject):
-    fields = {
-        'properties': fields.JsonField(),
-        'type': fields.StringField(),
-        'version': fields.StringField(),
-    }
-
-
-@base.SenlinObjectRegistry.register
 class PolicyCreateRequestBody(base.SenlinObject):
 
     fields = {
         'name': fields.NameField(),
-        'spec': fields.ObjectField('PolicySpec'),
+        'spec': fields.JsonField(),
     }
 
 
