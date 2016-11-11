@@ -666,32 +666,6 @@ class EngineService(service.Service):
                  {'name': name, 'id': policy.id})
         return policy.to_dict()
 
-    @request_context
-    def policy_create(self, context, name, spec):
-        """Create a policy with the given name and spec.
-
-        :param context: An instance of the request context.
-        :param name: The name for the policy to be created.
-        :param spec: A dictionary containing the spec for the policy.
-        :return: A dictionary containing the details of the policy object
-                 created.
-        """
-        if CONF.name_unique:
-            if policy_obj.Policy.get_by_name(context, name):
-                msg = _("A policy named '%(name)s' already exists."
-                        ) % {"name": name}
-                raise exception.BadRequest(msg=msg)
-
-        policy = self._validate_policy(context, spec, name=name)
-
-        LOG.info(_LI("Creating policy %(type)s '%(name)s'"),
-                 {'type': policy.type, 'name': policy.name})
-
-        policy.store(context)
-        LOG.info(_LI("Policy '%(name)s' is created: %(id)s."),
-                 {'name': name, 'id': policy.id})
-        return policy.to_dict()
-
     @request_context2
     def policy_get2(self, ctx, req):
         """Retrieve the details about a policy.
