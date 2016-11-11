@@ -19,6 +19,7 @@ from senlin.common import exception as exc
 from senlin.engine.actions import base as action_base
 from senlin.engine import service
 from senlin.objects import action as ao
+from senlin.objects.requests import actions as orao
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -180,6 +181,75 @@ class ActionTest(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.ctx, filters=None, limit=None,
                                           sort=None, marker=None,
                                           project_safe=False)
+
+    @mock.patch.object(action_base.Action, 'load_all')
+    def test_action_list2(self, mock_load):
+        x_1 = mock.Mock()
+        x_1.to_dict.return_value = {'k': 'v1'}
+        x_2 = mock.Mock()
+        x_2.to_dict.return_value = {'k': 'v2'}
+        mock_load.return_value = [x_1, x_2]
+
+        req = orao.ActionListRequest()
+        result = self.eng.action_list2(self.ctx, req.obj_to_primitive())
+        expected = [{'k': 'v1'}, {'k': 'v2'}]
+        self.assertEqual(expected, result)
+
+        mock_load.assert_called_once_with(self.ctx, project_safe=True)
+
+    @mock.patch.object(action_base.Action, 'load_all')
+    def test_action_list2_with_params(self, mock_load):
+        x_1 = mock.Mock()
+        x_1.to_dict.return_value = {'status': 'READY'}
+        x_2 = mock.Mock()
+        x_2.to_dict.return_value = {'status': 'SUCCESS'}
+        mock_load.return_value = [x_1, x_2]
+
+        req = orao.ActionListRequest(status=['READY', 'SUCCEEDED'],
+                                     limit=100,
+                                     sort='status',
+                                     project_safe=True)
+        result = self.eng.action_list2(self.ctx, req.obj_to_primitive())
+        expected = [{'status': 'READY'}, {'status': 'SUCCESS'}]
+        self.assertEqual(expected, result)
+
+        filters = {'status': ['READY', 'SUCCEEDED']}
+        mock_load.assert_called_once_with(self.ctx,
+                                          filters=filters,
+                                          limit=100,
+                                          sort='status',
+                                          project_safe=True
+                                          )
+
+    def test_action_list2_with_bad_params(self):
+        req = orao.ActionListRequest(project_safe=False)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.action_list2,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.Forbidden, ex.exc_info[0])
+
+    @mock.patch.object(action_base.Action, 'load_all')
+    def test_action_list2_with_Auth(self, mock_load):
+        mock_load.return_value = []
+
+        req = orao.ActionListRequest(project_safe=True)
+        result = self.eng.action_list2(self.ctx, req.obj_to_primitive())
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, project_safe=True)
+
+        self.ctx.is_admin = True
+
+        mock_load.reset_mock()
+        req = orao.ActionListRequest(project_safe=True)
+        result = self.eng.action_list2(self.ctx, req.obj_to_primitive())
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, project_safe=True)
+
+        mock_load.reset_mock()
+        req = orao.ActionListRequest(project_safe=False)
+        result = self.eng.action_list2(self.ctx, req.obj_to_primitive())
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, project_safe=False)
 
     @mock.patch.object(action_base.Action, 'create')
     @mock.patch.object(service.EngineService, 'cluster_find')
