@@ -127,7 +127,18 @@ class PolicyController(wsgi.Controller):
 
     @util.policy_enforce
     def delete(self, req, policy_id):
-        self.rpc_client.policy_delete(req.context, policy_id, cast=False)
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'PolicyDeleteRequest', {'identity': policy_id})
+        obj = None
+        try:
+            obj = vorp.PolicyDeleteRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        self.rpc_client.call2(req.context, 'policy_delete2', obj)
         raise exc.HTTPNoContent()
 
     @wsgi.Controller.api_version('1.2')
