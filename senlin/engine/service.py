@@ -639,6 +639,33 @@ class EngineService(service.Service):
 
         return policy
 
+    @request_context2
+    def policy_create2(self, ctx, req):
+        """Create a policy with the given name and spec.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the PolicyCreateRequestBody.
+        :return: A dictionary containing the details of the policy object
+                 created.
+        """
+        name = req.name
+
+        if CONF.name_unique:
+            if policy_obj.Policy.get_by_name(ctx, name):
+                msg = _("A policy named '%(name)s' already exists."
+                        ) % {"name": name}
+                raise exception.BadRequest(msg=msg)
+
+        policy = self._validate_policy(ctx, req.spec, name=name)
+
+        LOG.info(_LI("Creating policy %(type)s '%(name)s'"),
+                 {'type': policy.type, 'name': policy.name})
+
+        policy.store(ctx)
+        LOG.info(_LI("Policy '%(name)s' is created: %(id)s."),
+                 {'name': name, 'id': policy.id})
+        return policy.to_dict()
+
     @request_context
     def policy_create(self, context, name, spec):
         """Create a policy with the given name and spec.
