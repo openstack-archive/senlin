@@ -41,3 +41,14 @@ class TestActionList(test_base.SenlinTestCase):
         sot = actions.ActionListRequest()
         sot.obj_set_defaults()
         self.assertTrue(sot.project_safe)
+
+
+class TestActionGet(test_base.SenlinTestCase):
+
+    body = {
+        'identity': 'test-action'
+    }
+
+    def test_action_get_request(self):
+        sot = actions.ActionGetRequest(**self.body)
+        self.assertEqual('test-action', sot.identity)
