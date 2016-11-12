@@ -304,6 +304,33 @@ class ActionTest(base.SenlinTestCase):
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
+    @mock.patch.object(action_base.Action, 'load')
+    @mock.patch.object(service.EngineService, 'action_find')
+    def test_action_get2(self, mock_find, mock_load):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        x_action = mock.Mock()
+        x_action.to_dict.return_value = {'k': 'v'}
+        mock_load.return_value = x_action
+
+        req = orao.ActionGetRequest(identity='ACTION_ID')
+        result = self.eng.action_get2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'k': 'v'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'ACTION_ID')
+        mock_load.assert_called_once_with(self.ctx, db_action=x_obj)
+
+    @mock.patch.object(service.EngineService, 'action_find')
+    def test_action_get2_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='action', id='Bogus')
+        req = orao.ActionGetRequest(identity='Bogus')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.action_get2,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
     @mock.patch.object(action_base.Action, 'delete')
     @mock.patch.object(service.EngineService, 'action_find')
     def test_action_delete(self, mock_find, mock_delete):
