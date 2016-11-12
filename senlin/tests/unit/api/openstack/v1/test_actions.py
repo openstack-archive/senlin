@@ -204,14 +204,17 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'timeout': 3600
         }
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_resp)
         response = self.controller.get(req, action_id=action_id)
+        expected = {'action': engine_resp}
+        self.assertEqual(expected, response)
 
         mock_call.assert_called_once_with(
-            req.context, ('action_get', {'identity': action_id}))
-
-        self.assertEqual({'action': engine_resp}, response)
+            req.context, 'action_get2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vora.ActionGetRequest)
+        self.assertEqual(action_id, request.identity)
 
     def test_action_get_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
@@ -219,7 +222,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/actions/%(action_id)s' % {'action_id': action_id})
 
         error = senlin_exc.ResourceNotFound(type='action', id=action_id)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
