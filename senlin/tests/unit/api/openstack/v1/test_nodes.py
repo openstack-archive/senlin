@@ -237,6 +237,38 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, body=body)
         self.assertEqual("Request body missing 'node' key.", six.text_type(ex))
 
+    def test_node_create_with_missing_profile_id(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        body = {
+            'node': {
+                'name': 'test_node'
+            }
+        }
+
+        req = self._post('/nodes', jsonutils.dumps(body))
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.create,
+                               req, body=body)
+        self.assertEqual("'profile_id' is a required property",
+                         six.text_type(ex))
+
+    def test_node_create_with_missing_name(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        body = {
+            'node': {
+                'profile_id': 'xxxx-yyyy'
+            }
+        }
+
+        req = self._post('/nodes', jsonutils.dumps(body))
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.create,
+                               req, body=body)
+        self.assertEqual("'name' is a required property",
+                         six.text_type(ex))
+
     def test_node_create_with_bad_profile(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {
