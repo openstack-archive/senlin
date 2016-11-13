@@ -402,11 +402,14 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                          "request body.", six.text_type(ex))
         self.assertFalse(mock_call.called)
 
-    def test_policy_update_with_spec(self, mock_enforce):
+    def test_policy_update_with_unsupported_field(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'aaaa-bbbb-cccc'
         body = {
-            'policy': {'spec': {'param_2': 'value3'}}
+            'policy': {
+                'name': 'new_name_policy',
+                'bogus': 'foo'
+            }
         }
 
         req = self._patch('/policies/%(policy_id)s' % {'policy_id': pid},
@@ -418,7 +421,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, policy_id=pid, body=body)
 
         msg = _("Additional properties are not allowed"
-                " ('spec' was unexpected)")
+                " ('bogus' was unexpected)")
 
         self.assertEqual(msg, six.text_type(ex))
         self.assertFalse(mock_call.called)
