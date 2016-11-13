@@ -2169,19 +2169,6 @@ class EngineService(service.Service):
                  {'name': name, 'id': action_id})
         return {'action': action_id}
 
-    @request_context
-    def action_get(self, context, identity):
-        """Get the details about specified action.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of an action.
-        :return: A dictionary containing the details about an action, or an
-                 exception `ResourceNotFound` if no matching action is found.
-        """
-        db_action = self.action_find(context, identity)
-        action = action_mod.Action.load(context, db_action=db_action)
-        return action.to_dict()
-
     @request_context2
     def action_get2(self, ctx, req):
         """Retrieve the action specified.
