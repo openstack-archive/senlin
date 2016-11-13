@@ -2071,36 +2071,6 @@ class EngineService(service.Service):
 
         return action
 
-    @request_context
-    def action_list(self, context, filters=None, limit=None, marker=None,
-                    sort=None, project_safe=True):
-        """List action records matching the specified criteria.
-
-        :param context: An instance of the request context.
-        :param filters: A dictionary of key-value pairs for filtering out the
-                        result list.
-        :param limit: An integer specifying the maximum number of objects to
-                      return in a response.
-        :param marker: An UUID specifying the action after which the result
-                       list starts.
-        :param sort: A list of sorting keys (each optionally attached with a
-                     sorting direction) separated by commas.
-        :param project_safe: A boolean indicating whether actions from all
-                             projects will be returned.
-        :return: A list of `Action` object representations.
-        """
-        limit = utils.parse_int_param('limit', limit)
-        utils.validate_sort_param(sort, consts.ACTION_SORT_KEYS)
-        project_safe = utils.parse_bool_param('project_safe', project_safe)
-        if not project_safe and not context.is_admin:
-            raise exception.Forbidden()
-        results = action_mod.Action.load_all(context, filters=filters,
-                                             limit=limit, marker=marker,
-                                             sort=sort,
-                                             project_safe=project_safe)
-
-        return [a.to_dict() for a in results]
-
     @request_context2
     def action_list2(self, ctx, req):
         """List action records matching the specified criteria.
