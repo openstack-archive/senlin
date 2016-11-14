@@ -52,3 +52,11 @@ class ReceiverListRequest(base.SenlinObject):
             valid_keys=list(consts.RECEIVER_SORT_KEYS), nullable=True),
         'project_safe': fields.FlexibleBooleanField(default=True)
     }
+
+
+@base.SenlinObjectRegistry.register
+class ReceiverGetRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField()
+    }
