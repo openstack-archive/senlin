@@ -175,6 +175,52 @@ class TestObject(TestField):
             self.field.get_schema())
 
 
+class TestDummyObject(testtools.TestCase):
+
+    def setUp(self):
+        super(TestDummyObject, self).setUp()
+
+        @base.base.VersionedObjectRegistry.register
+        class TestableObject(base.base.VersionedObject):
+            fields = {}
+
+        self.field = fields.Field(senlin_fields.Object('TestableObject'))
+
+    def test_get_schema(self):
+        self.assertEqual(
+            {
+                'properties': {
+                    'versioned_object.changes': {
+                        'items': {'type': 'string'}, 'type': 'array'
+                    },
+                    'versioned_object.data': {
+                        'additionalProperties': False,
+                        'description': 'fields of TestableObject',
+                        'properties': {},
+                        'type': 'object',
+                    },
+                    'versioned_object.name': {
+                        'type': 'string',
+                    },
+                    'versioned_object.namespace': {
+                        'type': 'string',
+                    },
+                    'versioned_object.version': {
+                        'type': 'string',
+                    },
+                },
+                'readonly': False,
+                'required': [
+                    'versioned_object.namespace',
+                    'versioned_object.name',
+                    'versioned_object.version',
+                    'versioned_object.data',
+                ],
+                'type': 'object',
+            },
+            self.field.get_schema())
+
+
 class TestJson(TestField):
     def setUp(self):
         super(TestJson, self).setUp()
