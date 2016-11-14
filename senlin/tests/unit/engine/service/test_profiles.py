@@ -120,6 +120,42 @@ class ProfileTest(base.SenlinTestCase):
                                               project_safe=True)
 
     @mock.patch.object(pb.Profile, 'load_all')
+    def test_profile_list2(self, mock_load):
+        x_obj_1 = mock.Mock()
+        x_obj_1.to_dict.return_value = {'k': 'v1'}
+        x_obj_2 = mock.Mock()
+        x_obj_2.to_dict.return_value = {'k': 'v2'}
+        mock_load.return_value = [x_obj_1, x_obj_2]
+        req = vorp.ProfileListRequest(project_safe=True)
+
+        result = self.eng.profile_list2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
+        mock_load.assert_called_once_with(self.ctx, project_safe=True)
+
+    @mock.patch.object(pb.Profile, 'load_all')
+    def test_profile_list2_with_params(self, mock_load):
+        mock_load.return_value = []
+        params = {
+            'limit': 10,
+            'marker': 'KEY',
+            'name': ['foo'],
+            'type': ['os.nova.server'],
+            'sort': 'name:asc',
+            'project_safe': True
+        }
+        req = vorp.ProfileListRequest(**params)
+
+        result = self.eng.profile_list2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual([], result)
+        mock_load.assert_called_once_with(self.ctx, limit=10, marker='KEY',
+                                          filters={'name': ['foo'],
+                                                   'type': ['os.nova.server']},
+                                          sort='name:asc',
+                                          project_safe=True)
+
+    @mock.patch.object(pb.Profile, 'load_all')
     def test_profile_list(self, mock_load):
         x_obj_1 = mock.Mock()
         x_obj_1.to_dict.return_value = {'k': 'v1'}

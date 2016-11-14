@@ -338,6 +338,36 @@ class EngineService(service.Service):
 
         return profile
 
+    @request_context2
+    def profile_list2(self, ctx, req):
+        """List profiles matching the specified criteria.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ProfileListRequest object.
+        :return: A list of `Profile` object representations.
+        """
+        req.obj_set_defaults()
+        if not req.project_safe and not ctx.is_admin:
+            raise exception.Forbidden()
+
+        query = {'project_safe': req.project_safe}
+        if req.obj_attr_is_set('limit'):
+            query['limit'] = req.limit
+        if req.obj_attr_is_set('marker'):
+            query['marker'] = req.marker
+        if req.obj_attr_is_set('sort') and req.sort is not None:
+            query['sort'] = req.sort
+        filters = {}
+        if req.obj_attr_is_set('name'):
+            filters['name'] = req.name
+        if req.obj_attr_is_set('type'):
+            filters['type'] = req.type
+        if filters:
+            query['filters'] = filters
+
+        profiles = profile_base.Profile.load_all(ctx, **query)
+        return [p.to_dict() for p in profiles]
+
     @request_context
     def profile_list(self, context, limit=None, marker=None, sort=None,
                      filters=None, project_safe=True):
