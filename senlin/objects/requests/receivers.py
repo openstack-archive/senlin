@@ -41,12 +41,14 @@ class ReceiverListRequest(base.SenlinObject):
 
     fields = {
         'name': fields.ListOfStringsField(nullable=True),
-        'type': fields.ReceiverTypeField(nullable=True),
-        'action': fields.ClusterActionNameField(nullable=True),
-        'cluster_id': fields.StringField(nullable=True),
+        'type': fields.ListOfEnumField(
+            valid_values=list(consts.RECEIVER_TYPES), nullable=True),
+        'action': fields.ListOfEnumField(
+            valid_values=list(consts.CLUSTER_ACTION_NAMES), nullable=True),
+        'cluster_id': fields.ListOfStringsField(nullable=True),
         'limit': fields.NonNegativeIntegerField(nullable=True),
         'marker': fields.UUIDField(nullable=True),
         'sort': fields.SortField(
-            valid_keys=list(consts.NODE_SORT_KEYS), nullable=True),
+            valid_keys=list(consts.RECEIVER_SORT_KEYS), nullable=True),
         'project_safe': fields.FlexibleBooleanField(default=True)
     }
