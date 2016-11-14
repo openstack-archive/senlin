@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
 import mock
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
@@ -152,6 +153,89 @@ class PolicyTest(base.SenlinTestCase):
             filters={'name': ['test-policy'],
                      'type': ['senlin.policy.scaling-1.0']},
             project_safe=True)
+
+    def test_policy_create2_default(self):
+        self._setup_fakes()
+        req = orpo.PolicyCreateRequestBody(name='Fake', spec=self.spec)
+
+        result = self.eng.policy_create2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual('Fake', result['name'])
+        self.assertEqual('TestPolicy-1.0', result['type'])
+        self.assertIsNone(result['updated_at'])
+        self.assertIsNotNone(result['created_at'])
+        self.assertIsNotNone(result['id'])
+
+    @mock.patch.object(po.Policy, 'get_by_name')
+    def test_policy_create2_name_conflict(self, mock_get):
+        cfg.CONF.set_override('name_unique', True, enforce_type=True)
+        mock_get.return_value = mock.Mock()
+
+        spec = {
+            'type': 'FakePolicy',
+            'version': '1.0',
+            'properties': {
+                'KEY2': 6
+            }
+        }
+
+        req = orpo.PolicyCreateRequestBody(name='FAKE_NAME', spec=spec)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_create2,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: A policy named "
+                         "'FAKE_NAME' already exists.",
+                         six.text_type(ex.exc_info[1]))
+        mock_get.assert_called_once_with(self.ctx, 'FAKE_NAME')
+
+    def test_policy_create2_type_not_found(self):
+        # We skip the fakes setup, so we won't get the proper policy type
+        spec = {
+            'type': 'FakePolicy',
+            'version': '1.0',
+            'properties': {
+                'KEY2': 6
+            }
+        }
+
+        req = orpo.PolicyCreateRequestBody(name='Fake', spec=spec)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_create2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
+        self.assertEqual("The specified policy_type "
+                         "(FakePolicy-1.0) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+
+    def test_policy_create2_invalid_spec(self):
+        # This test is for the policy object constructor which may throw
+        # exceptions if the spec is invalid
+        self._setup_fakes()
+        spec = copy.deepcopy(self.spec)
+        spec['properties'] = {'KEY3': 'value3'}
+
+        req = orpo.PolicyCreateRequestBody(name='Fake', spec=spec)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_create2,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
+        self.assertEqual("Required spec item 'KEY2' not provided",
+                         six.text_type(ex.exc_info[1]))
+
+    def test_policy_create2_failed_validation(self):
+        self._setup_fakes()
+
+        mock_validate = self.patchobject(fakes.TestPolicy, 'validate')
+        mock_validate.side_effect = exc.InvalidSpec(message='BOOM')
+
+        req = orpo.PolicyCreateRequestBody(name='Fake', spec=self.spec)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_create2,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
+        self.assertEqual('BOOM', six.text_type(ex.exc_info[1]))
 
     def test_policy_create_default(self):
         self._setup_fakes()
