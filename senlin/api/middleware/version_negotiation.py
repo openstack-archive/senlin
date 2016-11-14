@@ -57,7 +57,7 @@ class VersionNegotiationFilter(wsgi.Middleware):
         accept = str(req.accept)
 
         # Check if there is a requested (micro-)version for API
-        controller = self._get_controller(req.path_info_peek(), req)
+        controller = self._get_controller(req.path_info_peek() or '', req)
         if controller:
             self._check_version_request(req, controller)
             major = req.environ['api.major']
@@ -66,6 +66,9 @@ class VersionNegotiationFilter(wsgi.Middleware):
                       % {'major': major, 'minor': minor})
             # Strip the version from the path
             req.path_info_pop()
+            path = req.path_info_peek()
+            if path is None or path == '/':
+                return controller(self.conf)
             return None
         else:
             LOG.debug("Unknown version in URI")
@@ -82,6 +85,9 @@ class VersionNegotiationFilter(wsgi.Middleware):
                 LOG.debug("Matched versioned media type. Version: "
                           "%(major)d.%(minor)d",
                           {'major': major, 'minor': minor})
+                path = req.path_info_peek()
+                if path is None or path == '/':
+                    return controller(self.conf)
                 return None
             else:
                 LOG.debug("Unknown version in request header")
