@@ -34,3 +34,11 @@ class ActionListRequest(base.SenlinObject):
             valid_keys=list(consts.ACTION_SORT_KEYS), nullable=True),
         'project_safe': fields.FlexibleBooleanField(default=True)
     }
+
+
+@base.SenlinObjectRegistry.register
+class ActionGetRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+    }
