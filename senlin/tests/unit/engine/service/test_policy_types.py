@@ -17,6 +17,7 @@ import six
 from senlin.common import exception as exc
 from senlin.engine import environment
 from senlin.engine import service
+from senlin.objects.requests import policy_type as orpt
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -69,6 +70,45 @@ class PolicyTypeTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.policy_type_get,
                                self.ctx, 'FAKE_TYPE')
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual('The policy_type (FAKE_TYPE) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+        mock_env.assert_called_once_with()
+        x_env.get_policy.assert_called_once_with('FAKE_TYPE')
+
+    @mock.patch.object(environment, 'global_env')
+    def test_policy_type_get2(self, mock_env):
+        x_env = mock.Mock()
+        x_policy_type = mock.Mock()
+        x_policy_type.get_schema.return_value = {'foo': 'bar'}
+        x_env.get_policy.return_value = x_policy_type
+        mock_env.return_value = x_env
+
+        req = orpt.PolicyTypeGetRequest(type_name='FAKE_TYPE')
+        result = self.eng.policy_type_get2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(
+            {
+                'name': 'FAKE_TYPE',
+                'schema': {'foo': 'bar'},
+            },
+            result)
+        mock_env.assert_called_once_with()
+        x_env.get_policy.assert_called_once_with('FAKE_TYPE')
+        x_policy_type.get_schema.assert_called_once_with()
+
+    @mock.patch.object(environment, 'global_env')
+    def test_policy_type_get2_nonexist(self, mock_env):
+        x_env = mock.Mock()
+        err = exc.ResourceNotFound(type='policy_type', id='FAKE_TYPE')
+        x_env.get_policy.side_effect = err
+        mock_env.return_value = x_env
+
+        req = orpt.PolicyTypeGetRequest(type_name='FAKE_TYPE')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_type_get,
+                               self.ctx, req.type_name)
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual('The policy_type (FAKE_TYPE) could not be found.',
