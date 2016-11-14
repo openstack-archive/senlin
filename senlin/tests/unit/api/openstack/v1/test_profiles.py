@@ -350,13 +350,15 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'metadata': {},
         }
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_resp)
 
         result = self.controller.get(req, profile_id=pid)
 
-        mock_call.assert_called_with(req.context,
-                                     ('profile_get', {'identity': pid}))
+        mock_call.assert_called_with(req.context, 'profile_get2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorp.ProfileGetRequest)
+        self.assertEqual(pid, request.identity)
 
         expected = {'profile': engine_resp}
         self.assertEqual(expected, result)
@@ -367,7 +369,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/profiles/%(profile_id)s' % {'profile_id': pid})
 
         error = senlin_exc.ResourceNotFound(type='profile', id=pid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
