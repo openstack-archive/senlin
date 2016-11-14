@@ -2203,35 +2203,6 @@ class EngineService(service.Service):
 
         return receiver
 
-    @request_context
-    def receiver_list(self, context, limit=None, marker=None, sort=None,
-                      filters=None, project_safe=True):
-        """List receivers matching the specified criteria.
-
-        :param context: An instance of the request context.
-        :param limit: An integer specifying the maximum number of objects to
-                      return in a response.
-        :param marker: An UUID specifying the receiver after which the result
-                       list starts.
-        :param sort: A list of sorting keys (each optionally attached with a
-                     sorting direction) separated by commas.
-        :param filters: A dictionary of key-value pairs for filtering out the
-                        result list.
-        :param project_safe: A boolean indicating whether receivers from all
-                             projects will be returned.
-        :return: A list of `Receiver` object representations.
-        """
-        limit = utils.parse_int_param('limit', limit)
-        utils.validate_sort_param(sort, consts.RECEIVER_SORT_KEYS)
-        project_safe = utils.parse_bool_param('project_safe', project_safe)
-        if not project_safe and not context.is_admin:
-            raise exception.Forbidden()
-        receivers = receiver_mod.Receiver.load_all(context, limit=limit,
-                                                   marker=marker,
-                                                   sort=sort, filters=filters,
-                                                   project_safe=project_safe)
-        return [r.to_dict() for r in receivers]
-
     @request_context2
     def receiver_list2(self, ctx, req):
         """List receivers matching the specified criteria.
