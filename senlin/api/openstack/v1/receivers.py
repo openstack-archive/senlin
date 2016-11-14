@@ -100,8 +100,7 @@ class ReceiverController(wsgi.Controller):
         except jsonschema.exceptions.ValidationError as ex:
             raise exc.HTTPBadRequest(six.text_type(ex.message))
 
-        receiver = self.rpc_client.call2(req.context, 'receiver_get2',
-                                         obj)
+        receiver = self.rpc_client.call2(req.context, 'receiver_get2', obj)
         return {'receiver': receiver}
 
     @util.policy_enforce

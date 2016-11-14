@@ -15,8 +15,10 @@ import mock
 from oslo_config import cfg
 
 from senlin.api.middleware import webhook as webhook_middleware
+from senlin.common import context
 from senlin.common import exception
 from senlin.drivers import base as driver_base
+from senlin.objects.requests import receivers as vorr
 from senlin.rpc import client as rpc
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -106,8 +108,9 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         self.assertRaises(exception.Forbidden, self.middleware._get_token,
                           **self.credential)
 
+    @mock.patch.object(context, 'RequestContext')
     @mock.patch.object(rpc, 'EngineClient')
-    def test_process_request(self, mock_client):
+    def test_process_request(self, mock_client, mock_ctx):
         cfg.CONF.set_override('auth_url', 'AUTH_URL', group='authentication',
                               enforce_type=True)
         cfg.CONF.set_override('service_username', 'USERNAME',
@@ -128,8 +131,10 @@ class TestWebhookMiddleware(base.SenlinTestCase):
             'id': 'FAKE_ID',
             'actor': {'foo': 'bar'}
         }
-        rpcc.receiver_get.return_value = fake_receiver
+        rpcc.call2.return_value = fake_receiver
         mock_client.return_value = rpcc
+        dbctx = mock.Mock()
+        mock_ctx.return_value = dbctx
 
         fake_return = ('WEBHOOK', {})
         mock_extract = self.patchobject(self.middleware, '_parse_url',
@@ -144,6 +149,10 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         mock_token.assert_called_once_with(
             auth_url='AUTH_URL', password='PASSWORD', username='USERNAME',
             user_domain_name='DOMAIN', foo='bar')
+        rpcc.call2.assert_called_with(dbctx, 'receiver_get2', mock.ANY)
+        request = rpcc.call2.call_args[0][2]
+        self.assertIsInstance(request, vorr.ReceiverGetRequest)
+        self.assertEqual('WEBHOOK', request.identity)
 
     def test_process_request_method_not_post(self):
         # Request method is not POST

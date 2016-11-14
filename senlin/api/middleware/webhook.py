@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import jsonschema
 from oslo_log import log as logging
 import six
 from six.moves.urllib import parse as urlparse
@@ -19,6 +20,8 @@ from senlin.common import context
 from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.drivers import base as driver_base
+from senlin.objects import base as obj_base
+from senlin.objects.requests import receivers as vorr
 from senlin.rpc import client as rpc
 
 LOG = logging.getLogger(__name__)
@@ -45,7 +48,17 @@ class WebhookMiddleware(wsgi.Middleware):
 
         dbctx = context.RequestContext(is_admin=True)
         rpcc = rpc.EngineClient()
-        receiver = rpcc.receiver_get(dbctx, receiver_id, project_safe=False)
+
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ReceiverGetRequest', {'identity': receiver_id})
+            obj = vorr.ReceiverGetRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except (ValueError) as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+        receiver = rpcc.call2(dbctx, 'receiver_get2', obj)
 
         svc_ctx = context.get_service_context()
         kwargs = {
