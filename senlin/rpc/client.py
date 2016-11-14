@@ -131,36 +131,6 @@ class EngineClient(object):
         return self.call(ctxt, self.make_msg('policy_type_get',
                                              type_name=type_name))
 
-    def policy_list(self, ctxt, limit=None, marker=None, sort=None,
-                    filters=None, project_safe=True):
-        return self.call(ctxt,
-                         self.make_msg('policy_list', filters=filters,
-                                       limit=limit, marker=marker, sort=sort,
-                                       project_safe=project_safe))
-
-    def policy_create(self, ctxt, name, spec):
-        return self.call(ctxt,
-                         self.make_msg('policy_create', name=name, spec=spec))
-
-    def policy_get(self, ctxt, identity):
-        return self.call(ctxt,
-                         self.make_msg('policy_get', identity=identity))
-
-    def policy_update(self, ctxt, identity, name):
-        return self.call(ctxt,
-                         self.make_msg('policy_update', identity=identity,
-                                       name=name))
-
-    def policy_delete(self, ctxt, identity, cast=True):
-        rpc_method = self.cast if cast else self.call
-        return rpc_method(ctxt,
-                          self.make_msg('policy_delete',
-                                        identity=identity))
-
-    def policy_validate(self, ctxt, spec):
-        return self.call(ctxt,
-                         self.make_msg('policy_validate', spec=spec))
-
     def action_list(self, ctxt, filters=None, limit=None, marker=None,
                     sort=None, project_safe=True):
         return self.call(ctxt,
