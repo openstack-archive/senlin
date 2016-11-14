@@ -575,7 +575,24 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_policy_validate_no_spec(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
         body = {
-            'policy': {'foo': 'bar'}
+            'policy': {}
+        }
+        req = self._post('/policies/validate', jsonutils.dumps(body),
+                         version='1.2')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.validate,
+                               req, body=body)
+        self.assertEqual("'spec' is a required property", six.text_type(ex))
+
+    def test_policy_validate_unsupported_field(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'validate', True)
+        body = {
+            'policy': {
+                'spec': {'type': 'senlin.policy.deletion',
+                         'version': '1.0'},
+                'foo': 'bar'
+            }
         }
         req = self._post('/policies/validate', jsonutils.dumps(body),
                          version='1.2')
