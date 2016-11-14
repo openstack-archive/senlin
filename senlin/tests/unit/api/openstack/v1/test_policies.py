@@ -199,38 +199,47 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._post('/policies', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_response)
 
         resp = self.controller.create(req, body=body)
 
-        mock_call.assert_called_with(
-            req.context,
-            ('policy_create', {
-                'name': 'test_policy',
-                'spec': {
-                    'type': 'policy_type',
-                    'version': '1.0',
-                    'properties': {'param_1': 'value1', 'param_2': 2}
-                },
-            })
-        )
-
+        mock_call.assert_called_with(req.context, 'policy_create2',
+                                     mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorp.PolicyCreateRequestBody)
         expected = {'policy': engine_response}
         self.assertEqual(expected, resp)
+        # request = mock_call.call_args[0][2]
+        # self.assertEqual('test_policy', request.name)
 
-    def test_policy_create_with_bad_body(self, mock_enforce):
+    def test_policy_create_no_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
-        body = {'name': 'test_policy'}
+        body = {'not_policy': 'test_policy'}
 
         req = self._post('/policies', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("Malformed request data, missing 'policy' key "
-                         "in request body.", six.text_type(ex))
+        self.assertEqual("Request body missing 'policy' key.",
+                         six.text_type(ex))
+
+        self.assertFalse(mock_call.called)
+
+    def test_policy_create_bad_policy(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        body = {'policy': {'name': 'fake_name'}}
+
+        req = self._post('/policies', jsonutils.dumps(body))
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.create,
+                               req, body=body)
+
+        self.assertEqual("'spec' is a required property",
+                         six.text_type(ex))
 
         self.assertFalse(mock_call.called)
 
@@ -250,16 +259,15 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         msg = 'Spec validation error (param): value'
         error = senlin_exc.SpecValidationFailed(message=msg)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     side_effect=error)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
                                               req, body=body)
 
-        expected_args = body['policy']
-        mock_call.assert_called_once_with(req.context,
-                                          ('policy_create', expected_args))
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorp.PolicyCreateRequestBody)
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('SpecValidationFailed', resp.json['error']['type'])
 

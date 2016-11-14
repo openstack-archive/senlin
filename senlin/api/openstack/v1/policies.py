@@ -69,18 +69,19 @@ class PolicyController(wsgi.Controller):
 
     @util.policy_enforce
     def create(self, req, body):
-        data = body.get('policy', None)
-        if data is None:
-            raise exc.HTTPBadRequest(_("Malformed request data, missing "
-                                       "'policy' key in request body."))
-        name = data.get(consts.POLICY_NAME, None)
-        if not name:
-            raise exc.HTTPBadRequest(_("No policy name specified"))
-        spec = data.get(consts.POLICY_SPEC, None)
-        if not spec:
-            raise exc.HTTPBadRequest(_("No policy spec provided"))
+        try:
+            body_req = obj_base.SenlinObject.normalize_req(
+                'PolicyCreateRequest', body, 'policy')
 
-        result = self.rpc_client.policy_create(req.context, name, spec)
+            obj = vorp.PolicyCreateRequest.obj_from_primitive(body_req)
+            jsonschema.validate(body_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        result = self.rpc_client.call2(req.context, 'policy_create2',
+                                       obj.policy)
 
         return {'policy': result}
 
