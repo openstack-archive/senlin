@@ -105,7 +105,16 @@ class ActionController(wsgi.Controller):
 
     @util.policy_enforce
     def get(self, req, action_id):
-        action = self.rpc_client.action_get(req.context, action_id)
+        params = {'identity': action_id}
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ActionGetRequest', params, None)
+            obj = vora.ActionGetRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except (ValueError) as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+
+        action = self.rpc_client.call2(req.context, 'action_get2', obj)
         if not action:
             raise exc.HTTPNotFound()
 
