@@ -115,12 +115,13 @@ class Object(fields.Object):
                         'type': 'object',
                         'description': 'fields of %s' % self._obj_name,
                         'properties': field_schemas,
-                        'required': required_fields,
                         'additionalProperties': False,
                     },
                 },
                 'required': [namespace_key, name_key, version_key, data_key],
             }
+            if required_fields:
+                schema['properties'][data_key]['required'] = required_fields
 
             return schema
         else:
