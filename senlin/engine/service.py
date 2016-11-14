@@ -2137,6 +2137,22 @@ class EngineService(service.Service):
         action = action_mod.Action.load(context, db_action=db_action)
         return action.to_dict()
 
+    @request_context2
+    def action_get2(self, ctx, req):
+        """Retrieve the action specified.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ActionGetRequest object.
+        :return: A dictionary containing the detailed information about a
+                 action or an exception of `ResourceNotFound` if no matching
+                 action could be found.
+        """
+
+        db_action = self.action_find(ctx, req.identity)
+        action = action_mod.Action.load(ctx, db_action=db_action)
+
+        return action.to_dict()
+
     @request_context
     def action_delete(self, context, identity):
         """Delete the specified action object.
