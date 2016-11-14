@@ -452,6 +452,19 @@ class EngineService(service.Service):
 
         return profile.to_dict()
 
+    @request_context2
+    def profile_get2(self, ctx, req):
+        """Retrieve the details about a profile.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ProfileGetRequest.
+        :return: A dictionary containing the profile details, or an exception
+                 of type `ResourceNotFound` if no matching object is found.
+        """
+        db_profile = self.profile_find(ctx, req.identity)
+        profile = profile_base.Profile.load(ctx, profile=db_profile)
+        return profile.to_dict()
+
     @request_context
     def profile_get(self, context, identity):
         """Retrieve the details about a profile.
