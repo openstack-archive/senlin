@@ -32,7 +32,17 @@ class PolicyTypeController(wsgi.Controller):
 
     @util.policy_enforce
     def index(self, req):
-        types = self.rpc_client.policy_type_list(req.context)
+        """Gets the supported policy types"""
+        norm_req = obj_base.SenlinObject.normalize_req(
+            'PolicyTypeListRequest', {})
+        obj = None
+        try:
+            obj = orpt.PolicyTypeListRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+
+        types = self.rpc_client.call2(req.context, 'policy_type_list2', obj)
         return {'policy_types': types}
 
     @util.policy_enforce
