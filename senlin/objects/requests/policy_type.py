@@ -20,3 +20,9 @@ class PolicyTypeGetRequest(base.SenlinObject):
     fields = {
         'type_name': fields.StringField()
     }
+
+
+@base.SenlinObjectRegistry.register
+class PolicyTypeListRequest(base.SenlinObject):
+
+    fields = {}

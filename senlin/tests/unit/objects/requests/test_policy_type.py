@@ -31,3 +31,15 @@ class TestPolicyTypeGet(test_base.SenlinTestCase):
         self.assertEqual('PolicyTypeGetRequest', res['senlin_object.name'])
         self.assertEqual('senlin', res['senlin_object.namespace'])
         self.assertEqual('1.0', res['senlin_object.version'])
+
+
+class TestPolicyTypeList(test_base.SenlinTestCase):
+
+    def test_policy_type_list_to_primitive(self):
+        sot = policy_type.PolicyTypeListRequest()
+        res = sot.obj_to_primitive()
+
+        self.assertEqual({}, res['senlin_object.data'])
+        self.assertEqual('PolicyTypeListRequest', res['senlin_object.name'])
+        self.assertEqual('senlin', res['senlin_object.namespace'])
+        self.assertEqual('1.0', res['senlin_object.version'])
