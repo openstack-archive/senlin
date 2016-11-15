@@ -368,37 +368,6 @@ class EngineService(service.Service):
         profiles = profile_base.Profile.load_all(ctx, **query)
         return [p.to_dict() for p in profiles]
 
-    @request_context
-    def profile_list(self, context, limit=None, marker=None, sort=None,
-                     filters=None, project_safe=True):
-        """List profiles matching the specified criteria.
-
-        :param context: An instance of request context.
-        :param limit: An integer specifying the maximum number of profiles to
-                      return in a response.
-        :param marker: An UUID specifying the profile after which the result
-                       list starts.
-        :param sort: A list of sorting keys (each optionally attached with a
-                     sorting direction) separated by commas.
-        :param filters: A dictionary of key-value pairs for filtering out the
-                        result list.
-        :param project_safe: A boolean indicating whether profiles from all
-                             projects will be returned.
-        :return: A list of `Profile` object representations.
-        """
-        limit = utils.parse_int_param(consts.PARAM_LIMIT, limit)
-        utils.validate_sort_param(sort, consts.PROFILE_SORT_KEYS)
-        project_safe = utils.parse_bool_param('project_safe', project_safe)
-        if not project_safe and not context.is_admin:
-            raise exception.Forbidden()
-
-        profiles = profile_base.Profile.load_all(context,
-                                                 limit=limit, marker=marker,
-                                                 sort=sort, filters=filters,
-                                                 project_safe=project_safe)
-
-        return [p.to_dict() for p in profiles]
-
     def _validate_profile(self, context, spec, name=None,
                           metadata=None, validate_props=False):
         """Validate a profile.
