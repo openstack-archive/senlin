@@ -124,13 +124,6 @@ class EngineClient(object):
         return self.call(ctxt,
                          self.make_msg('profile_validate', spec=spec))
 
-    def policy_type_list(self, ctxt):
-        return self.call(ctxt, self.make_msg('policy_type_list'))
-
-    def policy_type_get(self, ctxt, type_name):
-        return self.call(ctxt, self.make_msg('policy_type_get',
-                                             type_name=type_name))
-
     def action_list(self, ctxt, filters=None, limit=None, marker=None,
                     sort=None, project_safe=True):
         return self.call(ctxt,
