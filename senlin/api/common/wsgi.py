@@ -673,7 +673,13 @@ class Resource(object):
             # Attach openstack-api-version header
             if hasattr(response, 'headers'):
                 for hdr, val in response.headers.items():
-                    response.headers[hdr] = six.text_type(val)
+                    # Note(lvdongbing): Ensure header is a python 2 or 3
+                    # native string (thus not unicode in python 2 but stay
+                    # a string in python 3). Because mod-wsgi checks that
+                    # response header values are what's described as
+                    # "native strings". This means whatever `str` is in
+                    # either python 2 or 3, but never `unicode`.
+                    response.headers[hdr] = str(val)
                 ver = request.version_request
                 if not ver.is_null():
                     ver_res = ' '.join(['clustering', str(ver)])
