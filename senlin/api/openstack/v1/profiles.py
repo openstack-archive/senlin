@@ -14,6 +14,8 @@
 Profile endpoint for Senlin v1 ReST API.
 """
 
+import jsonschema
+import six
 from webob import exc
 
 from senlin.api.common import util
@@ -21,6 +23,8 @@ from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import utils
+from senlin.objects import base as obj_base
+from senlin.objects.requests import profiles as vorp
 
 
 class ProfileData(object):
@@ -126,26 +130,25 @@ class ProfileController(wsgi.Controller):
 
     @util.policy_enforce
     def update(self, req, profile_id, body):
-
         profile_data = body.get('profile', None)
         if profile_data is None:
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'profile' key in request body."))
 
-        # Spec is not allowed to be updated
-        spec = profile_data.get(consts.PROFILE_SPEC)
-        if spec is not None:
-            msg = _("Updating the spec of a profile is not supported because "
-                    "it may cause state conflicts in engine.")
-            raise exc.HTTPBadRequest(msg)
+        try:
+            body_req = obj_base.SenlinObject.normalize_req(
+                'ProfileUpdateRequestBody', profile_data)
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ProfileUpdateRequest', {'identity': profile_id,
+                                         'profile': body_req})
+            obj = vorp.ProfileUpdateRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
-        # Handle updatable properties including name and metadata
-        name = profile_data.get(consts.PROFILE_NAME, None)
-        metadata = profile_data.get(consts.PROFILE_METADATA, None)
-        # We don't check if type is specified or not
-        profile = self.rpc_client.profile_update(req.context, profile_id,
-                                                 name, metadata)
-
+        profile = self.rpc_client.call2(req.context, 'profile_update2', obj)
         return {'profile': profile}
 
     @util.policy_enforce
