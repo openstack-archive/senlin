@@ -86,7 +86,18 @@ class ReceiverController(wsgi.Controller):
 
     @util.policy_enforce
     def get(self, req, receiver_id):
-        receiver = self.rpc_client.receiver_get(req.context, receiver_id)
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ReceiverGetRequest', {'identity': receiver_id})
+            obj = vorr.ReceiverGetRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except (ValueError) as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        receiver = self.rpc_client.call2(req.context, 'receiver_get2',
+                                         obj)
         return {'receiver': receiver}
 
     @util.policy_enforce

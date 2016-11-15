@@ -347,14 +347,14 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_resp)
 
         result = self.controller.get(req, receiver_id=wid)
-
-        mock_call.assert_called_once_with(
-            req.context, ('receiver_get', {'identity': wid,
-                                           'project_safe': True}))
+        mock_call.assert_called_with(req.context, 'receiver_get2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorr.ReceiverGetRequest)
+        self.assertEqual(wid, request.identity)
 
         expected = {'receiver': engine_resp}
         self.assertEqual(expected, result)
@@ -365,7 +365,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/receivers/%(receiver_id)s' % {'receiver_id': wid})
 
         error = senlin_exc.ResourceNotFound(type='receiver', id=wid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
