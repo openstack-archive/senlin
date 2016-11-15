@@ -312,33 +312,6 @@ class ReceiverTest(base.SenlinTestCase):
             project=self.ctx.project, domain=self.ctx.domain, params={})
 
     @mock.patch.object(rb.Receiver, 'load')
-    def test_receiver_get(self, mock_load):
-        fake_obj = mock.Mock()
-        mock_find = self.patchobject(self.eng, 'receiver_find',
-                                     return_value=fake_obj)
-        fake_receiver = mock.Mock()
-        fake_receiver.to_dict.return_value = {'FOO': 'BAR'}
-        mock_load.return_value = fake_receiver
-
-        res = self.eng.receiver_get(self.ctx, 'FAKE_ID')
-
-        self.assertEqual({'FOO': 'BAR'}, res)
-        mock_find.assert_called_once_with(self.ctx, 'FAKE_ID',
-                                          project_safe=True)
-        mock_load.assert_called_once_with(self.ctx,
-                                          receiver_obj=fake_obj,
-                                          project_safe=True)
-
-    @mock.patch.object(service.EngineService, 'receiver_find')
-    def test_receiver_get_not_found(self, mock_find):
-
-        mock_find.side_effect = exc.ResourceNotFound(type='receiver', id='RR')
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_get, self.ctx, 'Bogus')
-        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-
-    @mock.patch.object(rb.Receiver, 'load')
     def test_receiver_get2(self, mock_load):
         fake_obj = mock.Mock()
         mock_find = self.patchobject(self.eng, 'receiver_find',

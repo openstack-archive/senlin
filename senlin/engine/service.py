@@ -2310,24 +2310,6 @@ class EngineService(service.Service):
 
         return receiver.to_dict()
 
-    @request_context
-    def receiver_get(self, context, identity, project_safe=True):
-        """Get the details about a receiver.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a receiver.
-        :param project_safe: Whether matching object from other projects can
-                             be returned.
-        :return: A dictionary containing the details about a receiver or
-                 an exception `ResourceNotFound` if no matching object found.
-        """
-        db_receiver = self.receiver_find(context, identity,
-                                         project_safe=project_safe)
-        receiver = receiver_mod.Receiver.load(context,
-                                              receiver_obj=db_receiver,
-                                              project_safe=project_safe)
-        return receiver.to_dict()
-
     @request_context2
     def receiver_get2(self, ctx, req):
         """Get the details about a receiver.
