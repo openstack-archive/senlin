@@ -476,6 +476,55 @@ class ProfileTest(base.SenlinTestCase):
 
     @mock.patch.object(pb.Profile, 'delete')
     @mock.patch.object(service.EngineService, 'profile_find')
+    def test_profile_delete2(self, mock_find, mock_delete):
+        x_obj = mock.Mock(id='PROFILE_ID')
+        mock_find.return_value = x_obj
+        mock_delete.return_value = None
+
+        req = vorp.ProfileDeleteRequest(identity='PROFILE_ID')
+        result = self.eng.profile_delete2(self.ctx, req.obj_to_primitive())
+
+        self.assertIsNone(result)
+        mock_find.assert_called_once_with(self.ctx, 'PROFILE_ID')
+        mock_delete.assert_called_once_with(self.ctx, 'PROFILE_ID')
+
+    @mock.patch.object(service.EngineService, 'profile_find')
+    def test_profile_delete2_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='profile',
+                                                     id='Bogus')
+
+        req = vorp.ProfileDeleteRequest(identity='Bogus')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.profile_delete2, self.ctx,
+                               req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual('The profile (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(pb.Profile, 'delete')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    def test_profile_delete2_profile_in_use(self, mock_find, mock_delete):
+        x_obj = mock.Mock(id='PROFILE_ID')
+        mock_find.return_value = x_obj
+        err = exc.EResourceBusy(type='profile', id='PROFILE_ID')
+        mock_delete.side_effect = err
+
+        req = vorp.ProfileDeleteRequest(identity='PROFILE_ID')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.profile_delete2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
+        self.assertEqual("The profile PROFILE_ID cannot be deleted: still "
+                         "referenced by some clusters and/or nodes.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'PROFILE_ID')
+        mock_delete.assert_called_once_with(self.ctx, 'PROFILE_ID')
+
+    @mock.patch.object(pb.Profile, 'delete')
+    @mock.patch.object(service.EngineService, 'profile_find')
     def test_profile_delete(self, mock_find, mock_delete):
         x_obj = mock.Mock(id='PROFILE_ID')
         mock_find.return_value = x_obj
