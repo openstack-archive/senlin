@@ -517,14 +517,15 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         pid = 'aaaa-bbbb-cccc'
         req = self._delete('/profiles/%(profile_id)s' % {'profile_id': pid})
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=None)
 
         self.assertRaises(exc.HTTPNoContent,
                           self.controller.delete, req, profile_id=pid)
 
-        mock_call.assert_called_with(
-            req.context, ('profile_delete', {'identity': pid}))
+        mock_call.assert_called_with(req.context, 'profile_delete2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertEqual(pid, request.identity)
 
     def test_profile_delete_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
@@ -532,7 +533,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._delete('/profiles/%(profile_id)s' % {'profile_id': pid})
 
         error = senlin_exc.ResourceNotFound(type='profile', id=pid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
@@ -549,7 +550,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         error = senlin_exc.ResourceInUse(type='profile', id=pid,
                                          reason='still in use')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
