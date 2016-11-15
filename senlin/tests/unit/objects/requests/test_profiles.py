@@ -275,42 +275,38 @@ class TestProfileValidate(test_base.SenlinTestCase):
 
     def test_validate_request_body(self):
         spec = copy.deepcopy(self.spec)
-        sot = profiles.ProfileSpec(**spec)
+        body = profiles.ProfileValidateRequestBody(spec=spec)
 
-        self.assertEqual('os.nova.server', sot.type)
-        self.assertEqual('1.0', sot.version)
+        self.assertEqual('os.nova.server', body.spec['type'])
+        self.assertEqual('1.0', body.spec['version'])
 
     def test_validate_request(self):
         spec = copy.deepcopy(self.spec)
-        profile = profiles.ProfileSpec(**spec)
+        body = profiles.ProfileValidateRequestBody(spec=spec)
 
-        request = {'profile': profile}
-        sot = profiles.ProfileValidateRequest(**request)
-        self.assertIsInstance(sot.profile, profiles.ProfileSpec)
+        sot = profiles.ProfileValidateRequest(profile=body)
+        self.assertIsInstance(sot.profile, profiles.ProfileValidateRequestBody)
 
     def test_request_body_to_primitive(self):
         spec = copy.deepcopy(self.spec)
-        sot = profiles.ProfileSpec(**spec)
-        res = sot.obj_to_primitive()
+        body = profiles.ProfileValidateRequestBody(spec=spec)
+        res = body.obj_to_primitive()
 
-        changes = res['senlin_object.changes']
-        self.assertIn('version', changes)
-        self.assertIn('type', changes)
-        self.assertIn('properties', changes)
-        self.assertEqual('ProfileSpec', res['senlin_object.name'])
+        self.assertIn('spec', res['senlin_object.changes'])
+        self.assertEqual(
+            'ProfileValidateRequestBody', res['senlin_object.name'])
         self.assertEqual('senlin', res['senlin_object.namespace'])
         self.assertEqual('1.0', res['senlin_object.version'])
 
-        data = res['senlin_object.data']
+        data = jsonutils.loads(res['senlin_object.data']['spec'])
         self.assertEqual(u'os.nova.server', data['type'])
         self.assertEqual(u'1.0', data['version'])
 
     def test_request_to_primitive(self):
         spec = copy.deepcopy(self.spec)
-        profile = profiles.ProfileSpec(**spec)
+        body = profiles.ProfileValidateRequestBody(spec=spec)
 
-        request = {'profile': profile}
-        sot = profiles.ProfileValidateRequest(**request)
+        sot = profiles.ProfileValidateRequest(profile=body)
         res = sot.obj_to_primitive()
 
         self.assertIn('profile', res['senlin_object.changes'])
@@ -318,19 +314,17 @@ class TestProfileValidate(test_base.SenlinTestCase):
         self.assertEqual('senlin', res['senlin_object.namespace'])
         self.assertEqual('1.0', res['senlin_object.version'])
 
-        pd = res['senlin_object.data']['profile']
-        pd_change = pd['senlin_object.changes']
-        self.assertIn('version', pd_change)
-        self.assertIn('type', pd_change)
-        self.assertIn('properties', pd_change)
+        profile_body = res['senlin_object.data']['profile']
+        self.assertIn('spec', profile_body['senlin_object.changes'])
 
-        self.assertEqual('ProfileSpec', pd['senlin_object.name'])
-        self.assertEqual('senlin', pd['senlin_object.namespace'])
-        self.assertEqual('1.0', pd['senlin_object.version'])
+        self.assertEqual(
+            'ProfileValidateRequestBody', profile_body['senlin_object.name'])
+        self.assertEqual('senlin', profile_body['senlin_object.namespace'])
+        self.assertEqual('1.0', profile_body['senlin_object.version'])
 
-        pd_data = pd['senlin_object.data']
-        self.assertEqual(u'os.nova.server', pd_data['type'])
-        self.assertEqual(u'1.0', pd_data['version'])
+        data = jsonutils.loads(profile_body['senlin_object.data']['spec'])
+        self.assertEqual(u'os.nova.server', data['type'])
+        self.assertEqual(u'1.0', data['version'])
 
 
 class TestProfileDelete(test_base.SenlinTestCase):

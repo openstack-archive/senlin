@@ -91,8 +91,16 @@ class ProfileDeleteRequest(base.SenlinObject):
 
 
 @base.SenlinObjectRegistry.register
+class ProfileValidateRequestBody(base.SenlinObject):
+
+    fields = {
+        'spec': fields.JsonField()
+    }
+
+
+@base.SenlinObjectRegistry.register
 class ProfileValidateRequest(base.SenlinObject):
 
     fields = {
-        'profile': fields.ObjectField('ProfileSpec')
+        'profile': fields.ObjectField('ProfileValidateRequestBody')
     }
