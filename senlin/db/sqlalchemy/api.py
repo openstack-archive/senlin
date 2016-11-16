@@ -666,6 +666,54 @@ def cluster_policy_update(context, cluster_id, policy_id, values):
         return binding
 
 
+def cluster_add_dependents(context, cluster_id, profile_id):
+    '''Add profile ID of container node to host cluster's 'dependents' property
+
+    :param cluster_id: ID of the cluster to be updated.
+    :param profile_id: Profile ID of the container node.
+    :raises ResourceNotFound: The specified cluster does not exist in database.
+    '''
+
+    with session_for_write() as session:
+        cluster = session.query(models.Cluster).get(cluster_id)
+        if cluster is None:
+            raise exception.ResourceNotFound(type='cluster', id=cluster_id)
+
+        dependents = cluster.dependents
+        profile = dependents.get('profile')
+        if not profile:
+            profile_deps = {'profile': [profile_id]}
+        elif profile_id not in profile:
+            profile.append(profile_id)
+            profile_deps = {'profile': profile}
+        cluster.dependents.update(profile_deps)
+        cluster.save(session)
+
+
+def cluster_remove_dependents(context, cluster_id, profile_id):
+    '''Remove profile ID from host cluster's 'dependents' property
+
+    :param cluster_id: ID of the cluster to be updated.
+    :param profile_id: Profile ID of the container node.
+    :raises ResourceNotFound: The specified cluster does not exist in database.
+    '''
+
+    with session_for_write() as session:
+        cluster = session.query(models.Cluster).get(cluster_id)
+        if cluster is None:
+            raise exception.ResourceNotFound(type='cluster', id=cluster_id)
+
+        profile = cluster.dependents.get('profile')
+        if profile is not None and profile_id in profile:
+            profile.remove(profile_id)
+            if len(profile) == 0:
+                cluster.dependents.pop('profile')
+            else:
+                profile_deps = {'profile': profile}
+                cluster.dependents.update(profile_deps)
+        cluster.save(session)
+
+
 # Profiles
 def profile_create(context, values):
     with session_for_write() as session:

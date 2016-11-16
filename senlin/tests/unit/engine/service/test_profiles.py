@@ -17,6 +17,7 @@ from oslo_utils import uuidutils
 import six
 
 from senlin.common import exception as exc
+from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import environment
 from senlin.engine import service
 from senlin.objects import profile as po
@@ -248,7 +249,8 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
         self.assertEqual('BOOM', six.text_type(ex.exc_info[1]))
 
-    def test_profile_create_default(self):
+    @mock.patch.object(pb.Profile, 'add_dependents')
+    def test_profile_create_default(self, mock_add):
         self._setup_fakes()
 
         result = self.eng.profile_create(self.ctx, 'p-1', self.spec)
@@ -259,6 +261,7 @@ class ProfileTest(base.SenlinTestCase):
         self.assertIsNone(result['updated_at'])
         self.assertIsNotNone(result['created_at'])
         self.assertIsNotNone(result['id'])
+        mock_add.assert_called_once_with(self.ctx, result['id'])
 
     @mock.patch.object(po.Profile, 'get_by_name')
     def test_profile_create_name_conflict(self, mock_get):
@@ -514,10 +517,16 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(0, x_profile.store.call_count)
         self.assertEqual('OLD_NAME', x_profile.name)
 
+    @mock.patch.object(db_api, 'cluster_remove_dependents')
     @mock.patch.object(pb.Profile, 'delete')
     @mock.patch.object(service.EngineService, 'profile_find')
-    def test_profile_delete2(self, mock_find, mock_delete):
+    def test_profile_delete2(self, mock_find, mock_delete, mock_remove):
+        self._setup_fakes()
+        spec = self.spec
+        spec['type'] = 'container.dockerinc.docker'
+        spec['properties']['host_cluster'] = 'FAKE_CLUSTER'
         x_obj = mock.Mock(id='PROFILE_ID')
+        x_obj.spec = spec
         mock_find.return_value = x_obj
         mock_delete.return_value = None
 
@@ -527,6 +536,8 @@ class ProfileTest(base.SenlinTestCase):
         self.assertIsNone(result)
         mock_find.assert_called_once_with(self.ctx, 'PROFILE_ID')
         mock_delete.assert_called_once_with(self.ctx, 'PROFILE_ID')
+        mock_remove.assert_called_once_with(self.ctx, 'FAKE_CLUSTER',
+                                            'PROFILE_ID')
 
     @mock.patch.object(service.EngineService, 'profile_find')
     def test_profile_delete2_not_found(self, mock_find):

@@ -30,6 +30,7 @@ from senlin.common import messaging as rpc_messaging
 from senlin.common import scaleutils as su
 from senlin.common import schema
 from senlin.common import utils
+from senlin.db.sqlalchemy import api as db_api
 from senlin.engine.actions import base as action_mod
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import cluster_policy as cpm
@@ -479,6 +480,7 @@ class EngineService(service.Service):
                  {'type': profile.type, 'name': profile.name})
 
         profile.store(context)
+        profile.add_dependents(context, profile.id)
 
         LOG.info(_LI("Profile %(name)s is created: %(id)s."),
                  {'name': name, 'id': profile.id})
@@ -573,6 +575,11 @@ class EngineService(service.Service):
             reason = _("still referenced by some clusters and/or nodes.")
             raise exception.ResourceInUse(type='profile', id=db_profile.id,
                                           reason=reason)
+        spec = db_profile.spec
+        if spec['type'] == 'container.dockerinc.docker':
+            cluster_id = spec['properties']['host_cluster']
+            db_api.cluster_remove_dependents(ctx, cluster_id,
+                                             db_profile.id)
 
         LOG.info(_LI("Profile '%s' is deleted."), req.identity)
 
