@@ -759,26 +759,6 @@ class EngineService(service.Service):
                                           reason=reason)
         LOG.info(_LI("Policy '%s' is deleted."), req.identity)
 
-    @request_context
-    def policy_delete(self, context, identity):
-        """Delete the specified policy.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a policy.
-        :return: None if succeeded or an exception of `ResourceInUse` if
-                 policy is still attached to certain clusters.
-        """
-        db_policy = self.policy_find(context, identity)
-        LOG.info(_LI("Delete policy '%s'."), identity)
-        try:
-            policy_base.Policy.delete(context, db_policy.id)
-        except exception.EResourceBusy:
-            reason = _("still attached to some clusters")
-            raise exception.ResourceInUse(type='policy', id=identity,
-                                          reason=reason)
-
-        LOG.info(_LI("Policy '%s' is deleted."), identity)
-
     @request_context2
     def policy_validate2(self, ctx, req):
         """Validate a policy with the given properties.
