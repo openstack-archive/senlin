@@ -62,7 +62,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         # with version
         res = rpcapi.call2(self.context, method, req, version='123')
 
-        client.prepare.assert_called_once_with(version='123')
+        rpcapi._client.prepare.assert_called_once_with(version='123')
         new_client = client.prepare.return_value
         new_client.call.assert_called_once_with(self.context, 'fake_method',
                                                 req=req)
@@ -221,42 +221,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_policy_type_get(self):
         self._test_engine_api('policy_type_get', 'call',
                               type_name='a-profile-type')
-
-    def test_policy_list(self):
-        default_args = {
-            'limit': mock.ANY,
-            'marker': mock.ANY,
-            'sort': mock.ANY,
-            'filters': mock.ANY,
-            'project_safe': mock.ANY,
-        }
-        self._test_engine_api('policy_list', 'call', **default_args)
-
-    def test_policy_create(self):
-        default_args = {
-            'name': mock.ANY,
-            'spec': mock.ANY,
-        }
-        self._test_engine_api('policy_create', 'call', **default_args)
-
-    def test_policy_get(self):
-        self._test_engine_api('policy_get', 'call', identity='a-policy')
-
-    def test_policy_update(self):
-        default_args = {
-            'identity': 'aaaa-bbbb-cccc',
-            'name': mock.ANY,
-        }
-        self._test_engine_api('policy_update', 'call', **default_args)
-
-    def test_policy_delete_cast(self):
-        self._test_engine_api('policy_delete', 'cast', identity='a-policy')
-
-    def test_policy_delete_call(self):
-        self._test_engine_api('policy_delete', 'call', identity='a-policy')
-
-    def test_policy_validate(self):
-        self._test_engine_api('policy_validate', 'call', spec=mock.ANY)
 
     def test_action_list(self):
         default_args = {
