@@ -31,121 +31,56 @@ class TestProfileCreate(test_base.SenlinTestCase):
         }
     }
 
-    body = {
-        'name': 'test-profile',
-        'spec': spec,
-        'metadata': {"x": "y"}
-    }
-
-    def test_profile_create_spec(self):
-        properties = {
-            'name': 'FAKE_SERVER_NAME',
-            'flavor': 'FAKE_FLAVOR',
-            'image': 'FAKE_IMAGE',
-            'key_name': 'FAKE_KEYNAME',
-            'networks': [{'network': 'FAKE_NET'}],
-            'user_data': 'FAKE_USER_DATA'
-        }
-        sot = profiles.ProfileSpec(**self.spec)
-        self.assertEqual(properties, sot.properties)
-        self.assertEqual('os.nova.server', sot.type)
-        self.assertEqual('1.0', sot.version)
-
     def test_profile_create_body(self):
-        spec = profiles.ProfileSpec(**self.spec)
-        body = {
-            'name': 'foo',
-            'spec': spec,
-            'metadata': {'x': 'y'},
-        }
-        sot = profiles.ProfileCreateRequestBody(**body)
-        self.assertIsInstance(sot.spec, profiles.ProfileSpec)
+        spec = copy.deepcopy(self.spec)
+        sot = profiles.ProfileCreateRequestBody(name='foo', spec=spec,
+                                                metadata={'x': 'y'})
         self.assertEqual('foo', sot.name)
         self.assertEqual({'x': 'y'}, sot.metadata)
+        self.assertEqual(u'os.nova.server', sot.spec['type'])
+        self.assertEqual(u'1.0', sot.spec['version'])
 
     def test_profile_create_request(self):
-        spec = profiles.ProfileSpec(**self.spec)
-        body = {
-            'name': 'foo',
-            'spec': spec,
-            'metadata': {'x': 'y'},
-        }
-        profile = profiles.ProfileCreateRequestBody(**body)
-        request = {'profile': profile}
-        sot = profiles.ProfileCreateRequest(**request)
+        spec = copy.deepcopy(self.spec)
+        body = profiles.ProfileCreateRequestBody(name='foo', spec=spec,
+                                                 metadata={'x': 'y'})
+        sot = profiles.ProfileCreateRequest(profile=body)
         self.assertIsInstance(sot.profile, profiles.ProfileCreateRequestBody)
 
-    def test_request_spec_to_primitice(self):
-        spec = copy.deepcopy(self.spec)
-        sot = profiles.ProfileSpec(**spec)
-        res = sot.obj_to_primitive()
-        data = res['senlin_object.data']
-
-        self.assertEqual('ProfileSpec', res['senlin_object.name'])
-        self.assertEqual('senlin', res['senlin_object.namespace'])
-        self.assertEqual('1.0', res['senlin_object.version'])
-
-        self.assertIn('version', res['senlin_object.changes'])
-        self.assertIn('type', res['senlin_object.changes'])
-        self.assertIn('properties', res['senlin_object.changes'])
-
-        properties = jsonutils.loads(data['properties'])
-        self.assertEqual(u'os.nova.server', data['type'])
-        self.assertEqual(u'1.0', data['version'])
-        self.assertEqual('FAKE_SERVER_NAME', properties['name'])
-        self.assertEqual('FAKE_FLAVOR', properties['flavor'])
-        self.assertEqual('FAKE_IMAGE', properties['image'])
-        self.assertEqual('FAKE_KEYNAME', properties['key_name'])
-        self.assertEqual([{'network': 'FAKE_NET'}], properties['networks'])
-        self.assertEqual('FAKE_USER_DATA', properties['user_data'])
-
     def test_request_body_to_primitive(self):
-        spec = profiles.ProfileSpec(**self.spec)
-        request = {
-            'name': 'test-profile',
-            'spec': spec,
-            'metadata': {'x': 'y'}
-        }
-        sot = profiles.ProfileCreateRequestBody(**request)
+        spec = copy.deepcopy(self.spec)
+        sot = profiles.ProfileCreateRequestBody(name='test-profile',
+                                                spec=spec,
+                                                metadata={'x': 'y'})
         self.assertEqual('test-profile', sot.name)
         self.assertEqual({'x': 'y'}, sot.metadata)
-        self.assertIsInstance(sot.spec, profiles.ProfileSpec)
 
         res = sot.obj_to_primitive()
-        data = res['senlin_object.data']['spec']
-        spec_data = data['senlin_object.data']
         # request body
         self.assertEqual('ProfileCreateRequestBody', res['senlin_object.name'])
         self.assertEqual('1.0', res['senlin_object.version'])
         self.assertEqual('senlin', res['senlin_object.namespace'])
-        self.assertEqual(u'test-profile', res['senlin_object.data']['name'])
-        self.assertEqual(u'{"x": "y"}', res['senlin_object.data']['metadata'])
         self.assertIn('name', res['senlin_object.changes'])
         self.assertIn('spec', res['senlin_object.changes'])
         self.assertIn('metadata', res['senlin_object.changes'])
         # spec
-        self.assertEqual('ProfileSpec', data['senlin_object.name'])
-        self.assertEqual('1.0', data['senlin_object.version'])
-        self.assertEqual('senlin', data['senlin_object.namespace'])
-        self.assertIn('version', data['senlin_object.changes'])
-        self.assertIn('type', data['senlin_object.changes'])
-        self.assertIn('properties', data['senlin_object.changes'])
+        data = res['senlin_object.data']
+        self.assertEqual(u'test-profile', data['name'])
+        self.assertEqual(u'{"x": "y"}', data['metadata'])
         # spec data
+        spec_data = jsonutils.loads(data['spec'])
         self.assertEqual(u'os.nova.server', spec_data['type'])
         self.assertEqual(u'1.0', spec_data['version'])
 
     def test_request_to_primitive(self):
-        spec = profiles.ProfileSpec(**self.spec)
-        body = {
-            'name': 'test-profile',
-            'spec': spec,
-            'metadata': {'x': 'y'}
-        }
-        body = profiles.ProfileCreateRequestBody(**body)
-        request = {'profile': body}
-        sot = profiles.ProfileCreateRequest(**request)
+        spec = copy.deepcopy(self.spec)
+        body = profiles.ProfileCreateRequestBody(name='test-profile',
+                                                 spec=spec,
+                                                 metadata={'x': 'y'})
+        sot = profiles.ProfileCreateRequest(profile=body)
         self.assertIsInstance(sot.profile, profiles.ProfileCreateRequestBody)
         self.assertEqual('test-profile', sot.profile.name)
+        self.assertEqual({'x': 'y'}, sot.profile.metadata)
 
         # request
         res = sot.obj_to_primitive()
@@ -164,18 +99,11 @@ class TestProfileCreate(test_base.SenlinTestCase):
         self.assertIn('spec', data['senlin_object.changes'])
         self.assertIn('metadata', data['senlin_object.changes'])
 
+        # spec
         pd = data['senlin_object.data']
         self.assertEqual(u'test-profile', pd['name'])
 
-        pd_spec = pd['spec']
-        self.assertIn('version', pd_spec['senlin_object.changes'])
-        self.assertIn('type', pd_spec['senlin_object.changes'])
-        self.assertIn('properties', pd_spec['senlin_object.changes'])
-        self.assertEqual('ProfileSpec', pd_spec['senlin_object.name'])
-        self.assertEqual('senlin', pd_spec['senlin_object.namespace'])
-        self.assertEqual('1.0', pd_spec['senlin_object.version'])
-
-        spec_data = pd_spec['senlin_object.data']
+        spec_data = jsonutils.loads(pd['spec'])
         self.assertEqual(u'os.nova.server', spec_data['type'])
         self.assertEqual(u'1.0', spec_data['version'])
 
