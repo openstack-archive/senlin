@@ -18,6 +18,7 @@ from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import events
 from senlin.common import exception as senlin_exc
 from senlin.common import policy
+from senlin.objects.requests import events as vore
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
@@ -58,50 +59,63 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         ]
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_resp)
 
-        resp = self.controller.index(req)
+        result = self.controller.index(req)
 
-        kwargs = {'limit': None, 'marker': None, 'filters': None,
-                  'sort': None, 'project_safe': True}
-        mock_call.assert_called_once_with(req.context,
-                                          ('event_list', kwargs))
-        self.assertEqual(resp, {'events': engine_resp})
+        expected = {'events': engine_resp}
+        self.assertEqual(expected, result)
+        mock_call.assert_called_with(req.context,
+                                     'event_list2', mock.ANY)
 
-    def test_event_index_whitelists_params(self, mock_enforce):
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vore.EventListRequest)
+        self.assertTrue(request.project_safe)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_event_index_whitelists_params(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
+        marker_uuid = '8216a86c-1bdc-442e-b493-329385d37cbd'
         params = {
+            'otype': 'NODE',
+            'oname': 'mynode1',
+            'action': 'NODE_CREATE',
+            'level': 'ERROR',
             'limit': 10,
-            'marker': 'fake marker',
-            'sort': 'fake sorting options',
+            'marker': marker_uuid,
+            'sort': 'timestamp',
             'global_project': False,
         }
+
         req = self._get('/events', params=params)
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     return_value=[])
+        mock_call.return_value = []
 
-        self.controller.index(req)
+        result = self.controller.index(req)
+        expected = {'events': []}
+        self.assertEqual(expected, result)
+        mock_call.assert_called_with(req.context,
+                                     'event_list2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vore.EventListRequest)
+        self.assertEqual(['NODE'], request.otype)
+        self.assertEqual(['mynode1'], request.oname)
+        self.assertEqual(['NODE_CREATE'], request.action)
+        self.assertEqual(['ERROR'], request.level)
+        self.assertEqual(10, request.limit)
+        self.assertEqual(marker_uuid, request.marker)
+        self.assertEqual('timestamp', request.sort)
+        self.assertTrue(request.project_safe)
 
-        rpc_call_args, w = mock_call.call_args
-        engine_args = rpc_call_args[1][1]
-
-        self.assertEqual(5, len(engine_args))
-        self.assertIn('limit', engine_args)
-        self.assertIn('marker', engine_args)
-        self.assertIn('sort', engine_args)
-        self.assertIn('project_safe', engine_args)
-
-    def test_event_index_whitelists_invalid_params(self, mock_enforce):
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_event_index_whitelists_invalid_params(self, mock_call,
+                                                   mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
-            'balrog': 'you shall not pass!'
+            'balrog': 'you shall not pass!',
         }
         req = self._get('/events', params=params)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     return_value=[])
-
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
@@ -109,38 +123,62 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
                          str(ex))
         self.assertFalse(mock_call.called)
 
-    def test_event_index_global_project_true(self, mock_enforce):
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_event_index_with_bad_schema(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {'level': 'fake'}
+        req = self._get('/events', params=params)
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index,
+                               req)
+
+        self.assertEqual("Field value fake is invalid",
+                         six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_event_index_limit_not_int(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {'limit': 'not-int'}
+        req = self._get('/event', params=params)
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index, req)
+
+        self.assertEqual("invalid literal for int() with base 10: 'not-int'",
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_event_index_global_project_true(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'global_project': 'True'}
         req = self._get('/events', params=params)
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         self.controller.index(req)
 
-        call_args, w = mock_call.call_args
-        call_args = call_args[1][1]
-        self.assertIn('project_safe', call_args)
-        self.assertFalse(call_args['project_safe'])
+        request = mock_call.call_args[0][2]
+        self.assertFalse(request.project_safe)
 
-    def test_event_index_global_project_false(self, mock_enforce):
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_events_index_global_project_false(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'global_project': 'False'}
         req = self._get('/events', params=params)
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         self.controller.index(req)
 
-        call_args, w = mock_call.call_args
-        call_args = call_args[1][1]
-        self.assertIn('project_safe', call_args)
-        self.assertTrue(call_args['project_safe'])
+        request = mock_call.call_args[0][2]
+        self.assertTrue(request.project_safe)
 
-    def test_event_index_global_project_not_bool(self, mock_enforce):
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_event_index_global_project_not_bool(self, mock_call,
+                                                 mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'global_project': 'No'}
         req = self._get('/events', params=params)
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
         ex = self.assertRaises(senlin_exc.InvalidParameter,
                                self.controller.index, req)
 
@@ -148,65 +186,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
                          six.text_type(ex))
         self.assertFalse(mock_call.called)
 
-    def test_event_index_limit_not_int(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {'limit': 'not-int'}
-        req = self._get('/events', params=params)
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
-        ex = self.assertRaises(senlin_exc.InvalidParameter,
-                               self.controller.index, req)
-
-        self.assertEqual("Invalid value 'not-int' specified for 'limit'",
-                         six.text_type(ex))
-        self.assertFalse(mock_call.called)
-
-    def test_event_index_whitelist_filter_params(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {
-            'oname': 'fake name',
-            'otype': 'fake type',
-            'oid': 'fake ID',
-            'cluster_id': 'another fake ID',
-            'action': 'fake action',
-            'level': 30,
-        }
-        req = self._get('/events', params=params)
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     return_value=[])
-        self.controller.index(req)
-
-        rpc_call_args, _ = mock_call.call_args
-        engine_args = rpc_call_args[1][1]
-        self.assertIn('filters', engine_args)
-
-        filters = engine_args['filters']
-        self.assertEqual(6, len(filters))
-        self.assertIn('oname', filters)
-        self.assertIn('oid', filters)
-        self.assertIn('otype', filters)
-        self.assertIn('cluster_id', filters)
-        self.assertIn('action', filters)
-        self.assertIn('level', filters)
-
-    def test_event_index_whitelist_filter_invalid_params(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {
-            'balrog': 'you shall not pass!'
-        }
-        req = self._get('/events', params=params)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
-                                     return_value=[])
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.index, req)
-
-        self.assertEqual("Invalid parameter balrog",
-                         str(ex))
-        self.assertFalse(mock_call.called)
-
-    def test_index_err_denied_policy(self, mock_enforce):
+    def test_index_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
         req = self._get('/events')
 
