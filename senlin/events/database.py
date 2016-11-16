@@ -11,6 +11,7 @@
 # under the License.
 
 from oslo_utils import reflection
+from oslo_utils import timeutils
 
 from senlin.objects import event as eo
 
@@ -98,3 +99,59 @@ class Event(object):
         self.id = event.id
 
         return self.id
+
+    @staticmethod
+    def _check_entity(e):
+        e_type = reflection.get_class_name(e, fully_qualified=False)
+        e_type = e_type.upper()
+
+        if e_type == 'CLUSTER':
+            return (e.id, e.id, e.name, 'CLUSTER')
+        elif e_type == 'NODE':
+            return (e.id, e.cluster_id, e.name, 'NODE')
+        elif e_type == 'CLUSTERACTION':
+            return (e.target, e.target, e.cluster.name, 'CLUSTER')
+        elif e_type == 'NODEACTION':
+            return (e.target, e.node.cluster_id, e.node.name, 'NODE')
+        else:
+            return (e.target, '', '', '')
+
+    @classmethod
+    def dump(cls, context, level, entity, action, status=None, reason=None,
+             **kwargs):
+        """Create an event record into database.
+
+        :param context: The request context.
+        :param level: The log level which is an integer as defined in logging.
+        :param entity: The object in question.
+        :param action: The action that triggered this dump.
+        :param status: The status of the action or the object.
+        :param reason: The reason that led the object into its current status.
+        :param kwargs: Additional parameters such as ``timestamp`` or
+                       ``extra``.
+        """
+        status = status or entity.status
+        reason = reason or entity.status_reason
+        oid, cluster_id, oname, otype = cls._check_entity(entity)
+
+        # use provided timestamp if any
+        timestamp = kwargs.get('timestamp') or timeutils.utcnow(True)
+        # use provided extra data if any
+        extra = kwargs.get("extra") or {}
+
+        values = {
+            'level': level,
+            'timestamp': timestamp,
+            'oid': oid,
+            'otype': otype,
+            'oname': oname,
+            'cluster_id': cluster_id,
+            'user': context.user,
+            'project': context.project,
+            'action': action,
+            'status': status,
+            'status_reason': reason,
+            'meta_data': extra,
+        }
+
+        eo.Event.create(context, values)
