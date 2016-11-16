@@ -144,8 +144,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_policy_index_limit_non_int(self, mock_call, mock_enforce):
-        mock_call = self.patchobject(rpc_client.EngineClient, 'policy_list',
-                                     return_value=[])
+        self._mock_enforce_setup(mock_enforce, 'index', True)
 
         params = {'limit': 'abc'}
         req = self._get('/policies', params=params)
