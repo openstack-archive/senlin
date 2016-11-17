@@ -15,4 +15,7 @@ Enabling senlin in DevStack
      #Enable senlin-dashboard
      enable_plugin senlin-dashboard https://git.openstack.org/openstack/senlin-dashboard
 
+Optionally, you can add a line ``SENLIN_USE_MOD_WSGI=True`` to the same ``local.conf``
+file if you prefer running the Senlin API service under Apache.
+
 3. Run ``./stack.sh``.
