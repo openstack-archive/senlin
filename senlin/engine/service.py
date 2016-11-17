@@ -581,15 +581,6 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Profile '%(id)s' is deleted."), {'id': identity})
 
-    @request_context
-    def policy_type_list(self, context):
-        """List known policy type implementations.
-
-        :param context: An instance of the request context.
-        :return: A list of policy types.
-        """
-        return environment.global_env().get_policy_types()
-
     @request_context2
     def policy_type_list2(self, ctx, req):
         """List known policy type implementations.

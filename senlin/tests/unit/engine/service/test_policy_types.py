@@ -43,17 +43,6 @@ class PolicyTypeTest(base.SenlinTestCase):
         x_env.get_policy_types.assert_called_once_with()
 
     @mock.patch.object(environment, 'global_env')
-    def test_policy_type_list(self, mock_env):
-        x_env = mock.Mock()
-        x_env.get_policy_types.return_value = [{'foo': 'bar'}]
-        mock_env.return_value = x_env
-
-        types = self.eng.policy_type_list(self.ctx)
-        self.assertEqual([{'foo': 'bar'}], types)
-        mock_env.assert_called_once_with()
-        x_env.get_policy_types.assert_called_once_with()
-
-    @mock.patch.object(environment, 'global_env')
     def test_policy_type_get2(self, mock_env):
         x_env = mock.Mock()
         x_policy_type = mock.Mock()
