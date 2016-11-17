@@ -16,20 +16,11 @@ from senlin.objects import fields
 
 
 @base.SenlinObjectRegistry.register
-class ProfileSpec(base.SenlinObject):
-    fields = {
-        'type': fields.StringField(),
-        'version': fields.StringField(),
-        'properties': fields.JsonField(),
-    }
-
-
-@base.SenlinObjectRegistry.register
 class ProfileCreateRequestBody(base.SenlinObject):
 
     fields = {
         'name': fields.NameField(),
-        'spec': fields.ObjectField('ProfileSpec'),
+        'spec': fields.JsonField(),
         'metadata': fields.JsonField(nullable=True, default={}),
     }
 
