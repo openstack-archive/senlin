@@ -1,0 +1,15 @@
+# Sample batch policy that can be attached to a cluster
+type: senlin.policy.batch
+version: 1.0
+properties:
+  # Minimum number of nodes that should remain in service when
+  # performing actions like CLUSTER_UPDATE, CLUSTER_DELETE.
+  min_in_service: 1
+
+  # Maximum number of nodes that can be processed at the
+  # same time.
+  max_batch_size: 2
+
+  # Number of seconds between two consecutive batches of
+  # operaitons. A value of 0 means no pause time.
+  pause_time: 3
