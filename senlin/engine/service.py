@@ -541,6 +541,26 @@ class EngineService(service.Service):
         LOG.info(_LI("Profile '%(id)s' is updated."), {'id': identity})
         return profile.to_dict()
 
+    @request_context2
+    def profile_delete2(self, ctx, req):
+        """Delete the specified profile.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ProfileDeleteRequest.
+        :return: None if succeeded or an exception of `ResourceInUse` if
+                 profile is referenced by certain clusters/nodes.
+        """
+        db_profile = self.profile_find(ctx, req.identity)
+        LOG.info(_LI("Deleting profile '%s'."), req.identity)
+        try:
+            profile_base.Profile.delete(ctx, db_profile.id)
+        except exception.EResourceBusy:
+            reason = _("still referenced by some clusters and/or nodes.")
+            raise exception.ResourceInUse(type='profile', id=db_profile.id,
+                                          reason=reason)
+
+        LOG.info(_LI("Profile '%s' is deleted."), req.identity)
+
     @request_context
     def profile_delete(self, context, identity):
         """Delete the specified profile.
