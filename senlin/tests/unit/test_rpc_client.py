@@ -215,13 +215,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         self._test_engine_api('profile_validate', 'call',
                               spec=mock.ANY)
 
-    def test_policy_type_list(self):
-        self._test_engine_api('policy_type_list', 'call')
-
-    def test_policy_type_get(self):
-        self._test_engine_api('policy_type_get', 'call',
-                              type_name='a-profile-type')
-
     def test_action_list(self):
         default_args = {
             'filters': mock.ANY,
