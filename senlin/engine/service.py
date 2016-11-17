@@ -571,6 +571,16 @@ class EngineService(service.Service):
         return environment.global_env().get_policy_types()
 
     @request_context2
+    def policy_type_list2(self, ctx, req):
+        """List known policy type implementations.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the PolicyTypeListRequest.
+        :return: A list of policy types.
+        """
+        return environment.global_env().get_policy_types()
+
+    @request_context2
     def policy_type_get2(self, ctx, req):
         """Get the details about a policy type.
 
