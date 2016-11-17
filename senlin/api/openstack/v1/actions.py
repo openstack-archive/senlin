@@ -87,6 +87,8 @@ class ActionController(wsgi.Controller):
             jsonschema.validate(norm_req, obj.to_json_schema())
         except (ValueError) as ex:
             raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
         actions = self.rpc_client.call2(req.context, "action_list2", obj)
 
@@ -113,9 +115,9 @@ class ActionController(wsgi.Controller):
             jsonschema.validate(norm_req, obj.to_json_schema())
         except (ValueError) as ex:
             raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
         action = self.rpc_client.call2(req.context, 'action_get2', obj)
-        if not action:
-            raise exc.HTTPNotFound()
 
         return {'action': action}

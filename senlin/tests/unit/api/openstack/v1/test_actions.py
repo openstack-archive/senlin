@@ -122,6 +122,20 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_action_index_with_bad_schema(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {'status': 'fake'}
+        req = self._get('/actions', params=params)
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.index,
+                               req)
+
+        self.assertEqual("Field value fake is invalid",
+                         six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_action_index_limit_not_int(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'limit': 'not-int'}
