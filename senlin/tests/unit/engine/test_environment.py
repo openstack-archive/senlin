@@ -243,8 +243,8 @@ class TestEnvironment(base.SenlinTestCase):
                         create=True) as mock_open:
             env.read_global_environment()
 
-        mock_dir.assert_called_once_with(env_dir + '/*')
-        mock_open.assert_called_once_with('%s/e.yaml' % env_dir)
+        mock_dir.assert_called_with(env_dir + '/*')
+        mock_open.assert_called_with('%s/e.yaml' % env_dir)
 
     def test_empty_environment_dir(self):
         mock_dir = self.patchobject(glob, 'glob', return_value=[])
