@@ -16,7 +16,7 @@ from oslo_log import log as logging
 from oslo_utils import timeutils
 
 from senlin.engine import cluster as cluster_mod
-from senlin.engine import event as EVENT
+from senlin.events import database as DB
 from senlin.objects import event as eo
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -24,10 +24,10 @@ from senlin.tests.unit.common import utils
 CLUSTER_ID = '2c5139a6-24ba-4a6f-bd53-a268f61536de'
 
 
-class TestEvent(base.SenlinTestCase):
+class TestDatabase(base.SenlinTestCase):
 
     def setUp(self):
-        super(TestEvent, self).setUp()
+        super(TestDatabase, self).setUp()
         self.context = utils.dummy_context()
 
     def test_event_init(self):
@@ -46,7 +46,7 @@ class TestEvent(base.SenlinTestCase):
             'metadata': {'foo': 'bar'},
         }
 
-        event = EVENT.Event(timestamp, logging.CRITICAL, **kwargs)
+        event = DB.Event(timestamp, logging.CRITICAL, **kwargs)
 
         self.assertEqual(timestamp, event.timestamp)
         self.assertEqual(logging.CRITICAL, event.level)
@@ -69,11 +69,11 @@ class TestEvent(base.SenlinTestCase):
         x_cluster = cluster_mod.Cluster('fake-cluster', 0, 'fake-profile',
                                         id='FAKE_CLUSTER')
 
-        event = EVENT.Event(timestamp, logging.CRITICAL, x_cluster,
-                            action="FAKE_ACTION", status="ACTIVE",
-                            status_reason="Recovered just now",
-                            user=self.context.user,
-                            project=self.context.project)
+        event = DB.Event(timestamp, logging.CRITICAL, x_cluster,
+                         action="FAKE_ACTION", status="ACTIVE",
+                         status_reason="Recovered just now",
+                         user=self.context.user,
+                         project=self.context.project)
 
         self.assertEqual(timestamp, event.timestamp)
         self.assertIsNone(event.id)
@@ -97,7 +97,7 @@ class TestEvent(base.SenlinTestCase):
         entity.name = 'obj-name'
         mock_get.return_value = 'Cluster'
 
-        event = EVENT.Event('timestamp', 'level', entity)
+        event = DB.Event('timestamp', 'level', entity)
 
         self.assertEqual('timestamp', event.timestamp)
         self.assertEqual('level', event.level)
@@ -117,7 +117,7 @@ class TestEvent(base.SenlinTestCase):
         entity.name = 'obj-name'
         mock_get.return_value = 'Node'
 
-        event = EVENT.Event('timestamp', 'level', entity)
+        event = DB.Event('timestamp', 'level', entity)
 
         self.assertEqual('timestamp', event.timestamp)
         self.assertEqual('level', event.level)
@@ -137,7 +137,7 @@ class TestEvent(base.SenlinTestCase):
         entity.cluster.name = 'obj-name'
         mock_get.return_value = 'ClusterAction'
 
-        event = EVENT.Event('timestamp', 'level', entity)
+        event = DB.Event('timestamp', 'level', entity)
 
         self.assertEqual('timestamp', event.timestamp)
         self.assertEqual('level', event.level)
@@ -158,7 +158,7 @@ class TestEvent(base.SenlinTestCase):
         entity.node.cluster_id = CLUSTER_ID
         mock_get.return_value = 'NodeAction'
 
-        event = EVENT.Event('timestamp', 'level', entity)
+        event = DB.Event('timestamp', 'level', entity)
 
         self.assertEqual('timestamp', event.timestamp)
         self.assertEqual('level', event.level)
@@ -185,7 +185,7 @@ class TestEvent(base.SenlinTestCase):
             'metadata': {'foo': 'bar'},
         }
 
-        event = EVENT.Event(timestamp, logging.CRITICAL, **kwargs)
+        event = DB.Event(timestamp, logging.CRITICAL, **kwargs)
         self.assertIsNone(event.id)
 
         event_id = event.store(self.context)
