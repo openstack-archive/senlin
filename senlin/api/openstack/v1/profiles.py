@@ -159,5 +159,15 @@ class ProfileController(wsgi.Controller):
 
     @util.policy_enforce
     def delete(self, req, profile_id):
-        self.rpc_client.profile_delete(req.context, profile_id, cast=False)
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ProfileDeleteRequest', {'identity': profile_id})
+            obj = vorp.ProfileDeleteRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        self.rpc_client.call2(req.context, 'profile_delete2', obj)
         raise exc.HTTPNoContent()
