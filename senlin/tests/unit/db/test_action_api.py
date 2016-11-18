@@ -154,6 +154,15 @@ class DBAPIActionTest(base.SenlinTestCase):
         for spec in specs:
             self.assertIn(spec['name'], names)
 
+    def test_action_get_all_project_safe(self):
+        parser.simple_parse(shared.sample_action)
+        _create_action(self.ctx)
+        new_ctx = utils.dummy_context(project='another-project')
+        actions = db_api.action_get_all(new_ctx, project_safe=True)
+        self.assertEqual(0, len(actions))
+        actions = db_api.action_get_all(new_ctx, project_safe=False)
+        self.assertEqual(1, len(actions))
+
     def test_action_check_status(self):
         specs = [
             {'name': 'A01', 'target': 'cluster_001'},
