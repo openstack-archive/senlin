@@ -2444,6 +2444,60 @@ class EngineService(service.Service):
 
         return results
 
+    @request_context2
+    def event_list2(self, ctx, req):
+        """List event records matching the specified criteria.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the EventListRequest object.
+        :return: A list of `Event` object representations.
+        """
+
+        req.obj_set_defaults()
+        if not req.project_safe and not ctx.is_admin:
+            raise exception.Forbidden()
+
+        query = {'project_safe': req.project_safe}
+        if req.obj_attr_is_set('limit'):
+            query['limit'] = req.limit
+        if req.obj_attr_is_set('marker'):
+            query['marker'] = req.marker
+        if req.obj_attr_is_set('sort') and req.sort is not None:
+            query['sort'] = req.sort
+
+        filters = {}
+        if req.obj_attr_is_set('oid'):
+            filters['oid'] = req.oid
+        if req.obj_attr_is_set('oname'):
+            filters['oname'] = req.oname
+        if req.obj_attr_is_set('otype'):
+            filters['otype'] = req.otype
+        if req.obj_attr_is_set('action'):
+            filters['action'] = req.action
+        if req.obj_attr_is_set('cluster_id'):
+            filters['cluster_id'] = req.cluster_id
+        if req.obj_attr_is_set('level'):
+            filters['level'] = req.level
+        if filters:
+            query['filters'] = filters
+
+        if filters and consts.EVENT_LEVEL in filters:
+            value = filters.pop(consts.EVENT_LEVEL)
+            value = utils.parse_level_values(value)
+            if value is not None:
+                filters[consts.EVENT_LEVEL] = value
+
+        all_events = event_obj.Event.get_all(ctx, **query)
+
+        results = []
+        for event in all_events:
+            evt = event.as_dict()
+            level = utils.level_from_number(evt['level'])
+            evt['level'] = level
+            results.append(evt)
+
+        return results
+
     @request_context
     def event_get(self, context, identity):
         """Get the details about a specified event.
