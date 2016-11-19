@@ -1187,8 +1187,9 @@ class EngineService(service.Service):
                       identity of a node as replacement.
         :returns: A dict containing the validated map of node substitutions.
         """
-        # TODO(anyone): This should use profile_get
-        profile = self.profile_find(ctx, cluster.profile_id)
+        profile = profile_obj.Profile.get(ctx, cluster.profile_id,
+                                          project_safe=True)
+
         cluster_profile_type = profile.type
 
         found = {}
@@ -1211,49 +1212,44 @@ class EngineService(service.Service):
                 not_found_new.append(new_node)
                 continue
 
-            # TODO(anyone): replace the 'elif' below with 'if' directly
             if db_old_node.cluster_id != cluster.id:
                 not_member.append(old_node)
-            elif db_new_node.cluster_id:
+            if db_new_node.cluster_id:
                 owned_nodes.append(new_node)
-            elif db_new_node.status != consts.NS_ACTIVE:
+            if db_new_node.status != consts.NS_ACTIVE:
                 bad_nodes.append(new_node)
-            else:
-                # check the profile type
-                # TODO(anyone): This should use profile_get
-                node_profile = self.profile_find(ctx, db_new_node.profile_id)
-                if cluster_profile_type != node_profile.type:
-                    not_match_nodes.append(new_node)
-                else:
-                    found[db_old_node.id] = db_new_node.id
 
-        # TODO(Anyone): since the above checking is already aggregating all
-        # illegal node specifications, we should combine the error message
-        # into a single one.
-        msg = None
+            # check the profile type
+            node_profile = profile_obj.Profile.get(ctx, db_new_node.profile_id,
+                                                   project_safe=True)
+
+            if cluster_profile_type != node_profile.type:
+                not_match_nodes.append(new_node)
+
+            found[db_old_node.id] = db_new_node.id
+
+        msg = []
         if len(not_member) > 0:
-            msg = _("The specified nodes %(n)s to be replaced are not "
-                    "members of the cluster %(c)s.") % {'n': not_member,
-                                                        'c': cluster.id}
-        elif len(owned_nodes) > 0:
-            msg = _("Nodes %s already member of a cluster.") % owned_nodes
-            LOG.error(msg)
-            raise exception.NodeNotOrphan(message=msg)
-        elif len(bad_nodes) > 0:
-            msg = _("Nodes are not ACTIVE: %s.") % bad_nodes
-        elif len(not_match_nodes) > 0:
-            msg = _("Profile type of nodes %s do not match that of the "
-                    "cluster.") % not_match_nodes
-            LOG.error(msg)
-            raise exception.ProfileTypeNotMatch(message=msg)
-        elif len(not_found_old) > 0:
-            msg = _("Original nodes not found: %s.") % not_found_old
-        elif len(not_found_new) > 0:
-            msg = _("Replacement nodes not found: %s.") % not_found_new
+            msg.append(_("The specified nodes %(n)s to be replaced are not "
+                         "members of the cluster %(c)s.") % {'n': not_member,
+                                                             'c': cluster.id})
+        if len(owned_nodes) > 0:
+            msg.append(_("Nodes %s already member of a "
+                         "cluster.") % owned_nodes)
+        if len(bad_nodes) > 0:
+            msg.append(_("Nodes are not ACTIVE: %s.") % bad_nodes)
+        if len(not_match_nodes) > 0:
+            msg.append(_("Profile type of nodes %s do not match that of the "
+                         "cluster.") % not_match_nodes)
+        if len(not_found_old) > 0:
+            msg.append(_("Original nodes not found: %s.") % not_found_old)
+        if len(not_found_new) > 0:
+            msg.append(_("Replacement nodes not found: %s.") % not_found_new)
 
-        if msg is not None:
-            LOG.error(msg)
-            raise exception.BadRequest(msg=msg)
+        if msg:
+            msg_err = '\n'.join(msg)
+            LOG.error(msg_err)
+            raise exception.BadRequest(msg=msg_err)
 
         return found
 

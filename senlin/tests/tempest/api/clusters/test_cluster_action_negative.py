@@ -1150,8 +1150,8 @@ class TestClusterReplaceNodesNegativeNewNotOrphan(base.BaseSenlinAPITest):
             }
         }
 
-        # Verify conflict exception(409) is raised.
-        self.assertRaises(exceptions.Conflict,
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
                           self.client.cluster_replace_nodes,
                           'clusters', self.cluster_id, params)
 
