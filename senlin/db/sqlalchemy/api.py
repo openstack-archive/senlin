@@ -868,9 +868,8 @@ def action_get_all(context, filters=None, limit=None, marker=None, sort=None,
                    project_safe=True):
 
     query = model_query(context, models.Action)
-    # TODO(Qiming): Enable multi-tenancy for actions
-    # if project_safe:
-    #    query = query.filter_by(project=context.project)
+    if project_safe:
+        query = query.filter_by(project=context.project)
 
     if filters:
         query = utils.exact_filter(query, models.Action, filters)
