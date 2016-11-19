@@ -11,7 +11,6 @@
 # under the License.
 
 from oslo_log import log as logging
-from oslo_utils import timeutils
 
 from senlin.common.i18n import _LC, _LE, _LW, _LI
 from senlin.events import database as DB
@@ -21,75 +20,46 @@ LOG = logging.getLogger(__name__)
 
 def critical(context, entity, action, status=None, status_reason=None,
              timestamp=None):
-    timestamp = timestamp or timeutils.utcnow(True)
-    event = DB.Event(timestamp, logging.CRITICAL, entity,
-                     action=action, status=status, status_reason=status_reason,
-                     user=context.user, project=context.project)
-    event.store(context)
+    DB.DBEvent.dump(context, logging.CRITICAL, entity, action,
+                    status=status, reason=status_reason, timestamp=timestamp)
     LOG.critical(_LC('%(name)s [%(id)s] - %(status)s: %(reason)s'),
-                 {'name': event.oname,
-                  'id': event.oid and event.oid[:8],
-                  'status': status,
-                  'reason': status_reason})
+                 {'name': entity.name, 'id': entity.id[:8],
+                  'status': status, 'reason': status_reason})
 
 
 def error(context, entity, action, status=None, status_reason=None,
           timestamp=None):
-    timestamp = timestamp or timeutils.utcnow(True)
-    event = DB.Event(timestamp, logging.ERROR, entity,
-                     action=action, status=status, status_reason=status_reason,
-                     user=context.user, project=context.project)
-    event.store(context)
+    DB.DBEvent.dump(context, logging.ERROR, entity, action,
+                    status=status, reason=status_reason, timestamp=timestamp)
     msg = _LE('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s')
     LOG.error(msg,
-              {'name': event.oname,
-               'id': event.oid and event.oid[:8],
-               'action': action,
-               'status': status,
-               'reason': status_reason})
+              {'name': entity.name, 'id': entity.id[:8], 'action': action,
+               'status': status, 'reason': status_reason})
 
 
 def warning(context, entity, action, status=None, status_reason=None,
             timestamp=None):
-    timestamp = timestamp or timeutils.utcnow(True)
-    event = DB.Event(timestamp, logging.WARNING, entity,
-                     action=action, status=status, status_reason=status_reason,
-                     user=context.user, project=context.project)
-    event.store(context)
+    DB.DBEvent.dump(context, logging.WARNING, entity, action,
+                    status=status, reason=status_reason, timestamp=timestamp)
     msg = _LW('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s')
     LOG.warning(msg,
-                {'name': event.oname,
-                 'id': event.oid and event.oid[:8],
-                 'action': action,
-                 'status': status,
-                 'reason': status_reason})
+                {'name': entity.name, 'id': entity.id[:8], 'action': action,
+                 'status': status, 'reason': status_reason})
 
 
 def info(context, entity, action, status=None, status_reason=None,
          timestamp=None):
-    timestamp = timestamp or timeutils.utcnow(True)
-    event = DB.Event(timestamp, logging.INFO, entity,
-                     action=action, status=status, status_reason=status_reason,
-                     user=context.user, project=context.project)
-    event.store(context)
+    DB.DBEvent.dump(context, logging.INFO, entity, action,
+                    status=status, reason=status_reason, timestamp=timestamp)
     LOG.info(_LI('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s'),
-             {'name': event.oname,
-              'id': event.oid and event.oid[:8],
-              'action': action,
-              'status': status,
-              'reason': status_reason})
+             {'name': entity.name, 'id': entity.id[:8], 'action': action,
+              'status': status, 'reason': status_reason})
 
 
 def debug(context, entity, action, status=None, status_reason=None,
           timestamp=None):
-    timestamp = timestamp or timeutils.utcnow(True)
-    event = DB.Event(timestamp, logging.DEBUG, entity,
-                     action=action, status=status, status_reason=status_reason,
-                     user=context.user, project=context.project)
-    event.store(context)
+    DB.DBEvent.dump(context, logging.DEBUG, entity, action,
+                    status=status, reason=status_reason, timestamp=timestamp)
     LOG.debug('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s',
-              {'name': event.oname,
-               'id': event.oid and event.oid[:8],
-               'action': action,
-               'status': status,
-               'reason': status_reason})
+              {'name': entity.name, 'id': entity.id[:8], 'action': action,
+               'status': status, 'reason': status_reason})
