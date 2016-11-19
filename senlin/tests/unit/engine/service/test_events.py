@@ -285,3 +285,26 @@ class EventTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         mock_find.assert_called_once_with(self.ctx, 'BOGUS')
+
+    @mock.patch.object(service.EngineService, 'event_find')
+    def test_event_get2(self, mock_find):
+        x_event = mock.Mock()
+        x_event.as_dict.return_value = {'level': consts.EVENT_LEVELS['DEBUG']}
+        mock_find.return_value = x_event
+
+        req = oreo.EventGetRequest(identity='EVENT_ID')
+        result = self.eng.event_get2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'level': 'DEBUG'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'EVENT_ID')
+
+    @mock.patch.object(service.EngineService, 'event_find')
+    def test_event_get2_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='event', id='BOGUS')
+        req = oreo.EventGetRequest(identity='BOGUS')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.event_get2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        mock_find.assert_called_once_with(self.ctx, 'BOGUS')

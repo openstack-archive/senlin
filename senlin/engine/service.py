@@ -2483,3 +2483,21 @@ class EngineService(service.Service):
         evt['level'] = level
 
         return evt
+
+    @request_context2
+    def event_get2(self, context, req):
+        """Retrieve the event specified.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the EventGetRequest object.
+        :return: A dictionary containing the detailed information about a
+                 event or an exception of `ResourceNotFound` if no matching
+                 event could be found.
+        """
+
+        db_event = self.event_find(context, req.identity)
+        evt = db_event.as_dict()
+        level = utils.level_from_number(evt['level'])
+        evt['level'] = level
+
+        return evt
