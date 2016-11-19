@@ -72,5 +72,17 @@ class EventController(wsgi.Controller):
 
     @util.policy_enforce
     def get(self, req, event_id):
-        event = self.rpc_client.event_get(req.context, event_id)
+        params = {'identity': event_id}
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'EventGetRequest', params, None)
+            obj = vore.EventGetRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except (ValueError) as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        event = self.rpc_client.call2(req.context, 'event_get2', obj)
+
         return {'event': event}
