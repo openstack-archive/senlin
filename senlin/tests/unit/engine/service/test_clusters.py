@@ -30,6 +30,7 @@ from senlin.objects import base as obj_base
 from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
 from senlin.objects import node as no
+from senlin.objects import profile as pr
 from senlin.objects import receiver as ro
 from senlin.objects.requests import clusters as orco
 from senlin.tests.unit.common import base
@@ -1408,7 +1409,7 @@ class ClusterTest(base.SenlinTestCase):
         notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'node_find')
-    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(pr.Profile, 'get')
     def test__validate_replace_nodes(self, mock_profile, mock_node):
         cluster = mock.Mock(id='CID', profile_id='FAKE_ID')
         mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
@@ -1428,12 +1429,12 @@ class ClusterTest(base.SenlinTestCase):
             mock.call(self.ctx, 'NEW_NODE'),
         ])
         mock_profile.assert_has_calls([
-            mock.call(self.ctx, 'FAKE_ID'),
-            mock.call(self.ctx, 'FAKE_ID_1')
+            mock.call(self.ctx, 'FAKE_ID', project_safe=True),
+            mock.call(self.ctx, 'FAKE_ID_1', project_safe=True)
         ])
 
     @mock.patch.object(service.EngineService, 'node_find')
-    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(pr.Profile, 'get')
     def test__validate_replace_nodes_old_missing(self, mock_profile,
                                                  mock_node):
         c = mock.Mock(id='CID', profile_id='FAKE_ID')
@@ -1448,7 +1449,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_node.assert_called_once_with(self.ctx, 'OLD')
 
     @mock.patch.object(service.EngineService, 'node_find')
-    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(pr.Profile, 'get')
     def test__validate_replace_nodes_new_missing(self, mock_profile,
                                                  mock_node):
         c = mock.Mock(id='CID', profile_id='FAKE_ID')
@@ -1470,7 +1471,7 @@ class ClusterTest(base.SenlinTestCase):
         ])
 
     @mock.patch.object(service.EngineService, 'node_find')
-    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(pr.Profile, 'get')
     def test__validate_replace_nodes_old_not_member(self, mock_profile,
                                                     mock_node):
         c = mock.Mock(id='CID', profile_id='FAKE_ID')
@@ -1492,7 +1493,7 @@ class ClusterTest(base.SenlinTestCase):
         ])
 
     @mock.patch.object(service.EngineService, 'node_find')
-    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(pr.Profile, 'get')
     def test__validate_replace_nodes_new_not_orphan(self, mock_profile,
                                                     mock_node):
         c = mock.Mock(id='CID', profile_id='FAKE_ID')
@@ -1502,7 +1503,7 @@ class ClusterTest(base.SenlinTestCase):
         ]
 
         # do it
-        ex = self.assertRaises(exc.NodeNotOrphan,
+        ex = self.assertRaises(exc.BadRequest,
                                self.eng._validate_replace_nodes,
                                self.ctx, c, {'OLD': 'NEW'})
 
@@ -1514,7 +1515,7 @@ class ClusterTest(base.SenlinTestCase):
         ])
 
     @mock.patch.object(service.EngineService, 'node_find')
-    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(pr.Profile, 'get')
     def test__validate_replace_nodes_new_bad_status(self, mock_profile,
                                                     mock_node):
         c = mock.Mock(id='CID', profile_id='FAKE_ID')
@@ -1535,7 +1536,37 @@ class ClusterTest(base.SenlinTestCase):
         ])
 
     @mock.patch.object(service.EngineService, 'node_find')
-    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(pr.Profile, 'get')
+    def test__validate_replace_nodes_mult_err(self, mock_profile,
+                                              mock_node):
+        msg = []
+        c = mock.Mock(id='CID', profile_id='FAKE_ID')
+        mock_node.side_effect = [
+            mock.Mock(id='OLD1', cluster_id='CID'),
+            mock.Mock(id='NEW1', cluster_id='OTHER', status=consts.NS_ACTIVE),
+            mock.Mock(id='OLD2', cluster_id='CID'),
+            mock.Mock(id='NEW2', cluster_id='', status=consts.NS_ERROR)
+        ]
+
+        # do it
+        ex = self.assertRaises(exc.BadRequest,
+                               self.eng._validate_replace_nodes,
+                               self.ctx, c, {'OLD1': 'NEW1',
+                                             'OLD2': 'NEW2'})
+
+        msg.append(_("The request is malformed: Nodes ['NEW1'] already"
+                     " member of a cluster."))
+        msg.append(_("Nodes are not ACTIVE: ['NEW2']."))
+        self.assertEqual('\n'.join(msg), six.text_type(ex))
+        mock_node.assert_has_calls([
+            mock.call(self.ctx, 'OLD1'),
+            mock.call(self.ctx, 'NEW1'),
+            mock.call(self.ctx, 'OLD2'),
+            mock.call(self.ctx, 'NEW2')
+        ])
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(pr.Profile, 'get')
     def test__validate_replace_nodes_new_profile_type_mismatch(
             self, mock_profile, mock_node):
         c = mock.Mock(id='CID', profile_id='FAKE_CLUSTER_PROFILE')
@@ -1550,7 +1581,7 @@ class ClusterTest(base.SenlinTestCase):
         ]
 
         # do it
-        ex = self.assertRaises(exc.ProfileTypeNotMatch,
+        ex = self.assertRaises(exc.BadRequest,
                                self.eng._validate_replace_nodes,
                                self.ctx, c, {'OLD': 'NEW'})
 
@@ -1561,8 +1592,8 @@ class ClusterTest(base.SenlinTestCase):
             mock.call(self.ctx, 'NEW')
         ])
         mock_profile.assert_has_calls([
-            mock.call(self.ctx, 'FAKE_CLUSTER_PROFILE'),
-            mock.call(self.ctx, 'FAKE_NODE_PROFILE')
+            mock.call(self.ctx, 'FAKE_CLUSTER_PROFILE', project_safe=True),
+            mock.call(self.ctx, 'FAKE_NODE_PROFILE', project_safe=True)
         ])
 
     @mock.patch.object(am.Action, 'create')
