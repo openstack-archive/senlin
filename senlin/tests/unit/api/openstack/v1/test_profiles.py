@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import copy
 import mock
 import six
 from webob import exc
@@ -21,6 +20,7 @@ from oslo_utils import uuidutils
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import profiles
 from senlin.common import exception as senlin_exc
+from senlin.common.i18n import _
 from senlin.common import policy
 from senlin.objects.requests import profiles as vorp
 from senlin.rpc import client as rpc_client
@@ -415,14 +415,17 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'metadata': {u'author': u'thomas j'},
         }
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_resp)
         result = self.controller.update(req, profile_id=pid, body=body)
+        mock_call.assert_called_with(req.context, 'profile_update2', mock.ANY)
 
-        args = copy.deepcopy(body['profile'])
-        args['identity'] = pid
-        mock_call.assert_called_with(req.context, ('profile_update', args))
-
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorp.ProfileUpdateRequest)
+        self.assertIsInstance(request.profile, vorp.ProfileUpdateRequestBody)
+        self.assertEqual(pid, request.identity)
+        self.assertEqual('profile-2', request.profile.name)
+        self.assertEqual({'author': 'thomas j'}, request.profile.metadata)
         expected = {'profile': engine_resp}
         self.assertEqual(expected, result)
 
@@ -433,11 +436,13 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
                         jsonutils.dumps(body))
 
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
                                req, profile_id=pid, body=body)
         self.assertEqual("Malformed request data, missing 'profile' key in "
                          "request body.", six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     def test_profile_update_no_name(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -449,29 +454,38 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
                         jsonutils.dumps(body))
 
-        self.patchobject(rpc_client.EngineClient, 'call', return_value={})
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
+                                     return_value={})
         result = self.controller.update(req, profile_id=pid, body=body)
         self.assertEqual({'profile': {}}, result)
 
-    def test_profile_update_with_spec(self, mock_enforce):
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorp.ProfileUpdateRequest)
+        self.assertIsInstance(request.profile, vorp.ProfileUpdateRequestBody)
+        self.assertEqual(pid, request.identity)
+        self.assertEqual({'author': 'thomas j'}, request.profile.metadata)
+
+    def test_profile_update_with_unexpected_field(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'aaaa-bbbb-cccc'
         body = {
             'profile': {
                 'name': 'new_profile',
                 'metadata': {'author': 'john d'},
-                'spec': {'param_1': 'value1'}
+                'foo': 'bar'
             }
         }
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
                         jsonutils.dumps(body))
 
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
                                req, profile_id=pid, body=body)
-        self.assertEqual("Updating the spec of a profile is not supported "
-                         "because it may cause state conflicts in engine.",
-                         six.text_type(ex))
+        msg = _("Additional properties are not allowed "
+                "('foo' was unexpected)")
+        self.assertEqual(msg, six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     def test_profile_update_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -486,7 +500,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                         jsonutils.dumps(body))
 
         error = senlin_exc.ResourceNotFound(type='profile', id=pid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
