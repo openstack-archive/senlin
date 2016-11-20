@@ -477,6 +477,37 @@ class EngineService(service.Service):
         profile = profile_base.Profile.load(context, profile=db_profile)
         return profile.to_dict()
 
+    @request_context2
+    def profile_update2(self, ctx, req):
+        """Update the properties of a given profile.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ProfileUpdateRequest object.
+        :returns: A dictionary containing the details of the updated profile,
+                  or an exception `ResourceNotFound` if no matching profile is
+                  found.
+        """
+        LOG.info(_LI("Updating profile '%(id)s.'"), {'id': req.identity})
+        db_profile = self.profile_find(ctx, req.identity)
+        profile = profile_base.Profile.load(ctx, profile=db_profile)
+        changed = False
+        if req.profile.obj_attr_is_set('name'):
+            if req.profile.name != profile.name:
+                profile.name = req.profile.name
+                changed = True
+        if req.profile.obj_attr_is_set('metadata'):
+            if req.profile.metadata != profile.metadata:
+                profile.metadata = req.profile.metadata
+                changed = True
+        if changed:
+            profile.store(ctx)
+        else:
+            msg = _("No property needs an update.")
+            raise exception.BadRequest(msg=msg)
+
+        LOG.info(_LI("Profile '%(id)s' is updated."), {'id': req.identity})
+        return profile.to_dict()
+
     @request_context
     def profile_update(self, context, identity, name=None, metadata=None):
         """Update the properties of a given profile.
