@@ -1045,8 +1045,8 @@ class EngineService(service.Service):
                  {'cluster': req.identity, 'nodes': req.nodes})
 
         db_cluster = self.cluster_find(context, req.identity)
-        db_cluster_profile = self.profile_find(context,
-                                               db_cluster.profile_id)
+        db_cluster_profile = profile_obj.Profile.get(
+            context, db_cluster.profile_id, project_safe=True)
         cluster_profile_type = db_cluster_profile.type
 
         found = []
@@ -1060,41 +1060,36 @@ class EngineService(service.Service):
                 # Skip node in the same cluster already
                 if db_node.status != consts.NS_ACTIVE:
                     bad_nodes.append(db_node.id)
-                elif len(db_node.cluster_id) != 0:
+                if db_node.cluster_id:
                     owned_nodes.append(db_node.id)
-                else:
-                    # check profile type matching
-                    db_node_profile = self.profile_find(context,
-                                                        db_node.profile_id)
-                    node_profile_type = db_node_profile.type
-                    if node_profile_type != cluster_profile_type:
-                        not_match_nodes.append(db_node.id)
-                    else:
-                        found.append(db_node.id)
+                # check profile type matching
+                db_node_profile = profile_obj.Profile.get(
+                    context, db_node.profile_id, project_safe=True)
+                node_profile_type = db_node_profile.type
+                if node_profile_type != cluster_profile_type:
+                    not_match_nodes.append(db_node.id)
+
+                found.append(db_node.id)
             except exception.ResourceNotFound:
                 not_found.append(node)
                 pass
 
-        error = None
-        if len(not_match_nodes) > 0:
-            error = _("Profile type of nodes %s does not match that of the "
-                      "cluster.") % not_match_nodes
-            LOG.error(error)
-            raise exception.ProfileTypeNotMatch(message=error)
-        elif len(owned_nodes) > 0:
-            error = _("Nodes %s already owned by some cluster.") % owned_nodes
-            LOG.error(error)
-            raise exception.NodeNotOrphan(message=error)
-        elif len(bad_nodes) > 0:
-            error = _("Nodes are not ACTIVE: %s.") % bad_nodes
-        elif len(not_found) > 0:
-            error = _("Nodes not found: %s.") % not_found
-        elif len(found) == 0:
-            error = _("No nodes to add: %s.") % req.nodes
+        msg = []
+        if len(not_match_nodes):
+            msg.append(_("Profile type of nodes %s does not match that of the "
+                         "cluster.") % not_match_nodes)
+        if len(owned_nodes):
+            msg.append(("Nodes %s already owned by some "
+                        "cluster.") % owned_nodes)
+        if len(bad_nodes):
+            msg.append(_("Nodes are not ACTIVE: %s.") % bad_nodes)
+        if len(not_found):
+            msg.append(_("Nodes not found: %s.") % not_found)
 
-        if error is not None:
-            LOG.error(error)
-            raise exception.BadRequest(msg=error)
+        if msg:
+            msg_err = '\n'.join(msg)
+            LOG.error(msg_err)
+            raise exception.BadRequest(msg=msg_err)
 
         target_size = db_cluster.desired_capacity + len(found)
         error = su.check_size_params(db_cluster, target_size, strict=True)

@@ -500,8 +500,8 @@ class TestClusterAddNodesNegativeNodeNotOrphan(base.BaseSenlinAPITest):
             }
         }
 
-        # Verify conflict exception(409) is raised.
-        self.assertRaises(exceptions.Conflict,
+        # Verify conflict exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
                           self.client.trigger_action,
                           'clusters', self.cluster_id, params)
 
