@@ -834,6 +834,28 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'node_find')
     @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_del_nodes2_mult_errors(self, mock_find,
+                                            mock_node):
+        mock_find.return_value = mock.Mock(id='1234')
+        mock_node.side_effect = [mock.Mock(id='NODE1', cluster_id='5678'),
+                                 exc.ResourceNotFound(type='node', id='NODE2')]
+        req = orco.ClusterDelNodesRequest(identity='CLUSTER',
+                                          nodes=['NODE1', 'NODE2'])
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_del_nodes2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        msg1 = _("The request is malformed: Nodes not found:")
+        msg2 = _("Nodes not members of specified cluster: ['NODE1'].")
+        self.assertIn(msg1, six.text_type(ex.exc_info[1]))
+        self.assertIn(msg2, six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        self.assertEqual(2, mock_node.call_count)
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_del_nodes2_orphan_nodes(self, mock_find, mock_node):
         mock_find.return_value = mock.Mock(id='1234')
         mock_node.return_value = mock.Mock(id='NODE3', cluster_id='')
