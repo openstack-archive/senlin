@@ -1890,3 +1890,28 @@ class ClusterTest(base.SenlinTestCase):
         mock_policies.assert_called_once_with(self.ctx, '12345678AB')
         mock_receivers.assert_called_once_with(
             self.ctx, filters={'cluster_id': '12345678AB'})
+
+    @mock.patch.object(ro.Receiver, 'get_all')
+    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_delete2_mult_err(self, mock_find, mock_policies,
+                                      mock_receivers):
+        x_obj = mock.Mock(id='12345678AB', dependents={})
+        mock_find.return_value = x_obj
+        mock_policies.return_value = [mock.Mock()]
+        mock_receivers.return_value = [mock.Mock()]
+        req = orco.ClusterDeleteRequest(identity='IDENTITY')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_delete2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
+        self.assertIn('there is still policy(s) attached to it.',
+                      six.text_type(ex.exc_info[1]))
+        self.assertIn('there is still receiver(s) associated with it.',
+                      six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'IDENTITY')
+        mock_policies.assert_called_once_with(self.ctx, '12345678AB')
+        mock_receivers.assert_called_once_with(
+            self.ctx, filters={'cluster_id': '12345678AB'})
