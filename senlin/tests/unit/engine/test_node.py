@@ -335,7 +335,7 @@ class TestNode(base.SenlinTestCase):
 
         node = nodem.Node('node1', PROFILE_ID, CLUSTER_ID, self.context)
         mock_create.side_effect = exception.EResourceCreation(
-            type='PROFILE', message='Boom')
+            type='PROFILE', message='Boom', resource_id='test_id')
 
         res = node.do_create(self.context)
 
@@ -343,7 +343,8 @@ class TestNode(base.SenlinTestCase):
         mock_status.assert_any_call(self.context, consts.NS_CREATING,
                                     'Creation in progress')
         mock_status.assert_any_call(self.context, consts.NS_ERROR,
-                                    'Failed in creating PROFILE: Boom.')
+                                    'Failed in creating PROFILE: Boom.',
+                                    physical_id='test_id')
 
     @mock.patch.object(node_obj.Node, 'delete')
     @mock.patch.object(nodem.Node, 'set_status')

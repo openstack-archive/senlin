@@ -430,6 +430,34 @@ class TestNovaServerBasic(base.SenlinTestCase):
         cc.server_create.assert_called_once_with(**attrs)
         self.assertEqual('FAKE_ID', server_id)
 
+    def test_do_create_wait_server_timeout(self):
+        cc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        self._stubout_profile(profile, mock_image=True, mock_flavor=True,
+                              mock_keypair=True, mock_net=True)
+
+        node_obj = mock.Mock(id='FAKE_NODE_ID', index=123,
+                             cluster_id='FAKE_CLUSTER_ID',
+                             data={
+                                'placement': {
+                                    'zone': 'AZ1',
+                                    'servergroup': 'SERVER_GROUP_1'
+                                }
+                             })
+        node_obj.name = 'TEST_SERVER'
+        server_obj = mock.Mock(id='FAKE_ID')
+        cc.server_create.return_value = server_obj
+
+        err = exc.InternalError(code=500, message='TIMEOUT')
+        cc.wait_for_server.side_effect = err
+        ex = self.assertRaises(exc.EResourceCreation, profile.do_create,
+                               node_obj)
+
+        self.assertEqual('Failed in creating server: TIMEOUT.',
+                         six.text_type(ex))
+        cc.wait_for_server.assert_called_once_with('FAKE_ID')
+
     def test_do_delete_ok(self):
         profile = server.ServerProfile('t', self.spec)
 

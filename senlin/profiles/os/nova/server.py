@@ -518,7 +518,10 @@ class ServerProfile(base.Profile):
             self.compute(obj).wait_for_server(server.id)
             return server.id
         except exc.InternalError as ex:
-            raise exc.EResourceCreation(type='server', message=ex.message)
+            if server and server.id:
+                resource_id = server.id
+            raise exc.EResourceCreation(type='server', message=ex.message,
+                                        resource_id=resource_id)
 
     def do_delete(self, obj, **params):
         """Delete the physical resource associated with the specified node.
