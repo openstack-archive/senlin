@@ -46,3 +46,14 @@ class TestEventList(test_base.SenlinTestCase):
         sot = events.EventListRequest()
         sot.obj_set_defaults()
         self.assertTrue(sot.project_safe)
+
+
+class TestEventGet(test_base.SenlinTestCase):
+
+    body = {
+        'identity': 'test-event'
+    }
+
+    def test_event_get_request(self):
+        sot = events.EventListRequest(**self.body)
+        self.assertEqual('test-event', sot.identity)
