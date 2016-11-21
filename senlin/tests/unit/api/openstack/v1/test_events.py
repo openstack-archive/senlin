@@ -216,15 +216,17 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
             "user": "a21ded6060534d99840658a777c2af5a"
         }
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_resp)
         response = self.controller.get(req, event_id=event_id)
-
-        mock_call.assert_called_once_with(
-            req.context, ('event_get', {'identity': event_id}))
-
         expected = {'event': engine_resp}
         self.assertEqual(expected, response)
+
+        mock_call.assert_called_once_with(
+            req.context, 'event_get2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vore.EventGetRequest)
+        self.assertEqual(event_id, request.identity)
 
     def test_event_get_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
@@ -232,7 +234,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/events/%(event_id)s' % {'event_id': event_id})
 
         error = senlin_exc.ResourceNotFound(type='event', id=event_id)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
