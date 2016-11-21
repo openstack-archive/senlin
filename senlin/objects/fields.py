@@ -408,6 +408,21 @@ class ClusterActionName(BaseEnum):
     ALL = consts.CLUSTER_ACTION_NAMES
 
 
+class ClusterStatus(BaseEnum):
+
+    ALL = consts.CLUSTER_STATUSES
+
+
+class NodeStatus(BaseEnum):
+
+    ALL = consts.NODE_STATUSES
+
+
+class ActionStatus(BaseEnum):
+
+    ALL = consts.ACTION_STATUSES
+
+
 class ReceiverType(BaseEnum):
 
     ALL = consts.RECEIVER_TYPES
@@ -517,6 +532,21 @@ class ClusterActionNameField(fields.AutoTypedField):
         nullable = kwargs.get('nullable', False)
         self.AUTO_TYPE = ClusterActionName(nullable=nullable)
         super(ClusterActionNameField, self).__init__(**kwargs)
+
+
+class ClusterStatusField(fields.AutoTypedField):
+
+    AUTO_TYPE = ClusterStatus
+
+
+class NodeStatusField(fields.AutoTypedField):
+
+    AUTO_TYPE = NodeStatus
+
+
+class ActionStatusField(fields.AutoTypedField):
+
+    AUTO_TYPE = ActionStatus
 
 
 class ReceiverTypeField(fields.AutoTypedField):
