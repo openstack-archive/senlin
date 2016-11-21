@@ -575,26 +575,6 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Profile '%s' is deleted."), req.identity)
 
-    @request_context
-    def profile_delete(self, context, identity):
-        """Delete the specified profile.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a profile.
-        :return: None if succeeded or an exception of `ResourceInUse` if
-                 profile is referenced by certain clusters/nodes.
-        """
-        db_profile = self.profile_find(context, identity)
-        LOG.info(_LI("Deleting profile '%s'."), identity)
-        try:
-            profile_base.Profile.delete(context, db_profile.id)
-        except exception.EResourceBusy:
-            reason = _("still referenced by some clusters and/or nodes.")
-            raise exception.ResourceInUse(type='profile', id=identity,
-                                          reason=reason)
-
-        LOG.info(_LI("Profile '%(id)s' is deleted."), {'id': identity})
-
     @request_context2
     def policy_type_list2(self, ctx, req):
         """List known policy type implementations.
