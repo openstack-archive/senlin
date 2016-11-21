@@ -34,30 +34,13 @@ class TestObject(vo_base.SenlinObject):
 
 
 @vo_base.SenlinObjectRegistry.register_if(False)
-class TestPayload(base.NotificationPayloadBase):
+class TestPayload(base.NotificationObject):
     VERSION = '1.0'
-
-    schema = {
-        'field_1': ('source_field', 'field_1'),
-        'field_2': ('source_field', 'field_2'),
-    }
 
     fields = {
         'extra_field': fields.StringField(),  # filled by ctor
         'field_1': fields.StringField(),  # filled by the schema
         'field_2': fields.IntegerField(),   # filled by the schema
-    }
-
-    def populate_schema(self, source_field):
-        super(TestPayload, self).populate_schema(source_field=source_field)
-
-
-@vo_base.SenlinObjectRegistry.register_if(False)
-class TestPayloadEmptySchema(base.NotificationPayloadBase):
-    VERSION = '1.0'
-
-    fields = {
-        'extra_field': fields.StringField(),  # filled by ctor
     }
 
 
@@ -93,9 +76,9 @@ class TestNotificationBase(test_base.SenlinTestCase):
     expected_payload = {
         'senlin_object.name': 'TestPayload',
         'senlin_object.data': {
-            'extra_field': 'test string',
             'field_1': 'test1',
-            'field_2': 42
+            'field_2': 42,
+            'extra_field': 'test string',
         },
         'senlin_object.version': '1.0',
         'senlin_object.namespace': 'senlin'
@@ -114,8 +97,8 @@ class TestNotificationBase(test_base.SenlinTestCase):
         self.my_obj = TestObject(field_1='test1', field_2=42,
                                  not_important_field=13)
 
-        self.payload = TestPayload(extra_field='test string')
-        self.payload.populate_schema(source_field=self.my_obj)
+        self.payload = TestPayload(field_1='test1', field_2=42,
+                                   extra_field='test string')
 
         self.notification = TestNotification(
             event_type=base.EventType(
@@ -194,53 +177,3 @@ class TestNotificationBase(test_base.SenlinTestCase):
             mock_context,
             expected_event_type='test_object.update',
             expected_payload=self.expected_payload)
-
-    @mock.patch('senlin.common.messaging.NOTIFIER')
-    def test_not_possible_to_emit_if_not_populated(self, mock_notifier):
-        # create a non-populated payload
-        payload = TestPayload(extra_field='test string')
-        event_type = base.EventType(object='test_object',
-                                    action=fields.NotificationAction.UPDATE)
-        publisher = base.NotificationPublisher.from_service_obj(
-            self.service_obj)
-
-        noti = TestNotification(
-            event_type=event_type,
-            publisher=publisher,
-            priority=fields.NotificationPriority.INFO,
-            payload=payload)
-
-        mock_context = mock.Mock()
-        self.assertRaises(AssertionError, noti.emit, mock_context)
-        self.assertFalse(mock_notifier.called)
-
-    @mock.patch('senlin.common.messaging.NOTIFIER')
-    def test_empty_schema(self, mock_notifier):
-        # create a non-populated payload
-        payload = TestPayloadEmptySchema(extra_field='test string')
-        event_type = base.EventType(object='test_object',
-                                    action=fields.NotificationAction.UPDATE)
-        publisher = base.NotificationPublisher.from_service_obj(
-            self.service_obj)
-
-        noti = TestNotificationEmptySchema(
-            event_type=event_type,
-            publisher=publisher,
-            priority=fields.NotificationPriority.INFO,
-            payload=payload)
-
-        mock_context = mock.Mock()
-        mock_context.to_dict.return_value = {}
-        noti.emit(mock_context)
-
-        self._verify_notification(
-            mock_notifier,
-            mock_context,
-            expected_event_type='test_object.update',
-            expected_payload={
-                'senlin_object.name': 'TestPayloadEmptySchema',
-                'senlin_object.data': {'extra_field': u'test string'},
-                'senlin_object.version': '1.0',
-                'senlin_object.namespace': 'senlin'
-            }
-        )
