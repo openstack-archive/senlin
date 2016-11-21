@@ -27,7 +27,7 @@ class V2MessagingClient(rest_client.RestClient):
 
         self.uri_prefix = 'v2'
 
-        client_id = uuidutils.generate_uuid().hex
+        client_id = uuidutils.generate_uuid()
         self.headers = {'Client-ID': client_id}
 
     def get_resp(self, resp, body):
