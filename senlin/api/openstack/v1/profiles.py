@@ -105,16 +105,18 @@ class ProfileController(wsgi.Controller):
     @wsgi.Controller.api_version('1.2')
     @util.policy_enforce
     def validate(self, req, body):
-        profile_data = body.get('profile')
-        if profile_data is None:
-            raise exc.HTTPBadRequest(_("Malformed request data, missing "
-                                       "'profile' key in request body."))
-        if consts.PROFILE_SPEC not in profile_data:
-            raise exc.HTTPBadRequest(_("No profile spec provided"))
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ProfileValidateRequest', body, 'profile')
 
-        result = self.rpc_client.profile_validate(
-            req.context, profile_data[consts.PROFILE_SPEC])
+            obj = vorp.ProfileValidateRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
+        result = self.rpc_client.call2(req.context, 'profile_validate2', obj)
         return {'profile': result}
 
     @util.policy_enforce
