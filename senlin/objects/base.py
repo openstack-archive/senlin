@@ -98,6 +98,8 @@ class SenlinObject(base.VersionedObject):
 
 class SenlinObjectRegistry(base.VersionedObjectRegistry):
 
+    notification_classes = []
+
     def registration_hook(self, cls, index):
         """Callback for object registration.
 
@@ -113,3 +115,14 @@ class SenlinObjectRegistry(base.VersionedObjectRegistry):
                 getattr(objects, cls.obj_name()).VERSION)
             if version >= curr_version:
                 setattr(objects, cls.obj_name(), cls)
+
+    @classmethod
+    def register_notification(cls, notification_cls):
+        """Register a class as concrete notification.
+
+        This is used only to register concrete notification or payload
+        classes. Do NOT register base classes intended for inheritance only.
+        """
+        cls.register_if(False)(notification_cls)
+        cls.notification_classes.append(notification_cls)
+        return notification_cls
