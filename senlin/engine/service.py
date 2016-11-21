@@ -522,39 +522,6 @@ class EngineService(service.Service):
         LOG.info(_LI("Profile '%(id)s' is updated."), {'id': req.identity})
         return profile.to_dict()
 
-    @request_context
-    def profile_update(self, context, identity, name=None, metadata=None):
-        """Update the properties of a given profile.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a profile.
-        :param name: The new name for the profile.
-        :param metadata: A dictionary of key-value pairs to be associated with
-                         the profile.
-        :returns: A dictionary containing the details of the updated profile,
-                  or an exception `ResourceNotFound` if no matching profile is
-                  found.
-        """
-        LOG.info(_LI("Updating profile '%(id)s.'"), {'id': identity})
-
-        db_profile = self.profile_find(context, identity)
-        profile = profile_base.Profile.load(context, profile=db_profile)
-        changed = False
-        if name is not None and name != profile.name:
-            profile.name = name
-            changed = True
-        if metadata is not None and metadata != profile.metadata:
-            profile.metadata = metadata
-            changed = True
-        if changed:
-            profile.store(context)
-        else:
-            msg = _("No property needs an update.")
-            raise exception.BadRequest(msg=msg)
-
-        LOG.info(_LI("Profile '%(id)s' is updated."), {'id': identity})
-        return profile.to_dict()
-
     @request_context2
     def profile_delete2(self, ctx, req):
         """Delete the specified profile.
