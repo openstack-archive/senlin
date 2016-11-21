@@ -300,15 +300,6 @@ class TestNode(base.SenlinTestCase):
         mock_details.assert_called_once_with(self.context, node)
         self.assertEqual({'foo': 'bar'}, res)
 
-    @mock.patch.object(node_obj.Node, 'update')
-    def test_update_dependents(self, mock_update):
-        node = nodem.Node('node1', PROFILE_ID, CLUSTER_ID, self.context)
-        node.id = 'node_id'
-        dependents = {'containers': ['container1']}
-        node.update_dependents(self.context, dependents)
-        values = {'dependents': {'containers': ['container1']}}
-        mock_update.assert_called_once_with(self.context, 'node_id', values)
-
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'create_object')
     def test_node_create(self, mock_create, mock_status):

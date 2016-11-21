@@ -75,6 +75,7 @@ def create_cluster(ctx, profile, **kwargs):
         'status': 'INIT',
         'status_reason': 'Just Initialized',
         'meta_data': {},
+        'dependents': {},
     }
     values.update(kwargs)
     if 'project' in kwargs:
@@ -104,6 +105,7 @@ def create_node(ctx, cluster, profile, **kwargs):
         'status_reason': 'create complete',
         'meta_data': jsonutils.loads('{"foo": "123"}'),
         'data': jsonutils.loads('{"key1": "value1"}'),
+        'dependents': {},
     }
     values.update(kwargs)
     return db_api.node_create(ctx, values)

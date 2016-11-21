@@ -15,6 +15,7 @@ import mock
 from senlin.common import context
 from senlin.common import exception as exc
 from senlin.common.i18n import _
+from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import cluster
 from senlin.engine import node
 from senlin.profiles.container import docker as docker_profile
@@ -281,23 +282,25 @@ class TestContainerDockerProfile(base.SenlinTestCase):
                 "missing from the provided stack node.")
         self.assertEqual(msg, ex.message)
 
-    @mock.patch.object(docker_profile.DockerProfile, '_add_dependents_to_host')
+    @mock.patch.object(db_api, 'node_add_dependents')
     @mock.patch.object(context, 'get_admin_context')
     @mock.patch.object(docker_profile.DockerProfile, 'docker')
     def test_do_create(self, mock_docker, mock_ctx, mock_add):
+        ctx = mock.Mock()
+        mock_ctx.return_value = ctx
         dockerclient = mock.Mock()
         mock_docker.return_value = dockerclient
         container = {'Id': 'd' * 64}
         dockerclient.container_create.return_value = container
         container_id = 'd' * 36
         profile = docker_profile.DockerProfile('container', self.spec)
-        host = mock.Mock()
-        cluster = mock.Mock()
+        host = mock.Mock(id='node_id')
         profile.host = host
         profile.cluster = cluster
+        profile.id = 'profile_id'
         obj = mock.Mock(id='fake_con_id')
         ret_container_id = profile.do_create(obj)
-        mock_add.assert_any_call(host, 'fake_con_id')
+        mock_add.assert_called_once_with(ctx, 'node_id', 'fake_con_id')
         self.assertEqual(container_id, ret_container_id)
         params = {
             'image': 'hello-world',
@@ -305,25 +308,6 @@ class TestContainerDockerProfile(base.SenlinTestCase):
             'command': '/bin/sleep 30',
         }
         dockerclient.container_create.assert_called_once_with(**params)
-
-    @mock.patch.object(context, 'get_admin_context')
-    def test_add_dependents_to_host(self, mock_ctx):
-        host = mock.Mock(dependents={}, id='fake_host')
-        container = mock.Mock()
-        ctx = mock.Mock()
-        mock_ctx.return_value = ctx
-        profile = docker_profile.DockerProfile('container', self.spec)
-        profile.host = host
-        profile._add_dependents_to_host(host, container)
-        dependents = {'containers': [container]}
-        profile.host.update_dependents.assert_any_call(ctx, dependents)
-
-        dep = {'containers': ['container1']}
-        host = mock.Mock(dependents=dep, id='fake_host')
-        profile.host = host
-        dependents = {'containers': ['container1', container]}
-        profile._add_dependents_to_host(host, container)
-        profile.host.update_dependents.assert_any_call(ctx, dependents)
 
     @mock.patch.object(docker_profile.DockerProfile, 'docker')
     def test_do_create_failed(self, mock_docker):
@@ -333,20 +317,24 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         self.assertRaises(exc.EResourceCreation,
                           profile.do_create, obj)
 
-    @mock.patch.object(docker_profile.DockerProfile,
-                       '_remove_dependents_from_host')
+    @mock.patch.object(context, 'get_admin_context')
+    @mock.patch.object(db_api, 'node_remove_dependents')
     @mock.patch.object(docker_profile.DockerProfile, 'docker')
-    def test_do_delete(self, mock_docker, mock_remove):
+    def test_do_delete(self, mock_docker, mock_rem, mock_ctx):
         obj = mock.Mock(id='container1')
         physical_id = mock.Mock()
         obj.physical_id = physical_id
         dockerclient = mock.Mock()
+        ctx = mock.Mock()
+        mock_ctx.return_value = ctx
         mock_docker.return_value = dockerclient
-        host = mock.Mock()
+        host = mock.Mock(dependents={})
+        host.id = 'node_id'
         profile = docker_profile.DockerProfile('container', self.spec)
         profile.host = host
-        profile.cluster = None
+        profile.id = 'profile_id'
         self.assertIsNone(profile.do_delete(obj))
+        mock_rem.assert_called_once_with(ctx, 'node_id', 'container1')
         dockerclient.container_delete.assert_any_call(physical_id)
 
     def test_do_delete_no_physical_id(self):
@@ -364,15 +352,3 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         profile = docker_profile.DockerProfile('container', self.spec)
         self.assertRaises(exc.EResourceDeletion,
                           profile.do_delete, obj)
-
-    @mock.patch.object(context, 'get_admin_context')
-    def test_remove_dependents_from_host(self, mock_ctx):
-        ctx = mock.Mock()
-        mock_ctx.return_value = ctx
-        dependents = {'containers': ['con1', 'con2', 'con3']}
-        host = mock.Mock(dependents=dependents)
-        profile = docker_profile.DockerProfile('container', self.spec)
-        profile._remove_dependents_from_host(host, 'con2')
-        new_deps = {'containers': ['con1', 'con3']}
-        self.assertEqual(new_deps, host.dependents)
-        host.update_dependents.assert_called_once_with(ctx, new_deps)

@@ -18,9 +18,10 @@ from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.common import utils
+from senlin.db.sqlalchemy import api as db_api
 from senlin.drivers.container import docker_v1 as docker_driver
 from senlin.engine import cluster
-from senlin.engine import node
+from senlin.engine import node as node_mod
 from senlin.profiles import base
 
 
@@ -156,7 +157,7 @@ class DockerProfile(base.Profile):
         """
 
         try:
-            host_node = node.Node.load(ctx, node_id=host_node)
+            host_node = node_mod.Node.load(ctx, node_id=host_node)
         except exc.ResourceNotFound as ex:
             msg = ex.enhance_msg('host', ex)
             raise exc.EResourceCreation(type='container', message=msg)
@@ -219,23 +220,6 @@ class DockerProfile(base.Profile):
 
         return host_ip
 
-    def _add_dependents_to_host(self, host, container):
-        """Add container node id to host property.
-
-        :param host: The host node to host the container
-        :param container: The id of the container node
-        """
-
-        ctx = context.get_admin_context()
-        containers = host.dependents.get('containers', None)
-        if not containers:
-            dependents = {'containers': [container]}
-        else:
-            containers.append(container)
-            dependents = {'containers': containers}
-
-        host.update_dependents(ctx, dependents)
-
     def do_create(self, obj):
         """Create a container instance using the given profile.
 
@@ -254,8 +238,9 @@ class DockerProfile(base.Profile):
         }
 
         try:
+            ctx = context.get_admin_context()
             dockerclient = self.docker(obj)
-            self._add_dependents_to_host(self.host, obj.id)
+            db_api.node_add_dependents(ctx, self.host.id, obj.id)
             container = dockerclient.container_create(**params)
         except exc.InternalError as ex:
             raise exc.EResourceCreation(type='container',
@@ -263,18 +248,6 @@ class DockerProfile(base.Profile):
 
         self.container_id = container['Id'][:36]
         return self.container_id
-
-    def _remove_dependents_from_host(self, host, container):
-        """Remove dependency record of host
-
-        :param host: The host node to host the container
-        :param container: The id of the container node
-        """
-        ctx = context.get_admin_context()
-        containers = host.dependents['containers']
-        containers.remove(container)
-        dependents = {'containers': containers}
-        host.update_dependents(ctx, dependents)
 
     def do_delete(self, obj):
         """Delete a container node.
@@ -291,5 +264,6 @@ class DockerProfile(base.Profile):
             raise exc.EResourceDeletion(type='container',
                                         id=obj.physical_id,
                                         message=six.text_type(ex))
-        self._remove_dependents_from_host(self.host, obj.id)
+        ctx = context.get_admin_context()
+        db_api.node_remove_dependents(ctx, self.host.id, obj.id)
         return
