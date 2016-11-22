@@ -124,3 +124,14 @@ class TestReceiverGet(test_base.SenlinTestCase):
         }
         sot = receivers.ReceiverGetRequest(**params)
         self.assertEqual('receiver-001', sot.identity)
+
+
+class TestReceiverDelete(test_base.SenlinTestCase):
+
+    body = {
+        'identity': 'test-receiver'
+    }
+
+    def test_receiver_delete_request(self):
+        sot = receivers.ReceiverDeleteRequest(**self.body)
+        self.assertEqual('test-receiver', sot.identity)
