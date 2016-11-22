@@ -265,28 +265,6 @@ class EventTest(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.ctx, project_safe=False)
 
     @mock.patch.object(service.EngineService, 'event_find')
-    def test_event_get(self, mock_find):
-        x_event = mock.Mock()
-        x_event.as_dict.return_value = {'level': '30'}
-        mock_find.return_value = x_event
-
-        res = self.eng.event_get(self.ctx, 'level')
-
-        self.assertEqual({'level': 'WARNING'}, res)
-        mock_find.assert_called_once_with(self.ctx, 'level')
-
-    @mock.patch.object(service.EngineService, 'event_find')
-    def test_event_get_not_found(self, mock_find):
-        mock_find.side_effect = exc.ResourceNotFound(type='event', id='BOGUS')
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.event_get,
-                               self.ctx, 'BOGUS')
-
-        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        mock_find.assert_called_once_with(self.ctx, 'BOGUS')
-
-    @mock.patch.object(service.EngineService, 'event_find')
     def test_event_get2(self, mock_find):
         x_event = mock.Mock()
         x_event.as_dict.return_value = {'level': consts.EVENT_LEVELS['DEBUG']}
