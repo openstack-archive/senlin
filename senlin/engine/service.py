@@ -1186,18 +1186,17 @@ class EngineService(service.Service):
                 not_found.append(node)
                 pass
 
-        error = None
+        msg = []
         if len(not_found):
-            error = _("Nodes not found: %s.") % not_found
-        elif len(bad_nodes):
-            error = _("Nodes not members of specified cluster: "
-                      "%s.") % bad_nodes
-        elif len(found) == 0:
-            error = _("No nodes specified.")
+            msg.append(_("Nodes not found: %s.") % not_found)
+        if len(bad_nodes):
+            msg.append(_("Nodes not members of specified cluster: "
+                         "%s.") % bad_nodes)
 
-        if error is not None:
-            LOG.error(error)
-            raise exception.BadRequest(msg=error)
+        if msg:
+            msg_err = '\n'.join(msg)
+            LOG.error(msg_err)
+            raise exception.BadRequest(msg=msg_err)
 
         target_size = db_cluster.desired_capacity - len(found)
         error = su.check_size_params(db_cluster, target_size, strict=True)
