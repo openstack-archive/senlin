@@ -570,12 +570,12 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(pr.Profile, 'get')
     @mock.patch.object(service.EngineService, 'node_find')
-    @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(dispatcher, 'start_action')
-    def test_cluster_add_nodes2(self, notify, mock_find, mock_profile,
-                                mock_node, mock_action, mock_check):
+    def test_cluster_add_nodes2(self, notify, mock_find, mock_node,
+                                mock_profile, mock_action, mock_check):
         x_cluster = mock.Mock(id='12345678AB', profile_id='FAKE_ID',
                               desired_capacity=4)
         mock_find.return_value = x_cluster
@@ -606,13 +606,14 @@ class ClusterTest(base.SenlinTestCase):
             status=am.Action.READY,
             inputs={'nodes': ['NODE1', 'NODE2']},
         )
+        self.assertEqual(3, mock_profile.call_count)
         notify.assert_called_once_with()
 
+    @mock.patch.object(pr.Profile, 'get')
     @mock.patch.object(service.EngineService, 'node_find')
-    @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_cluster_add_nodes2_nodes_not_found(self, mock_find, mock_profile,
-                                                mock_node):
+    def test_cluster_add_nodes2_nodes_not_found(self, mock_find, mock_node,
+                                                mock_profile):
         mock_find.return_value = mock.Mock(id='1234', profile_id='FAKE_ID')
         mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
         mock_node.side_effect = exc.ResourceNotFound(type='node', id='NODE1')
@@ -627,17 +628,19 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual("The request is malformed: Nodes not found: "
                          "['NODE1'].", six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
-        mock_profile.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_profile.assert_called_once_with(self.ctx, 'FAKE_ID',
+                                             project_safe=True)
         mock_node.assert_called_once_with(self.ctx, 'NODE1')
 
+    @mock.patch.object(pr.Profile, 'get')
     @mock.patch.object(service.EngineService, 'node_find')
-    @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_cluster_add_nodes2_bad_status(self, mock_find, mock_profile,
-                                           mock_node):
+    def test_cluster_add_nodes2_bad_status(self, mock_find, mock_node,
+                                           mock_profile):
         mock_find.return_value = mock.Mock(id='1234', profile_id='FAKE_ID')
         mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
-        mock_node.return_value = mock.Mock(id='NODE2', status='ERROR')
+        mock_node.return_value = mock.Mock(
+            id='NODE2', cluster_id='', status='ERROR')
         req = {'identity': 'CLUSTER', 'nodes': ['NODE2']}
         self._prepare_request(req)
 
@@ -651,14 +654,14 @@ class ClusterTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
 
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
-        mock_profile.assert_called_once_with(self.ctx, 'FAKE_ID')
+        self.assertEqual(2, mock_profile.call_count)
         mock_node.assert_called_once_with(self.ctx, 'NODE2')
 
+    @mock.patch.object(pr.Profile, 'get')
     @mock.patch.object(service.EngineService, 'node_find')
-    @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_add_nodes2_node_already_owned(self, mock_find,
-                                                   mock_profile, mock_node):
+                                                   mock_node, mock_profile):
 
         mock_find.return_value = mock.Mock(id='1234', profile_id='FAKE_ID')
         mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
@@ -671,19 +674,20 @@ class ClusterTest(base.SenlinTestCase):
                                self.eng.cluster_add_nodes2,
                                self.ctx, req)
 
-        self.assertEqual(exc.NodeNotOrphan, ex.exc_info[0])
-        self.assertEqual("Nodes ['NODE3'] already owned by some cluster.",
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: "
+                         "Nodes ['NODE3'] already owned by some cluster.",
                          six.text_type(ex.exc_info[1]))
 
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
-        mock_profile.assert_called_once_with(self.ctx, 'FAKE_ID')
+        self.assertEqual(2, mock_profile.call_count)
         mock_node.assert_called_once_with(self.ctx, 'NODE3')
 
+    @mock.patch.object(pr.Profile, 'get')
     @mock.patch.object(service.EngineService, 'node_find')
-    @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_add_nodes2_node_profile_type_not_match(
-            self, mock_find, mock_profile, mock_node):
+            self, mock_find, mock_node, mock_profile):
 
         mock_find.return_value = mock.Mock(id='1234', profile_id='FAKE_ID')
         mock_profile.side_effect = [
@@ -699,23 +703,49 @@ class ClusterTest(base.SenlinTestCase):
                                self.eng.cluster_add_nodes2,
                                self.ctx, req)
 
-        self.assertEqual(exc.ProfileTypeNotMatch, ex.exc_info[0])
-        self.assertEqual("Profile type of nodes ['NODE4'] does not match "
-                         "that of the cluster.",
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Profile type of nodes "
+                         "['NODE4'] does not match that of the cluster.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_profile.assert_has_calls([
-            mock.call(self.ctx, 'FAKE_ID'),
-            mock.call(self.ctx, 'DIFF'),
+            mock.call(self.ctx, 'FAKE_ID', project_safe=True),
+            mock.call(self.ctx, 'DIFF', project_safe=True),
         ])
         mock_node.assert_called_once_with(self.ctx, 'NODE4')
 
+    @mock.patch.object(pr.Profile, 'get')
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_add_nodes2_mult_err(self, mock_find, mock_node,
+                                         mock_profile):
+        mock_find.return_value = mock.Mock(id='1234', profile_id='FAKE_ID')
+        mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
+        mock_node.return_value = mock.Mock(id='NODE2', status='ERROR')
+        req = {'identity': 'CLUSTER', 'nodes': ['NODE2']}
+        self._prepare_request(req)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_add_nodes2,
+                               self.ctx, req)
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        msg1 = _("The request is malformed: Nodes ['NODE2'] "
+                 "already owned by some cluster.")
+        msg2 = _("Nodes are not ACTIVE: ['NODE2'].")
+        self.assertIn(msg1, six.text_type(ex.exc_info[1]))
+        self.assertIn(msg2, six.text_type(ex.exc_info[1]))
+
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        self.assertEqual(2, mock_profile.call_count)
+        mock_node.assert_called_once_with(self.ctx, 'NODE2')
+
+    @mock.patch.object(pr.Profile, 'get')
     @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(service.EngineService, 'node_find')
-    @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_cluster_add_nodes2_failed_checking(self, mock_find, mock_profile,
-                                                mock_node, mock_check):
+    def test_cluster_add_nodes2_failed_checking(self, mock_find, mock_node,
+                                                mock_check, mock_profile):
         x_cluster = mock.Mock(id='12345678AB', profile_id='FAKE_PROFILE',
                               desired_capacity=2)
         mock_find.return_value = x_cluster
@@ -739,9 +769,9 @@ class ClusterTest(base.SenlinTestCase):
 
         mock_find.assert_called_once_with(self.ctx, 'C1')
         mock_profile.assert_has_calls([
-            mock.call(self.ctx, 'FAKE_PROFILE'),
-            mock.call(self.ctx, 'FAKE_PROFILE_1'),
-            mock.call(self.ctx, 'FAKE_PROFILE_2'),
+            mock.call(self.ctx, 'FAKE_PROFILE', project_safe=True),
+            mock.call(self.ctx, 'FAKE_PROFILE_1', project_safe=True),
+            mock.call(self.ctx, 'FAKE_PROFILE_2', project_safe=True),
         ])
         mock_node.assert_has_calls([
             mock.call(self.ctx, 'NODE_A'),
