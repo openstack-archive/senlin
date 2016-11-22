@@ -16,15 +16,15 @@ from oslo_utils import timeutils
 from oslo_utils import uuidutils
 
 from senlin import objects
-from senlin.objects import base
+from senlin.objects import base as vo_base
 from senlin.objects import fields
-from senlin.objects import notification
+from senlin.objects.notifications import base
 from senlin.tests.unit.common import base as test_base
 from senlin.tests.unit.common import utils
 
 
-@base.SenlinObjectRegistry.register_if(False)
-class TestObject(base.SenlinObject):
+@vo_base.SenlinObjectRegistry.register_if(False)
+class TestObject(vo_base.SenlinObject):
     VERSION = '1.0'
     fields = {
         'field_1': fields.StringField(),
@@ -33,8 +33,8 @@ class TestObject(base.SenlinObject):
     }
 
 
-@base.SenlinObjectRegistry.register_if(False)
-class TestPayload(notification.NotificationPayloadBase):
+@vo_base.SenlinObjectRegistry.register_if(False)
+class TestPayload(base.NotificationPayloadBase):
     VERSION = '1.0'
 
     schema = {
@@ -52,8 +52,8 @@ class TestPayload(notification.NotificationPayloadBase):
         super(TestPayload, self).populate_schema(source_field=source_field)
 
 
-@base.SenlinObjectRegistry.register_if(False)
-class TestPayloadEmptySchema(notification.NotificationPayloadBase):
+@vo_base.SenlinObjectRegistry.register_if(False)
+class TestPayloadEmptySchema(base.NotificationPayloadBase):
     VERSION = '1.0'
 
     fields = {
@@ -61,16 +61,16 @@ class TestPayloadEmptySchema(notification.NotificationPayloadBase):
     }
 
 
-@base.SenlinObjectRegistry.register_if(False)
-class TestNotification(notification.NotificationBase):
+@vo_base.SenlinObjectRegistry.register_if(False)
+class TestNotification(base.NotificationBase):
     VERSION = '1.0'
     fields = {
         'payload': fields.ObjectField('TestPayload')
     }
 
 
-@base.SenlinObjectRegistry.register_if(False)
-class TestNotificationEmptySchema(notification.NotificationBase):
+@vo_base.SenlinObjectRegistry.register_if(False)
+class TestNotificationEmptySchema(base.NotificationBase):
     VERSION = '1.0'
     fields = {
         'payload': fields.ObjectField('TestPayloadEmptySchema')
@@ -118,11 +118,11 @@ class TestNotificationBase(test_base.SenlinTestCase):
         self.payload.populate_schema(source_field=self.my_obj)
 
         self.notification = TestNotification(
-            event_type=notification.EventType(
+            event_type=base.EventType(
                 object='test_object',
                 action=fields.NotificationAction.UPDATE,
                 phase=fields.NotificationPhase.START),
-            publisher=notification.NotificationPublisher.from_service_obj(
+            publisher=base.NotificationPublisher.from_service_obj(
                 self.service_obj),
             priority=fields.NotificationPriority.INFO,
             payload=self.payload)
@@ -154,11 +154,11 @@ class TestNotificationBase(test_base.SenlinTestCase):
 
     @mock.patch('senlin.common.messaging.NOTIFIER')
     def test_emit_with_host_and_binary_as_publisher(self, mock_notifier):
-        event_type = notification.EventType(
+        event_type = base.EventType(
             object='test_object',
             action=fields.NotificationAction.UPDATE)
-        publisher = notification.NotificationPublisher(host='fake-host',
-                                                       binary='senlin-fake')
+        publisher = base.NotificationPublisher(host='fake-host',
+                                               binary='senlin-fake')
 
         noti = TestNotification(event_type=event_type,
                                 publisher=publisher,
@@ -178,10 +178,9 @@ class TestNotificationBase(test_base.SenlinTestCase):
     @mock.patch('senlin.common.messaging.NOTIFIER')
     def test_emit_event_type_without_phase(self, mock_notifier):
         noti = TestNotification(
-            event_type=notification.EventType(
-                object='test_object',
-                action=fields.NotificationAction.UPDATE),
-            publisher=notification.NotificationPublisher.from_service_obj(
+            event_type=base.EventType(object='test_object',
+                                      action=fields.NotificationAction.UPDATE),
+            publisher=base.NotificationPublisher.from_service_obj(
                 self.service_obj),
             priority=fields.NotificationPriority.INFO,
             payload=self.payload)
@@ -200,10 +199,9 @@ class TestNotificationBase(test_base.SenlinTestCase):
     def test_not_possible_to_emit_if_not_populated(self, mock_notifier):
         # create a non-populated payload
         payload = TestPayload(extra_field='test string')
-        event_type = notification.EventType(
-            object='test_object',
-            action=fields.NotificationAction.UPDATE)
-        publisher = notification.NotificationPublisher.from_service_obj(
+        event_type = base.EventType(object='test_object',
+                                    action=fields.NotificationAction.UPDATE)
+        publisher = base.NotificationPublisher.from_service_obj(
             self.service_obj)
 
         noti = TestNotification(
@@ -220,10 +218,9 @@ class TestNotificationBase(test_base.SenlinTestCase):
     def test_empty_schema(self, mock_notifier):
         # create a non-populated payload
         payload = TestPayloadEmptySchema(extra_field='test string')
-        event_type = notification.EventType(
-            object='test_object',
-            action=fields.NotificationAction.UPDATE)
-        publisher = notification.NotificationPublisher.from_service_obj(
+        event_type = base.EventType(object='test_object',
+                                    action=fields.NotificationAction.UPDATE)
+        publisher = base.NotificationPublisher.from_service_obj(
             self.service_obj)
 
         noti = TestNotificationEmptySchema(
