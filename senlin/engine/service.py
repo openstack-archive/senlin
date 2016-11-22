@@ -1041,30 +1041,32 @@ class EngineService(service.Service):
             raise exception.ActionInProgress(type='cluster', id=req.identity,
                                              status=cluster.status)
 
+        # collect all errors
+        msg = []
         containers = cluster.dependents.get('containers', None)
         if containers is not None and len(containers) > 0:
-            reason = _("still depended by other clusters and/or nodes")
-            raise exception.ResourceInUse(type='cluster', id=req.identity,
-                                          reason=reason)
+            err = _("still depended by other clusters and/or nodes")
+            LOG.error(err)
+            msg.append(err)
 
         policies = cp_obj.ClusterPolicy.get_all(ctx, cluster.id)
         if len(policies) > 0:
-            msg = _('Cluster %(id)s cannot be deleted without having all '
+            err = _('Cluster %(id)s cannot be deleted without having all '
                     'policies detached.') % {'id': req.identity}
-            LOG.error(msg)
-            reason = _("there is still policy(s) attached to it.")
-            raise exception.ResourceInUse(type='cluster', id=req.identity,
-                                          reason=reason)
+            LOG.error(err)
+            msg.append(_("there is still policy(s) attached to it."))
 
         receivers = receiver_obj.Receiver.get_all(
             ctx, filters={'cluster_id': cluster.id})
         if len(receivers) > 0:
-            msg = _('Cluster %(id)s cannot be deleted without having all '
+            err = _('Cluster %(id)s cannot be deleted without having all '
                     'receivers deleted.') % {'id': req.identity}
-            LOG.error(msg)
-            reason = _("there is still receiver(s) associated with it.")
+            LOG.error(err)
+            msg.append(_("there is still receiver(s) associated with it."))
+
+        if msg:
             raise exception.ResourceInUse(type='cluster', id=req.identity,
-                                          reason=reason)
+                                          reason='\n'.join(msg))
 
         params = {
             'name': 'cluster_delete_%s' % cluster.id[:8],
