@@ -293,6 +293,22 @@ class EngineService(service.Service):
         """
         return environment.global_env().get_profile_types()
 
+    @request_context2
+    def profile_type_get2(self, ctx, req):
+        """Get the details about a profile type.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of ProfileTypeGetRequest.
+        :return: The details about a profile type.
+        """
+        profile = environment.global_env().get_profile(req.type_name)
+        data = profile.get_schema()
+
+        return {
+            'name': req.type_name,
+            'schema': data
+        }
+
     @request_context
     def profile_type_get(self, context, type_name):
         """Get the details about a profile type.

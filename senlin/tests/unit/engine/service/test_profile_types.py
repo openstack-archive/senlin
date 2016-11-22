@@ -17,6 +17,7 @@ import six
 from senlin.common import exception as exc
 from senlin.engine import environment
 from senlin.engine import service
+from senlin.objects.requests import profile_type as vorp
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -38,6 +39,45 @@ class ProfileTypeTest(base.SenlinTestCase):
         self.assertEqual([{'foo': 'bar'}], types)
         mock_env.assert_called_once_with()
         x_env.get_profile_types.assert_called_once_with()
+
+    @mock.patch.object(environment, 'global_env')
+    def test_profile_type_get2(self, mock_env):
+        x_env = mock.Mock()
+        x_profile_type = mock.Mock()
+        x_profile_type.get_schema.return_value = {'foo': 'bar'}
+        x_env.get_profile.return_value = x_profile_type
+        mock_env.return_value = x_env
+
+        req = vorp.ProfileTypeGetRequest(type_name='FAKE_TYPE')
+        result = self.eng.profile_type_get2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(
+            {
+                'name': 'FAKE_TYPE',
+                'schema': {'foo': 'bar'},
+            },
+            result)
+        mock_env.assert_called_once_with()
+        x_env.get_profile.assert_called_once_with('FAKE_TYPE')
+        x_profile_type.get_schema.assert_called_once_with()
+
+    @mock.patch.object(environment, 'global_env')
+    def test_profile_type_get2_nonexist(self, mock_env):
+        x_env = mock.Mock()
+        err = exc.ResourceNotFound(type='profile_type', id='FAKE_TYPE')
+        x_env.get_profile.side_effect = err
+        mock_env.return_value = x_env
+
+        req = vorp.ProfileTypeGetRequest(type_name='FAKE_TYPE')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.profile_type_get2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual('The profile_type (FAKE_TYPE) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+        mock_env.assert_called_once_with()
+        x_env.get_profile.assert_called_once_with('FAKE_TYPE')
 
     @mock.patch.object(environment, 'global_env')
     def test_profile_type_get(self, mock_env):
