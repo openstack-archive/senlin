@@ -1539,30 +1539,24 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(pr.Profile, 'get')
     def test__validate_replace_nodes_mult_err(self, mock_profile,
                                               mock_node):
-        msg = []
         c = mock.Mock(id='CID', profile_id='FAKE_ID')
         mock_node.side_effect = [
             mock.Mock(id='OLD1', cluster_id='CID'),
-            mock.Mock(id='NEW1', cluster_id='OTHER', status=consts.NS_ACTIVE),
-            mock.Mock(id='OLD2', cluster_id='CID'),
-            mock.Mock(id='NEW2', cluster_id='', status=consts.NS_ERROR)
+            mock.Mock(id='NEW1', cluster_id='OTHER', status=consts.NS_ERROR),
         ]
 
         # do it
         ex = self.assertRaises(exc.BadRequest,
                                self.eng._validate_replace_nodes,
-                               self.ctx, c, {'OLD1': 'NEW1',
-                                             'OLD2': 'NEW2'})
+                               self.ctx, c, {'OLD1': 'NEW1'})
 
-        msg.append(_("The request is malformed: Nodes ['NEW1'] already"
-                     " member of a cluster."))
-        msg.append(_("Nodes are not ACTIVE: ['NEW2']."))
-        self.assertEqual('\n'.join(msg), six.text_type(ex))
+        msg1 = _("Nodes ['NEW1'] already member of a cluster.")
+        msg2 = _("Nodes are not ACTIVE: ['NEW1'].")
+        self.assertIn(msg1, six.text_type(ex))
+        self.assertIn(msg2, six.text_type(ex))
         mock_node.assert_has_calls([
             mock.call(self.ctx, 'OLD1'),
             mock.call(self.ctx, 'NEW1'),
-            mock.call(self.ctx, 'OLD2'),
-            mock.call(self.ctx, 'NEW2')
         ])
 
     @mock.patch.object(service.EngineService, 'node_find')
