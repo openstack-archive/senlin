@@ -356,34 +356,6 @@ class ProfileTest(base.SenlinTestCase):
 
     @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(service.EngineService, 'profile_find')
-    def test_profile_get(self, mock_find, mock_load):
-        x_obj = mock.Mock()
-        mock_find.return_value = x_obj
-        x_profile = mock.Mock()
-        x_profile.to_dict.return_value = {'foo': 'bar'}
-        mock_load.return_value = x_profile
-
-        result = self.eng.profile_get(self.ctx, 'FAKE_PROFILE')
-
-        self.assertEqual({'foo': 'bar'}, result)
-        mock_find.assert_called_once_with(self.ctx, 'FAKE_PROFILE')
-        mock_load.assert_called_once_with(self.ctx, profile=x_obj)
-
-    @mock.patch.object(service.EngineService, 'profile_find')
-    def test_profile_get_not_found(self, mock_find):
-        mock_find.side_effect = exc.ResourceNotFound(type='profile',
-                                                     id='Bogus')
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_get, self.ctx, 'Bogus')
-
-        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The profile (Bogus) could not be found.',
-                         six.text_type(ex.exc_info[1]))
-        mock_find.assert_called_once_with(self.ctx, 'Bogus')
-
-    @mock.patch.object(pb.Profile, 'load')
-    @mock.patch.object(service.EngineService, 'profile_find')
     def test_profile_update2(self, mock_find, mock_load):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj

@@ -478,19 +478,6 @@ class EngineService(service.Service):
         profile = profile_base.Profile.load(ctx, profile=db_profile)
         return profile.to_dict()
 
-    @request_context
-    def profile_get(self, context, identity):
-        """Retrieve the details about a profile.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a profile.
-        :return: A dictionary containing the policy details, or an exception
-                 of type `ResourceNotFound` if no matching object is found.
-        """
-        db_profile = self.profile_find(context, identity)
-        profile = profile_base.Profile.load(context, profile=db_profile)
-        return profile.to_dict()
-
     @request_context2
     def profile_update2(self, ctx, req):
         """Update the properties of a given profile.
