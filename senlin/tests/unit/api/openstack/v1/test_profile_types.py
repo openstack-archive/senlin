@@ -17,6 +17,7 @@ from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import profile_types
 from senlin.common import exception as senlin_exc
 from senlin.common import policy
+from senlin.objects.requests import profile_type as vorp
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
@@ -40,14 +41,17 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         engine_response = [{'name': 'os.heat.stack'},
                            {'name': 'os.nova.server'}]
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_response)
 
         response = self.controller.index(req)
         self.assertEqual({'profile_types': engine_response}, response)
 
-        mock_call.assert_called_once_with(req.context,
-                                          ('profile_type_list', {}))
+        mock_call.assert_called_once_with(
+            req.context, 'profile_type_list2', mock.ANY)
+
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorp.ProfileTypeListRequest)
 
     def test_profile_type_list_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)

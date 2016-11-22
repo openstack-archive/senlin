@@ -14,8 +14,14 @@
 Profile type endpoint for Senlin v1 ReST API.
 """
 
+import jsonschema
+import six
+from webob import exc
+
 from senlin.api.common import util
 from senlin.api.common import wsgi
+from senlin.objects import base as obj_base
+from senlin.objects.requests import profile_type as vorp
 
 
 class ProfileTypeController(wsgi.Controller):
@@ -26,7 +32,15 @@ class ProfileTypeController(wsgi.Controller):
 
     @util.policy_enforce
     def index(self, req):
-        types = self.rpc_client.profile_type_list(req.context)
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ProfileTypeListRequest', {})
+            obj = vorp.ProfileTypeListRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+
+        types = self.rpc_client.call2(req.context, 'profile_type_list2', obj)
         return {'profile_types': types}
 
     @util.policy_enforce
