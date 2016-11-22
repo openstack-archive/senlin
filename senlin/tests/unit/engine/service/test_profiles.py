@@ -449,61 +449,6 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(0, x_profile.store.call_count)
         self.assertEqual('OLD_NAME', x_profile.name)
 
-    @mock.patch.object(pb.Profile, 'load')
-    @mock.patch.object(service.EngineService, 'profile_find')
-    def test_profile_update(self, mock_find, mock_load):
-        x_obj = mock.Mock()
-        mock_find.return_value = x_obj
-        x_profile = mock.Mock()
-        x_profile.name = 'OLD_NAME'
-        x_profile.metadata = {'V': 'K'}
-        x_profile.to_dict.return_value = {'foo': 'bar'}
-        mock_load.return_value = x_profile
-
-        result = self.eng.profile_update(self.ctx, 'FAKE_PROFILE',
-                                         name='NEW_NAME',
-                                         metadata={'K': 'V'})
-        self.assertEqual({'foo': 'bar'}, result)
-        mock_find.assert_called_once_with(self.ctx, 'FAKE_PROFILE')
-        mock_load.assert_called_once_with(self.ctx, profile=x_obj)
-        self.assertEqual('NEW_NAME', x_profile.name)
-        self.assertEqual({'K': 'V'}, x_profile.metadata)
-        x_profile.store.assert_called_once_with(self.ctx)
-
-    @mock.patch.object(service.EngineService, 'profile_find')
-    def test_profile_update_not_found(self, mock_find):
-
-        mock_find.side_effect = exc.ResourceNotFound(type='profile',
-                                                     id='Bogus')
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_update,
-                               self.ctx, 'Bogus', name='NEW_NAME')
-
-        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The profile (Bogus) could not be found.',
-                         six.text_type(ex.exc_info[1]))
-        mock_find.assert_called_once_with(self.ctx, 'Bogus')
-
-    @mock.patch.object(pb.Profile, 'load')
-    @mock.patch.object(service.EngineService, 'profile_find')
-    def test_profile_update_no_change(self, mock_find, mock_load):
-        x_obj = mock.Mock()
-        mock_find.return_value = x_obj
-        x_profile = mock.Mock()
-        x_profile.name = 'OLD_NAME'
-        x_profile.to_dict.return_value = {'foo': 'bar'}
-        mock_load.return_value = x_profile
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_update,
-                               self.ctx, 'FAKE_PROFILE')
-
-        self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual(
-            'The request is malformed: No property needs an update.',
-            six.text_type(ex.exc_info[1]))
-
     @mock.patch.object(pb.Profile, 'delete')
     @mock.patch.object(service.EngineService, 'profile_find')
     def test_profile_delete2(self, mock_find, mock_delete):
