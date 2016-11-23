@@ -51,12 +51,12 @@ class NotificationPublisher(NotificationObject):
     VERSION = '1.0'
 
     fields = {
-        'host': fields.StringField(nullable=False),
-        'binary': fields.StringField(nullable=False),
+        'host': fields.StringField(),
+        'binary': fields.StringField(),
     }
 
     @classmethod
-    def from_service_obj(cls, service):
+    def from_service(cls, service):
         return cls(host=service.host, binary=service.binary)
 
     @property
@@ -81,7 +81,7 @@ class NotificationBase(NotificationObject):
     def _emit(self, context, event_type, publisher_id, payload):
         notifier = messaging.get_notifier(publisher_id)
         notify = getattr(notifier, self.priority)
-        notify(context, event_type=event_type, payload=payload)
+        notify(context, event_type, payload)
 
     def emit(self, context):
         """Send the notification."""
