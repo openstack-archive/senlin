@@ -407,6 +407,37 @@ class EngineService(service.Service):
 
         return profile
 
+    @request_context2
+    def profile_create2(self, ctx, req):
+        """Create a profile with the given properties.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ProfileCreateRequest object.
+        :return: A dictionary containing the details of the profile object
+                 created.
+        """
+        name = req.profile.name
+        if CONF.name_unique:
+            if profile_obj.Profile.get_by_name(ctx, name):
+                msg = _("A profile named '%(name)s' already exists."
+                        ) % {"name": name}
+                raise exception.BadRequest(msg=msg)
+
+        metadata = {}
+        if req.profile.obj_attr_is_set('metadata'):
+            metadata = req.profile.metadata
+
+        LOG.info(_LI("Creating profile '%s'."), name)
+
+        profile = self._validate_profile(ctx, req.profile.spec, name=name,
+                                         metadata=metadata)
+        profile.store(ctx)
+
+        LOG.info(_LI("Profile %(name)s is created: %(id)s."),
+                 {'name': name, 'id': profile.id})
+
+        return profile.to_dict()
+
     @request_context
     def profile_create(self, context, name, spec, metadata=None):
         """Create a profile with the given properties.

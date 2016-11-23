@@ -155,6 +155,99 @@ class ProfileTest(base.SenlinTestCase):
                                           sort='name:asc',
                                           project_safe=True)
 
+    def test_profile_create2_default(self):
+        self._setup_fakes()
+        body = vorp.ProfileCreateRequestBody(name='p-1', spec=self.spec,
+                                             metadata={'foo': 'bar'})
+        req = vorp.ProfileCreateRequest(profile=body)
+
+        result = self.eng.profile_create2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual('p-1', result['name'])
+        self.assertEqual('TestProfile-1.0', result['type'])
+        self.assertEqual(self.spec, result['spec'])
+        self.assertEqual({'foo': 'bar'}, result['metadata'])
+        self.assertIsNone(result['updated_at'])
+        self.assertIsNotNone(result['created_at'])
+        self.assertIsNotNone(result['id'])
+
+    @mock.patch.object(po.Profile, 'get_by_name')
+    def test_profile_create2_name_conflict(self, mock_get):
+        cfg.CONF.set_override('name_unique', True, enforce_type=True)
+        mock_get.return_value = mock.Mock()
+
+        spec = {
+            'type': 'FakeProfile',
+            'version': '1.0',
+            'properties': {
+                'LIST': ['A', 'B'],
+                'MAP': {'KEY1': 11, 'KEY2': 12},
+            }
+        }
+
+        body = vorp.ProfileCreateRequestBody(name='FAKE_NAME', spec=spec)
+        req = vorp.ProfileCreateRequest(profile=body)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.profile_create2,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: A profile named "
+                         "'FAKE_NAME' already exists.",
+                         six.text_type(ex.exc_info[1]))
+        mock_get.assert_called_once_with(self.ctx, 'FAKE_NAME')
+
+    def test_profile_create2_type_not_found(self):
+        # We skip the fakes setup, so we won't get the proper profile type
+        spec = {
+            'type': 'FakeProfile',
+            'version': '1.0',
+            'properties': {
+                'LIST': ['A', 'B'],
+                'MAP': {'KEY1': 11, 'KEY2': 12},
+            }
+        }
+
+        body = vorp.ProfileCreateRequestBody(name='p-2', spec=spec)
+        req = vorp.ProfileCreateRequest(profile=body)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.profile_create2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
+        self.assertEqual("The specified profile_type "
+                         "(FakeProfile-1.0) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+
+    def test_profile_create2_invalid_spec(self):
+        # This test is for the profile object constructor which may throw
+        # exceptions if the spec is invalid
+        self._setup_fakes()
+        self.spec['properties'] = {'KEY3': 'value3'}
+
+        body = vorp.ProfileCreateRequestBody(name='foo', spec=self.spec)
+        req = vorp.ProfileCreateRequest(profile=body)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.profile_create2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
+        self.assertEqual("Unrecognizable spec item 'KEY3'",
+                         six.text_type(ex.exc_info[1]))
+
+    def test_profile_create2_failed_validation(self):
+        self._setup_fakes()
+
+        mock_validate = self.patchobject(fakes.TestProfile, 'validate')
+        mock_validate.side_effect = exc.InvalidSpec(message='BOOM')
+
+        body = vorp.ProfileCreateRequestBody(name='p-2', spec=self.spec)
+        req = vorp.ProfileCreateRequest(profile=body)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.profile_create2,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
+        self.assertEqual('BOOM', six.text_type(ex.exc_info[1]))
+
     def test_profile_create_default(self):
         self._setup_fakes()
 
