@@ -96,12 +96,12 @@ class DockerProfile(base.Profile):
         host_type = self.host.rt['profile'].type_name
         if host_type not in self._VALID_HOST_TYPES:
             msg = _("Type of host node (%s) is not supported") % host_type
-            raise exc.EResourceCreation(type='container', message=msg)
+            raise exc.InternalError(message=msg)
 
         host_ip = self._get_host_ip(obj, self.host.physical_id, host_type)
         if host_ip is None:
             msg = _("Unable to determine the IP address of host node")
-            raise exc.EResourceCreation(type='container', message=msg)
+            raise exc.InternalError(message=msg)
 
         url = 'tcp://%(ip)s:%(port)d' % {'ip': host_ip,
                                          'port': self.properties[self.PORT]}
@@ -126,12 +126,12 @@ class DockerProfile(base.Profile):
                             "cluster %(host_cluster)s") % {
                         "host_node": host_node,
                         "host_cluster": host_cluster}
-                    raise exc.EResourceCreation(type='container', message=msg)
+                    raise exc.InternalError(message=msg)
         elif host_cluster is not None:
             host = self._get_random_node(ctx, host_cluster)
         else:
             msg = _("Either host_node or host_cluster should be provided")
-            raise exc.EResourceCreation(type='container', message=msg)
+            raise exc.InternalError(message=msg)
 
         return host
 
@@ -146,7 +146,7 @@ class DockerProfile(base.Profile):
             host_cluster = cluster.Cluster.load(ctx, cluster_id=host_cluster)
         except exc.ResourceNotFound as ex:
             msg = ex.enhance_msg('host', ex)
-            raise exc.EResourceCreation(type='container', message=msg)
+            raise exc.InternalError(message=msg)
         return host_cluster
 
     def _get_specified_node(self, ctx, host_node):
@@ -160,7 +160,7 @@ class DockerProfile(base.Profile):
             host_node = node_mod.Node.load(ctx, node_id=host_node)
         except exc.ResourceNotFound as ex:
             msg = ex.enhance_msg('host', ex)
-            raise exc.EResourceCreation(type='container', message=msg)
+            raise exc.InternalError(message=msg)
         return host_node
 
     def _get_random_node(self, ctx, host_cluster):
@@ -174,7 +174,7 @@ class DockerProfile(base.Profile):
         nodes = self.cluster.rt['nodes']
         if len(nodes) == 0:
             msg = _("The cluster (%s) contains no nodes") % host_cluster
-            raise exc.EResourceCreation(type='container', message=msg)
+            raise exc.InternalError(message=msg)
         else:
             good_nodes = []
             for i in range(len(nodes)):
@@ -185,7 +185,7 @@ class DockerProfile(base.Profile):
             else:
                 msg = _("There is no active nodes running in the cluster (%s)"
                         ) % host_cluster
-                raise exc.EResourceCreation(type='container', message=msg)
+                raise exc.InternalError(message=msg)
         return node
 
     def _get_host_ip(self, obj, host_node, host_type):
@@ -216,7 +216,7 @@ class DockerProfile(base.Profile):
             if not outputs or host_ip is None:
                 msg = _("Output 'fixed_ip' is missing from the provided stack"
                         " node")
-                raise exc.EResourceCreation(type='container', message=msg)
+                raise exc.InternalError(message=msg)
 
         return host_ip
 
