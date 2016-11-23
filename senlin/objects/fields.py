@@ -158,15 +158,15 @@ class Json(fields.FieldType):
 
 class NotificationPriority(fields.Enum):
 
+    # The priorities here are derived from oslo_messaging.notify.notifier
     ALL = (
-        AUDIT, CRITICAL, DEBUG, INFO, ERROR, SAMPLE, WARN,
+        AUDIT, CRITICAL, ERROR, WARN, INFO, DEBUG, SAMPLE,
     ) = (
-        'audit', 'critical', 'debug', 'info', 'error', 'sample', 'warn',
+        'audit', 'critical', 'error', 'warn', 'info', 'debug', 'sample',
     )
 
     def __init__(self):
-        super(NotificationPriority, self).__init__(
-            valid_values=NotificationPriority.ALL)
+        super(NotificationPriority, self).__init__(self.ALL)
 
 
 class NotificationPhase(fields.Enum):
@@ -178,21 +178,32 @@ class NotificationPhase(fields.Enum):
     )
 
     def __init__(self):
-        super(NotificationPhase, self).__init__(
-            valid_values=NotificationPhase.ALL)
+        super(NotificationPhase, self).__init__(self.ALL)
 
 
 class NotificationAction(fields.Enum):
 
+    # This is a combination of cluster actions and node actions
     ALL = (
-        UPDATE,
+        CLUSTER_CREATE, CLUSTER_DELETE, CLUSTER_UPDATE,
+        CLUSTER_ADD_NODES, CLUSTER_DEL_NODES, CLUSTER_REPLACE_NODES,
+        CLUSTER_SCALE_OUT, CLUSTER_SCALE_IN, CLUSTER_RESIZE,
+        CLUSTER_ATTACH_POLICY, CLUSTER_DETACH_POLICY, CLUSTER_UPDATE_POLICY,
+        CLUSTER_CHECK, CLUSTER_RECOVER,
+        NODE_CREATE, NODE_DELETE, NODE_UPDATE,
+        NODE_CHECK, NODE_RECOVER
     ) = (
-        'update',
+        'create', 'delete', 'update',
+        'add_nodes', 'del_nodes', 'replace_nodes',
+        'scale_out', 'scale_in', 'resize',
+        'attach_policy', 'detach_policy', 'update_policy',
+        'check', 'recover',
+        'create', 'delete', 'update',
+        'check', 'recover',
     )
 
     def __init__(self):
-        super(NotificationAction, self).__init__(
-            valid_values=NotificationAction.ALL)
+        super(NotificationAction, self).__init__(self.ALL)
 
 
 class Name(fields.String):

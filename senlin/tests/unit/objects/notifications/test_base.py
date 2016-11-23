@@ -103,9 +103,9 @@ class TestNotificationBase(test_base.SenlinTestCase):
         self.notification = TestNotification(
             event_type=base.EventType(
                 object='test_object',
-                action=fields.NotificationAction.UPDATE,
+                action=fields.NotificationAction.CLUSTER_UPDATE,
                 phase=fields.NotificationPhase.START),
-            publisher=base.NotificationPublisher.from_service_obj(
+            publisher=base.NotificationPublisher.from_service(
                 self.service_obj),
             priority=fields.NotificationPriority.INFO,
             payload=self.payload)
@@ -117,9 +117,9 @@ class TestNotificationBase(test_base.SenlinTestCase):
         mock_notify = mock_notifier.prepare.return_value.info
         self.assertTrue(mock_notify.called)
         self.assertEqual(mock_notify.call_args[0][0], mock_context)
-        self.assertEqual(mock_notify.call_args[1]['event_type'],
+        self.assertEqual(mock_notify.call_args[0][1],
                          expected_event_type)
-        actual_payload = mock_notify.call_args[1]['payload']
+        actual_payload = mock_notify.call_args[0][2]
         self.assertJsonEqual(expected_payload, actual_payload)
 
     @mock.patch('senlin.common.messaging.NOTIFIER')
@@ -139,7 +139,7 @@ class TestNotificationBase(test_base.SenlinTestCase):
     def test_emit_with_host_and_binary_as_publisher(self, mock_notifier):
         event_type = base.EventType(
             object='test_object',
-            action=fields.NotificationAction.UPDATE)
+            action=fields.NotificationAction.CLUSTER_UPDATE)
         publisher = base.NotificationPublisher(host='fake-host',
                                                binary='senlin-fake')
 
@@ -161,9 +161,10 @@ class TestNotificationBase(test_base.SenlinTestCase):
     @mock.patch('senlin.common.messaging.NOTIFIER')
     def test_emit_event_type_without_phase(self, mock_notifier):
         noti = TestNotification(
-            event_type=base.EventType(object='test_object',
-                                      action=fields.NotificationAction.UPDATE),
-            publisher=base.NotificationPublisher.from_service_obj(
+            event_type=base.EventType(
+                object='test_object',
+                action=fields.NotificationAction.CLUSTER_UPDATE),
+            publisher=base.NotificationPublisher.from_service(
                 self.service_obj),
             priority=fields.NotificationPriority.INFO,
             payload=self.payload)
