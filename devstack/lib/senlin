@@ -270,22 +270,19 @@ function create_senlin_accounts {
 
     create_service_user "senlin" "admin"
 
-    if [[ "$KEYSTONE_CATALOG_BACKEND" = 'sql' ]]; then
-
-        local senlin_service=$(get_or_create_service "senlin" \
-                "clustering" "Senlin Clustering Service")
-        if [ "$SENLIN_USE_MOD_WSGI" == "True" ]; then
-            senlin_api_url="$SERVICE_PROTOCOL://$SENLIN_API_HOST/cluster"
-        else
-            senlin_api_url="$SERVICE_PROTOCOL://$SENLIN_API_HOST:$SENLIN_API_PORT"
-        fi
-
-        get_or_create_endpoint $senlin_service \
-            "$REGION_NAME" \
-            "$senlin_api_url" \
-            "$senlin_api_url" \
-            "$senlin_api_url"
+    local senlin_service=$(get_or_create_service "senlin" \
+        "clustering" "Senlin Clustering Service")
+    if [ "$SENLIN_USE_MOD_WSGI" == "True" ]; then
+        senlin_api_url="$SERVICE_PROTOCOL://$SENLIN_API_HOST/cluster"
+    else
+        senlin_api_url="$SERVICE_PROTOCOL://$SENLIN_API_HOST:$SENLIN_API_PORT"
     fi
+
+    get_or_create_endpoint $senlin_service \
+        "$REGION_NAME" \
+        "$senlin_api_url" \
+        "$senlin_api_url" \
+        "$senlin_api_url"
 
     # get or adds 'service' role to 'senlin' on 'demo' project
     get_or_add_user_project_role "service" "senlin" "demo"
