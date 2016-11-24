@@ -85,11 +85,7 @@ class NotificationBase(NotificationObject):
 
     def emit(self, context):
         """Send the notification."""
-        # Note(gibi): notification payload will be a newly populated object
-        # therefore every field of it will look changed so this does not carry
-        # any extra information so we drop this from the payload.
         self.payload.obj_reset_changes(recursive=False)
-
         self._emit(context,
                    event_type=self.event_type.to_notification_field(),
                    publisher_id=self.publisher.publisher_id,
