@@ -12,11 +12,13 @@
 
 import mock
 import six
+from webob import exc
 
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import profile_types
 from senlin.common import exception as senlin_exc
 from senlin.common import policy
+from senlin.objects.requests import profile_type as vorp
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
@@ -72,16 +74,32 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             },
         }
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_response)
 
         response = self.controller.get(req, type_name=type_name)
 
         mock_call.assert_called_once_with(
-            req.context,
-            ('profile_type_get', {'type_name': type_name}))
+            req.context, 'profile_type_get2', mock.ANY)
 
         self.assertEqual(engine_response, response['profile_type'])
+
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorp.ProfileTypeGetRequest)
+        self.assertEqual('SimpleProfile', request.type_name)
+
+    def test_profile_type_get_with_bad_param(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'get', True)
+        type_name = 100
+        req = self._get('/profile_types/%(type)s' % {'type': type_name})
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.get,
+                               req, type_name=type_name)
+        self.assertEqual("100 is not of type 'string'", six.text_type(ex))
+        mock_call.assert_not_called()
 
     def test_profile_type_get_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
@@ -89,7 +107,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/profile_types/%(type)s' % {'type': type_name})
 
         error = senlin_exc.ResourceNotFound(type='profile_type', id=type_name)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
@@ -97,8 +115,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, type_name=type_name)
 
         mock_call.assert_called_once_with(
-            req.context,
-            ('profile_type_get', {'type_name': type_name}))
+            req.context, 'profile_type_get2', mock.ANY)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
