@@ -12,12 +12,14 @@ tags
 *~
 *.eggs
 *.egg-info
+*.iml
 *.log
 *.pyc
 *.swp
 *.swo
 .coverage
 .coverage.*
+.idea
 .project
 .pydevproject
 .testrepository
