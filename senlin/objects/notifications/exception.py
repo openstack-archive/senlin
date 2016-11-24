@@ -33,6 +33,8 @@ class ExceptionPayload(base.NotificationObject):
 
     @classmethod
     def from_exception(cls, exc):
+        if exc is None:
+            return None
         trace = inspect.trace()[-1]
         module = inspect.getmodule(trace[0])
         module_name = module.__name__ if module else 'unknown'
