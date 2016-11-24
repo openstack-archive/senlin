@@ -416,7 +416,7 @@ class TestClusterAttachPolicy(test_base.SenlinTestCase):
 
         sot.obj_set_defaults()
         self.assertTrue(sot.obj_attr_is_set('enabled'))
-        self.assertEqual(True, sot.enabled)
+        self.assertTrue(sot.enabled)
 
     def test_init_failed(self):
         ex = self.assertRaises(ValueError,
@@ -438,7 +438,7 @@ class TestClusterUpdatePolicy(test_base.SenlinTestCase):
 
         sot.obj_set_defaults()
         self.assertTrue(sot.obj_attr_is_set('enabled'))
-        self.assertEqual(True, sot.enabled)
+        self.assertTrue(sot.enabled)
 
     def test_init_failed(self):
         ex = self.assertRaises(ValueError,

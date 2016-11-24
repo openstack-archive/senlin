@@ -15,6 +15,7 @@ Senlin Specific Commandments
 - [S320] Default arguments of a method should not be mutable.
 - [S321] The api_version decorator has to be the first decorator on a method.
 - [S322] LOG.warn is deprecated. Enforce use of LOG.warning.
+- [S323] Use assertTrue(...) rather than assertEqual(True, ...).
 
 Working on APIs
 ---------------

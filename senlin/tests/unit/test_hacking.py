@@ -116,3 +116,12 @@ class HackingTestCase(base.SenlinTestCase):
                   LOG.warning("LOG.warn is deprecated")
                """
         self._assert_has_no_errors(code, checks.no_log_warn)
+
+    def test_assert_equal_true(self):
+        test_value = True
+        self.assertEqual(0, len(list(checks.assert_equal_true(
+            "assertTrue(True)"))))
+        self.assertEqual(1, len(list(checks.assert_equal_true(
+            "assertEqual(True, %s)" % test_value))))
+        self.assertEqual(1, len(list(checks.assert_equal_true(
+            "assertEqual(%s, True)" % test_value))))
