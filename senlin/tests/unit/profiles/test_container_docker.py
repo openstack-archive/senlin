@@ -81,10 +81,10 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         mock_get.return_value = host
         obj = mock.Mock()
         profile = docker_profile.DockerProfile('container', self.spec)
-        ex = self.assertRaises(exc.EResourceCreation,
+        ex = self.assertRaises(exc.InternalError,
                                profile.docker, obj)
-        msg = _('Failed in creating container: Type of host node '
-                '(wrong_type) is not supported.')
+        msg = _('Type of host node (wrong_type) is not supported')
+
         self.assertEqual(msg, ex.message)
 
     @mock.patch.object(docker_profile.DockerProfile, '_get_host_ip')
@@ -96,10 +96,10 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         mock_ip.return_value = None
         obj = mock.Mock()
         profile = docker_profile.DockerProfile('container', self.spec)
-        ex = self.assertRaises(exc.EResourceCreation,
+        ex = self.assertRaises(exc.InternalError,
                                profile.docker, obj)
-        msg = _('Failed in creating container: Unable to determine the IP '
-                'address of host node.')
+        msg = _('Unable to determine the IP address of host node')
+
         self.assertEqual(msg, ex.message)
 
     @mock.patch.object(docker_profile.DockerProfile, '_get_host_cluster')
@@ -129,11 +129,10 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         mock_cluster.return_value = cluster
         profile = docker_profile.DockerProfile('container', self.spec)
         ctx = mock.Mock()
-        ex = self.assertRaises(exc.EResourceCreation,
+        ex = self.assertRaises(exc.InternalError,
                                profile._get_host,
                                ctx, 'fake_node', 'fake_cluster')
-        msg = _('Failed in creating container: Host node fake_node '
-                'does not belong to cluster fake_cluster.')
+        msg = _('Host node fake_node does not belong to cluster fake_cluster')
         self.assertEqual(msg, ex.message)
 
     def test_get_host_no_host(self):
@@ -142,10 +141,10 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         del spec['properties']['host_cluster']
         profile = docker_profile.DockerProfile('container', spec)
         obj = mock.Mock()
-        ex = self.assertRaises(exc.EResourceCreation,
+        ex = self.assertRaises(exc.InternalError,
                                profile.docker, obj)
-        msg = _('Failed in creating container: Either host_node '
-                'or host_cluster should be provided.')
+        msg = _('Either host_node or host_cluster should be provided')
+
         self.assertEqual(msg, ex.message)
 
     @mock.patch.object(cluster.Cluster, 'load')
@@ -165,11 +164,11 @@ class TestContainerDockerProfile(base.SenlinTestCase):
 
         ctx = mock.Mock()
         profile = docker_profile.DockerProfile('container', self.spec)
-        ex = self.assertRaises(exc.EResourceCreation,
+        ex = self.assertRaises(exc.InternalError,
                                profile._get_host_cluster,
                                ctx, 'host_cluster')
-        msg = _("Failed in creating container: The host cluster "
-                "(host_cluster) could not be found.")
+        msg = _("The host cluster (host_cluster) could not be found.")
+
         self.assertEqual(msg, ex.message)
 
     @mock.patch.object(node.Node, 'load')
@@ -188,10 +187,10 @@ class TestContainerDockerProfile(base.SenlinTestCase):
                                                      id='fake_node')
         profile = docker_profile.DockerProfile('container', self.spec)
         obj = mock.Mock()
-        ex = self.assertRaises(exc.EResourceCreation,
+        ex = self.assertRaises(exc.InternalError,
                                profile.docker, obj)
-        msg = _('Failed in creating container: The host node (fake_node) '
-                'could not be found.')
+        msg = _('The host node (fake_node) could not be found.')
+
         self.assertEqual(msg, ex.message)
 
     @mock.patch.object(docker_profile.DockerProfile, '_get_host_cluster')
@@ -213,11 +212,11 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         mock_cluster.return_value = cluster
         profile = docker_profile.DockerProfile('container', self.spec)
         ctx = mock.Mock()
-        ex = self.assertRaises(exc.EResourceCreation,
+        ex = self.assertRaises(exc.InternalError,
                                profile._get_random_node,
                                ctx, 'host_cluster')
-        msg = _('Failed in creating container: The cluster (host_cluster) '
-                'contains no nodes.')
+        msg = _('The cluster (host_cluster) contains no nodes')
+
         self.assertEqual(msg, ex.message)
 
     @mock.patch.object(docker_profile.DockerProfile, '_get_host_cluster')
@@ -229,11 +228,11 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         mock_cluster.return_value = cluster
         profile = docker_profile.DockerProfile('container', self.spec)
         ctx = mock.Mock()
-        ex = self.assertRaises(exc.EResourceCreation,
+        ex = self.assertRaises(exc.InternalError,
                                profile._get_random_node,
                                ctx, 'host_cluster')
-        msg = _('Failed in creating container: There is no active nodes '
-                'running in the cluster (host_cluster).')
+        msg = _('There is no active nodes running in the cluster '
+                '(host_cluster)')
         self.assertEqual(msg, ex.message)
 
     def test_get_host_ip_nova_server(self):
@@ -274,12 +273,12 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         profile._orchestrationclient = oc
         obj = mock.Mock()
 
-        ex = self.assertRaises(exc.EResourceCreation,
+        ex = self.assertRaises(exc.InternalError,
                                profile._get_host_ip,
                                obj, 'fake_node', 'os.heat.stack')
 
-        msg = _("Failed in creating container: Output 'fixed_ip' is "
-                "missing from the provided stack node.")
+        msg = _("Output 'fixed_ip' is missing from the provided stack node")
+
         self.assertEqual(msg, ex.message)
 
     @mock.patch.object(db_api, 'node_add_dependents')
