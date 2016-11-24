@@ -2317,6 +2317,20 @@ class EngineService(service.Service):
         receiver_mod.Receiver.delete(context, db_receiver.id)
         LOG.info(_LI("Receiver %s is deleted."), identity)
 
+    @request_context2
+    def receiver_delete2(self, ctx, req):
+        """Delete the specified receiver.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ReceiverDeleteRequest object.
+        :return: None if successfully deleted the receiver or an exception of
+                 `ResourceNotFound` if the object could not be found.
+        """
+        db_receiver = self.receiver_find(ctx, req.identity)
+        LOG.info(_LI("Deleting receiver %s."), req.identity)
+        receiver_mod.Receiver.delete(ctx, db_receiver.id)
+        LOG.info(_LI("Receiver %s is deleted."), req.identity)
+
     @request_context
     def receiver_notify(self, context, identity, params=None):
         """Handle notification to specified receiver.
