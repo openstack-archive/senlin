@@ -2499,23 +2499,6 @@ class EngineService(service.Service):
 
         return results
 
-    @request_context
-    def event_get(self, context, identity):
-        """Get the details about a specified event.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of an event.
-        :return: A dictionary containing the details about the event or an
-                 exception of `ResourceNotFound` if no matching record could
-                 be found.
-        """
-        db_event = self.event_find(context, identity)
-        evt = db_event.as_dict()
-        level = utils.level_from_number(evt['level'])
-        evt['level'] = level
-
-        return evt
-
     @request_context2
     def event_get2(self, context, req):
         """Retrieve the event specified.
