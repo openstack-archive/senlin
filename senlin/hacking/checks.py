@@ -14,6 +14,8 @@ import re
 
 asse_equal_end_with_none_re = re.compile(r"assertEqual\(.*?,\s+None\)$")
 asse_equal_start_with_none_re = re.compile(r"assertEqual\(None,")
+asse_equal_start_with_true_re = re.compile(r"assertEqual\(True,")
+asse_equal_end_with_true_re = re.compile(r"assertEqual\(.*?,\s+True\)$")
 mutable_default_args = re.compile(r"^\s*def .+\((.+=\{\}|.+=\[\])")
 api_version_dec = re.compile(r"@.*api_version")
 decorator_re = re.compile(r"@.*")
@@ -54,12 +56,24 @@ def no_log_warn(logical_line):
     Deprecated LOG.warn(), instead use LOG.warning
     https://bugs.launchpad.net/senlin/+bug/1508442
 
-    N352
+    S322
     """
 
     msg = ("S322: LOG.warn is deprecated, please use LOG.warning!")
     if "LOG.warn(" in logical_line:
         yield (0, msg)
+
+
+def assert_equal_true(logical_line):
+    """Check for assertEqual(A, True) or assertEqual(True, A) sentences
+
+    S323
+    """
+    res = (asse_equal_start_with_true_re.search(logical_line) or
+           asse_equal_end_with_true_re.search(logical_line))
+    if res:
+        yield (0, "S323: assertEqual(A, True) or assertEqual(True, A) "
+               "sentences not allowed")
 
 
 def check_api_version_decorator(logical_line, previous_logical, blank_before,
@@ -77,3 +91,4 @@ def factory(register):
     register(no_mutable_default_args)
     register(no_log_warn)
     register(check_api_version_decorator)
+    register(assert_equal_true)
