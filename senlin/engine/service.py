@@ -284,6 +284,16 @@ class EngineService(service.Service):
     def get_revision(self, context):
         return CONF.revision['senlin_engine_revision']
 
+    @request_context2
+    def profile_type_list2(self, ctx, req):
+        """List known profile type implementations.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ProfileTypeListRequest.
+        :return: A list of profile types.
+        """
+        return environment.global_env().get_profile_types()
+
     @request_context
     def profile_type_list(self, context):
         """List known profile type implementations.

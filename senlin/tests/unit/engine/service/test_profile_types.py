@@ -30,6 +30,19 @@ class ProfileTypeTest(base.SenlinTestCase):
         self.eng = service.EngineService('host-a', 'topic-a')
 
     @mock.patch.object(environment, 'global_env')
+    def test_profile_type_list2(self, mock_env):
+        x_env = mock.Mock()
+        x_env.get_profile_types.return_value = [{'foo': 'bar'}]
+        mock_env.return_value = x_env
+
+        req = vorp.ProfileTypeListRequest()
+        types = self.eng.profile_type_list2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual([{'foo': 'bar'}], types)
+        mock_env.assert_called_once_with()
+        x_env.get_profile_types.assert_called_once_with()
+
+    @mock.patch.object(environment, 'global_env')
     def test_profile_type_list(self, mock_env):
         x_env = mock.Mock()
         x_env.get_profile_types.return_value = [{'foo': 'bar'}]
