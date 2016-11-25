@@ -77,6 +77,11 @@ class DockerProfile(base.Profile):
         self.host = None
         self.cluster = None
 
+    def add_dependents(self, context, profile_id):
+        host_cluster = self.properties.get(self.HOST_CLUSTER, None)
+        if host_cluster is not None:
+            db_api.cluster_add_dependents(context, host_cluster, profile_id)
+
     def docker(self, obj):
         """Construct docker client based on object.
 

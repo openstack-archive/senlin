@@ -466,3 +466,38 @@ class DBAPIClusterTest(base.SenlinTestCase):
         # but the policy is not deleted
         result = db_api.policy_get(self.ctx, policy.id)
         self.assertIsNotNone(result)
+
+    def test_cluster_add_dependents(self):
+        cluster = shared.create_cluster(self.ctx, self.profile)
+        profile_id = 'profile1'
+        db_api.cluster_add_dependents(self.ctx, cluster.id, profile_id)
+        res = db_api.cluster_get(self.ctx, cluster.id)
+        self.assertEqual(['profile1'], res.dependents['profile'])
+        deps = {'containers': ['container1']}
+        cluster = shared.create_cluster(self.ctx, self.profile,
+                                        dependents=deps)
+        db_api.cluster_add_dependents(self.ctx, cluster.id, profile_id)
+        res = db_api.cluster_get(self.ctx, cluster.id)
+        deps = {'profile': ['profile1'],
+                'containers': ['container1']}
+        self.assertEqual(deps, res.dependents)
+        db_api.cluster_add_dependents(self.ctx, cluster.id, 'profile2')
+        res = db_api.cluster_get(self.ctx, cluster.id)
+        deps = {'profile': ['profile1', 'profile2'],
+                'containers': ['container1']}
+        self.assertEqual(deps, res.dependents)
+
+    def test_cluster_remove_dependents(self):
+        deps = {'containers': ['container1'],
+                'profile': ['profile1', 'profile2']}
+        cluster = shared.create_cluster(self.ctx, self.profile,
+                                        dependents=deps)
+        db_api.cluster_remove_dependents(self.ctx, cluster.id, 'profile1')
+        res = db_api.cluster_get(self.ctx, cluster.id)
+        deps = {'containers': ['container1'], 'profile': ['profile2']}
+        self.assertEqual(deps, res.dependents)
+
+        db_api.cluster_remove_dependents(self.ctx, cluster.id, 'profile2')
+        res = db_api.cluster_get(self.ctx, cluster.id)
+        deps = {'containers': ['container1']}
+        self.assertEqual(deps, res.dependents)

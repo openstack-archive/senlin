@@ -351,3 +351,13 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         profile = docker_profile.DockerProfile('container', self.spec)
         self.assertRaises(exc.EResourceDeletion,
                           profile.do_delete, obj)
+
+    @mock.patch.object(context, 'get_admin_context')
+    @mock.patch.object(db_api, 'cluster_add_dependents')
+    def test_add_dependents(self, mock_add, mock_ctx):
+        profile = docker_profile.DockerProfile('container', self.spec)
+        ctx = mock.Mock()
+        mock_ctx.return_value = ctx
+        profile.add_dependents(ctx, 'profile_id')
+        mock_add.assert_called_once_with(ctx, 'fake_cluster',
+                                         'profile_id')
