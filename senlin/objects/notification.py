@@ -176,6 +176,43 @@ class ClusterPayload(NotificationObject):
 
 
 @base.SenlinObjectRegistry.register_notification
+class NodePayload(NotificationObject):
+
+    VERSION = '1.0'
+
+    fields = {
+        'id': fields.UUIDField(),
+        'name': fields.StringField(),
+        'profile_id': fields.UUIDField(),
+        'cluster_id': fields.StringField(),
+        'physical_id': fields.UUIDField(nullable=True),
+        'index': fields.IntegerField(),
+        'role': fields.StringField(nullable=True),
+        'init_at': fields.DateTimeField(),
+        'created_at': fields.DateTimeField(nullable=True),
+        'updated_at': fields.DateTimeField(nullable=True),
+        'status': fields.StringField(),
+        'status_reason': fields.StringField(),
+        'metadata': fields.JsonField(nullable=True),
+        'data': fields.JsonField(nullable=True),
+        'user': fields.StringField(),
+        'project': fields.StringField(),
+        'domain': fields.StringField(nullable=True),
+        'dependents': fields.JsonField(nullable=True),
+    }
+
+    @classmethod
+    def from_node(cls, node):
+        values = {}
+        for field in cls.fields:
+            if node.obj_attr_is_set(field):
+                values[field] = getattr(node, field)
+        obj = cls(**values)
+        obj.obj_reset_changes(recursive=False)
+        return obj
+
+
+@base.SenlinObjectRegistry.register_notification
 class ActionPayload(NotificationObject):
 
     VERSION = '1.0'
@@ -230,10 +267,40 @@ class ClusterActionPayload(NotificationObject):
 
 
 @base.SenlinObjectRegistry.register_notification
+class NodeActionPayload(NotificationObject):
+
+    VERSION = '1.0'
+
+    fields = {
+        'node': fields.ObjectField('NodePayload'),
+        'action': fields.ObjectField('ActionPayload'),
+        'exception': fields.ObjectField('ExceptionPayload', nullable=True),
+    }
+
+    def __init__(self, node, action, **kwargs):
+        ex = kwargs.pop('exception', None)
+        super(NodeActionPayload, self).__init__(
+            node=NodePayload.from_node(node),
+            action=ActionPayload.from_action(action),
+            exception=ex,
+            **kwargs)
+
+
+@base.SenlinObjectRegistry.register_notification
 class ClusterActionNotification(NotificationBase):
 
     VERSION = '1.0'
 
     fields = {
         'payload': fields.ObjectField('ClusterActionPayload')
+    }
+
+
+@base.SenlinObjectRegistry.register_notification
+class NodeActionNotification(NotificationBase):
+
+    VERSION = '1.0'
+
+    fields = {
+        'payload': fields.ObjectField('NodeActionPayload')
     }

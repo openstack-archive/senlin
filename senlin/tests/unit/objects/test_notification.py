@@ -283,6 +283,72 @@ class TestClusterPayload(testtools.TestCase):
         self._verify_equality(sot, self.params)
 
 
+class TestNodePayload(testtools.TestCase):
+
+    def setUp(self):
+        super(TestNodePayload, self).setUp()
+
+        uuid = uuidutils.generate_uuid()
+        prof_uuid = uuidutils.generate_uuid()
+        cluster_uuid = uuidutils.generate_uuid()
+        physical_uuid = uuidutils.generate_uuid()
+        dt = timeutils.utcnow(True)
+        self.params = {
+            'id': uuid,
+            'name': 'fake_name',
+            'profile_id': prof_uuid,
+            'cluster_id': cluster_uuid,
+            'physical_id': physical_uuid,
+            'index': 3,
+            'role': 'master',
+            'init_at': dt,
+            'created_at': dt,
+            'updated_at': dt,
+            'status': 'ACTIVE',
+            'status_reason': 'Good',
+            'metadata': {'foo': 'bar'},
+            'data': {'key': 'value'},
+            'user': 'user1',
+            'project': 'project1',
+            'domain': 'domain1',
+            'dependents': {'zoo': {'lion', 'deer'}}
+        }
+
+    def _verify_equality(self, obj, params):
+        for k, v in params.items():
+            self.assertTrue(obj.obj_attr_is_set(k))
+            self.assertEqual(v, getattr(obj, k))
+
+    def test_create(self):
+        sot = base.NodePayload(**self.params)
+        self._verify_equality(sot, self.params)
+
+    def test_create_with_required_fields(self):
+        params = {
+            'id': uuidutils.generate_uuid(),
+            'name': 'fake_name',
+            'profile_id': uuidutils.generate_uuid(),
+            'cluster_id': '',
+            'index': -1,
+            'init_at': timeutils.utcnow(True),
+            'status': 'ACTIVE',
+            'status_reason': 'Good',
+            'user': 'user1',
+            'project': 'project1',
+        }
+
+        sot = base.NodePayload(**params)
+
+        self._verify_equality(sot, params)
+
+    def test_create_with_obj(self):
+        n1 = objects.Node(**self.params)
+
+        sot = base.NodePayload.from_node(n1)
+
+        self._verify_equality(sot, self.params)
+
+
 class TestActionPayload(testtools.TestCase):
 
     def setUp(self):
@@ -405,6 +471,64 @@ class TestClusterActionPayload(testtools.TestCase):
         self.assertIsNone(sot.exception)
 
 
+class TestNodeActionPayload(testtools.TestCase):
+
+    def setUp(self):
+        super(TestNodeActionPayload, self).setUp()
+
+        node_params = {
+            'id': uuidutils.generate_uuid(),
+            'name': 'fake_name',
+            'profile_id': uuidutils.generate_uuid(),
+            'cluster_id': '',
+            'index': -1,
+            'init_at': timeutils.utcnow(True),
+            'status': 'ACTIVE',
+            'status_reason': 'Good',
+            'user': 'user1',
+            'project': 'project1',
+        }
+        self.node = objects.Node(**node_params)
+        action_params = {
+
+            'id': uuidutils.generate_uuid(),
+            'name': 'fake_name',
+            'target': uuidutils.generate_uuid(),
+            'action': 'CLUSTER_CREATE',
+            'start_time': 1.23,
+            'status': 'RUNNING',
+            'status_reason': 'Good',
+            'user': 'user1',
+            'project': 'project1',
+        }
+        self.action = objects.Action(**action_params)
+
+    def test_create(self):
+        exobj = None
+        try:
+            {}['key']
+        except Exception:
+            ex = exception.InvalidSpec(message='boom')
+            exobj = base.ExceptionPayload.from_exception(ex)
+
+        sot = base.NodeActionPayload(node=self.node,
+                                     action=self.action,
+                                     exception=exobj)
+
+        self.assertTrue(sot.obj_attr_is_set('node'))
+        self.assertTrue(sot.obj_attr_is_set('action'))
+        self.assertTrue(sot.obj_attr_is_set('exception'))
+        self.assertIsNotNone(sot.exception)
+
+    def test_create_with_no_exc(self):
+        sot = base.NodeActionPayload(node=self.node, action=self.action)
+
+        self.assertTrue(sot.obj_attr_is_set('node'))
+        self.assertTrue(sot.obj_attr_is_set('action'))
+        self.assertTrue(sot.obj_attr_is_set('exception'))
+        self.assertIsNone(sot.exception)
+
+
 class TestClusterActionNotification(testtools.TestCase):
 
     def setUp(self):
@@ -443,5 +567,45 @@ class TestClusterActionNotification(testtools.TestCase):
                                             action=self.action)
 
         sot = base.ClusterActionNotification(payload=payload)
+
+        self.assertTrue(sot.obj_attr_is_set('payload'))
+
+
+class TestNodeActionNotification(testtools.TestCase):
+
+    def setUp(self):
+        super(TestNodeActionNotification, self).setUp()
+
+        node_params = {
+            'id': uuidutils.generate_uuid(),
+            'name': 'fake_name',
+            'profile_id': uuidutils.generate_uuid(),
+            'cluster_id': '',
+            'index': -1,
+            'init_at': timeutils.utcnow(True),
+            'status': 'ACTIVE',
+            'status_reason': 'Good',
+            'user': 'user1',
+            'project': 'project1',
+        }
+        self.node = objects.Node(**node_params)
+        action_params = {
+
+            'id': uuidutils.generate_uuid(),
+            'name': 'fake_name',
+            'target': uuidutils.generate_uuid(),
+            'action': 'CLUSTER_CREATE',
+            'start_time': 1.23,
+            'status': 'RUNNING',
+            'status_reason': 'Good',
+            'user': 'user1',
+            'project': 'project1',
+        }
+        self.action = objects.Action(**action_params)
+
+    def test_create(self):
+        payload = base.NodeActionPayload(node=self.node, action=self.action)
+
+        sot = base.NodeActionNotification(payload=payload)
 
         self.assertTrue(sot.obj_attr_is_set('payload'))
