@@ -32,7 +32,15 @@ class ProfileTypeController(wsgi.Controller):
 
     @util.policy_enforce
     def index(self, req):
-        types = self.rpc_client.profile_type_list(req.context)
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ProfileTypeListRequest', {})
+            obj = vorp.ProfileTypeListRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+
+        types = self.rpc_client.call2(req.context, 'profile_type_list2', obj)
         return {'profile_types': types}
 
     @util.policy_enforce
