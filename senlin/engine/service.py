@@ -2419,49 +2419,6 @@ class EngineService(service.Service):
 
         return event
 
-    @request_context
-    def event_list(self, context, filters=None, limit=None, marker=None,
-                   sort=None, project_safe=True):
-        """List event records matching the specified criteria.
-
-        :param context: An instance of the request context.
-        :param filters: A dictionary of key-value pairs for filtering out the
-                        result list.
-        :param limit: An integer specifying the maximum number of objects to
-                      return in a response.
-        :param marker: An UUID specifying the event after which the result
-                       list starts.
-        :param sort: A list of sorting keys (each optionally attached with a
-                     sorting direction) separated by commas.
-        :param project_safe: A boolean indicating whether events from all
-                             projects will be returned.
-        :return: A list of `Event` object representations.
-        """
-        limit = utils.parse_int_param('limit', limit)
-        utils.validate_sort_param(sort, consts.EVENT_SORT_KEYS)
-        project_safe = utils.parse_bool_param('project_safe', project_safe)
-        if not project_safe and not context.is_admin:
-            raise exception.Forbidden()
-
-        if filters and consts.EVENT_LEVEL in filters:
-            value = filters.pop(consts.EVENT_LEVEL)
-            value = utils.parse_level_values(value)
-            if value is not None:
-                filters[consts.EVENT_LEVEL] = value
-
-        all_events = event_obj.Event.get_all(context, filters=filters,
-                                             limit=limit, marker=marker,
-                                             sort=sort,
-                                             project_safe=project_safe)
-        results = []
-        for event in all_events:
-            evt = event.as_dict()
-            level = utils.level_from_number(evt['level'])
-            evt['level'] = level
-            results.append(evt)
-
-        return results
-
     @request_context2
     def event_list2(self, ctx, req):
         """List event records matching the specified criteria.
