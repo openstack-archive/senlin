@@ -91,9 +91,9 @@ class NotificationBase(NotificationObject):
         """Send the notification."""
         self.payload.obj_reset_changes(recursive=False)
         self._emit(context,
-                   event_type=self.event_type.to_notification_field(),
-                   publisher_id=self.publisher.publisher_id,
-                   payload=self.payload.obj_to_primitive())
+                   self.event_type.to_notification_field(),
+                   self.publisher.publisher_id,
+                   self.payload.obj_to_primitive())
 
 
 # TODO(Qiming): revisit this and see if we should remove it
