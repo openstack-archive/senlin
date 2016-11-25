@@ -294,15 +294,6 @@ class EngineService(service.Service):
         """
         return environment.global_env().get_profile_types()
 
-    @request_context
-    def profile_type_list(self, context):
-        """List known profile type implementations.
-
-        :param context: An instance of the request context.
-        :return: A list of profile types.
-        """
-        return environment.global_env().get_profile_types()
-
     @request_context2
     def profile_type_get2(self, ctx, req):
         """Get the details about a profile type.
