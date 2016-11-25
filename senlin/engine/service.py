@@ -319,22 +319,6 @@ class EngineService(service.Service):
             'schema': data
         }
 
-    @request_context
-    def profile_type_get(self, context, type_name):
-        """Get the details about a profile type.
-
-        :param context: An instance of the request context.
-        :param type_name: The name of a profile type.
-        :return: The details about a profile type.
-        """
-        profile = environment.global_env().get_profile(type_name)
-        data = profile.get_schema()
-
-        return {
-            'name': type_name,
-            'schema': data,
-        }
-
     def profile_find(self, context, identity, project_safe=True):
         """Find a profile with the given identity.
 
