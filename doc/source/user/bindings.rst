@@ -98,7 +98,7 @@ The following options are supported for the command
 For example, the following command attaches a policy named ``up01`` to the
 cluster ``c3``, with its enabled status set to ``True``::
 
-  $ openstack cluster policy attach --enabled --policy up01 c3
+  $ openstack cluster policy attach --enabled True --policy up01 c3
 
 Note that most of the time, Senlin doesn't more than one policy of the same
 type to be attached to the same cluster. This restriction is relaxed for some
