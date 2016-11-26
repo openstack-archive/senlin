@@ -27,26 +27,6 @@ from senlin.objects import base as obj_base
 from senlin.objects.requests import profiles as vorp
 
 
-class ProfileData(object):
-    """The data accompanying a POST/PUT request to create/update a profile."""
-
-    def __init__(self, data):
-        self.data = data
-
-    def name(self):
-        if consts.PROFILE_NAME not in self.data:
-            raise exc.HTTPBadRequest(_("No profile name specified"))
-        return self.data[consts.PROFILE_NAME]
-
-    def spec(self):
-        if consts.PROFILE_SPEC not in self.data:
-            raise exc.HTTPBadRequest(_("No profile spec provided"))
-        return self.data[consts.PROFILE_SPEC]
-
-    def metadata(self):
-        return self.data.get(consts.PROFILE_METADATA, None)
-
-
 class ProfileController(wsgi.Controller):
     """WSGI controller for profiles resource in Senlin v1 API."""
 
@@ -89,17 +69,17 @@ class ProfileController(wsgi.Controller):
 
     @util.policy_enforce
     def create(self, req, body):
-        profile_data = body.get('profile')
-        if profile_data is None:
-            raise exc.HTTPBadRequest(_("Malformed request data, missing "
-                                       "'profile' key in request body."))
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ProfileCreateRequest', body, 'profile')
+            obj = vorp.ProfileCreateRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
-        data = ProfileData(profile_data)
-        result = self.rpc_client.profile_create(req.context,
-                                                data.name(),
-                                                data.spec(),
-                                                data.metadata())
-
+        result = self.rpc_client.call2(req.context, 'profile_create2', obj)
         return {'profile': result}
 
     @wsgi.Controller.api_version('1.2')

@@ -28,36 +28,6 @@ from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
 
 
-class ProfileDataTest(base.SenlinTestCase):
-    def test_profile_data(self):
-        body = {
-            'name': 'test_profile',
-            'spec': {
-                'type': 'test_profile_type',
-                'version': '1.0',
-                'properties': {
-                    'param1': 'value1',
-                    'param2': 'value2',
-                    'context': {
-                        'region': 'region1',
-                    },
-                }
-            },
-            'metadata': {}
-        }
-        data = profiles.ProfileData(body)
-        self.assertEqual('test_profile', data.name())
-        self.assertEqual(body['spec'], data.spec())
-        self.assertEqual({}, data.metadata())
-
-    def test_required_fields_missing(self):
-        body = {'not a profile name': 'wibble'}
-        data = profiles.ProfileData(body)
-        self.assertRaises(exc.HTTPBadRequest, data.name)
-        self.assertRaises(exc.HTTPBadRequest, data.spec)
-        self.assertIsNone(data.metadata())
-
-
 @mock.patch.object(policy, 'enforce')
 class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def setUp(self):
@@ -216,43 +186,45 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._post('/profiles', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_response)
 
         resp = self.controller.create(req, body=body)
 
-        mock_call.assert_called_with(
-            req.context,
-            ('profile_create', {
-                'name': 'test_profile',
-                'spec': {
-                    'type': 'test_profile_type',
-                    'version': '1.0',
-                    'properties': {
-                        'param_1': 'value1',
-                        'param_2': 2
-                    },
-                },
-                'metadata': {},
-            })
-        )
+        mock_call.assert_called_with(req.context, 'profile_create2', mock.ANY)
+
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorp.ProfileCreateRequest)
 
         expected = {'profile': engine_response}
         self.assertEqual(expected, resp)
 
-    def test_profile_create_with_bad_body(self, mock_enforce):
+    def test_profile_create_with_no_profile(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {'name': 'test_profile'}
 
         req = self._post('/profiles', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("Malformed request data, missing 'profile' key "
-                         "in request body.", six.text_type(ex))
+        self.assertEqual("Request body missing 'profile' key.",
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
+    def test_profile_create_with_profile_no_spec(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        body = {'profile': {'name': 'test_profile'}}
+
+        req = self._post('/profiles', jsonutils.dumps(body))
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.create,
+                               req, body=body)
+
+        self.assertEqual("'spec' is a required property",
+                         six.text_type(ex))
         self.assertFalse(mock_call.called)
 
     def test_profile_create_with_bad_type(self, mock_enforce):
@@ -272,15 +244,15 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/profiles', jsonutils.dumps(body))
 
         error = senlin_exc.ResourceNotFound(type='profile_type', id=type_name)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      side_effect=error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
                                               req, body=body)
 
-        mock_call.assert_called_once_with(req.context,
-                                          ('profile_create', body['profile']))
+        mock_call.assert_called_once_with(req.context, 'profile_create2',
+                                          mock.ANY)
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
@@ -301,14 +273,14 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         msg = 'Spec validation error (param): value'
         error = senlin_exc.SpecValidationFailed(message=msg)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      side_effect=error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
                                               req, body=body)
-        mock_call.assert_called_once_with(req.context,
-                                          ('profile_create', body['profile']))
+        mock_call.assert_called_once_with(req.context, 'profile_create2',
+                                          mock.ANY)
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('SpecValidationFailed', resp.json['error']['type'])
 
