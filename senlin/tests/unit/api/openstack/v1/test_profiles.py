@@ -594,7 +594,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
         req = self._post('/profiles/validate', jsonutils.dumps(body),
                          version='1.1')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
 
         ex = self.assertRaises(senlin_exc.MethodVersionNotFound,
                                self.controller.validate,
@@ -641,8 +641,65 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.validate,
                                req, body=body)
-        self.assertEqual("Malformed request data, missing 'profile' key in "
-                         "request body.", six.text_type(ex))
+        self.assertEqual("Request body missing 'profile' key.",
+                         six.text_type(ex))
+
+    def test_profile_validate_no_spec(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'validate', True)
+        body = {
+            'profile': {}
+        }
+        req = self._post('/profiles/validate', jsonutils.dumps(body),
+                         version='1.2')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.validate,
+                               req, body=body)
+        self.assertEqual("'spec' is a required property", six.text_type(ex))
+
+    def test_profile_validate_unsupported_field(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'validate', True)
+        body = {
+            'profile': {
+                'spec': {'type': 'os.nova.server',
+                         'version': '1.0'},
+                'foo': 'bar'
+            }
+        }
+        req = self._post('/profiles/validate', jsonutils.dumps(body),
+                         version='1.2')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.validate,
+                               req, body=body)
+        self.assertEqual("Additional properties are not allowed "
+                         "('foo' was unexpected)", six.text_type(ex))
+
+    def test_profile_validate_invalide_spec(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'validate', True)
+        body = {
+            'profile': {
+                'spec': {
+                    'type': 'os.nova.server',
+                    'version': '1.0'
+                }
+            }
+        }
+
+        req = self._post('/profiles/validate', jsonutils.dumps(body),
+                         version='1.2')
+
+        msg = 'Spec validation error'
+        error = senlin_exc.SpecValidationFailed(message=msg)
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.validate,
+                                              req, body=body)
+
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('SpecValidationFailed', resp.json['error']['type'])
 
     def test_profile_validate_success(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
@@ -659,10 +716,14 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/profiles/validate', jsonutils.dumps(body),
                          version='1.2')
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=spec)
         result = self.controller.validate(req, body=body)
         mock_call.assert_called_with(req.context,
-                                     ('profile_validate', spec))
+                                     'profile_validate2',
+                                     mock.ANY)
         expected = {'profile': spec}
         self.assertEqual(expected, result)
+
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorp.ProfileValidateRequest)
