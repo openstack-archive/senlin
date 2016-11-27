@@ -27,7 +27,7 @@ def register_all():
     __import__('senlin.objects.health_registry')
     __import__('senlin.objects.node')
     __import__('senlin.objects.node_lock')
-    __import__('senlin.objects.notifications.base')
+    __import__('senlin.objects.notification')
     __import__('senlin.objects.policy')
     __import__('senlin.objects.profile')
     __import__('senlin.objects.receiver')
