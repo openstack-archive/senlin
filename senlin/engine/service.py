@@ -486,19 +486,6 @@ class EngineService(service.Service):
 
         return profile.to_dict()
 
-    @request_context
-    def profile_validate(self, context, spec):
-        """Validate a profile with the given properties.
-
-        :param context: An instance of the request context.
-        :param spec: A dictionary containing the spec for the profile.
-        :return: A dictionary containing the details of the profile object
-                 validated.
-        """
-        profile = self._validate_profile(context, spec, validate_props=True)
-
-        return profile.to_dict()
-
     @request_context2
     def profile_get2(self, ctx, req):
         """Retrieve the details about a profile.
