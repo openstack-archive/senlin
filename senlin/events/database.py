@@ -29,9 +29,9 @@ class DBEvent(object):
         elif e_type == 'NODE':
             return (e.id, e.cluster_id, e.name, 'NODE')
         elif e_type == 'CLUSTERACTION':
-            return (e.target, e.target, e.cluster.name, 'CLUSTER')
+            return (e.target, e.target, e.entity.name, 'CLUSTER')
         elif e_type == 'NODEACTION':
-            return (e.target, e.node.cluster_id, e.node.name, 'NODE')
+            return (e.target, e.entity.cluster_id, e.entity.name, 'NODE')
         else:
             return (e.target, '', '', '')
 

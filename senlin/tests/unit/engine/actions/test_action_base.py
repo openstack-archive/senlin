@@ -811,8 +811,8 @@ class ActionProcTest(base.SenlinTestCase):
         action.id = '5eb0c9a5-149a-4cd7-875f-0351c3cc69d5'
         action.owner = OWNER_ID
         action.start_time = 123456
-        action.cluster = mock.Mock(id=CLUSTER_ID)
-        action.cluster.name = 'fake-cluster'
+        action.entity = mock.Mock(id=CLUSTER_ID)
+        action.entity.name = 'fake-cluster'
         self.patchobject(action, 'execute', side_effect=Exception('Boom!'))
         mock_load.return_value = action
 
