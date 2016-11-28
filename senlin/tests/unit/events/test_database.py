@@ -80,7 +80,7 @@ class TestDatabase(base.SenlinTestCase):
         entity = mock.Mock()
 
         res = DB.DBEvent.dump(self.context, 'LEVEL', entity, 'ACTION',
-                              'STATUS', 'REASON')
+                              status='STATUS', reason='REASON')
 
         self.assertIsNone(res)
         mock_check.assert_called_once_with(entity)

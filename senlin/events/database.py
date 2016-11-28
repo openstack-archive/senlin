@@ -36,21 +36,18 @@ class DBEvent(object):
             return (e.target, '', '', '')
 
     @classmethod
-    def dump(cls, context, level, entity, action, status=None, reason=None,
-             **kwargs):
+    def dump(cls, ctx, level, entity, action, **kwargs):
         """Create an event record into database.
 
-        :param context: The request context.
-        :param level: The log level which is an integer as defined in logging.
-        :param entity: The object in question.
+        :param ctx: The request context.
+        :param level: An integer as defined by python logging module.
+        :param entity: A cluster or a node object.
         :param action: The action that triggered this dump.
-        :param status: The status of the action or the object.
-        :param reason: The reason that led the object into its current status.
-        :param kwargs: Additional parameters such as ``timestamp`` or
-                       ``extra``.
+        :param dict kwargs: Additional parameters such as ``phase``,
+                            ``timestamp`` or ``extra``.
         """
-        status = status or entity.status
-        reason = reason or entity.status_reason
+        status = kwargs.get('status') or entity.status
+        reason = kwargs.get('reason') or entity.status_reason
         oid, cluster_id, oname, otype = cls._check_entity(entity)
 
         # use provided timestamp if any
@@ -65,12 +62,12 @@ class DBEvent(object):
             'otype': otype,
             'oname': oname,
             'cluster_id': cluster_id,
-            'user': context.user,
-            'project': context.project,
+            'user': ctx.user,
+            'project': ctx.project,
             'action': action,
             'status': status,
             'status_reason': reason,
             'meta_data': extra,
         }
 
-        eo.Event.create(context, values)
+        eo.Event.create(ctx, values)
