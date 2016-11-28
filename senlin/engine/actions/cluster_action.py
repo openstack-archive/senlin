@@ -911,8 +911,7 @@ class ClusterAction(base.Action):
         self.policy_check(self.entity.id, 'BEFORE')
         if self.data['status'] != policy_mod.CHECK_OK:
             reason = _('Policy check failure: %s') % self.data['reason']
-            EVENT.error(self.context, self.entity, self.action, 'Failed',
-                        reason)
+            EVENT.error(self.context, self.entity, self, 'error', reason)
             return self.RES_ERROR, reason
 
         result = self.RES_OK
@@ -921,8 +920,7 @@ class ClusterAction(base.Action):
         method = getattr(self, method_name, None)
         if method is None:
             error = _('Unsupported action: %s.') % self.action
-            EVENT.error(self.context, self.entity, self.action, 'Failed',
-                        error)
+            EVENT.error(self.context, self.entity, self, 'error', error)
             return self.RES_ERROR, error
 
         result, reason = method()
@@ -932,8 +930,7 @@ class ClusterAction(base.Action):
             self.policy_check(self.entity.id, 'AFTER')
             if self.data['status'] != policy_mod.CHECK_OK:
                 error = _('Policy check failure: %s') % self.data['reason']
-                EVENT.error(self.context, self.entity, self.action, 'Failed',
-                            error)
+                EVENT.error(self.context, self.entity, self, 'error', error)
                 return self.RES_ERROR, error
 
         return result, reason

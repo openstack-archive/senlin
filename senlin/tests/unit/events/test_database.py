@@ -78,8 +78,9 @@ class TestDatabase(base.SenlinTestCase):
     def test_dump(self, mock_create, mock_check):
         mock_check.return_value = ('1', '2', '3', '4')
         entity = mock.Mock()
+        action = mock.Mock(action='ACTION')
 
-        res = DB.DBEvent.dump(self.context, 'LEVEL', entity, 'ACTION',
+        res = DB.DBEvent.dump(self.context, 'LEVEL', entity, action,
                               status='STATUS', reason='REASON')
 
         self.assertIsNone(res)
@@ -106,8 +107,9 @@ class TestDatabase(base.SenlinTestCase):
     def test_dump_with_extra_but_no_status_(self, mock_create, mock_check):
         mock_check.return_value = ('1', '2', '3', '4')
         entity = mock.Mock(status='S1', status_reason='R1')
+        action = mock.Mock(action='ACTION')
 
-        res = DB.DBEvent.dump(self.context, 'LEVEL', entity, 'ACTION',
+        res = DB.DBEvent.dump(self.context, 'LEVEL', entity, action,
                               timestamp='NOW', extra={'foo': 'bar'})
 
         self.assertIsNone(res)
