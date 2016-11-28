@@ -287,28 +287,28 @@ class Action(object):
         ao.Action.delete(context, action_id)
 
     def signal(self, cmd):
-        '''Send a signal to the action.'''
+        """Send a signal to the action.
+
+        :param cmd: One of the command word defined in self.COMMANDS.
+        :returns: None
+        """
         if cmd not in self.COMMANDS:
             return
 
         if cmd == self.SIG_CANCEL:
-            expected_statuses = (self.INIT, self.WAITING, self.READY,
-                                 self.RUNNING)
+            expected = (self.INIT, self.WAITING, self.READY, self.RUNNING)
         elif cmd == self.SIG_SUSPEND:
-            expected_statuses = (self.RUNNING)
-        else:     # SIG_RESUME
-            expected_statuses = (self.SUSPENDED)
+            expected = (self.RUNNING)
+        else:  # SIG_RESUME
+            expected = (self.SUSPENDED)
 
-        if self.status not in expected_statuses:
-            reason = _("Action (%(action)s) is in unexpected status "
-                       "(%(actual)s) while expected status should be one of "
-                       "(%(expected)s).") % dict(action=self.id,
-                                                 expected=expected_statuses,
-                                                 actual=self.status)
-            EVENT.error(self.context, self, cmd, status_reason=reason)
+        if self.status not in expected:
+            LOG.error(_LE("Action (%(id)s) is in status (%(actual)s) while "
+                          "expected status should be one of (%(expected)s)."),
+                      dict(id=self.id[:8], expected=expected,
+                           actual=self.status))
             return
 
-        # TODO(Yanyan Hu): use DB session here
         ao.Action.signal(self.context, self.id, cmd)
 
     def execute(self, **kwargs):

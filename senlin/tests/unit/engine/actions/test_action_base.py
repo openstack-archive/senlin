@@ -35,6 +35,7 @@ from senlin.tests.unit import fakes
 CLUSTER_ID = 'e1cfd82b-dc95-46ad-86e8-37864d7be1cd'
 OBJID = '571fffb8-f41c-4cbc-945c-cb2937d76f19'
 OWNER_ID = 'c7114713-ee68-409d-ba5d-0560a72a386c'
+ACTION_ID = '4c2cead2-fd74-418a-9d12-bd2d9bd7a812'
 
 
 class DummyAction(ab.Action):
@@ -295,8 +296,7 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual(0, mock_call.call_count)
 
     @mock.patch.object(ao.Action, 'signal')
-    @mock.patch.object(EVENT, 'error')
-    def test_action_signal_cancel(self, mock_error, mock_call):
+    def test_action_signal_cancel(self, mock_call):
         values = copy.deepcopy(self.action_values)
         action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, **values)
         action.store(self.ctx)
@@ -317,13 +317,10 @@ class ActionBaseTest(base.SenlinTestCase):
             self.assertIsNone(result)
             self.assertEqual(0, mock_call.call_count)
             mock_call.reset_mock()
-            self.assertEqual(1, mock_error.call_count)
-            mock_error.reset_mock()
 
     @mock.patch.object(ao.Action, 'signal')
-    @mock.patch.object(EVENT, 'error')
-    def test_action_signal_suspend(self, mock_error, mock_call):
-        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
+    def test_action_signal_suspend(self, mock_call):
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id=ACTION_ID)
 
         expected = [action.RUNNING]
         for status in expected:
@@ -341,13 +338,10 @@ class ActionBaseTest(base.SenlinTestCase):
             self.assertIsNone(result)
             self.assertEqual(0, mock_call.call_count)
             mock_call.reset_mock()
-            self.assertEqual(1, mock_error.call_count)
-            mock_error.reset_mock()
 
     @mock.patch.object(ao.Action, 'signal')
-    @mock.patch.object(EVENT, 'error')
-    def test_action_signal_resume(self, mock_error, mock_call):
-        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
+    def test_action_signal_resume(self, mock_call):
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id=ACTION_ID)
 
         expected = [action.SUSPENDED]
         for status in expected:
@@ -365,8 +359,6 @@ class ActionBaseTest(base.SenlinTestCase):
             self.assertIsNone(result)
             self.assertEqual(0, mock_call.call_count)
             mock_call.reset_mock()
-            self.assertEqual(1, mock_error.call_count)
-            mock_error.reset_mock()
 
     def test_execute_default(self):
         action = ab.Action.__new__(DummyAction, OBJID, 'BOOM', self.ctx)
