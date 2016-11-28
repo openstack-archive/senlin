@@ -169,13 +169,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         self._test_engine_api('credential_update', 'call',
                               cred=mock.ANY, attrs=mock.ANY)
 
-    def test_profile_type_list(self):
-        self._test_engine_api('profile_type_list', 'call')
-
-    def test_profile_type_get(self):
-        self._test_engine_api('profile_type_get', 'call',
-                              type_name='a-profile-type')
-
     def test_profile_list(self):
         default_args = {
             'limit': mock.ANY,

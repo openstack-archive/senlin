@@ -85,13 +85,6 @@ class EngineClient(object):
         return self.call(ctxt, self.make_msg('credential_update', cred=cred,
                                              attrs=attrs))
 
-    def profile_type_list(self, ctxt):
-        return self.call(ctxt, self.make_msg('profile_type_list'))
-
-    def profile_type_get(self, ctxt, type_name):
-        return self.call(ctxt, self.make_msg('profile_type_get',
-                                             type_name=type_name))
-
     def profile_list(self, ctxt, limit=None, marker=None, sort=None,
                      filters=None, project_safe=True):
         return self.call(ctxt,
