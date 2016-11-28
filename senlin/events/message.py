@@ -70,7 +70,6 @@ class MessageEvent(object):
         :param level: An integer as defined by python logging module.
         :param entity: A cluster or a node object.
         :param action: An action object for the current operation.
-        :param phase: The current phase of the operation.
         :param dict kwargs: Other keyword arguments for the operation.
         """
         # TODO(Qiming): Add filter about levels that should not be logged
