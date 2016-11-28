@@ -42,9 +42,9 @@ class NodeAction(base.Action):
         super(NodeAction, self).__init__(target, action, context, **kwargs)
 
         try:
-            self.node = node_mod.Node.load(self.context, node_id=self.target)
+            self.entity = node_mod.Node.load(self.context, node_id=self.target)
         except Exception:
-            self.node = None
+            self.entity = None
 
     @profiler.trace('NodeAction.do_create', hide_args=False)
     def do_create(self):
@@ -52,7 +52,7 @@ class NodeAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        cluster_id = self.node.cluster_id
+        cluster_id = self.entity.cluster_id
         if cluster_id and self.cause == base.CAUSE_RPC:
             # Check cluster size constraint if target cluster is specified
             cluster = cm.Cluster.load(self.context, cluster_id)
@@ -60,10 +60,11 @@ class NodeAction(base.Action):
             result = su.check_size_params(cluster, desired, None, None, True)
             if result:
                 # cannot place node into the cluster
-                no.Node.update(self.context, self.node.id, {'cluster_id': ''})
+                no.Node.update(self.context, self.entity.id,
+                               {'cluster_id': ''})
                 return self.RES_ERROR, result
 
-        res = self.node.do_create(self.context)
+        res = self.entity.do_create(self.context)
 
         if cluster_id and self.cause == base.CAUSE_RPC:
             # Update cluster's desired_capacity and re-evaluate its status no
@@ -83,7 +84,7 @@ class NodeAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        cluster_id = self.node.cluster_id
+        cluster_id = self.entity.cluster_id
         if cluster_id and self.cause == base.CAUSE_RPC:
             # If node belongs to a cluster, check size constraint
             # before deleting it
@@ -101,7 +102,7 @@ class NodeAction(base.Action):
                 if grace_period:
                     eventlet.sleep(grace_period)
 
-        res = self.node.do_delete(self.context)
+        res = self.entity.do_delete(self.context)
 
         if cluster_id and self.cause == base.CAUSE_RPC:
             # check if desired_capacity should be changed
@@ -126,7 +127,7 @@ class NodeAction(base.Action):
         :returns: A tuple containing the result and the corresponding reason.
         """
         params = self.inputs
-        res = self.node.do_update(self.context, params)
+        res = self.entity.do_update(self.context, params)
         if res:
             return self.RES_OK, _('Node updated successfully.')
         else:
@@ -144,7 +145,7 @@ class NodeAction(base.Action):
         :returns: A tuple containing the result and the corresponding reason.
         """
         cluster_id = self.inputs.get('cluster_id')
-        result = self.node.do_join(self.context, cluster_id)
+        result = self.entity.do_join(self.context, cluster_id)
         if result:
             return self.RES_OK, _('Node successfully joined cluster.')
         else:
@@ -161,7 +162,7 @@ class NodeAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        res = self.node.do_leave(self.context)
+        res = self.entity.do_leave(self.context)
         if res:
             return self.RES_OK, _('Node successfully left cluster.')
         else:
@@ -173,7 +174,7 @@ class NodeAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        res = self.node.do_check(self.context)
+        res = self.entity.do_check(self.context)
         if res:
             return self.RES_OK, _('Node status is ACTIVE.')
         else:
@@ -185,7 +186,7 @@ class NodeAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        res = self.node.do_recover(self.context, **self.inputs)
+        res = self.entity.do_recover(self.context, **self.inputs)
         if res:
             return self.RES_OK, _('Node recovered successfully.')
         else:
@@ -200,7 +201,8 @@ class NodeAction(base.Action):
 
         if method is None:
             reason = _('Unsupported action: %s') % self.action
-            EVENT.error(self.context, self.node, self.action, 'Failed', reason)
+            EVENT.error(self.context, self.entity, self.action, 'Failed',
+                        reason)
             return self.RES_ERROR, reason
 
         return method()
@@ -213,16 +215,16 @@ class NodeAction(base.Action):
         """
         # Since node.cluster_id could be reset to '' during action execution,
         # we record it here for policy check and cluster lock release.
-        saved_cluster_id = self.node.cluster_id
+        saved_cluster_id = self.entity.cluster_id
         if (saved_cluster_id and self.cause == base.CAUSE_RPC):
             res = senlin_lock.cluster_lock_acquire(
-                self.context, self.node.cluster_id, self.id, self.owner,
+                self.context, self.entity.cluster_id, self.id, self.owner,
                 senlin_lock.NODE_SCOPE, False)
 
             if not res:
                 return self.RES_RETRY, _('Failed in locking cluster')
 
-            self.policy_check(self.node.cluster_id, 'BEFORE')
+            self.policy_check(self.entity.cluster_id, 'BEFORE')
             if self.data['status'] != pb.CHECK_OK:
                 # Don't emit message since policy_check should have done it
                 senlin_lock.cluster_lock_release(saved_cluster_id, self.id,
@@ -231,7 +233,7 @@ class NodeAction(base.Action):
 
         reason = ''
         try:
-            res = senlin_lock.node_lock_acquire(self.context, self.node.id,
+            res = senlin_lock.node_lock_acquire(self.context, self.entity.id,
                                                 self.id, self.owner, False)
             if not res:
                 res = self.RES_ERROR
@@ -247,7 +249,7 @@ class NodeAction(base.Action):
                     else:
                         res = self.RES_OK
         finally:
-            senlin_lock.node_lock_release(self.node.id, self.id)
+            senlin_lock.node_lock_release(self.entity.id, self.id)
             if saved_cluster_id and self.cause == base.CAUSE_RPC:
                 senlin_lock.cluster_lock_release(saved_cluster_id, self.id,
                                                  senlin_lock.NODE_SCOPE)

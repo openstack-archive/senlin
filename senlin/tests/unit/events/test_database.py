@@ -51,8 +51,8 @@ class TestDatabase(base.SenlinTestCase):
     @mock.patch('oslo_utils.reflection.get_class_name')
     def test__check_entity_clusteraction(self, mock_get):
         entity = mock.Mock(target=CLUSTER_ID)
-        entity.cluster = mock.Mock()
-        entity.cluster.name = 'obj-name'
+        entity.entity = mock.Mock()
+        entity.entity.name = 'obj-name'
         mock_get.return_value = 'ClusterAction'
 
         res = DB.DBEvent._check_entity(entity)
@@ -63,9 +63,9 @@ class TestDatabase(base.SenlinTestCase):
     @mock.patch('oslo_utils.reflection.get_class_name')
     def test__check_entity_nodeaction(self, mock_get):
         entity = mock.Mock(target='FAKE_ID')
-        entity.node = mock.Mock()
-        entity.node.name = 'node-name'
-        entity.node.cluster_id = CLUSTER_ID
+        entity.entity = mock.Mock()
+        entity.entity.name = 'node-name'
+        entity.entity.cluster_id = CLUSTER_ID
         mock_get.return_value = 'NodeAction'
 
         res = DB.DBEvent._check_entity(entity)
