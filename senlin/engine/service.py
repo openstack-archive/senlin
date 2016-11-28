@@ -1145,11 +1145,15 @@ class EngineService(service.Service):
         found = []
         not_found = []
         bad_nodes = []
+        depended_nodes = []
         for node in req.nodes:
             try:
                 db_node = self.node_find(ctx, node)
+                dep_nodes = db_node.dependents.get('nodes', None)
                 if db_node.cluster_id != db_cluster.id:
                     bad_nodes.append(db_node.id)
+                elif dep_nodes is not None:
+                    depended_nodes.append(db_node.id)
                 else:
                     found.append(db_node.id)
             except exception.ResourceNotFound:
@@ -1157,6 +1161,12 @@ class EngineService(service.Service):
                 pass
 
         msg = []
+        if len(depended_nodes):
+            reason = _("nodes %s are depended by other nodes, so can't be "
+                       "deleted or become orphan nodes") % depended_nodes
+            LOG.error(reason)
+            raise exception.ResourceInUse(type='node', id=depended_nodes,
+                                          reason=reason)
         if len(not_found):
             msg.append(_("Nodes not found: %s.") % not_found)
         if len(bad_nodes):

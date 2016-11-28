@@ -788,7 +788,8 @@ class ClusterTest(base.SenlinTestCase):
                                 mock_action, mock_check):
         x_cluster = mock.Mock(id='1234', desired_capacity=2)
         mock_find.return_value = x_cluster
-        mock_node.return_value = mock.Mock(id='NODE2', cluster_id='1234')
+        mock_node.return_value = mock.Mock(id='NODE2', cluster_id='1234',
+                                           dependents={})
         mock_check.return_value = None
         mock_action.return_value = 'ACTION_ID'
         req = orco.ClusterDelNodesRequest(identity='CLUSTER', nodes=['NODE1'])
@@ -842,6 +843,23 @@ class ClusterTest(base.SenlinTestCase):
                       six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_node.assert_called_once_with(self.ctx, 'NODE1')
+
+    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_del_nodes2_have_containers(self, mock_cluster, mock_node):
+        mock_cluster.return_value = mock.Mock(id='CLUSTER1')
+        dependents = {'nodes': ['container1']}
+        node = mock.Mock(id='NODE1', dependents=dependents,
+                         cluster_id='CLUSTER1')
+        mock_node.return_value = node
+        req = orco.ClusterDelNodesRequest(identity='CLUSTER', nodes=['NODE1'])
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_del_nodes2,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
+        message = _("nodes ['NODE1'] are depended by other nodes, so can't be "
+                    "deleted or become orphan nodes")
+        self.assertIn(message, six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(service.EngineService, 'node_find')
     @mock.patch.object(service.EngineService, 'cluster_find')
@@ -910,7 +928,8 @@ class ClusterTest(base.SenlinTestCase):
                                                 mock_check):
         x_cluster = mock.Mock(id='1234', desired_capacity=2)
         mock_find.return_value = x_cluster
-        mock_node.return_value = mock.Mock(id='NODE2', cluster_id='1234')
+        mock_node.return_value = mock.Mock(id='NODE2', cluster_id='1234',
+                                           dependents={})
         mock_check.return_value = 'Failed size checking.'
         req = orco.ClusterDelNodesRequest(identity='CLUSTER', nodes=['NODE3'])
 
