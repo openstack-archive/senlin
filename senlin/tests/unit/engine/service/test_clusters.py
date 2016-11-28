@@ -1849,7 +1849,7 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_delete2_with_containers(self, mock_find):
-        dependents = {'containers': ['container1']}
+        dependents = {'profile': ['profile1']}
         cluster = mock.Mock(id='cluster1', status='ACTIVE',
                             dependents=dependents)
         mock_find.return_value = cluster
@@ -1859,8 +1859,8 @@ class ClusterTest(base.SenlinTestCase):
                                self.eng.cluster_delete2,
                                self.ctx, req.obj_to_primitive())
 
-        msg = _("The cluster FAKE_CLUSTER cannot be deleted: still depended "
-                "by other clusters and/or nodes.")
+        msg = _("The cluster FAKE_CLUSTER cannot be deleted: still referenced "
+                "by profile(s): ['profile1'].")
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
         self.assertEqual(msg, six.text_type(ex.exc_info[1]))
 

@@ -1016,9 +1016,9 @@ class EngineService(service.Service):
 
         # collect all errors
         msg = []
-        containers = cluster.dependents.get('containers', None)
-        if containers is not None and len(containers) > 0:
-            err = _("still depended by other clusters and/or nodes")
+        con_profiles = cluster.dependents.get('profile', None)
+        if con_profiles is not None:
+            err = _("still referenced by profile(s): %s") % con_profiles
             LOG.error(err)
             msg.append(err)
 
