@@ -351,11 +351,11 @@ class Action(object):
             ao.Action.abandon(self.context, self.id)
 
         if status == self.SUCCEEDED:
-            EVENT.info(self.context, self, self.action, status, reason)
+            EVENT.info(self.context, self.entity, self, 'end', reason)
         elif status == self.READY:
-            EVENT.warning(self.context, self, self.action, status, reason)
+            EVENT.warning(self.context, self.entity, self, 'error', 'RETRY')
         else:
-            EVENT.error(self.context, self, self.action, status, reason)
+            EVENT.error(self.context, self.entity, self, 'error', reason)
 
         self.status = status
         self.status_reason = reason
@@ -373,7 +373,7 @@ class Action(object):
     def _check_signal(self):
         # Check timeout first, if true, return timeout message
         if self.timeout is not None and self.is_timeout():
-            EVENT.debug(self.context, self, self.action, 'TIMEOUT')
+            EVENT.debug(self.context, self.entity, self, 'error', 'TIMEOUT')
             return self.RES_TIMEOUT
 
         result = ao.Action.signal_query(self.context, self.id)
@@ -395,23 +395,15 @@ class Action(object):
         :return: True if the policy checking can be continued, or False if the
                  policy checking should be aborted.
         """
-        # Abort policy checking if failures found
-        status = 'CHECK ERROR'
-        reason = _("Failed policy '%(name)s': %(reason)s."
-                   ) % {'name': name, 'reason': self.data['reason']}
+        reason = self.data['reason']
         if self.data['status'] == policy_mod.CHECK_OK:
-            method = EVENT.debug
-            status = 'CHECK OK'
-            reason = self.data['reason']
-        else:
-            method = EVENT.error
-
-        method(self.context, self, self.action, status, reason)
-
-        if self.data['status'] == policy_mod.CHECK_OK:
+            EVENT.debug(self.context, self.entity, self, 'check', reason)
             return True
-        else:
-            return False
+
+        reason = _("Failed policy '%(name)s': %(reason)s."
+                   ) % {'name': name, 'reason': reason}
+        EVENT.error(self.context, self.entity, self, 'error', reason)
+        return False
 
     def policy_check(self, cluster_id, target):
         """Check all policies attached to cluster and give result.
@@ -495,7 +487,6 @@ class Action(object):
         return action_dict
 
 
-# TODO(Yanyan Hu): Replace context parameter with session parameter
 def ActionProc(context, action_id):
     '''Action process.'''
 
@@ -505,8 +496,7 @@ def ActionProc(context, action_id):
         LOG.error(_LE('Action "%s" could not be found.'), action_id)
         return False
 
-    # TODO(Anyone): Remove context usage in event module
-    EVENT.info(action.context, action, action.action, 'START')
+    EVENT.info(action.context, action.entity, action, 'start')
 
     reason = 'Action completed'
     success = True

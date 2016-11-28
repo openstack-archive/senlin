@@ -64,7 +64,7 @@ class DBEvent(object):
             'cluster_id': cluster_id,
             'user': ctx.user,
             'project': ctx.project,
-            'action': action,
+            'action': action.action,
             'status': status,
             'status_reason': reason,
             'meta_data': extra,
