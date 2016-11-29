@@ -10,19 +10,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_utils import reflection
 from oslo_utils import timeutils
 
+from senlin.events import base
 from senlin.objects import event as eo
 
 
-class DBEvent(object):
+class DBEvent(base.EventBackend):
     """DB driver for event dumping"""
-
-    @staticmethod
-    def _check_entity(e):
-        e_type = reflection.get_class_name(e, fully_qualified=False)
-        return e_type.upper()
 
     @classmethod
     def dump(cls, ctx, level, entity, action, **kwargs):

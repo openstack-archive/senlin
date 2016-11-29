@@ -11,42 +11,23 @@
 # under the License.
 
 import mock
+import testtools
 
+from senlin.events import base
 from senlin.events import database as DB
 from senlin.objects import event as eo
-from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
 CLUSTER_ID = '2c5139a6-24ba-4a6f-bd53-a268f61536de'
 
 
-class TestDatabase(base.SenlinTestCase):
+class TestDatabase(testtools.TestCase):
 
     def setUp(self):
         super(TestDatabase, self).setUp()
         self.context = utils.dummy_context()
 
-    @mock.patch('oslo_utils.reflection.get_class_name')
-    def test__check_entity_cluster(self, mock_get):
-        entity = mock.Mock()
-        mock_get.return_value = 'Cluster'
-
-        res = DB.DBEvent._check_entity(entity)
-
-        self.assertEqual('CLUSTER', res)
-        mock_get.assert_called_once_with(entity, fully_qualified=False)
-
-    @mock.patch('oslo_utils.reflection.get_class_name')
-    def test__check_entity_node(self, mock_get):
-        entity = mock.Mock()
-        mock_get.return_value = 'Node'
-
-        res = DB.DBEvent._check_entity(entity)
-
-        self.assertEqual('NODE', res)
-        mock_get.assert_called_once_with(entity, fully_qualified=False)
-
-    @mock.patch.object(DB.DBEvent, '_check_entity')
+    @mock.patch.object(base.EventBackend, '_check_entity')
     @mock.patch.object(eo.Event, 'create')
     def test_dump(self, mock_create, mock_check):
         mock_check.return_value = 'CLUSTER'
@@ -76,7 +57,7 @@ class TestDatabase(base.SenlinTestCase):
                 'meta_data': {}
             })
 
-    @mock.patch.object(DB.DBEvent, '_check_entity')
+    @mock.patch.object(base.EventBackend, '_check_entity')
     @mock.patch.object(eo.Event, 'create')
     def test_dump_with_extra_but_no_status_(self, mock_create, mock_check):
         mock_check.return_value = 'NODE'
