@@ -30,7 +30,6 @@ API
 ---
   - Support advanced filters as suggested by the API WG:
     `Filtering Guidelines`_
-  - Support to ``os-request-id`` when serving api requests.
 
 PROFILE
 -------
