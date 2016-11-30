@@ -144,30 +144,6 @@ class EngineClient(object):
         return self.call(ctxt,
                          self.make_msg('action_get', identity=identity))
 
-    def receiver_list(self, ctxt, limit=None, marker=None, filters=None,
-                      sort=None, project_safe=True):
-        return self.call(ctxt,
-                         self.make_msg('receiver_list', filters=filters,
-                                       limit=limit, marker=marker,
-                                       sort=sort, project_safe=project_safe))
-
-    def receiver_create(self, ctxt, name, type_name, cluster_id, action,
-                        actor=None, params=None):
-        return self.call(ctxt,
-                         self.make_msg('receiver_create',
-                                       name=name, type_name=type_name,
-                                       cluster_id=cluster_id, action=action,
-                                       actor=actor, params=params))
-
-    def receiver_get(self, ctxt, identity, project_safe=True):
-        return self.call(ctxt, self.make_msg('receiver_get', identity=identity,
-                                             project_safe=project_safe))
-
-    def receiver_delete(self, ctxt, identity, cast=True):
-        rpc_method = self.cast if cast else self.call
-        return rpc_method(ctxt, self.make_msg('receiver_delete',
-                                              identity=identity))
-
     def receiver_notify(self, ctxt, identity, params=None):
         return self.call(ctxt,
                          self.make_msg('receiver_notify', identity=identity,

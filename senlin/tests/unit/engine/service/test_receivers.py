@@ -341,27 +341,6 @@ class ReceiverTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'receiver_find')
     @mock.patch.object(rb.Receiver, 'delete')
-    def test_receiver_delete(self, mock_delete, mock_find):
-        fake_obj = mock.Mock()
-        fake_obj.id = 'FAKE_ID'
-        mock_find.return_value = fake_obj
-
-        result = self.eng.receiver_delete(self.ctx, 'FAKE_RECEIVER')
-
-        self.assertIsNone(result)
-        mock_find.assert_called_once_with(self.ctx, 'FAKE_RECEIVER')
-        mock_delete.assert_called_once_with(self.ctx, 'FAKE_ID')
-
-    @mock.patch.object(service.EngineService, 'receiver_find')
-    def test_receiver_delete_not_found(self, mock_find):
-        mock_find.side_effect = exc.ResourceNotFound(type='receiver', id='RR')
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_delete, self.ctx, 'Bogus')
-        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-
-    @mock.patch.object(service.EngineService, 'receiver_find')
-    @mock.patch.object(rb.Receiver, 'delete')
     def test_receiver_delete2(self, mock_delete, mock_find):
         fake_obj = mock.Mock()
         fake_obj.id = 'FAKE_ID'
