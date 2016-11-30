@@ -17,6 +17,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import timeutils
 
+from senlin.common import consts
 from senlin.common import context as req_context
 from senlin.common import exception
 from senlin.common.i18n import _, _LE
@@ -351,11 +352,14 @@ class Action(object):
             ao.Action.abandon(self.context, self.id)
 
         if status == self.SUCCEEDED:
-            EVENT.info(self.context, self.entity, self, 'end', reason)
+            EVENT.info(self.context, self.entity, self, consts.PHASE_END,
+                       reason)
         elif status == self.READY:
-            EVENT.warning(self.context, self.entity, self, 'error', 'RETRY')
+            EVENT.warning(self.context, self.entity, self, consts.PHASE_ERROR,
+                          'RETRY')
         else:
-            EVENT.error(self.context, self.entity, self, 'error', reason)
+            EVENT.error(self.context, self.entity, self, consts.PHASE_ERROR,
+                        reason)
 
         self.status = status
         self.status_reason = reason
