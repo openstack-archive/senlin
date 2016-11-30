@@ -17,6 +17,7 @@ from oslo_config import cfg
 from oslo_utils import timeutils
 import six
 
+from senlin.common import consts
 from senlin.common import exception
 from senlin.common import utils as common_utils
 from senlin.engine.actions import base as ab
@@ -409,6 +410,33 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual(action.READY, action.status)
         self.assertEqual('BUSY', action.status_reason)
         mock_abandon.assert_called_once_with(action.context, 'FAKE_ID')
+
+    @mock.patch.object(EVENT, 'info')
+    @mock.patch.object(EVENT, 'error')
+    @mock.patch.object(EVENT, 'warning')
+    @mock.patch.object(ao.Action, 'mark_succeeded')
+    @mock.patch.object(ao.Action, 'mark_failed')
+    @mock.patch.object(ao.Action, 'abandon')
+    def test_set_status_reason_is_none(self, mock_abandon, mark_fail,
+                                       mark_succeed, mock_warning, mock_error,
+                                       mock_info):
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id='FAKE_ID')
+        action.entity = mock.Mock()
+
+        action.set_status(action.RES_OK)
+        mock_info.assert_called_once_with(action.context, action.entity,
+                                          action, consts.PHASE_END,
+                                          'SUCCEEDED')
+
+        action.set_status(action.RES_ERROR)
+        mock_error.assert_called_once_with(action.context, action.entity,
+                                           action, consts.PHASE_ERROR,
+                                           'ERROR')
+
+        action.set_status(action.RES_RETRY)
+        mock_warning.assert_called_once_with(action.context, action.entity,
+                                             action, consts.PHASE_ERROR,
+                                             'RETRY')
 
     @mock.patch.object(ao.Action, 'check_status')
     def test_get_status(self, mock_get):
