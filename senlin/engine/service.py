@@ -984,7 +984,7 @@ class EngineService(service.Service):
 
         # collect all errors
         msg = []
-        con_profiles = cluster.dependents.get('profile', None)
+        con_profiles = cluster.dependents.get('profiles', None)
         if con_profiles is not None:
             err = _("still referenced by profile(s): %s") % con_profiles
             LOG.error(err)
@@ -1762,8 +1762,8 @@ class EngineService(service.Service):
             raise exception.ActionInProgress(type='node', id=req.identity,
                                              status=node.status)
 
-        containers = node.dependents.get('containers', None)
-        if containers is not None and len(containers) > 0:
+        nodes = node.dependents.get('nodes', None)
+        if nodes is not None and len(nodes) > 0:
             reason = _("still depended by other clusters and/or nodes")
             raise exception.ResourceInUse(type='node', id=req.identity,
                                           reason=reason)

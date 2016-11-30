@@ -684,8 +684,8 @@ class NodeTest(base.SenlinTestCase):
             # skipping assertion on mock_find
 
     @mock.patch.object(service.EngineService, 'node_find')
-    def test_node_delete2_contain_container(self, mock_find):
-        dependents = {'containers': ['container1']}
+    def test_node_delete2_have_dependency(self, mock_find):
+        dependents = {'nodes': ['NODE1']}
         node = mock.Mock(id='NODE_ID', status='ACTIVE', dependents=dependents)
         mock_find.return_value = node
         req = orno.NodeDeleteRequest(identity='node1')
