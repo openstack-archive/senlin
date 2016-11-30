@@ -392,15 +392,26 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         wid = 'aaaa-bbbb-cccc'
         req = self._delete('/receivers/%(receiver_id)s' % {'receiver_id': wid})
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=None)
 
         self.assertRaises(exc.HTTPNoContent,
                           self.controller.delete, req, receiver_id=wid)
+        mock_call.assert_called_with(req.context, 'receiver_delete2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorr.ReceiverDeleteRequest)
+        self.assertEqual(wid, request.identity)
 
-        mock_call.assert_called_with(
-            req.context,
-            ('receiver_delete', {'identity': wid}))
+    def test_receiver_delete_err_malformed_receiver_id(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete', True)
+        wid = {'k1': 'v1'}
+        req = self._delete('/receivers/%(receiver_id)s' % {'receiver_id': wid})
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.delete, req,
+                               receiver_id=wid)
+        self.assertEqual("A string is required in field identity, "
+                         "not a dict", six.text_type(ex))
 
     def test_receiver_delete_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
@@ -408,7 +419,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._delete('/receivers/%(receiver_id)s' % {'receiver_id': wid})
 
         error = senlin_exc.ResourceNotFound(type='receiver', id=wid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
