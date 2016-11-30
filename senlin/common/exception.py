@@ -200,7 +200,7 @@ class NodeNotOrphan(SenlinException):
 class InternalError(SenlinException):
     """A base class for internal exceptions in senlin.
 
-    The internal exception classes which inherit from :class:`InternalError`
+    The internal exception classes which inherit from :class:`SenlinException`
     class should be translated to a user facing exception type if need to be
     made user visible.
     """
