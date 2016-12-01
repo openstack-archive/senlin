@@ -2269,20 +2269,6 @@ class EngineService(service.Service):
                                               receiver_obj=db_receiver)
         return receiver.to_dict()
 
-    @request_context
-    def receiver_delete(self, context, identity):
-        """Delete the specified receiver.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a receiver.
-        :return: None if successfully deleted the receiver or an exception of
-                 `ResourceNotFound` if the object could not be found.
-        """
-        db_receiver = self.receiver_find(context, identity)
-        LOG.info(_LI("Deleting receiver %s."), identity)
-        receiver_mod.Receiver.delete(context, db_receiver.id)
-        LOG.info(_LI("Receiver %s is deleted."), identity)
-
     @request_context2
     def receiver_delete2(self, ctx, req):
         """Delete the specified receiver.

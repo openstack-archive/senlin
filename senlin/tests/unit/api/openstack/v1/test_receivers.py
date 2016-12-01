@@ -122,7 +122,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     def test_receiver_index_invalid_type(self, mock_enforce):
-        mock_call = self.patchobject(rpc_client.EngineClient, 'receiver_list',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=[])
 
         params = {'type': 'bogus'}
@@ -134,7 +134,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     def test_receiver_index_invalid_action(self, mock_enforce):
-        mock_call = self.patchobject(rpc_client.EngineClient, 'receiver_list',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=[])
 
         params = {'action': 'bogus'}
@@ -146,7 +146,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     def test_receiver_index_limit_non_int(self, mock_enforce):
-        mock_call = self.patchobject(rpc_client.EngineClient, 'receiver_list',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=[])
 
         params = {'limit': 'abc'}
@@ -158,7 +158,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     def test_receiver_index_invalid_sort(self, mock_enforce):
-        mock_call = self.patchobject(rpc_client.EngineClient, 'receiver_list',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=[])
 
         params = {'sort': 'bogus:foo'}
