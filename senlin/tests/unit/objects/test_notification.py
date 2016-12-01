@@ -16,6 +16,7 @@ from oslo_utils import timeutils
 from oslo_utils import uuidutils
 import testtools
 
+from senlin.common import consts
 from senlin.common import exception
 from senlin import objects
 from senlin.objects import base as vo_base
@@ -100,10 +101,10 @@ class TestNotificationBase(testtools.TestCase):
             event_type=base.EventType(
                 object='test_object',
                 action=fields.NotificationAction.CLUSTER_UPDATE,
-                phase=fields.NotificationPhase.START),
+                phase=consts.PHASE_START),
             publisher=base.NotificationPublisher.from_service(
                 self.service_obj),
-            priority=fields.NotificationPriority.INFO,
+            priority=consts.PRIO_INFO,
             payload=self.payload)
 
     def _verify_notification(self, mock_notifier, mock_context,
@@ -141,7 +142,7 @@ class TestNotificationBase(testtools.TestCase):
 
         noti = TestNotification(event_type=event_type,
                                 publisher=publisher,
-                                priority=fields.NotificationPriority.INFO,
+                                priority=consts.PRIO_INFO,
                                 payload=self.payload)
 
         mock_context = mock.Mock()
@@ -162,7 +163,7 @@ class TestNotificationBase(testtools.TestCase):
                 action=fields.NotificationAction.CLUSTER_UPDATE),
             publisher=base.NotificationPublisher.from_service(
                 self.service_obj),
-            priority=fields.NotificationPriority.INFO,
+            priority=consts.PRIO_INFO,
             payload=self.payload)
 
         mock_context = mock.Mock()

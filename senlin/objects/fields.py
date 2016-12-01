@@ -159,11 +159,7 @@ class Json(fields.FieldType):
 class NotificationPriority(fields.Enum):
 
     # The priorities here are derived from oslo_messaging.notify.notifier
-    ALL = (
-        AUDIT, CRITICAL, ERROR, WARN, INFO, DEBUG, SAMPLE,
-    ) = (
-        'audit', 'critical', 'error', 'warn', 'info', 'debug', 'sample',
-    )
+    ALL = consts.NOTIFICATION_PRIORITIES
 
     def __init__(self):
         super(NotificationPriority, self).__init__(self.ALL)
@@ -171,11 +167,7 @@ class NotificationPriority(fields.Enum):
 
 class NotificationPhase(fields.Enum):
 
-    ALL = (
-        START, END, ERROR,
-    ) = (
-        'start', 'end', 'error',
-    )
+    ALL = consts.NOTIFICATION_PHASES
 
     def __init__(self):
         super(NotificationPhase, self).__init__(self.ALL)
@@ -184,6 +176,7 @@ class NotificationPhase(fields.Enum):
 class NotificationAction(fields.Enum):
 
     # This is a combination of cluster actions and node actions
+    # TODO(Anyone): Move this definition to consts module
     ALL = (
         CLUSTER_CREATE, CLUSTER_DELETE, CLUSTER_UPDATE,
         CLUSTER_ADD_NODES, CLUSTER_DEL_NODES, CLUSTER_REPLACE_NODES,

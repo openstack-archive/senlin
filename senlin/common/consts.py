@@ -253,3 +253,18 @@ RECOVER_OPERATIONS = (
 ) = (
     'RECREATE', 'REBUILD',
 )
+
+
+NOTIFICATION_PRIORITIES = (
+    PRIO_AUDIT, PRIO_CRITICAL, PRIO_ERROR, PRIO_WARN, PRIO_INFO, PRIO_DEBUG,
+    PRIO_SAMPLE,
+) = (
+    'audit', 'critical', 'error', 'warn', 'info', 'debug', 'sample',
+)
+
+
+NOTIFICATION_PHASES = (
+    PHASE_START, PHASE_END, PHASE_ERROR,
+) = (
+    'start', 'end', 'error',
+)
