@@ -353,13 +353,13 @@ class Action(object):
 
         if status == self.SUCCEEDED:
             EVENT.info(self.context, self.entity, self, consts.PHASE_END,
-                       reason)
+                       reason or 'SUCCEEDED')
         elif status == self.READY:
             EVENT.warning(self.context, self.entity, self, consts.PHASE_ERROR,
-                          'RETRY')
+                          reason or 'RETRY')
         else:
             EVENT.error(self.context, self.entity, self, consts.PHASE_ERROR,
-                        reason)
+                        reason or 'ERROR')
 
         self.status = status
         self.status_reason = reason
