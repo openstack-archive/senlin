@@ -1868,7 +1868,7 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     def test_cluster_delete2_with_containers(self, mock_find):
-        dependents = {'profile': ['profile1']}
+        dependents = {'profiles': ['profile1']}
         cluster = mock.Mock(id='cluster1', status='ACTIVE',
                             dependents=dependents)
         mock_find.return_value = cluster

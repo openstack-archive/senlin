@@ -310,50 +310,44 @@ def node_update(context, node_id, values):
                 cluster.save(session)
 
 
-def node_add_dependents(context, node_id, container_id):
-    '''Add ID of container node to 'dependents' property of host node.
+def node_add_dependents(context, depended_node, node):
+    '''Add dependency between nodes.
 
-    :param node_id: ID of the host node.
-    :param container_id: ID of the container node.
+    :param depended_node: ID of the depended node.
+    :param node: ID of the node which has dependencies on other nodes.
     :raises ResourceNotFound: The specified node does not exist in database.
     '''
     with session_for_write() as session:
-        node = session.query(models.Node).get(node_id)
-        if not node:
-            raise exception.ResourceNotFound(type='node', id=node_id)
+        dep_node = session.query(models.Node).get(depended_node)
+        if not dep_node:
+            raise exception.ResourceNotFound(type='node', id=depended_node)
 
-        containers = node.dependents.get('containers', None)
-        if not containers:
-            dependents = {'containers': [container_id]}
-        else:
-            containers.append(container_id)
-            dependents = {'containers': dependents}
-        values = {'dependents': dependents}
-        node.update(values)
-        node.save(session)
+        nodes = dep_node.dependents.get('nodes', [])
+        nodes.append(node)
+        dep_node.dependents.update({'nodes': nodes})
+        dep_node.save(session)
 
 
-def node_remove_dependents(context, node_id, container_id):
-    '''Remove ID of container node from 'dependents' property of host node.
+def node_remove_dependents(context, depended_node, node):
+    '''Remove dependency between nodes.
 
-    :param node_id: ID of the host node.
-    :param container_id: ID of the container node.
+    :param depended_node: ID of the depended node.
+    :param node: ID of the node which has dependencies on other nodes.
     :raises ResourceNotFound: The specified node does not exist in database.
     '''
     with session_for_write() as session:
-        node = session.query(models.Node).get(node_id)
-        if not node:
-            raise exception.ResourceNotFound(type='node', id=node_id)
+        dep_node = session.query(models.Node).get(depended_node)
+        if not dep_node:
+            raise exception.ResourceNotFound(type='node', id=depended_node)
 
-        containers = node.dependents['containers']
-        containers.remove(container_id)
-        if len(containers) > 0:
-            dependents = {'containers': containers}
-        else:
-            dependents = {}
-        values = {'dependents': dependents}
-        node.update(values)
-        node.save(session)
+        nodes = dep_node.dependents.get('nodes', [])
+        if node in nodes:
+            nodes.remove(node)
+            if len(nodes) > 0:
+                dep_node.dependents.update({'nodes': nodes})
+            else:
+                dep_node.dependents.pop('nodes')
+            dep_node.save(session)
 
 
 def node_migrate(context, node_id, to_cluster, timestamp, role=None):
@@ -679,14 +673,9 @@ def cluster_add_dependents(context, cluster_id, profile_id):
         if cluster is None:
             raise exception.ResourceNotFound(type='cluster', id=cluster_id)
 
-        dependents = cluster.dependents
-        profile = dependents.get('profile')
-        if not profile:
-            profile_deps = {'profile': [profile_id]}
-        elif profile_id not in profile:
-            profile.append(profile_id)
-            profile_deps = {'profile': profile}
-        cluster.dependents.update(profile_deps)
+        profiles = cluster.dependents.get('profiles', [])
+        profiles.append(profile_id)
+        cluster.dependents.update({'profiles': profiles})
         cluster.save(session)
 
 
@@ -703,15 +692,14 @@ def cluster_remove_dependents(context, cluster_id, profile_id):
         if cluster is None:
             raise exception.ResourceNotFound(type='cluster', id=cluster_id)
 
-        profile = cluster.dependents.get('profile')
-        if profile is not None and profile_id in profile:
-            profile.remove(profile_id)
-            if len(profile) == 0:
-                cluster.dependents.pop('profile')
+        profiles = cluster.dependents.get('profiles', [])
+        if profile_id in profiles:
+            profiles.remove(profile_id)
+            if len(profiles) == 0:
+                cluster.dependents.pop('profiles')
             else:
-                profile_deps = {'profile': profile}
-                cluster.dependents.update(profile_deps)
-        cluster.save(session)
+                cluster.dependents.update({'profiles': profiles})
+            cluster.save(session)
 
 
 # Profiles
