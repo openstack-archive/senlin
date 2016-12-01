@@ -101,7 +101,18 @@ class ReceiverController(wsgi.Controller):
 
     @util.policy_enforce
     def delete(self, req, receiver_id):
-        self.rpc_client.receiver_delete(req.context, receiver_id, cast=False)
+        params = {'identity': receiver_id}
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ReceiverDeleteRequest', params)
+            obj = vorr.ReceiverDeleteRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        self.rpc_client.call2(req.context, 'receiver_delete2', obj)
         raise exc.HTTPNoContent()
 
     @util.policy_enforce
