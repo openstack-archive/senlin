@@ -71,6 +71,10 @@ DOC
 -----
   - Provide a sample conf file for customizing senlin options.
 
+TEST
+----
+  - Add more Rally profile and scenario support for Senlin.
+
 OTHERS
 ------
   - Integration with Glare for profile/policy specs storage. At least we may
