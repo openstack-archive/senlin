@@ -28,56 +28,30 @@ class TestDatabase(base.SenlinTestCase):
 
     @mock.patch('oslo_utils.reflection.get_class_name')
     def test__check_entity_cluster(self, mock_get):
-        entity = mock.Mock(id='obj-id')
-        entity.name = 'obj-name'
+        entity = mock.Mock()
         mock_get.return_value = 'Cluster'
 
         res = DB.DBEvent._check_entity(entity)
 
-        self.assertEqual(('obj-id', 'obj-id', 'obj-name', 'CLUSTER'), res)
+        self.assertEqual('CLUSTER', res)
         mock_get.assert_called_once_with(entity, fully_qualified=False)
 
     @mock.patch('oslo_utils.reflection.get_class_name')
     def test__check_entity_node(self, mock_get):
-        entity = mock.Mock(id='obj-id', cluster_id='cluster-id')
-        entity.name = 'obj-name'
+        entity = mock.Mock()
         mock_get.return_value = 'Node'
 
         res = DB.DBEvent._check_entity(entity)
 
-        self.assertEqual(('obj-id', 'cluster-id', 'obj-name', 'NODE'), res)
-        mock_get.assert_called_once_with(entity, fully_qualified=False)
-
-    @mock.patch('oslo_utils.reflection.get_class_name')
-    def test__check_entity_clusteraction(self, mock_get):
-        entity = mock.Mock(target=CLUSTER_ID)
-        entity.entity = mock.Mock()
-        entity.entity.name = 'obj-name'
-        mock_get.return_value = 'ClusterAction'
-
-        res = DB.DBEvent._check_entity(entity)
-
-        self.assertEqual((CLUSTER_ID, CLUSTER_ID, 'obj-name', 'CLUSTER'), res)
-        mock_get.assert_called_once_with(entity, fully_qualified=False)
-
-    @mock.patch('oslo_utils.reflection.get_class_name')
-    def test__check_entity_nodeaction(self, mock_get):
-        entity = mock.Mock(target='FAKE_ID')
-        entity.entity = mock.Mock()
-        entity.entity.name = 'node-name'
-        entity.entity.cluster_id = CLUSTER_ID
-        mock_get.return_value = 'NodeAction'
-
-        res = DB.DBEvent._check_entity(entity)
-
-        self.assertEqual(('FAKE_ID', CLUSTER_ID, 'node-name', 'NODE'), res)
+        self.assertEqual('NODE', res)
         mock_get.assert_called_once_with(entity, fully_qualified=False)
 
     @mock.patch.object(DB.DBEvent, '_check_entity')
     @mock.patch.object(eo.Event, 'create')
     def test_dump(self, mock_create, mock_check):
-        mock_check.return_value = ('1', '2', '3', '4')
-        entity = mock.Mock()
+        mock_check.return_value = 'CLUSTER'
+        entity = mock.Mock(id='CLUSTER_ID')
+        entity.name = 'cluster1'
         action = mock.Mock(action='ACTION')
 
         res = DB.DBEvent.dump(self.context, 'LEVEL', entity, action,
@@ -90,10 +64,10 @@ class TestDatabase(base.SenlinTestCase):
             {
                 'level': 'LEVEL',
                 'timestamp': mock.ANY,
-                'oid': '1',
-                'otype': '4',
-                'oname': '3',
-                'cluster_id': '2',
+                'oid': 'CLUSTER_ID',
+                'otype': 'CLUSTER',
+                'oname': 'cluster1',
+                'cluster_id': 'CLUSTER_ID',
                 'user': self.context.user,
                 'project': self.context.project,
                 'action': 'ACTION',
@@ -105,8 +79,11 @@ class TestDatabase(base.SenlinTestCase):
     @mock.patch.object(DB.DBEvent, '_check_entity')
     @mock.patch.object(eo.Event, 'create')
     def test_dump_with_extra_but_no_status_(self, mock_create, mock_check):
-        mock_check.return_value = ('1', '2', '3', '4')
-        entity = mock.Mock(status='S1', status_reason='R1')
+        mock_check.return_value = 'NODE'
+        entity = mock.Mock(id='NODE_ID', status='S1', status_reason='R1',
+                           cluster_id='CLUSTER_ID')
+        entity.name = 'node1'
+
         action = mock.Mock(action='ACTION')
 
         res = DB.DBEvent.dump(self.context, 'LEVEL', entity, action,
@@ -119,10 +96,10 @@ class TestDatabase(base.SenlinTestCase):
             {
                 'level': 'LEVEL',
                 'timestamp': 'NOW',
-                'oid': '1',
-                'otype': '4',
-                'oname': '3',
-                'cluster_id': '2',
+                'oid': 'NODE_ID',
+                'otype': 'NODE',
+                'oname': 'node1',
+                'cluster_id': 'CLUSTER_ID',
                 'user': self.context.user,
                 'project': self.context.project,
                 'action': 'ACTION',

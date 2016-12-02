@@ -22,18 +22,7 @@ class DBEvent(object):
     @staticmethod
     def _check_entity(e):
         e_type = reflection.get_class_name(e, fully_qualified=False)
-        e_type = e_type.upper()
-
-        if e_type == 'CLUSTER':
-            return (e.id, e.id, e.name, 'CLUSTER')
-        elif e_type == 'NODE':
-            return (e.id, e.cluster_id, e.name, 'NODE')
-        elif e_type == 'CLUSTERACTION':
-            return (e.target, e.target, e.entity.name, 'CLUSTER')
-        elif e_type == 'NODEACTION':
-            return (e.target, e.entity.cluster_id, e.entity.name, 'NODE')
-        else:
-            return (e.target, '', '', '')
+        return e_type.upper()
 
     @classmethod
     def dump(cls, ctx, level, entity, action, **kwargs):
@@ -48,8 +37,8 @@ class DBEvent(object):
         """
         status = kwargs.get('status') or entity.status
         reason = kwargs.get('reason') or entity.status_reason
-        oid, cluster_id, oname, otype = cls._check_entity(entity)
-
+        otype = cls._check_entity(entity)
+        cluster_id = entity.id if otype == 'CLUSTER' else entity.cluster_id
         # use provided timestamp if any
         timestamp = kwargs.get('timestamp') or timeutils.utcnow(True)
         # use provided extra data if any
@@ -58,9 +47,9 @@ class DBEvent(object):
         values = {
             'level': level,
             'timestamp': timestamp,
-            'oid': oid,
+            'oid': entity.id,
             'otype': otype,
-            'oname': oname,
+            'oname': entity.name,
             'cluster_id': cluster_id,
             'user': ctx.user,
             'project': ctx.project,
