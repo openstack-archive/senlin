@@ -19,8 +19,7 @@ from osprofiler import profiler
 
 from senlin.common import consts
 from senlin.common import exception
-from senlin.common.i18n import _
-from senlin.common.i18n import _LI
+from senlin.common.i18n import _, _LI
 from senlin.common import scaleutils
 from senlin.common import utils
 from senlin.engine.actions import base

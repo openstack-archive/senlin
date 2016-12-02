@@ -28,8 +28,7 @@ from six.moves import urllib
 
 from senlin.common import consts
 from senlin.common import exception
-from senlin.common.i18n import _
-from senlin.common.i18n import _LI
+from senlin.common.i18n import _, _LI
 from senlin.objects import service as service_obj
 
 cfg.CONF.import_opt('max_response_size', 'senlin.common.config')

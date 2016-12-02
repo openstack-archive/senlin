@@ -16,8 +16,7 @@ from oslo_utils import timeutils
 
 from senlin.common import consts
 from senlin.common import exception
-from senlin.common.i18n import _
-from senlin.common.i18n import _LE
+from senlin.common.i18n import _, _LE
 from senlin.common import utils
 from senlin.engine import cluster_policy as cpm
 from senlin.engine import node as node_mod

@@ -25,8 +25,7 @@ from senlin.common import constraints
 from senlin.common import consts
 from senlin.common import context
 from senlin.common import exception as exc
-from senlin.common.i18n import _
-from senlin.common.i18n import _LE
+from senlin.common.i18n import _, _LE
 from senlin.common import scaleutils as su
 from senlin.common import schema
 from senlin.common import utils

@@ -16,8 +16,7 @@ import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
-from senlin.common.i18n import _
-from senlin.common.i18n import _LE
+from senlin.common.i18n import _, _LE
 from senlin.common import utils
 from senlin.objects import node as no
 from senlin.profiles import base as pb
