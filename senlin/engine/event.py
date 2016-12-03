@@ -10,12 +10,32 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_config import cfg
 from oslo_log import log as logging
+from stevedore import named
 
 from senlin.common.i18n import _LC, _LE, _LW, _LI
 from senlin.events import database as DB
 
 LOG = logging.getLogger(__name__)
+
+dispatchers = None
+
+
+def load_dispatcher():
+    """Load dispatchers."""
+    global dispatchers
+
+    LOG.debug("Loading dispatchers")
+    dispatchers = named.NamedExtensionManager(
+        namespace="senlin.dispatchers",
+        names=cfg.CONF.dispatchers,
+        invoke_on_load=True,
+        propagate_map_exceptions=True)
+    if not list(dispatchers):
+        LOG.warning(_LW("No dispatchers configured for 'senlin.disaptchers'"))
+    else:
+        LOG.info(_LI("Loaded dispatchers: %s"), dispatchers.names())
 
 
 def critical(context, entity, action, status=None, status_reason=None,

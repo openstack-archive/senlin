@@ -94,7 +94,7 @@ engine_opts = [
 ]
 cfg.CONF.register_opts(engine_opts)
 
-# DEFAULT, cloud_backend
+# DEFAULT, host
 rpc_opts = [
     cfg.StrOpt('host',
                default=socket.gethostname(),
@@ -110,6 +110,13 @@ cloud_backend_opts = [
                default='openstack',
                help=_('Default cloud backend to use.'))]
 cfg.CONF.register_opts(cloud_backend_opts)
+
+# DEFAULT, event dispatchers
+dispatcher_opts = [
+    cfg.MultiStrOpt("dispatchers",
+                    default=['database', 'message'],
+                    help=_("Event dispatchers to enable"))]
+cfg.CONF.register_opts(dispatcher_opts)
 
 authentication_group = cfg.OptGroup('authentication')
 authentication_opts = [

@@ -36,6 +36,7 @@ from senlin.engine import cluster as cluster_mod
 from senlin.engine import cluster_policy as cpm
 from senlin.engine import dispatcher
 from senlin.engine import environment
+from senlin.engine import event as EVENT
 from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.engine.receivers import base as receiver_mod
@@ -117,6 +118,7 @@ class EngineService(service.Service):
 
         # Initialize the global environment
         environment.initialize()
+        EVENT.load_dispatcher()
 
     def init_tgm(self):
         self.TG = scheduler.ThreadGroupManager()
