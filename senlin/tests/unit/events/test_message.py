@@ -17,6 +17,7 @@ from oslo_utils import timeutils
 from oslo_utils import uuidutils
 import testtools
 
+from senlin.events import base
 from senlin.events import message as MSG
 from senlin import objects
 from senlin.objects import notification as nobj
@@ -30,26 +31,6 @@ class TestMessageEvent(testtools.TestCase):
     def setUp(self):
         super(TestMessageEvent, self).setUp()
         self.ctx = utils.dummy_context()
-
-    @mock.patch('oslo_utils.reflection.get_class_name')
-    def test__check_entity_cluster(self, mock_get):
-        entity = mock.Mock()
-        mock_get.return_value = 'Cluster'
-
-        res = MSG.MessageEvent._check_entity(entity)
-
-        self.assertEqual('CLUSTER', res)
-        mock_get.assert_called_once_with(entity, fully_qualified=False)
-
-    @mock.patch('oslo_utils.reflection.get_class_name')
-    def test__check_entity_node(self, mock_get):
-        entity = mock.Mock()
-        mock_get.return_value = 'Node'
-
-        res = MSG.MessageEvent._check_entity(entity)
-
-        self.assertEqual('NODE', res)
-        mock_get.assert_called_once_with(entity, fully_qualified=False)
 
     @mock.patch.object(nobj.NotificationBase, '_emit')
     def test__notify_cluster_action(self, mock_emit):
@@ -224,7 +205,7 @@ class TestMessageEvent(testtools.TestCase):
         self.assertEqual(expected_payload, payload)
 
     @mock.patch.object(MSG.MessageEvent, '_notify_cluster_action')
-    @mock.patch('oslo_utils.reflection.get_class_name')
+    @mock.patch.object(base.EventBackend, '_check_entity')
     def test_dump_cluster_action_event(self, mock_check, mock_notify):
         mock_check.return_value = 'CLUSTER'
         entity = mock.Mock()
@@ -233,12 +214,12 @@ class TestMessageEvent(testtools.TestCase):
         res = MSG.MessageEvent.dump(self.ctx, logging.INFO, entity, action)
 
         self.assertIsNone(res)
-        mock_check.assert_called_once_with(entity, fully_qualified=False)
+        mock_check.assert_called_once_with(entity)
         mock_notify.assert_called_once_with(self.ctx, logging.INFO, entity,
                                             action)
 
     @mock.patch.object(MSG.MessageEvent, '_notify_node_action')
-    @mock.patch('oslo_utils.reflection.get_class_name')
+    @mock.patch.object(base.EventBackend, '_check_entity')
     def test_dump_node_action_event(self, mock_check, mock_notify):
         mock_check.return_value = 'NODE'
         entity = mock.Mock()
@@ -247,6 +228,6 @@ class TestMessageEvent(testtools.TestCase):
         res = MSG.MessageEvent.dump(self.ctx, logging.INFO, entity, action)
 
         self.assertIsNone(res)
-        mock_check.assert_called_once_with(entity, fully_qualified=False)
+        mock_check.assert_called_once_with(entity)
         mock_notify.assert_called_once_with(self.ctx, logging.INFO, entity,
                                             action)

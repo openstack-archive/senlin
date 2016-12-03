@@ -11,24 +11,14 @@
 # under the License.
 
 from oslo_config import cfg
-from oslo_utils import reflection
 
 from senlin.common import utils
+from senlin.events import base
 from senlin.objects import notification as nobj
 
 
-class MessageEvent(object):
+class MessageEvent(base.EventBackend):
     """Message driver for event dumping"""
-
-    @staticmethod
-    def _check_entity(e):
-        e_type = reflection.get_class_name(e, fully_qualified=False)
-        return e_type.upper()
-
-    @staticmethod
-    def _get_action_name(action):
-        name = action.split('_', 1)[1]
-        return name.lower()
 
     @classmethod
     def _notify_cluster_action(cls, ctx, level, cluster, action, **kwargs):
