@@ -201,7 +201,7 @@ class NodeAction(base.Action):
 
         if method is None:
             reason = _('Unsupported action: %s') % self.action
-            EVENT.error(self.context, self.entity, self, 'error', reason)
+            EVENT.error(self, consts.PHASE_ERROR, reason)
             return self.RES_ERROR, reason
 
         return method()

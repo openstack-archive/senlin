@@ -424,18 +424,15 @@ class ActionBaseTest(base.SenlinTestCase):
         action.entity = mock.Mock()
 
         action.set_status(action.RES_OK)
-        mock_info.assert_called_once_with(action.context, action.entity,
-                                          action, consts.PHASE_END,
+        mock_info.assert_called_once_with(action, consts.PHASE_END,
                                           'SUCCEEDED')
 
         action.set_status(action.RES_ERROR)
-        mock_error.assert_called_once_with(action.context, action.entity,
-                                           action, consts.PHASE_ERROR,
+        mock_error.assert_called_once_with(action, consts.PHASE_ERROR,
                                            'ERROR')
 
         action.set_status(action.RES_RETRY)
-        mock_warning.assert_called_once_with(action.context, action.entity,
-                                             action, consts.PHASE_ERROR,
+        mock_warning.assert_called_once_with(action, consts.PHASE_ERROR,
                                              'RETRY')
 
     @mock.patch.object(ao.Action, 'check_status')
@@ -831,8 +828,7 @@ class ActionProcTest(base.SenlinTestCase):
 
         self.assertTrue(res)
         mock_load.assert_called_once_with(self.ctx, action_id='ACTION_ID')
-        mock_event_info.assert_called_once_with(action.context, mock_obj,
-                                                action, 'start')
+        mock_event_info.assert_called_once_with(action, 'start')
         mock_status.assert_called_once_with(action.RES_OK, 'BIG SUCCESS')
 
     @mock.patch.object(EVENT, 'info')
@@ -850,6 +846,5 @@ class ActionProcTest(base.SenlinTestCase):
 
         self.assertFalse(res)
         mock_load.assert_called_once_with(self.ctx, action_id='ACTION')
-        mock_info.assert_called_once_with(action.context, action.entity,
-                                          action, 'start')
+        mock_info.assert_called_once_with(action, 'start')
         mock_status.assert_called_once_with(action.RES_ERROR, 'Boom!')

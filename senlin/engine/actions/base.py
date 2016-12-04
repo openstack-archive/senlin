@@ -352,14 +352,11 @@ class Action(object):
             ao.Action.abandon(self.context, self.id)
 
         if status == self.SUCCEEDED:
-            EVENT.info(self.context, self.entity, self, consts.PHASE_END,
-                       reason or 'SUCCEEDED')
+            EVENT.info(self, consts.PHASE_END, reason or 'SUCCEEDED')
         elif status == self.READY:
-            EVENT.warning(self.context, self.entity, self, consts.PHASE_ERROR,
-                          reason or 'RETRY')
+            EVENT.warning(self, consts.PHASE_ERROR, reason or 'RETRY')
         else:
-            EVENT.error(self.context, self.entity, self, consts.PHASE_ERROR,
-                        reason or 'ERROR')
+            EVENT.error(self, consts.PHASE_ERROR, reason or 'ERROR')
 
         self.status = status
         self.status_reason = reason
@@ -377,7 +374,7 @@ class Action(object):
     def _check_signal(self):
         # Check timeout first, if true, return timeout message
         if self.timeout is not None and self.is_timeout():
-            EVENT.debug(self.context, self.entity, self, 'error', 'TIMEOUT')
+            EVENT.debug(self, consts.PHASE_ERROR, 'TIMEOUT')
             return self.RES_TIMEOUT
 
         result = ao.Action.signal_query(self.context, self.id)
@@ -401,12 +398,12 @@ class Action(object):
         """
         reason = self.data['reason']
         if self.data['status'] == policy_mod.CHECK_OK:
-            EVENT.debug(self.context, self.entity, self, 'check', reason)
+            LOG.debug(self, 'check', reason)
             return True
 
         reason = _("Failed policy '%(name)s': %(reason)s."
                    ) % {'name': name, 'reason': reason}
-        EVENT.error(self.context, self.entity, self, 'error', reason)
+        EVENT.error(self, consts.PHASE_ERROR, reason)
         return False
 
     def policy_check(self, cluster_id, target):
@@ -500,7 +497,7 @@ def ActionProc(context, action_id):
         LOG.error(_LE('Action "%s" could not be found.'), action_id)
         return False
 
-    EVENT.info(action.context, action.entity, action, 'start')
+    EVENT.info(action, consts.PHASE_START)
 
     reason = 'Action completed'
     success = True

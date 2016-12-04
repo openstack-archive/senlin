@@ -14,7 +14,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from stevedore import named
 
-from senlin.common.i18n import _LC, _LE, _LW, _LI
+from senlin.common.i18n import _, _LC, _LE, _LW, _LI
 from senlin.events import database as DB
 
 LOG = logging.getLogger(__name__)
@@ -38,48 +38,45 @@ def load_dispatcher():
         LOG.info(_LI("Loaded dispatchers: %s"), dispatchers.names())
 
 
-def critical(context, entity, action, status=None, status_reason=None,
-             timestamp=None):
-    DB.DBEvent.dump(context, logging.CRITICAL, entity, action,
-                    status=status, reason=status_reason, timestamp=timestamp)
-    LOG.critical(_LC('%(name)s [%(id)s] - %(status)s: %(reason)s'),
-                 {'name': entity.name, 'id': entity.id[:8],
-                  'status': status, 'reason': status_reason})
+def critical(action, phase=None, reason=None, timestamp=None):
+    DB.DBEvent.dump(action.context, logging.CRITICAL, action.entity, action,
+                    status=phase, reason=reason, timestamp=timestamp)
+
+    LOG.critical(_LC('%(name)s [%(id)s] %(action)s - %(phase)s: %(reason)s'),
+                 {'name': action.entity.name, 'id': action.entity.id[:8],
+                  'action': action.action, 'phase': phase, 'reason': reason})
 
 
-def error(context, entity, action, status=None, status_reason=None,
-          timestamp=None):
-    DB.DBEvent.dump(context, logging.ERROR, entity, action,
-                    status=status, reason=status_reason, timestamp=timestamp)
-    msg = _LE('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s')
-    LOG.error(msg,
-              {'name': entity.name, 'id': entity.id[:8], 'action': action,
-               'status': status, 'reason': status_reason})
+def error(action, phase=None, reason=None, timestamp=None):
+    DB.DBEvent.dump(action.context, logging.ERROR, action.entity, action,
+                    status=phase, reason=reason, timestamp=timestamp)
+
+    LOG.error(_LE('%(name)s [%(id)s] %(action)s - %(phase)s: %(reason)s'),
+              {'name': action.entity.name, 'id': action.entity.id[:8],
+               'action': action.action, 'phase': phase, 'reason': reason})
 
 
-def warning(context, entity, action, status=None, status_reason=None,
-            timestamp=None):
-    DB.DBEvent.dump(context, logging.WARNING, entity, action,
-                    status=status, reason=status_reason, timestamp=timestamp)
-    msg = _LW('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s')
-    LOG.warning(msg,
-                {'name': entity.name, 'id': entity.id[:8], 'action': action,
-                 'status': status, 'reason': status_reason})
+def warning(action, phase=None, reason=None, timestamp=None):
+    DB.DBEvent.dump(action.context, logging.WARNING, action.entity, action,
+                    status=phase, reason=reason, timestamp=timestamp)
+
+    LOG.warning(_LW('%(name)s [%(id)s] %(action)s - %(phase)s: %(reason)s'),
+                {'name': action.entity.name, 'id': action.entity.id[:8],
+                 'action': action.action, 'phase': phase, 'reason': reason})
 
 
-def info(context, entity, action, status=None, status_reason=None,
-         timestamp=None):
-    DB.DBEvent.dump(context, logging.INFO, entity, action,
-                    status=status, reason=status_reason, timestamp=timestamp)
-    LOG.info(_LI('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s'),
-             {'name': entity.name, 'id': entity.id[:8], 'action': action,
-              'status': status, 'reason': status_reason})
+def info(action, phase=None, reason=None, timestamp=None):
+    DB.DBEvent.dump(action.context, logging.INFO, action.entity, action,
+                    status=phase, reason=reason, timestamp=timestamp)
+
+    LOG.info(_LI('%(name)s [%(id)s] %(action)s - %(phase)s: %(reason)s'),
+             {'name': action.entity.name, 'id': action.entity.id[:8],
+              'action': action.action, 'phase': phase, 'reason': reason})
 
 
-def debug(context, entity, action, status=None, status_reason=None,
-          timestamp=None):
-    DB.DBEvent.dump(context, logging.DEBUG, entity, action,
-                    status=status, reason=status_reason, timestamp=timestamp)
-    LOG.debug('%(name)s [%(id)s] %(action)s - %(status)s: %(reason)s',
-              {'name': entity.name, 'id': entity.id[:8], 'action': action,
-               'status': status, 'reason': status_reason})
+def debug(action, phase=None, reason=None, timestamp=None):
+    DB.DBEvent.dump(action.context, logging.DEBUG, action.entity, action,
+                    status=phase, reason=reason, timestamp=timestamp)
+    LOG.debug(_('%(name)s [%(id)s] %(action)s - %(phase)s: %(reason)s'),
+              {'name': action.entity.name, 'id': action.entity.id[:8],
+               'action': action.action, 'phase': phase, 'reason': reason})
