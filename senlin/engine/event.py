@@ -14,11 +14,11 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from stevedore import named
 
-from senlin.common.i18n import _, _LC, _LE, _LW, _LI
+from senlin.common.i18n import _LW, _LI
 from senlin.events import database as DB
 
 LOG = logging.getLogger(__name__)
-
+FMT = '%(name)s [%(id)s] %(action)s - %(phase)s: %(reason)s'
 dispatchers = None
 
 
@@ -38,45 +38,44 @@ def load_dispatcher():
         LOG.info(_LI("Loaded dispatchers: %s"), dispatchers.names())
 
 
+def _event_data(action, phase=None, reason=None):
+    return dict(name=action.entity.name,
+                id=action.entity.id[:8],
+                action=action.action,
+                phase=phase,
+                reason=reason)
+
+
 def critical(action, phase=None, reason=None, timestamp=None):
     DB.DBEvent.dump(action.context, logging.CRITICAL, action.entity, action,
                     status=phase, reason=reason, timestamp=timestamp)
 
-    LOG.critical(_LC('%(name)s [%(id)s] %(action)s - %(phase)s: %(reason)s'),
-                 {'name': action.entity.name, 'id': action.entity.id[:8],
-                  'action': action.action, 'phase': phase, 'reason': reason})
+    LOG.critical(FMT, _event_data(action, phase, reason))
 
 
 def error(action, phase=None, reason=None, timestamp=None):
     DB.DBEvent.dump(action.context, logging.ERROR, action.entity, action,
                     status=phase, reason=reason, timestamp=timestamp)
 
-    LOG.error(_LE('%(name)s [%(id)s] %(action)s - %(phase)s: %(reason)s'),
-              {'name': action.entity.name, 'id': action.entity.id[:8],
-               'action': action.action, 'phase': phase, 'reason': reason})
+    LOG.error(FMT, _event_data(action, phase, reason))
 
 
 def warning(action, phase=None, reason=None, timestamp=None):
     DB.DBEvent.dump(action.context, logging.WARNING, action.entity, action,
                     status=phase, reason=reason, timestamp=timestamp)
 
-    LOG.warning(_LW('%(name)s [%(id)s] %(action)s - %(phase)s: %(reason)s'),
-                {'name': action.entity.name, 'id': action.entity.id[:8],
-                 'action': action.action, 'phase': phase, 'reason': reason})
+    LOG.warning(FMT, _event_data(action, phase, reason))
 
 
 def info(action, phase=None, reason=None, timestamp=None):
     DB.DBEvent.dump(action.context, logging.INFO, action.entity, action,
                     status=phase, reason=reason, timestamp=timestamp)
 
-    LOG.info(_LI('%(name)s [%(id)s] %(action)s - %(phase)s: %(reason)s'),
-             {'name': action.entity.name, 'id': action.entity.id[:8],
-              'action': action.action, 'phase': phase, 'reason': reason})
+    LOG.info(FMT, _event_data(action, phase, reason))
 
 
 def debug(action, phase=None, reason=None, timestamp=None):
     DB.DBEvent.dump(action.context, logging.DEBUG, action.entity, action,
                     status=phase, reason=reason, timestamp=timestamp)
-    LOG.debug(_('%(name)s [%(id)s] %(action)s - %(phase)s: %(reason)s'),
-              {'name': action.entity.name, 'id': action.entity.id[:8],
-               'action': action.action, 'phase': phase, 'reason': reason})
+
+    LOG.debug(FMT, _event_data(action, phase, reason))
