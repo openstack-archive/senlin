@@ -26,12 +26,10 @@ class EventBackend(object):
         return name[1].lower() if len(name) > 1 else 'unknown'
 
     @classmethod
-    def dump(cls, ctx, level, entity, action, **kwargs):
+    def dump(cls, level, action, **kwargs):
         """A method for sub-class to override.
 
-        :param ctx: The request context.
         :param level: An integer as defined by python logging module.
-        :param entity: A cluster or a node object.
         :param action: The action that triggered this dump.
         :param dict kwargs: Additional parameters such as ``phase``,
                             ``timestamp`` or ``extra``.

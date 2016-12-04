@@ -57,4 +57,4 @@ class TestEventBackend(testtools.TestCase):
     def test_dump(self):
         self.assertRaises(NotImplementedError,
                           base.EventBackend.dump,
-                          '1', '2', '3', '4')
+                          '1', '2')
