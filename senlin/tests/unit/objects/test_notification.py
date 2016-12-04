@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
 
 import mock
 from oslo_utils import timeutils
@@ -18,6 +19,9 @@ import testtools
 
 from senlin.common import consts
 from senlin.common import exception
+from senlin.engine.actions import base as action_base
+from senlin.engine import cluster
+from senlin.engine import node
 from senlin import objects
 from senlin.objects import base as vo_base
 from senlin.objects import fields
@@ -223,13 +227,11 @@ class TestClusterPayload(testtools.TestCase):
 
         uuid = uuidutils.generate_uuid()
         prof_uuid = uuidutils.generate_uuid()
-        parent_uuid = uuidutils.generate_uuid()
         dt = timeutils.utcnow(True)
         self.params = {
             'id': uuid,
             'name': 'fake_name',
             'profile_id': prof_uuid,
-            'parent': parent_uuid,
             'init_at': dt,
             'created_at': dt,
             'updated_at': dt,
@@ -277,7 +279,11 @@ class TestClusterPayload(testtools.TestCase):
         self._verify_equality(sot, params)
 
     def test_create_with_obj(self):
-        c1 = objects.Cluster(**self.params)
+        params = copy.deepcopy(self.params)
+        name = params.pop('name')
+        desired_capacity = params.pop('desired_capacity')
+        profile_id = params.pop('profile_id')
+        c1 = cluster.Cluster(name, desired_capacity, profile_id, **params)
 
         sot = base.ClusterPayload.from_cluster(c1)
 
@@ -343,7 +349,10 @@ class TestNodePayload(testtools.TestCase):
         self._verify_equality(sot, params)
 
     def test_create_with_obj(self):
-        n1 = objects.Node(**self.params)
+        params = copy.deepcopy(self.params)
+        name = params.pop('name')
+        profile_id = params.pop('profile_id')
+        n1 = node.Node(name, profile_id, **params)
 
         sot = base.NodePayload.from_node(n1)
 
@@ -414,34 +423,32 @@ class TestClusterActionPayload(testtools.TestCase):
 
     def setUp(self):
         super(TestClusterActionPayload, self).setUp()
-
+        ctx = utils.dummy_context()
         cluster_params = {
             'id': uuidutils.generate_uuid(),
-            'name': 'fake_name',
-            'profile_id': uuidutils.generate_uuid(),
             'init_at': timeutils.utcnow(True),
             'min_size': 1,
             'max_size': 10,
-            'desired_capacity': 5,
             'timeout': 4,
             'status': 'ACTIVE',
             'status_reason': 'Good',
             'user': 'user1',
             'project': 'project1',
         }
-        self.cluster = objects.Cluster(**cluster_params)
+        self.cluster = cluster.Cluster('CC', 5, uuidutils.generate_uuid(),
+                                       **cluster_params)
         action_params = {
             'id': uuidutils.generate_uuid(),
             'name': 'fake_name',
-            'target': uuidutils.generate_uuid(),
-            'action': 'CLUSTER_CREATE',
             'start_time': 1.23,
             'status': 'RUNNING',
             'status_reason': 'Good',
             'user': 'user1',
             'project': 'project1',
         }
-        self.action = objects.Action(**action_params)
+        self.action = action_base.Action(uuidutils.generate_uuid(),
+                                         'CLUSTER_CREATE', ctx,
+                                         **action_params)
 
     def test_create(self):
         exobj = None
@@ -476,33 +483,28 @@ class TestNodeActionPayload(testtools.TestCase):
 
     def setUp(self):
         super(TestNodeActionPayload, self).setUp()
-
+        ctx = utils.dummy_context()
         node_params = {
             'id': uuidutils.generate_uuid(),
-            'name': 'fake_name',
-            'profile_id': uuidutils.generate_uuid(),
             'cluster_id': '',
             'index': -1,
             'init_at': timeutils.utcnow(True),
             'status': 'ACTIVE',
             'status_reason': 'Good',
-            'user': 'user1',
-            'project': 'project1',
         }
-        self.node = objects.Node(**node_params)
+        self.node = node.Node('NN', uuidutils.generate_uuid(), **node_params)
         action_params = {
 
             'id': uuidutils.generate_uuid(),
             'name': 'fake_name',
-            'target': uuidutils.generate_uuid(),
-            'action': 'CLUSTER_CREATE',
             'start_time': 1.23,
             'status': 'RUNNING',
             'status_reason': 'Good',
             'user': 'user1',
             'project': 'project1',
         }
-        self.action = objects.Action(**action_params)
+        self.action = action_base.Action(uuidutils.generate_uuid(),
+                                         'NODE_CREATE', ctx, **action_params)
 
     def test_create(self):
         exobj = None
@@ -534,34 +536,32 @@ class TestClusterActionNotification(testtools.TestCase):
 
     def setUp(self):
         super(TestClusterActionNotification, self).setUp()
-
+        ctx = utils.dummy_context()
         cluster_params = {
             'id': uuidutils.generate_uuid(),
-            'name': 'fake_name',
-            'profile_id': uuidutils.generate_uuid(),
             'init_at': timeutils.utcnow(True),
             'min_size': 1,
             'max_size': 10,
-            'desired_capacity': 5,
             'timeout': 4,
             'status': 'ACTIVE',
             'status_reason': 'Good',
             'user': 'user1',
             'project': 'project1',
         }
-        self.cluster = objects.Cluster(**cluster_params)
+        self.cluster = cluster.Cluster('CC', 5, uuidutils.generate_uuid(),
+                                       **cluster_params)
         action_params = {
             'id': uuidutils.generate_uuid(),
             'name': 'fake_name',
-            'target': uuidutils.generate_uuid(),
-            'action': 'CLUSTER_CREATE',
             'start_time': 1.23,
             'status': 'RUNNING',
             'status_reason': 'Good',
             'user': 'user1',
             'project': 'project1',
         }
-        self.action = objects.Action(**action_params)
+        self.action = action_base.Action(uuidutils.generate_uuid(),
+                                         'CLUSTER_CREATE', ctx,
+                                         **action_params)
 
     def test_create(self):
         payload = base.ClusterActionPayload(cluster=self.cluster,
@@ -576,11 +576,9 @@ class TestNodeActionNotification(testtools.TestCase):
 
     def setUp(self):
         super(TestNodeActionNotification, self).setUp()
-
+        ctx = utils.dummy_context()
         node_params = {
             'id': uuidutils.generate_uuid(),
-            'name': 'fake_name',
-            'profile_id': uuidutils.generate_uuid(),
             'cluster_id': '',
             'index': -1,
             'init_at': timeutils.utcnow(True),
@@ -589,20 +587,19 @@ class TestNodeActionNotification(testtools.TestCase):
             'user': 'user1',
             'project': 'project1',
         }
-        self.node = objects.Node(**node_params)
+        self.node = node.Node('NN', uuidutils.generate_uuid(), **node_params)
         action_params = {
 
             'id': uuidutils.generate_uuid(),
             'name': 'fake_name',
-            'target': uuidutils.generate_uuid(),
-            'action': 'CLUSTER_CREATE',
             'start_time': 1.23,
             'status': 'RUNNING',
             'status_reason': 'Good',
             'user': 'user1',
             'project': 'project1',
         }
-        self.action = objects.Action(**action_params)
+        self.action = action_base.Action(uuidutils.generate_uuid(),
+                                         'NODE_CREATE', ctx, **action_params)
 
     def test_create(self):
         payload = base.NodeActionPayload(node=self.node, action=self.action)
