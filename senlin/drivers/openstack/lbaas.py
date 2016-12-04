@@ -17,8 +17,7 @@ from oslo_context import context as oslo_context
 from oslo_log import log as logging
 
 from senlin.common import exception
-from senlin.common.i18n import _
-from senlin.common.i18n import _LE
+from senlin.common.i18n import _, _LE
 from senlin.drivers import base
 from senlin.drivers.openstack import neutron_v2 as neutronclient
 

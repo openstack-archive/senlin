@@ -23,8 +23,7 @@ import sys
 from oslo_log import log as logging
 import six
 
-from senlin.common.i18n import _
-from senlin.common.i18n import _LE
+from senlin.common.i18n import _, _LE
 
 _FATAL_EXCEPTION_FORMAT_ERRORS = False
 LOG = logging.getLogger(__name__)
