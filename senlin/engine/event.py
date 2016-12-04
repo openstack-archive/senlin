@@ -47,35 +47,35 @@ def _event_data(action, phase=None, reason=None):
 
 
 def critical(action, phase=None, reason=None, timestamp=None):
-    DB.DBEvent.dump(logging.CRITICAL, action, status=phase, reason=reason,
+    DB.DBEvent.dump(logging.CRITICAL, action, phase=phase, reason=reason,
                     timestamp=timestamp)
 
     LOG.critical(FMT, _event_data(action, phase, reason))
 
 
 def error(action, phase=None, reason=None, timestamp=None):
-    DB.DBEvent.dump(logging.ERROR, action, status=phase, reason=reason,
+    DB.DBEvent.dump(logging.ERROR, action, phase=phase, reason=reason,
                     timestamp=timestamp)
 
     LOG.error(FMT, _event_data(action, phase, reason))
 
 
 def warning(action, phase=None, reason=None, timestamp=None):
-    DB.DBEvent.dump(logging.WARNING, action, status=phase, reason=reason,
+    DB.DBEvent.dump(logging.WARNING, action, phase=phase, reason=reason,
                     timestamp=timestamp)
 
     LOG.warning(FMT, _event_data(action, phase, reason))
 
 
 def info(action, phase=None, reason=None, timestamp=None):
-    DB.DBEvent.dump(logging.INFO, action, status=phase, reason=reason,
+    DB.DBEvent.dump(logging.INFO, action, phase=phase, reason=reason,
                     timestamp=timestamp)
 
     LOG.info(FMT, _event_data(action, phase, reason))
 
 
 def debug(action, phase=None, reason=None, timestamp=None):
-    DB.DBEvent.dump(logging.DEBUG, action, status=phase, reason=reason,
+    DB.DBEvent.dump(logging.DEBUG, action, phase=phase, reason=reason,
                     timestamp=timestamp)
 
     LOG.debug(FMT, _event_data(action, phase, reason))

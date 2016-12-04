@@ -30,7 +30,7 @@ class DBEvent(base.EventBackend):
         """
         ctx = action.context
         entity = action.entity
-        status = kwargs.get('status') or entity.status
+        status = kwargs.get('phase') or entity.status
         reason = kwargs.get('reason') or entity.status_reason
         otype = cls._check_entity(entity)
         cluster_id = entity.id if otype == 'CLUSTER' else entity.cluster_id
