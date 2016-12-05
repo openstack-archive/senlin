@@ -161,10 +161,6 @@ class PolicyTypeConflict(SenlinException):
     msg_fmt = _("The policy with type (%(policy_type)s) already exists.")
 
 
-class InvalidSchemaError(SenlinException):
-    msg_fmt = _("%(message)s")
-
-
 class InvalidSpec(SenlinException):
     msg_fmt = _("%(message)s")
 
