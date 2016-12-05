@@ -36,8 +36,7 @@ class TestDatabase(testtools.TestCase):
         action = mock.Mock(context=self.context, action='ACTION',
                            entity=entity)
 
-        res = DB.DBEvent.dump('LEVEL', action, status='STATUS',
-                              reason='REASON')
+        res = DB.DBEvent.dump('LEVEL', action, phase='STATUS', reason='REASON')
 
         self.assertIsNone(res)
         mock_check.assert_called_once_with(entity)
