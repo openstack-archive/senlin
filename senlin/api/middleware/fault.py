@@ -52,6 +52,7 @@ class FaultWrapper(wsgi.Middleware):
         'InvalidGlobalAPIVersion': webob.exc.HTTPNotAcceptable,
         'InvalidParameter': webob.exc.HTTPBadRequest,
         'InvalidSchemaError': webob.exc.HTTPBadRequest,
+        'InvalidSpec': webob.exc.HTTPBadRequest,
         'MethodVersionNotFound': webob.exc.HTTPBadRequest,
         'MultipleChoices': webob.exc.HTTPBadRequest,
         'NodeNotOrphan': webob.exc.HTTPConflict,
@@ -60,7 +61,6 @@ class FaultWrapper(wsgi.Middleware):
         'RequestLimitExceeded': webob.exc.HTTPBadRequest,
         'ResourceInUse': webob.exc.HTTPConflict,
         'ResourceNotFound': webob.exc.HTTPNotFound,
-        'SpecValidationFailed': webob.exc.HTTPBadRequest,
     }
 
     def _map_exception_to_error(self, class_exception):

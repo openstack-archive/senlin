@@ -272,7 +272,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/profiles', jsonutils.dumps(body))
 
         msg = 'Spec validation error (param): value'
-        error = senlin_exc.SpecValidationFailed(message=msg)
+        error = senlin_exc.InvalidSpec(message=msg)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      side_effect=error)
 
@@ -282,7 +282,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'profile_create2',
                                           mock.ANY)
         self.assertEqual(400, resp.json['code'])
-        self.assertEqual('SpecValidationFailed', resp.json['error']['type'])
+        self.assertEqual('InvalidSpec', resp.json['error']['type'])
 
     def test_profile_create_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', False)
@@ -662,7 +662,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                          version='1.2')
 
         msg = 'Spec validation error'
-        error = senlin_exc.SpecValidationFailed(message=msg)
+        error = senlin_exc.InvalidSpec(message=msg)
         mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
@@ -671,7 +671,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, body=body)
 
         self.assertEqual(400, resp.json['code'])
-        self.assertEqual('SpecValidationFailed', resp.json['error']['type'])
+        self.assertEqual('InvalidSpec', resp.json['error']['type'])
 
     def test_profile_validate_success(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)

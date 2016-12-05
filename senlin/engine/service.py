@@ -403,7 +403,7 @@ class EngineService(service.Service):
         except exception.ESchema as ex:
             msg = six.text_type(ex)
             LOG.error(_LE("Failed in validating profile: %s"), msg)
-            raise exception.SpecValidationFailed(message=msg)
+            raise exception.InvalidSpec(message=msg)
 
         return profile
 
@@ -619,6 +619,7 @@ class EngineService(service.Service):
 
         type_name, version = schema.get_spec_version(spec)
         type_str = "-".join([type_name, version])
+
         plugin = environment.global_env().get_policy(type_str)
 
         kwargs = {
@@ -635,7 +636,7 @@ class EngineService(service.Service):
         except exception.InvalidSpec as ex:
             msg = six.text_type(ex)
             LOG.error(_LE("Failed in validating policy: %s"), msg)
-            raise exception.SpecValidationFailed(message=msg)
+            raise exception.InvalidSpec(message=msg)
 
         return policy
 

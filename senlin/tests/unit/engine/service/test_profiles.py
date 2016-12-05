@@ -232,7 +232,7 @@ class ProfileTest(base.SenlinTestCase):
                                self.eng.profile_create2,
                                self.ctx, req.obj_to_primitive())
 
-        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
+        self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
         self.assertEqual("Unrecognizable spec item 'KEY3'",
                          six.text_type(ex.exc_info[1]))
 
@@ -247,7 +247,7 @@ class ProfileTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.profile_create2,
                                self.ctx, req.obj_to_primitive())
-        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
+        self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
         self.assertEqual('BOOM', six.text_type(ex.exc_info[1]))
 
     def test_profile_validate2_pass(self):
@@ -292,7 +292,7 @@ class ProfileTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.profile_validate2,
                                self.ctx, request.obj_to_primitive())
-        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
+        self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
         self.assertEqual('BOOM',
                          six.text_type(ex.exc_info[1]))
 
