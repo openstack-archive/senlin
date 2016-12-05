@@ -20,16 +20,16 @@ class DBEvent(base.EventBackend):
     """DB driver for event dumping"""
 
     @classmethod
-    def dump(cls, ctx, level, entity, action, **kwargs):
+    def dump(cls, level, action, **kwargs):
         """Create an event record into database.
 
-        :param ctx: The request context.
         :param level: An integer as defined by python logging module.
-        :param entity: A cluster or a node object.
         :param action: The action that triggered this dump.
         :param dict kwargs: Additional parameters such as ``phase``,
                             ``timestamp`` or ``extra``.
         """
+        ctx = action.context
+        entity = action.entity
         status = kwargs.get('status') or entity.status
         reason = kwargs.get('reason') or entity.status_reason
         otype = cls._check_entity(entity)

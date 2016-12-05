@@ -53,16 +53,16 @@ class MessageEvent(base.EventBackend):
         notification.emit(ctx)
 
     @classmethod
-    def dump(cls, ctx, level, entity, action, **kwargs):
+    def dump(cls, level, action, **kwargs):
         """Dump the provided event into message queue.
 
-        :param ctx: The request context.
         :param level: An integer as defined by python logging module.
-        :param entity: A cluster or a node object.
         :param action: An action object for the current operation.
         :param dict kwargs: Other keyword arguments for the operation.
         """
         # TODO(Qiming): Add filter about levels that should not be logged
+        ctx = action.context
+        entity = action.entity
         etype = cls._check_entity(entity)
         if etype == 'CLUSTER':
             cls._notify_cluster_action(ctx, level, entity, action, **kwargs)

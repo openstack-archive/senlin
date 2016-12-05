@@ -209,9 +209,9 @@ class TestMessageEvent(testtools.TestCase):
     def test_dump_cluster_action_event(self, mock_check, mock_notify):
         mock_check.return_value = 'CLUSTER'
         entity = mock.Mock()
-        action = mock.Mock()
+        action = mock.Mock(context=self.ctx, entity=entity)
 
-        res = MSG.MessageEvent.dump(self.ctx, logging.INFO, entity, action)
+        res = MSG.MessageEvent.dump(logging.INFO, action)
 
         self.assertIsNone(res)
         mock_check.assert_called_once_with(entity)
@@ -223,9 +223,9 @@ class TestMessageEvent(testtools.TestCase):
     def test_dump_node_action_event(self, mock_check, mock_notify):
         mock_check.return_value = 'NODE'
         entity = mock.Mock()
-        action = mock.Mock()
+        action = mock.Mock(context=self.ctx, entity=entity)
 
-        res = MSG.MessageEvent.dump(self.ctx, logging.INFO, entity, action)
+        res = MSG.MessageEvent.dump(logging.INFO, action)
 
         self.assertIsNone(res)
         mock_check.assert_called_once_with(entity)

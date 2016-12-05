@@ -33,10 +33,11 @@ class TestDatabase(testtools.TestCase):
         mock_check.return_value = 'CLUSTER'
         entity = mock.Mock(id='CLUSTER_ID')
         entity.name = 'cluster1'
-        action = mock.Mock(action='ACTION')
+        action = mock.Mock(context=self.context, action='ACTION',
+                           entity=entity)
 
-        res = DB.DBEvent.dump(self.context, 'LEVEL', entity, action,
-                              status='STATUS', reason='REASON')
+        res = DB.DBEvent.dump('LEVEL', action, status='STATUS',
+                              reason='REASON')
 
         self.assertIsNone(res)
         mock_check.assert_called_once_with(entity)
@@ -65,10 +66,11 @@ class TestDatabase(testtools.TestCase):
                            cluster_id='CLUSTER_ID')
         entity.name = 'node1'
 
-        action = mock.Mock(action='ACTION')
+        action = mock.Mock(context=self.context, entity=entity,
+                           action='ACTION')
 
-        res = DB.DBEvent.dump(self.context, 'LEVEL', entity, action,
-                              timestamp='NOW', extra={'foo': 'bar'})
+        res = DB.DBEvent.dump('LEVEL', action, timestamp='NOW',
+                              extra={'foo': 'bar'})
 
         self.assertIsNone(res)
         mock_check.assert_called_once_with(entity)
