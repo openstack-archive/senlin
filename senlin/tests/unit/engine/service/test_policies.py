@@ -220,7 +220,7 @@ class PolicyTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.policy_create2,
                                self.ctx, req.obj_to_primitive())
-        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
+        self.assertEqual(exc.ESchema, ex.exc_info[0])
         self.assertEqual("Required spec item 'KEY2' not provided",
                          six.text_type(ex.exc_info[1]))
 

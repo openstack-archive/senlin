@@ -15,7 +15,7 @@ import six
 import testtools
 
 from senlin.common import constraints
-from senlin.common import exception
+from senlin.common import exception as exc
 from senlin.common import schema
 
 
@@ -44,14 +44,12 @@ class TestConstraintsSchema(testtools.TestCase):
         # ... and value as number or string
         self.assertIsNone(s.validate(1))
 
-        err = self.assertRaises(exception.SpecValidationFailed,
-                                s.validate, 3)
+        err = self.assertRaises(exc.ESchema, s.validate, 3)
         self.assertEqual('"3" must be one of the allowed values: 1, 2, 4',
                          six.text_type(err))
 
         self.assertIsNone(s.validate('1'))
-        err = self.assertRaises(exception.SpecValidationFailed,
-                                s.validate, '3')
+        err = self.assertRaises(exc.ESchema, s.validate, '3')
         self.assertEqual('"3" must be one of the allowed values: 1, 2, 4',
                          six.text_type(err))
 
@@ -61,14 +59,12 @@ class TestConstraintsSchema(testtools.TestCase):
         )
         # ... and value as number or string
         self.assertIsNone(s.validate(1))
-        err = self.assertRaises(exception.SpecValidationFailed,
-                                s.validate, 3)
+        err = self.assertRaises(exc.ESchema, s.validate, 3)
         self.assertEqual('"3" must be one of the allowed values: 1, 2, 4',
                          six.text_type(err))
 
         self.assertIsNone(s.validate('1'))
-        err = self.assertRaises(exception.SpecValidationFailed,
-                                s.validate, '3')
+        err = self.assertRaises(exc.ESchema, s.validate, '3')
         self.assertEqual('"3" must be one of the allowed values: 1, 2, 4',
                          six.text_type(err))
 
@@ -86,13 +82,11 @@ class TestConstraintsSchema(testtools.TestCase):
         )
         # ... and value as number or string
         self.assertIsNone(s.validate_constraints(1.1))
-        err = self.assertRaises(exception.SpecValidationFailed,
-                                s.validate_constraints, 3.3)
+        err = self.assertRaises(exc.ESchema, s.validate_constraints, 3.3)
         self.assertEqual('"3.3" must be one of the allowed values: '
                          '1.1, 2.2, 4.4', six.text_type(err))
         self.assertIsNone(s.validate_constraints('1.1', s))
-        err = self.assertRaises(exception.SpecValidationFailed,
-                                s.validate_constraints, '3.3')
+        err = self.assertRaises(exc.ESchema, s.validate_constraints, '3.3')
         self.assertEqual('"3.3" must be one of the allowed values: '
                          '1.1, 2.2, 4.4', six.text_type(err))
 
@@ -102,13 +96,11 @@ class TestConstraintsSchema(testtools.TestCase):
         )
         # ... and value as number or string
         self.assertIsNone(s.validate_constraints(1.1, s))
-        err = self.assertRaises(exception.SpecValidationFailed,
-                                s.validate_constraints, 3.3, s)
+        err = self.assertRaises(exc.ESchema, s.validate_constraints, 3.3, s)
         self.assertEqual('"3.3" must be one of the allowed values: '
                          '1.1, 2.2, 4.4', six.text_type(err))
         self.assertIsNone(s.validate_constraints('1.1', s))
-        err = self.assertRaises(exception.SpecValidationFailed,
-                                s.validate_constraints, '3.3', s)
+        err = self.assertRaises(exc.ESchema, s.validate_constraints, '3.3', s)
         self.assertEqual('"3.3" must be one of the allowed values: '
                          '1.1, 2.2, 4.4', six.text_type(err))
 
@@ -226,9 +218,7 @@ class TestConstraintsSchema(testtools.TestCase):
         c = constraints.AllowedValues(['foo', 'bar'])
         s = schema.String('A string', default='wibble', required=True,
                           constraints=[c])
-        err = self.assertRaises(exception.SpecValidationFailed,
-                                s.validate,
-                                'zoo')
+        err = self.assertRaises(exc.ESchema, s.validate, 'zoo')
         self.assertIn('"zoo" must be one of the allowed values: foo, bar',
                       six.text_type(err))
 
@@ -244,8 +234,7 @@ class TestConstraintsSchema(testtools.TestCase):
         nested = schema.String('A string', default='wibble', required=True,
                                constraints=[c])
         s = schema.Map('A map', schema={'Foo': nested})
-        err = self.assertRaises(exception.SpecValidationFailed, s.validate,
-                                {'Foo': 'zoo'})
+        err = self.assertRaises(exc.ESchema, s.validate, {'Foo': 'zoo'})
 
         self.assertIn('"zoo" must be one of the allowed values: foo, bar',
                       six.text_type(err))
