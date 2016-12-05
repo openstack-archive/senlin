@@ -137,9 +137,10 @@ class ProfileTest(base.SenlinTestCase):
     @mock.patch.object(pb.Profile, 'load_all')
     def test_profile_list2_with_params(self, mock_load):
         mock_load.return_value = []
+        marker = uuidutils.generate_uuid()
         params = {
             'limit': 10,
-            'marker': 'KEY',
+            'marker': marker,
             'name': ['foo'],
             'type': ['os.nova.server'],
             'sort': 'name:asc',
@@ -150,7 +151,7 @@ class ProfileTest(base.SenlinTestCase):
         result = self.eng.profile_list2(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([], result)
-        mock_load.assert_called_once_with(self.ctx, limit=10, marker='KEY',
+        mock_load.assert_called_once_with(self.ctx, limit=10, marker=marker,
                                           filters={'name': ['foo'],
                                                    'type': ['os.nova.server']},
                                           sort='name:asc',
@@ -214,9 +215,9 @@ class ProfileTest(base.SenlinTestCase):
                                self.eng.profile_create2,
                                self.ctx, req.obj_to_primitive())
 
-        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
-        self.assertEqual("The specified profile_type "
-                         "(FakeProfile-1.0) could not be found.",
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual("The profile_type (FakeProfile-1.0) could not "
+                         "be found.",
                          six.text_type(ex.exc_info[1]))
 
     def test_profile_create2_invalid_spec(self):
