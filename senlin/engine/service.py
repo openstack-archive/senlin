@@ -621,11 +621,7 @@ class EngineService(service.Service):
 
         type_name, version = schema.get_spec_version(spec)
         type_str = "-".join([type_name, version])
-        try:
-            plugin = environment.global_env().get_policy(type_str)
-        except exception.ResourceNotFound as ex:
-            msg = ex.enhance_msg('specified', ex)
-            raise exception.SpecValidationFailed(message=msg)
+        plugin = environment.global_env().get_policy(type_str)
 
         kwargs = {
             'user': context.user,
