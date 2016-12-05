@@ -535,8 +535,7 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_ERROR, res_code)
         reason = 'Unsupported action: NODE_DANCE'
         self.assertEqual(reason, res_msg)
-        mock_error.assert_called_once_with(
-            action.context, node, action, 'error', reason)
+        mock_error.assert_called_once_with(action, 'error', reason)
 
     @mock.patch.object(lock, 'cluster_lock_acquire')
     def test_execute_failed_lock_cluster(self, mock_acquire, mock_load):
