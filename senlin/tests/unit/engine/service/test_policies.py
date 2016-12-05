@@ -204,9 +204,9 @@ class PolicyTest(base.SenlinTestCase):
                                self.eng.policy_create2,
                                self.ctx, req.obj_to_primitive())
 
-        self.assertEqual(exc.SpecValidationFailed, ex.exc_info[0])
-        self.assertEqual("The specified policy_type "
-                         "(FakePolicy-1.0) could not be found.",
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual("The policy_type (FakePolicy-1.0) could "
+                         "not be found.",
                          six.text_type(ex.exc_info[1]))
 
     def test_policy_create2_invalid_spec(self):
