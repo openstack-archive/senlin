@@ -429,9 +429,8 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Creating profile '%s'."), name)
 
-        profile = self._validate_profile(ctx, req.profile.spec, name=name,
-                                         metadata=metadata)
-        profile.store(ctx)
+        profile = profile_base.Profile.create(ctx, name, req.profile.spec,
+                                              metadata=metadata)
 
         LOG.info(_LI("Profile %(name)s is created: %(id)s."),
                  {'name': name, 'id': profile.id})

@@ -250,6 +250,40 @@ class TestProfileBase(base.SenlinTestCase):
                                          project_safe=False)
         mock_from.assert_called_once_with(dbobj)
 
+    @mock.patch.object(senlin_ctx, 'get_service_context')
+    def test_create(self, mock_context):
+        mock_context.return_value = {}
+        res = pb.Profile.create(self.ctx, 'my_profile', self.spec)
+
+        self.assertIsInstance(res, pb.Profile)
+
+        obj = po.Profile.get(self.ctx, res.id)
+        self.assertEqual('my_profile', obj.name)
+
+    def test_create_profile_type_not_found(self):
+        spec = copy.deepcopy(self.spec)
+        spec['type'] = "bogus"
+        ex = self.assertRaises(exception.InvalidSpec,
+                               pb.Profile.create,
+                               self.ctx, 'my_profile', spec)
+
+        self.assertEqual("Failed in creating profile my_profile: The "
+                         "profile_type (bogus-1.0) could not be found.",
+                         six.text_type(ex))
+
+    @mock.patch.object(pb.Profile, 'validate')
+    @mock.patch.object(senlin_ctx, 'get_service_context')
+    def test_create_failed_validation(self, mock_context, mock_validate):
+        mock_context.return_value = {}
+        mock_validate.side_effect = exception.ESchema(message="Boom")
+
+        ex = self.assertRaises(exception.InvalidSpec,
+                               pb.Profile.create,
+                               self.ctx, 'my_profile', self.spec)
+
+        self.assertEqual("Failed in creating profile my_profile: Boom",
+                         six.text_type(ex))
+
     @mock.patch.object(po.Profile, 'delete')
     def test_delete(self, mock_delete):
         res = pb.Profile.delete(self.ctx, 'FAKE_ID')
