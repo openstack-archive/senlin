@@ -93,16 +93,6 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.ctx, 'FAKE_CLUSTER',
                                           filters='FOO', sort='enabled')
 
-    def test_cluster_policy_list_bad_sort(self):
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_list,
-                               self.ctx, 'CLUSTER', sort='crazy')
-
-        self.assertEqual(exc.InvalidParameter, ex.exc_info[0])
-        self.assertEqual("Invalid value 'crazy' specified for 'sort key'",
-                         six.text_type(ex.exc_info[1]))
-
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(service.EngineService, 'policy_find')
     @mock.patch.object(cp_mod.ClusterPolicy, 'load')
