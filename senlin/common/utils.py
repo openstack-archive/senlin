@@ -42,27 +42,18 @@ class URLFetchError(exception.Error, IOError):
     pass
 
 
-def parse_int_param(name, value, allow_zero=True, allow_negative=False,
-                    lower_limit=None, upper_limit=None):
-    if value is None:
-        return None
+def get_positive_int(v):
+    """Util function converting/checking a value of positive integer.
 
-    if value in ('0', 0):
-        if allow_zero:
-            return int(value)
-        raise exception.InvalidParameter(name=name, value=value)
-
-    try:
-        result = int(value)
-    except (TypeError, ValueError):
-        raise exception.InvalidParameter(name=name, value=value)
-    else:
-        if any([(allow_negative is False and result < 0),
-                (lower_limit and result < lower_limit),
-                (upper_limit and result > upper_limit)]):
-            raise exception.InvalidParameter(name=name, value=value)
-
-    return result
+    :param v: A value to be checked.
+    :returns: (b, v) where v is (converted) value if bool is True.
+              b is False if the value fails validation.
+    """
+    if strutils.is_int_like(v):
+        count = int(v)
+        if count > 0:
+            return True, count
+    return False, 0
 
 
 def parse_bool_param(name, value):

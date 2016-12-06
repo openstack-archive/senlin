@@ -18,7 +18,6 @@ from oslo_utils import timeutils
 from osprofiler import profiler
 
 from senlin.common import consts
-from senlin.common import exception
 from senlin.common.i18n import _, _LI
 from senlin.common import scaleutils
 from senlin.common import utils
@@ -756,11 +755,10 @@ class ClusterAction(base.Action):
             count = pd.get('count', 1)
         else:
             # If no scaling policy is attached, use the input count directly
-            count = self.inputs.get('count', 1)
-            try:
-                count = utils.parse_int_param('count', count, allow_zero=False)
-            except exception.InvalidParameter:
-                reason = _('Invalid count (%s) for scaling out.') % count
+            value = self.inputs.get('count', 1)
+            success, count = utils.get_positive_int(value)
+            if not success:
+                reason = _('Invalid count (%s) for scaling out.') % value
                 return self.RES_ERROR, reason
 
         # check provided params against current properties
@@ -801,12 +799,10 @@ class ClusterAction(base.Action):
         else:
             # If no scaling policy is attached, use the input count directly
             candidates = []
-            count = self.inputs.get('count', 1)
-            try:
-                count = utils.parse_int_param('count', count,
-                                              allow_zero=False)
-            except exception.InvalidParameter:
-                reason = _('Invalid count (%s) for scaling in.') % count
+            value = self.inputs.get('count', 1)
+            success, count = utils.get_positive_int(value)
+            if not success:
+                reason = _('Invalid count (%s) for scaling in.') % value
                 return self.RES_ERROR, reason
 
         # check provided params against current properties

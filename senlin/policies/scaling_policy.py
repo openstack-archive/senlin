@@ -12,7 +12,6 @@
 
 from senlin.common import constraints
 from senlin.common import consts
-from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.common import scaleutils as su
 from senlin.common import schema
@@ -164,20 +163,19 @@ class ScalingPolicy(base.Policy):
         """
 
         # Use action input if count is provided
-        count = action.inputs.get('count', None)
+        count_value = action.inputs.get('count', None)
         current = no.Node.count_by_cluster(action.context, cluster_id)
-        if count is None:
+        if count_value is None:
             # count not specified, calculate it
-            count = self._calculate_adjustment_count(current)
+            count_value = self._calculate_adjustment_count(current)
 
         # Count must be positive value
-        try:
-            count = utils.parse_int_param('count', count, allow_zero=False)
-        except exception.InvalidParameter:
+        success, count = utils.get_positive_int(count_value)
+        if not success:
             action.data.update({
                 'status': base.CHECK_ERROR,
                 'reason': _("Invalid count (%(c)s) for action '%(a)s'."
-                            ) % {'c': count, 'a': action.action}
+                            ) % {'c': count_value, 'a': action.action}
             })
             action.store(action.context)
             return

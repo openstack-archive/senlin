@@ -36,35 +36,18 @@ class TestParameterParsing(base.SenlinTestCase):
             self.assertRaises(exception.InvalidParameter,
                               utils.parse_bool_param, name, value)
 
-    def test_parse_int(self):
-        name = 'param'
-        cases = {0: 0, 2: 2, '0': 0, '2': 2}
+    def test_parse_positive_int(self):
+        cases = {1: 1, 2: 2, '1': 1, '2': 2}
         for value, expected in cases.items():
-            actual = utils.parse_int_param(name, value)
+            res, actual = utils.get_positive_int(value)
+            self.assertTrue(res)
             self.assertEqual(expected, actual)
 
-        # A None should be returned directly
-        actual = utils.parse_int_param(name, None)
-        self.assertIsNone(actual)
-
-        for value in (2, '2'):
-            self.assertTrue(utils.parse_int_param(name, value,
-                                                  allow_zero=False))
-        for value in (0, '0'):
-            self.assertRaises(exception.InvalidParameter,
-                              utils.parse_int_param, name, value,
-                              allow_zero=False)
-        for value in (-1, '-2'):
-            self.assertTrue(utils.parse_int_param(name, value,
-                                                  allow_negative=True))
-        for value in (-1, '-2'):
-            self.assertRaises(exception.InvalidParameter,
-                              utils.parse_int_param, name, value)
-
-        for value in (1, 6):
-            self.assertRaises(exception.InvalidParameter,
-                              utils.parse_int_param, name, value,
-                              lower_limit=2, upper_limit=5)
+        bad_values = ['foo', {}, [], -1, 1.5, 0.2, None]
+        for value in bad_values:
+            res, actual = utils.get_positive_int(value)
+            self.assertFalse(res)
+            self.assertEqual(0, actual)
 
     def test_validate_sort_param(self):
         whitelist = ['foo', 'bar', 'zoo']

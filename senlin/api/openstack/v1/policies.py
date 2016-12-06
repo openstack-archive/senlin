@@ -145,7 +145,7 @@ class PolicyController(wsgi.Controller):
     @wsgi.Controller.api_version('1.2')
     @util.policy_enforce
     def validate(self, req, body):
-        """Validate the policy spec user specified. """
+        """Validate the policy spec user specified."""
         try:
             body_req = obj_base.SenlinObject.normalize_req(
                 'PolicyValidateRequest', body, 'policy')
