@@ -51,7 +51,6 @@ class FaultWrapper(wsgi.Middleware):
         'InternalError': webob.exc.HTTPInternalServerError,
         'InvalidGlobalAPIVersion': webob.exc.HTTPNotAcceptable,
         'InvalidParameter': webob.exc.HTTPBadRequest,
-        'InvalidSchemaError': webob.exc.HTTPBadRequest,
         'InvalidSpec': webob.exc.HTTPBadRequest,
         'MethodVersionNotFound': webob.exc.HTTPBadRequest,
         'MultipleChoices': webob.exc.HTTPBadRequest,
