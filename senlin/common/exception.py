@@ -165,7 +165,7 @@ class InvalidSchemaError(SenlinException):
     msg_fmt = _("%(message)s")
 
 
-class SpecValidationFailed(SenlinException):
+class InvalidSpec(SenlinException):
     msg_fmt = _("%(message)s")
 
 
@@ -264,11 +264,6 @@ class ESchema(InternalError):
 
 
 class InvalidPlugin(InternalError):
-    msg_fmt = _("%(message)s")
-
-
-# TODO(Qiming): Remove this
-class InvalidSpec(InternalError):
     msg_fmt = _("%(message)s")
 
 
