@@ -25,7 +25,6 @@ CONF = cfg.CONF
 class SenlinPlugin(senlin_utils.SenlinScenario):
     """Base class for Senlin scenarios with basic atomic actions."""
 
-    @atomic.action_timer("senlin.get_action")
     def _get_action(self, action_id):
         """Get action details.
 
@@ -81,6 +80,22 @@ class SenlinPlugin(senlin_utils.SenlinScenario):
             update_resource=self._get_action,
             timeout=senlin_utils.CONF.benchmark.senlin_action_timeout)
 
+    @atomic.action_timer("senlin.cluster_scale_in")
+    def _scale_in_cluster(self, cluster, count):
+        """Cluster scale in.
+
+        :param cluster: cluster object.
+        :param count: number of nodes to be removed from the cluster.
+        """
+        res = self.admin_clients("senlin").cluster_scale_in(cluster.id, count)
+        action = self._get_action(res["action"])
+        utils.wait_for_status(
+          action,
+          ready_statuses=["SUCCEEDED"],
+          failure_statuses=["FAILED"],
+          update_resource=self._get_action,
+          timeout=senlin_utils.CONF.benchmark.senlin_action_timeout)
+
     @validation.required_openstack(admin=True)
     @validation.required_services(consts.Service.SENLIN)
     @validation.required_contexts("profiles")
@@ -103,4 +118,29 @@ class SenlinPlugin(senlin_utils.SenlinScenario):
         cluster = self._create_cluster(profile_id, timeout=timeout,
                                        **create_params)
         self._resize_cluster(cluster, **resize_params)
+        self._delete_cluster(cluster)
+
+    @validation.required_openstack(admin=True)
+    @validation.required_services(consts.Service.SENLIN)
+    @validation.required_contexts("profiles")
+    @scenario.configure(context={"cleanup": ["senlin"]})
+    def create_scale_in_delete_cluster(self, desired_capacity=1,
+                                       min_size=0, max_size=-1,
+                                       count=1):
+        """Create a cluster, scale-in it and then delete it.
+
+        Measure the `senlin cluster-create`, `senlin cluster-scale-in`
+        and `senlin cluster-delete` commands performance.
+
+        :param desired_capacity: The capacity or initial number of nodes
+                                 owned by the cluster
+        :param min_size: The minimum number of nodes owned by the cluster
+        :param max_size: The maximum number of nodes owned by the cluster.
+                         -1 means no limit
+        :param count: The number of nodes will be removed from the cluster.
+        """
+        profile_id = self.context["tenant"]["profile"]
+        cluster = self._create_cluster(profile_id, desired_capacity,
+                                       min_size, max_size)
+        self._scale_in_cluster(cluster, count)
         self._delete_cluster(cluster)
