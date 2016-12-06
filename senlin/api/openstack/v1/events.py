@@ -21,7 +21,6 @@ from senlin.api.common import util
 from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
-from senlin.common import utils
 from senlin.objects import base as obj_base
 from senlin.objects.requests import events as vore
 
@@ -52,7 +51,7 @@ class EventController(wsgi.Controller):
                 raise exc.HTTPBadRequest(_('Invalid parameter %s') % key)
         params = util.get_allowed_params(req.params, whitelist)
 
-        project_safe = not utils.parse_bool_param(
+        project_safe = not util.parse_bool_param(
             consts.PARAM_GLOBAL_PROJECT,
             params.pop(consts.PARAM_GLOBAL_PROJECT, False))
         params['project_safe'] = project_safe

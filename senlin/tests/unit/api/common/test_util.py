@@ -83,6 +83,7 @@ class TestGetAllowedParams(base.SenlinTestCase):
 
 
 class TestPolicyEnforce(base.SenlinTestCase):
+
     def setUp(self):
         super(TestPolicyEnforce, self).setUp()
         self.req = wsgi.Request({})
@@ -105,3 +106,16 @@ class TestPolicyEnforce(base.SenlinTestCase):
         self.assertRaises(exc.HTTPForbidden,
                           self.controller.an_action,
                           self.req, tenant_id='foo')
+
+
+class TestParseBool(base.SenlinTestCase):
+
+    def test_parse_bool(self):
+        name = 'param'
+        for value in ('True', 'true', 'TRUE', True):
+            self.assertTrue(util.parse_bool_param(name, value))
+        for value in ('False', 'false', 'FALSE', False):
+            self.assertFalse(util.parse_bool_param(name, value))
+        for value in ('foo', 't', 'f', 'yes', 'no', 'y', 'n', '1', '0', None):
+            self.assertRaises(exc.HTTPBadRequest,
+                              util.parse_bool_param, name, value)

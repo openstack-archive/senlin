@@ -21,7 +21,6 @@ from senlin.api.common import util
 from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
-from senlin.common import utils
 from senlin.objects import base as obj_base
 from senlin.objects.requests import nodes as vorn
 
@@ -53,7 +52,7 @@ class NodeController(wsgi.Controller):
                 raise exc.HTTPBadRequest(_('Invalid parameter %s') % key)
         params = util.get_allowed_params(req.params, whitelist)
 
-        project_safe = not utils.parse_bool_param(
+        project_safe = not util.parse_bool_param(
             consts.PARAM_GLOBAL_PROJECT,
             params.pop(consts.PARAM_GLOBAL_PROJECT, False))
         params['project_safe'] = project_safe
@@ -96,7 +95,7 @@ class NodeController(wsgi.Controller):
         params = {'identity': node_id}
         key = consts.PARAM_SHOW_DETAILS
         if key in req.params:
-            params['show_details'] = utils.parse_bool_param(
+            params['show_details'] = util.parse_bool_param(
                 key, req.params[key])
         try:
             norm_req = obj_base.SenlinObject.normalize_req(

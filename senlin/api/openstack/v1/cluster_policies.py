@@ -20,7 +20,6 @@ from senlin.api.common import util
 from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
-from senlin.common import utils
 
 
 class ClusterPolicyController(wsgi.Controller):
@@ -48,7 +47,7 @@ class ClusterPolicyController(wsgi.Controller):
         filters = util.get_allowed_params(req.params, filter_whitelist)
         key = consts.CP_ENABLED
         if key in filters:
-            filters[key] = utils.parse_bool_param(key, filters[key])
+            filters[key] = util.parse_bool_param(key, filters[key])
 
         if not filters:
             filters = None

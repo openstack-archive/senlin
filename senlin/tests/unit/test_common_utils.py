@@ -25,18 +25,9 @@ from senlin.objects import service as service_obj
 from senlin.tests.unit.common import base
 
 
-class TestParameterParsing(base.SenlinTestCase):
-    def test_parse_bool(self):
-        name = 'param'
-        for value in ('True', 'true', 'TRUE', True):
-            self.assertTrue(utils.parse_bool_param(name, value))
-        for value in ('False', 'false', 'FALSE', False):
-            self.assertFalse(utils.parse_bool_param(name, value))
-        for value in ('foo', 't', 'f', 'yes', 'no', 'y', 'n', '1', '0', None):
-            self.assertRaises(exception.InvalidParameter,
-                              utils.parse_bool_param, name, value)
+class TestGetPositiveInt(base.SenlinTestCase):
 
-    def test_parse_positive_int(self):
+    def test_get_positive_int(self):
         cases = {1: 1, 2: 2, '1': 1, '2': 2}
         for value, expected in cases.items():
             res, actual = utils.get_positive_int(value)

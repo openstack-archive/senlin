@@ -56,13 +56,6 @@ def get_positive_int(v):
     return False, 0
 
 
-def parse_bool_param(name, value):
-    if str(value).lower() not in ('true', 'false'):
-        raise exception.InvalidParameter(name=name, value=str(value))
-
-    return strutils.bool_from_string(value, strict=True)
-
-
 def parse_level_values(values):
     """Parse a given list of level values to numbers.
 
