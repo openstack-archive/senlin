@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
+
 import mock
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
@@ -195,6 +197,22 @@ class ProfileTest(base.SenlinTestCase):
                          "'FAKE_NAME' already exists.",
                          six.text_type(ex.exc_info[1]))
         mock_get.assert_called_once_with(self.ctx, 'FAKE_NAME')
+
+    @mock.patch.object(pb.Profile, 'create')
+    def test_profile_create2_type_not_found(self, mock_create):
+        self._setup_fakes()
+        spec = copy.deepcopy(self.spec)
+        spec['type'] = 'Bogus'
+        body = vorp.ProfileCreateRequestBody(name='foo', spec=spec)
+        req = vorp.ProfileCreateRequest(profile=body)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.profile_create2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual("The profile_type (Bogus-1.0) could not be found.",
+                         six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(pb.Profile, 'create')
     def test_profile_create2_invalid_spec(self, mock_create):

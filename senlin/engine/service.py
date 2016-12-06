@@ -429,8 +429,12 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Creating profile '%s'."), name)
 
-        profile = profile_base.Profile.create(ctx, name, req.profile.spec,
-                                              metadata=metadata)
+        # NOTE: we get the Profile subclass directly to ensure we are calling
+        # the correct methods.
+        type_name, version = schema.get_spec_version(req.profile.spec)
+        type_str = "-".join([type_name, version])
+        cls = environment.global_env().get_profile(type_str)
+        profile = cls.create(ctx, name, req.profile.spec, metadata=metadata)
 
         LOG.info(_LI("Profile %(name)s is created: %(id)s."),
                  {'name': name, 'id': profile.id})
