@@ -142,7 +142,7 @@ class TestProfileBase(base.SenlinTestCase):
         bad_spec = copy.deepcopy(self.spec)
         del bad_spec['version']
 
-        ex = self.assertRaises(exception.SpecValidationFailed,
+        ex = self.assertRaises(exception.ESchema,
                                pb.Profile, 'test-profile', bad_spec)
         self.assertEqual("The 'version' key is missing from the provided "
                          "spec map.", six.text_type(ex))

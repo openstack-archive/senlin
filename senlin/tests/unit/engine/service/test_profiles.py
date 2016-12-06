@@ -240,7 +240,7 @@ class ProfileTest(base.SenlinTestCase):
         self._setup_fakes()
 
         mock_validate = self.patchobject(fakes.TestProfile, 'validate')
-        mock_validate.side_effect = exc.InvalidSpec(message='BOOM')
+        mock_validate.side_effect = exc.ESchema(message='BOOM')
 
         body = vorp.ProfileCreateRequestBody(name='p-2', spec=self.spec)
         req = vorp.ProfileCreateRequest(profile=body)
@@ -284,7 +284,7 @@ class ProfileTest(base.SenlinTestCase):
         self._setup_fakes()
 
         mock_do_validate = self.patchobject(fakes.TestProfile, 'do_validate')
-        mock_do_validate.side_effect = exc.InvalidSpec(message='BOOM')
+        mock_do_validate.side_effect = exc.ESchema(message='BOOM')
 
         body = vorp.ProfileValidateRequestBody(spec=self.spec)
         request = vorp.ProfileValidateRequest(profile=body)

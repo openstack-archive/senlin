@@ -259,10 +259,15 @@ class EResourceOperation(InternalError):
     msg_fmt = _("Failed in %(op)s %(type)s %(id)s: %(message)s.")
 
 
+class ESchema(InternalError):
+    msg_fmt = _("%(message)s")
+
+
 class InvalidPlugin(InternalError):
     msg_fmt = _("%(message)s")
 
 
+# TODO(Qiming): Remove this
 class InvalidSpec(InternalError):
     msg_fmt = _("%(message)s")
 

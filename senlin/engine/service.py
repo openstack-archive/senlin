@@ -400,7 +400,7 @@ class EngineService(service.Service):
         profile = plugin(name, spec, **kwargs)
         try:
             profile.validate(validate_props=validate_props)
-        except exception.InvalidSpec as ex:
+        except exception.ESchema as ex:
             msg = six.text_type(ex)
             LOG.error(_LE("Failed in validating profile: %s"), msg)
             raise exception.SpecValidationFailed(message=msg)
