@@ -167,6 +167,34 @@ class Profile(object):
             yield cls.from_object(record)
 
     @classmethod
+    def create(cls, ctx, name, spec, metadata=None):
+        """Create a profile object and validate it.
+
+        :param ctx: The requesting context.
+        :param name: The name for the profile object.
+        :param spec: A dict containing the detailed spec.
+        :param metadata: An optional dictionary specifying key-value pairs to
+                         be associated with the profile.
+        :returns: An instance of Profile.
+        """
+        if metadata is None:
+            metadata = {}
+
+        profile = None
+        try:
+            profile = cls(name, spec, metadata=metadata, user=ctx.user,
+                          project=ctx.project)
+            profile.validate(True)
+        except (exc.ResourceNotFound, exc.ESchema) as ex:
+            error = _("Failed in creating profile %(name)s: %(error)s"
+                      ) % {"name": name, "error": six.text_type(ex)}
+            raise exc.InvalidSpec(message=error)
+
+        profile.store(ctx)
+
+        return profile
+
+    @classmethod
     def delete(cls, ctx, profile_id):
         po.Profile.delete(ctx, profile_id)
 
