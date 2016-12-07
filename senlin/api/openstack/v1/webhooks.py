@@ -14,8 +14,14 @@
 Webhook endpoint for Senlin v1 ReST API.
 """
 
+import jsonschema
+import six
+from webob import exc
+
 from senlin.api.common import util
 from senlin.api.common import wsgi
+from senlin.objects import base as obj_base
+from senlin.objects.requests import webhooks as vorw
 
 
 class WebhookController(wsgi.Controller):
@@ -25,13 +31,22 @@ class WebhookController(wsgi.Controller):
 
     @util.policy_enforce
     def trigger(self, req, webhook_id, body=None):
-        params = None
         if body is None:
-            body = {}
-        if body and 'params' in body:
-            params = body.get('params')
+            body = {'params': None}
+        try:
+            body = obj_base.SenlinObject.normalize_req(
+                'WebhookTriggerRequestBody', body)
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'WebhookTriggerRequest', {'identity': webhook_id,
+                                          'body': body})
+            obj = vorw.WebhookTriggerRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
-        res = self.rpc_client.webhook_trigger(req.context, webhook_id, params)
+        res = self.rpc_client.call2(req.context, 'webhook_trigger2', obj)
         location = {'location': '/actions/%s' % res['action']}
         res.update(location)
         return res
