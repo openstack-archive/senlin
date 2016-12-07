@@ -146,7 +146,6 @@ class ClusterPayload(NotificationObject):
         'id': fields.UUIDField(),
         'name': fields.StringField(),
         'profile_id': fields.UUIDField(),
-        'parent': fields.UUIDField(nullable=True),
         'init_at': fields.DateTimeField(),
         'created_at': fields.DateTimeField(nullable=True),
         'updated_at': fields.DateTimeField(nullable=True),
@@ -168,8 +167,7 @@ class ClusterPayload(NotificationObject):
     def from_cluster(cls, cluster):
         values = {}
         for field in cls.fields:
-            if cluster.obj_attr_is_set(field):
-                values[field] = getattr(cluster, field)
+            values[field] = getattr(cluster, field)
         obj = cls(**values)
         obj.obj_reset_changes(recursive=False)
         return obj
@@ -205,8 +203,7 @@ class NodePayload(NotificationObject):
     def from_node(cls, node):
         values = {}
         for field in cls.fields:
-            if node.obj_attr_is_set(field):
-                values[field] = getattr(node, field)
+            values[field] = getattr(node, field)
         obj = cls(**values)
         obj.obj_reset_changes(recursive=False)
         return obj
@@ -239,8 +236,7 @@ class ActionPayload(NotificationObject):
     def from_action(cls, action):
         values = {}
         for field in cls.fields:
-            if action.obj_attr_is_set(field):
-                values[field] = getattr(action, field)
+            values[field] = getattr(action, field)
         obj = cls(**values)
         obj.obj_reset_changes(recursive=False)
         return obj

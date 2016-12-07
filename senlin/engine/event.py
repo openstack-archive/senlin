@@ -14,8 +14,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from stevedore import named
 
-from senlin.common.i18n import _LW, _LI
-from senlin.events import database as DB
+from senlin.common.i18n import _LE, _LI, _LW
 
 LOG = logging.getLogger(__name__)
 FMT = '%(name)s [%(id)s] %(action)s - %(phase)s: %(reason)s'
@@ -46,36 +45,35 @@ def _event_data(action, phase=None, reason=None):
                 reason=reason)
 
 
-def critical(action, phase=None, reason=None, timestamp=None):
-    DB.DBEvent.dump(logging.CRITICAL, action, phase=phase, reason=reason,
-                    timestamp=timestamp)
+def _dump(level, action, phase, reason, timestamp):
+    global dispatchers
+    try:
+        dispatchers.map_method("dump", level, action,
+                               phase=phase, reason=reason, timestamp=timestamp)
+    except Exception:
+        LOG.exception(_LE("Dispatcher failed to handle the event"))
 
+
+def critical(action, phase=None, reason=None, timestamp=None):
+    _dump(logging.CRITICAL, action, phase, reason, timestamp)
     LOG.critical(FMT, _event_data(action, phase, reason))
 
 
 def error(action, phase=None, reason=None, timestamp=None):
-    DB.DBEvent.dump(logging.ERROR, action, phase=phase, reason=reason,
-                    timestamp=timestamp)
-
+    _dump(logging.ERROR, action, phase, reason, timestamp)
     LOG.error(FMT, _event_data(action, phase, reason))
 
 
 def warning(action, phase=None, reason=None, timestamp=None):
-    DB.DBEvent.dump(logging.WARNING, action, phase=phase, reason=reason,
-                    timestamp=timestamp)
-
+    _dump(logging.WARNING, action, phase, reason, timestamp)
     LOG.warning(FMT, _event_data(action, phase, reason))
 
 
 def info(action, phase=None, reason=None, timestamp=None):
-    DB.DBEvent.dump(logging.INFO, action, phase=phase, reason=reason,
-                    timestamp=timestamp)
-
+    _dump(logging.INFO, action, phase, reason, timestamp)
     LOG.info(FMT, _event_data(action, phase, reason))
 
 
 def debug(action, phase=None, reason=None, timestamp=None):
-    DB.DBEvent.dump(logging.DEBUG, action, phase=phase, reason=reason,
-                    timestamp=timestamp)
-
+    _dump(logging.DEBUG, action, phase, reason, timestamp)
     LOG.debug(FMT, _event_data(action, phase, reason))

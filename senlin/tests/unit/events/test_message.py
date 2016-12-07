@@ -17,9 +17,11 @@ from oslo_utils import timeutils
 from oslo_utils import uuidutils
 import testtools
 
+from senlin.engine.actions import base as action_base
+from senlin.engine import cluster
+from senlin.engine import node
 from senlin.events import base
 from senlin.events import message as MSG
-from senlin import objects
 from senlin.objects import notification as nobj
 from senlin.tests.unit.common import utils
 
@@ -40,45 +42,47 @@ class TestMessageEvent(testtools.TestCase):
         action_id = uuidutils.generate_uuid()
         cluster_params = {
             'id': cluster_id,
-            'name': 'fake_name',
-            'profile_id': profile_id,
             'init_at': cluster_init,
             'min_size': 1,
             'max_size': 10,
-            'desired_capacity': 5,
             'timeout': 4,
             'status': 'ACTIVE',
             'status_reason': 'Good',
             'user': 'user1',
             'project': 'project1',
         }
-        cluster = objects.Cluster(**cluster_params)
+        c1 = cluster.Cluster('fake_name', 5, profile_id, **cluster_params)
         action_params = {
             'id': action_id,
             'name': 'fake_name',
-            'target': cluster_id,
-            'action': 'CLUSTER_CREATE',
             'start_time': 1.23,
             'status': 'RUNNING',
             'status_reason': 'Good',
             'user': 'user1',
             'project': 'project1',
         }
-        action = objects.Action(**action_params)
+        action = action_base.Action(cluster_id, 'CLUSTER_CREATE', self.ctx,
+                                    **action_params)
         publisher_id = 'senlin-engine:%s' % cfg.CONF.host
         expected_payload = {
             'senlin_object.data': {
                 'action': {
                     'senlin_object.data': {
-                        'action': u'CLUSTER_CREATE',
+                        'action': 'CLUSTER_CREATE',
+                        'created_at': None,
+                        'data': '{}',
+                        'end_time': None,
                         'id': action_id,
+                        'inputs': '{}',
                         'name': 'fake_name',
-                        'project': 'project1',
+                        'outputs': '{}',
+                        'project': self.ctx.project,
                         'start_time': 1.23,
                         'status': 'RUNNING',
                         'status_reason': 'Good',
                         'target': cluster_id,
-                        'user': u'user1'
+                        'timeout': 3600,
+                        'user': self.ctx.user,
                     },
                     'senlin_object.name': 'ActionPayload',
                     'senlin_object.namespace': 'senlin',
@@ -86,10 +90,15 @@ class TestMessageEvent(testtools.TestCase):
                 },
                 'cluster': {
                     'senlin_object.data': {
+                        'created_at': None,
+                        'data': '{}',
+                        'dependents': '{}',
                         'desired_capacity': 5,
+                        'domain': '',
                         'id': cluster_id,
                         'init_at': mock.ANY,
                         'max_size': 10,
+                        'metadata': '{}',
                         'min_size': 1,
                         'name': 'fake_name',
                         'profile_id': profile_id,
@@ -97,6 +106,7 @@ class TestMessageEvent(testtools.TestCase):
                         'status': u'ACTIVE',
                         'status_reason': u'Good',
                         'timeout': 4,
+                        'updated_at': None,
                         'user': u'user1'
                     },
                     'senlin_object.name': 'ClusterPayload',
@@ -111,7 +121,7 @@ class TestMessageEvent(testtools.TestCase):
         }
 
         res = MSG.MessageEvent._notify_cluster_action(
-            self.ctx, logging.INFO, cluster, action, phase='start')
+            self.ctx, logging.INFO, c1, action, phase='start')
 
         self.assertIsNone(res)
 
@@ -128,8 +138,6 @@ class TestMessageEvent(testtools.TestCase):
         action_id = uuidutils.generate_uuid()
         node_params = {
             'id': node_id,
-            'name': 'fake_name',
-            'profile_id': profile_id,
             'cluster_id': '',
             'index': -1,
             'init_at': node_init,
@@ -138,33 +146,36 @@ class TestMessageEvent(testtools.TestCase):
             'user': 'user1',
             'project': 'project1',
         }
-        node = objects.Node(**node_params)
+        n1 = node.Node('fake_name', profile_id, **node_params)
         action_params = {
             'id': action_id,
             'name': 'fake_name',
-            'target': node_id,
-            'action': 'NODE_CREATE',
             'start_time': 1.23,
             'status': 'RUNNING',
             'status_reason': 'Good',
-            'user': 'user1',
-            'project': 'project1',
         }
-        action = objects.Action(**action_params)
+        action = action_base.Action(node_id, 'NODE_CREATE', self.ctx,
+                                    **action_params)
         publisher_id = 'senlin-engine:%s' % cfg.CONF.host
         expected_payload = {
             'senlin_object.data': {
                 'action': {
                     'senlin_object.data': {
                         'action': 'NODE_CREATE',
+                        'created_at': None,
+                        'data': '{}',
+                        'end_time': None,
                         'id': action_id,
+                        'inputs': '{}',
                         'name': 'fake_name',
-                        'project': 'project1',
+                        'outputs': '{}',
+                        'project': self.ctx.project,
                         'start_time': 1.23,
                         'status': 'RUNNING',
                         'status_reason': 'Good',
                         'target': node_id,
-                        'user': u'user1'
+                        'timeout': 3600,
+                        'user': self.ctx.user,
                     },
                     'senlin_object.name': 'ActionPayload',
                     'senlin_object.namespace': 'senlin',
@@ -173,14 +184,22 @@ class TestMessageEvent(testtools.TestCase):
                 'node': {
                     'senlin_object.data': {
                         'cluster_id': '',
+                        'created_at': None,
+                        'data': '{}',
+                        'dependents': '{}',
+                        'domain': '',
                         'id': node_id,
                         'index': -1,
                         'init_at': mock.ANY,
+                        'metadata': '{}',
                         'name': 'fake_name',
+                        'physical_id': None,
                         'profile_id': profile_id,
                         'project': 'project1',
+                        'role': '',
                         'status': 'ACTIVE',
                         'status_reason': 'Good',
+                        'updated_at': None,
                         'user': 'user1',
                     },
                     'senlin_object.name': 'NodePayload',
@@ -195,7 +214,7 @@ class TestMessageEvent(testtools.TestCase):
         }
 
         res = MSG.MessageEvent._notify_node_action(
-            self.ctx, logging.INFO, node, action, phase='start')
+            self.ctx, logging.INFO, n1, action, phase='start')
 
         self.assertIsNone(res)
 
