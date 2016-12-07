@@ -392,9 +392,9 @@ class NodeTest(base.SenlinTestCase):
                                self.eng.node_create2,
                                self.ctx, req.obj_to_primitive())
 
-        self.assertEqual(exc.ProfileTypeNotMatch, ex.exc_info[0])
-        self.assertEqual("Node and cluster have different profile type, "
-                         "operation aborted.",
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Node and cluster have "
+                         "different profile type, operation aborted.",
                          six.text_type(ex.exc_info[1]))
         mock_profile.assert_has_calls([
             mock.call(self.ctx, 'NODE_PROFILE'),
@@ -605,9 +605,9 @@ class NodeTest(base.SenlinTestCase):
                                self.eng.node_update2,
                                self.ctx, req.obj_to_primitive())
 
-        self.assertEqual(exc.ProfileTypeNotMatch, ex.exc_info[0])
-        self.assertEqual('Cannot update a node to a different profile type, '
-                         'operation aborted.',
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Cannot update a node to "
+                         "a different profile type, operation aborted.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
         mock_profile.assert_has_calls([
