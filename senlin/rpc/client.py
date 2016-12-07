@@ -149,11 +149,6 @@ class EngineClient(object):
                          self.make_msg('receiver_notify', identity=identity,
                                        params=params))
 
-    def webhook_trigger(self, ctxt, identity, params=None):
-        return self.call(ctxt,
-                         self.make_msg('webhook_trigger', identity=identity,
-                                       params=params))
-
     def event_list(self, ctxt, filters=None, limit=None, marker=None,
                    sort=None, project_safe=True):
         return self.call(ctxt,
