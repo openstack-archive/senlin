@@ -2317,6 +2317,45 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
+    @request_context2
+    def webhook_trigger2(self, ctx, req):
+        """trigger the webhook.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the WebhookTriggerRequest object.
+        :return: A dictionary contains the ID of the action fired.
+        """
+        identity = req.identity
+        params = req.body.params
+
+        LOG.info(_LI("Triggering webhook (%s)"), identity)
+        receiver = self.receiver_find(ctx, identity)
+
+        try:
+            cluster = self.cluster_find(ctx, receiver.cluster_id)
+        except exception.ResourceNotFound as ex:
+            msg = ex.enhance_msg('referenced', ex)
+            raise exception.BadRequest(msg=msg)
+
+        data = copy.deepcopy(receiver.params)
+        if params:
+            data.update(params)
+
+        kwargs = {
+            'name': 'webhook_%s' % receiver.id[:8],
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+            'inputs': data
+        }
+
+        action_id = action_mod.Action.create(ctx, cluster.id,
+                                             receiver.action, **kwargs)
+        dispatcher.start_action()
+        LOG.info(_LI("Webhook %(w)s triggered with action queued: %(a)s."),
+                 {'w': identity, 'a': action_id})
+
+        return {'action': action_id}
+
     def event_find(self, context, identity, project_safe=True):
         """Find an event with the given identity.
 
