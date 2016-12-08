@@ -260,10 +260,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
     def test_action_get(self):
         self._test_engine_api('action_get', 'call', identity='an-action')
 
-    def test_webhook_trigger(self):
-        self._test_engine_api('webhook_trigger', 'call', identity='wh_name',
-                              params={'pname': 'pvalue'})
-
     def test_event_list(self):
         default_args = {
             'filters': mock.ANY,
