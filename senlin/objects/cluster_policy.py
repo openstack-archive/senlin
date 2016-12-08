@@ -83,3 +83,19 @@ class ClusterPolicy(base.SenlinObject, base.VersionedObjectDictCompat):
     @classmethod
     def delete(cls, context, cluster_id, policy_id):
         db_api.cluster_policy_detach(context, cluster_id, policy_id)
+
+    def to_dict(self):
+        binding_dict = {
+            'id': self.id,
+            'cluster_id': self.cluster.id,
+            'policy_id': self.policy.id,
+            'enabled': self.enabled,
+            'data': self.data,
+            'last_op': self.last_op,
+            'priority': self.priority,
+            # below are derived data for user's convenience
+            'cluster_name': self.cluster.name,
+            'policy_name': self.policy.name,
+            'policy_type': self.policy.type,
+        }
+        return binding_dict
