@@ -128,17 +128,17 @@ class TestNovaV2(base.SenlinTestCase):
 
         res = d.server_resize_confirm('fakeid')
 
-        self.assertEqual(d.conn.compute.confirm_resize_server.return_value,
+        self.assertEqual(d.conn.compute.confirm_server_resize.return_value,
                          res)
-        d.conn.compute.confirm_resize_server.assert_called_once_with('fakeid')
+        d.conn.compute.confirm_server_resize.assert_called_once_with('fakeid')
 
     def test_server_resize_revert(self):
         d = nova_v2.NovaClient(self.conn_params)
 
         res = d.server_resize_revert('fakeid')
 
-        self.assertEqual(d.conn.compute.revert_resize_server.return_value, res)
-        d.conn.compute.revert_resize_server.assert_called_once_with('fakeid')
+        self.assertEqual(d.conn.compute.revert_server_resize.return_value, res)
+        d.conn.compute.revert_server_resize.assert_called_once_with('fakeid')
 
     def test_server_reboot(self):
         d = nova_v2.NovaClient(self.conn_params)
