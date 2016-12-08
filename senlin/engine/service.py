@@ -30,7 +30,6 @@ from senlin.common import messaging as rpc_messaging
 from senlin.common import scaleutils as su
 from senlin.common import schema
 from senlin.common import utils
-from senlin.db.sqlalchemy import api as db_api
 from senlin.engine.actions import base as action_mod
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import cluster_policy as cpm
@@ -510,18 +509,14 @@ class EngineService(service.Service):
         """
         db_profile = self.profile_find(ctx, req.identity)
         LOG.info(_LI("Deleting profile '%s'."), req.identity)
+
+        cls = environment.global_env().get_profile(db_profile.type)
         try:
-            profile_base.Profile.delete(ctx, db_profile.id)
+            cls.delete(ctx, db_profile.id)
         except exception.EResourceBusy:
             reason = _("still referenced by some clusters and/or nodes.")
             raise exception.ResourceInUse(type='profile', id=db_profile.id,
                                           reason=reason)
-        spec = db_profile.spec
-        if spec['type'] == 'container.dockerinc.docker':
-            cluster_id = spec['properties']['host_cluster']
-            db_api.cluster_remove_dependents(ctx, cluster_id,
-                                             db_profile.id)
-
         LOG.info(_LI("Profile '%s' is deleted."), req.identity)
 
     @request_context2

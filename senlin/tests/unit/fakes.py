@@ -42,6 +42,10 @@ class TestProfile(profile_base.Profile):
     def __init__(self, name, spec, **kwargs):
         super(TestProfile, self).__init__(name, spec, **kwargs)
 
+    @classmethod
+    def delete(cls, ctx, profile_id):
+        super(TestProfile, cls).delete(ctx, profile_id)
+
     def do_create(self):
         return {}
 

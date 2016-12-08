@@ -89,6 +89,15 @@ class DockerProfile(base.Profile):
 
         return profile
 
+    @classmethod
+    def delete(cls, ctx, profile_id):
+        obj = cls.load(ctx, profile_id=profile_id)
+        cluster_id = obj.properties.get(obj.HOST_CLUSTER, None)
+        if cluster_id:
+            db_api.cluster_remove_dependents(ctx, cluster_id, profile_id)
+
+        super(DockerProfile, cls).delete(ctx, profile_id)
+
     def docker(self, obj):
         """Construct docker client based on object.
 

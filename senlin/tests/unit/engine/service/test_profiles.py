@@ -19,7 +19,6 @@ from oslo_utils import uuidutils
 import six
 
 from senlin.common import exception as exc
-from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import environment
 from senlin.engine import service
 from senlin.objects import profile as po
@@ -370,16 +369,11 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(0, x_profile.store.call_count)
         self.assertEqual('OLD_NAME', x_profile.name)
 
-    @mock.patch.object(db_api, 'cluster_remove_dependents')
-    @mock.patch.object(pb.Profile, 'delete')
+    @mock.patch.object(fakes.TestProfile, 'delete')
     @mock.patch.object(service.EngineService, 'profile_find')
-    def test_profile_delete2(self, mock_find, mock_delete, mock_remove):
+    def test_profile_delete2(self, mock_find, mock_delete):
         self._setup_fakes()
-        spec = self.spec
-        spec['type'] = 'container.dockerinc.docker'
-        spec['properties']['host_cluster'] = 'FAKE_CLUSTER'
-        x_obj = mock.Mock(id='PROFILE_ID')
-        x_obj.spec = spec
+        x_obj = mock.Mock(id='PROFILE_ID', type='TestProfile-1.0')
         mock_find.return_value = x_obj
         mock_delete.return_value = None
 
@@ -389,8 +383,6 @@ class ProfileTest(base.SenlinTestCase):
         self.assertIsNone(result)
         mock_find.assert_called_once_with(self.ctx, 'PROFILE_ID')
         mock_delete.assert_called_once_with(self.ctx, 'PROFILE_ID')
-        mock_remove.assert_called_once_with(self.ctx, 'FAKE_CLUSTER',
-                                            'PROFILE_ID')
 
     @mock.patch.object(service.EngineService, 'profile_find')
     def test_profile_delete2_not_found(self, mock_find):
@@ -410,7 +402,8 @@ class ProfileTest(base.SenlinTestCase):
     @mock.patch.object(pb.Profile, 'delete')
     @mock.patch.object(service.EngineService, 'profile_find')
     def test_profile_delete2_profile_in_use(self, mock_find, mock_delete):
-        x_obj = mock.Mock(id='PROFILE_ID')
+        self._setup_fakes()
+        x_obj = mock.Mock(id='PROFILE_ID', type='TestProfile-1.0')
         mock_find.return_value = x_obj
         err = exc.EResourceBusy(type='profile', id='PROFILE_ID')
         mock_delete.side_effect = err
