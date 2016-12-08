@@ -23,6 +23,9 @@ ENGINE
       or policies.
     * Always do health check before any scaling actions.
 
+  - Verify the works to be done after oslo.messaging version bump.
+    [https://review.openstack.org/#/c/408114]
+
 MIDDLE PRIORITY
 ===============
 
