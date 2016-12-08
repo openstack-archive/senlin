@@ -16,8 +16,25 @@ from senlin.objects import fields
 
 
 @base.SenlinObjectRegistry.register
-class ActionListRequest(base.SenlinObject):
+class ActionCreateRequestBody(base.SenlinObject):
+    fields = {
+        'name': fields.NameField(),
+        'cluster_id': fields.StringField(),
+        'action': fields.StringField(),
+        'inputs': fields.JsonField(nullable=True, default={}),
+    }
 
+
+@base.SenlinObjectRegistry.register
+class ActionCreateRequest(base.SenlinObject):
+
+    fields = {
+        'action': fields.ObjectField('ActionCreateRequestBody')
+    }
+
+
+@base.SenlinObjectRegistry.register
+class ActionListRequest(base.SenlinObject):
     action_name_list = list(consts.CLUSTER_ACTION_NAMES)
     action_name_list.extend(list(consts.NODE_ACTION_NAMES))
 
