@@ -76,9 +76,12 @@ Install Senlin Server
    This can be done using the :command:`setup-service` script under the
    :file:`tools` folder.
 
+   **NOTE:** Suppose you have devstack installed under the
+   :file:`/opt/devstack` folder
+
 ::
 
-  $ source ~/devstack/openrc admin
+  $ source /opt/devstack/openrc admin admin
   $ cd /opt/stack/senlin/tools
   $ ./setup-service <HOST IP> <SERVICE_PASSWORD>
 
