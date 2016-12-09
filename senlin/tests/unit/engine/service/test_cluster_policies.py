@@ -21,6 +21,7 @@ from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import dispatcher
 from senlin.engine import service
 from senlin.objects import cluster_policy as cpo
+from senlin.objects.requests import cluster_policies as orcp
 from senlin.objects.requests import clusters as orco
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -143,7 +144,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(service.EngineService, 'policy_find')
-    @mock.patch.object(cp_mod.ClusterPolicy, 'load')
+    @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
     def test_cluster_policy_get_binding_not_found(self, mock_load,
                                                   mock_policy, mock_cluster):
         mock_cluster.return_value = mock.Mock(id='FAKE_CLUSTER')
@@ -158,6 +159,80 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual(exc.PolicyBindingNotFound, ex.exc_info[0])
         self.assertEqual("The policy (POLICY) is not found attached to "
                          "the specified cluster (CLUSTER).",
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(service.EngineService, 'policy_find')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
+    def test_cluster_policy_get2(self, mock_get, mock_policy, mock_cluster):
+        mock_cluster.return_value = mock.Mock(id='C1')
+        mock_policy.return_value = mock.Mock(id='P1')
+        x_binding = mock.Mock()
+        x_binding.to_dict.return_value = {'foo': 'bar'}
+        mock_get.return_value = x_binding
+
+        req = orcp.ClusterPolicyGetRequest(identity='C1',
+                                           policy_id='P1')
+        result = self.eng.cluster_policy_get2(self.ctx,
+                                              req.obj_to_primitive())
+
+        self.assertEqual({'foo': 'bar'}, result)
+        mock_cluster.assert_called_once_with(self.ctx, 'C1')
+        mock_policy.assert_called_once_with(self.ctx, 'P1')
+        mock_get.assert_called_once_with(self.ctx, 'C1', 'P1')
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_policy_get2_cluster_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='cid')
+        req = orcp.ClusterPolicyGetRequest(identity='cid',
+                                           policy_id='pid')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_policy_get2,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual("The cluster (cid) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'cid')
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(service.EngineService, 'policy_find')
+    def test_cluster_policy_get2_policy_not_found(self, mock_policy,
+                                                  mock_cluster):
+        mock_cluster.return_value = mock.Mock(id='cid')
+        mock_policy.side_effect = exc.ResourceNotFound(type='policy',
+                                                       id='pid')
+        req = orcp.ClusterPolicyGetRequest(identity='cid',
+                                           policy_id='pid')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_policy_get2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual("The policy (pid) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_cluster.assert_called_once_with(self.ctx, 'cid')
+        mock_policy.assert_called_once_with(self.ctx, 'pid')
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(service.EngineService, 'policy_find')
+    @mock.patch.object(cpo.ClusterPolicy, 'get')
+    def test_cluster_policy_get2_binding_not_found(self, mock_get,
+                                                   mock_policy, mock_cluster):
+        mock_cluster.return_value = mock.Mock(id='cid')
+        mock_policy.return_value = mock.Mock(id='pid')
+        err = exc.PolicyNotAttached(policy='pid', cluster='cid')
+        mock_get.side_effect = err
+
+        req = orcp.ClusterPolicyGetRequest(identity='cid',
+                                           policy_id='pid')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_policy_get2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.PolicyBindingNotFound, ex.exc_info[0])
+        self.assertEqual("The policy (pid) is not found attached to "
+                         "the specified cluster (cid).",
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(action_mod.Action, 'create')
