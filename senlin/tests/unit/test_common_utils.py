@@ -49,49 +49,6 @@ class TestParameterParsing(base.SenlinTestCase):
             self.assertFalse(res)
             self.assertEqual(0, actual)
 
-    def test_validate_sort_param(self):
-        whitelist = ['foo', 'bar', 'zoo']
-        # None case
-        actual = utils.validate_sort_param(None, whitelist)
-        self.assertIsNone(actual)
-
-        # single good key
-        actual = utils.validate_sort_param('foo', whitelist)
-        self.assertIsNone(actual)
-
-        # multiple keys
-        actual = utils.validate_sort_param('foo,bar', whitelist)
-        self.assertIsNone(actual)
-
-        # with dirs
-        value = 'foo:asc,bar,zoo:desc'
-        actual = utils.validate_sort_param(value, whitelist)
-        self.assertIsNone(actual)
-
-    def test_validate_sort_param_key_missing(self):
-        whitelist = ['foo', 'bar', 'zoo']
-        ex = self.assertRaises(exception.InvalidParameter,
-                               utils.validate_sort_param,
-                               ':asc', whitelist)
-        self.assertEqual("Invalid value '' specified for 'sort key'",
-                         six.text_type(ex))
-
-    def test_validate_sort_param_invalid_key(self):
-        whitelist = ['foo', 'bar', 'zoo']
-        ex = self.assertRaises(exception.InvalidParameter,
-                               utils.validate_sort_param,
-                               'cool', whitelist)
-        self.assertEqual("Invalid value 'cool' specified for 'sort key'",
-                         six.text_type(ex))
-
-    def test_validate_sort_param_invalid_dir(self):
-        whitelist = ['foo', 'bar', 'zoo']
-        ex = self.assertRaises(exception.InvalidParameter,
-                               utils.validate_sort_param,
-                               'bar:inc', whitelist)
-        self.assertEqual("Invalid value 'inc' specified for 'sort dir'",
-                         six.text_type(ex))
-
 
 class Response(object):
     def __init__(self, buf=''):

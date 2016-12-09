@@ -1831,7 +1831,8 @@ class EngineService(service.Service):
                      directions) separated by commas.
         :return: A list containing dictionaries each representing a binding.
         """
-        utils.validate_sort_param(sort, consts.CLUSTER_POLICY_SORT_KEYS)
+        # NOTE: The validation of sort parameter will be done later when
+        #       migrated to versioned request objects.
         db_cluster = self.cluster_find(context, identity)
         bindings = cpm.ClusterPolicy.load_all(
             context, db_cluster.id, filters=filters, sort=sort)

@@ -63,30 +63,6 @@ def parse_bool_param(name, value):
     return strutils.bool_from_string(value, strict=True)
 
 
-def validate_sort_param(value, whitelist):
-    """Validate a string value and see if it is a valid sort param.
-
-    :param value: A string as the input which should be one of the following
-                  formats:
-                  - 'key1,key2,key3'
-                  - 'key1:asc,key2,key3:desc'
-                  - 'key1:asc,key2:asc,key3:desc'
-    :param whitelist: A list of permitted sorting keys.
-    :return: None if validation succeeds or an exception of `InvalidParameter`
-             otherwise.
-    """
-
-    if value is None:
-        return None
-
-    for s in value.split(','):
-        s_key, _sep, s_dir = s.partition(':')
-        if not s_key or s_key not in whitelist:
-            raise exception.InvalidParameter(name='sort key', value=s_key)
-        if s_dir and s_dir not in ('asc', 'desc'):
-            raise exception.InvalidParameter(name='sort dir', value=s_dir)
-
-
 def parse_level_values(values):
     """Parse a given list of level values to numbers.
 
