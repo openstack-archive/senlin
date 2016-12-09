@@ -68,3 +68,11 @@ class ReceiverDeleteRequest(base.SenlinObject):
     fields = {
         'identity': fields.StringField()
     }
+
+
+@base.SenlinObjectRegistry.register
+class ReceiverNotifyRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField()
+    }
