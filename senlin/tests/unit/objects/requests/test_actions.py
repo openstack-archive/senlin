@@ -9,13 +9,90 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import copy
 
 from senlin.objects.requests import actions
 from senlin.tests.unit.common import base as test_base
 
 
-class TestActionList(test_base.SenlinTestCase):
+class TestActionCreate(test_base.SenlinTestCase):
 
+    body = {
+        'name': 'test-action',
+        'cluster_id': 'test-cluster',
+        'action': 'CLUSTER_CREATE',
+    }
+
+    def test_action_create_request_body(self):
+        sot = actions.ActionCreateRequestBody(**self.body)
+        self.assertEqual('test-action', sot.name)
+        self.assertEqual('test-cluster', sot.cluster_id)
+        self.assertEqual('CLUSTER_CREATE', sot.action)
+
+        sot.obj_set_defaults()
+
+        self.assertEqual({}, sot.inputs)
+
+    def test_action_create_request_body_full(self):
+        body = copy.deepcopy(self.body)
+        body['inputs'] = {'foo': 'bar'}
+        sot = actions.ActionCreateRequestBody(**body)
+        self.assertEqual('test-action', sot.name)
+        self.assertEqual('test-cluster', sot.cluster_id)
+        self.assertEqual('CLUSTER_CREATE', sot.action)
+        self.assertEqual({'foo': 'bar'}, sot.inputs)
+
+    def test_action_create_request_body_to_primitive(self):
+        sot = actions.ActionCreateRequestBody(**self.body)
+        res = sot.obj_to_primitive()
+        self.assertEqual(
+            {
+                'name': u'test-action',
+                'cluster_id': u'test-cluster',
+                'action': u'CLUSTER_CREATE',
+            },
+            res['senlin_object.data']
+        )
+        self.assertEqual('ActionCreateRequestBody',
+                         res['senlin_object.name'])
+        self.assertEqual('senlin', res['senlin_object.namespace'])
+        self.assertEqual('1.0', res['senlin_object.version'])
+        self.assertIn('name', res['senlin_object.changes'])
+        self.assertIn('cluster_id', res['senlin_object.changes'])
+
+    def test_action_create_request_to_primitive(self):
+        body = actions.ActionCreateRequestBody(**self.body)
+        request = {'action': body}
+        sot = actions.ActionCreateRequest(**request)
+        self.assertIsInstance(sot.action, actions.ActionCreateRequestBody)
+
+        self.assertEqual('test-action', sot.action.name)
+        self.assertEqual('test-cluster', sot.action.cluster_id)
+
+        res = sot.obj_to_primitive()
+        self.assertEqual(['action'], res['senlin_object.changes'])
+        self.assertEqual('ActionCreateRequest', res['senlin_object.name'])
+        self.assertEqual('senlin', res['senlin_object.namespace'])
+        self.assertEqual('1.0', res['senlin_object.version'])
+        data = res['senlin_object.data']['action']
+        self.assertIn('cluster_id', data['senlin_object.changes'])
+        self.assertIn('name', data['senlin_object.changes'])
+        self.assertEqual('ActionCreateRequestBody',
+                         data['senlin_object.name'])
+        self.assertEqual('senlin', data['senlin_object.namespace'])
+        self.assertEqual('1.0', data['senlin_object.version'])
+
+        self.assertEqual(
+            {
+                'name': u'test-action',
+                'cluster_id': u'test-cluster',
+                'action': u'CLUSTER_CREATE',
+            },
+            data['senlin_object.data']
+        )
+
+
+class TestActionList(test_base.SenlinTestCase):
     def test_action_list_request_body_full(self):
         params = {
             'name': ['node_create_12345678'],
