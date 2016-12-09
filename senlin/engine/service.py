@@ -2302,6 +2302,29 @@ class EngineService(service.Service):
         receiver.notify(context, params)
 
     @request_context2
+    def receiver_notify2(self, ctx, req):
+        """Handle notification to specified receiver.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ReceiverNotifyRequest object.
+        """
+        db_receiver = self.receiver_find(ctx, req.identity)
+        # permission checking
+        if not ctx.is_admin and ctx.user != db_receiver.user:
+            raise exception.Forbidden()
+
+        # Receiver type check
+        if db_receiver.type != consts.RECEIVER_MESSAGE:
+            msg = _("Notifying non-message receiver is not allowed.")
+            raise exception.BadRequest(msg=msg)
+
+        LOG.info(_LI("Received notification to receiver %s."), req.identity)
+        receiver = receiver_mod.Receiver.load(ctx,
+                                              receiver_obj=db_receiver,
+                                              project_safe=True)
+        receiver.notify(ctx)
+
+    @request_context2
     def webhook_trigger2(self, ctx, req):
         """trigger the webhook.
 
