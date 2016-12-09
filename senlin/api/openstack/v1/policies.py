@@ -22,7 +22,6 @@ from senlin.api.common import util
 from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
-from senlin.common import utils
 from senlin.objects import base as obj_base
 from senlin.objects.requests import policies as vorp
 
@@ -50,8 +49,7 @@ class PolicyController(wsgi.Controller):
         params = util.get_allowed_params(req.params, whitelist)
         is_global = params.pop(consts.PARAM_GLOBAL_PROJECT, False)
 
-        unsafe = utils.parse_bool_param(consts.PARAM_GLOBAL_PROJECT,
-                                        is_global)
+        unsafe = util.parse_bool_param(consts.PARAM_GLOBAL_PROJECT, is_global)
         params['project_safe'] = not unsafe
         norm_req = obj_base.SenlinObject.normalize_req(
             'PolicyListRequest', params, None)

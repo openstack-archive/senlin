@@ -13,8 +13,10 @@
 
 import functools
 
+from oslo_utils import strutils
 from webob import exc
 
+from senlin.common.i18n import _
 from senlin.common import policy
 
 
@@ -66,3 +68,12 @@ def get_allowed_params(params, whitelist):
             allowed_params[key] = value
 
     return allowed_params
+
+
+def parse_bool_param(name, value):
+    if str(value).lower() not in ('true', 'false'):
+        msg = _("Invalid value '%(value)s' specified for '%(name)s'"
+                ) % {'name': name, 'value': value}
+        raise exc.HTTPBadRequest(msg)
+
+    return strutils.bool_from_string(value, strict=True)

@@ -134,7 +134,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
         req = self._get('/policies', params=params)
 
-        ex = self.assertRaises(senlin_exc.InvalidParameter,
+        ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index,
                                req)
 

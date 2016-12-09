@@ -177,7 +177,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {'global_project': 'No'}
         req = self._get('/actions', params=params)
 
-        ex = self.assertRaises(senlin_exc.InvalidParameter,
+        ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
         self.assertEqual("Invalid value 'No' specified for 'global_project'",

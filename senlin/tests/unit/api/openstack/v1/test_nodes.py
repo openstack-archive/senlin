@@ -142,7 +142,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params = {'global_project': 'No'}
         req = self._get('/nodes', params=params)
 
-        ex = self.assertRaises(senlin_exc.InvalidParameter,
+        ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
         self.assertEqual("Invalid value 'No' specified for 'global_project'",
@@ -358,7 +358,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/nodes/%(node_id)s' % {'node_id': node_id},
                         params=params)
 
-        ex = self.assertRaises(senlin_exc.InvalidParameter,
+        ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.get,
                                req, node_id=node_id)
 

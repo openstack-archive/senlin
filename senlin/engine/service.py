@@ -1888,7 +1888,7 @@ class EngineService(service.Service):
             'status': action_mod.Action.READY,
             'inputs': {
                 'policy_id': db_policy.id,
-                'enabled': utils.parse_bool_param('enabled', req.enabled),
+                'enabled': req.enabled,
             }
         }
         action_id = action_mod.Action.create(ctx, db_cluster.id,

@@ -23,7 +23,6 @@ from senlin.api.common import util
 from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
-from senlin.common import utils
 from senlin.objects import base as obj_base
 from senlin.objects.requests import clusters as vorc
 
@@ -62,8 +61,7 @@ class ClusterController(wsgi.Controller):
         # Note: We have to do a boolean parsing here because 1) there is
         # a renaming, 2) the boolean is usually presented as a string.
         is_global = params.pop(consts.PARAM_GLOBAL_PROJECT, False)
-        unsafe = utils.parse_bool_param(consts.PARAM_GLOBAL_PROJECT,
-                                        is_global)
+        unsafe = util.parse_bool_param(consts.PARAM_GLOBAL_PROJECT, is_global)
         params['project_safe'] = not unsafe
         norm_req = obj_base.SenlinObject.normalize_req(
             'ClusterListRequest', params, None)
