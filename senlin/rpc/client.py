@@ -134,11 +134,6 @@ class EngineClient(object):
         return self.call(ctxt,
                          self.make_msg('action_get', identity=identity))
 
-    def receiver_notify(self, ctxt, identity, params=None):
-        return self.call(ctxt,
-                         self.make_msg('receiver_notify', identity=identity,
-                                       params=params))
-
     def event_list(self, ctxt, filters=None, limit=None, marker=None,
                    sort=None, project_safe=True):
         return self.call(ctxt,

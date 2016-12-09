@@ -2278,29 +2278,6 @@ class EngineService(service.Service):
         receiver_mod.Receiver.delete(ctx, db_receiver.id)
         LOG.info(_LI("Receiver %s is deleted."), req.identity)
 
-    @request_context
-    def receiver_notify(self, context, identity, params=None):
-        """Handle notification to specified receiver.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a receiver.
-        :param params: Parameters received from notification.
-        """
-        db_receiver = self.receiver_find(context, identity)
-        # permission checking
-        if not context.is_admin and context.user != db_receiver.user:
-            raise exception.Forbidden()
-
-        # Receiver type check
-        if db_receiver.type != consts.RECEIVER_MESSAGE:
-            raise exception.Forbidden()
-
-        LOG.info(_LI("Received notification to receiver %s."), identity)
-        receiver = receiver_mod.Receiver.load(context,
-                                              receiver_obj=db_receiver,
-                                              project_safe=True)
-        receiver.notify(context, params)
-
     @request_context2
     def receiver_notify2(self, ctx, req):
         """Handle notification to specified receiver.
