@@ -452,7 +452,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.eng.cluster_update2,
                                self.ctx, req.obj_to_primitive())
 
-        self.assertEqual(exc.ProfileTypeNotMatch, ex.exc_info[0])
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
         mock_profile.assert_has_calls([

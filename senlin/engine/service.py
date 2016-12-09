@@ -915,7 +915,7 @@ class EngineService(service.Service):
             if new_profile.type != old_profile.type:
                 msg = _('Cannot update a cluster to a different profile type, '
                         'operation aborted.')
-                raise exception.ProfileTypeNotMatch(message=msg)
+                raise exception.BadRequest(msg=msg)
             if old_profile.id != new_profile.id:
                 inputs['new_profile_id'] = new_profile.id
 
@@ -1611,8 +1611,7 @@ class EngineService(service.Service):
                 if node_profile.type != cluster_profile.type:
                     msg = _('Node and cluster have different profile type, '
                             'operation aborted.')
-                    LOG.error(msg)
-                    raise exception.ProfileTypeNotMatch(message=msg)
+                    raise exception.BadRequest(msg=msg)
             index = cluster_obj.Cluster.get_next_index(ctx, cluster_id)
         else:
             cluster_id = ''
@@ -1690,8 +1689,7 @@ class EngineService(service.Service):
             if old_profile.type != db_profile.type:
                 msg = _('Cannot update a node to a different profile type, '
                         'operation aborted.')
-                LOG.error(msg)
-                raise exception.ProfileTypeNotMatch(message=msg)
+                raise exception.BadRequest(msg=msg)
 
             inputs = {'new_profile_id': profile_id}
         else:
