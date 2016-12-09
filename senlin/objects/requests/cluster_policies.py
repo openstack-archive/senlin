@@ -26,3 +26,12 @@ class ClusterPolicyListRequest(base.SenlinObject):
         'sort': fields.SortField(
             valid_keys=list(consts.CLUSTER_POLICY_SORT_KEYS), nullable=True)
     }
+
+
+@base.SenlinObjectRegistry.register
+class ClusterPolicyGetRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'policy_id': fields.StringField(),
+    }
