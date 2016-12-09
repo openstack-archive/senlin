@@ -103,10 +103,6 @@ class MultipleChoices(SenlinException):
                 "Please be more specific.")
 
 
-class InvalidParameter(SenlinException):
-    msg_fmt = _("Invalid value '%(value)s' specified for '%(name)s'")
-
-
 class ResourceNotFound(SenlinException):
     """Generic exception for resource not found.
 
