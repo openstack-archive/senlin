@@ -22,7 +22,7 @@ from senlin.common import exception
 class ContextMiddleware(wsgi.Middleware):
 
     def process_request(self, req):
-        '''Build context from authentication info extracted from request.'''
+        """Build context from authentication info extracted from request."""
 
         headers = req.headers
         environ = req.environ
@@ -63,6 +63,7 @@ class ContextMiddleware(wsgi.Middleware):
         except Exception:
             raise exception.NotAuthenticated()
 
+        api_version = str(req.version_request)
         req.context = context.RequestContext(
             auth_token=auth_token,
             user=user,
@@ -79,4 +80,6 @@ class ContextMiddleware(wsgi.Middleware):
             project_domain_name=project_domain_name,
             auth_token_info=auth_token_info,
             region_name=region_name,
-            roles=roles)
+            roles=roles,
+            api_version=api_version
+        )

@@ -18,6 +18,7 @@ from oslo_middleware import request_id
 from oslo_policy import opts as policy_opts
 import webob
 
+from senlin.api.common import version_request as vr
 from senlin.api.middleware import context
 from senlin.common import exception
 from senlin.tests.unit.common import base
@@ -89,10 +90,11 @@ class RequestContextMiddlewareTest(base.SenlinTestCase):
                               group='oslo_policy', enforce_type=True)
 
     def test_context_middleware(self):
-
+        avr = vr.APIVersionRequest('1.0')
         middleware = context.ContextMiddleware(None)
         request = webob.Request.blank('/clusters', headers=self.headers,
                                       environ=self.environ)
+        request.version_request = avr
         if self.expected_exception:
             self.assertRaises(
                 self.expected_exception, middleware.process_request, request)
@@ -104,12 +106,13 @@ class RequestContextMiddlewareTest(base.SenlinTestCase):
             self.assertIsNotNone(ctx.get('request_id'))
 
     def test_context_middleware_with_requestid(self):
-
+        avr = vr.APIVersionRequest('1.0')
         middleware = context.ContextMiddleware(None)
         request = webob.Request.blank('/clusters', headers=self.headers,
                                       environ=self.environ)
         req_id = 'req-5a63f0d7-1b69-447b-b621-4ea87cc7186d'
         request.environ[request_id.ENV_REQUEST_ID] = req_id
+        request.version_request = avr
         if self.expected_exception:
             self.assertRaises(
                 self.expected_exception, middleware.process_request, request)
