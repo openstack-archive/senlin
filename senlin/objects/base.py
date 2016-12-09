@@ -11,6 +11,7 @@
 # under the License.
 
 """Senlin common internal object model"""
+import re
 
 from oslo_utils import versionutils
 from oslo_versionedobjects import base
@@ -33,7 +34,13 @@ class SenlinObject(base.VersionedObject):
     """
     OBJ_SERIAL_NAMESPACE = 'senlin_object'
     OBJ_PROJECT_NAMESPACE = 'senlin'
+    BASE_VERSION = '1.0'
     VERSION = '1.0'
+
+    # list of version maps from api requst version to object version
+    # higher api versions after lower api versions. e.g.
+    # {'1.2': '1.0', '1.4': '1.1'}
+    VERSION_MAP = {}
 
     @staticmethod
     def _from_db_object(context, obj, db_obj):
@@ -68,6 +75,24 @@ class SenlinObject(base.VersionedObject):
 
         schema.update(fields.Object(obj_name).get_schema())
         return schema
+
+    @classmethod
+    def find_version(cls, context):
+        match = re.match(r"^([1-9]\d*)\.([1-9]\d*|0)$", context.api_version)
+        req_major = int(match.group(1))
+        req_minor = int(match.group(2))
+        # base version is '1.0'
+        matched_version = cls.BASE_VERSION
+        for api_ver, obj_ver in cls.VERSION_MAP.items():
+            match = re.match(r"^([1-9]\d*)\.([1-9]\d*|0)$", api_ver)
+            api_major = int(match.group(1))
+            api_minor = int(match.group(2))
+            if (api_major, api_minor) <= (req_major, req_minor):
+                matched_version = obj_ver
+            else:
+                break
+
+        return matched_version
 
     @classmethod
     def normalize_req(cls, name, req, key=None):
