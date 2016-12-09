@@ -116,5 +116,16 @@ class ReceiverController(wsgi.Controller):
 
     @util.policy_enforce
     def notify(self, req, receiver_id, body=None):
-        self.rpc_client.receiver_notify(req.context, receiver_id, body)
+        params = {'identity': receiver_id}
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ReceiverNotifyRequest', params)
+            obj = vorr.ReceiverNotifyRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+        except jsonschema.exceptions.ValidationError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+        self.rpc_client.call2(req.context, 'receiver_notify2', obj)
         raise exc.HTTPNoContent()
