@@ -194,6 +194,39 @@ class ActionTest(base.SenlinTestCase):
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         mock_find.assert_called_once_with(self.ctx, 'C1')
 
+    @mock.patch.object(action_base.Action, 'create')
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_action_create2(self, mock_find, mock_action):
+        mock_find.return_value = mock.Mock(id='FAKE_CLUSTER')
+        mock_action.return_value = 'ACTION_ID'
+
+        req = orao.ActionCreateRequestBody(name='a1', cluster_id='C1',
+                                           action='CLUSTER_CREATE')
+
+        result = self.eng.action_create2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'C1')
+        mock_action.assert_called_once_with(
+            self.ctx, 'FAKE_CLUSTER', 'CLUSTER_CREATE',
+            name='a1',
+            cause=action_base.CAUSE_RPC,
+            status=action_base.Action.READY,
+            inputs={})
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_action_create2_cluster_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster', id='C1')
+
+        req = orao.ActionCreateRequestBody(name='NODE1',
+                                           cluster_id='C1')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.action_create2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        mock_find.assert_called_once_with(self.ctx, 'C1')
+
     @mock.patch.object(action_base.Action, 'load')
     @mock.patch.object(service.EngineService, 'action_find')
     def test_action_get2(self, mock_find, mock_load):
