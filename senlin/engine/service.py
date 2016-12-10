@@ -2116,6 +2116,26 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Action '%s' is deleted."), identity)
 
+    @request_context2
+    def action_delete2(self, ctx, req):
+        """Delete the specified action object.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ActionDeleteRequest object.
+        :return: None if deletion was successful, or an exception of type
+                 `ResourceInUse`.
+        """
+        db_action = self.action_find(ctx, req.identity)
+        LOG.info(_LI("Deleting action '%s'."), req.identity)
+        try:
+            action_mod.Action.delete(ctx, db_action.id)
+        except exception.EResourceBusy:
+            reason = _("still in one of WAITING, RUNNING or SUSPENDED state")
+            raise exception.ResourceInUse(type='action', id=req.identity,
+                                          reason=reason)
+
+        LOG.info(_LI("Action '%s' is deleted."), req.identity)
+
     def receiver_find(self, context, identity, project_safe=True):
         """Find a receiver with the given identity.
 
