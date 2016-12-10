@@ -1837,6 +1837,31 @@ class EngineService(service.Service):
 
         return [binding.to_dict() for binding in bindings]
 
+    @request_context2
+    def cluster_policy_list2(self, ctx, req):
+        """List cluster-policy bindings given the cluster identity.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ClusterPolicyListRequest object.
+        :return: A list containing dictionaries each representing a binding.
+        """
+        sort = None
+        if req.obj_attr_is_set('sort'):
+            sort = req.sort
+        filters = {}
+        if req.obj_attr_is_set('policy_name'):
+            filters['policy_name'] = req.policy_name
+        if req.obj_attr_is_set('policy_type'):
+            filters['policy_type'] = req.policy_type
+        if req.obj_attr_is_set('enabled'):
+            filters['enabled'] = req.enabled
+
+        db_cluster = self.cluster_find(ctx, req.identity)
+        bindings = cp_obj.ClusterPolicy.get_all(
+            ctx, db_cluster.id, filters=filters, sort=sort)
+
+        return [binding.to_dict() for binding in bindings]
+
     @request_context
     def cluster_policy_get(self, context, identity, policy_id):
         """Get the binding record giving the cluster and policy identity.

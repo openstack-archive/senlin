@@ -95,6 +95,73 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                           filters='FOO', sort='enabled')
 
     @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
+    def test_cluster_policy_list2(self, mock_get, mock_find):
+        x_obj = mock.Mock(id='FAKE_CLUSTER')
+        mock_find.return_value = x_obj
+        b1 = mock.Mock()
+        b1.to_dict.return_value = {'k': 'v1'}
+        b2 = mock.Mock()
+        b2.to_dict.return_value = {'k': 'v2'}
+        mock_get.return_value = [b1, b2]
+
+        req = orcp.ClusterPolicyListRequest(identity='CLUSTER')
+        result = self.eng.cluster_policy_list2(
+            self.ctx, req.obj_to_primitive())
+        self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+        mock_get.assert_called_once_with(self.ctx, 'FAKE_CLUSTER',
+                                         filters={}, sort=None)
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
+    def test_cluster_policy_list2_with_param(self, mock_get,
+                                             mock_find):
+        x_obj = mock.Mock(id='FAKE_CLUSTER')
+        mock_find.return_value = x_obj
+        mock_get.return_value = []
+
+        params = {
+            'identity': 'CLUSTER',
+            'policy_name': 'fake_name',
+            'policy_type': 'fake_type',
+            'enabled': True,
+            'sort': 'enabled'
+        }
+
+        req = orcp.ClusterPolicyListRequest(**params)
+
+        result = self.eng.cluster_policy_list2(
+            self.ctx, req.obj_to_primitive())
+        self.assertEqual([], result)
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
+
+    def test_cluster_policy_list2_bad_param(self):
+        params = {
+            'identity': 'CLUSTER',
+            'sort': 'bad',
+        }
+
+        ex = self.assertRaises(ValueError,
+                               orcp.ClusterPolicyListRequest,
+                               **params)
+        self.assertEqual("unsupported sort key 'bad' for 'sort'.",
+                         six.text_type(ex))
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
+    def test_cluster_policy_list2_cluster_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='Bogus')
+        req = orcp.ClusterPolicyListRequest(identity='Bogus')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_policy_list2,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual("The cluster (Bogus) could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(service.EngineService, 'policy_find')
     @mock.patch.object(cp_mod.ClusterPolicy, 'load')
     def test_cluster_policy_get(self, mock_load, mock_policy, mock_cluster):
