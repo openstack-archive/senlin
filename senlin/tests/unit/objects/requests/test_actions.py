@@ -129,3 +129,14 @@ class TestActionGet(test_base.SenlinTestCase):
     def test_action_get_request(self):
         sot = actions.ActionGetRequest(**self.body)
         self.assertEqual('test-action', sot.identity)
+
+
+class TestActionDelete(test_base.SenlinTestCase):
+
+    body = {
+        'identity': 'test-action'
+    }
+
+    def test_action_get_request(self):
+        sot = actions.ActionDeleteRequest(**self.body)
+        self.assertEqual('test-action', sot.identity)

@@ -59,3 +59,11 @@ class ActionGetRequest(base.SenlinObject):
     fields = {
         'identity': fields.StringField(),
     }
+
+
+@base.SenlinObjectRegistry.register
+class ActionDeleteRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField()
+    }
