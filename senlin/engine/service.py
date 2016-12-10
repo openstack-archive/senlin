@@ -33,7 +33,6 @@ from senlin.common import utils
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine.actions import base as action_mod
 from senlin.engine import cluster as cluster_mod
-from senlin.engine import cluster_policy as cpm
 from senlin.engine import dispatcher
 from senlin.engine import environment
 from senlin.engine import event as EVENT
@@ -1841,28 +1840,6 @@ class EngineService(service.Service):
             ctx, db_cluster.id, filters=filters, sort=sort)
 
         return [binding.to_dict() for binding in bindings]
-
-    @request_context
-    def cluster_policy_get(self, context, identity, policy_id):
-        """Get the binding record giving the cluster and policy identity.
-
-        :param context: An instance of the request context.
-        :param identity: The ID, name or short ID of the target cluster.
-        :param policy_id: The ID, name or short ID of the target policy.
-        :return: A dictionary containing the binding record, or raises an
-                 exception of ``PolicyNotAttached``.
-        """
-        db_cluster = self.cluster_find(context, identity)
-        db_policy = self.policy_find(context, policy_id)
-
-        try:
-            binding = cpm.ClusterPolicy.load(
-                context, db_cluster.id, db_policy.id)
-        except exception.PolicyNotAttached:
-            raise exception.PolicyBindingNotFound(policy=policy_id,
-                                                  identity=identity)
-
-        return binding.to_dict()
 
     @request_context2
     def cluster_policy_get2(self, ctx, req):

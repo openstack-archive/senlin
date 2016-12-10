@@ -17,7 +17,6 @@ import six
 from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.engine.actions import base as action_mod
-from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import dispatcher
 from senlin.engine import service
 from senlin.objects import cluster_policy as cpo
@@ -101,73 +100,6 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual("The cluster (Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
-
-    @mock.patch.object(service.EngineService, 'cluster_find')
-    @mock.patch.object(service.EngineService, 'policy_find')
-    @mock.patch.object(cp_mod.ClusterPolicy, 'load')
-    def test_cluster_policy_get(self, mock_load, mock_policy, mock_cluster):
-        mock_cluster.return_value = mock.Mock(id='FAKE_CLUSTER')
-        mock_policy.return_value = mock.Mock(id='FAKE_POLICY')
-        x_binding = mock.Mock()
-        x_binding.to_dict.return_value = {'foo': 'bar'}
-        mock_load.return_value = x_binding
-
-        result = self.eng.cluster_policy_get(self.ctx, 'C1', 'P1')
-
-        self.assertEqual({'foo': 'bar'}, result)
-        mock_cluster.assert_called_once_with(self.ctx, 'C1')
-        mock_policy.assert_called_once_with(self.ctx, 'P1')
-        mock_load.assert_called_once_with(self.ctx, 'FAKE_CLUSTER',
-                                          'FAKE_POLICY')
-
-    @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_cluster_policy_get_cluster_not_found(self, mock_find):
-        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
-                                                     id='Bogus')
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_get,
-                               self.ctx, 'Bogus', 'POLICY')
-        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual("The cluster (Bogus) could not be found.",
-                         six.text_type(ex.exc_info[1]))
-        mock_find.assert_called_once_with(self.ctx, 'Bogus')
-
-    @mock.patch.object(service.EngineService, 'cluster_find')
-    @mock.patch.object(service.EngineService, 'policy_find')
-    def test_cluster_policy_get_policy_not_found(self, mock_policy,
-                                                 mock_cluster):
-        mock_cluster.return_value = mock.Mock(id='FAKE_CLUSTER')
-        mock_policy.side_effect = exc.ResourceNotFound(type='policy',
-                                                       id='Bogus')
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_get,
-                               self.ctx, 'CLUSTER', 'Bogus')
-
-        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual("The policy (Bogus) could not be found.",
-                         six.text_type(ex.exc_info[1]))
-        mock_cluster.assert_called_once_with(self.ctx, 'CLUSTER')
-        mock_policy.assert_called_once_with(self.ctx, 'Bogus')
-
-    @mock.patch.object(service.EngineService, 'cluster_find')
-    @mock.patch.object(service.EngineService, 'policy_find')
-    @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
-    def test_cluster_policy_get_binding_not_found(self, mock_load,
-                                                  mock_policy, mock_cluster):
-        mock_cluster.return_value = mock.Mock(id='FAKE_CLUSTER')
-        mock_policy.return_value = mock.Mock(id='FAKE_POLICY')
-        err = exc.PolicyNotAttached(policy='POLICY', cluster='CLUSTER')
-        mock_load.side_effect = err
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_get,
-                               self.ctx, 'CLUSTER', 'POLICY')
-
-        self.assertEqual(exc.PolicyBindingNotFound, ex.exc_info[0])
-        self.assertEqual("The policy (POLICY) is not found attached to "
-                         "the specified cluster (CLUSTER).",
-                         six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(service.EngineService, 'cluster_find')
     @mock.patch.object(service.EngineService, 'policy_find')
