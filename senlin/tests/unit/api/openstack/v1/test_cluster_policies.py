@@ -157,14 +157,16 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'policy_type': 'ScalingPolicy',
         }
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_resp)
         response = self.controller.get(req, cluster_id=cid, policy_id=pid)
 
         mock_call.assert_called_once_with(
-            req.context, ('cluster_policy_get',
-                          {'identity': cid, 'policy_id': pid}))
-
+            req.context, 'cluster_policy_get2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertEqual(cid, request.identity)
+        self.assertEqual(pid, request.policy_id)
+        self.assertIsInstance(request, vorc.ClusterPolicyGetRequest)
         self.assertEqual({'cluster_policy': engine_resp}, response)
 
     def test_cluster_policy_get_not_found(self, mock_enforce):
@@ -175,7 +177,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                         '' % {'cid': cid, 'pid': pid})
 
         error = senlin_exc.PolicyBindingNotFound(policy=pid, identity=cid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
@@ -200,3 +202,16 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
+
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_action_get_bad_params(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'get', True)
+        cid = 'FAKE_CLUSTER'
+        pid = ['Fake']
+        req = self._get('/cluster_policies/%(cid)s/%(pid)s'
+                        '' % {'cid': cid, 'pid': pid})
+        ex = self.assertRaises(exc.HTTPBadRequest, self.controller.get,
+                               req, cluster_id=cid, policy_id=pid)
+        self.assertEqual("A string is required in field policy_id, not a list",
+                         six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)

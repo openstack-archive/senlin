@@ -229,7 +229,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                                    mock_policy, mock_cluster):
         mock_cluster.return_value = mock.Mock(id='cid')
         mock_policy.return_value = mock.Mock(id='pid')
-        err = exc.PolicyNotAttached(policy='pid', cluster='cid')
+        err = exc.PolicyBindingNotFound(policy='pid', identity='cid')
         mock_get.side_effect = err
 
         req = orcp.ClusterPolicyGetRequest(identity='cid',

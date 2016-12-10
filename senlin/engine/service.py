@@ -1869,19 +1869,17 @@ class EngineService(service.Service):
         """Get the binding record giving the cluster and policy identity.
 
         :param ctx: An instance of request context.
-                :param req: An instance of the ClusterPolicyGetRequest object.
+        :param req: An instance of the ClusterPolicyGetRequest object.
         :return: A dictionary containing the binding record, or raises an
-                 exception of ``PolicyNotAttached``.
+                 exception of ``PolicyBindingNotFound``.
         """
         identity = req.identity
         policy_id = req.policy_id
         db_cluster = self.cluster_find(ctx, identity)
         db_policy = self.policy_find(ctx, policy_id)
 
-        try:
-            binding = cp_obj.ClusterPolicy.get(
-                ctx, db_cluster.id, db_policy.id)
-        except exception.PolicyNotAttached:
+        binding = cp_obj.ClusterPolicy.get(ctx, db_cluster.id, db_policy.id)
+        if binding is None:
             raise exception.PolicyBindingNotFound(policy=policy_id,
                                                   identity=identity)
 

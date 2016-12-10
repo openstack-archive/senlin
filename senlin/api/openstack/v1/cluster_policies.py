@@ -64,6 +64,16 @@ class ClusterPolicyController(wsgi.Controller):
 
     @util.policy_enforce
     def get(self, req, cluster_id, policy_id):
-        cluster_policy = self.rpc_client.cluster_policy_get(
-            req.context, cluster_id=cluster_id, policy_id=policy_id)
+
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ClusterPolicyGetRequest', {'identity': cluster_id,
+                                            'policy_id': policy_id})
+            obj = vocp.ClusterPolicyGetRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
+
+        cluster_policy = self.rpc_client.call2(req.context,
+                                               'cluster_policy_get2', obj)
         return {'cluster_policy': cluster_policy}
