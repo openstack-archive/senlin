@@ -18,6 +18,7 @@ from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import cluster_policies as cp_mod
 from senlin.common import exception as senlin_exc
 from senlin.common import policy
+from senlin.objects.requests import cluster_policies as vorc
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
@@ -55,25 +56,26 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         ]
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=engine_resp)
 
         result = self.controller.index(req, cluster_id=cid)
 
-        default_args = {'sort': None, 'filters': None, 'identity': cid}
-        mock_call.assert_called_with(req.context,
-                                     ('cluster_policy_list', default_args))
+        mock_call.assert_called_with(req.context, 'cluster_policy_list2',
+                                     mock.ANY)
 
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorc.ClusterPolicyListRequest)
         expected = {'cluster_policies': engine_resp}
         self.assertEqual(expected, result)
 
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_cluster_policy_index_valid_filter_params(self, mock_call,
-                                                      mock_enforce):
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_cluster_policy_index_with_params(self, mock_call,
+                                              mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         cid = 'FAKE_CLUSTER'
         params = {
-            'sort': 'fake sorting string',
+            'sort': 'enabled',
             'enabled': 'True',
         }
         req = self._get('/cluster_policies/%s' % cid, params=params)
@@ -81,15 +83,17 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.controller.index(req, cluster_id=cid)
 
-        rpc_call_args, _ = mock_call.call_args
-        engine_args = rpc_call_args[1][1]
+        mock_call.assert_called_once_with(
+            req.context, 'cluster_policy_list2', mock.ANY)
 
-        self.assertEqual(3, len(engine_args))
-        self.assertIn('sort', engine_args)
-        self.assertIn('filters', engine_args)
-        self.assertNotIn('balrog', engine_args)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorc.ClusterPolicyListRequest)
+        self.assertTrue(request.enabled)
+        self.assertEqual('enabled', request.sort)
+        self.assertFalse(request.obj_attr_is_set('policy_name'))
+        self.assertFalse(request.obj_attr_is_set('policy_type'))
 
-    @mock.patch.object(rpc_client.EngineClient, 'call')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_cluster_policy_index_invalid_params(self, mock_call,
                                                  mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -99,12 +103,29 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'balrog': 'you shall not pass!'
         }
         req = self._get('/cluster_policies/%s' % cid, params=params)
-        mock_call.return_value = []
 
         ex = self.assertRaises(exc.HTTPBadRequest, self.controller.index,
                                req, cluster_id=cid)
         self.assertEqual('Invalid parameter balrog',
                          six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_cluster_policy_index_invalid_sort(self, mock_call,
+                                               mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        cid = 'FAKE_CLUSTER'
+        params = {
+            'enabled': 'True',
+            'sort': 'bad sort'
+        }
+        req = self._get('/cluster_policies/%s' % cid, params=params)
+
+        ex = self.assertRaises(exc.HTTPBadRequest, self.controller.index,
+                               req, cluster_id=cid)
+        self.assertEqual("unsupported sort key 'bad sort' for 'sort'.",
+                         six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
 
     def test_cluster_policy_index_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)

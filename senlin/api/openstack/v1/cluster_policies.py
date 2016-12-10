@@ -14,12 +14,16 @@
 ClusterPolicies endpoint for Senlin v1 ReST API.
 """
 
+import jsonschema
+import six
 from webob import exc
 
 from senlin.api.common import util
 from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
+from senlin.objects import base as obj_base
+from senlin.objects.requests import cluster_policies as vocp
 
 
 class ClusterPolicyController(wsgi.Controller):
@@ -30,31 +34,31 @@ class ClusterPolicyController(wsgi.Controller):
 
     @util.policy_enforce
     def index(self, req, cluster_id):
-        filter_whitelist = {
+        param_whitelist = {
             consts.CP_ENABLED: 'single',
             consts.CP_POLICY_NAME: 'single',
             consts.CP_POLICY_TYPE: 'single',
-        }
-        param_whitelist = {
             consts.PARAM_SORT: 'single',
         }
         for key in req.params.keys():
-            if (key not in param_whitelist.keys() and key not in
-                    filter_whitelist.keys()):
+            if (key not in param_whitelist.keys()):
                 raise exc.HTTPBadRequest(_('Invalid parameter %s') % key)
 
         params = util.get_allowed_params(req.params, param_whitelist)
-        filters = util.get_allowed_params(req.params, filter_whitelist)
         key = consts.CP_ENABLED
-        if key in filters:
-            filters[key] = util.parse_bool_param(key, filters[key])
+        if key in params:
+            params[key] = util.parse_bool_param(key, params[key])
+        params['identity'] = cluster_id
+        try:
+            norm_req = obj_base.SenlinObject.normalize_req(
+                'ClusterPolicyListRequest', params, None)
+            obj = vocp.ClusterPolicyListRequest.obj_from_primitive(norm_req)
+            jsonschema.validate(norm_req, obj.to_json_schema())
+        except ValueError as ex:
+            raise exc.HTTPBadRequest(six.text_type(ex))
 
-        if not filters:
-            filters = None
-        policies = self.rpc_client.cluster_policy_list(req.context,
-                                                       cluster_id=cluster_id,
-                                                       filters=filters,
-                                                       **params)
+        policies = self.rpc_client.call2(req.context, 'cluster_policy_list2',
+                                         obj)
 
         return {'cluster_policies': policies}
 
