@@ -1817,26 +1817,6 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context
-    def cluster_policy_list(self, context, identity, filters=None, sort=None):
-        """List cluster-policy bindings given the cluster identity.
-
-        :param context: An instance of the request context.
-        :param identity: The ID, name or short ID of the target cluster.
-        :param filters: A list of key-value pairs for filtering out the result
-                        list.
-        :param sort: A list of sorting keys (optionally appended with sorting
-                     directions) separated by commas.
-        :return: A list containing dictionaries each representing a binding.
-        """
-        # NOTE: The validation of sort parameter will be done later when
-        #       migrated to versioned request objects.
-        db_cluster = self.cluster_find(context, identity)
-        bindings = cpm.ClusterPolicy.load_all(
-            context, db_cluster.id, filters=filters, sort=sort)
-
-        return [binding.to_dict() for binding in bindings]
-
     @request_context2
     def cluster_policy_list2(self, ctx, req):
         """List cluster-policy bindings given the cluster identity.
