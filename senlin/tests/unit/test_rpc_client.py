@@ -13,7 +13,6 @@
 """
 Unit Tests for senlin.rpc.client
 """
-import copy
 import mock
 
 from senlin.common import messaging
@@ -217,35 +216,6 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'project_safe': mock.ANY,
         }
         self._test_engine_api('action_list', 'call', **default_args)
-
-    def test_cluster_policy_list(self):
-        kwargs = {
-            'cluster_id': 'a-cluster',
-            'filters': mock.ANY,
-            'sort': mock.ANY,
-        }
-        call_kwargs = copy.deepcopy(kwargs)
-        call_kwargs['identity'] = 'a-cluster'
-        del call_kwargs['cluster_id']
-        expected_message = self.rpcapi.make_msg('cluster_policy_list',
-                                                **call_kwargs)
-        kwargs['expected_message'] = expected_message
-        self._test_engine_api('cluster_policy_list', 'call', **kwargs)
-
-    def test_cluster_policy_get(self):
-        kwargs = {
-            'cluster_id': 'a-cluster',
-            'policy_id': 'a-policy',
-        }
-
-        call_kwargs = {
-            'identity': 'a-cluster',
-            'policy_id': 'a-policy',
-        }
-        expected_message = self.rpcapi.make_msg('cluster_policy_get',
-                                                **call_kwargs)
-        kwargs['expected_message'] = expected_message
-        self._test_engine_api('cluster_policy_get', 'call', **kwargs)
 
     def test_action_create(self):
         kwargs = {

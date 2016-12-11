@@ -124,16 +124,6 @@ class EngineClient(object):
                                        limit=limit, marker=marker,
                                        sort=sort, project_safe=project_safe))
 
-    def cluster_policy_list(self, ctxt, cluster_id, filters=None, sort=None):
-        return self.call(ctxt, self.make_msg('cluster_policy_list',
-                                             identity=cluster_id,
-                                             filters=filters, sort=sort))
-
-    def cluster_policy_get(self, ctxt, cluster_id, policy_id):
-        return self.call(ctxt, self.make_msg('cluster_policy_get',
-                                             identity=cluster_id,
-                                             policy_id=policy_id))
-
     def action_create(self, ctxt, name, cluster, action, params):
         return self.call(ctxt,
                          self.make_msg('action_create',
