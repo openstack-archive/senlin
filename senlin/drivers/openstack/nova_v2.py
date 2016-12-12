@@ -76,11 +76,11 @@ class NovaClient(base.DriverBase):
 
     @sdk.translate_exception
     def server_resize_confirm(self, server):
-        return self.conn.compute.confirm_resize_server(server)
+        return self.conn.compute.confirm_server_resize(server)
 
     @sdk.translate_exception
     def server_resize_revert(self, server):
-        return self.conn.compute.revert_resize_server(server)
+        return self.conn.compute.revert_server_resize(server)
 
     @sdk.translate_exception
     def server_reboot(self, server, reboot_type):
