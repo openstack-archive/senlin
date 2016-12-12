@@ -31,7 +31,7 @@ class RequestContext(base_context.RequestContext):
                  user_name=None, project_name=None, domain_name=None,
                  user_domain_name=None, project_domain_name=None,
                  auth_token_info=None, region_name=None, roles=None,
-                 password=None, **kwargs):
+                 password=None, api_version=None, **kwargs):
 
         '''Initializer of request context.'''
         # We still have 'tenant' param because oslo_context still use it.
@@ -61,6 +61,7 @@ class RequestContext(base_context.RequestContext):
         self.auth_token_info = auth_token_info
         self.region_name = region_name
         self.password = password
+        self.api_version = api_version
 
         # Check user is admin or not
         if is_admin is None:
@@ -83,7 +84,9 @@ class RequestContext(base_context.RequestContext):
             'domain_name': self.domain_name,
             'trusts': self.trusts,
             'region_name': self.region_name,
-            'password': self.password})
+            'password': self.password,
+            'api_version': self.api_version,
+        })
         return d
 
     @classmethod
