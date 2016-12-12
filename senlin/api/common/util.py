@@ -59,7 +59,11 @@ def parse_request(name, req, body, key=None):
     except Exception as ex:
         raise exc.HTTPBadRequest(six.text_type(ex))
 
-    primitive = req_cls.normalize_req(name, body, key)
+    try:
+        primitive = req_cls.normalize_req(name, body, key)
+    except ValueError as ex:
+        raise exc.HTTPBadRequest(six.text_type(ex))
+
     version = req_cls.find_version(req.context)
     obj = None
     try:
