@@ -481,7 +481,8 @@ class EngineService(service.Service):
         db_profile = self.profile_find(ctx, req.identity)
         profile = profile_base.Profile.load(ctx, profile=db_profile)
         changed = False
-        if req.profile.obj_attr_is_set('name'):
+        if (req.profile.obj_attr_is_set('name') and
+                req.profile.name is not None):
             if req.profile.name != profile.name:
                 profile.name = req.profile.name
                 changed = True
