@@ -365,56 +365,6 @@ class ReceiverTest(base.SenlinTestCase):
 
     @mock.patch.object(rb.Receiver, 'load')
     @mock.patch.object(service.EngineService, 'receiver_find')
-    def test_receiver_notify(self, mock_find, mock_load):
-        fake_obj = mock.Mock()
-        fake_obj.id = 'FAKE_ID'
-        fake_obj.type = 'message'
-        fake_obj.user = self.ctx.user
-        fake_receiver = mock.Mock()
-        mock_find.return_value = fake_obj
-        mock_load.return_value = fake_receiver
-
-        result = self.eng.receiver_notify(self.ctx, 'FAKE_RECEIVER')
-
-        self.assertIsNone(result)
-        mock_find.assert_called_once_with(self.ctx, 'FAKE_RECEIVER')
-        mock_load.assert_called_once_with(self.ctx, receiver_obj=fake_obj,
-                                          project_safe=True)
-        fake_receiver.notify.assert_called_once_with(self.ctx, None)
-
-    @mock.patch.object(service.EngineService, 'receiver_find')
-    def test_receiver_notify_not_found(self, mock_find):
-        mock_find.side_effect = exc.ResourceNotFound(type='receiver', id='RR')
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_notify, self.ctx, 'Bogus')
-        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-
-    @mock.patch.object(service.EngineService, 'receiver_find')
-    def test_receiver_notify_permission_check_fail(self, mock_find):
-        fake_obj = mock.Mock()
-        fake_obj.id = 'FAKE_ID'
-        fake_obj.user = 'foo'
-        mock_find.return_value = fake_obj
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_notify, self.ctx, 'Bogus')
-        self.assertEqual(exc.Forbidden, ex.exc_info[0])
-
-    @mock.patch.object(service.EngineService, 'receiver_find')
-    def test_receiver_notify_incorrect_type(self, mock_find):
-        fake_obj = mock.Mock()
-        fake_obj.id = 'FAKE_ID'
-        fake_obj.user = self.ctx.user
-        fake_obj.type = 'not_message'
-        mock_find.return_value = fake_obj
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_notify, self.ctx, 'Bogus')
-        self.assertEqual(exc.Forbidden, ex.exc_info[0])
-
-    @mock.patch.object(rb.Receiver, 'load')
-    @mock.patch.object(service.EngineService, 'receiver_find')
     def test_receiver_notify2(self, mock_find, mock_load):
         fake_obj = mock.Mock()
         fake_obj.id = 'FAKE_ID'
