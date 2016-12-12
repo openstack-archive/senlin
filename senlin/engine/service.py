@@ -2092,6 +2092,37 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context2
+    def action_create2(self, ctx, req):
+        """Create an action with given details.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ActionCreateRequestBody object.
+        :return: A dictionary containing the details about the action and the
+                 ID of the action triggered by this operation.
+        """
+        LOG.info(_LI("Creating action '%s'."), req.name)
+
+        req.obj_set_defaults()
+        target = self.cluster_find(ctx, req.cluster_id)
+
+        # Create an action instance
+        params = {
+            'name': req.name,
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+            'inputs': req.inputs or {},
+        }
+        action_id = action_mod.Action.create(ctx, target.id, req.action,
+                                             **params)
+
+        # TODO(Anyone): Uncomment this to notify the dispatcher
+        # dispatcher.start_action(action_id=action.id)
+
+        LOG.info(_LI("Action '%(name)s' is created: %(id)s."),
+                 {'name': req.name, 'id': action_id})
+        return {'action': action_id}
+
+    @request_context2
     def action_get2(self, ctx, req):
         """Retrieve the action specified.
 
