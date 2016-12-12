@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
+
 import mock
 
 from senlin.common import context
@@ -50,6 +52,26 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         self.assertIsNone(profile._dockerclient)
         self.assertIsNone(profile.container_id)
         self.assertIsNone(profile.host)
+
+    @mock.patch.object(db_api, 'cluster_add_dependents')
+    def test_create(self, mock_add):
+        profile = docker_profile.DockerProfile.create(
+            self.context, 'fake_name', self.spec)
+
+        self.assertIsNotNone(profile)
+        mock_add.assert_called_once_with(self.context, 'fake_cluster',
+                                         profile.id)
+
+    @mock.patch.object(db_api, 'cluster_add_dependents')
+    def test_create_no_host_cluster(self, mock_add):
+        spec = copy.deepcopy(self.spec)
+        del spec['properties']['host_cluster']
+
+        profile = docker_profile.DockerProfile.create(
+            self.context, 'fake_name', spec)
+
+        self.assertIsNotNone(profile)
+        self.assertEqual(0, mock_add.call_count)
 
     @mock.patch('senlin.drivers.container.docker_v1.DockerClient')
     @mock.patch.object(docker_profile.DockerProfile, '_get_host_ip')
@@ -320,9 +342,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
     @mock.patch.object(db_api, 'node_remove_dependents')
     @mock.patch.object(docker_profile.DockerProfile, 'docker')
     def test_do_delete(self, mock_docker, mock_rem, mock_ctx):
-        obj = mock.Mock(id='container1')
-        physical_id = mock.Mock()
-        obj.physical_id = physical_id
+        obj = mock.Mock(id='container1', physical_id='FAKE_PHYID')
         dockerclient = mock.Mock()
         ctx = mock.Mock()
         mock_ctx.return_value = ctx
@@ -332,32 +352,24 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         profile = docker_profile.DockerProfile('container', self.spec)
         profile.host = host
         profile.id = 'profile_id'
-        self.assertIsNone(profile.do_delete(obj))
+
+        res = profile.do_delete(obj)
+
+        self.assertIsNone(res)
         mock_rem.assert_called_once_with(ctx, 'node_id', 'container1')
-        dockerclient.container_delete.assert_any_call(physical_id)
+        dockerclient.container_delete.assert_any_call('FAKE_PHYID')
 
     def test_do_delete_no_physical_id(self):
-        obj = mock.Mock()
-        obj.physical_id = None
+        obj = mock.Mock(physical_id=None)
         profile = docker_profile.DockerProfile('container', self.spec)
         self.assertIsNone(profile.do_delete(obj))
 
     @mock.patch.object(docker_profile.DockerProfile, 'docker')
     def test_do_delete_failed(self, mock_docker):
-        obj = mock.Mock()
-        physical_id = mock.Mock()
-        obj.physical_id = physical_id
+        obj = mock.Mock(physical_id='FAKE_ID')
         mock_docker.side_effect = exc.InternalError
+
         profile = docker_profile.DockerProfile('container', self.spec)
+
         self.assertRaises(exc.EResourceDeletion,
                           profile.do_delete, obj)
-
-    @mock.patch.object(context, 'get_admin_context')
-    @mock.patch.object(db_api, 'cluster_add_dependents')
-    def test_add_dependents(self, mock_add, mock_ctx):
-        profile = docker_profile.DockerProfile('container', self.spec)
-        ctx = mock.Mock()
-        mock_ctx.return_value = ctx
-        profile.add_dependents(ctx, 'profile_id')
-        mock_add.assert_called_once_with(ctx, 'fake_cluster',
-                                         'profile_id')

@@ -77,10 +77,17 @@ class DockerProfile(base.Profile):
         self.host = None
         self.cluster = None
 
-    def add_dependents(self, context, profile_id):
-        host_cluster = self.properties.get(self.HOST_CLUSTER, None)
-        if host_cluster is not None:
-            db_api.cluster_add_dependents(context, host_cluster, profile_id)
+    @classmethod
+    def create(cls, ctx, name, spec, metadata=None):
+        profile = super(DockerProfile, cls).create(ctx, name, spec, metadata)
+
+        host_cluster = profile.properties.get(profile.HOST_CLUSTER, None)
+        if host_cluster:
+            db_api.cluster_add_dependents(ctx, host_cluster, profile.id)
+
+        # TODO(Qiming): handle dependency to a node
+
+        return profile
 
     def docker(self, obj):
         """Construct docker client based on object.

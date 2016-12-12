@@ -198,9 +198,6 @@ class Profile(object):
     def delete(cls, ctx, profile_id):
         po.Profile.delete(ctx, profile_id)
 
-    def add_dependents(self, context, profile_id):
-        pass
-
     def store(self, ctx):
         '''Store the profile into database and return its ID.'''
         timestamp = timeutils.utcnow(True)
