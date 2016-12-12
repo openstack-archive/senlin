@@ -368,8 +368,8 @@ def action_acquire(context, action_id, owner, timestamp):
     return IMPL.action_acquire(context, action_id, owner, timestamp)
 
 
-def action_acquire_1st_ready(context, owner, timestamp):
-    return IMPL.action_acquire_1st_ready(context, owner, timestamp)
+def action_acquire_random_ready(context, owner, timestamp):
+    return IMPL.action_acquire_random_ready(context, owner, timestamp)
 
 
 def action_abandon(context, action_id):
