@@ -18,6 +18,13 @@ from senlin.objects import fields as obj_fields
 from senlin.tests.unit.common import base
 
 
+class FakeObject(obj_base.SenlinObject):
+
+    VERSION_MAP = {
+        '1.3': '1.2'
+    }
+
+
 class TestBaseObject(base.SenlinTestCase):
 
     def test_base_class(self):
@@ -67,6 +74,27 @@ class TestBaseObject(base.SenlinTestCase):
             'title': 'SenlinObject'
         }
         self.assertEqual(expected, obj.to_json_schema())
+
+    def test_find_version_default(self):
+        ctx = mock.Mock(api_version='1.1')
+
+        res = FakeObject.find_version(ctx)
+
+        self.assertEqual('1.0', res)
+
+    def test_find_version_match(self):
+        ctx = mock.Mock(api_version='1.3')
+
+        res = FakeObject.find_version(ctx)
+
+        self.assertEqual('1.2', res)
+
+    def test_find_version_above(self):
+        ctx = mock.Mock(api_version='1.4')
+
+        res = FakeObject.find_version(ctx)
+
+        self.assertEqual('1.2', res)
 
     def test_normalize_req(self):
         req = {'primary': {'bar': 'zoo'}}
