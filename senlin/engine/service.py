@@ -2059,38 +2059,6 @@ class EngineService(service.Service):
 
         return [a.to_dict() for a in results]
 
-    @request_context
-    def action_create(self, context, name, cluster, action, inputs=None):
-        """Create an action with given details.
-
-        :param context: Request context instance.
-        :param name: Name of the action.
-        :param cluster: Name, ID or short ID of the targeted cluster.
-        :param action: String representation of the action.
-        :param inputs: Optional inputs for the action.
-        :return: A dict containing the action created.
-        """
-        LOG.info(_LI("Creating action '%s'."), name)
-
-        target = self.cluster_find(context, cluster)
-
-        # Create an action instance
-        params = {
-            'name': name,
-            'cause': action_mod.CAUSE_RPC,
-            'status': action_mod.Action.READY,
-            'inputs': inputs or {},
-        }
-        action_id = action_mod.Action.create(context, target.id, action,
-                                             **params)
-
-        # TODO(Anyone): Uncomment this to notify the dispatcher
-        # dispatcher.start_action(action_id=action.id)
-
-        LOG.info(_LI("Action '%(name)s' is created: %(id)s."),
-                 {'name': name, 'id': action_id})
-        return {'action': action_id}
-
     @request_context2
     def action_create2(self, ctx, req):
         """Create an action with given details.

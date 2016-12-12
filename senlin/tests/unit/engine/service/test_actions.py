@@ -168,34 +168,6 @@ class ActionTest(base.SenlinTestCase):
 
     @mock.patch.object(action_base.Action, 'create')
     @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_action_create(self, mock_find, mock_action):
-        mock_find.return_value = mock.Mock(id='FAKE_CLUSTER')
-        mock_action.return_value = 'ACTION_ID'
-
-        result = self.eng.action_create(self.ctx, 'a1', 'C1', 'OBJECT_ACTION')
-
-        self.assertEqual({'action': 'ACTION_ID'}, result)
-        mock_find.assert_called_once_with(self.ctx, 'C1')
-        mock_action.assert_called_once_with(
-            self.ctx, 'FAKE_CLUSTER', 'OBJECT_ACTION',
-            name='a1',
-            cause=action_base.CAUSE_RPC,
-            status=action_base.Action.READY,
-            inputs={})
-
-    @mock.patch.object(service.EngineService, 'cluster_find')
-    def test_action_create_cluster_not_found(self, mock_find):
-        mock_find.side_effect = exc.ResourceNotFound(type='cluster', id='C1')
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.action_create,
-                               self.ctx, 'a1', 'C1', 'OBJECT_ACTION')
-
-        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        mock_find.assert_called_once_with(self.ctx, 'C1')
-
-    @mock.patch.object(action_base.Action, 'create')
-    @mock.patch.object(service.EngineService, 'cluster_find')
     def test_action_create2(self, mock_find, mock_action):
         mock_find.return_value = mock.Mock(id='FAKE_CLUSTER')
         mock_action.return_value = 'ACTION_ID'
