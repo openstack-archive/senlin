@@ -692,11 +692,18 @@ class EngineService(service.Service):
         db_policy = self.policy_find(ctx, req.identity)
         policy = policy_base.Policy.load(ctx, db_policy=db_policy)
 
-        if req.policy.name != policy.name:
+        changed = False
+        if (req.policy.name is not None and
+                req.policy.name != policy.name):
             LOG.info(_LI("Updating policy '%s'."), req.identity)
             policy.name = req.policy.name
+            changed = True
             policy.store(ctx)
             LOG.info(_LI("Policy '%s' is updated."), req.identity)
+
+        if not changed:
+            msg = _("No property needs an update.")
+            raise exception.BadRequest(msg=msg)
 
         return policy.to_dict()
 

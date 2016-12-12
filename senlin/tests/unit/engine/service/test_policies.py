@@ -366,8 +366,14 @@ class PolicyTest(base.SenlinTestCase):
 
         req = orpo.PolicyUpdateRequest(**request)
 
-        result = self.eng.policy_update2(self.ctx, req.obj_to_primitive())
-        self.assertEqual({'foo': 'bar'}, result)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_update2,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual(
+            'The request is malformed: No property needs an update.',
+            six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE')
         mock_load.assert_called_once_with(self.ctx, db_policy=x_obj)
         self.assertEqual(0, x_policy.store.call_count)
