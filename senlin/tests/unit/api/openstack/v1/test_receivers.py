@@ -447,15 +447,28 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/receivers/%(receiver_id)s/notify' % {
             'receiver_id': wid}, None)
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
                                      return_value=None)
 
         self.assertRaises(exc.HTTPNoContent,
                           self.controller.notify, req, receiver_id=wid)
 
-        mock_call.assert_called_with(
-            req.context,
-            ('receiver_notify', {'identity': wid, 'params': None}))
+        mock_call.assert_called_with(req.context, 'receiver_notify2', mock.ANY)
+        request = mock_call.call_args[0][2]
+        self.assertIsInstance(request, vorr.ReceiverNotifyRequest)
+        self.assertEqual(wid, request.identity)
+
+    def test_receiver_notify_err_malformed_receiver_id(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'notify', True)
+        wid = {'k1': 'v1'}
+        req = self._post('/receivers/%(receiver_id)s' % {'receiver_id': wid},
+                         None)
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.notify, req,
+                               receiver_id=wid)
+        self.assertEqual("A string is required in field identity, "
+                         "not a dict", six.text_type(ex))
 
     def test_receiver_notify_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'notify')
@@ -464,7 +477,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'receiver_id': wid}, None)
 
         error = senlin_exc.ResourceNotFound(type='receiver', id=wid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
