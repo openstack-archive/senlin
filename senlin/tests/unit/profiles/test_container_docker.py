@@ -20,6 +20,7 @@ from senlin.common.i18n import _
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import cluster
 from senlin.engine import node
+from senlin.profiles import base as base_profile
 from senlin.profiles.container import docker as docker_profile
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -72,6 +73,38 @@ class TestContainerDockerProfile(base.SenlinTestCase):
 
         self.assertIsNotNone(profile)
         self.assertEqual(0, mock_add.call_count)
+
+    @mock.patch.object(base_profile.Profile, 'delete')
+    @mock.patch.object(base_profile.Profile, 'load')
+    @mock.patch.object(db_api, 'cluster_remove_dependents')
+    def test_delete(self, mock_db, mock_load, mock_delete):
+        profile = docker_profile.DockerProfile('t', self.spec)
+        mock_load.return_value = profile
+
+        res = docker_profile.DockerProfile.delete(self.context, 'FAKE_ID')
+
+        self.assertIsNone(res)
+        mock_load.assert_called_once_with(self.context, profile_id='FAKE_ID')
+        mock_db.assert_called_once_with(self.context, 'fake_cluster',
+                                        'FAKE_ID')
+        mock_delete.assert_called_once_with(self.context, 'FAKE_ID')
+
+    @mock.patch.object(base_profile.Profile, 'delete')
+    @mock.patch.object(base_profile.Profile, 'load')
+    @mock.patch.object(db_api, 'cluster_remove_dependents')
+    def test_delete_no_host_cluster(self, mock_db, mock_load, mock_delete):
+        spec = copy.deepcopy(self.spec)
+        del spec['properties']['host_cluster']
+        profile = docker_profile.DockerProfile.create(
+            self.context, 'fake_name', spec)
+        mock_load.return_value = profile
+
+        res = docker_profile.DockerProfile.delete(self.context, 'FAKE_ID')
+
+        self.assertIsNone(res)
+        mock_load.assert_called_once_with(self.context, profile_id='FAKE_ID')
+        self.assertEqual(0, mock_db.call_count)
+        mock_delete.assert_called_once_with(self.context, 'FAKE_ID')
 
     @mock.patch('senlin.drivers.container.docker_v1.DockerClient')
     @mock.patch.object(docker_profile.DockerProfile, '_get_host_ip')
