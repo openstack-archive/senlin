@@ -77,6 +77,12 @@ class SenlinObject(base.VersionedObject):
         return schema
 
     @classmethod
+    def obj_class_from_name(cls, objname, objver=None):
+        if objver is None:
+            objver = cls.VERSION
+        return super(SenlinObject, cls).obj_class_from_name(objname, objver)
+
+    @classmethod
     def find_version(cls, context):
         match = re.match(r"^([1-9]\d*)\.([1-9]\d*|0)$", context.api_version)
         req_major = int(match.group(1))

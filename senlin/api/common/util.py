@@ -13,11 +13,14 @@
 
 import functools
 
+import jsonschema
 from oslo_utils import strutils
+import six
 from webob import exc
 
 from senlin.common.i18n import _
 from senlin.common import policy
+from senlin.objects import base as obj_base
 
 
 def policy_enforce(handler):
@@ -33,13 +36,45 @@ def policy_enforce(handler):
         # Enable project_id based target check
         rule = "%s:%s" % (controller.REQUEST_SCOPE,
                           handler.__name__)
-        allowed = policy.enforce(context=req.context,
-                                 rule=rule, target={})
+        allowed = policy.enforce(context=req.context, rule=rule, target={})
         if not allowed:
             raise exc.HTTPForbidden()
         return handler(controller, req, **kwargs)
 
     return policy_checker
+
+
+def parse_request(name, req, body, key=None):
+    """Formalize an API request and validates it.
+
+    :param name: The name for a versioned request object.
+    :param req: Reference to a WSGI reqeust object.
+    :param body: The JSON body (if any) that accompanies a request. Could be
+                 augmented by controller before getting passed here.
+    :param key: An optional key indicating the inner object for a request.
+    :returns: A validated, versioned request object
+    """
+    try:
+        req_cls = obj_base.SenlinObject.obj_class_from_name(name)
+    except Exception as ex:
+        raise exc.HTTPBadRequest(six.text_type(ex))
+
+    primitive = req_cls.normalize_req(name, body, key)
+    version = req_cls.find_version(req.context)
+    obj = None
+    try:
+        obj = req_cls.obj_from_primitive(primitive)
+        jsonschema.validate(primitive, obj.to_json_schema())
+    except ValueError as ex:
+        raise exc.HTTPBadRequest(six.text_type(ex))
+    except jsonschema.exceptions.ValidationError as ex:
+        raise exc.HTTPBadRequest(six.text_type(ex.message))
+
+    # Do version coversion if necessary
+    if obj is not None and version != req_cls.VERSION:
+        obj.obj_make_compatible(primitive, version)
+
+    return obj
 
 
 def get_allowed_params(params, whitelist):

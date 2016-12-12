@@ -10,17 +10,34 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import jsonschema
 import mock
+import six
 from webob import exc
 
 from senlin.api.common import util
 from senlin.api.common import wsgi
 from senlin.common import context
 from senlin.common import policy
+from senlin.objects import base as obj_base
 from senlin.tests.unit.common import base
+from senlin.tests.unit.common import utils
+
+
+class FakeRequest(obj_base.SenlinObject):
+
+    VERSION = '2.0'
+    VERSION_MAP = {
+        '1.3': '2.0'
+    }
+
+    @classmethod
+    def obj_from_primitive(cls, primitive):
+        pass
 
 
 class TestGetAllowedParams(base.SenlinTestCase):
+
     def setUp(self):
         super(TestGetAllowedParams, self).setUp()
         req = wsgi.Request({})
@@ -106,6 +123,85 @@ class TestPolicyEnforce(base.SenlinTestCase):
         self.assertRaises(exc.HTTPForbidden,
                           self.controller.an_action,
                           self.req, tenant_id='foo')
+
+
+class TestParseRequest(base.SenlinTestCase):
+
+    def setUp(self):
+        super(TestParseRequest, self).setUp()
+        self.context = utils.dummy_context()
+
+    def test_all_okay(self):
+        name = 'ClusterListRequest'
+        body = {'project_safe': True}
+        req = mock.Mock(context=self.context)
+
+        res = util.parse_request(name, req, body)
+
+        self.assertIsNotNone(res)
+
+    def test_bad_request_name(self):
+        name = 'BadClusterListRequest'
+        body = {'project_safe': True}
+        req = mock.Mock(context=self.context)
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               util.parse_request,
+                               name, req, body)
+
+        self.assertEqual('Unsupported object type BadClusterListRequest',
+                         six.text_type(ex))
+
+    def test_bad_primitive(self):
+        name = 'ClusterListRequest'
+        body = {'limit': -1}
+        req = mock.Mock(context=self.context)
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               util.parse_request,
+                               name, req, body)
+
+        self.assertEqual("Value must be >= 0 for field 'limit'.",
+                         six.text_type(ex))
+
+    def test_bad_schema(self):
+        name = 'ClusterListRequest'
+        body = {'bogus_key': 'bogus_value'}
+        req = mock.Mock(context=self.context)
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               util.parse_request,
+                               name, req, body)
+
+        self.assertEqual("Additional properties are not allowed ('bogus_key' "
+                         "was unexpected)", six.text_type(ex))
+
+    @mock.patch.object(jsonschema, 'validate')
+    @mock.patch.object(FakeRequest, 'obj_from_primitive')
+    @mock.patch.object(obj_base.SenlinObject, 'obj_class_from_name')
+    def test_version_conversion(self, mock_cls, mock_construct, mock_validate):
+        name = 'FakeReq'
+        body = {}
+        mock_cls.return_value = FakeRequest
+        # The following context will force the request to be downgraded to
+        # its base version (1.0)
+        context = utils.dummy_context(api_version='1.2')
+        req = mock.Mock(context=context)
+        obj = mock.Mock()
+        mock_construct.return_value = obj
+        primitive = {
+            'senlin_object.version': '2.0',
+            'senlin_object.name': 'FakeReq',
+            'senlin_object.data': {},
+            'senlin_object.namespace': 'senlin'
+        }
+
+        res = util.parse_request(name, req, body)
+
+        self.assertIsNotNone(res)
+        mock_cls.assert_called_once_with('FakeReq')
+        mock_construct.assert_called_once_with(primitive)
+        obj.obj_make_compatible.assert_called_once_with(primitive, '1.0')
 
 
 class TestParseBool(base.SenlinTestCase):

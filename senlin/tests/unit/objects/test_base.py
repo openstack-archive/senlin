@@ -11,6 +11,7 @@
 # under the License.
 
 import mock
+from oslo_versionedobjects import base as ovo_base
 import six
 
 from senlin.objects import base as obj_base
@@ -74,6 +75,21 @@ class TestBaseObject(base.SenlinTestCase):
             'title': 'SenlinObject'
         }
         self.assertEqual(expected, obj.to_json_schema())
+
+    @mock.patch.object(ovo_base.VersionedObject, 'obj_class_from_name')
+    def test_obj_class_from_name_with_version(self, mock_convert):
+        res = obj_base.SenlinObject.obj_class_from_name('Foo', '1.23')
+
+        self.assertEqual(mock_convert.return_value, res)
+        mock_convert.assert_called_once_with('Foo', '1.23')
+
+    @mock.patch.object(ovo_base.VersionedObject, 'obj_class_from_name')
+    def test_obj_class_from_name_no_version(self, mock_convert):
+        res = obj_base.SenlinObject.obj_class_from_name('Foo')
+
+        self.assertEqual(mock_convert.return_value, res)
+        mock_convert.assert_called_once_with(
+            'Foo', obj_base.SenlinObject.VERSION)
 
     def test_find_version_default(self):
         ctx = mock.Mock(api_version='1.1')
