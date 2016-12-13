@@ -15,16 +15,12 @@
 Cluster endpoint for Senlin v1 ReST API.
 """
 
-import jsonschema
-import six
 from webob import exc
 
 from senlin.api.common import util
 from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
-from senlin.objects import base as obj_base
-from senlin.objects.requests import clusters as vorc
 
 
 class ClusterController(wsgi.Controller):
@@ -130,7 +126,7 @@ class ClusterController(wsgi.Controller):
         return self.rpc_client.call2(req.context, 'cluster_replace_nodes2',
                                      obj)
 
-    def _do_resize(self, context, cluster_id, data):
+    def _do_resize(self, req, cluster_id, data):
         params = {'identity': cluster_id}
         if consts.ADJUSTMENT_TYPE in data:
             params['adjustment_type'] = data.get(consts.ADJUSTMENT_TYPE)
@@ -145,17 +141,7 @@ class ClusterController(wsgi.Controller):
         if consts.ADJUSTMENT_STRICT in data:
             params['strict'] = data.get(consts.ADJUSTMENT_STRICT)
 
-        norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterResizeRequest', params)
-
-        obj = None
-        try:
-            obj = vorc.ClusterResizeRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
+        obj = util.parse_request('ClusterResizeRequest', req, params)
 
         if (obj.obj_attr_is_set('adjustment_type') and
                 not obj.obj_attr_is_set('number')):
@@ -175,7 +161,7 @@ class ClusterController(wsgi.Controller):
                         ) % {'m': obj.max_size, 'n': obj.min_size}
                 raise exc.HTTPBadRequest(msg)
 
-        return self.rpc_client.call2(context, 'cluster_resize2', obj)
+        return self.rpc_client.call2(req.context, 'cluster_resize2', obj)
 
     def _do_scale_out(self, req, cid, count):
         params = {'identity': cid}
@@ -256,7 +242,7 @@ class ClusterController(wsgi.Controller):
             res = self._del_nodes(req, cluster_id, nodes)
         elif this_action == self.RESIZE:
             data = body.get(this_action)
-            res = self._do_resize(req.context, cluster_id, data)
+            res = self._do_resize(req, cluster_id, data)
         elif this_action == self.SCALE_OUT:
             count = body.get(this_action).get('count')
             res = self._do_scale_out(req, cluster_id, count)
@@ -298,23 +284,13 @@ class ClusterController(wsgi.Controller):
             'identity': cluster_id,
             'path': stripped_path,
         }
-        norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterCollectRequest', params, None)
-
-        obj = None
-        try:
-            obj = vorc.ClusterCollectRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
+        obj = util.parse_request('ClusterCollectRequest', req, params)
         return self.rpc_client.call2(req.context, 'cluster_collect2', obj)
 
     @util.policy_enforce
     def delete(self, req, cluster_id):
-        obj = vorc.ClusterDeleteRequest(identity=cluster_id)
+        params = {'identity': cluster_id}
+        obj = util.parse_request('ClusterDeleteRequest', req, params)
         res = self.rpc_client.call2(req.context, 'cluster_delete2', obj)
 
         action_id = res.pop('action')
