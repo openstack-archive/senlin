@@ -152,6 +152,18 @@ class TestParseRequest(base.SenlinTestCase):
         self.assertEqual('Unsupported object type BadClusterListRequest',
                          six.text_type(ex))
 
+    def test_bad_request_body(self):
+        name = 'ClusterCreateRequest'
+        body = {'bad_key': 'bad_value'}
+        req = mock.Mock(context=self.context)
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               util.parse_request,
+                               name, req, body, 'cluster')
+
+        self.assertEqual("Request body missing 'cluster' key.",
+                         six.text_type(ex))
+
     def test_bad_primitive(self):
         name = 'ClusterListRequest'
         body = {'limit': -1}
