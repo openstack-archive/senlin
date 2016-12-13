@@ -133,6 +133,29 @@ When nodes are removed from a cluster, they will get their ``index`` property
 reset to -1.
 
 
+Replacing Node(s) in a Cluster
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :program:`openstack cluster` command line also provides command
+:command:`cluster members replace` to replace node(s) in a cluster. The argument
+"--nodes" is used to describe the list of node pairs like <OLD_NODE1=NEW_NODE1>.
+OLD_NODE is the name or ID of a node to be replaced, and NEW_NODE is the name or
+ID of a node as replacement. You can use the name, the ID or the "short ID" to
+specify the cluster. The identifier specified must uniquely identifies a node
+or a cluster object, or else you will get an error message indicating that the
+request was rejected. The following command replaces node21 with node22::
+
+  $ openstack cluster members replace --nodes node21=node22 webservers
+
+When performing this operation, Senlin engine will check if the replaced
+nodes are actually members of the specified cluster. If any node from the
+specified node list does not belong to the target cluster, you will get an
+error message and the command fails.
+
+When nodes are removed from the cluster, they will get their ``index`` property
+reset to -1.
+
+
 See Also
 ~~~~~~~~
 

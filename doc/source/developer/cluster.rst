@@ -284,6 +284,7 @@ A cluster object supports the following asynchronous actions:
 
 - ``add_nodes``: add a list of nodes into the target cluster;
 - ``del_nodes``: remove the specified list of nodes from the cluster;
+- ``replace_nodes``: replace the specified list of nodes in the cluster;
 - ``resize``: adjust the size of the cluster;
 - ``scale_in``: explicitly shrink the size of the cluster;
 - ``scale_out``: explicitly enlarge the size of the cluster.
@@ -372,6 +373,39 @@ associated resources.
 Note also that by default Senlin won't destroy the nodes that are deleted
 from the cluster. It simply removes the nodes from the cluster so that they
 become orphan nodes.
+
+
+Replacing Nodes in a Cluster
+-----------------------------
+
+Senlin API provides the ``replace_nodes`` action for user to replace some existing
+nodes in the specified cluster. The parameter for this action is interpreted
+as a dict in which each item is the node-pair{OLD_NODE:NEW_NODE}. The key OLD_NODE
+is the UUID, name or short ID of a node to be replaced, and the value NEW_NODE is
+the UUID, name or short ID of a node as replacement.
+
+When receiving a ``replace_nodes`` action request, the Senlin API only validates
+if the parameter is a dict and if the dict is empty. After this validation,
+the request is forwarded to the Senlin engine for processing.
+
+The Senlin engine will examine nodes in the dict one by one and see if all of
+the following conditions is true. Senlin engine accepts the request if so.
+
+- All nodes from the list can be found from the database.
+- All replaced nodes from the list are the members of the specified cluster.
+- All replacement nodes from the list are not the members of any cluster.
+- The profile types of all replacement nodes match that of the specified
+  cluster.
+- The statuses of all replacement nodes are ACTIVE.
+
+When this phase of validation succeeds, the request is translated into a
+``CLUSTER_REPLACE_NODES`` builtin action and queued for execution. The engine
+returns to the user an action UUID for checking.
+
+When the action is picked up by a worker thread for execution, Senlin forks a
+number of ``NODE_LEAVE`` and related ``NODE_JOIN`` actions, and execute them
+asynchronously. When all forked actions complete, the ``CLUSTER_REPLACE_NODES``
+returns with a success.
 
 
 Resizing a Cluster

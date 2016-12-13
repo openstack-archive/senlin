@@ -31,6 +31,7 @@ actions are supported at the time of this design:
 - ``CLUSTER_UPDATE``: An action for updating a cluster;
 - ``CLUSTER_ADD_NODES``: An action for adding existing nodes to a cluster;
 - ``CLUSTER_DEL_NODES``: An action for removing nodes from a cluster;
+- ``CLUSTER_REPLACE_NODES``: An action for replacing nodes in a cluster;
 - ``CLUSTER_RESIZE``: An action for adjusting the size of a cluster;
 - ``CLUSTER_SCALE_IN``: An action to shrink the size of a cluster by removing
   nodes from the cluster;
