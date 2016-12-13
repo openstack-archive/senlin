@@ -401,6 +401,312 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__add_nodes(self, mock_call, mock_parse, mock_enforce):
+        req = mock.Mock()
+        cid = 'FAKE_ID'
+        nodes = ['NODE1']
+        mock_call.return_value = {'action': 'action-id'}
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        resp = self.controller._add_nodes(req, cid, nodes)
+
+        self.assertEqual({'action': 'action-id'}, resp)
+        mock_parse.assert_called_once_with(
+            'ClusterAddNodesRequest', req, {'identity': cid, 'nodes': nodes})
+        mock_call.assert_called_once_with(
+            req.context, 'cluster_add_nodes2', obj)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__add_nodes_failed_request(self, mock_call, mock_parse, _ignore):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        nodes = ['NODE2']
+        mock_parse.side_effect = exc.HTTPBadRequest('Boom')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller._add_nodes,
+                               req, cid, nodes)
+
+        self.assertEqual("Boom", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ClusterAddNodesRequest', req, {'identity': cid, 'nodes': nodes})
+        self.assertFalse(mock_call.called)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__add_nodes_failed_engine(self, mock_call, mock_parse, _ignore):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        nodes = ['NODE3']
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.side_effect = senlin_exc.BadRequest(msg='Boom')
+
+        ex = self.assertRaises(senlin_exc.BadRequest,
+                               self.controller._add_nodes,
+                               req, cid, nodes)
+
+        mock_parse.assert_called_once_with(
+            'ClusterAddNodesRequest', req, {'identity': cid, 'nodes': nodes})
+        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        mock_call.assert_called_once_with(
+            req.context, 'cluster_add_nodes2', obj)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__del_nodes(self, mock_call, mock_parse, _ignore):
+        req = mock.Mock()
+        cid = 'FAKE_ID'
+        nodes = ['NODE4']
+        mock_call.return_value = {'action': 'action-id'}
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        resp = self.controller._del_nodes(req, cid, nodes)
+
+        self.assertEqual({'action': 'action-id'}, resp)
+        mock_parse.assert_called_once_with(
+            'ClusterDelNodesRequest', req, {'identity': cid, 'nodes': nodes})
+        mock_call.assert_called_once_with(
+            req.context, 'cluster_del_nodes2', obj)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__del_nodes_failed_request(self, mock_call, mock_parse, _ignore):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        nodes = ['NODE5']
+        mock_parse.side_effect = exc.HTTPBadRequest('Boom')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller._del_nodes,
+                               req, cid, nodes)
+
+        self.assertEqual("Boom", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ClusterDelNodesRequest', req, {'identity': cid, 'nodes': nodes})
+        self.assertFalse(mock_call.called)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__del_nodes_failed_engine(self, mock_call, mock_parse, _ignore):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        nodes = ['NODE6']
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.side_effect = senlin_exc.BadRequest(msg='Boom')
+
+        ex = self.assertRaises(senlin_exc.BadRequest,
+                               self.controller._del_nodes,
+                               req, cid, nodes)
+
+        mock_parse.assert_called_once_with(
+            'ClusterDelNodesRequest', req, {'identity': cid, 'nodes': nodes})
+        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        mock_call.assert_called_once_with(
+            req.context, 'cluster_del_nodes2', obj)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__replace_nodes(self, mock_call, mock_parse, _ignore):
+        req = mock.Mock()
+        cid = 'FAKE_ID'
+        nodes = {'OLD': 'NEW'}
+        mock_call.return_value = {'action': 'action-id'}
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        resp = self.controller._replace_nodes(req, cid, nodes)
+
+        self.assertEqual({'action': 'action-id'}, resp)
+        mock_parse.assert_called_once_with(
+            'ClusterReplaceNodesRequest', req,
+            {'identity': cid, 'nodes': nodes})
+        mock_call.assert_called_once_with(
+            req.context, 'cluster_replace_nodes2', obj)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__replace_nodes_none(self, mock_call, mock_parse, _ign):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller._replace_nodes,
+                               req, cid, None)
+
+        self.assertEqual("The data provided is not a map", six.text_type(ex))
+        self.assertEqual(0, mock_parse.call_count)
+        self.assertFalse(mock_call.called)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__replace_nodes_not_map(self, mock_call, mock_parse, _ign):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        nodes = ['abc', 'def']
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller._replace_nodes,
+                               req, cid, nodes)
+
+        self.assertEqual("The data provided is not a map", six.text_type(ex))
+        self.assertEqual(0, mock_parse.call_count)
+        self.assertFalse(mock_call.called)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__replace_nodes_failed_request(self, mock_call, mock_parse, _ign):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        nodes = {'OLD': 'NEW'}
+        mock_parse.side_effect = exc.HTTPBadRequest('Boom')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller._replace_nodes,
+                               req, cid, nodes)
+
+        self.assertEqual("Boom", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ClusterReplaceNodesRequest', req,
+            {'identity': cid, 'nodes': nodes})
+        self.assertFalse(mock_call.called)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__replace_nodes_failed_engine(self, mock_call, mock_parse, _ign):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        nodes = {'OLD': 'NEW'}
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.side_effect = senlin_exc.BadRequest(msg='Boom')
+
+        ex = self.assertRaises(senlin_exc.BadRequest,
+                               self.controller._replace_nodes,
+                               req, cid, nodes)
+
+        mock_parse.assert_called_once_with(
+            'ClusterReplaceNodesRequest', req,
+            {'identity': cid, 'nodes': nodes})
+        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        mock_call.assert_called_once_with(
+            req.context, 'cluster_replace_nodes2', obj)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__do_scale_out(self, mock_call, mock_parse, _ignore):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        count = 1
+        mock_call.return_value = {'action': 'action-id'}
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        resp = self.controller._do_scale_out(req, cid, count)
+
+        self.assertEqual({'action': 'action-id'}, resp)
+        mock_parse.assert_called_once_with(
+            'ClusterScaleOutRequest', req, {'identity': cid, 'count': count})
+        mock_call.assert_called_once_with(
+            req.context, 'cluster_scale_out2', obj)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__do_scale_out_failed_request(self, mock_call, mock_parse, _ign):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        count = 2
+        mock_parse.side_effect = exc.HTTPBadRequest('Boom')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller._do_scale_out,
+                               req, cid, count)
+
+        self.assertEqual("Boom", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ClusterScaleOutRequest', req, {'identity': cid, 'count': count})
+        self.assertFalse(mock_call.called)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__do_scale_out_failed_engine(self, mock_call, mock_parse, _ign):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        count = 3
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.side_effect = senlin_exc.BadRequest(msg='Boom')
+
+        ex = self.assertRaises(senlin_exc.BadRequest,
+                               self.controller._do_scale_out,
+                               req, cid, count)
+
+        mock_parse.assert_called_once_with(
+            'ClusterScaleOutRequest', req, {'identity': cid, 'count': count})
+        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        mock_call.assert_called_once_with(
+            req.context, 'cluster_scale_out2', obj)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__do_scale_in(self, mock_call, mock_parse, _ignore):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        count = 4
+        mock_call.return_value = {'action': 'action-id'}
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        resp = self.controller._do_scale_in(req, cid, count)
+
+        self.assertEqual({'action': 'action-id'}, resp)
+        mock_parse.assert_called_once_with(
+            'ClusterScaleInRequest', req, {'identity': cid, 'count': count})
+        mock_call.assert_called_once_with(
+            req.context, 'cluster_scale_in2', obj)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__do_scale_in_failed_request(self, mock_call, mock_parse, _ign):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        count = 5
+        mock_parse.side_effect = exc.HTTPBadRequest('Boom')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller._do_scale_in,
+                               req, cid, count)
+
+        self.assertEqual("Boom", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ClusterScaleInRequest', req, {'identity': cid, 'count': count})
+        self.assertFalse(mock_call.called)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__do_scale_in_failed_engine(self, mock_call, mock_parse, _ign):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        count = 6
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.side_effect = senlin_exc.BadRequest(msg='Boom')
+
+        ex = self.assertRaises(senlin_exc.BadRequest,
+                               self.controller._do_scale_in,
+                               req, cid, count)
+
+        mock_parse.assert_called_once_with(
+            'ClusterScaleInRequest', req, {'identity': cid, 'count': count})
+        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        mock_call.assert_called_once_with(
+            req.context, 'cluster_scale_in2', obj)
+
     def test_cluster_delete(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         cid = 'aaaa-bbbb-cccc'
@@ -611,64 +917,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertIn("Unrecognized value 'FOO'", six.text_type(ex))
         self.assertEqual(0, mock_call.call_count)
-
-    def test_action_scale_out(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'aaaa-bbbb-cccc'
-        body = {'scale_out': {'count': 1}}
-        eng_resp = {'action': {'id': 'action-id', 'target': cid}}
-
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=eng_resp)
-
-        resp = self.controller.action(req, cluster_id=cid, body=body)
-
-        mock_call.assert_called_once_with(req.context, 'cluster_scale_out2',
-                                          mock.ANY)
-        self.assertEqual(eng_resp, resp)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorc.ClusterScaleOutRequest)
-        self.assertEqual(cid, request.identity)
-        self.assertEqual(1, request.count)
-
-    def test_action_scale_in(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'aaaa-bbbb-cccc'
-        body = {'scale_in': {'count': 1}}
-        eng_resp = {'action': {'id': 'action-id', 'target': cid}}
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=eng_resp)
-
-        resp = self.controller.action(req, cluster_id=cid, body=body)
-
-        mock_call.assert_called_once_with(req.context, 'cluster_scale_in2',
-                                          mock.ANY)
-        self.assertEqual(eng_resp, resp)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorc.ClusterScaleInRequest)
-        self.assertEqual(cid, request.identity)
-        self.assertEqual(1, request.count)
-
-    def _action_scale_non_int(self, action, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'aaaa-bbbb-cccc'
-        body = {action: {'count': 'abc'}}
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.action,
-                               req, cluster_id=cid, body=body)
-
-        self.assertIn("invalid literal", six.text_type(ex))
-
-    def test_action_scale_out_non_int(self, mock_enforce):
-        self._action_scale_non_int('scale_out', mock_enforce)
-
-    def test_action_scale_in_non_int(self, mock_enforce):
-        self._action_scale_non_int('scale_in', mock_enforce)
 
     def test_action_attach_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -1045,150 +1293,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
         self.assertEqual(0, mock_call.call_count)
 
-    def test_action_add_nodes(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'FAKE_ID'
-        body = {'add_nodes': {'nodes': ['NODE1']}}
-        eng_resp = {'action': 'action-id'}
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=eng_resp)
-
-        resp = self.controller.action(req, cluster_id=cid, body=body)
-
-        mock_call.assert_called_once_with(req.context, 'cluster_add_nodes2',
-                                          mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorc.ClusterAddNodesRequest)
-        self.assertEqual('FAKE_ID', request.identity)
-        self.assertEqual(['NODE1'], request.nodes)
-        result = {
-            'action': 'action-id',
-            'location': '/actions/action-id',
-        }
-        self.assertEqual(result, resp)
-
-    def test_action_add_nodes_none(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'aaaa-bbbb-cccc'
-        body = {'add_nodes': {'somearg': 'somevalue'}}
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.action,
-                               req, cluster_id=cid, body=body)
-
-        self.assertEqual("Value for 'nodes' must have at least 1 item(s).",
-                         six.text_type(ex))
-        self.assertFalse(mock_call.called)
-
-    def test_action_add_nodes_empty(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'aaaa-bbbb-cccc'
-        body = {'add_nodes': {'nodes': []}}
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.action,
-                               req, cluster_id=cid, body=body)
-
-        self.assertEqual("Value for 'nodes' must have at least 1 item(s).",
-                         six.text_type(ex))
-        self.assertFalse(mock_call.called)
-
-    def test_action_add_nodes_bad_requests(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'aaaa-bbbb-cccc'
-        body = {'add_nodes': {'nodes': ['bad-node-1']}}
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-
-        error = senlin_exc.ResourceNotFound(type='Node', id='bad-node-1')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
-        mock_call.side_effect = shared.to_remote_error(error)
-
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.action,
-                                              req, cluster_id=cid, body=body)
-
-        self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
-        self.assertIn('The Node (bad-node-1) could not be found.',
-                      resp.json['error']['message'])
-
-    def test_action_del_nodes(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'aaaa-bbbb-cccc'
-        body = {'del_nodes': {'nodes': ['NODE1', ]}}
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-        eng_resp = {'action': 'action-id'}
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=eng_resp)
-
-        resp = self.controller.action(req, cluster_id=cid, body=body)
-
-        mock_call.assert_called_once_with(req.context, 'cluster_del_nodes2',
-                                          mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorc.ClusterDelNodesRequest)
-        self.assertEqual(cid, request.identity)
-        self.assertEqual(['NODE1'], request.nodes)
-        result = {
-            'action': 'action-id',
-            'location': '/actions/action-id',
-        }
-        self.assertEqual(result, resp)
-
-    def test_action_del_nodes_none(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'aaaa-bbbb-cccc'
-        body = {'del_nodes': {'somearg': 'somevalue'}}
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.action,
-                               req, cluster_id=cid, body=body)
-
-        self.assertEqual("Value for 'nodes' must have at least 1 item(s).",
-                         six.text_type(ex))
-        self.assertFalse(mock_call.called)
-
-    def test_action_del_nodes_empty(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'aaaa-bbbb-cccc'
-        body = {'del_nodes': {'nodes': []}}
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.action,
-                               req, cluster_id=cid, body=body)
-
-        self.assertEqual("Value for 'nodes' must have at least 1 item(s).",
-                         six.text_type(ex))
-        self.assertFalse(mock_call.called)
-
-    def test_action_del_nodes_bad_request(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'aaaa-bbbb-cccc'
-        body = {'del_nodes': {'nodes': ['bad-node-1']}}
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-
-        error = senlin_exc.BadRequest(msg='Nodes not found: bad-node-1')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
-        mock_call.side_effect = shared.to_remote_error(error)
-
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.action,
-                                              req, cluster_id=cid, body=body)
-
-        self.assertEqual(400, resp.json['code'])
-        self.assertEqual('BadRequest', resp.json['error']['type'])
-        self.assertIn('Nodes not found: bad-node-1',
-                      resp.json['error']['message'])
-
     def test_action_check(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
@@ -1280,70 +1384,3 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
-
-    def test_action_replace_nodes(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'aaaa-bbbb-cccc'
-        body = {
-            'replace_nodes': {
-                'nodes': {
-                    'dddd-eeee-ffff': 'gggg-hhhh-iiii'
-                }
-            }
-        }
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body),
-                         version='1.3')
-        eng_resp = {'action': 'action-id'}
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=eng_resp)
-
-        resp = self.controller.action(req, cluster_id=cid, body=body)
-
-        result = {
-            'action': 'action-id',
-            'location': '/actions/action-id'
-        }
-        self.assertEqual(result, resp)
-        mock_call.assert_called_once_with(req.context,
-                                          'cluster_replace_nodes2', mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorc.ClusterReplaceNodesRequest)
-        self.assertEqual(cid, request.identity)
-        self.assertEqual({'dddd-eeee-ffff': 'gggg-hhhh-iiii'}, request.nodes)
-
-    def test_action_replace_nodes_not_map(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'CID'
-        body = {'replace_nodes': {'nodes': ['node1']}}
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body),
-                         version='1.3')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.action,
-                               req, cluster_id=cid, body=body)
-
-        self.assertEqual('The data provided is not a map.', six.text_type(ex))
-        self.assertFalse(mock_call.called)
-
-    def test_action_replace_nodes_duplicate(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'CID'
-        body = {
-            'replace_nodes': {
-                'nodes': {
-                    'origin1': 'replace_node',
-                    'origin2': 'replace_node'
-                }
-            }
-        }
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body),
-                         version='1.3')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.action,
-                               req, cluster_id=cid, body=body)
-
-        self.assertEqual('Map contains duplicated values', six.text_type(ex))
-        self.assertFalse(mock_call.called)
