@@ -651,7 +651,7 @@ class NodeActionTest(base.SenlinTestCase):
         res_code, res_msg = action.execute()
 
         reason = 'Failed in locking node'
-        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual(action.RES_RETRY, res_code)
         self.assertEqual(reason, res_msg)
         mock_load.assert_called_once_with(action.context, node_id='NODE_ID')
         mock_acquire.assert_called_once_with(self.ctx, 'FAKE_CLUSTER',

@@ -945,8 +945,9 @@ class ClusterAction(base.Action):
                                                self.id, self.owner,
                                                senlin_lock.CLUSTER_SCOPE,
                                                forced)
+        # Failed to acquire lock, return RES_RETRY
         if not res:
-            return self.RES_ERROR, _('Failed in locking cluster.')
+            return self.RES_RETRY, _('Failed in locking cluster.')
 
         try:
             res, reason = self._execute(**kwargs)

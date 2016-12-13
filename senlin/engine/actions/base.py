@@ -504,6 +504,8 @@ def ActionProc(context, action_id):
     try:
         # Step 2: execute the action
         result, reason = action.execute()
+        if result == action.RES_RETRY:
+            success = False
     except Exception as ex:
         # We catch exception here to make sure the following logics are
         # executed.
