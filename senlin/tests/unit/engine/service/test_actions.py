@@ -228,49 +228,6 @@ class ActionTest(base.SenlinTestCase):
 
     @mock.patch.object(action_base.Action, 'delete')
     @mock.patch.object(service.EngineService, 'action_find')
-    def test_action_delete(self, mock_find, mock_delete):
-        x_obj = mock.Mock()
-        x_obj.id = 'FAKE_ID'
-        mock_find.return_value = x_obj
-        mock_delete.return_value = None
-
-        result = self.eng.action_delete(self.ctx, 'ACTION')
-        self.assertIsNone(result)
-        mock_find.assert_called_once_with(self.ctx, 'ACTION')
-        mock_delete.assert_called_once_with(self.ctx, 'FAKE_ID')
-
-    @mock.patch.object(action_base.Action, 'delete')
-    @mock.patch.object(service.EngineService, 'action_find')
-    def test_action_delete_resource_busy(self, mock_find, mock_delete):
-        x_obj = mock.Mock()
-        x_obj.id = 'FAKE_ID'
-        mock_find.return_value = x_obj
-        ex = exc.EResourceBusy(type='action', id='FAKE_ID')
-        mock_delete.side_effect = ex
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.action_delete,
-                               self.ctx, 'ACTION')
-
-        self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
-        self.assertEqual("The action ACTION cannot be deleted: still in one "
-                         "of WAITING, RUNNING or SUSPENDED state.",
-                         six.text_type(ex.exc_info[1]))
-        mock_find.assert_called_once_with(self.ctx, 'ACTION')
-        mock_delete.assert_called_once_with(self.ctx, 'FAKE_ID')
-
-    @mock.patch.object(service.EngineService, 'action_find')
-    def test_action_delete_not_found(self, mock_find):
-        mock_find.side_effect = exc.ResourceNotFound(type='action', id='Bogus')
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.action_delete,
-                               self.ctx, 'Bogus')
-
-        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-
-    @mock.patch.object(action_base.Action, 'delete')
-    @mock.patch.object(service.EngineService, 'action_find')
     def test_action_delete2(self, mock_find, mock_delete):
         x_obj = mock.Mock()
         x_obj.id = 'FAKE_ID'
