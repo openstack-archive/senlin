@@ -97,8 +97,8 @@ class Action(base.SenlinObject, base.VersionedObjectDictCompat):
         return db_api.action_acquire(context, action_id, owner, timestamp)
 
     @classmethod
-    def acquire_1st_ready(cls, context, owner, timestamp):
-        return db_api.action_acquire_1st_ready(context, owner, timestamp)
+    def acquire_random_ready(cls, context, owner, timestamp):
+        return db_api.action_acquire_random_ready(context, owner, timestamp)
 
     @classmethod
     def abandon(cls, context, action_id):
