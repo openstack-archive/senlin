@@ -59,6 +59,7 @@ class DockerProfile(base.Profile):
             _('The port number used to connect to docker daemon.'),
             default=2375
         ),
+        # TODO(anyone): Only one of the following properties can be specified.
         HOST_NODE: schema.String(
             _('The node on which container will be launched.')
         ),
@@ -85,7 +86,9 @@ class DockerProfile(base.Profile):
         if host_cluster:
             db_api.cluster_add_dependents(ctx, host_cluster, profile.id)
 
-        # TODO(Qiming): handle dependency to a node
+        host_node = profile.properties.get(profile.HOST_NODE, None)
+        if host_node:
+            db_api.node_add_dependents(ctx, host_node, profile.id, 'profile')
 
         return profile
 
@@ -95,6 +98,10 @@ class DockerProfile(base.Profile):
         cluster_id = obj.properties.get(obj.HOST_CLUSTER, None)
         if cluster_id:
             db_api.cluster_remove_dependents(ctx, cluster_id, profile_id)
+
+        node_id = obj.properties.get(obj.HOST_NODE, None)
+        if node_id:
+            db_api.node_remove_dependents(ctx, node_id, profile_id, 'profile')
 
         super(DockerProfile, cls).delete(ctx, profile_id)
 
