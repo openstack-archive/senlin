@@ -178,7 +178,8 @@ class TestParseRequest(base.SenlinTestCase):
 
     def test_bad_schema(self):
         name = 'ClusterListRequest'
-        body = {'bogus_key': 'bogus_value'}
+        body = {'bogus_key': 'bogus_value',
+                'project_safe': True}
         req = mock.Mock(context=self.context)
 
         ex = self.assertRaises(exc.HTTPBadRequest,
