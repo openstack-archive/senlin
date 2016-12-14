@@ -191,110 +191,47 @@ class ClusterController(wsgi.Controller):
         obj = util.parse_request('ClusterScaleInRequest', req, params)
         return self.rpc_client.call2(req.context, 'cluster_scale_in2', obj)
 
-    def _do_policy_attach(self, context, cid, data):
-        params = {'identity': cid}
+    def _do_policy_attach(self, req, cid, data):
         if not isinstance(data, dict):
-            msg = _("The data provided is not a map.")
+            msg = _("The data provided is not a map")
             raise exc.HTTPBadRequest(msg)
+        params = {'identity': cid}
+        params.update(data)
+        obj = util.parse_request('ClusterAttachPolicyRequest', req, params)
+        return self.rpc_client.call2(req.context,
+                                     'cluster_policy_attach2', obj)
+
+    def _do_policy_detach(self, req, cid, data):
+        if not isinstance(data, dict):
+            msg = _("The data provided is not a map")
+            raise exc.HTTPBadRequest(msg)
+        params = {'identity': cid}
         params.update(data)
 
-        norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterAttachPolicyRequest', params, None)
+        obj = util.parse_request('ClusterDetachPolicyRequest', req, params)
+        return self.rpc_client.call2(req.context,
+                                     'cluster_policy_detach2', obj)
 
-        obj = None
-        try:
-            obj = vorc.ClusterAttachPolicyRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
-        return self.rpc_client.call2(context, 'cluster_policy_attach2', obj)
-
-    def _do_policy_detach(self, context, cid, data):
-        params = {'identity': cid}
+    def _do_policy_update(self, req, cid, data):
         if not isinstance(data, dict):
-            msg = _("The data provided is not a map.")
+            msg = _("The data provided is not a map")
             raise exc.HTTPBadRequest(msg)
+        params = {'identity': cid}
         params.update(data)
 
-        norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterDetachPolicyRequest', params, None)
+        obj = util.parse_request('ClusterUpdatePolicyRequest', req, params)
+        return self.rpc_client.call2(req.context,
+                                     'cluster_policy_update2', obj)
 
-        obj = None
-        try:
-            obj = vorc.ClusterDetachPolicyRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
+    def _do_check(self, req, cid, data):
+        params = {'identity': cid, 'params': data}
+        obj = util.parse_request('ClusterCheckRequest', req, params)
+        return self.rpc_client.call2(req.context, 'cluster_check2', obj)
 
-        return self.rpc_client.call2(context, 'cluster_policy_detach2', obj)
-
-    def _do_policy_update(self, context, cid, data):
-        params = {'identity': cid}
-        if not isinstance(data, dict):
-            msg = _("The data provided is not a map.")
-            raise exc.HTTPBadRequest(msg)
-        params.update(data)
-
-        norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterUpdatePolicyRequest', params, None)
-
-        obj = None
-        try:
-            obj = vorc.ClusterUpdatePolicyRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
-        return self.rpc_client.call2(context, 'cluster_policy_update2', obj)
-
-    def _do_check(self, context, cid, data):
-        params = {'identity': cid}
-        if not isinstance(data, dict):
-            msg = _("The params provided is not a map.")
-            raise exc.HTTPBadRequest(msg)
-        params['params'] = data
-
-        norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterCheckRequest', params, None)
-
-        obj = None
-        try:
-            obj = vorc.ClusterCheckRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
-        return self.rpc_client.call2(context, 'cluster_check2', obj)
-
-    def _do_recover(self, context, cid, data):
-        params = {'identity': cid}
-        if not isinstance(data, dict):
-            msg = _("The params provided is not a map.")
-            raise exc.HTTPBadRequest(msg)
-        params['params'] = data
-
-        norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterRecoverRequest', params, None)
-
-        obj = None
-        try:
-            obj = vorc.ClusterRecoverRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
-        return self.rpc_client.call2(context, 'cluster_recover2', obj)
+    def _do_recover(self, req, cid, data):
+        params = {'identity': cid, 'params': data}
+        obj = util.parse_request('ClusterRecoverRequest', req, params)
+        return self.rpc_client.call2(req.context, 'cluster_recover2', obj)
 
     @util.policy_enforce
     def action(self, req, cluster_id, body=None):
@@ -328,19 +265,19 @@ class ClusterController(wsgi.Controller):
             res = self._do_scale_in(req, cluster_id, count)
         elif this_action == self.POLICY_ATTACH:
             data = body.get(this_action)
-            res = self._do_policy_attach(req.context, cluster_id, data)
+            res = self._do_policy_attach(req, cluster_id, data)
         elif this_action == self.POLICY_DETACH:
             data = body.get(this_action)
-            res = self._do_policy_detach(req.context, cluster_id, data)
+            res = self._do_policy_detach(req, cluster_id, data)
         elif this_action == self.POLICY_UPDATE:
             data = body.get(this_action)
-            res = self._do_policy_update(req.context, cluster_id, data)
+            res = self._do_policy_update(req, cluster_id, data)
         elif this_action == self.CHECK:
             data = body.get(this_action)
-            res = self._do_check(req.context, cluster_id, data)
+            res = self._do_check(req, cluster_id, data)
         elif this_action == self.RECOVER:
             data = body.get(this_action)
-            res = self._do_recover(req.context, cluster_id, data)
+            res = self._do_recover(req, cluster_id, data)
         else:  # this_action == self.REPLACE_NODES:
             data = body.get(this_action).get('nodes')
             res = self._replace_nodes(req, cluster_id, data)
