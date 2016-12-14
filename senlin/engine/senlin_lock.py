@@ -16,7 +16,6 @@ import time
 
 from senlin.common.i18n import _, _LE, _LI
 from senlin.common import utils
-from senlin.engine import scheduler
 from senlin.objects import action as ao
 from senlin.objects import cluster_lock as cl_obj
 from senlin.objects import node_lock as nl_obj
@@ -55,23 +54,12 @@ def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
     if action_id in owners:
         return True
 
-    # Step 2: retry using global configuration options
-    retries = cfg.CONF.lock_retry_times
-    retry_interval = cfg.CONF.lock_retry_interval
-
-    while retries > 0:
-        scheduler.sleep(retry_interval)
-        LOG.debug('Acquire lock for cluster %s again' % cluster_id)
-        owners = cl_obj.ClusterLock.acquire(cluster_id, action_id, scope)
-        if action_id in owners:
-            return True
-        retries = retries - 1
-
-    # Step 3: Last resort is 'forced locking', only needed when retry failed
+    # Step 2: Last resort is 'forced locking', only needed when retry failed
     if forced:
         owners = cl_obj.ClusterLock.steal(cluster_id, action_id)
         return action_id in owners
 
+    # Step 3: check if the owner is a dead engine, if so, steal the lock.
     # Will reach here only because scope == CLUSTER_SCOPE
     action = ao.Action.get(context, owners[0])
     if (action and action.owner and action.owner != engine and
@@ -83,6 +71,7 @@ def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
         })
         reason = _('Engine died when executing this action.')
         owners = cl_obj.ClusterLock.steal(cluster_id, action_id)
+        # Mark the old action to failed.
         ao.Action.mark_failed(context, action.id, time.time(), reason)
         return action_id in owners
 
@@ -121,23 +110,12 @@ def node_lock_acquire(context, node_id, action_id, engine=None,
     if action_id == owner:
         return True
 
-    # Step 2: retry using global configuration options
-    retries = cfg.CONF.lock_retry_times
-    retry_interval = cfg.CONF.lock_retry_interval
-
-    while retries > 0:
-        scheduler.sleep(retry_interval)
-        LOG.debug('Acquire lock for node %s again' % node_id)
-        owner = nl_obj.NodeLock.acquire(node_id, action_id)
-        if action_id == owner:
-            return True
-        retries = retries - 1
-
-    # Step 3: Last resort is 'forced locking', only needed when retry failed
+    # Step 2: Last resort is 'forced locking', only needed when retry failed
     if forced:
         owner = nl_obj.NodeLock.steal(node_id, action_id)
         return action_id == owner
 
+    # Step 3: Try to steal a lock if it's owner is a dead engine.
     # if this node lock by dead engine
     action = ao.Action.get(context, owner)
     if (action and action.owner and action.owner != engine and

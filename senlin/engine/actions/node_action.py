@@ -235,7 +235,7 @@ class NodeAction(base.Action):
             res = senlin_lock.node_lock_acquire(self.context, self.entity.id,
                                                 self.id, self.owner, False)
             if not res:
-                res = self.RES_ERROR
+                res = self.RES_RETRY
                 reason = _('Failed in locking node')
             else:
                 res, reason = self._execute()

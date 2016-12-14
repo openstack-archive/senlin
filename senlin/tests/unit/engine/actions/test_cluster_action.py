@@ -2655,7 +2655,7 @@ class ClusterActionTest(base.SenlinTestCase):
 
         res_code, res_msg = action.execute()
 
-        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual(action.RES_RETRY, res_code)
         self.assertEqual('Failed in locking cluster.', res_msg)
         mock_load.assert_called_once_with(action.context, cluster.id)
 
