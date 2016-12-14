@@ -310,43 +310,61 @@ def node_update(context, node_id, values):
                 cluster.save(session)
 
 
-def node_add_dependents(context, depended_node, node):
-    '''Add dependency between nodes.
+def node_add_dependents(context, depended, dependent, dep_type=None):
+    """Add dependency between nodes.
 
-    :param depended_node: ID of the depended node.
-    :param node: ID of the node which has dependencies on other nodes.
+    :param depended: ID of the depended dependent.
+    :param dependent: ID of the dependent node or profile which has
+                     dependencies on depended node.
+    :param dep_type: The type of dependency. It can be 'node' indicating a
+                     dependency beween two nodes; or 'profile' indicating a
+                     dependency from profile to node.
     :raises ResourceNotFound: The specified node does not exist in database.
-    '''
+    """
     with session_for_write() as session:
-        dep_node = session.query(models.Node).get(depended_node)
+        dep_node = session.query(models.Node).get(depended)
         if not dep_node:
-            raise exception.ResourceNotFound(type='node', id=depended_node)
+            raise exception.ResourceNotFound(type='node', id=depended)
 
-        nodes = dep_node.dependents.get('nodes', [])
-        nodes.append(node)
-        dep_node.dependents.update({'nodes': nodes})
+        if dep_type is None or dep_type == 'node':
+            key = 'nodes'
+        else:
+            key = 'profiles'
+        dependents = dep_node.dependents.get(key, [])
+        dependents.append(dependent)
+        dep_node.dependents.update({key: dependents})
         dep_node.save(session)
 
 
-def node_remove_dependents(context, depended_node, node):
-    '''Remove dependency between nodes.
+def node_remove_dependents(context, depended, dependent, dep_type=None):
+    """Remove dependency between nodes.
 
-    :param depended_node: ID of the depended node.
-    :param node: ID of the node which has dependencies on other nodes.
+    :param depended: ID of the depended node.
+    :param dependent: ID of the node or profile which has dependencies on
+                     the depended node.
+    :param dep_type: The type of dependency. It can be 'node' indicating a
+                     dependency beween two nodes; or 'profile' indicating a
+                     dependency from profile to node.
+
     :raises ResourceNotFound: The specified node does not exist in database.
-    '''
+    """
     with session_for_write() as session:
-        dep_node = session.query(models.Node).get(depended_node)
+        dep_node = session.query(models.Node).get(depended)
         if not dep_node:
-            raise exception.ResourceNotFound(type='node', id=depended_node)
+            raise exception.ResourceNotFound(type='node', id=depended)
 
-        nodes = dep_node.dependents.get('nodes', [])
-        if node in nodes:
-            nodes.remove(node)
-            if len(nodes) > 0:
-                dep_node.dependents.update({'nodes': nodes})
+        if dep_type is None or dep_type == 'node':
+            key = 'nodes'
+        else:
+            key = 'profiles'
+
+        dependents = dep_node.dependents.get(key, [])
+        if dependent in dependents:
+            dependents.remove(dependent)
+            if len(dependents) > 0:
+                dep_node.dependents.update({key: dependents})
             else:
-                dep_node.dependents.pop('nodes')
+                dep_node.dependents.pop(key)
             dep_node.save(session)
 
 
