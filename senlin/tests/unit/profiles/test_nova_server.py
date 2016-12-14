@@ -458,6 +458,29 @@ class TestNovaServerBasic(base.SenlinTestCase):
                          six.text_type(ex))
         cc.wait_for_server.assert_called_once_with('FAKE_ID')
 
+    def test_do_create_failed(self):
+        cc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        self._stubout_profile(profile, mock_image=True, mock_flavor=True,
+                              mock_keypair=True, mock_net=True)
+        node_obj = mock.Mock(id='FAKE_NODE_ID', index=123,
+                             cluster_id='FAKE_CLUSTER_ID',
+                             data={
+                                'placement': {
+                                    'zone': 'AZ1',
+                                    'servergroup': 'SERVER_GROUP_1'
+                                }
+                             })
+        node_obj.name = 'TEST_SERVER'
+        cc.server_create.side_effect = exc.InternalError(
+            code=500, message="creation failed.")
+        ex = self.assertRaises(exc.EResourceCreation, profile.do_create,
+                               node_obj)
+        self.assertEqual('Failed in creating server: creation failed.',
+                         six.text_type(ex))
+        self.assertEqual(0, cc.wait_for_server.call_count)
+
     def test_do_delete_ok(self):
         profile = server.ServerProfile('t', self.spec)
 
