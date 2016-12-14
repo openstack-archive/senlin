@@ -109,58 +109,24 @@ class ClusterController(wsgi.Controller):
         }
         return result
 
-    def _add_nodes(self, ctx, cid, nodes):
+    def _add_nodes(self, req, cid, nodes):
         params = {'identity': cid, 'nodes': nodes}
-        norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterAddNodesRequest', params)
-        obj = None
-        try:
-            obj = vorc.ClusterAddNodesRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
+        obj = util.parse_request('ClusterAddNodesRequest', req, params)
+        return self.rpc_client.call2(req.context, 'cluster_add_nodes2', obj)
 
-        return self.rpc_client.call2(ctx, 'cluster_add_nodes2', obj)
-
-    def _del_nodes(self, ctx, cid, nodes):
+    def _del_nodes(self, req, cid, nodes):
         params = {'identity': cid, 'nodes': nodes}
-        norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterDelNodesRequest', params)
-        obj = None
-        try:
-            obj = vorc.ClusterDelNodesRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
-        return self.rpc_client.call2(ctx, 'cluster_del_nodes2', obj)
+        obj = util.parse_request('ClusterDelNodesRequest', req, params)
+        return self.rpc_client.call2(req.context, 'cluster_del_nodes2', obj)
 
     @wsgi.Controller.api_version('1.3')
-    def _replace_nodes(self, req, cluster_id, data):
-        nodes = data.get('nodes')
+    def _replace_nodes(self, req, cluster_id, nodes):
         if not nodes or not isinstance(nodes, dict):
-            msg = _("The data provided is not a map.")
+            msg = _("The data provided is not a map")
             raise exc.HTTPBadRequest(msg)
 
-        params = {
-            'identity': cluster_id,
-            'nodes': nodes
-        }
-        norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterReplaceNodesRequest', params)
-        obj = None
-        try:
-            obj = vorc.ClusterReplaceNodesRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
+        params = {'identity': cluster_id, 'nodes': nodes}
+        obj = util.parse_request('ClusterReplaceNodesRequest', req, params)
         return self.rpc_client.call2(req.context, 'cluster_replace_nodes2',
                                      obj)
 
@@ -211,41 +177,19 @@ class ClusterController(wsgi.Controller):
 
         return self.rpc_client.call2(context, 'cluster_resize2', obj)
 
-    def _do_scale_out(self, context, cid, count):
+    def _do_scale_out(self, req, cid, count):
         params = {'identity': cid}
         if count is not None:
             params['count'] = count
+        obj = util.parse_request('ClusterScaleOutRequest', req, params)
+        return self.rpc_client.call2(req.context, 'cluster_scale_out2', obj)
 
-        norm_req = obj_base.SenlinObject.normalize_req(
-            'ClusterScaleOutRequest', params, None)
-        obj = None
-        try:
-            obj = vorc.ClusterScaleOutRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
-        return self.rpc_client.call2(context, 'cluster_scale_out2', obj)
-
-    def _do_scale_in(self, context, cid, count):
+    def _do_scale_in(self, req, cid, count):
         params = {'identity': cid}
         if count is not None:
             params['count'] = count
-
-        norm_req = obj_base.SenlinObject.normalize_req('ClusterScaleInRequest',
-                                                       params, None)
-        obj = None
-        try:
-            obj = vorc.ClusterScaleInRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
-        return self.rpc_client.call2(context, 'cluster_scale_in2', obj)
+        obj = util.parse_request('ClusterScaleInRequest', req, params)
+        return self.rpc_client.call2(req.context, 'cluster_scale_in2', obj)
 
     def _do_policy_attach(self, context, cid, data):
         params = {'identity': cid}
@@ -369,19 +313,19 @@ class ClusterController(wsgi.Controller):
 
         if this_action == self.ADD_NODES:
             nodes = body.get(this_action).get('nodes', [])
-            res = self._add_nodes(req.context, cluster_id, nodes)
+            res = self._add_nodes(req, cluster_id, nodes)
         elif this_action == self.DEL_NODES:
             nodes = body.get(this_action).get('nodes', [])
-            res = self._del_nodes(req.context, cluster_id, nodes)
+            res = self._del_nodes(req, cluster_id, nodes)
         elif this_action == self.RESIZE:
             data = body.get(this_action)
             res = self._do_resize(req.context, cluster_id, data)
         elif this_action == self.SCALE_OUT:
             count = body.get(this_action).get('count')
-            res = self._do_scale_out(req.context, cluster_id, count)
+            res = self._do_scale_out(req, cluster_id, count)
         elif this_action == self.SCALE_IN:
             count = body.get(this_action).get('count')
-            res = self._do_scale_in(req.context, cluster_id, count)
+            res = self._do_scale_in(req, cluster_id, count)
         elif this_action == self.POLICY_ATTACH:
             data = body.get(this_action)
             res = self._do_policy_attach(req.context, cluster_id, data)
@@ -398,7 +342,7 @@ class ClusterController(wsgi.Controller):
             data = body.get(this_action)
             res = self._do_recover(req.context, cluster_id, data)
         else:  # this_action == self.REPLACE_NODES:
-            data = body.get(this_action)
+            data = body.get(this_action).get('nodes')
             res = self._replace_nodes(req, cluster_id, data)
 
         location = {'location': '/actions/%s' % res['action']}
