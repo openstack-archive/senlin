@@ -513,6 +513,8 @@ class ServerProfile(base.Profile):
                 hints.update({'group': group_id})
                 kwargs['scheduler_hints'] = hints
 
+        server = None
+        resource_id = 'UNKNOWN'
         try:
             server = self.compute(obj).server_create(**kwargs)
             self.compute(obj).wait_for_server(server.id)
