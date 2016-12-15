@@ -22,7 +22,7 @@
             flavor: 1
             image: "cirros-0.3.4-x86_64-uec"
             networks:
-              - network: private
+              - network: public
       sla:
         failure_rate:
           max: 0
@@ -56,7 +56,36 @@
             flavor: 1
             image: "cirros-0.3.4-x86_64-uec"
             networks:
-              - network: private
+              - network: public
       sla:
         failure_rate:
           max: 0
+
+  SenlinPlugin.create_scale_in_delete_cluster:
+    -
+      args:
+        desired_capacity: 3
+        min_size: 0
+        max_size: 5
+        count: 3
+      runner:
+        type: constant
+        times: 3
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        profiles:
+          type: os.nova.server
+          version: "1.0"
+          properties:
+            name: cirros_server
+            flavor: 1
+            image: "cirros-0.3.4-x86_64-uec"
+            networks:
+              - network: public
+      sla:
+        failure_rate:
+          max: 0
+
