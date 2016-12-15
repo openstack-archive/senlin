@@ -325,6 +325,28 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual({'K': 'V'}, x_profile.metadata)
         x_profile.store.assert_called_once_with(self.ctx)
 
+    @mock.patch.object(pb.Profile, 'load')
+    @mock.patch.object(service.EngineService, 'profile_find')
+    def test_profile_update2_name_none(self, mock_find, mock_load):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        x_profile = mock.Mock()
+        x_profile.name = 'OLD_NAME'
+        x_profile.to_dict.return_value = {'foo': 'bar'}
+        mock_load.return_value = x_profile
+
+        params = {'name': None, 'metadata': {'K': 'V'}}
+        req_body = vorp.ProfileUpdateRequestBody(**params)
+        req = vorp.ProfileUpdateRequest(identity='PID', profile=req_body)
+
+        result = self.eng.profile_update2(self.ctx, req.obj_to_primitive())
+        self.assertEqual({'foo': 'bar'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'PID')
+        mock_load.assert_called_once_with(self.ctx, profile=x_obj)
+        self.assertEqual('OLD_NAME', x_profile.name)
+        self.assertEqual({'K': 'V'}, x_profile.metadata)
+        x_profile.store.assert_called_once_with(self.ctx)
+
     @mock.patch.object(service.EngineService, 'profile_find')
     def test_profile_update2_not_found(self, mock_find):
 
