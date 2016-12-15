@@ -2100,26 +2100,6 @@ class EngineService(service.Service):
 
         return action.to_dict()
 
-    @request_context
-    def action_delete(self, context, identity):
-        """Delete the specified action object.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of an action object.
-        :return: None if deletion was successful, or an exception of type
-                 `ResourceInUse`.
-        """
-        db_action = self.action_find(context, identity)
-        LOG.info(_LI("Deleting action '%s'."), identity)
-        try:
-            action_mod.Action.delete(context, db_action.id)
-        except exception.EResourceBusy:
-            reason = _("still in one of WAITING, RUNNING or SUSPENDED state")
-            raise exception.ResourceInUse(type='action', id=identity,
-                                          reason=reason)
-
-        LOG.info(_LI("Action '%s' is deleted."), identity)
-
     @request_context2
     def action_delete2(self, ctx, req):
         """Delete the specified action object.
