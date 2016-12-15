@@ -43,3 +43,4 @@ def register_all():
     __import__('senlin.objects.requests.policy_type')
     __import__('senlin.objects.requests.webhooks')
     __import__('senlin.objects.requests.cluster_policies')
+    __import__('senlin.objects.requests.credentials')
