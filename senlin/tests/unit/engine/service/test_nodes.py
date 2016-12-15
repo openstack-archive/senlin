@@ -113,7 +113,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
         mock_load.assert_called_once_with(self.ctx, project_safe=True)
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(node_mod.Node, 'load_all')
     def test_node_list2_with_cluster_id(self, mock_load, mock_find):
         obj_1 = mock.Mock()
@@ -152,7 +152,7 @@ class NodeTest(base.SenlinTestCase):
                                           project_safe=True,
                                           filters={'status': ['ACTIVE']})
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     def test_node_list2_cluster_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='cluster',
                                                      id='BOGUS')
@@ -235,7 +235,7 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch('senlin.engine.node.Node')
     @mock.patch.object(co.Cluster, 'get_next_index')
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_create2_same_profile(self, notify, mock_profile,
@@ -277,7 +277,7 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch('senlin.engine.node.Node')
     @mock.patch.object(co.Cluster, 'get_next_index')
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_create2_same_profile_type(self, notify, mock_profile,
@@ -353,7 +353,7 @@ class NodeTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_profile.assert_called_once_with(self.ctx, 'Bogus')
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(service.EngineService, 'profile_find')
     def test_node_create2_cluster_not_found(self, mock_profile, mock_cluster):
         mock_profile.return_value = mock.Mock()
@@ -374,7 +374,7 @@ class NodeTest(base.SenlinTestCase):
         mock_profile.assert_called_once_with(self.ctx, 'PROFILE_NAME')
         mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(service.EngineService, 'profile_find')
     def test_node_create2_profile_type_not_match(self, mock_profile,
                                                  mock_cluster):

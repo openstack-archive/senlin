@@ -41,7 +41,7 @@ from senlin.engine.receivers import base as receiver_mod
 from senlin.engine import scheduler
 from senlin.objects import action as action_obj
 from senlin.objects import base as obj_base
-from senlin.objects import cluster as cluster_obj
+from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cp_obj
 from senlin.objects import credential as cred_obj
 from senlin.objects import event as event_obj
@@ -735,37 +735,6 @@ class EngineService(service.Service):
 
         return policy.to_dict()
 
-    def cluster_find(self, context, identity, project_safe=True):
-        """Find a cluster with the given identity.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short ID of a cluster.
-        :param project_safe: A boolean parameter specifying whether only
-                             clusters from the same project are qualified to
-                             be returned.
-        :return: An instance of `Cluster` class.
-        :raises: `ResourceNotFound` if no matching object can be found.
-        """
-
-        if uuidutils.is_uuid_like(identity):
-            cluster = cluster_obj.Cluster.get(context, identity,
-                                              project_safe=project_safe)
-            if not cluster:
-                cluster = cluster_obj.Cluster.get_by_name(
-                    context, identity, project_safe=project_safe)
-        else:
-            cluster = cluster_obj.Cluster.get_by_name(
-                context, identity, project_safe=project_safe)
-            # maybe it is a short form of UUID
-            if not cluster:
-                cluster = cluster_obj.Cluster.get_by_short_id(
-                    context, identity, project_safe=project_safe)
-
-        if not cluster:
-            raise exception.ResourceNotFound(type='cluster', id=identity)
-
-        return cluster
-
     @request_context2
     def cluster_list2(self, ctx, req):
         """List clusters matching the specified criteria.
@@ -804,7 +773,7 @@ class EngineService(service.Service):
         :param req: An instance of the ClusterGetRequest.
         :return: A dictionary containing the details about a cluster.
         """
-        db_cluster = self.cluster_find(context, req.identity)
+        db_cluster = co.Cluster.find(context, req.identity)
         cluster = cluster_mod.Cluster.load(context, dbcluster=db_cluster)
         return cluster.to_dict()
 
@@ -815,7 +784,7 @@ class EngineService(service.Service):
         :return: None if cluster creation is okay, or an exception of type
                  `Forbbiden` if number of clusters reaches the maximum.
         """
-        existing = cluster_obj.Cluster.count_all(context)
+        existing = co.Cluster.count_all(context)
         maximum = CONF.max_clusters_per_project
         if existing >= maximum:
             raise exception.Forbidden()
@@ -831,7 +800,7 @@ class EngineService(service.Service):
         """
         self.check_cluster_quota(ctx)
         if CONF.name_unique:
-            if cluster_obj.Cluster.get_by_name(ctx, req.name):
+            if co.Cluster.get_by_name(ctx, req.name):
                 msg = _("a cluster named '%s' already exists.") % req.name
                 raise exception.BadRequest(msg=msg)
 
@@ -894,7 +863,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the details about the cluster and the
                  ID of the action triggered by this operation.
         """
-        db_cluster = self.cluster_find(ctx, req.identity)
+        db_cluster = co.Cluster.find(ctx, req.identity)
         cluster = cluster_mod.Cluster.load(ctx, dbcluster=db_cluster)
         if cluster.status == consts.CS_ERROR:
             msg = _('Updating a cluster in error state')
@@ -960,7 +929,7 @@ class EngineService(service.Service):
         LOG.info(_LI('Deleting cluster %s'), req.identity)
 
         # 'cluster' below is a DB object.
-        cluster = self.cluster_find(ctx, req.identity)
+        cluster = co.Cluster.find(ctx, req.identity)
         if cluster.status in [consts.CS_CREATING,
                               consts.CS_UPDATING,
                               consts.CS_DELETING,
@@ -1018,7 +987,7 @@ class EngineService(service.Service):
         LOG.info(_LI("Adding nodes '%(nodes)s' to cluster '%(cluster)s'."),
                  {'cluster': req.identity, 'nodes': req.nodes})
 
-        db_cluster = self.cluster_find(context, req.identity)
+        db_cluster = co.Cluster.find(context, req.identity)
         db_cluster_profile = profile_obj.Profile.get(
             context, db_cluster.profile_id, project_safe=True)
         cluster_profile_type = db_cluster_profile.type
@@ -1095,7 +1064,7 @@ class EngineService(service.Service):
         """
         LOG.info(_LI("Deleting nodes '%(nodes)s' from cluster '%(cluster)s'."),
                  {'cluster': req.identity, 'nodes': req.nodes})
-        db_cluster = self.cluster_find(ctx, req.identity)
+        db_cluster = co.Cluster.find(ctx, req.identity)
         found = []
         not_found = []
         bad_nodes = []
@@ -1240,7 +1209,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the ID of the action triggered.
         """
         LOG.info(_LI("Replace nodes of the cluster '%s'."), req.identity)
-        db_cluster = self.cluster_find(ctx, req.identity)
+        db_cluster = co.Cluster.find(ctx, req.identity)
 
         nodes = self._validate_replace_nodes(ctx, db_cluster, req.nodes)
         kwargs = {
@@ -1307,7 +1276,7 @@ class EngineService(service.Service):
         if req.obj_attr_is_set(consts.ADJUSTMENT_STRICT):
             strict = req.strict
 
-        db_cluster = self.cluster_find(ctx, req.identity)
+        db_cluster = co.Cluster.find(ctx, req.identity)
         current = node_obj.Node.count_by_cluster(ctx, db_cluster.id)
         if adj_type is not None:
             desired = su.calculate_desired(current, adj_type, number, min_step)
@@ -1356,7 +1325,7 @@ class EngineService(service.Service):
         :param req: An instance of the ClusterScaleOutRequest object.
         :return: A dict with the ID of the action fired.
         """
-        db_cluster = self.cluster_find(ctx, req.identity)
+        db_cluster = co.Cluster.find(ctx, req.identity)
         if req.obj_attr_is_set('count'):
             if req.count == 0:
                 err = _("Count for scale-out request cannot be 0.")
@@ -1396,7 +1365,7 @@ class EngineService(service.Service):
         :param req: An instance of the ClusterScaleOutRequest object.
         :return: A dict with the ID of the action fired.
         """
-        db_cluster = self.cluster_find(ctx, req.identity)
+        db_cluster = co.Cluster.find(ctx, req.identity)
         if req.obj_attr_is_set('count'):
             if req.count == 0:
                 err = _("Count for scale-in request cannot be 0.")
@@ -1440,7 +1409,7 @@ class EngineService(service.Service):
         # validate 'path' string and return a parser,
         # The function may raise a BadRequest exception.
         parser = utils.get_path_parser(req.path)
-        cluster = self.cluster_find(ctx, req.identity)
+        cluster = co.Cluster.find(ctx, req.identity)
         nodes = node_mod.Node.load_all(ctx, cluster_id=cluster.id)
         attrs = []
         for node in nodes:
@@ -1462,7 +1431,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the ID of the action triggered.
         """
         LOG.info(_LI("Checking cluster '%s'."), req.identity)
-        db_cluster = self.cluster_find(ctx, req.identity)
+        db_cluster = co.Cluster.find(ctx, req.identity)
         # cope with cluster check request from engine internal
         if not ctx.user or not ctx.project:
             ctx.user = db_cluster.user
@@ -1490,7 +1459,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the ID of the action triggered.
         """
         LOG.info(_LI("Recovering cluster '%s'."), req.identity)
-        db_cluster = self.cluster_find(ctx, req.identity)
+        db_cluster = co.Cluster.find(ctx, req.identity)
 
         # cope with cluster check request from engine internal
         if not ctx.user or not ctx.project:
@@ -1559,7 +1528,8 @@ class EngineService(service.Service):
         if req.obj_attr_is_set('sort') and req.sort is not None:
             query['sort'] = req.sort
         if req.obj_attr_is_set('cluster_id') and req.cluster_id:
-            db_cluster = self.cluster_find(ctx, req.cluster_id)
+            # TODO(anyone): Check exception and return BadRequest
+            db_cluster = co.Cluster.find(ctx, req.cluster_id)
             query['cluster_id'] = db_cluster.id
 
         filters = {}
@@ -1599,10 +1569,10 @@ class EngineService(service.Service):
         req.obj_set_defaults()
         if req.cluster_id:
             try:
-                db_cluster = self.cluster_find(ctx, req.cluster_id)
-            except exception.ResourceNotFound as ex:
+                db_cluster = co.Cluster.find(ctx, req.cluster_id)
+            except (exception.ResourceNotFound,
+                    exception.MultipleChoices) as ex:
                 msg = ex.enhance_msg('specified', ex)
-
                 raise exception.BadRequest(msg=msg)
 
             cluster_id = db_cluster.id
@@ -1613,7 +1583,7 @@ class EngineService(service.Service):
                     msg = _('Node and cluster have different profile type, '
                             'operation aborted.')
                     raise exception.BadRequest(msg=msg)
-            index = cluster_obj.Cluster.get_next_index(ctx, cluster_id)
+            index = co.Cluster.get_next_index(ctx, cluster_id)
         else:
             cluster_id = ''
             index = -1
@@ -1837,7 +1807,7 @@ class EngineService(service.Service):
         if req.obj_attr_is_set('enabled'):
             filters['enabled'] = req.enabled
 
-        db_cluster = self.cluster_find(ctx, req.identity)
+        db_cluster = co.Cluster.find(ctx, req.identity)
         bindings = cp_obj.ClusterPolicy.get_all(
             ctx, db_cluster.id, filters=filters, sort=sort)
 
@@ -1854,7 +1824,7 @@ class EngineService(service.Service):
         """
         identity = req.identity
         policy_id = req.policy_id
-        db_cluster = self.cluster_find(ctx, identity)
+        db_cluster = co.Cluster.find(ctx, identity)
         db_policy = self.policy_find(ctx, policy_id)
 
         binding = cp_obj.ClusterPolicy.get(ctx, db_cluster.id, db_policy.id)
@@ -1878,7 +1848,7 @@ class EngineService(service.Service):
                      "(%(cluster)s)."),
                  {'policy': req.policy_id, 'cluster': req.identity})
 
-        db_cluster = self.cluster_find(ctx, req.identity)
+        db_cluster = co.Cluster.find(ctx, req.identity)
         try:
             db_policy = self.policy_find(ctx, req.policy_id)
         except exception.ResourceNotFound as ex:
@@ -1918,7 +1888,7 @@ class EngineService(service.Service):
                      "'%(cluster)s'."),
                  {'policy': req.policy_id, 'cluster': req.identity})
 
-        db_cluster = self.cluster_find(ctx, req.identity)
+        db_cluster = co.Cluster.find(ctx, req.identity)
         try:
             db_policy = self.policy_find(ctx, req.policy_id)
         except exception.ResourceNotFound as ex:
@@ -1959,7 +1929,7 @@ class EngineService(service.Service):
         LOG.info(_LI("Updating policy '%(policy)s' on cluster '%(cluster)s.'"),
                  {'policy': req.policy_id, 'cluster': req.identity})
 
-        db_cluster = self.cluster_find(ctx, req.identity)
+        db_cluster = co.Cluster.find(ctx, req.identity)
         try:
             db_policy = self.policy_find(ctx, req.policy_id)
         except exception.ResourceNotFound as ex:
@@ -2065,7 +2035,8 @@ class EngineService(service.Service):
         LOG.info(_LI("Creating action '%s'."), req.name)
 
         req.obj_set_defaults()
-        target = self.cluster_find(ctx, req.cluster_id)
+        # TODO(Anyone): check exception and return BadRequest
+        target = co.Cluster.find(ctx, req.cluster_id)
 
         # Create an action instance
         params = {
@@ -2219,8 +2190,9 @@ class EngineService(service.Service):
 
             # Check whether cluster identified by cluster_id does exist
             try:
-                cluster = self.cluster_find(ctx, req.cluster_id)
-            except exception.ResourceNotFound as ex:
+                cluster = co.Cluster.find(ctx, req.cluster_id)
+            except (exception.ResourceNotFound,
+                    exception.MultipleChoices) as ex:
                 msg = ex.enhance_msg('referenced', ex)
                 raise exception.BadRequest(msg=msg)
 
@@ -2309,8 +2281,8 @@ class EngineService(service.Service):
         receiver = self.receiver_find(ctx, identity)
 
         try:
-            cluster = self.cluster_find(ctx, receiver.cluster_id)
-        except exception.ResourceNotFound as ex:
+            cluster = co.Cluster.find(ctx, receiver.cluster_id)
+        except (exception.ResourceNotFound, exception.MultipleChoices) as ex:
             msg = ex.enhance_msg('referenced', ex)
             raise exception.BadRequest(msg=msg)
 

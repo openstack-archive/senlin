@@ -19,6 +19,7 @@ import six
 from senlin.common import exception as exc
 from senlin.engine.receivers import base as rb
 from senlin.engine import service
+from senlin.objects import cluster as co
 from senlin.objects import receiver as ro
 from senlin.objects.requests import receivers as orro
 from senlin.tests.unit.common import base
@@ -158,7 +159,7 @@ class ReceiverTest(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.ctx, project_safe=True)
         mock_load.reset_mock()
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(rb.Receiver, 'create')
     def test_receiver_create2_webhook_succeed(self, mock_create, mock_find):
         fake_cluster = mock.Mock()
@@ -212,7 +213,7 @@ class ReceiverTest(base.SenlinTestCase):
                          "already exists.",
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     def test_receiver_create2_webhook_cluster_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='cluster', id='C1')
         req = orro.ReceiverCreateRequestBody(name='r1', type='webhook',
@@ -227,7 +228,7 @@ class ReceiverTest(base.SenlinTestCase):
                          "(C1) could not be found.",
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(rb.Receiver, 'create')
     def test_receiver_create2_webhook_forbidden(self, mock_create, mock_find):
         fake_cluster = mock.Mock()
@@ -254,7 +255,7 @@ class ReceiverTest(base.SenlinTestCase):
         result = self.eng.receiver_create2(self.ctx, req.obj_to_primitive())
         self.assertIsInstance(result, dict)
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     def test_receiver_create2_webhook_cluster_not_specified(self, mock_find):
         fake_cluster = mock.Mock()
         fake_cluster.user = self.ctx.user
@@ -274,7 +275,7 @@ class ReceiverTest(base.SenlinTestCase):
                              "required for creating webhook receiver.",
                              six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     def test_receiver_create2_webhook_action_not_specified(self, mock_find):
         fake_cluster = mock.Mock()
         fake_cluster.user = self.ctx.user

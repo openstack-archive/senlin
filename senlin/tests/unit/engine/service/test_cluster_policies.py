@@ -19,6 +19,7 @@ from senlin.common import exception as exc
 from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
 from senlin.engine import service
+from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
 from senlin.objects.requests import cluster_policies as orcp
 from senlin.objects.requests import clusters as orco
@@ -34,7 +35,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.eng = service.EngineService('host-a', 'topic-a')
         self.eng.init_tgm()
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     def test_cluster_policy_list2(self, mock_get, mock_find):
         x_obj = mock.Mock(id='FAKE_CLUSTER')
@@ -53,7 +54,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_get.assert_called_once_with(self.ctx, 'FAKE_CLUSTER',
                                          filters={}, sort=None)
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     def test_cluster_policy_list2_with_param(self, mock_get,
                                              mock_find):
@@ -88,7 +89,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual("unsupported sort key 'bad' for 'sort'.",
                          six.text_type(ex))
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     def test_cluster_policy_list2_cluster_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='cluster',
                                                      id='Bogus')
@@ -101,7 +102,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(service.EngineService, 'policy_find')
     @mock.patch.object(cpo.ClusterPolicy, 'get')
     def test_cluster_policy_get2(self, mock_get, mock_policy, mock_cluster):
@@ -121,7 +122,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_policy.assert_called_once_with(self.ctx, 'P1')
         mock_get.assert_called_once_with(self.ctx, 'C1', 'P1')
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     def test_cluster_policy_get2_cluster_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='cluster',
                                                      id='cid')
@@ -135,7 +136,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'cid')
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_cluster_policy_get2_policy_not_found(self, mock_policy,
                                                   mock_cluster):
@@ -154,7 +155,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_cluster.assert_called_once_with(self.ctx, 'cid')
         mock_policy.assert_called_once_with(self.ctx, 'pid')
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(service.EngineService, 'policy_find')
     @mock.patch.object(cpo.ClusterPolicy, 'get')
     def test_cluster_policy_get2_binding_not_found(self, mock_get,
@@ -176,7 +177,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(action_mod.Action, 'create')
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(service.EngineService, 'policy_find')
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_policy_attach2(self, notify, mock_policy, mock_cluster,
@@ -202,7 +203,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         )
         notify.assert_called_once_with()
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     def test_cluster_policy_attach2_cluster_not_found(self, mock_cluster):
         mock_cluster.side_effect = exc.ResourceNotFound(type='cluster',
                                                         id='BOGUS')
@@ -218,7 +219,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'BOGUS')
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_cluster_policy_attach2_policy_not_found(self, mock_policy,
                                                      mock_cluster):
@@ -241,7 +242,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(cpo.ClusterPolicy, 'get')
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(service.EngineService, 'policy_find')
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_policy_detach2(self, notify, mock_policy, mock_cluster,
@@ -268,7 +269,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         )
         notify.assert_called_once_with()
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     def test_cluster_policy_detach2_cluster_not_found(self, mock_cluster):
         mock_cluster.side_effect = exc.ResourceNotFound(type='cluster',
                                                         id='Bogus')
@@ -284,7 +285,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_cluster_policy_detach2_policy_not_found(self, mock_policy,
                                                      mock_cluster):
@@ -306,7 +307,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_policy.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(cpo.ClusterPolicy, 'get')
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_cluster_policy_detach2_binding_not_found(self, mock_policy,
                                                       mock_cluster, mock_cp):
@@ -329,7 +330,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(cpo.ClusterPolicy, 'get')
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(service.EngineService, 'policy_find')
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_policy_update2(self, notify, mock_policy, mock_cluster,
@@ -357,7 +358,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         )
         notify.assert_called_once_with()
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     def test_cluster_policy_update2_cluster_not_found(self, mock_cluster):
         mock_cluster.side_effect = exc.ResourceNotFound(type='cluster',
                                                         id='Bogus')
@@ -373,7 +374,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_cluster_policy_update2_policy_not_found(self, mock_policy,
                                                      mock_cluster):
@@ -395,7 +396,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_policy.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(cpo.ClusterPolicy, 'get')
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(service.EngineService, 'policy_find')
     def test_cluster_policy_update2_binding_not_found(self, mock_policy,
                                                       mock_cluster, mock_cp):

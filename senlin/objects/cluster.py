@@ -12,6 +12,9 @@
 
 """Cluster object."""
 
+from oslo_utils import uuidutils
+
+from senlin.common import exception as exc
 from senlin.db import api as db_api
 from senlin.objects import base
 from senlin.objects import fields
@@ -49,6 +52,27 @@ class Cluster(base.SenlinObject, base.VersionedObjectDictCompat):
         values = cls._transpose_metadata(values)
         obj = db_api.cluster_create(context, values)
         return cls._from_db_object(context, cls(context), obj)
+
+    @classmethod
+    def find(cls, context, identity, project_safe=True):
+        cluster = None
+        if uuidutils.is_uuid_like(identity):
+            cluster = cls.get(context, identity, project_safe=project_safe)
+            if not cluster:
+                cluster = cls.get_by_name(context, identity,
+                                          project_safe=project_safe)
+        else:
+            cluster = cls.get_by_name(context, identity,
+                                      project_safe=project_safe)
+            # maybe it is a short form of UUID
+            if not cluster:
+                cluster = cls.get_by_short_id(context, identity,
+                                              project_safe=project_safe)
+
+        if not cluster:
+            raise exc.ResourceNotFound(type='cluster', id=identity)
+
+        return cluster
 
     @classmethod
     def get(cls, context, cluster_id, **kwargs):
