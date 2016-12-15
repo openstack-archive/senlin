@@ -12,8 +12,11 @@
 
 from oslo_config import cfg
 from oslo_log import log as logging
+from oslo_utils import timeutils
+import six
 from stevedore import named
 
+from senlin.common import consts
 from senlin.common.i18n import _LE, _LI, _LW
 
 LOG = logging.getLogger(__name__)
@@ -28,11 +31,11 @@ def load_dispatcher():
     LOG.debug("Loading dispatchers")
     dispatchers = named.NamedExtensionManager(
         namespace="senlin.dispatchers",
-        names=cfg.CONF.dispatchers,
+        names=cfg.CONF.event_dispatchers,
         invoke_on_load=True,
         propagate_map_exceptions=True)
     if not list(dispatchers):
-        LOG.warning(_LW("No dispatchers configured for 'senlin.disaptchers'"))
+        LOG.warning(_LW("No dispatchers configured for 'senlin.dispatchers'"))
     else:
         LOG.info(_LI("Loaded dispatchers: %s"), dispatchers.names())
 
@@ -47,11 +50,23 @@ def _event_data(action, phase=None, reason=None):
 
 def _dump(level, action, phase, reason, timestamp):
     global dispatchers
+
+    if timestamp is None:
+        timestamp = timeutils.utcnow(True)
+
+    # We check the logging level threshold only when debug is False
+    if cfg.CONF.debug is False:
+        watermark = cfg.CONF.dispatchers.priority.upper()
+        bound = consts.EVENT_LEVELS.get(watermark, logging.INFO)
+        if level < bound:
+            return
+
     try:
         dispatchers.map_method("dump", level, action,
                                phase=phase, reason=reason, timestamp=timestamp)
-    except Exception:
-        LOG.exception(_LE("Dispatcher failed to handle the event"))
+    except Exception as ex:
+        LOG.exception(_LE("Dispatcher failed to handle the event: %s"),
+                      six.text_type(ex))
 
 
 def critical(action, phase=None, reason=None, timestamp=None):
