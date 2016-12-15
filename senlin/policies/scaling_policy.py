@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_config import cfg
+
 from senlin.common import constraints
 from senlin.common import consts
 from senlin.common.i18n import _
@@ -19,6 +21,9 @@ from senlin.common import utils
 from senlin.objects import cluster as co
 from senlin.objects import node as no
 from senlin.policies import base
+
+
+CONF = cfg.CONF
 
 
 class ScalingPolicy(base.Policy):
@@ -182,6 +187,9 @@ class ScalingPolicy(base.Policy):
 
         # Check size constraints
         cluster = co.Cluster.get(action.context, cluster_id)
+        max_size = cluster.max_size
+        if max_size == -1:
+            max_size = cfg.CONF.max_nodes_per_cluster
         if action.action == consts.CLUSTER_SCALE_IN:
             if self.best_effort:
                 count = min(count, current - cluster.min_size)
@@ -189,7 +197,7 @@ class ScalingPolicy(base.Policy):
                                           strict=not self.best_effort)
         else:
             if self.best_effort:
-                count = min(count, cluster.max_size - current)
+                count = min(count, max_size - current)
             result = su.check_size_params(cluster, current + count,
                                           strict=not self.best_effort)
 

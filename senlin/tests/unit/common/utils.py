@@ -85,7 +85,7 @@ def create_profile(context, profile_id):
     return objects.Profile.create(context, values)
 
 
-def create_cluster(context, cluster_id, profile_id):
+def create_cluster(context, cluster_id, profile_id, **kwargs):
     values = {
         'id': cluster_id,
         'profile_id': profile_id,
@@ -99,7 +99,7 @@ def create_cluster(context, cluster_id, profile_id):
         'user': context.user,
         'project': context.project,
     }
-
+    values.update(kwargs)
     return objects.Cluster.create(context, values)
 
 

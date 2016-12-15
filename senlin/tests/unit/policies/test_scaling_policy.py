@@ -21,6 +21,7 @@ from senlin.tests.unit.common import utils
 
 PROFILE_ID = 'aa5f86b8-e52b-4f2b-828a-4c14c770938d'
 CLUSTER_ID = '2c5139a6-24ba-4a6f-bd53-a268f61536de'
+CLUSTER_NOMAXSIZE_ID = 'e470c11d-910d-491b-a7c3-93b047a6108d'
 
 
 class TestScalingPolicy(base.SenlinTestCase):
@@ -45,6 +46,9 @@ class TestScalingPolicy(base.SenlinTestCase):
         self.profile = utils.create_profile(self.context, PROFILE_ID)
         self.cluster = utils.create_cluster(self.context, CLUSTER_ID,
                                             PROFILE_ID)
+        self.cluster_no_maxsize = utils. \
+            create_cluster(self.context, CLUSTER_NOMAXSIZE_ID,
+                           PROFILE_ID, max_size=-1)
 
     def _create_nodes(self, count):
         NODE_IDS = [
@@ -191,6 +195,31 @@ class TestScalingPolicy(base.SenlinTestCase):
             'status': pb.CHECK_OK,
         }
         action.data.update.assert_called_with(pd)
+
+    @mock.patch.object(sp.ScalingPolicy, '_calculate_adjustment_count')
+    @mock.patch.object(no.Node, 'count_by_cluster')
+    def test_pre_op_pass_check_effort(self, mock_currentcount,
+                                      mock_adjustmentcount):
+        # Cluster with maxsize and best_effert is False
+        action = mock.Mock()
+        action.context = self.context
+        action.action = consts.CLUSTER_SCALE_OUT
+        action.inputs = {}
+        mock_adjustmentcount.return_value = 1
+        mock_currentcount.return_value = 2
+        policy = sp.ScalingPolicy('test-policy', self.spec)
+        policy.event = consts.CLUSTER_SCALE_OUT
+        policy.best_effort = True
+        policy.pre_op(self.cluster_no_maxsize['id'], action)
+        pd = {
+            'creation': {
+                'count': 1,
+            },
+            'reason': 'Scaling request validated.',
+            'status': pb.CHECK_OK,
+        }
+        action.data.update.assert_called_with(pd)
+        action.store.assert_called_with(self.context)
 
     def test_pre_op_fail_negative_count(self):
         self._create_nodes(3)
