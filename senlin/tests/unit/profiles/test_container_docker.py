@@ -54,17 +54,9 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         self.assertIsNone(profile.container_id)
         self.assertIsNone(profile.host)
 
+    @mock.patch.object(db_api, 'node_add_dependents')
     @mock.patch.object(db_api, 'cluster_add_dependents')
-    def test_create(self, mock_add):
-        profile = docker_profile.DockerProfile.create(
-            self.context, 'fake_name', self.spec)
-
-        self.assertIsNotNone(profile)
-        mock_add.assert_called_once_with(self.context, 'fake_cluster',
-                                         profile.id)
-
-    @mock.patch.object(db_api, 'cluster_add_dependents')
-    def test_create_no_host_cluster(self, mock_add):
+    def test_create_with_host_node(self, mock_cadd, mock_nadd):
         spec = copy.deepcopy(self.spec)
         del spec['properties']['host_cluster']
 
@@ -72,39 +64,63 @@ class TestContainerDockerProfile(base.SenlinTestCase):
             self.context, 'fake_name', spec)
 
         self.assertIsNotNone(profile)
-        self.assertEqual(0, mock_add.call_count)
+        mock_nadd.assert_called_once_with(self.context, 'fake_node',
+                                          profile.id, 'profile')
+        self.assertEqual(0, mock_cadd.call_count)
 
-    @mock.patch.object(base_profile.Profile, 'delete')
-    @mock.patch.object(base_profile.Profile, 'load')
-    @mock.patch.object(db_api, 'cluster_remove_dependents')
-    def test_delete(self, mock_db, mock_load, mock_delete):
-        profile = docker_profile.DockerProfile('t', self.spec)
-        mock_load.return_value = profile
-
-        res = docker_profile.DockerProfile.delete(self.context, 'FAKE_ID')
-
-        self.assertIsNone(res)
-        mock_load.assert_called_once_with(self.context, profile_id='FAKE_ID')
-        mock_db.assert_called_once_with(self.context, 'fake_cluster',
-                                        'FAKE_ID')
-        mock_delete.assert_called_once_with(self.context, 'FAKE_ID')
-
-    @mock.patch.object(base_profile.Profile, 'delete')
-    @mock.patch.object(base_profile.Profile, 'load')
-    @mock.patch.object(db_api, 'cluster_remove_dependents')
-    def test_delete_no_host_cluster(self, mock_db, mock_load, mock_delete):
+    @mock.patch.object(db_api, 'node_add_dependents')
+    @mock.patch.object(db_api, 'cluster_add_dependents')
+    def test_create_with_host_cluster(self, mock_cadd, mock_nadd):
         spec = copy.deepcopy(self.spec)
-        del spec['properties']['host_cluster']
+        del spec['properties']['host_node']
+
         profile = docker_profile.DockerProfile.create(
             self.context, 'fake_name', spec)
+
+        self.assertIsNotNone(profile)
+        mock_cadd.assert_called_once_with(self.context, 'fake_cluster',
+                                          profile.id)
+        self.assertEqual(0, mock_nadd.call_count)
+
+    @mock.patch.object(base_profile.Profile, 'delete')
+    @mock.patch.object(base_profile.Profile, 'load')
+    @mock.patch.object(db_api, 'node_remove_dependents')
+    @mock.patch.object(db_api, 'cluster_remove_dependents')
+    def test_delete_with_host_node(self, mock_cdel, mock_ndel, mock_load,
+                                   mock_delete):
+        spec = copy.deepcopy(self.spec)
+        del spec['properties']['host_cluster']
+
+        profile = docker_profile.DockerProfile('t', spec)
         mock_load.return_value = profile
 
         res = docker_profile.DockerProfile.delete(self.context, 'FAKE_ID')
 
         self.assertIsNone(res)
         mock_load.assert_called_once_with(self.context, profile_id='FAKE_ID')
-        self.assertEqual(0, mock_db.call_count)
+        mock_ndel.assert_called_once_with(self.context, 'fake_node',
+                                          'FAKE_ID', 'profile')
+        self.assertEqual(0, mock_cdel.call_count)
         mock_delete.assert_called_once_with(self.context, 'FAKE_ID')
+
+    @mock.patch.object(base_profile.Profile, 'delete')
+    @mock.patch.object(base_profile.Profile, 'load')
+    @mock.patch.object(db_api, 'node_remove_dependents')
+    @mock.patch.object(db_api, 'cluster_remove_dependents')
+    def test_delete_with_host_cluster(self, mock_cdel, mock_ndel, mock_load,
+                                      mock_delete):
+        spec = copy.deepcopy(self.spec)
+        del spec['properties']['host_node']
+        profile = docker_profile.DockerProfile('fake_name', spec)
+        mock_load.return_value = profile
+
+        res = docker_profile.DockerProfile.delete(self.context, 'FAKE_ID')
+
+        self.assertIsNone(res)
+        mock_load.assert_called_once_with(self.context, profile_id='FAKE_ID')
+        mock_cdel.assert_called_once_with(self.context, 'fake_cluster',
+                                          'FAKE_ID')
+        self.assertEqual(0, mock_ndel.call_count)
 
     @mock.patch('senlin.drivers.container.docker_v1.DockerClient')
     @mock.patch.object(docker_profile.DockerProfile, '_get_host_ip')
