@@ -604,7 +604,6 @@ class EngineService(service.Service):
         return [p.to_dict()
                 for p in policy_base.Policy.load_all(ctx, **query)]
 
-    @request_context
     def _validate_policy(self, context, spec, name=None, validate_props=False):
         """Validate a policy.
 
