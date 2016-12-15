@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
+
 import mock
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
@@ -25,6 +27,7 @@ from senlin.objects.requests import clusters as vorc
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
+from senlin.tests.unit.common import utils
 
 
 @mock.patch.object(policy, 'enforce')
@@ -39,6 +42,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         cfgopts = DummyConfig()
         self.controller = clusters.ClusterController(options=cfgopts)
+        self.context = utils.dummy_context()
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -599,6 +603,134 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def _test_resize_with_type(self, adj_type, mock_call, mock_parse):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        data = {
+            'adjustment_type': adj_type,
+            'number': 1,
+            'min_size': 0,
+            'max_size': 10,
+            'min_step': 1,
+            'strict': True
+        }
+        mock_call.return_value = {'action': 'action-id'}
+        # We are using a real object for testing
+        obj = vorc.ClusterResizeRequest(identity=cid, **data)
+        mock_parse.return_value = obj
+
+        resp = self.controller._do_resize(req, cid, data)
+
+        self.assertEqual({'action': 'action-id'}, resp)
+        params = copy.deepcopy(data)
+        params['identity'] = cid
+        mock_parse.assert_called_once_with(
+            'ClusterResizeRequest', req, params)
+        mock_call.assert_called_once_with(req.context, 'cluster_resize2', obj)
+
+    def test__do_resize_exact_capacity(self, mock_enforce):
+        self._test_resize_with_type('EXACT_CAPACITY')
+
+    def test__do_resize_with_change_capacity(self, mock_enforce):
+        self._test_resize_with_type('CHANGE_IN_CAPACITY')
+
+    def test__do_resize_with_change_percentage(self, mock_enforce):
+        self._test_resize_with_type('CHANGE_IN_PERCENTAGE')
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__do_resize_failed_request(self, mock_call, mock_parse, _ign):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        data = {'adjustment_type': 'EXACT_CAPACITY', 'number': 10}
+        mock_parse.side_effect = exc.HTTPBadRequest('Boom')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller._do_resize,
+                               req, cid, data)
+
+        self.assertEqual("Boom", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ClusterResizeRequest', req,
+            {
+                'identity': cid,
+                'adjustment_type': 'EXACT_CAPACITY',
+                'number': 10
+            })
+        self.assertFalse(mock_call.called)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__do_resize_missing_number(self, mock_call, mock_parse, _ign):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        data = {'adjustment_type': 'EXACT_CAPACITY'}
+        obj = vorc.ClusterResizeRequest(identity=cid, **data)
+        mock_parse.return_value = obj
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller._do_resize,
+                               req, cid, data)
+
+        self.assertEqual('Missing number value for size adjustment.',
+                         six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__do_resize_missing_type(self, mock_call, mock_parse, _ign):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        data = {'number': 2}
+        obj = vorc.ClusterResizeRequest(identity=cid, **data)
+        mock_parse.return_value = obj
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller._do_resize,
+                               req, cid, data)
+
+        self.assertEqual("Missing adjustment_type value for size adjustment.",
+                         six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__do_resize_max_size_too_small(self, mock_call, mock_parse, _ign):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        data = {'min_size': 2, 'max_size': 1}
+        obj = vorc.ClusterResizeRequest(identity=cid, **data)
+        mock_parse.return_value = obj
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller._do_resize,
+                               req, cid, data)
+
+        self.assertEqual("The specified min_size (2) is greater than "
+                         "the specified max_size (1).", six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test__do_resize_failed_engine(self, mock_call, mock_parse, _ign):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        data = {'max_size': 200}
+        obj = vorc.ClusterResizeRequest(identity=cid, **data)
+        mock_parse.return_value = obj
+        mock_call.side_effect = senlin_exc.BadRequest(msg='Boom')
+
+        ex = self.assertRaises(senlin_exc.BadRequest,
+                               self.controller._do_resize,
+                               req, cid, data)
+
+        mock_parse.assert_called_once_with(
+            'ClusterResizeRequest', req, {'identity': cid, 'max_size': 200})
+        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        mock_call.assert_called_once_with(
+            req.context, 'cluster_resize2', obj)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test__do_scale_out(self, mock_call, mock_parse, _ignore):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
@@ -1040,217 +1172,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(
             req.context, 'cluster_recover2', obj)
 
-    def test_cluster_delete(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'delete', True)
-        cid = 'aaaa-bbbb-cccc'
-        req = self._delete('/clusters/%s' % cid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value={'action': 'FAKE_ID'})
-
-        res = self.controller.delete(req, cluster_id=cid)
-
-        result = {'location': '/actions/FAKE_ID'}
-        self.assertEqual(result, res)
-        mock_call.assert_called_with(req.context, 'cluster_delete2', mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorc.ClusterDeleteRequest)
-        self.assertEqual(cid, request.identity)
-
-    def test_cluster_delete_not_found(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'delete', True)
-        cid = 'aaaa-bbbb-cccc'
-        req = self._delete('/clusters/%s' % cid)
-        error = senlin_exc.ResourceNotFound(type='cluster', id=cid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
-        mock_call.side_effect = shared.to_remote_error(error)
-
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.delete,
-                                              req, cluster_id=cid)
-
-        self.assertEqual(404, resp.json['code'])
-        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
-
-    def test_cluster_delete_err_denied_policy(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'delete', False)
-        cid = 'aaaa-bbbb-cccc'
-        req = self._delete('/clusters/%s' % cid)
-        resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.delete,
-                                              req, cluster_id=cid)
-
-        self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
-
-    def _test_action_resize_w_type(self, adj_type, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'aaaa-bbbb-cccc'
-        body = {
-            'resize': {
-                'adjustment_type': adj_type,
-                'number': 1,
-                'min_size': 0,
-                'max_size': 10,
-                'min_step': 1,
-                'strict': True
-            }
-        }
-        eng_resp = {'action': 'action-id'}
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=eng_resp)
-
-        resp = self.controller.action(req, cluster_id=cid, body=body)
-
-        mock_call.assert_called_once_with(req.context, 'cluster_resize2',
-                                          mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorc.ClusterResizeRequest)
-        self.assertEqual(adj_type, request.adjustment_type)
-        self.assertEqual(1, request.number)
-        self.assertEqual(0, request.min_size)
-        self.assertEqual(10, request.max_size)
-        self.assertEqual(1, request.min_step)
-        self.assertTrue(request.strict)
-        result = {
-            'action': 'action-id',
-            'location': '/actions/action-id',
-        }
-        self.assertEqual(result, resp)
-
-    def test_action_resize_with_exact_capacity(self, mock_enforce):
-        self._test_action_resize_w_type('EXACT_CAPACITY', mock_enforce)
-
-    def test_action_resize_with_change_capacity(self, mock_enforce):
-        self._test_action_resize_w_type('CHANGE_IN_CAPACITY', mock_enforce)
-
-    def test_action_resize_with_change_percentage(self, mock_enforce):
-        self._test_action_resize_w_type('CHANGE_IN_PERCENTAGE', mock_enforce)
-
-    def test_action_resize_with_bad_type(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        cid = 'aaaa-bbbb-cccc'
-        body = {
-            'resize': {
-                'adjustment_type': 'NOT_QUITE_SURE',
-                'number': 1
-            }
-        }
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.action,
-                               req, cluster_id=cid, body=body)
-
-        self.assertIn("Value 'NOT_QUITE_SURE' is not acceptable for field "
-                      "'adjustment_type'.", six.text_type(ex))
-        self.assertEqual(0, mock_call.call_count)
-
-    def test_action_resize_missing_number(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
-        cid = 'aaaa-bbbb-cccc'
-        body = {
-            'resize': {
-                'adjustment_type': 'EXACT_CAPACITY',
-            }
-        }
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.action,
-                               req, cluster_id=cid, body=body)
-
-        self.assertEqual('Missing number value for size adjustment.',
-                         six.text_type(ex))
-        self.assertEqual(0, mock_call.call_count)
-
-    def test_action_resize_missing_type(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
-
-        cid = 'aaaa-bbbb-cccc'
-        body = {'resize': {'number': 2}}
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.action,
-                               req, cluster_id=cid, body=body)
-
-        self.assertEqual("Missing adjustment_type value for size adjustment.",
-                         six.text_type(ex))
-        self.assertEqual(0, mock_call.call_count)
-
-    def _test_resize_param_not_int(self, param, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
-        cid = 'aaaa-bbbb-cccc'
-        body = {
-            'resize': {
-                'adjustment_type': 'CHANGE_IN_CAPACITY',
-                'number': 1,
-            }
-        }
-        body['resize'][param] = 'BOGUS'
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.action,
-                               req, cluster_id=cid, body=body)
-
-        self.assertEqual(0, mock_call.call_count)
-
-        return six.text_type(ex)
-
-    def test_action_resize_number_not_int(self, mock_enforce):
-        r = self._test_resize_param_not_int('number', mock_enforce)
-        self.assertIn('could not convert string to float', r)
-
-    def test_action_resize_min_size_not_int(self, mock_enforce):
-        r = self._test_resize_param_not_int('min_size', mock_enforce)
-        self.assertEqual("The value for min_size must be an integer: 'BOGUS'.",
-                         r)
-
-    def test_action_resize_max_size_not_int(self, mock_enforce):
-        r = self._test_resize_param_not_int('max_size', mock_enforce)
-        self.assertEqual("The value for max_size must be an integer: 'BOGUS'.",
-                         r)
-
-    def test_action_resize_min_step_not_int(self, mock_enforce):
-        r = self._test_resize_param_not_int('min_step', mock_enforce)
-        self.assertEqual("invalid literal for int() with base 10: 'BOGUS'", r)
-
-    def test_action_resize_max_size_too_small(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
-        cid = 'aaaa-bbbb-cccc'
-        body = {'resize': {'min_size': 2, 'max_size': 1}}
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.action,
-                               req, cluster_id=cid, body=body)
-
-        self.assertEqual("The specified min_size (2) is greater than "
-                         "the specified max_size (1).", six.text_type(ex))
-        self.assertEqual(0, mock_call.call_count)
-
-    def test_action_resize_strict_non_bool(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'action', True)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
-        cid = 'aaaa-bbbb-cccc'
-        body = {'resize': {'strict': 'FOO'}}
-        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.action,
-                               req, cluster_id=cid, body=body)
-
-        self.assertIn("Unrecognized value 'FOO'", six.text_type(ex))
-        self.assertEqual(0, mock_call.call_count)
-
     def test_cluster_action_missing_action(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         cid = 'aaaa-bbbb-cccc'
@@ -1305,39 +1226,31 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_cluster_collect(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'collect', True)
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_collect(self, mock_call, mock_parse, mock_enforce):
+        req = mock.Mock(context=self.context)
         cid = 'aaaa-bbbb-cccc'
         path = 'foo.bar'
-        req = self._get('/clusters/%(cid)s/attrs/%(path)s' %
-                        {'cid': cid, 'path': path}, version='1.2')
-        engine_response = {
-            'cluster_attributes': [{'key': 'value'}],
-        }
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_response)
+        eng_resp = {'cluster_attributes': [{'key': 'value'}]}
+        mock_call.return_value = eng_resp
+        obj = vorc.ClusterResizeRequest(identity=cid, path=path)
+        mock_parse.return_value = obj
 
         resp = self.controller.collect(req, cluster_id=cid, path=path)
 
-        self.assertEqual(engine_response, resp)
-        mock_call.assert_called_once_with(req.context, 'cluster_collect2',
-                                          mock.ANY)
+        self.assertEqual(eng_resp, resp)
+        mock_call.assert_called_once_with(req.context, 'cluster_collect2', obj)
 
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorc.ClusterCollectRequest)
-        self.assertEqual(cid, request.identity)
-        self.assertEqual(path, request.path)
-
-    def test_cluster_collect_version_mismatch(self, mock_enforce):
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_collect_version_mismatch(self, mock_call, mock_enforce):
         # NOTE: we skip the mock_enforce setup below because api version check
         #       comes before the policy enforcement and the check fails in
         #       this test case.
-        # self._mock_enforce_setup(mock_enforce, 'collect', True)
         cid = 'aaaa-bbbb-cccc'
         path = 'foo.bar'
         req = self._get('/clusters/%(cid)s/attrs/%(path)s' %
                         {'cid': cid, 'path': path}, version='1.1')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
 
         ex = self.assertRaises(senlin_exc.MethodVersionNotFound,
                                self.controller.collect,
@@ -1347,23 +1260,63 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('API version 1.1 is not supported on this method.',
                          six.text_type(ex))
 
-    def test_cluster_collect_path_not_provided(self, mock_enforce):
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_collect_path_not_provided(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'collect', True)
+        req = mock.Mock(context=self.context)
         cid = 'aaaa-bbbb-cccc'
         path = '    '
         req = self._get('/clusters/%(cid)s/attrs/%(path)s' %
                         {'cid': cid, 'path': path}, version='1.2')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.collect,
                                req, cluster_id=cid, path=path)
 
-        self.assertEqual(0, mock_call.call_count)
         self.assertEqual('Required path attribute is missing.',
                          six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
 
-    def test_cluster_collect_denied_policy(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_collect_failed_request(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'collect', True)
+        req = mock.Mock(context=self.context)
+        cid = 'aaaa-bbbb-cccc'
+        path = 'foo.bar'
+        mock_parse.side_effect = exc.HTTPBadRequest('Boom')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.collect,
+                               req, cluster_id=cid, path=path)
+
+        self.assertEqual("Boom", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ClusterCollectRequest', req, {'identity': cid, 'path': path})
+        self.assertFalse(mock_call.called)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_collect_failed_engine(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'collect', True)
+        req = mock.Mock(context=self.context)
+        cid = 'aaaa-bbbb-cccc'
+        path = 'foo.bar'
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.side_effect = senlin_exc.BadRequest(msg='Boom')
+
+        ex = self.assertRaises(senlin_exc.BadRequest,
+                               self.controller.collect,
+                               req, cluster_id=cid, path=path)
+
+        mock_parse.assert_called_once_with(
+            'ClusterCollectRequest', req, {'identity': cid, 'path': path})
+        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        mock_call.assert_called_once_with(
+            req.context, 'cluster_collect2', obj)
+
+    def test_collect_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'collect', False)
         cid = 'aaaa-bbbb-cccc'
         path = 'foo.bar'
@@ -1378,3 +1331,69 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
         self.assertEqual(0, mock_call.call_count)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_delete(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete', True)
+        req = mock.Mock(context=self.context)
+        cid = 'aaaa-bbbb-cccc'
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.return_value = {'action': 'FAKE_ID'}
+
+        res = self.controller.delete(req, cluster_id=cid)
+
+        result = {'location': '/actions/FAKE_ID'}
+        self.assertEqual(result, res)
+        mock_parse.assert_called_once_with(
+            'ClusterDeleteRequest', req, {'identity': cid})
+
+        mock_call.assert_called_with(req.context, 'cluster_delete2', obj)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_delete_failed_request(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete', True)
+        cid = 'fake-cluster'
+        req = mock.Mock(context=self.context)
+        mock_parse.side_effect = exc.HTTPBadRequest('Boom')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.delete,
+                               req, cluster_id=cid)
+
+        self.assertEqual("Boom", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ClusterDeleteRequest', req, {'identity': cid})
+        self.assertFalse(mock_call.called)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_delete_failed_engine(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete', True)
+        req = mock.Mock(context=self.context)
+        cid = 'aaaa-bbbb-cccc'
+        req = self._delete('/clusters/%s' % cid)
+        error = senlin_exc.ResourceNotFound(type='cluster', id=cid)
+        mock_call.side_effect = shared.to_remote_error(error)
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.delete,
+                                              req, cluster_id=cid)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+
+    def test_delete_err_denied_policy(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete', False)
+        cid = 'aaaa-bbbb-cccc'
+        req = self._delete('/clusters/%s' % cid)
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.delete,
+                                              req, cluster_id=cid)
+
+        self.assertEqual(403, resp.status_int)
+        self.assertIn('403 Forbidden', six.text_type(resp))
