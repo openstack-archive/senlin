@@ -2182,28 +2182,6 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    def event_find(self, context, identity, project_safe=True):
-        """Find an event with the given identity.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of the event.
-        :param project_safe: A boolean specifying that only events from the
-                             same project as the requesting one are qualified
-                             to be returned.
-        :return: A dictionary containing the details of the event.
-        """
-        event = None
-        if uuidutils.is_uuid_like(identity):
-            event = event_obj.Event.get(context, identity,
-                                        project_safe=project_safe)
-        if not event:
-            event = event_obj.Event.get_by_short_id(context, identity,
-                                                    project_safe=project_safe)
-        if not event:
-            raise exception.ResourceNotFound(type='event', id=identity)
-
-        return event
-
     @request_context2
     def event_list2(self, ctx, req):
         """List event records matching the specified criteria.
@@ -2269,7 +2247,7 @@ class EngineService(service.Service):
                  event could be found.
         """
 
-        db_event = self.event_find(context, req.identity)
+        db_event = event_obj.Event.find(context, req.identity)
         evt = db_event.as_dict()
         level = utils.level_from_number(evt['level'])
         evt['level'] = level
