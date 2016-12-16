@@ -1893,32 +1893,6 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    def action_find(self, context, identity, project_safe=True):
-        """Find an action with the given identity.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of an action.
-        :return: A DB object of action or an exception `ResourceNotFound` if
-                 no matching action is found.
-        """
-        if uuidutils.is_uuid_like(identity):
-            action = action_obj.Action.get(context, identity,
-                                           project_safe=project_safe)
-            if not action:
-                action = action_obj.Action.get_by_name(
-                    context, identity, project_safe=project_safe)
-        else:
-            action = action_obj.Action.get_by_name(
-                context, identity, project_safe=project_safe)
-            if not action:
-                action = action_obj.Action.get_by_short_id(
-                    context, identity, project_safe=project_safe)
-
-        if not action:
-            raise exception.ResourceNotFound(type='action', id=identity)
-
-        return action
-
     @request_context2
     def action_list2(self, ctx, req):
         """List action records matching the specified criteria.
@@ -1998,7 +1972,7 @@ class EngineService(service.Service):
                  action could be found.
         """
 
-        db_action = self.action_find(ctx, req.identity)
+        db_action = action_obj.Action.find(ctx, req.identity)
         action = action_mod.Action.load(ctx, db_action=db_action)
 
         return action.to_dict()
@@ -2012,7 +1986,7 @@ class EngineService(service.Service):
         :return: None if deletion was successful, or an exception of type
                  `ResourceInUse`.
         """
-        db_action = self.action_find(ctx, req.identity)
+        db_action = action_obj.Action.find(ctx, req.identity)
         LOG.info(_LI("Deleting action '%s'."), req.identity)
         try:
             action_mod.Action.delete(ctx, db_action.id)
