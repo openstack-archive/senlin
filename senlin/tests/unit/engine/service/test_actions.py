@@ -19,6 +19,7 @@ from senlin.common import exception as exc
 from senlin.engine.actions import base as action_base
 from senlin.engine import service
 from senlin.objects import action as ao
+from senlin.objects import cluster as co
 from senlin.objects.requests import actions as orao
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -167,7 +168,7 @@ class ActionTest(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.ctx, project_safe=False)
 
     @mock.patch.object(action_base.Action, 'create')
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     def test_action_create2(self, mock_find, mock_action):
         mock_find.return_value = mock.Mock(id='FAKE_CLUSTER')
         mock_action.return_value = 'ACTION_ID'
@@ -186,7 +187,7 @@ class ActionTest(base.SenlinTestCase):
             status=action_base.Action.READY,
             inputs={})
 
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     def test_action_create2_cluster_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='cluster', id='C1')
 

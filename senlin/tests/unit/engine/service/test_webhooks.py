@@ -18,6 +18,7 @@ from senlin.common import exception
 from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
 from senlin.engine import service
+from senlin.objects import cluster as co
 from senlin.objects.requests import webhooks as vorw
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -32,7 +33,7 @@ class WebhookTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(service.EngineService, 'receiver_find')
     def test_webhook_trigger2_with_params(self, mock_get, mock_find,
                                           mock_action, notify):
@@ -63,7 +64,7 @@ class WebhookTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(service.EngineService, 'receiver_find')
     def test_webhook_trigger2_no_params(self, mock_get, mock_find,
                                         mock_action, notify):
@@ -108,7 +109,7 @@ class WebhookTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'RRR')
 
     @mock.patch.object(service.EngineService, 'receiver_find')
-    @mock.patch.object(service.EngineService, 'cluster_find')
+    @mock.patch.object(co.Cluster, 'find')
     def test_webhook_trigger_cluster_not_found2(self, mock_cluster, mock_find):
         receiver = mock.Mock()
         receiver.cluster_id = 'BOGUS'
