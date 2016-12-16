@@ -999,7 +999,7 @@ class EngineService(service.Service):
         not_match_nodes = []
         for node in req.nodes:
             try:
-                db_node = self.node_find(context, node)
+                db_node = node_obj.Node.find(context, node)
                 # Skip node in the same cluster already
                 if db_node.status != consts.NS_ACTIVE:
                     bad_nodes.append(db_node.id)
@@ -1013,7 +1013,7 @@ class EngineService(service.Service):
                     not_match_nodes.append(db_node.id)
 
                 found.append(db_node.id)
-            except exception.ResourceNotFound:
+            except (exception.ResourceNotFound, exception.MultipleChoices):
                 not_found.append(node)
                 pass
 
@@ -1071,7 +1071,7 @@ class EngineService(service.Service):
         depended_nodes = []
         for node in req.nodes:
             try:
-                db_node = self.node_find(ctx, node)
+                db_node = node_obj.Node.find(ctx, node)
                 dep_nodes = db_node.dependents.get('nodes', None)
                 if db_node.cluster_id != db_cluster.id:
                     bad_nodes.append(db_node.id)
@@ -1079,7 +1079,7 @@ class EngineService(service.Service):
                     depended_nodes.append(db_node.id)
                 else:
                     found.append(db_node.id)
-            except exception.ResourceNotFound:
+            except (exception.ResourceNotFound, exception.MultipleChoices):
                 not_found.append(node)
                 pass
 
@@ -1148,14 +1148,14 @@ class EngineService(service.Service):
         not_match_nodes = []
         for (old_node, new_node) in nodes.items():
             try:
-                db_old_node = self.node_find(ctx, old_node)
-            except exception.ResourceNotFound:
+                db_old_node = node_obj.Node.find(ctx, old_node)
+            except (exception.ResourceNotFound, exception.MultipleChoices):
                 not_found_old.append(old_node)
                 continue
 
             try:
-                db_new_node = self.node_find(ctx, new_node)
-            except exception.ResourceNotFound:
+                db_new_node = node_obj.Node.find(ctx, new_node)
+            except (exception.ResourceNotFound, exception.MultipleChoices):
                 not_found_new.append(new_node)
                 continue
 
@@ -1479,35 +1479,6 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    def node_find(self, context, identity, project_safe=True):
-        """Find a node with the given identity.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a node.
-        :param project_safe: A boolean indicating whether only nodes from the
-                             same project as the requesting one are qualified
-                             to be returned.
-        :return: A DB object of Node or an exception of `ResourceNotFound` if
-                 no matching object is found.
-        """
-        if uuidutils.is_uuid_like(identity):
-            node = node_obj.Node.get(context, identity,
-                                     project_safe=project_safe)
-            if not node:
-                node = node_obj.Node.get_by_name(context, identity,
-                                                 project_safe=project_safe)
-        else:
-            node = node_obj.Node.get_by_name(context, identity,
-                                             project_safe=project_safe)
-            if not node:
-                node = node_obj.Node.get_by_short_id(
-                    context, identity, project_safe=project_safe)
-
-        if node is None:
-            raise exception.ResourceNotFound(type='node', id=identity)
-
-        return node
-
     @request_context2
     def node_list2(self, ctx, req):
         """List node records matching the specified criteria.
@@ -1627,7 +1598,7 @@ class EngineService(service.Service):
                  could be found.
         """
         req.obj_set_defaults()
-        db_node = self.node_find(ctx, req.identity)
+        db_node = node_obj.Node.find(ctx, req.identity)
         node = node_mod.Node.load(ctx, db_node=db_node)
         res = node.to_dict()
         if req.show_details and node.physical_id:
@@ -1646,7 +1617,7 @@ class EngineService(service.Service):
         """
         LOG.info(_LI("Updating node '%s'."), req.identity)
 
-        db_node = self.node_find(ctx, req.identity)
+        db_node = node_obj.Node.find(ctx, req.identity)
         if req.obj_attr_is_set('profile_id') and req.profile_id is not None:
             try:
                 db_profile = self.profile_find(ctx, req.profile_id)
@@ -1707,7 +1678,7 @@ class EngineService(service.Service):
         """
         LOG.info(_LI('Deleting node %s'), req.identity)
 
-        node = self.node_find(ctx, req.identity)
+        node = node_obj.Node.find(ctx, req.identity)
 
         if node.status in [consts.NS_CREATING,
                            consts.NS_UPDATING,
@@ -1745,7 +1716,7 @@ class EngineService(service.Service):
         """
         LOG.info(_LI("Checking node '%s'."), req.identity)
 
-        db_node = self.node_find(ctx, req.identity)
+        db_node = node_obj.Node.find(ctx, req.identity)
 
         kwargs = {
             'name': 'node_check_%s' % db_node.id[:8],
@@ -1772,7 +1743,7 @@ class EngineService(service.Service):
         """
         LOG.info(_LI("Recovering node '%s'."), req.identity)
 
-        db_node = self.node_find(ctx, req.identity)
+        db_node = node_obj.Node.find(ctx, req.identity)
 
         kwargs = {
             'name': 'node_recover_%s' % db_node.id[:8],

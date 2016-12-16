@@ -505,7 +505,7 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(am.Action, 'create')
     @mock.patch.object(pr.Profile, 'get')
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_add_nodes2(self, notify, mock_find, mock_node,
@@ -544,7 +544,7 @@ class ClusterTest(base.SenlinTestCase):
         notify.assert_called_once_with()
 
     @mock.patch.object(pr.Profile, 'get')
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_add_nodes2_nodes_not_found(self, mock_find, mock_node,
                                                 mock_profile):
@@ -567,7 +567,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_node.assert_called_once_with(self.ctx, 'NODE1')
 
     @mock.patch.object(pr.Profile, 'get')
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_add_nodes2_bad_status(self, mock_find, mock_node,
                                            mock_profile):
@@ -592,7 +592,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_node.assert_called_once_with(self.ctx, 'NODE2')
 
     @mock.patch.object(pr.Profile, 'get')
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_add_nodes2_node_already_owned(self, mock_find,
                                                    mock_node, mock_profile):
@@ -618,7 +618,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_node.assert_called_once_with(self.ctx, 'NODE3')
 
     @mock.patch.object(pr.Profile, 'get')
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_add_nodes2_node_profile_type_not_match(
             self, mock_find, mock_node, mock_profile):
@@ -649,7 +649,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_node.assert_called_once_with(self.ctx, 'NODE4')
 
     @mock.patch.object(pr.Profile, 'get')
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_add_nodes2_mult_err(self, mock_find, mock_node,
                                          mock_profile):
@@ -676,7 +676,7 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(pr.Profile, 'get')
     @mock.patch.object(su, 'check_size_params')
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_add_nodes2_failed_checking(self, mock_find, mock_node,
                                                 mock_check, mock_profile):
@@ -715,7 +715,7 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(am.Action, 'create')
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_del_nodes2(self, notify, mock_find, mock_node,
@@ -761,7 +761,7 @@ class ClusterTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_del_nodes2_node_not_found(self, mock_find, mock_node):
         mock_find.return_value = mock.Mock()
@@ -778,7 +778,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_node.assert_called_once_with(self.ctx, 'NODE1')
 
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_del_nodes2_have_containers(self, mock_cluster, mock_node):
         mock_cluster.return_value = mock.Mock(id='CLUSTER1')
@@ -795,7 +795,7 @@ class ClusterTest(base.SenlinTestCase):
                     "deleted or become orphan nodes")
         self.assertIn(message, six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_del_nodes2_node_in_other_cluster(self, mock_find,
                                                       mock_node):
@@ -814,7 +814,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_node.assert_called_once_with(self.ctx, 'NODE2')
 
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_del_nodes2_mult_errors(self, mock_find, mock_node):
         mock_find.return_value = mock.Mock(id='1234')
@@ -835,7 +835,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         self.assertEqual(2, mock_node.call_count)
 
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_del_nodes2_orphan_nodes(self, mock_find, mock_node):
         mock_find.return_value = mock.Mock(id='1234')
@@ -855,7 +855,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_node.assert_called_once_with(self.ctx, 'NODE3')
 
     @mock.patch.object(su, 'check_size_params')
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_del_nodes2_failed_checking(self, mock_find, mock_node,
                                                 mock_check):
@@ -1412,7 +1412,7 @@ class ClusterTest(base.SenlinTestCase):
         )
         notify.assert_called_once_with()
 
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(pr.Profile, 'get')
     def test__validate_replace_nodes(self, mock_profile, mock_node):
         cluster = mock.Mock(id='CID', profile_id='FAKE_ID')
@@ -1437,7 +1437,7 @@ class ClusterTest(base.SenlinTestCase):
             mock.call(self.ctx, 'FAKE_ID_1', project_safe=True)
         ])
 
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(pr.Profile, 'get')
     def test__validate_replace_nodes_old_missing(self, mock_profile,
                                                  mock_node):
@@ -1452,7 +1452,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertIn("Original nodes not found: ['OLD']", six.text_type(ex))
         mock_node.assert_called_once_with(self.ctx, 'OLD')
 
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(pr.Profile, 'get')
     def test__validate_replace_nodes_new_missing(self, mock_profile,
                                                  mock_node):
@@ -1474,7 +1474,7 @@ class ClusterTest(base.SenlinTestCase):
             mock.call(self.ctx, 'NEW')
         ])
 
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(pr.Profile, 'get')
     def test__validate_replace_nodes_old_not_member(self, mock_profile,
                                                     mock_node):
@@ -1496,7 +1496,7 @@ class ClusterTest(base.SenlinTestCase):
             mock.call(self.ctx, 'NEW')
         ])
 
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(pr.Profile, 'get')
     def test__validate_replace_nodes_new_not_orphan(self, mock_profile,
                                                     mock_node):
@@ -1518,7 +1518,7 @@ class ClusterTest(base.SenlinTestCase):
             mock.call(self.ctx, 'NEW')
         ])
 
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(pr.Profile, 'get')
     def test__validate_replace_nodes_new_bad_status(self, mock_profile,
                                                     mock_node):
@@ -1539,7 +1539,7 @@ class ClusterTest(base.SenlinTestCase):
             mock.call(self.ctx, 'NEW')
         ])
 
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(pr.Profile, 'get')
     def test__validate_replace_nodes_mult_err(self, mock_profile,
                                               mock_node):
@@ -1563,7 +1563,7 @@ class ClusterTest(base.SenlinTestCase):
             mock.call(self.ctx, 'NEW1'),
         ])
 
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(pr.Profile, 'get')
     def test__validate_replace_nodes_new_profile_type_mismatch(
             self, mock_profile, mock_node):
@@ -1596,7 +1596,7 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(am.Action, 'create')
     @mock.patch.object(service.EngineService, '_validate_replace_nodes')
-    @mock.patch.object(service.EngineService, 'node_find')
+    @mock.patch.object(no.Node, 'find')
     @mock.patch.object(service.EngineService, 'profile_find')
     @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(dispatcher, 'start_action')
