@@ -19,6 +19,7 @@ from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
 from senlin.engine import service
 from senlin.objects import cluster as co
+from senlin.objects import receiver as ro
 from senlin.objects.requests import webhooks as vorw
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -34,7 +35,7 @@ class WebhookTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(co.Cluster, 'find')
-    @mock.patch.object(service.EngineService, 'receiver_find')
+    @mock.patch.object(ro.Receiver, 'find')
     def test_webhook_trigger2_with_params(self, mock_get, mock_find,
                                           mock_action, notify):
         mock_find.return_value = mock.Mock(id='FAKE_CLUSTER')
@@ -65,7 +66,7 @@ class WebhookTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(co.Cluster, 'find')
-    @mock.patch.object(service.EngineService, 'receiver_find')
+    @mock.patch.object(ro.Receiver, 'find')
     def test_webhook_trigger2_no_params(self, mock_get, mock_find,
                                         mock_action, notify):
         mock_find.return_value = mock.Mock(id='FAKE_CLUSTER')
@@ -93,7 +94,7 @@ class WebhookTest(base.SenlinTestCase):
         )
         notify.assert_called_once_with()
 
-    @mock.patch.object(service.EngineService, 'receiver_find')
+    @mock.patch.object(ro.Receiver, 'find')
     def test_webhook_trigger_receiver_not_found2(self, mock_find):
         mock_find.side_effect = exception.ResourceNotFound(type='receiver',
                                                            id='RRR')
@@ -108,7 +109,7 @@ class WebhookTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'RRR')
 
-    @mock.patch.object(service.EngineService, 'receiver_find')
+    @mock.patch.object(ro.Receiver, 'find')
     @mock.patch.object(co.Cluster, 'find')
     def test_webhook_trigger_cluster_not_found2(self, mock_cluster, mock_find):
         receiver = mock.Mock()

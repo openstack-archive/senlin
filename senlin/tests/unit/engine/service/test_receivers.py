@@ -13,7 +13,6 @@
 import mock
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
-from oslo_utils import uuidutils
 import six
 
 from senlin.common import exception as exc
@@ -32,72 +31,6 @@ class ReceiverTest(base.SenlinTestCase):
         super(ReceiverTest, self).setUp()
         self.ctx = utils.dummy_context(project='receiver_test_project')
         self.eng = service.EngineService('host-a', 'topic-a')
-
-    @mock.patch.object(ro.Receiver, 'get')
-    def test_receiver_find_by_uuid(self, mock_get):
-        fake_obj = mock.Mock()
-        mock_get.return_value = fake_obj
-        fake_id = uuidutils.generate_uuid()
-
-        res = self.eng.receiver_find(self.ctx, fake_id)
-
-        self.assertEqual(fake_obj, res)
-        mock_get.assert_called_once_with(self.ctx, fake_id, project_safe=True)
-
-    @mock.patch.object(ro.Receiver, 'get_by_name')
-    @mock.patch.object(ro.Receiver, 'get')
-    def test_receiver_find_by_uuid_as_name(self, mock_get, mock_get_name):
-        mock_get.return_value = None
-        fake_obj = mock.Mock()
-        mock_get_name.return_value = fake_obj
-        fake_id = uuidutils.generate_uuid()
-
-        res = self.eng.receiver_find(self.ctx, fake_id, project_safe=False)
-
-        self.assertEqual(fake_obj, res)
-        mock_get.assert_called_once_with(self.ctx, fake_id, project_safe=False)
-        mock_get_name.assert_called_once_with(self.ctx, fake_id,
-                                              project_safe=False)
-
-    @mock.patch.object(ro.Receiver, 'get_by_name')
-    def test_receiver_find_by_name(self, mock_get_name):
-        fake_obj = mock.Mock()
-        mock_get_name.return_value = fake_obj
-        fake_id = 'not-a-uuid'
-
-        res = self.eng.receiver_find(self.ctx, fake_id)
-
-        self.assertEqual(fake_obj, res)
-        mock_get_name.assert_called_once_with(self.ctx, fake_id,
-                                              project_safe=True)
-
-    @mock.patch.object(ro.Receiver, 'get_by_short_id')
-    @mock.patch.object(ro.Receiver, 'get_by_name')
-    def test_receiver_find_by_short_id(self, mock_get_name, mock_get_shortid):
-        mock_get_name.return_value = None
-        fake_obj = mock.Mock()
-        mock_get_shortid.return_value = fake_obj
-        fake_id = '12345678'
-
-        res = self.eng.receiver_find(self.ctx, fake_id, False)
-
-        self.assertEqual(fake_obj, res)
-        mock_get_name.assert_called_once_with(self.ctx, fake_id,
-                                              project_safe=False)
-        mock_get_shortid.assert_called_once_with(self.ctx, fake_id,
-                                                 project_safe=False)
-
-    @mock.patch.object(ro.Receiver, 'get_by_name')
-    def test_receiver_find_not_found(self, mock_get_name):
-        mock_get_name.return_value = None
-        fake_id = '12345678'  # not a uuid
-
-        self.assertRaises(exc.ResourceNotFound,
-                          self.eng.receiver_find,
-                          self.ctx, fake_id, True)
-
-        mock_get_name.assert_called_once_with(self.ctx, fake_id,
-                                              project_safe=True)
 
     @mock.patch.object(rb.Receiver, 'load_all')
     def test_receiver_list2(self, mock_load):
@@ -312,11 +245,11 @@ class ReceiverTest(base.SenlinTestCase):
             self.ctx, 'message', None, None, name='r1', user=self.ctx.user,
             project=self.ctx.project, domain=self.ctx.domain, params={})
 
+    @mock.patch.object(ro.Receiver, 'find')
     @mock.patch.object(rb.Receiver, 'load')
-    def test_receiver_get2(self, mock_load):
+    def test_receiver_get2(self, mock_load, mock_find):
         fake_obj = mock.Mock()
-        mock_find = self.patchobject(self.eng, 'receiver_find',
-                                     return_value=fake_obj)
+        mock_find.return_value = fake_obj
         fake_receiver = mock.Mock()
         fake_receiver.to_dict.return_value = {'FOO': 'BAR'}
         mock_load.return_value = fake_receiver
@@ -329,9 +262,8 @@ class ReceiverTest(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.ctx,
                                           receiver_obj=fake_obj)
 
-    @mock.patch.object(service.EngineService, 'receiver_find')
+    @mock.patch.object(ro.Receiver, 'find')
     def test_receiver_get2_not_found(self, mock_find):
-
         mock_find.side_effect = exc.ResourceNotFound(type='receiver', id='RR')
 
         req = orro.ReceiverGetRequest(identity='Bogus')
@@ -340,7 +272,7 @@ class ReceiverTest(base.SenlinTestCase):
                                req.obj_to_primitive())
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
 
-    @mock.patch.object(service.EngineService, 'receiver_find')
+    @mock.patch.object(ro.Receiver, 'find')
     @mock.patch.object(rb.Receiver, 'delete')
     def test_receiver_delete2(self, mock_delete, mock_find):
         fake_obj = mock.Mock()
@@ -354,7 +286,7 @@ class ReceiverTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'FAKE_RECEIVER')
         mock_delete.assert_called_once_with(self.ctx, 'FAKE_ID')
 
-    @mock.patch.object(service.EngineService, 'receiver_find')
+    @mock.patch.object(ro.Receiver, 'find')
     def test_receiver_delete2_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='receiver', id='RR')
 
@@ -365,7 +297,7 @@ class ReceiverTest(base.SenlinTestCase):
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
 
     @mock.patch.object(rb.Receiver, 'load')
-    @mock.patch.object(service.EngineService, 'receiver_find')
+    @mock.patch.object(ro.Receiver, 'find')
     def test_receiver_notify2(self, mock_find, mock_load):
         fake_obj = mock.Mock()
         fake_obj.id = 'FAKE_ID'
@@ -384,7 +316,7 @@ class ReceiverTest(base.SenlinTestCase):
                                           project_safe=True)
         fake_receiver.notify.assert_called_once_with(self.ctx)
 
-    @mock.patch.object(service.EngineService, 'receiver_find')
+    @mock.patch.object(ro.Receiver, 'find')
     def test_receiver_notify2_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='receiver', id='RR')
 
@@ -394,7 +326,7 @@ class ReceiverTest(base.SenlinTestCase):
                                req.obj_to_primitive())
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
 
-    @mock.patch.object(service.EngineService, 'receiver_find')
+    @mock.patch.object(ro.Receiver, 'find')
     def test_receiver_notify2_permission_check_fail(self, mock_find):
         fake_obj = mock.Mock()
         fake_obj.id = 'FAKE_ID'
@@ -407,7 +339,7 @@ class ReceiverTest(base.SenlinTestCase):
                                req.obj_to_primitive())
         self.assertEqual(exc.Forbidden, ex.exc_info[0])
 
-    @mock.patch.object(service.EngineService, 'receiver_find')
+    @mock.patch.object(ro.Receiver, 'find')
     def test_receiver_notify2_incorrect_type(self, mock_find):
         fake_obj = mock.Mock()
         fake_obj.id = 'FAKE_ID'
