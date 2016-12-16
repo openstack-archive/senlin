@@ -17,10 +17,10 @@ from webob import exc
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 
+from senlin.api.common import util
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import policies
 from senlin.common import exception as senlin_exc
-from senlin.common.i18n import _
 from senlin.common import policy
 from senlin.objects.requests import policies as vorp
 from senlin.rpc import client as rpc_client
@@ -39,8 +39,10 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cfgopts = DummyConfig()
         self.controller = policies.PolicyController(options=cfgopts)
 
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_policy_index_normal(self, mock_call, mock_enforce):
+    def test_policy_index_normal(self, mock_call, mock_parse,
+                                 mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/policies')
 
@@ -59,26 +61,23 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ]
 
         mock_call.return_value = engine_resp
+        obj = vorp.PolicyListRequest()
+        mock_parse.return_value = obj
 
         result = self.controller.index(req)
 
         expected = {u'policies': engine_resp}
         self.assertEqual(expected, result)
 
-        mock_call.assert_called_with(req.context, 'policy_list2',
-                                     mock.ANY)
+        mock_parse.assert_called_once_with('PolicyListRequest', req,
+                                           {'project_safe': True})
+        mock_call.assert_called_once_with(req.context, 'policy_list2',
+                                          mock.ANY)
 
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorp.PolicyListRequest)
-        self.assertTrue(request.project_safe)
-        self.assertFalse(request.obj_attr_is_set('name'))
-        self.assertFalse(request.obj_attr_is_set('type'))
-        self.assertFalse(request.obj_attr_is_set('limit'))
-        self.assertFalse(request.obj_attr_is_set('marker'))
-        self.assertFalse(request.obj_attr_is_set('sort'))
-
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_policy_index_whitelists_params(self, mock_call, mock_enforce):
+    def test_policy_index_whitelists_params(self, mock_call, mock_parse,
+                                            mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         fake_id = uuidutils.generate_uuid()
         params = {
@@ -90,6 +89,8 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'global_project': True,
         }
         req = self._get('/policies', params=params)
+        obj = vorp.PolicyListRequest()
+        mock_parse.return_value = obj
 
         engine_resp = [{'foo': 'bar'}]
         mock_call.return_value = engine_resp
@@ -99,62 +100,56 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         expected = {u'policies': engine_resp}
         self.assertEqual(expected, result)
 
+        mock_parse.assert_called_once_with(
+            'PolicyListRequest', req,
+            {
+                'name': ['FAKE'],
+                'type': ['TYPE'],
+                'limit': '20',
+                'marker': fake_id,
+                'sort': 'name:asc',
+                'project_safe': False,
+            })
         mock_call.assert_called_once_with(req.context, 'policy_list2',
                                           mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorp.PolicyListRequest)
-        self.assertFalse(request.project_safe)
-        self.assertEqual(['FAKE'], request.name)
-        self.assertEqual(['TYPE'], request.type)
-        self.assertEqual(20, request.limit)
-        self.assertEqual(fake_id, request.marker)
-        self.assertEqual('name:asc', request.sort)
 
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_policy_index_whitelist_bad_params(self, mock_call, mock_enforce):
+    def test_policy_index_whitelist_bad_params(self, mock_call, mock_parse,
+                                               mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
             'balrog': 'fake_value'
         }
         req = self._get('/policies', params=params)
-
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index,
                                req)
 
         self.assertEqual("Invalid parameter balrog", six.text_type(ex))
         self.assertEqual(0, mock_call.call_count)
+        self.assertEqual(0, mock_parse.call_count)
 
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_policy_index_gloable_project_invalid(self, mock_call,
-                                                  mock_enforce):
+    def test_policy_index_invalid_param(self, mock_call,
+                                        mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
-            'global_project': 'No',
+            'limit': '10',
         }
         req = self._get('/policies', params=params)
-
+        err = "Invalid value 'No' specified for 'global_project'"
+        mock_parse.side_effect = exc.HTTPBadRequest(err)
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index,
                                req)
 
-        self.assertEqual("Invalid value 'No' specified for 'global_project'",
-                         six.text_type(ex))
+        self.assertEqual(err, six.text_type(ex))
         self.assertEqual(0, mock_call.call_count)
-
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_policy_index_limit_non_int(self, mock_call, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-
-        params = {'limit': 'abc'}
-        req = self._get('/policies', params=params)
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.index,
-                               req)
-
-        self.assertIn("invalid literal for int() with base 10: 'abc'",
-                      six.text_type(ex))
-        self.assertEqual(0, mock_call.call_count)
+        mock_parse.assert_called_once_with(
+            'PolicyListRequest', req, {'limit': '10',
+                                       'project_safe': True})
 
     def test_policy_index_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
@@ -167,7 +162,10 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_policy_create_success(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_create_success(self, mock_call, mock_parse,
+                                   mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {
             'policy': {
@@ -198,51 +196,54 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._post('/policies', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_response)
+        mock_call.return_value = engine_response
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         resp = self.controller.create(req, body=body)
-
+        self.assertEqual(engine_response, resp['policy'])
+        mock_parse.assert_called_once_with(
+            'PolicyCreateRequest', req, body, 'policy')
         mock_call.assert_called_with(req.context, 'policy_create2',
                                      mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorp.PolicyCreateRequestBody)
-        expected = {'policy': engine_response}
-        self.assertEqual(expected, resp)
-        # request = mock_call.call_args[0][2]
-        # self.assertEqual('test_policy', request.name)
 
-    def test_policy_create_no_policy(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_create_no_policy(self, mock_call, mock_parse,
+                                     mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {'not_policy': 'test_policy'}
 
         req = self._post('/policies', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_parse.side_effect = exc.HTTPBadRequest("bad param")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("Request body missing 'policy' key.",
-                         six.text_type(ex))
-
+        self.assertEqual("bad param", six.text_type(ex))
         self.assertFalse(mock_call.called)
 
-    def test_policy_create_bad_policy(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_create_bad_policy(self, mock_call, mock_parse,
+                                      mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {'policy': {'name': 'fake_name'}}
 
         req = self._post('/policies', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_parse.side_effect = exc.HTTPBadRequest("bad spec")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("'spec' is a required property",
-                         six.text_type(ex))
-
+        self.assertEqual("bad spec", six.text_type(ex))
         self.assertFalse(mock_call.called)
 
-    def test_policy_create_with_spec_validation_failed(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_create_with_spec_validation_failed(self, mock_call,
+                                                       mock_parse,
+                                                       mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {
             'policy': {
@@ -255,20 +256,20 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
         req = self._post('/policies', jsonutils.dumps(body))
-
-        msg = 'Spec validation error (param): value'
-        error = senlin_exc.InvalidSpec(message=msg)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
-        mock_call.side_effect = shared.to_remote_error(error)
-
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        err = senlin_exc.InvalidSpec(message="bad spec")
+        mock_call.side_effect = shared.to_remote_error(err)
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
                                               req, body=body)
 
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorp.PolicyCreateRequestBody)
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('InvalidSpec', resp.json['error']['type'])
+        mock_parse.assert_called_once_with(
+            'PolicyCreateRequest', mock.ANY, body, 'policy')
+        mock_call.assert_called_once_with(req.context, 'policy_create2',
+                                          obj.policy)
 
     def test_policy_create_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', False)
@@ -285,37 +286,41 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         req = self._post('/policies', jsonutils.dumps(body))
         resp = shared.request_with_middleware(fault.FaultWrapper,
-                                              self.controller.create, req)
+                                              self.controller.create,
+                                              req, body=body)
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_policy_get_normal(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_get_normal(self, mock_call, mock_parse,
+                               mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         pid = 'pid'
         req = self._get('/policies/%s' % pid)
 
         engine_resp = {'foo': 'bar'}
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_resp)
+        mock_call.return_value = engine_resp
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         result = self.controller.get(req, policy_id=pid)
 
+        self.assertEqual(engine_resp, result['policy'])
+        mock_parse.assert_called_once_with(
+            'PolicyGetRequest', req, {'identity': pid})
         mock_call.assert_called_with(req.context, 'policy_get2',
                                      mock.ANY)
 
-        expected = {'policy': engine_resp}
-        self.assertEqual(expected, result)
-        request = mock_call.call_args[0][2]
-        self.assertEqual('pid', request.identity)
-
-    def test_policy_get_not_found(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_get_not_found(self, mock_call, mock_parse,
+                                  mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         pid = 'non-existent-policy'
         req = self._get('/policies/%s' % pid)
 
         error = senlin_exc.ResourceNotFound(type='policy', id=pid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
@@ -324,6 +329,8 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+        mock_parse.assert_called_once_with(
+            "PolicyGetRequest", mock.ANY, {'identity': pid})
 
     def test_policy_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)
@@ -337,7 +344,10 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_policy_update_normal(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_update_normal(self, mock_call, mock_parse,
+                                  mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'aaaa-bbbb-cccc'
         body = {
@@ -361,46 +371,53 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'updated_time': None,
         }
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_resp)
+        mock_call.return_value = engine_resp
+        obj = mock.Mock()
+        mock_parse.requests = obj
+
+        obj
         result = self.controller.update(req, policy_id=pid, body=body)
-        mock_call.assert_called_with(req.context, 'policy_update2',
-                                     mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorp.PolicyUpdateRequest)
-        self.assertIsInstance(request.policy, vorp.PolicyUpdateRequestBody)
-        self.assertEqual(pid, request.identity)
-        self.assertEqual('policy-2', request.policy.name)
+
         expected = {'policy': engine_resp}
         self.assertEqual(expected, result)
 
-    def test_policy_update_with_no_name(self, mock_enforce):
+        mock_parse.assert_called_once_with(
+            'PolicyUpdateRequest', req, {'identity': pid,
+                                         'policy': mock.ANY})
+        mock_call.assert_called_with(req.context, 'policy_update2',
+                                     mock.ANY)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_update_with_no_name(self, mock_call, mock_parse,
+                                        mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'aaaa-bbbb-cccc'
         body = {'policy': {}}
 
         req = self._put('/policies/%(pid)s' % {'pid': pid},
                         jsonutils.dumps(body))
-
-        engine_resp = mock.Mock()
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_resp)
+        mock_parse.side_effect = exc.HTTPBadRequest("bad param")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
                                req, policy_id=pid, body=body)
 
-        self.assertEqual("'name' is a required property",
-                         six.text_type(ex))
+        self.assertEqual("bad param", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'PolicyUpdateRequest', req, {'identity': pid,
+                                         'policy': mock.ANY})
         self.assertFalse(mock_call.called)
 
-    def test_policy_update_with_bad_body(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_update_with_bad_body(self, mock_call, mock_parse,
+                                         mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'aaaa-bbbb-cccc'
         body = {'foo': 'bar'}
         req = self._patch('/policies/%(pid)s' % {'pid': pid},
                           jsonutils.dumps(body))
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
                                req, policy_id=pid, body=body)
@@ -408,8 +425,12 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual("Malformed request data, missing 'policy' key in "
                          "request body.", six.text_type(ex))
         self.assertFalse(mock_call.called)
+        self.assertFalse(mock_parse.called)
 
-    def test_policy_update_with_unsupported_field(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_update_with_unsupported_field(self, mock_call, mock_parse,
+                                                  mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'aaaa-bbbb-cccc'
         body = {
@@ -419,21 +440,23 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
 
-        req = self._patch('/policies/%(policy_id)s' % {'policy_id': pid},
-                          jsonutils.dumps(body))
-
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        req = self._put('/policies/%(pid)s' % {'pid': pid},
+                        jsonutils.dumps(body))
+        mock_parse.side_effect = exc.HTTPBadRequest("bad param")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
                                req, policy_id=pid, body=body)
 
-        msg = _("Additional properties are not allowed"
-                " ('bogus' was unexpected)")
-
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual("bad param", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'PolicyUpdateRequest', req, {'identity': pid,
+                                         'policy': mock.ANY})
         self.assertFalse(mock_call.called)
 
-    def test_policy_update_not_found(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_update_not_found(self, mock_call, mock_parse,
+                                     mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'non-existent-policy'
         body = {
@@ -444,8 +467,9 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._patch('/policies/%(policy_id)s' % {'policy_id': pid},
                           jsonutils.dumps(body))
 
+        obj = mock.Mock()
+        mock_parse.return_value = obj
         error = senlin_exc.ResourceNotFound(type='policy', id=pid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
@@ -459,7 +483,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'update', False)
         pid = 'aaaa-bbbb-cccc'
         body = {
-            'policy': {'name': 'test_policy', 'spec': {'param5': 'value5'}},
+            'policy': {'name': 'test_policy'},
         }
         req = self._put('/policies/%(policy_id)s' % {'policy_id': pid},
                         jsonutils.dumps(body))
@@ -471,31 +495,36 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_policy_delete_success(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_delete_success(self, mock_call, mock_parse,
+                                   mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         pid = 'FAKE_ID'
         req = self._delete('/policies/%s' % pid)
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=None)
-
+        obj = mock.Mock()
+        mock_parse.return_value = obj
         self.assertRaises(exc.HTTPNoContent,
                           self.controller.delete, req, policy_id=pid)
 
+        mock_parse.assert_called_once_with(
+            'PolicyDeleteRequest', req, {'identity': pid})
         mock_call.assert_called_with(
             req.context, 'policy_delete2', mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertEqual('FAKE_ID', request.identity)
 
-    def test_policy_delete_not_found(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_delete_not_found(self, mock_call, mock_parse,
+                                     mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         pid = 'FAKE_ID'
         req = self._delete('/policies/%s' % pid)
 
         error = senlin_exc.ResourceNotFound(type='policy', id=pid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
-
+        obj = mock.Mock()
+        mock_parse.return_value = obj
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.delete,
                                               req, policy_id=pid)
@@ -515,13 +544,13 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_policy_validate_version_mismatch(self, mock_enforce):
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_validate_version_mismatch(self, mock_call, mock_enforce):
         body = {
             'policy': {}
         }
         req = self._post('/policies/validate', jsonutils.dumps(body),
                          version='1.1')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
 
         ex = self.assertRaises(senlin_exc.MethodVersionNotFound,
                                self.controller.validate,
@@ -559,19 +588,27 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_policy_validate_no_body(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_validate_no_body(self, mock_call, mock_parse,
+                                     mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
         body = {'foo': 'bar'}
         req = self._post('/policies/validate', jsonutils.dumps(body),
                          version='1.2')
-
+        mock_parse.side_effect = exc.HTTPBadRequest("miss policy")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.validate,
                                req, body=body)
-        self.assertEqual("Request body missing 'policy' key.",
-                         six.text_type(ex))
+        self.assertEqual("miss policy", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'PolicyValidateRequest', req, body, 'policy')
+        self.assertFalse(mock_call.called)
 
-    def test_policy_validate_no_spec(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_validate_no_spec(self, mock_call, mock_parse,
+                                     mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
         body = {
             'policy': {}
@@ -579,30 +616,19 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/policies/validate', jsonutils.dumps(body),
                          version='1.2')
 
+        mock_parse.side_effect = exc.HTTPBadRequest("miss policy")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.validate,
                                req, body=body)
-        self.assertEqual("'spec' is a required property", six.text_type(ex))
+        self.assertEqual("miss policy", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'PolicyValidateRequest', req, body, 'policy')
+        self.assertFalse(mock_call.called)
 
-    def test_policy_validate_unsupported_field(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'validate', True)
-        body = {
-            'policy': {
-                'spec': {'type': 'senlin.policy.deletion',
-                         'version': '1.0'},
-                'foo': 'bar'
-            }
-        }
-        req = self._post('/policies/validate', jsonutils.dumps(body),
-                         version='1.2')
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller.validate,
-                               req, body=body)
-        self.assertEqual("Additional properties are not allowed "
-                         "('foo' was unexpected)", six.text_type(ex))
-
-    def test_policy_validate_invalide_spec(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_validate_invalide_spec(self, mock_call, mock_parse,
+                                           mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
         body = {
             'policy': {
@@ -618,8 +644,9 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         msg = 'Spec validation error'
         error = senlin_exc.InvalidSpec(message=msg)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.validate,
@@ -628,7 +655,10 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('InvalidSpec', resp.json['error']['type'])
 
-    def test_policy_validate_success(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_policy_validate_success(self, mock_call, mock_parse,
+                                     mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
         spec = {
             'spec': {
@@ -643,11 +673,14 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         req = self._post('/policies/validate', jsonutils.dumps(body),
                          version='1.2')
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.return_value = spec
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=spec)
         result = self.controller.validate(req, body=body)
-        mock_call.assert_called_with(req.context,
-                                     'policy_validate2', mock.ANY)
-        expected = {'policy': spec}
-        self.assertEqual(expected, result)
+        self.assertEqual(body, result)
+
+        mock_parse.assert_called_once_with(
+            'PolicyValidateRequest', req, body, 'policy')
+        mock_call.assert_called_with(
+            req.context, 'policy_validate2', mock.ANY)
