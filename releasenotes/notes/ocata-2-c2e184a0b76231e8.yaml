@@ -1,0 +1,8 @@
+---
+features:
+  - Versioned request support in API, RPC and engine layers.
+  - Basic support for event/notification.
+  - Enables osprofiler support.
+  - Rally plugin for cluster scaling in.
+  - Batch policy support for cluster actions.
+  - Integration test for message receiver.
