@@ -330,35 +330,6 @@ class EngineService(service.Service):
             'schema': data
         }
 
-    def profile_find(self, context, identity, project_safe=True):
-        """Find a profile with the given identity.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a profile.
-        :param project_safe: A boolean indicating whether profile from
-                             projects other than the requesting one can be
-                             returned.
-        :return: A DB object of profile or an exception `ResourceNotFound`
-                 if no matching object is found.
-        """
-        if uuidutils.is_uuid_like(identity):
-            profile = profile_obj.Profile.get(context, identity,
-                                              project_safe=project_safe)
-            if not profile:
-                profile = profile_obj.Profile.get_by_name(
-                    context, identity, project_safe=project_safe)
-        else:
-            profile = profile_obj.Profile.get_by_name(
-                context, identity, project_safe=project_safe)
-            if not profile:
-                profile = profile_obj.Profile.get_by_short_id(
-                    context, identity, project_safe=project_safe)
-
-        if not profile:
-            raise exception.ResourceNotFound(type='profile', id=identity)
-
-        return profile
-
     @request_context2
     def profile_list2(self, ctx, req):
         """List profiles matching the specified criteria.
@@ -481,7 +452,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the profile details, or an exception
                  of type `ResourceNotFound` if no matching object is found.
         """
-        db_profile = self.profile_find(ctx, req.identity)
+        db_profile = profile_obj.Profile.find(ctx, req.identity)
         profile = profile_base.Profile.load(ctx, profile=db_profile)
         return profile.to_dict()
 
@@ -496,7 +467,7 @@ class EngineService(service.Service):
                   found.
         """
         LOG.info(_LI("Updating profile '%(id)s.'"), {'id': req.identity})
-        db_profile = self.profile_find(ctx, req.identity)
+        db_profile = profile_obj.Profile.find(ctx, req.identity)
         profile = profile_base.Profile.load(ctx, profile=db_profile)
         changed = False
         if (req.profile.obj_attr_is_set('name') and
@@ -526,7 +497,7 @@ class EngineService(service.Service):
         :return: None if succeeded or an exception of `ResourceInUse` if
                  profile is referenced by certain clusters/nodes.
         """
-        db_profile = self.profile_find(ctx, req.identity)
+        db_profile = profile_obj.Profile.find(ctx, req.identity)
         LOG.info(_LI("Deleting profile '%s'."), req.identity)
 
         cls = environment.global_env().get_profile(db_profile.type)
@@ -824,7 +795,7 @@ class EngineService(service.Service):
                 raise exception.BadRequest(msg=msg)
 
         try:
-            db_profile = self.profile_find(ctx, req.profile_id)
+            db_profile = profile_obj.Profile.find(ctx, req.profile_id)
         except exception.ResourceNotFound as ex:
             msg = ex.enhance_msg('specified', ex)
             raise exception.BadRequest(msg=msg)
@@ -894,9 +865,9 @@ class EngineService(service.Service):
         inputs = {}
         if (req.obj_attr_is_set(consts.CLUSTER_PROFILE) and
                 req.profile_id is not None):
-            old_profile = self.profile_find(ctx, cluster.profile_id)
+            old_profile = profile_obj.Profile.find(ctx, cluster.profile_id)
             try:
-                new_profile = self.profile_find(ctx, req.profile_id)
+                new_profile = profile_obj.Profile.find(ctx, req.profile_id)
             except exception.ResourceNotFound as ex:
                 msg = ex.enhance_msg('specified', ex)
                 raise exception.BadRequest(msg=msg)
@@ -1551,7 +1522,7 @@ class EngineService(service.Service):
         LOG.info(_LI("Creating node '%s'."), req.name)
 
         try:
-            node_profile = self.profile_find(ctx, req.profile_id)
+            node_profile = profile_obj.Profile.find(ctx, req.profile_id)
         except exception.ResourceNotFound as ex:
             msg = ex.enhance_msg('specified', ex)
             raise exception.BadRequest(msg=msg)
@@ -1567,8 +1538,8 @@ class EngineService(service.Service):
 
             cluster_id = db_cluster.id
             if node_profile.id != db_cluster.profile_id:
-                cluster_profile = self.profile_find(ctx,
-                                                    db_cluster.profile_id)
+                cluster_profile = profile_obj.Profile.find(
+                    ctx, db_cluster.profile_id)
                 if node_profile.type != cluster_profile.type:
                     msg = _('Node and cluster have different profile type, '
                             'operation aborted.')
@@ -1639,14 +1610,14 @@ class EngineService(service.Service):
         db_node = node_obj.Node.find(ctx, req.identity)
         if req.obj_attr_is_set('profile_id') and req.profile_id is not None:
             try:
-                db_profile = self.profile_find(ctx, req.profile_id)
+                db_profile = profile_obj.Profile.find(ctx, req.profile_id)
             except exception.ResourceNotFound as ex:
                 msg = ex.enhance_msg('specified', ex)
                 raise exception.BadRequest(msg=msg)
             profile_id = db_profile.id
 
             # check if profile_type matches
-            old_profile = self.profile_find(ctx, db_node.profile_id)
+            old_profile = profile_obj.Profile.find(ctx, db_node.profile_id)
             if old_profile.type != db_profile.type:
                 msg = _('Cannot update a node to a different profile type, '
                         'operation aborted.')

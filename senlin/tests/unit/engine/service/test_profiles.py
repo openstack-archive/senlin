@@ -55,72 +55,6 @@ class ProfileTest(base.SenlinTestCase):
             }
         }
 
-    @mock.patch.object(po.Profile, 'get')
-    def test_profile_find_by_uuid(self, mock_get):
-        x_profile = mock.Mock()
-        mock_get.return_value = x_profile
-
-        aid = uuidutils.generate_uuid()
-        result = self.eng.profile_find(self.ctx, aid)
-
-        self.assertEqual(x_profile, result)
-        mock_get.assert_called_once_with(self.ctx, aid, project_safe=True)
-
-    @mock.patch.object(po.Profile, 'get_by_name')
-    @mock.patch.object(po.Profile, 'get')
-    def test_profile_find_by_uuid_as_name(self, mock_get, mock_get_name):
-        x_profile = mock.Mock()
-        mock_get_name.return_value = x_profile
-        mock_get.return_value = None
-
-        aid = uuidutils.generate_uuid()
-        result = self.eng.profile_find(self.ctx, aid, project_safe=False)
-
-        self.assertEqual(x_profile, result)
-        mock_get.assert_called_once_with(self.ctx, aid, project_safe=False)
-        mock_get_name.assert_called_once_with(self.ctx, aid,
-                                              project_safe=False)
-
-    @mock.patch.object(po.Profile, 'get_by_name')
-    def test_profile_find_by_name(self, mock_get_name):
-        x_profile = mock.Mock()
-        mock_get_name.return_value = x_profile
-
-        aid = 'this-is-not-uuid'
-        result = self.eng.profile_find(self.ctx, aid)
-
-        self.assertEqual(x_profile, result)
-        mock_get_name.assert_called_once_with(self.ctx, aid, project_safe=True)
-
-    @mock.patch.object(po.Profile, 'get_by_short_id')
-    @mock.patch.object(po.Profile, 'get_by_name')
-    def test_profile_find_by_shortid(self, mock_get_name, mock_get_shortid):
-        x_profile = mock.Mock()
-        mock_get_shortid.return_value = x_profile
-        mock_get_name.return_value = None
-
-        aid = 'abcd-1234-abcd'
-        result = self.eng.profile_find(self.ctx, aid, project_safe=False)
-
-        self.assertEqual(x_profile, result)
-        mock_get_name.assert_called_once_with(self.ctx, aid,
-                                              project_safe=False)
-        mock_get_shortid.assert_called_once_with(self.ctx, aid,
-                                                 project_safe=False)
-
-    @mock.patch.object(po.Profile, 'get_by_name')
-    def test_profile_find_not_found(self, mock_get_name):
-        mock_get_name.return_value = None
-
-        ex = self.assertRaises(exc.ResourceNotFound,
-                               self.eng.profile_find,
-                               self.ctx, 'Bogus')
-
-        self.assertEqual('The profile (Bogus) could not be found.',
-                         six.text_type(ex))
-        mock_get_name.assert_called_once_with(self.ctx, 'Bogus',
-                                              project_safe=True)
-
     @mock.patch.object(pb.Profile, 'load_all')
     def test_profile_list2(self, mock_load):
         x_obj_1 = mock.Mock()
@@ -273,7 +207,7 @@ class ProfileTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(pb.Profile, 'load')
-    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(po.Profile, 'find')
     def test_profile_get2(self, mock_find, mock_load):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
@@ -288,7 +222,7 @@ class ProfileTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'FAKE_PROFILE')
         mock_load.assert_called_once_with(self.ctx, profile=x_obj)
 
-    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(po.Profile, 'find')
     def test_profile_get2_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='profile',
                                                      id='Bogus')
@@ -303,7 +237,7 @@ class ProfileTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(pb.Profile, 'load')
-    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(po.Profile, 'find')
     def test_profile_update2(self, mock_find, mock_load):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
@@ -326,7 +260,7 @@ class ProfileTest(base.SenlinTestCase):
         x_profile.store.assert_called_once_with(self.ctx)
 
     @mock.patch.object(pb.Profile, 'load')
-    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(po.Profile, 'find')
     def test_profile_update2_name_none(self, mock_find, mock_load):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
@@ -347,7 +281,7 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual({'K': 'V'}, x_profile.metadata)
         x_profile.store.assert_called_once_with(self.ctx)
 
-    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(po.Profile, 'find')
     def test_profile_update2_not_found(self, mock_find):
 
         mock_find.side_effect = exc.ResourceNotFound(type='profile',
@@ -366,7 +300,7 @@ class ProfileTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(pb.Profile, 'load')
-    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(po.Profile, 'find')
     def test_profile_update2_no_change(self, mock_find, mock_load):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
@@ -392,7 +326,7 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual('OLD_NAME', x_profile.name)
 
     @mock.patch.object(fakes.TestProfile, 'delete')
-    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(po.Profile, 'find')
     def test_profile_delete2(self, mock_find, mock_delete):
         self._setup_fakes()
         x_obj = mock.Mock(id='PROFILE_ID', type='TestProfile-1.0')
@@ -406,7 +340,7 @@ class ProfileTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'PROFILE_ID')
         mock_delete.assert_called_once_with(self.ctx, 'PROFILE_ID')
 
-    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(po.Profile, 'find')
     def test_profile_delete2_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='profile',
                                                      id='Bogus')
@@ -422,7 +356,7 @@ class ProfileTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(pb.Profile, 'delete')
-    @mock.patch.object(service.EngineService, 'profile_find')
+    @mock.patch.object(po.Profile, 'find')
     def test_profile_delete2_profile_in_use(self, mock_find, mock_delete):
         self._setup_fakes()
         x_obj = mock.Mock(id='PROFILE_ID', type='TestProfile-1.0')

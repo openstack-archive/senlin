@@ -11,7 +11,9 @@
 # under the License.
 
 """Profile object."""
+from oslo_utils import uuidutils
 
+from senlin.common import exception
 from senlin.db import api as db_api
 from senlin.objects import base
 from senlin.objects import fields
@@ -41,6 +43,32 @@ class Profile(base.SenlinObject, base.VersionedObjectDictCompat):
         values = cls._transpose_metadata(values)
         obj = db_api.profile_create(context, values)
         return cls._from_db_object(context, cls(context), obj)
+
+    @classmethod
+    def find(cls, context, identity, **kwargs):
+        """Find a profile with the given identity.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of a profile.
+        :param project_safe: A boolean indicating whether profile from
+                             projects other than the requesting one can be
+                             returned.
+        :return: A DB object of profile or an exception `ResourceNotFound`
+                 if no matching object is found.
+        """
+        if uuidutils.is_uuid_like(identity):
+            profile = cls.get(context, identity, **kwargs)
+            if not profile:
+                profile = cls.get_by_name(context, identity, **kwargs)
+        else:
+            profile = cls.get_by_name(context, identity, **kwargs)
+            if not profile:
+                profile = cls.get_by_short_id(context, identity, **kwargs)
+
+        if not profile:
+            raise exception.ResourceNotFound(type='profile', id=identity)
+
+        return profile
 
     @classmethod
     def get(cls, context, profile_id, **kwargs):
