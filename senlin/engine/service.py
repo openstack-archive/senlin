@@ -220,32 +220,6 @@ class EngineService(service.Service):
             self.cleanup_timer.stop()
             LOG.info(_LI("Finished cleaning up dead services."))
 
-    @request_context
-    def credential_create(self, context, cred, attrs=None):
-        """Create the credential based on the context.
-
-        We may add more parameters in future to the query parameter, for
-        example as Senlin expands its support to non-OpenStack backends.
-
-        :param context: The requesting context which contains the user id
-                        along with other identity information.
-        :param cred: A credential to be associated with the user identity
-                     provided in the context.
-        :param dict attrs: Optional attributes associated with the credential.
-        :return: A dictionary containing the persistent credential.
-        """
-        values = {
-            'user': context.user,
-            'project': context.project,
-            'cred': {
-                'openstack': {
-                    'trust': cred
-                }
-            }
-        }
-        cred_obj.Credential.update_or_create(context, values)
-        return {'cred': cred}
-
     @request_context2
     def credential_create2(self, ctx, req):
         """Create the credential based on the context.
