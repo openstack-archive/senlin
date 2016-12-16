@@ -535,35 +535,6 @@ class EngineService(service.Service):
             'schema': data
         }
 
-    def policy_find(self, context, identity, project_safe=True):
-        """Find a policy with the given identity.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a profile.
-        :param project_safe: A boolean indicating whether policies from
-                             projects other than the requesting one should be
-                             evaluated.
-        :return: A DB object of policy or an exception of `ResourceNotFound`
-                 if no matching object is found.
-        """
-        if uuidutils.is_uuid_like(identity):
-            policy = policy_obj.Policy.get(context, identity,
-                                           project_safe=project_safe)
-            if not policy:
-                policy = policy_obj.Policy.get_by_name(
-                    context, identity, project_safe=project_safe)
-        else:
-            policy = policy_obj.Policy.get_by_name(context, identity,
-                                                   project_safe=project_safe)
-            if not policy:
-                policy = policy_obj.Policy.get_by_short_id(
-                    context, identity, project_safe=project_safe)
-
-        if not policy:
-            raise exception.ResourceNotFound(type='policy', id=identity)
-
-        return policy
-
     @request_context2
     def policy_list2(self, ctx, req):
         """List policies matching the specified criteria
@@ -662,7 +633,7 @@ class EngineService(service.Service):
         :param req: An instance of the PolicyGetRequest.
         :return: A dictionary containing the policy details.
         """
-        db_policy = self.policy_find(ctx, req.identity)
+        db_policy = policy_obj.Policy.find(ctx, req.identity)
         policy = policy_base.Policy.load(ctx, db_policy=db_policy)
         return policy.to_dict()
 
@@ -674,7 +645,7 @@ class EngineService(service.Service):
         :param req: An instance of the PolicyUpdateRequest.
         :return: A dictionary containing the policy details.
         """
-        db_policy = self.policy_find(ctx, req.identity)
+        db_policy = policy_obj.Policy.find(ctx, req.identity)
         policy = policy_base.Policy.load(ctx, db_policy=db_policy)
 
         changed = False
@@ -701,7 +672,7 @@ class EngineService(service.Service):
         :return: None if succeeded or an exception of `ResourceInUse` if
                  policy is still attached to certain clusters.
         """
-        db_policy = self.policy_find(ctx, req.identity)
+        db_policy = policy_obj.Policy.find(ctx, req.identity)
         LOG.info(_LI("Deleting policy '%s'."), req.identity)
         try:
             policy_base.Policy.delete(ctx, db_policy.id)
@@ -1786,7 +1757,7 @@ class EngineService(service.Service):
         identity = req.identity
         policy_id = req.policy_id
         db_cluster = co.Cluster.find(ctx, identity)
-        db_policy = self.policy_find(ctx, policy_id)
+        db_policy = policy_obj.Policy.find(ctx, policy_id)
 
         binding = cp_obj.ClusterPolicy.get(ctx, db_cluster.id, db_policy.id)
         if binding is None:
@@ -1811,7 +1782,7 @@ class EngineService(service.Service):
 
         db_cluster = co.Cluster.find(ctx, req.identity)
         try:
-            db_policy = self.policy_find(ctx, req.policy_id)
+            db_policy = policy_obj.Policy.find(ctx, req.policy_id)
         except exception.ResourceNotFound as ex:
             msg = ex.enhance_msg('specified', ex)
             raise exception.BadRequest(msg=msg)
@@ -1851,7 +1822,7 @@ class EngineService(service.Service):
 
         db_cluster = co.Cluster.find(ctx, req.identity)
         try:
-            db_policy = self.policy_find(ctx, req.policy_id)
+            db_policy = policy_obj.Policy.find(ctx, req.policy_id)
         except exception.ResourceNotFound as ex:
             msg = ex.enhance_msg('specified', ex)
             raise exception.BadRequest(msg=msg)
@@ -1892,7 +1863,7 @@ class EngineService(service.Service):
 
         db_cluster = co.Cluster.find(ctx, req.identity)
         try:
-            db_policy = self.policy_find(ctx, req.policy_id)
+            db_policy = policy_obj.Policy.find(ctx, req.policy_id)
         except exception.ResourceNotFound as ex:
             msg = ex.enhance_msg('specified', ex)
             raise exception.BadRequest(msg=msg)
