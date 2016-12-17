@@ -1460,8 +1460,11 @@ class EngineService(service.Service):
         if req.obj_attr_is_set('sort') and req.sort is not None:
             query['sort'] = req.sort
         if req.obj_attr_is_set('cluster_id') and req.cluster_id:
-            # TODO(anyone): Check exception and return BadRequest
-            db_cluster = co.Cluster.find(ctx, req.cluster_id)
+            try:
+                db_cluster = co.Cluster.find(ctx, req.cluster_id)
+            except exception.ResourceNotFound:
+                msg = _("Cannot find the given cluster: %s") % req.cluster_id
+                raise exception.BadRequest(msg=msg)
             query['cluster_id'] = db_cluster.id
 
         filters = {}
