@@ -27,6 +27,7 @@ from senlin.api.common import wsgi
 from senlin.common.i18n import _LI
 from senlin.common import messaging
 from senlin.common import profiler
+from senlin import objects
 from senlin import version
 
 _lazy.enable_lazy()
@@ -40,6 +41,7 @@ def main():
         cfg.CONF(project='senlin', prog='senlin-api',
                  version=version.version_info.version_string())
         logging.setup(cfg.CONF, 'senlin-api')
+        objects.register_all()
         messaging.setup()
 
         app = wsgi.load_paste_app()
