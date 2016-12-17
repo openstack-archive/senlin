@@ -12,6 +12,9 @@
 
 """Event object."""
 
+from oslo_utils import uuidutils
+
+from senlin.common import exception
 from senlin.db import api as db_api
 from senlin.objects import base
 from senlin.objects import fields
@@ -41,6 +44,26 @@ class Event(base.SenlinObject, base.VersionedObjectDictCompat):
     def create(cls, context, values):
         obj = db_api.event_create(context, values)
         return cls._from_db_object(context, cls(context), obj)
+
+    @classmethod
+    def find(cls, context, identity, **kwargs):
+        """Find an event with the given identity.
+
+        :param context: An instance of the request context.
+        :param identity: The UUID, name or short-id of the event.
+        :param dict kwargs: Other keyword query parameters.
+
+        :return: A dictionary containing the details of the event.
+        """
+        event = None
+        if uuidutils.is_uuid_like(identity):
+            event = cls.get(context, identity, **kwargs)
+        if not event:
+            event = cls.get_by_short_id(context, identity, **kwargs)
+        if not event:
+            raise exception.ResourceNotFound(type='event', id=identity)
+
+        return event
 
     @classmethod
     def get(cls, context, event_id, **kwargs):
