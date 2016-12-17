@@ -2023,35 +2023,6 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Action '%s' is deleted."), req.identity)
 
-    def receiver_find(self, context, identity, project_safe=True):
-        """Find a receiver with the given identity.
-
-        :param context: An instance of the request context.
-        :param identity: The UUID, name or short-id of a receiver.
-        :param project_safe: A boolean indicating whether receiver from other
-                             projects other than the requesting one can be
-                             returned.
-        :return: A DB object of receiver or an exception `ResourceNotFound`
-                 if no matching receiver is found.
-        """
-        if uuidutils.is_uuid_like(identity):
-            receiver = receiver_obj.Receiver.get(
-                context, identity, project_safe=project_safe)
-            if not receiver:
-                receiver = receiver_obj.Receiver.get_by_name(
-                    context, identity, project_safe=project_safe)
-        else:
-            receiver = receiver_obj.Receiver.get_by_name(
-                context, identity, project_safe=project_safe)
-            if not receiver:
-                receiver = receiver_obj.Receiver.get_by_short_id(
-                    context, identity, project_safe=project_safe)
-
-        if not receiver:
-            raise exception.ResourceNotFound(type='receiver', id=identity)
-
-        return receiver
-
     @request_context2
     def receiver_list2(self, ctx, req):
         """List receivers matching the specified criteria.
@@ -2156,7 +2127,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the details about a receiver or
                  an exception `ResourceNotFound` if no matching object found.
         """
-        db_receiver = self.receiver_find(ctx, req.identity)
+        db_receiver = receiver_obj.Receiver.find(ctx, req.identity)
         receiver = receiver_mod.Receiver.load(ctx,
                                               receiver_obj=db_receiver)
         return receiver.to_dict()
@@ -2170,7 +2141,7 @@ class EngineService(service.Service):
         :return: None if successfully deleted the receiver or an exception of
                  `ResourceNotFound` if the object could not be found.
         """
-        db_receiver = self.receiver_find(ctx, req.identity)
+        db_receiver = receiver_obj.Receiver.find(ctx, req.identity)
         LOG.info(_LI("Deleting receiver %s."), req.identity)
         receiver_mod.Receiver.delete(ctx, db_receiver.id)
         LOG.info(_LI("Receiver %s is deleted."), req.identity)
@@ -2182,7 +2153,7 @@ class EngineService(service.Service):
         :param ctx: An instance of the request context.
         :param req: An instance of the ReceiverNotifyRequest object.
         """
-        db_receiver = self.receiver_find(ctx, req.identity)
+        db_receiver = receiver_obj.Receiver.find(ctx, req.identity)
         # permission checking
         if not ctx.is_admin and ctx.user != db_receiver.user:
             raise exception.Forbidden()
@@ -2210,7 +2181,7 @@ class EngineService(service.Service):
         params = req.body.params
 
         LOG.info(_LI("Triggering webhook (%s)"), identity)
-        receiver = self.receiver_find(ctx, identity)
+        receiver = receiver_obj.Receiver.find(ctx, identity)
 
         try:
             cluster = co.Cluster.find(ctx, receiver.cluster_id)
