@@ -112,12 +112,22 @@ cloud_backend_opts = [
 cfg.CONF.register_opts(cloud_backend_opts)
 
 # DEFAULT, event dispatchers
-dispatcher_opts = [
-    cfg.MultiStrOpt("dispatchers",
-                    default=['database', 'message'],
+event_opts = [
+    cfg.MultiStrOpt("event_dispatchers", default=['database', 'message'],
                     help=_("Event dispatchers to enable"))]
-cfg.CONF.register_opts(dispatcher_opts)
+cfg.CONF.register_opts(event_opts)
 
+# Dispatcher section
+dispatcher_group = cfg.OptGroup('dispatchers')
+dispatcher_opts = [
+    cfg.StrOpt('priority', default='info',
+               help=_("Lowest event priorities to be dispatched. Valid values "
+                      "include 'critical', 'error', 'warning', 'info' and "
+                      "'debug'."))]
+cfg.CONF.register_group(dispatcher_group)
+cfg.CONF.register_opts(dispatcher_opts, group=dispatcher_group)
+
+# Authentication section
 authentication_group = cfg.OptGroup('authentication')
 authentication_opts = [
     cfg.StrOpt('auth_url', default='',

@@ -20,16 +20,35 @@ from senlin.engine import event
 
 class TestEvent(testtools.TestCase):
 
+    def setUp(self):
+        super(TestEvent, self).setUp()
+        logging.register_options(cfg.CONF)
+
     @mock.patch('stevedore.named.NamedExtensionManager')
     def test_load_dispatcher(self, mock_mgr):
-        cfg.CONF.set_override('dispatchers', ['foo', 'bar'], enforce_type=True)
 
+        class FakeDispatcher(object):
+            values = {'a': 1, 'b': 2}
+
+            def __iter__(self):
+                return iter(self.values)
+
+            def __getitem__(self, key):
+                return self.values.get(key, '')
+
+            def __contains__(self, name):
+                return name in self.values
+
+            def names(self):
+                return self.values.keys()
+
+        mock_mgr.return_value = FakeDispatcher()
         res = event.load_dispatcher()
 
         self.assertIsNone(res)
         mock_mgr.assert_called_once_with(
             namespace='senlin.dispatchers',
-            names=['foo', 'bar'],
+            names=cfg.CONF.event_dispatchers,
             invoke_on_load=True,
             propagate_map_exceptions=True)
 
@@ -57,83 +76,117 @@ class TestEvent(testtools.TestCase):
                          res)
 
     def test__dump(self):
+        cfg.CONF.set_override('debug', True, enforce_type=True)
         saved_dispathers = event.dispatchers
         event.dispatchers = mock.Mock()
         action = mock.Mock()
         try:
-            event._dump('LEVEL', action, 'Phase1', 'Reason1', 'Timestamp1')
+            event._dump(logging.INFO, action, 'Phase1', 'Reason1', 'TS1')
             event.dispatchers.map_method.assert_called_once_with(
-                'dump', 'LEVEL', action,
-                phase='Phase1', reason='Reason1', timestamp='Timestamp1')
+                'dump', logging.INFO, action,
+                phase='Phase1', reason='Reason1', timestamp='TS1')
+        finally:
+            event.dispatchers = saved_dispathers
+
+    def test__dump_without_timestamp(self):
+        cfg.CONF.set_override('debug', True, enforce_type=True)
+        saved_dispathers = event.dispatchers
+        event.dispatchers = mock.Mock()
+        action = mock.Mock()
+        try:
+            event._dump(logging.INFO, action, 'Phase1', 'Reason1', None)
+
+            event.dispatchers.map_method.assert_called_once_with(
+                'dump', logging.INFO, action,
+                phase='Phase1', reason='Reason1', timestamp=mock.ANY)
+        finally:
+            event.dispatchers = saved_dispathers
+
+    def test__dump_guarded(self):
+        cfg.CONF.set_override('debug', False, enforce_type=True)
+        cfg.CONF.set_override('priority', 'warning', group='dispatchers',
+                              enforce_type=True)
+        saved_dispathers = event.dispatchers
+        event.dispatchers = mock.Mock()
+        action = mock.Mock()
+        try:
+            event._dump(logging.INFO, action, 'Phase1', 'Reason1', 'TS1')
+
+            self.assertEqual(0, event.dispatchers.map_method.call_count)
         finally:
             event.dispatchers = saved_dispathers
 
     def test__dump_with_exception(self):
+        cfg.CONF.set_override('debug', True, enforce_type=True)
         saved_dispathers = event.dispatchers
         event.dispatchers = mock.Mock()
-        event.dispatchers.map_method.side_effect = Exception()
+        event.dispatchers.map_method.side_effect = Exception('fab')
         action = mock.Mock()
         try:
-            res = event._dump('LEVEL', action, 'Phase1', 'Reason1', 'TS1')
+            res = event._dump(logging.INFO, action, 'Phase1', 'Reason1', 'TS1')
 
             self.assertIsNone(res)  # exception logged only
             event.dispatchers.map_method.assert_called_once_with(
-                'dump', 'LEVEL', action,
+                'dump', logging.INFO, action,
                 phase='Phase1', reason='Reason1', timestamp='TS1')
         finally:
             event.dispatchers = saved_dispathers
 
 
-@mock.patch.object(event, '_event_data')
 @mock.patch.object(event, '_dump')
 class TestLogMethods(testtools.TestCase):
 
-    def test_critical(self, mock_dump, mock_data):
-        action = mock.Mock()
+    def test_critical(self, mock_dump):
+        entity = mock.Mock(id='1234567890')
+        entity.name = 'fake_obj'
+        action = mock.Mock(entity=entity, action='ACTION_NAME')
 
         res = event.critical(action, 'P1', 'R1', 'TS1')
 
         self.assertIsNone(res)
         mock_dump.assert_called_once_with(logging.CRITICAL, action,
                                           'P1', 'R1', 'TS1')
-        mock_data.assert_called_once_with(action, 'P1', 'R1')
 
-    def test_error(self, mock_dump, mock_data):
-        action = mock.Mock()
+    def test_error(self, mock_dump):
+        entity = mock.Mock(id='1234567890')
+        entity.name = 'fake_obj'
+        action = mock.Mock(entity=entity, action='ACTION_NAME')
 
         res = event.error(action, 'P1', 'R1', 'TS1')
 
         self.assertIsNone(res)
         mock_dump.assert_called_once_with(logging.ERROR, action,
                                           'P1', 'R1', 'TS1')
-        mock_data.assert_called_once_with(action, 'P1', 'R1')
 
-    def test_warning(self, mock_dump, mock_data):
-        action = mock.Mock()
+    def test_warning(self, mock_dump):
+        entity = mock.Mock(id='1234567890')
+        entity.name = 'fake_obj'
+        action = mock.Mock(entity=entity, action='ACTION_NAME')
 
         res = event.warning(action, 'P1', 'R1', 'TS1')
 
         self.assertIsNone(res)
         mock_dump.assert_called_once_with(logging.WARNING, action,
                                           'P1', 'R1', 'TS1')
-        mock_data.assert_called_once_with(action, 'P1', 'R1')
 
-    def test_info(self, mock_dump, mock_data):
-        action = mock.Mock()
+    def test_info(self, mock_dump):
+        entity = mock.Mock(id='1234567890')
+        entity.name = 'fake_obj'
+        action = mock.Mock(entity=entity, action='ACTION_NAME')
 
         res = event.info(action, 'P1', 'R1', 'TS1')
 
         self.assertIsNone(res)
         mock_dump.assert_called_once_with(logging.INFO, action,
                                           'P1', 'R1', 'TS1')
-        mock_data.assert_called_once_with(action, 'P1', 'R1')
 
-    def test_debug(self, mock_dump, mock_data):
-        action = mock.Mock()
+    def test_debug(self, mock_dump):
+        entity = mock.Mock(id='1234567890')
+        entity.name = 'fake_obj'
+        action = mock.Mock(entity=entity, action='ACTION_NAME')
 
         res = event.debug(action, 'P1', 'R1', 'TS1')
 
         self.assertIsNone(res)
         mock_dump.assert_called_once_with(logging.DEBUG, action,
                                           'P1', 'R1', 'TS1')
-        mock_data.assert_called_once_with(action, 'P1', 'R1')
