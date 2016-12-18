@@ -101,8 +101,9 @@ class NodeTest(base.SenlinTestCase):
                                self.eng.node_list2,
                                self.ctx, req.obj_to_primitive())
 
-        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual("The cluster (BOGUS) could not be found.",
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual('The request is malformed: Cannot find the given '
+                         'cluster: BOGUS.',
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'BOGUS')
 
