@@ -1918,8 +1918,11 @@ class EngineService(service.Service):
         LOG.info(_LI("Creating action '%s'."), req.name)
 
         req.obj_set_defaults()
-        # TODO(Anyone): check exception and return BadRequest
-        target = co.Cluster.find(ctx, req.cluster_id)
+        try:
+            target = co.Cluster.find(ctx, req.cluster_id)
+        except exception.ResourceNotFound:
+            msg = _("Cannot find the given cluster: %s") % req.cluster_id
+            raise exception.BadRequest(msg=msg)
 
         # Create an action instance
         params = {
