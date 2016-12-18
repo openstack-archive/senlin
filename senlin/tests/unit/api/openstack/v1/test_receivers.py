@@ -16,11 +16,11 @@ from webob import exc
 
 from oslo_serialization import jsonutils
 
+from senlin.api.common import util
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import receivers
 from senlin.common import exception as senlin_exc
 from senlin.common import policy
-from senlin.objects.requests import receivers as vorr
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
@@ -37,7 +37,9 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cfgopts = DummyConfig()
         self.controller = receivers.ReceiverController(options=cfgopts)
 
-    def test_receiver_index_normal(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_index_normal(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/receivers')
 
@@ -63,20 +65,21 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         ]
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_resp)
+        mock_call.return_value = engine_resp
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         result = self.controller.index(req)
 
-        mock_call.assert_called_with(req.context, 'receiver_list2', mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorr.ReceiverListRequest)
-        self.assertTrue(request.project_safe)
+        self.assertEqual(engine_resp, result['receivers'])
+        mock_parse.assert_called_once_with(
+            'ReceiverListRequest', req, mock.ANY)
+        mock_call.assert_called_with(req.context, 'receiver_list2', obj)
 
-        expected = {'receivers': engine_resp}
-        self.assertEqual(expected, result)
-
-    def test_receiver_index_whitelists_params(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_index_whitelists_params(self, mock_call,
+                                              mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         marker = 'cac6d9c1-cb4e-4884-ba2a-3cbc72d84aaf'
         params = {
@@ -90,95 +93,153 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
         req = self._get('/receivers', params=params)
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.return_value = []
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
-        self.controller.index(req)
+        result = self.controller.index(req)
+
+        self.assertEqual([], result['receivers'])
+        mock_parse.assert_called_once_with(
+            'ReceiverListRequest', req,
+            {
+                'sort': 'name:desc',
+                'name': ['receiver01'],
+                'action': ['CLUSTER_RESIZE'],
+                'limit': '20',
+                'marker': marker,
+                'cluster_id': ['123abc'],
+                'type': ['webhook'],
+                'project_safe': True
+            })
         mock_call.assert_called_with(req.context, 'receiver_list2', mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorr.ReceiverListRequest)
-        self.assertTrue(request.project_safe)
-        self.assertEqual(20, request.limit)
-        self.assertEqual(marker, request.marker)
-        self.assertEqual('name:desc', request.sort)
-        self.assertEqual(['receiver01'], request.name)
-        self.assertEqual(['webhook'], request.type)
-        self.assertEqual(['123abc'], request.cluster_id)
-        self.assertEqual(['CLUSTER_RESIZE'], request.action)
 
-    def test_receiver_index_whitelists_invalid_params(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_index_whitelists_invalid_params(self, mock_call,
+                                                      mock_parse,
+                                                      mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
             'balrog': 'you shall not pass!'
         }
         req = self._get('/receivers', params=params)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
-        self.assertEqual("Invalid parameter balrog",
-                         str(ex))
+        self.assertEqual("Invalid parameter balrog", six.text_type(ex))
+        self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
-    def test_receiver_index_invalid_type(self, mock_enforce):
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=[])
-
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_index_invalid_type(self, mock_call,
+                                         mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'type': 'bogus'}
         req = self._get('/receivers', params=params)
+
+        mock_parse.side_effect = exc.HTTPBadRequest("bad param")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
-        self.assertIn("Field value bogus is invalid",
-                      six.text_type(ex))
+
+        self.assertEqual("bad param", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ReceiverListRequest', req,
+            {
+                'type': ['bogus'],
+                'project_safe': True
+            })
         self.assertFalse(mock_call.called)
 
-    def test_receiver_index_invalid_action(self, mock_enforce):
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=[])
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_index_invalid_action(self, mock_call,
+                                           mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
 
         params = {'action': 'bogus'}
         req = self._get('/receivers', params=params)
+
+        mock_parse.side_effect = exc.HTTPBadRequest("bad param")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
-        self.assertIn("Field value bogus is invalid",
-                      six.text_type(ex))
+
+        self.assertEqual("bad param", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ReceiverListRequest', req,
+            {
+                'action': ['bogus'],
+                'project_safe': True
+            })
         self.assertFalse(mock_call.called)
 
-    def test_receiver_index_limit_non_int(self, mock_enforce):
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=[])
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_index_limit_non_int(self, mock_call,
+                                          mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
 
         params = {'limit': 'abc'}
         req = self._get('/receivers', params=params)
+
+        mock_parse.side_effect = exc.HTTPBadRequest("bad param")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
-        self.assertIn("invalid literal for int() with base 10: 'abc'",
-                      six.text_type(ex))
+
+        self.assertEqual("bad param", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ReceiverListRequest', req,
+            {
+                'limit': 'abc',
+                'project_safe': True
+            })
         self.assertFalse(mock_call.called)
 
-    def test_receiver_index_invalid_sort(self, mock_enforce):
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=[])
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_index_invalid_sort(self, mock_call,
+                                         mock_parse, mock_enforce):
+
+        self._mock_enforce_setup(mock_enforce, 'index', True)
 
         params = {'sort': 'bogus:foo'}
         req = self._get('/receivers', params=params)
+
+        mock_parse.side_effect = exc.HTTPBadRequest("bad param")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
-        self.assertIn("unsupported sort dir 'foo' for 'sort'.",
-                      six.text_type(ex))
+
+        self.assertEqual("bad param", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ReceiverListRequest', req,
+            {
+                'sort': 'bogus:foo',
+                'project_safe': True
+            })
         self.assertFalse(mock_call.called)
 
-    def test_receiver_index_global_project(self, mock_enforce):
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=[])
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_index_global_project(self, mock_call,
+                                           mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
 
         params = {'global_project': True}
         req = self._get('/receivers', params=params)
-        self.controller.index(req)
-        mock_call.assert_called_once_with(req.context,
-                                          'receiver_list2',
-                                          mock.ANY)
+
+        mock_call.return_value = []
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        result = self.controller.index(req)
+
+        self.assertEqual([], result['receivers'])
+        mock_parse.assert_called_once_with(
+            'ReceiverListRequest', req, {'project_safe': False})
+        mock_call.assert_called_once_with(
+            req.context, 'receiver_list2', obj)
 
     def test_receiver_index_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
@@ -189,7 +250,10 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_receiver_create_success(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_create_success(self, mock_call,
+                                     mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {
             'receiver': {
@@ -226,41 +290,42 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._post('/receivers', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_response)
+        mock_call.return_value = engine_response
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         resp = self.controller.create(req, body=body)
 
-        mock_call.assert_called_with(req.context, 'receiver_create2', mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorr.ReceiverCreateRequestBody)
-        self.assertEqual('test_receiver', request.name)
-        self.assertEqual('webhook', request.type)
-        self.assertEqual('FAKE_ID', request.cluster_id)
-        self.assertEqual('CLUSTER_RESIZE', request.action)
-        self.assertEqual({'user_id': 'test_user_id',
-                          'password': 'test_pass'}, request.actor)
-        self.assertEqual({'test_param': 'test_value'}, request.params)
+        self.assertEqual(engine_response, resp['receiver'])
+        mock_parse.assert_called_once_with(
+            'ReceiverCreateRequest', req, body, 'receiver')
+        mock_call.assert_called_with(
+            req.context, 'receiver_create2', obj.receiver)
 
-        expected = {'receiver': engine_response}
-        self.assertEqual(expected, resp)
-
-    def test_receiver_create_with_bad_body(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_create_with_bad_body(self, mock_call, mock_parse,
+                                           mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {'name': 'test_receiver'}
 
         req = self._post('/receivers', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+
+        mock_parse.side_effect = exc.HTTPBadRequest("bad param")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("Request body missing 'receiver' key.",
-                         six.text_type(ex))
-
+        self.assertEqual("bad param", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ReceiverCreateRequest', req, body, 'receiver')
         self.assertFalse(mock_call.called)
 
-    def test_receiver_create_missing_required_field(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_create_missing_required_field(self, mock_call,
+                                                    mock_parse,
+                                                    mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {
             'receiver': {
@@ -271,15 +336,21 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._post('/receivers', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+
+        mock_parse.side_effect = exc.HTTPBadRequest("miss type")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("'type' is a required property", six.text_type(ex))
+        self.assertEqual("miss type", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ReceiverCreateRequest', req, body, 'receiver')
         self.assertFalse(mock_call.called)
 
-    def test_receiver_create_with_bad_type(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_create_with_bad_type(self, mock_call,
+                                           mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         r_type = 'unsupported'
         body = {
@@ -292,16 +363,21 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._post('/receivers', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+
+        mock_parse.side_effect = exc.HTTPBadRequest("bad type")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("Value 'unsupported' is not acceptable for field "
-                         "'type'.", six.text_type(ex))
+        self.assertEqual("bad type", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ReceiverCreateRequest', req, body, 'receiver')
         self.assertFalse(mock_call.called)
 
-    def test_receiver_create_illegal_action(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_create_illegal_action(self, mock_call,
+                                            mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         action = 'illegal_action'
         body = {
@@ -313,16 +389,20 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
         req = self._post('/receivers', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+
+        mock_parse.side_effect = exc.HTTPBadRequest("bad action")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("Value 'illegal_action' is not acceptable for field "
-                         "'action'.", six.text_type(ex))
+        self.assertEqual("bad action", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ReceiverCreateRequest', req, body, 'receiver')
         self.assertFalse(mock_call.called)
 
-    def test_receiver_get_normal(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_get_normal(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         wid = 'aaaa-bbbb-cccc'
         req = self._get('/receivers/%(receiver_id)s' % {'receiver_id': wid})
@@ -347,25 +427,26 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_resp)
+        mock_call.return_value = engine_resp
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         result = self.controller.get(req, receiver_id=wid)
-        mock_call.assert_called_with(req.context, 'receiver_get2', mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorr.ReceiverGetRequest)
-        self.assertEqual(wid, request.identity)
 
-        expected = {'receiver': engine_resp}
-        self.assertEqual(expected, result)
+        self.assertEqual(engine_resp, result['receiver'])
+        mock_parse.assert_called_once_with(
+            'ReceiverGetRequest', req, {'identity': wid})
+        mock_call.assert_called_with(req.context, 'receiver_get2', obj)
 
-    def test_receiver_get_not_found(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_get_not_found(self, mock_call, mock_parse,
+                                    mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         wid = 'non-existent-receiver'
         req = self._get('/receivers/%(receiver_id)s' % {'receiver_id': wid})
 
         error = senlin_exc.ResourceNotFound(type='receiver', id=wid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
@@ -387,39 +468,51 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_receiver_delete_success(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_delete_success(self, mock_call, mock_parse,
+                                     mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         wid = 'aaaa-bbbb-cccc'
         req = self._delete('/receivers/%(receiver_id)s' % {'receiver_id': wid})
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=None)
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         self.assertRaises(exc.HTTPNoContent,
                           self.controller.delete, req, receiver_id=wid)
-        mock_call.assert_called_with(req.context, 'receiver_delete2', mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorr.ReceiverDeleteRequest)
-        self.assertEqual(wid, request.identity)
+        mock_parse.assert_called_once_with(
+            'ReceiverDeleteRequest', req, {'identity': wid})
+        mock_call.assert_called_once_with(
+            req.context, 'receiver_delete2', obj)
 
-    def test_receiver_delete_err_malformed_receiver_id(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_delete_err_malformed_receiver_id(self, mock_call,
+                                                       mock_parse,
+                                                       mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         wid = {'k1': 'v1'}
         req = self._delete('/receivers/%(receiver_id)s' % {'receiver_id': wid})
 
+        mock_parse.side_effect = exc.HTTPBadRequest("bad identity")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.delete, req,
                                receiver_id=wid)
-        self.assertEqual("A string is required in field identity, "
-                         "not a dict", six.text_type(ex))
+        self.assertEqual("bad identity", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ReceiverDeleteRequest', req, {'identity': wid})
+        self.assertFalse(mock_call.called)
 
-    def test_receiver_delete_not_found(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_delete_not_found(self, mock_call, mock_parse,
+                                       mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         wid = 'aaaa-bbbb-cccc'
         req = self._delete('/receivers/%(receiver_id)s' % {'receiver_id': wid})
 
         error = senlin_exc.ResourceNotFound(type='receiver', id=wid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
@@ -441,43 +534,53 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_receiver_notify_success(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_notify_success(self, mock_call, mock_parse,
+                                     mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'notify')
         wid = 'aaaa-bbbb-cccc'
         req = self._post('/receivers/%(receiver_id)s/notify' % {
             'receiver_id': wid}, None)
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=None)
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         self.assertRaises(exc.HTTPNoContent,
                           self.controller.notify, req, receiver_id=wid)
+        mock_parse.assert_called_once_with(
+            'ReceiverNotifyRequest', req, {'identity': wid})
+        mock_call.assert_called_with(req.context, 'receiver_notify2', obj)
 
-        mock_call.assert_called_with(req.context, 'receiver_notify2', mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorr.ReceiverNotifyRequest)
-        self.assertEqual(wid, request.identity)
-
-    def test_receiver_notify_err_malformed_receiver_id(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_notify_err_malformed_receiver_id(self, mock_call,
+                                                       mock_parse,
+                                                       mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'notify', True)
         wid = {'k1': 'v1'}
         req = self._post('/receivers/%(receiver_id)s' % {'receiver_id': wid},
                          None)
 
+        mock_parse.side_effect = exc.HTTPBadRequest("bad identity")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.notify, req,
                                receiver_id=wid)
-        self.assertEqual("A string is required in field identity, "
-                         "not a dict", six.text_type(ex))
+        self.assertEqual("bad identity", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ReceiverNotifyRequest', req, {'identity': wid})
+        self.assertFalse(mock_call.called)
 
-    def test_receiver_notify_not_found(self, mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'notify')
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_receiver_notify_not_found(self, mock_call, mock_parse,
+                                       mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'notify', True)
         wid = 'aaaa-bbbb-cccc'
         req = self._post('/receivers/%(receiver_id)s/notify' % {
             'receiver_id': wid}, None)
 
         error = senlin_exc.ResourceNotFound(type='receiver', id=wid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
