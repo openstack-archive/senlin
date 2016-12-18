@@ -14,8 +14,6 @@
 Policy endpoint for Senlin v1 ReST API.
 """
 
-import jsonschema
-import six
 from webob import exc
 
 from senlin.api.common import util
@@ -23,7 +21,6 @@ from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.objects import base as obj_base
-from senlin.objects.requests import policies as vorp
 
 
 class PolicyController(wsgi.Controller):
@@ -51,33 +48,13 @@ class PolicyController(wsgi.Controller):
 
         unsafe = util.parse_bool_param(consts.PARAM_GLOBAL_PROJECT, is_global)
         params['project_safe'] = not unsafe
-        norm_req = obj_base.SenlinObject.normalize_req(
-            'PolicyListRequest', params, None)
-        obj = None
-        try:
-            obj = vorp.PolicyListRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
+        obj = util.parse_request('PolicyListRequest', req, params)
         policies = self.rpc_client.call2(req.context, 'policy_list2', obj)
         return {'policies': policies}
 
     @util.policy_enforce
     def create(self, req, body):
-        try:
-            body_req = obj_base.SenlinObject.normalize_req(
-                'PolicyCreateRequest', body, 'policy')
-
-            obj = vorp.PolicyCreateRequest.obj_from_primitive(body_req)
-            jsonschema.validate(body_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
+        obj = util.parse_request('PolicyCreateRequest', req, body, 'policy')
         result = self.rpc_client.call2(req.context, 'policy_create2',
                                        obj.policy)
 
@@ -86,17 +63,8 @@ class PolicyController(wsgi.Controller):
     @util.policy_enforce
     def get(self, req, policy_id):
         """Gets detailed information for a policy"""
-        norm_req = obj_base.SenlinObject.normalize_req(
-            'PolicyGetRequest', {'identity': policy_id})
-        obj = None
-        try:
-            obj = vorp.PolicyGetRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
+        body = {'identity': policy_id}
+        obj = util.parse_request('PolicyGetRequest', req, body)
         policy = self.rpc_client.call2(req.context, 'policy_get2', obj)
 
         return {'policy': policy}
@@ -107,36 +75,19 @@ class PolicyController(wsgi.Controller):
         if data is None:
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'policy' key in request body."))
-        try:
-            body_req = obj_base.SenlinObject.normalize_req(
-                'PolicyUpdateRequestBody', body['policy'])
-            norm_req = obj_base.SenlinObject.normalize_req(
-                'PolicyUpdateRequest', {'identity': policy_id,
-                                        'policy': body_req})
-            obj = vorp.PolicyUpdateRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
+        body_req = obj_base.SenlinObject.normalize_req(
+            'PolicyUpdateRequestBody', body['policy'])
+        obj = util.parse_request('PolicyUpdateRequest', req,
+                                 {'identity': policy_id,
+                                  'policy': body_req})
         policy = self.rpc_client.call2(req.context, 'policy_update2', obj)
 
         return {'policy': policy}
 
     @util.policy_enforce
     def delete(self, req, policy_id):
-        norm_req = obj_base.SenlinObject.normalize_req(
-            'PolicyDeleteRequest', {'identity': policy_id})
-        obj = None
-        try:
-            obj = vorp.PolicyDeleteRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
+        body = {'identity': policy_id}
+        obj = util.parse_request('PolicyDeleteRequest', req, body)
         self.rpc_client.call2(req.context, 'policy_delete2', obj)
         raise exc.HTTPNoContent()
 
@@ -144,17 +95,8 @@ class PolicyController(wsgi.Controller):
     @util.policy_enforce
     def validate(self, req, body):
         """Validate the policy spec user specified."""
-        try:
-            body_req = obj_base.SenlinObject.normalize_req(
-                'PolicyValidateRequest', body, 'policy')
-
-            obj = vorp.PolicyValidateRequest.obj_from_primitive(body_req)
-            jsonschema.validate(body_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
+        obj = util.parse_request('PolicyValidateRequest', req, body,
+                                 'policy')
         result = self.rpc_client.call2(req.context, 'policy_validate2',
                                        obj.policy)
 
