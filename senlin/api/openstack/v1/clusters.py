@@ -277,7 +277,7 @@ class ClusterController(wsgi.Controller):
     def collect(self, req, cluster_id, path):
         """Aggregate attribute values across a cluster."""
         stripped_path = path.strip()
-        if stripped_path == '':
+        if (stripped_path == '') or (stripped_path == 'None'):
             raise exc.HTTPBadRequest(_("Required path attribute is missing."))
 
         params = {

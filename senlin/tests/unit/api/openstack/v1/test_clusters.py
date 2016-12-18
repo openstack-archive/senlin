@@ -1277,6 +1277,23 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                          six.text_type(ex))
         self.assertEqual(0, mock_call.call_count)
 
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_collect_path_is_none(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'collect', True)
+        req = mock.Mock(context=self.context)
+        cid = 'aaaa-bbbb-cccc'
+        path = 'None'
+        req = self._get('/clusters/%(cid)s/attrs/%(path)s' %
+                        {'cid': cid, 'path': path}, version='1.2')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.collect,
+                               req, cluster_id=cid, path=path)
+
+        self.assertEqual('Required path attribute is missing.',
+                         six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_collect_failed_request(self, mock_call, mock_parse, mock_enforce):
