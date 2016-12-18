@@ -16,10 +16,9 @@ from webob import exc
 
 from oslo_serialization import jsonutils
 
+from senlin.api.common import util
 from senlin.api.openstack.v1 import webhooks
-from senlin.common.i18n import _
 from senlin.common import policy
-from senlin.objects.requests import webhooks as vorw
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
@@ -36,7 +35,9 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cfgopts = DummyConfig()
         self.controller = webhooks.WebhookController(options=cfgopts)
 
-    def test_webhook_trigger(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_webhook_trigger(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'trigger', True)
         body = None
         webhook_id = 'test_webhook_id'
@@ -48,26 +49,22 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         req = self._post('/webhooks/test_webhook_id/trigger',
                          jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_response)
+        mock_call.return_value = engine_response
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         resp = self.controller.trigger(req, webhook_id=webhook_id, body=None)
 
-        mock_call.assert_called_with(req.context, 'webhook_trigger2',
-                                     mock.ANY)
+        self.assertEqual(action_id, resp['action'])
+        self.assertEqual('/actions/test_action_id', resp['location'])
+        mock_parse.assert_called_once_with(
+            'WebhookTriggerRequest', req, mock.ANY)
+        mock_call.assert_called_once_with(req.context, 'webhook_trigger2', obj)
 
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorw.WebhookTriggerRequest)
-        self.assertEqual(webhook_id, request.identity)
-        self.assertIsInstance(
-            request.body, vorw.WebhookTriggerRequestBody)
-
-        expected = engine_response
-        location = {'location': '/actions/test_action_id'}
-        expected.update(location)
-        self.assertEqual(expected, resp)
-
-    def test_webhook_trigger_with_params(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_webhook_trigger_with_params(self, mock_call, mock_parse,
+                                         mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'trigger', True)
         body = {'params': {'key': 'value'}}
         webhook_id = 'test_webhook_id'
@@ -76,50 +73,49 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         req = self._post('/webhooks/test_webhook_id/trigger',
                          jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_response)
+        mock_call.return_value = engine_response
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         resp = self.controller.trigger(req, webhook_id=webhook_id, body=body)
 
-        mock_call.assert_called_with(req.context, 'webhook_trigger2',
-                                     mock.ANY)
+        self.assertEqual('FAKE_ACTION', resp['action'])
+        self.assertEqual('/actions/FAKE_ACTION', resp['location'])
+        mock_parse.assert_called_once_with(
+            'WebhookTriggerRequest', req, mock.ANY)
+        mock_call.assert_called_once_with(req.context, 'webhook_trigger2', obj)
 
-        self.assertEqual(engine_response, resp)
-
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorw.WebhookTriggerRequest)
-        self.assertIsInstance(
-            request.body, vorw.WebhookTriggerRequestBody)
-        self.assertEqual(webhook_id, request.identity)
-
-    def test_webhook_trigger_invalid_params(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_webhook_trigger_invalid_params(self, mock_call, mock_parse,
+                                            mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'trigger', True)
         webhook_id = 'fake'
         body = {"bad": "boo"}
         req = self._patch('/webhooks/%s/trigger' % webhook_id,
                           jsonutils.dumps(body))
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_parse.side_effect = exc.HTTPBadRequest("bad param")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.trigger,
                                req, webhook_id=webhook_id, body=body)
 
-        self.assertEqual(_("Additional properties are not allowed "
-                           "('bad' was unexpected)"), six.text_type(ex))
+        self.assertEqual("bad param", six.text_type(ex))
         self.assertFalse(mock_call.called)
 
-    def test_webhook_trigger_invalid_json(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_webhook_trigger_invalid_json(self, mock_call, mock_parse,
+                                          mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'trigger', True)
         webhook_id = 'fake'
         body = {"params": "boo"}
         req = self._patch('/webhooks/%s/trigger' % webhook_id,
                           jsonutils.dumps(body))
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_parse.side_effect = exc.HTTPBadRequest("invalid param")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.trigger,
                                req, webhook_id=webhook_id, body=body)
-        self.assertEqual("The server could not comply with the request since"
-                         " it is either malformed or otherwise incorrect.",
-                         six.text_type(ex))
+        self.assertEqual("invalid param", six.text_type(ex))
         self.assertFalse(mock_call.called)
