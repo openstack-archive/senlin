@@ -28,26 +28,6 @@ class CredentialTest(base.SenlinTestCase):
         self.eng = service.EngineService('host-a', 'topic-a')
 
     @mock.patch.object(co.Credential, 'update_or_create')
-    def test_credential_create(self, mock_create):
-        x_cred = 'fake_cred'
-
-        result = self.eng.credential_create(self.ctx, x_cred)
-
-        self.assertEqual({'cred': x_cred}, result)
-        mock_create.assert_called_once_with(
-            self.ctx,
-            {
-                'user': 'fake_user_id',
-                'project': 'fake_project_id',
-                'cred': {
-                    'openstack': {
-                        'trust': 'fake_cred'
-                    }
-                }
-            }
-        )
-
-    @mock.patch.object(co.Credential, 'update_or_create')
     def test_credential_create2(self, mock_create):
         trust_id = 'c8602dc1-677b-45bc-b732-3bc0d86d9537'
         cred = {'openstack': {'trust': trust_id}}
