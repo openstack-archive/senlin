@@ -14,11 +14,11 @@ import mock
 import six
 from webob import exc
 
+from senlin.api.common import util
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import profile_types
 from senlin.common import exception as senlin_exc
 from senlin.common import policy
-from senlin.objects.requests import profile_type as vorp
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
@@ -35,24 +35,25 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cfgopts = DummyConfig()
         self.controller = profile_types.ProfileTypeController(options=cfgopts)
 
-    def test_profile_type_list(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_type_list(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/profile_types')
 
         engine_response = [{'name': 'os.heat.stack'},
                            {'name': 'os.nova.server'}]
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_response)
+        mock_call.return_value = engine_response
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         response = self.controller.index(req)
-        self.assertEqual({'profile_types': engine_response}, response)
 
+        self.assertEqual(engine_response, response['profile_types'])
+        mock_parse.assert_called_once_with('ProfileTypeListRequest', req, {})
         mock_call.assert_called_once_with(
             req.context, 'profile_type_list2', mock.ANY)
-
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorp.ProfileTypeListRequest)
 
     def test_profile_type_list_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
@@ -64,7 +65,9 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_profile_type_get(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_type_get(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         type_name = 'SimpleProfile'
         req = self._get('/profile_types/%(type)s' % {'type': type_name})
@@ -77,51 +80,59 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             },
         }
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_response)
+        mock_call.return_value = engine_response
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         response = self.controller.get(req, type_name=type_name)
 
+        self.assertEqual(engine_response, response['profile_type'])
+        mock_parse.assert_called_once_with(
+            'ProfileTypeGetRequest', req, {'type_name': type_name})
         mock_call.assert_called_once_with(
             req.context, 'profile_type_get2', mock.ANY)
 
-        self.assertEqual(engine_response, response['profile_type'])
-
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorp.ProfileTypeGetRequest)
-        self.assertEqual('SimpleProfile', request.type_name)
-
-    def test_profile_type_get_with_bad_param(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_type_get_with_bad_param(self, mock_call, mock_parse,
+                                             mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         type_name = 100
         req = self._get('/profile_types/%(type)s' % {'type': type_name})
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_parse.side_effect = exc.HTTPBadRequest("bad param")
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.get,
                                req, type_name=type_name)
-        self.assertEqual("100 is not of type 'string'", six.text_type(ex))
+
+        self.assertEqual("bad param", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ProfileTypeGetRequest', req, {'type_name': type_name})
         mock_call.assert_not_called()
 
-    def test_profile_type_get_not_found(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_type_get_not_found(self, mock_call, mock_parse,
+                                        mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         type_name = 'BogusProfileType'
         req = self._get('/profile_types/%(type)s' % {'type': type_name})
 
         error = senlin_exc.ResourceNotFound(type='profile_type', id=type_name)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
                                               req, type_name=type_name)
 
-        mock_call.assert_called_once_with(
-            req.context, 'profile_type_get2', mock.ANY)
-
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+
+        mock_parse.assert_called_once_with(
+            'ProfileTypeGetRequest', mock.ANY, {'type_name': type_name})
+        mock_call.assert_called_once_with(
+            req.context, 'profile_type_get2', mock.ANY)
 
     def test_profile_type_get_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)
