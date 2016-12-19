@@ -22,6 +22,8 @@ from senlin.db.sqlalchemy import api as db_api
 from senlin.drivers.container import docker_v1 as docker_driver
 from senlin.engine import cluster
 from senlin.engine import node as node_mod
+from senlin.objects import cluster as co
+from senlin.objects import node as no
 from senlin.profiles import base
 
 
@@ -143,23 +145,11 @@ class DockerProfile(base.Profile):
         :param host_node: The uuid of the hosting node.
         :param host_cluster: The uuid of the hosting cluster.
         """
-
+        host = None
         if host_node is not None:
             host = self._get_specified_node(ctx, host_node)
-            if host_cluster is not None:
-                self.cluster = self._get_host_cluster(ctx, host_cluster)
-                if host.id not in [
-                        node.id for node in self.cluster.rt['nodes']]:
-                    msg = _("Host node %(host_node)s does not belong to "
-                            "cluster %(host_cluster)s") % {
-                        "host_node": host_node,
-                        "host_cluster": host_cluster}
-                    raise exc.InternalError(message=msg)
-        elif host_cluster is not None:
+        if host_cluster is not None:
             host = self._get_random_node(ctx, host_cluster)
-        else:
-            msg = _("Either host_node or host_cluster should be provided")
-            raise exc.InternalError(message=msg)
 
         return host
 
@@ -247,6 +237,41 @@ class DockerProfile(base.Profile):
                 raise exc.InternalError(message=msg)
 
         return host_ip
+
+    def do_validate(self, obj):
+        """Validate if the spec has provided valid configuration.
+
+        :param obj: The node object.
+        """
+        cluster = self.properties[self.HOST_CLUSTER]
+        node = self.properties[self.HOST_NODE]
+        if all([cluster, node]):
+            msg = _("Either '%(c)s' or '%(n)s' should be specified, but not "
+                    "both.") % {'c': self.HOST_CLUSTER, 'n': self.HOST_NODE}
+            raise exc.InvalidSpec(message=msg)
+
+        if not any([cluster, node]):
+            msg = _("Either '%(c)s' or '%(n)s' should be specified."
+                    ) % {'c': self.HOST_CLUSTER, 'n': self.HOST_NODE}
+            raise exc.InvalidSpec(message=msg)
+
+        if cluster:
+            try:
+                co.Cluster.find(self.context, cluster)
+            except (exc.ResourceNotFound, exc.MultipleChoices):
+                msg = _("The specified %(key)s '%(val)s' could not be found "
+                        "or is not unique."
+                        ) % {'key': self.HOST_CLUSTER, 'val': cluster}
+                raise exc.InvalidSpec(message=msg)
+
+        if node:
+            try:
+                no.Node.find(self.context, node)
+            except (exc.ResourceNotFound, exc.MultipleChoices):
+                msg = _("The specified %(key)s '%(val)s' could not be found "
+                        "or is not unique."
+                        ) % {'key': self.HOST_NODE, 'val': node}
+                raise exc.InvalidSpec(message=msg)
 
     def do_create(self, obj):
         """Create a container instance using the given profile.

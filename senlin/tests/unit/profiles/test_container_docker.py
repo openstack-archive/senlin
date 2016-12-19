@@ -13,6 +13,7 @@
 import copy
 
 import mock
+import six
 
 from senlin.common import context
 from senlin.common import exception as exc
@@ -20,7 +21,9 @@ from senlin.common.i18n import _
 from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import cluster
 from senlin.engine import node
-from senlin.profiles import base as base_profile
+from senlin.objects import cluster as co
+from senlin.objects import node as no
+from senlin.profiles import base as pb
 from senlin.profiles.container import docker as docker_profile
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -42,9 +45,8 @@ class TestContainerDockerProfile(base.SenlinTestCase):
                 'name': 'docker_container',
                 'image': 'hello-world',
                 'command': '/bin/sleep 30',
-                'host_node': 'fake_node',
-                'host_cluster': 'fake_cluster',
                 'port': 2375,
+                'host_node': 'fake_node',
             }
         }
 
@@ -54,25 +56,29 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         self.assertIsNone(profile.container_id)
         self.assertIsNone(profile.host)
 
+    @mock.patch.object(docker_profile.DockerProfile, 'do_validate')
     @mock.patch.object(db_api, 'node_add_dependents')
     @mock.patch.object(db_api, 'cluster_add_dependents')
-    def test_create_with_host_node(self, mock_cadd, mock_nadd):
-        spec = copy.deepcopy(self.spec)
-        del spec['properties']['host_cluster']
+    def test_create_with_host_node(self, mock_cadd, mock_nadd, mock_validate):
+        mock_validate.return_value = None
 
         profile = docker_profile.DockerProfile.create(
-            self.context, 'fake_name', spec)
+            self.context, 'fake_name', self.spec)
 
         self.assertIsNotNone(profile)
         mock_nadd.assert_called_once_with(self.context, 'fake_node',
                                           profile.id, 'profile')
         self.assertEqual(0, mock_cadd.call_count)
 
+    @mock.patch.object(docker_profile.DockerProfile, 'do_validate')
     @mock.patch.object(db_api, 'node_add_dependents')
     @mock.patch.object(db_api, 'cluster_add_dependents')
-    def test_create_with_host_cluster(self, mock_cadd, mock_nadd):
+    def test_create_with_host_cluster(self, mock_cadd, mock_nadd,
+                                      mock_validate):
+        mock_validate.return_value = None
         spec = copy.deepcopy(self.spec)
         del spec['properties']['host_node']
+        spec['properties']['host_cluster'] = 'fake_cluster'
 
         profile = docker_profile.DockerProfile.create(
             self.context, 'fake_name', spec)
@@ -82,16 +88,13 @@ class TestContainerDockerProfile(base.SenlinTestCase):
                                           profile.id)
         self.assertEqual(0, mock_nadd.call_count)
 
-    @mock.patch.object(base_profile.Profile, 'delete')
-    @mock.patch.object(base_profile.Profile, 'load')
+    @mock.patch.object(pb.Profile, 'delete')
+    @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(db_api, 'node_remove_dependents')
     @mock.patch.object(db_api, 'cluster_remove_dependents')
     def test_delete_with_host_node(self, mock_cdel, mock_ndel, mock_load,
                                    mock_delete):
-        spec = copy.deepcopy(self.spec)
-        del spec['properties']['host_cluster']
-
-        profile = docker_profile.DockerProfile('t', spec)
+        profile = docker_profile.DockerProfile('t', self.spec)
         mock_load.return_value = profile
 
         res = docker_profile.DockerProfile.delete(self.context, 'FAKE_ID')
@@ -103,14 +106,15 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         self.assertEqual(0, mock_cdel.call_count)
         mock_delete.assert_called_once_with(self.context, 'FAKE_ID')
 
-    @mock.patch.object(base_profile.Profile, 'delete')
-    @mock.patch.object(base_profile.Profile, 'load')
+    @mock.patch.object(pb.Profile, 'delete')
+    @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(db_api, 'node_remove_dependents')
     @mock.patch.object(db_api, 'cluster_remove_dependents')
     def test_delete_with_host_cluster(self, mock_cdel, mock_ndel, mock_load,
                                       mock_delete):
         spec = copy.deepcopy(self.spec)
         del spec['properties']['host_node']
+        spec['properties']['host_cluster'] = 'fake_cluster'
         profile = docker_profile.DockerProfile('fake_name', spec)
         mock_load.return_value = profile
 
@@ -140,7 +144,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         obj = mock.Mock()
         client = profile.docker(obj)
         self.assertEqual(dockerclient, client)
-        mock_host.assert_called_once_with(ctx, 'fake_node', 'fake_cluster')
+        mock_host.assert_called_once_with(ctx, 'fake_node', None)
         mock_ip.assert_called_once_with(obj, 'server1', 'os.nova.server')
         url = 'tcp://1.2.3.4:2375'
         mock_client.assert_called_once_with(url)
@@ -170,51 +174,6 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         ex = self.assertRaises(exc.InternalError,
                                profile.docker, obj)
         msg = _('Unable to determine the IP address of host node')
-
-        self.assertEqual(msg, ex.message)
-
-    @mock.patch.object(docker_profile.DockerProfile, '_get_host_cluster')
-    @mock.patch.object(docker_profile.DockerProfile, '_get_specified_node')
-    def test_get_host(self, mock_node, mock_cluster):
-        node1 = mock.Mock(id='node1')
-        node2 = mock.Mock(id='node2')
-        mock_node.return_value = node1
-        cluster = mock.Mock(rt={'nodes': [node1, node2]})
-        mock_cluster.return_value = cluster
-        profile = docker_profile.DockerProfile('container', self.spec)
-        ctx = mock.Mock()
-        host = profile._get_host(ctx, 'fake_node', 'fake_cluster')
-        self.assertEqual(node1, host)
-        mock_node.assert_called_once_with(ctx, 'fake_node')
-        mock_cluster.assert_called_once_with(ctx, 'fake_cluster')
-
-    @mock.patch.object(docker_profile.DockerProfile, '_get_host_cluster')
-    @mock.patch.object(docker_profile.DockerProfile, '_get_specified_node')
-    def test_get_host_node_not_belong_to_cluster(self, mock_node,
-                                                 mock_cluster):
-        node1 = mock.Mock(id='node1')
-        node2 = mock.Mock(id='node2')
-        node3 = mock.Mock(id='node3')
-        mock_node.return_value = node1
-        cluster = mock.Mock(rt={'nodes': [node2, node3]})
-        mock_cluster.return_value = cluster
-        profile = docker_profile.DockerProfile('container', self.spec)
-        ctx = mock.Mock()
-        ex = self.assertRaises(exc.InternalError,
-                               profile._get_host,
-                               ctx, 'fake_node', 'fake_cluster')
-        msg = _('Host node fake_node does not belong to cluster fake_cluster')
-        self.assertEqual(msg, ex.message)
-
-    def test_get_host_no_host(self):
-        spec = self.spec
-        del spec['properties']['host_node']
-        del spec['properties']['host_cluster']
-        profile = docker_profile.DockerProfile('container', spec)
-        obj = mock.Mock()
-        ex = self.assertRaises(exc.InternalError,
-                               profile.docker, obj)
-        msg = _('Either host_node or host_cluster should be provided')
 
         self.assertEqual(msg, ex.message)
 
@@ -351,6 +310,86 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         msg = _("Output 'fixed_ip' is missing from the provided stack node")
 
         self.assertEqual(msg, ex.message)
+
+    def test_do_validate_with_cluster_and_node(self):
+        spec = copy.deepcopy(self.spec)
+        spec['properties']['host_cluster'] = 'fake_cluster'
+        obj = mock.Mock()
+        profile = docker_profile.DockerProfile('container', spec)
+
+        ex = self.assertRaises(exc.InvalidSpec,
+                               profile.do_validate, obj)
+
+        self.assertEqual("Either 'host_cluster' or 'host_node' should be "
+                         "specified, but not both.", six.text_type(ex))
+
+    def test_do_validate_with_neither_cluster_or_node(self):
+        spec = copy.deepcopy(self.spec)
+        del spec['properties']['host_node']
+        obj = mock.Mock()
+        profile = docker_profile.DockerProfile('container', spec)
+
+        ex = self.assertRaises(exc.InvalidSpec,
+                               profile.do_validate, obj)
+
+        self.assertEqual("Either 'host_cluster' or 'host_node' should be "
+                         "specified.", six.text_type(ex))
+
+    @mock.patch.object(no.Node, 'find')
+    def test_do_validate_with_node(self, mock_find):
+        obj = mock.Mock()
+        profile = docker_profile.DockerProfile('container', self.spec)
+        mock_find.return_value = mock.Mock()
+
+        res = profile.do_validate(obj)
+
+        self.assertIsNone(res)
+        mock_find.assert_called_once_with(profile.context, 'fake_node')
+
+    @mock.patch.object(no.Node, 'find')
+    def test_do_validate_node_not_found(self, mock_find):
+        obj = mock.Mock()
+        profile = docker_profile.DockerProfile('container', self.spec)
+        mock_find.side_effect = exc.ResourceNotFound(type='node',
+                                                     id='fake_node')
+
+        ex = self.assertRaises(exc.InvalidSpec,
+                               profile.do_validate, obj)
+
+        self.assertEqual("The specified host_node 'fake_node' could not be "
+                         "found or is not unique.", six.text_type(ex))
+        mock_find.assert_called_once_with(profile.context, 'fake_node')
+
+    @mock.patch.object(co.Cluster, 'find')
+    def test_do_validate_with_cluster(self, mock_find):
+        spec = copy.deepcopy(self.spec)
+        obj = mock.Mock()
+        del spec['properties']['host_node']
+        spec['properties']['host_cluster'] = 'fake_cluster'
+        profile = docker_profile.DockerProfile('container', spec)
+        mock_find.return_value = mock.Mock()
+
+        res = profile.do_validate(obj)
+
+        self.assertIsNone(res)
+        mock_find.assert_called_once_with(profile.context, 'fake_cluster')
+
+    @mock.patch.object(co.Cluster, 'find')
+    def test_do_validate_cluster_not_found(self, mock_find):
+        spec = copy.deepcopy(self.spec)
+        del spec['properties']['host_node']
+        spec['properties']['host_cluster'] = 'fake_cluster'
+        obj = mock.Mock()
+        mock_find.side_effect = exc.ResourceNotFound(type='node',
+                                                     id='fake_cluster')
+        profile = docker_profile.DockerProfile('container', spec)
+
+        ex = self.assertRaises(exc.InvalidSpec,
+                               profile.do_validate, obj)
+
+        self.assertEqual("The specified host_cluster 'fake_cluster' could "
+                         "not be found or is not unique.", six.text_type(ex))
+        mock_find.assert_called_once_with(profile.context, 'fake_cluster')
 
     @mock.patch.object(db_api, 'node_add_dependents')
     @mock.patch.object(context, 'get_admin_context')
