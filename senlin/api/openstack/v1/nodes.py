@@ -57,30 +57,14 @@ class NodeController(wsgi.Controller):
             params.pop(consts.PARAM_GLOBAL_PROJECT, False))
         params['project_safe'] = project_safe
 
-        try:
-            norm_req = obj_base.SenlinObject.normalize_req(
-                'NodeListRequest', params)
-            obj = vorn.NodeListRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except (ValueError) as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-
+        obj = util.parse_request('NodeListRequest', req, params)
         nodes = self.rpc_client.call2(req.context, 'node_list2', obj)
         return {'nodes': nodes}
 
     @util.policy_enforce
     def create(self, req, body):
         """Create a new node."""
-        try:
-            norm_req = obj_base.SenlinObject.normalize_req(
-                'NodeCreateRequest', body, 'node')
-            obj = vorn.NodeCreateRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except (ValueError) as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
+        obj = util.parse_request('NodeCreateRequest', req, body, 'node')
         node = self.rpc_client.call2(req.context, 'node_create2',
                                      obj.node)
         action_id = node.pop('action')
@@ -97,14 +81,8 @@ class NodeController(wsgi.Controller):
         if key in req.params:
             params['show_details'] = util.parse_bool_param(
                 key, req.params[key])
-        try:
-            norm_req = obj_base.SenlinObject.normalize_req(
-                'NodeGetRequest', params, None)
-            obj = vorn.NodeGetRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except (ValueError) as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
 
+        obj = util.parse_request('NodeGetRequest', req, params)
         node = self.rpc_client.call2(req.context, 'node_get2', obj)
         return {'node': node}
 
@@ -116,16 +94,8 @@ class NodeController(wsgi.Controller):
                                        "'node' key in request body."))
         params = data
         params['identity'] = node_id
-        try:
-            norm_req = obj_base.SenlinObject.normalize_req('NodeUpdateRequest',
-                                                           params, None)
-            obj = vorn.NodeUpdateRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
+        obj = util.parse_request('NodeUpdateRequest', req, params)
         node = self.rpc_client.call2(req.context, 'node_update2', obj)
 
         action_id = node.pop('action')
