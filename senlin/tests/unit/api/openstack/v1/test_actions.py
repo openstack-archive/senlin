@@ -14,11 +14,11 @@ import mock
 import six
 from webob import exc
 
+from senlin.api.common import util
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import actions
 from senlin.common import exception as senlin_exc
 from senlin.common import policy
-from senlin.objects.requests import actions as vora
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
@@ -38,7 +38,9 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cfgopts = DummyConfig()
         self.controller = actions.ActionController(options=cfgopts)
 
-    def test_action_index(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_action_index(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/actions')
 
@@ -63,21 +65,22 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         ]
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_resp)
+        mock_call.return_value = engine_resp
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         result = self.controller.index(req)
-        expected = {'actions': engine_resp}
-        self.assertEqual(expected, result)
-        mock_call.assert_called_with(req.context,
-                                     'action_list2', mock.ANY)
 
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vora.ActionListRequest)
-        self.assertTrue(request.project_safe)
+        self.assertEqual(engine_resp, result['actions'])
+        mock_parse.assert_called_once_with(
+            'ActionListRequest', req, {'project_safe': True})
+        mock_call.assert_called_once_with(
+            req.context, 'action_list2', obj)
 
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_action_index_whitelists_params(self, mock_call, mock_enforce):
+    def test_action_index_whitelists_params(self, mock_call,
+                                            mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         marker_uuid = '8216a86c-1bdc-442e-b493-329385d37cbc'
         params = {
@@ -91,23 +94,29 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/actions', params=params)
 
         mock_call.return_value = []
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         result = self.controller.index(req)
-        expected = {'actions': []}
-        self.assertEqual(expected, result)
-        mock_call.assert_called_with(req.context,
-                                     'action_list2', mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vora.ActionListRequest)
-        self.assertEqual(['NODE_CREATE'], request.name)
-        self.assertEqual(['SUCCEEDED'], request.status)
-        self.assertEqual(10, request.limit)
-        self.assertEqual(marker_uuid, request.marker)
-        self.assertEqual('status', request.sort)
-        self.assertFalse(request.project_safe)
 
+        self.assertEqual([], result['actions'])
+        mock_parse.assert_called_once_with(
+            'ActionListRequest', req,
+            {
+                'status': ['SUCCEEDED'],
+                'sort': 'status',
+                'name': ['NODE_CREATE'],
+                'limit': '10',
+                'marker': marker_uuid,
+                'project_safe': False
+            })
+        mock_call.assert_called_once_with(
+            req.context, 'action_list2', obj)
+
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_action_index_whitelists_invalid_params(self, mock_call,
+                                                    mock_parse,
                                                     mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
@@ -119,60 +128,91 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual("Invalid parameter balrog",
                          str(ex))
+        self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_action_index_with_bad_schema(self, mock_call, mock_enforce):
+    def test_action_index_with_bad_schema(self, mock_call,
+                                          mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'status': 'fake'}
         req = self._get('/actions', params=params)
 
+        mock_parse.side_effect = exc.HTTPBadRequest("bad param")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index,
                                req)
 
-        self.assertEqual("Field value fake is invalid",
-                         six.text_type(ex))
-        self.assertEqual(0, mock_call.call_count)
+        self.assertEqual("bad param", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ActionListRequest', req, mock.ANY)
+        self.assertFalse(mock_call.called)
 
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_action_index_limit_not_int(self, mock_call, mock_enforce):
+    def test_action_index_limit_not_int(self, mock_call,
+                                        mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'limit': 'not-int'}
         req = self._get('/actions', params=params)
 
+        mock_parse.side_effect = exc.HTTPBadRequest("bad limit")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
-        self.assertEqual("invalid literal for int() with base 10: 'not-int'",
-                         six.text_type(ex))
+        self.assertEqual("bad limit", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ActionListRequest', req, mock.ANY)
         self.assertFalse(mock_call.called)
 
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_action_index_global_project_true(self, mock_call, mock_enforce):
+    def test_action_index_global_project_true(self, mock_call,
+                                              mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'global_project': 'True'}
         req = self._get('/actions', params=params)
 
-        self.controller.index(req)
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.return_value = []
 
-        request = mock_call.call_args[0][2]
-        self.assertFalse(request.project_safe)
+        result = self.controller.index(req)
 
+        self.assertEqual([], result['actions'])
+        mock_parse.assert_called_once_with(
+            'ActionListRequest', req, {'project_safe': False})
+        mock_call.assert_called_once_with(
+            req.context, 'action_list2', obj)
+
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_action_index_global_project_false(self, mock_call, mock_enforce):
+    def test_action_index_global_project_false(self, mock_call,
+                                               mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'global_project': 'False'}
         req = self._get('/actions', params=params)
 
-        self.controller.index(req)
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        error = senlin_exc.Forbidden()
+        mock_call.side_effect = shared.to_remote_error(error)
 
-        request = mock_call.call_args[0][2]
-        self.assertTrue(request.project_safe)
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.index,
+                                              req)
 
+        self.assertEqual(403, resp.json['code'])
+        self.assertEqual('Forbidden', resp.json['error']['type'])
+        mock_parse.assert_called_once_with(
+            "ActionListRequest", mock.ANY, {'project_safe': True})
+        mock_call.assert_called_once_with(req.context, 'action_list2', obj)
+
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_action_index_global_project_not_bool(self, mock_call,
-                                                  mock_enforce):
+                                                  mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'global_project': 'No'}
         req = self._get('/actions', params=params)
@@ -183,6 +223,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual("Invalid value 'No' specified for 'global_project'",
                          six.text_type(ex))
         self.assertFalse(mock_call.called)
+        self.assertFalse(mock_parse.called)
 
     def test_action_index_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
@@ -194,7 +235,9 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_action_get_success(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_action_get_success(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         action_id = 'aaaa-bbbb-cccc'
         req = self._get('/actions/%(action_id)s' % {'action_id': action_id})
@@ -218,25 +261,30 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'timeout': 3600
         }
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_resp)
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.return_value = engine_resp
+
         response = self.controller.get(req, action_id=action_id)
-        expected = {'action': engine_resp}
-        self.assertEqual(expected, response)
 
+        self.assertEqual(engine_resp, response['action'])
+
+        mock_parse.assert_called_once_with(
+            'ActionGetRequest', req, {'identity': action_id})
         mock_call.assert_called_once_with(
-            req.context, 'action_get2', mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vora.ActionGetRequest)
-        self.assertEqual(action_id, request.identity)
+            req.context, 'action_get2', obj)
 
-    def test_action_get_not_found(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_action_get_not_found(self, mock_call, mock_parse,
+                                  mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         action_id = 'non-existent-action'
         req = self._get('/actions/%(action_id)s' % {'action_id': action_id})
 
+        obj = mock.Mock()
+        mock_parse.return_value = obj
         error = senlin_exc.ResourceNotFound(type='action', id=action_id)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
@@ -245,6 +293,10 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+        mock_parse.assert_called_once_with(
+            'ActionGetRequest', mock.ANY, {'identity': action_id})
+        mock_call.assert_called_once_with(
+            req.context, 'action_get2', obj)
 
     def test_action_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)
