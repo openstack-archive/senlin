@@ -147,7 +147,13 @@ class DockerProfile(base.Profile):
         """
         host = None
         if host_node is not None:
-            host = self._get_specified_node(ctx, host_node)
+            try:
+                host = node_mod.Node.load(ctx, node_id=host_node)
+            except exc.ResourceNotFound as ex:
+                msg = ex.enhance_msg('host', ex)
+                raise exc.InternalError(message=msg)
+            return host
+
         if host_cluster is not None:
             host = self._get_random_node(ctx, host_cluster)
 
@@ -166,20 +172,6 @@ class DockerProfile(base.Profile):
             msg = ex.enhance_msg('host', ex)
             raise exc.InternalError(message=msg)
         return host_cluster
-
-    def _get_specified_node(self, ctx, host_node):
-        """Get the specified node information.
-
-        :param ctx: An instance of the request context.
-        :param host_node: The uuid of the hosting node.
-        """
-
-        try:
-            host_node = node_mod.Node.load(ctx, node_id=host_node)
-        except exc.ResourceNotFound as ex:
-            msg = ex.enhance_msg('host', ex)
-            raise exc.InternalError(message=msg)
-        return host_node
 
     def _get_random_node(self, ctx, host_cluster):
         """Get a node randomly from the host cluster.
