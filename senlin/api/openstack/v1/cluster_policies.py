@@ -14,16 +14,12 @@
 ClusterPolicies endpoint for Senlin v1 ReST API.
 """
 
-import jsonschema
-import six
 from webob import exc
 
 from senlin.api.common import util
 from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
-from senlin.objects import base as obj_base
-from senlin.objects.requests import cluster_policies as vocp
 
 
 class ClusterPolicyController(wsgi.Controller):
@@ -49,14 +45,8 @@ class ClusterPolicyController(wsgi.Controller):
         if key in params:
             params[key] = util.parse_bool_param(key, params[key])
         params['identity'] = cluster_id
-        try:
-            norm_req = obj_base.SenlinObject.normalize_req(
-                'ClusterPolicyListRequest', params, None)
-            obj = vocp.ClusterPolicyListRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
 
+        obj = util.parse_request('ClusterPolicyListRequest', req, params)
         policies = self.rpc_client.call2(req.context, 'cluster_policy_list2',
                                          obj)
 
@@ -65,15 +55,8 @@ class ClusterPolicyController(wsgi.Controller):
     @util.policy_enforce
     def get(self, req, cluster_id, policy_id):
 
-        try:
-            norm_req = obj_base.SenlinObject.normalize_req(
-                'ClusterPolicyGetRequest', {'identity': cluster_id,
-                                            'policy_id': policy_id})
-            obj = vocp.ClusterPolicyGetRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-
+        params = {'identity': cluster_id, 'policy_id': policy_id}
+        obj = util.parse_request('ClusterPolicyGetRequest', req, params)
         cluster_policy = self.rpc_client.call2(req.context,
                                                'cluster_policy_get2', obj)
         return {'cluster_policy': cluster_policy}
