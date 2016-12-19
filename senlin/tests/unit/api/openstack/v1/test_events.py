@@ -14,11 +14,11 @@ import mock
 import six
 from webob import exc
 
+from senlin.api.common import util
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import events
 from senlin.common import exception as senlin_exc
 from senlin.common import policy
-from senlin.objects.requests import events as vore
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
@@ -38,7 +38,9 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cfgopts = DummyConfig()
         self.controller = events.EventController(options=cfgopts)
 
-    def test_event_index(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_event_index(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/events')
 
@@ -59,22 +61,24 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         ]
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_resp)
+        mock_call.return_value = engine_resp
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         result = self.controller.index(req)
 
-        expected = {'events': engine_resp}
-        self.assertEqual(expected, result)
-        mock_call.assert_called_with(req.context,
-                                     'event_list2', mock.ANY)
+        self.assertEqual(engine_resp, result['events'])
+        mock_parse.assert_called_once_with(
+            'EventListRequest', req,
+            {
+                'project_safe': True
+            })
+        mock_call.assert_called_once_with(req.context, 'event_list2', obj)
 
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vore.EventListRequest)
-        self.assertTrue(request.project_safe)
-
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_event_index_whitelists_params(self, mock_call, mock_enforce):
+    def test_event_index_whitelists_params(self, mock_call, mock_parse,
+                                           mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         marker_uuid = '8216a86c-1bdc-442e-b493-329385d37cbd'
         params = {
@@ -91,90 +95,126 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._get('/events', params=params)
 
         mock_call.return_value = []
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         result = self.controller.index(req)
-        expected = {'events': []}
-        self.assertEqual(expected, result)
-        mock_call.assert_called_with(req.context,
-                                     'event_list2', mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vore.EventListRequest)
-        self.assertEqual(['NODE'], request.otype)
-        self.assertEqual(['mynode1'], request.oname)
-        self.assertEqual(['NODE_CREATE'], request.action)
-        self.assertEqual(['ERROR'], request.level)
-        self.assertEqual(10, request.limit)
-        self.assertEqual(marker_uuid, request.marker)
-        self.assertEqual('timestamp', request.sort)
-        self.assertTrue(request.project_safe)
 
+        self.assertEqual([], result['events'])
+        mock_parse.assert_called_once_with(
+            'EventListRequest', req,
+            {
+                'sort': 'timestamp',
+                'project_safe': True,
+                'level': ['ERROR'],
+                'action': ['NODE_CREATE'],
+                'otype': ['NODE'],
+                'limit': '10',
+                'marker': marker_uuid,
+                'oname': ['mynode1']
+            })
+        mock_call.assert_called_once_with(req.context,
+                                          'event_list2', obj)
+
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_event_index_whitelists_invalid_params(self, mock_call,
+                                                   mock_parse,
                                                    mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
             'balrog': 'you shall not pass!',
         }
         req = self._get('/events', params=params)
+
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
-        self.assertEqual("Invalid parameter balrog",
-                         str(ex))
+        self.assertEqual("Invalid parameter balrog", six.text_type(ex))
+        self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_event_index_with_bad_schema(self, mock_call, mock_enforce):
+    def test_event_index_with_bad_schema(self, mock_call, mock_parse,
+                                         mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'level': 'fake'}
         req = self._get('/events', params=params)
 
+        mock_parse.side_effect = exc.HTTPBadRequest("invalid value")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index,
                                req)
 
-        self.assertEqual("Field value fake is invalid",
-                         six.text_type(ex))
+        self.assertEqual("invalid value", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'EventListRequest', req, mock.ANY)
         self.assertEqual(0, mock_call.call_count)
 
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_event_index_limit_not_int(self, mock_call, mock_enforce):
+    def test_event_index_limit_not_int(self, mock_call, mock_parse,
+                                       mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'limit': 'not-int'}
         req = self._get('/event', params=params)
 
+        mock_parse.side_effect = exc.HTTPBadRequest("not int")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
-        self.assertEqual("invalid literal for int() with base 10: 'not-int'",
-                         six.text_type(ex))
+        self.assertEqual("not int", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'EventListRequest', req, mock.ANY)
         self.assertFalse(mock_call.called)
 
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_event_index_global_project_true(self, mock_call, mock_enforce):
+    def test_event_index_global_project_true(self, mock_call,
+                                             mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'global_project': 'True'}
         req = self._get('/events', params=params)
 
-        self.controller.index(req)
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        error = senlin_exc.Forbidden()
+        mock_call.side_effect = shared.to_remote_error(error)
 
-        request = mock_call.call_args[0][2]
-        self.assertFalse(request.project_safe)
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.index,
+                                              req)
 
+        self.assertEqual(403, resp.json['code'])
+        self.assertEqual('Forbidden', resp.json['error']['type'])
+        mock_parse.assert_called_once_with(
+            "EventListRequest", mock.ANY, {'project_safe': False})
+        mock_call.assert_called_once_with(req.context, 'event_list2', obj)
+
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_events_index_global_project_false(self, mock_call, mock_enforce):
+    def test_events_index_global_project_false(self, mock_call,
+                                               mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'global_project': 'False'}
         req = self._get('/events', params=params)
 
-        self.controller.index(req)
+        mock_call.return_value = []
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
-        request = mock_call.call_args[0][2]
-        self.assertTrue(request.project_safe)
+        resp = self.controller.index(req)
 
+        self.assertEqual([], resp['events'])
+        mock_parse.assert_called_once_with(
+            'EventListRequest', req, {'project_safe': True})
+        mock_call.assert_called_once_with(req.context, 'event_list2', obj)
+
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_event_index_global_project_not_bool(self, mock_call,
-                                                 mock_enforce):
+                                                 mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'global_project': 'No'}
         req = self._get('/events', params=params)
@@ -184,6 +224,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual("Invalid value 'No' specified for 'global_project'",
                          six.text_type(ex))
+        self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
     def test_index_denied_policy(self, mock_enforce):
@@ -196,7 +237,9 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_event_get_success(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_event_get_success(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         event_id = "2d255b9c-8f36-41a2-a137-c0175ccc29c3"
         req = self._get('/events/%(event_id)s' % {'event_id': event_id})
@@ -216,25 +259,26 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
             "user": "a21ded6060534d99840658a777c2af5a"
         }
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_resp)
-        response = self.controller.get(req, event_id=event_id)
-        expected = {'event': engine_resp}
-        self.assertEqual(expected, response)
+        mock_call.return_value = engine_resp
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
+        response = self.controller.get(req, event_id=event_id)
+
+        self.assertEqual(engine_resp, response['event'])
+        mock_parse.assert_called_once_with(
+            'EventGetRequest', req, {'identity': event_id})
         mock_call.assert_called_once_with(
             req.context, 'event_get2', mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vore.EventGetRequest)
-        self.assertEqual(event_id, request.identity)
 
-    def test_event_get_not_found(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_event_get_not_found(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         event_id = 'non-existent-event'
         req = self._get('/events/%(event_id)s' % {'event_id': event_id})
 
         error = senlin_exc.ResourceNotFound(type='event', id=event_id)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
@@ -243,6 +287,11 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+
+        mock_parse.assert_called_once_with(
+            'EventGetRequest', mock.ANY, {'identity': event_id})
+        mock_call.assert_called_once_with(
+            req.context, 'event_get2', mock.ANY)
 
     def test_event_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)

@@ -13,16 +13,13 @@
 """
 Event endpoint for Senlin v1 ReST API.
 """
-import jsonschema
-import six
+
 from webob import exc
 
 from senlin.api.common import util
 from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
-from senlin.objects import base as obj_base
-from senlin.objects.requests import events as vore
 
 
 class EventController(wsgi.Controller):
@@ -56,32 +53,16 @@ class EventController(wsgi.Controller):
             params.pop(consts.PARAM_GLOBAL_PROJECT, False))
         params['project_safe'] = project_safe
 
-        try:
-            norm_req = obj_base.SenlinObject.normalize_req(
-                'EventListRequest', params)
-            obj = vore.EventListRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except (ValueError) as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
+        obj = util.parse_request('EventListRequest', req, params)
         events = self.rpc_client.call2(req.context, "event_list2", obj)
 
         return {'events': events}
 
     @util.policy_enforce
     def get(self, req, event_id):
-        params = {'identity': event_id}
-        try:
-            norm_req = obj_base.SenlinObject.normalize_req(
-                'EventGetRequest', params, None)
-            obj = vore.EventGetRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except (ValueError) as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
+        obj = util.parse_request('EventGetRequest', req,
+                                 {'identity': event_id})
         event = self.rpc_client.call2(req.context, 'event_get2', obj)
 
         return {'event': event}
