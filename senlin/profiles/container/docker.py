@@ -159,20 +159,6 @@ class DockerProfile(base.Profile):
 
         return host
 
-    def _get_host_cluster(self, ctx, host_cluster):
-        """Get the specified cluster information.
-
-        :param ctx: An instance of the request context.
-        :param host_cluster: The uuid of the hosting cluster.
-        """
-
-        try:
-            host_cluster = cluster.Cluster.load(ctx, cluster_id=host_cluster)
-        except exc.ResourceNotFound as ex:
-            msg = ex.enhance_msg('host', ex)
-            raise exc.InternalError(message=msg)
-        return host_cluster
-
     def _get_random_node(self, ctx, host_cluster):
         """Get a node randomly from the host cluster.
 
@@ -180,7 +166,13 @@ class DockerProfile(base.Profile):
         :param host_cluster: The uuid of the hosting cluster.
         """
 
-        self.cluster = self._get_host_cluster(ctx, host_cluster)
+        self.cluster = None
+        try:
+            self.cluster = cluster.Cluster.load(ctx, cluster_id=host_cluster)
+        except exc.ResourceNotFound as ex:
+            msg = ex.enhance_msg('host', ex)
+            raise exc.InternalError(message=msg)
+
         nodes = self.cluster.rt['nodes']
         if len(nodes) == 0:
             msg = _("The cluster (%s) contains no nodes") % host_cluster
