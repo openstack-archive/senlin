@@ -320,7 +320,7 @@ class Action(object):
         :param kwargs: additional parameters that may override the default
                        properties stored in the action record.
         '''
-        return NotImplemented
+        raise NotImplementedError
 
     def set_status(self, result, reason=None):
         """Set action status based on return value from execute."""

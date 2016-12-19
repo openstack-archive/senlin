@@ -363,8 +363,8 @@ class ActionBaseTest(base.SenlinTestCase):
 
     def test_execute_default(self):
         action = ab.Action.__new__(DummyAction, OBJID, 'BOOM', self.ctx)
-        res = action.execute()
-        self.assertEqual(NotImplemented, res)
+        self.assertRaises(NotImplementedError,
+                          action.execute)
 
     @mock.patch.object(EVENT, 'info')
     @mock.patch.object(EVENT, 'error')
