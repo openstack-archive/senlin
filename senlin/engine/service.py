@@ -1051,6 +1051,9 @@ class EngineService(service.Service):
                 'count': len(found),
             },
         }
+        if 'destroy_after_deletion' in req:   # version 1.1
+            params['inputs'].update(
+                {'destroy_after_deletion': req.destroy_after_deletion})
         action_id = action_mod.Action.create(ctx, db_cluster.id,
                                              consts.CLUSTER_DEL_NODES,
                                              **params)
