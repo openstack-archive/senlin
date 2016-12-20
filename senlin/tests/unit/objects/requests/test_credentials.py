@@ -60,3 +60,20 @@ class TestCredentialGet(test_base.SenlinTestCase):
         self.assertEqual('test-user', sot.user)
         self.assertEqual('test-project', sot.project)
         self.assertEqual({'foo': 'bar'}, sot.query)
+
+
+class TestCredentialUpdate(test_base.SenlinTestCase):
+
+    body = {
+        'cred': {
+            'openstack': {
+                'trust': 'f49419fd-e48b-4e8c-a201-30eb4560acf4'
+            }
+        }
+    }
+
+    def test_credential_update_request(self):
+        sot = credentials.CredentialUpdateRequest(**self.body)
+        self.assertEqual(self.body['cred'], sot.cred)
+        sot.obj_set_defaults()
+        self.assertEqual({}, sot.attrs)

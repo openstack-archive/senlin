@@ -100,3 +100,14 @@ class CredentialTest(base.SenlinTestCase):
         mock_update.assert_called_once_with(
             self.ctx, 'fake_user_id', 'fake_project_id',
             {'cred': {'openstack': {'trust': x_cred}}})
+
+    @mock.patch.object(co.Credential, 'update')
+    def test_credential_update2(self, mock_update):
+        x_cred = 'fake_credential'
+        cred = {'openstack': {'trust': x_cred}}
+        req = vorc.CredentialUpdateRequest(cred=cred)
+        result = self.eng.credential_update2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'cred': cred}, result)
+        mock_update.assert_called_once_with(
+            self.ctx, 'fake_user_id', 'fake_project_id', {'cred': cred})
