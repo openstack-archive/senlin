@@ -331,7 +331,7 @@ class EngineService(service.Service):
         if filters:
             query['filters'] = filters
 
-        profiles = profile_base.Profile.load_all(ctx, **query)
+        profiles = profile_obj.Profile.get_all(ctx, **query)
         return [p.to_dict() for p in profiles]
 
     def _validate_profile(self, context, spec, name=None,
@@ -426,8 +426,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the profile details, or an exception
                  of type `ResourceNotFound` if no matching object is found.
         """
-        db_profile = profile_obj.Profile.find(ctx, req.identity)
-        profile = profile_base.Profile.load(ctx, profile=db_profile)
+        profile = profile_obj.Profile.find(ctx, req.identity)
         return profile.to_dict()
 
     @request_context2
