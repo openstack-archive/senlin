@@ -36,5 +36,5 @@ class BaseSenlinFunctionalTest(base.BaseSenlinTest):
             cls.os.auth_provider,
             CONF.clustering.catalog_type,
             CONF.identity.region,
-            **cls.os.default_params_with_timeout_values
+            **cls.default_params_with_timeout_values
         )

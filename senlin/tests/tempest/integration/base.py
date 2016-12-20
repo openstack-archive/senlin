@@ -32,12 +32,12 @@ class BaseSenlinIntegrationTest(base.BaseSenlinTest):
             cls.os_adm.auth_provider,
             CONF.clustering.catalog_type,
             CONF.identity.region,
-            **cls.os_adm.default_params_with_timeout_values
+            **cls.default_params_with_timeout_values
         )
 
         cls.messaging_client = messaging_client.V2MessagingClient(
             cls.os_adm.auth_provider,
             CONF.messaging.catalog_type,
             CONF.identity.region,
-            **cls.os_adm.default_params_with_timeout_values
+            **cls.default_params_with_timeout_values
         )

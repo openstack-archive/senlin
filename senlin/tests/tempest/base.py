@@ -22,6 +22,16 @@ class BaseSenlinTest(test.BaseTestCase):
 
     credentials = ['primary']
 
+    default_params = config.service_client_config()
+
+    # NOTE: Tempest uses timeout values of compute API if project specific
+    # timeout values don't exist.
+    default_params_with_timeout_values = {
+        'build_interval': CONF.compute.build_interval,
+        'build_timeout': CONF.compute.build_timeout
+    }
+    default_params_with_timeout_values.update(default_params)
+
     @classmethod
     def skip_checks(cls):
         super(BaseSenlinTest, cls).skip_checks()
