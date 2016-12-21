@@ -60,7 +60,7 @@ you can use the following command to create a profile object:
   $ openstack cluster profile create --spec-file cirros_basic.yaml myserver
 
 Check the :doc:`Profiles <../user/profiles>` section in the
-:doc:`User References <../user/index>` documentation for more details.
+:ref:`user-references` documentation for more details.
 
 Creating Your First Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -84,7 +84,7 @@ nodes in the cluster.
   $ senlin cluster-show mycluster
 
 For more details, check the :doc:`Creating a Cluster <../user/clusters>`
-section in the :doc:`User References <../user/index>` documentation.
+section in the :ref:`user-references` documentation.
 
 
 Scaling a Cluster
@@ -106,7 +106,7 @@ To decrease the size of the cluster, use the following command:
   $ senlin cluster-show mycluster
 
 For more details, please check the :doc:`Resizing a Cluster <../user/clusters>`
-section in the :doc:`User References <../user/index>` documentation.
+section in the :ref:`user-references` section.
 
 
 Resizing a Cluster
@@ -123,7 +123,7 @@ Yet another way to change the size of a cluster is to use the command
 The ``cluster-resize`` command supports more flexible options to control how
 a cluster is resized. For more details, please check the
 :doc:`Resizing a Cluster <../user/clusters>` section in the
-:doc:`User References <../user/index>` documentation.
+:ref:`user-references` section.
 
 
 Creating a Node
@@ -139,7 +139,7 @@ then add it to a cluster. To create a node using a given profile:
 
 For other options supported by the ``node-create`` command, please check the
 :doc:`Creating a Node <../user/nodes>` subsection in the
-:doc:`User References <../user/index>` documentation.
+:ref:`user-references` documentation.
 
 
 Adding a Node to a Cluster
@@ -172,8 +172,8 @@ command:
   $ senlin node-show oldnode
 
 For other cluster membership management commands and options, please check the
-:doc:`Cluster Membership <../user/membership>` section in the
-:doc:`User References <../user/index>` documentation.
+:doc:`Cluster Membership <../user/membership>` section in the 
+:ref:`user-references`_ section.
 
 
 .. _Installation Guide: http://docs.openstack.org/developer/senlin/install.html

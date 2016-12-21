@@ -84,4 +84,4 @@ After a while, you can check that the cluster has been shrunk by 1 node.
 
 For more details about managing receivers, please check the
 :doc:`Receivers <../user/receivers>` section in the
-:doc:`User References <../user/index>` documentation.
+:ref:`user-references` documentation.
