@@ -216,7 +216,7 @@ function install_senlin_dashboard {
 # configure_senlin_dashboard() - Set config files
 function config_senlin_dashboard {
     # Install Senlin Dashboard as plugin for Horizon
-    ln -sf $SENLIN_DASHBOARD_DIR/_50_senlin.py.example $HORIZON_DIR/openstack_dashboard/local/enabled/_50_senlin.py
+    ln -sf $SENLIN_DASHBOARD_DIR/senlin_dashboard/enabled/_50_senlin.py $HORIZON_DIR/openstack_dashboard/local/enabled/_50_senlin.py
     # Enable senlin policy
     ln -sf $SENLIN_DASHBOARD_DIR/senlin_dashboard/conf/senlin_policy.json $HORIZON_DIR/openstack_dashboard/conf/senlin_policy.json
 }
