@@ -279,6 +279,10 @@ class EngineService(service.Service):
         return CONF.revision['senlin_engine_revision']
 
     @request_context2
+    def get_revision2(self, ctx, req):
+        return CONF.revision['senlin_engine_revision']
+
+    @request_context2
     def profile_type_list2(self, ctx, req):
         """List known profile type implementations.
 
