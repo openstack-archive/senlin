@@ -1900,9 +1900,9 @@ class EngineService(service.Service):
             filters['status'] = req.status
         if filters:
             query['filters'] = filters
-        results = action_mod.Action.load_all(ctx, **query)
 
-        return [a.to_dict() for a in results]
+        actions = action_obj.Action.get_all(ctx, **query)
+        return [a.to_dict() for a in actions]
 
     @request_context2
     def action_create2(self, ctx, req):
@@ -1950,8 +1950,7 @@ class EngineService(service.Service):
                  action could be found.
         """
 
-        db_action = action_obj.Action.find(ctx, req.identity)
-        action = action_mod.Action.load(ctx, db_action=db_action)
+        action = action_obj.Action.find(ctx, req.identity)
 
         return action.to_dict()
 
