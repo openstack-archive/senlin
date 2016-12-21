@@ -100,3 +100,18 @@ class Policy(base.SenlinObject, base.VersionedObjectDictCompat):
     @classmethod
     def delete(cls, context, obj_id):
         db_api.policy_delete(context, obj_id)
+
+    def to_dict(self):
+        policy_dict = {
+            'id': self.id,
+            'name': self.name,
+            'type': self.type,
+            'user': self.user,
+            'project': self.project,
+            'domain': self.domain,
+            'spec': self.spec,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at,
+            'data': self.data
+        }
+        return policy_dict

@@ -536,8 +536,7 @@ class EngineService(service.Service):
         if filters:
             query['filters'] = filters
 
-        return [p.to_dict()
-                for p in policy_base.Policy.load_all(ctx, **query)]
+        return [p.to_dict() for p in policy_obj.Policy.get_all(ctx, **query)]
 
     def _validate_policy(self, context, spec, name=None, validate_props=False):
         """Validate a policy.
@@ -607,8 +606,7 @@ class EngineService(service.Service):
         :param req: An instance of the PolicyGetRequest.
         :return: A dictionary containing the policy details.
         """
-        db_policy = policy_obj.Policy.find(ctx, req.identity)
-        policy = policy_base.Policy.load(ctx, db_policy=db_policy)
+        policy = policy_obj.Policy.find(ctx, req.identity)
         return policy.to_dict()
 
     @request_context2
