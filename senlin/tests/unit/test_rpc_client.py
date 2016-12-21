@@ -157,9 +157,5 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         for expected_arg, actual_arg in zip(expected_args, actual_args):
             self.assertEqual(expected_arg, actual_arg)
 
-    def test_credential_update(self):
-        self._test_engine_api('credential_update', 'call',
-                              cred=mock.ANY, attrs=mock.ANY)
-
     def test_get_revision(self):
         self._test_engine_api('get_revision', 'call')
