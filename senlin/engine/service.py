@@ -2006,7 +2006,7 @@ class EngineService(service.Service):
         if filters:
             query['filters'] = filters
 
-        receivers = receiver_mod.Receiver.load_all(ctx, **query)
+        receivers = receiver_obj.Receiver.get_all(ctx, **query)
         return [r.to_dict() for r in receivers]
 
     @request_context2
@@ -2078,9 +2078,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the details about a receiver or
                  an exception `ResourceNotFound` if no matching object found.
         """
-        db_receiver = receiver_obj.Receiver.find(ctx, req.identity)
-        receiver = receiver_mod.Receiver.load(ctx,
-                                              receiver_obj=db_receiver)
+        receiver = receiver_obj.Receiver.find(ctx, req.identity)
         return receiver.to_dict()
 
     @request_context2

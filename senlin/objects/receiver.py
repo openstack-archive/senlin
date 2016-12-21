@@ -15,6 +15,7 @@
 from oslo_utils import uuidutils
 
 from senlin.common import exception
+from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.objects import base
 from senlin.objects import fields
@@ -88,8 +89,27 @@ class Receiver(base.SenlinObject, base.VersionedObjectDictCompat):
 
     @classmethod
     def get_all(cls, context, **kwargs):
-        return db_api.receiver_get_all(context, **kwargs)
+        objs = db_api.receiver_get_all(context, **kwargs)
+        return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
     @classmethod
     def delete(cls, context, receiver_id):
         db_api.receiver_delete(context, receiver_id)
+
+    def to_dict(self):
+        receiver_dict = {
+            'id': self.id,
+            'name': self.name,
+            'type': self.type,
+            'user': self.user,
+            'project': self.project,
+            'domain': self.domain,
+            'created_at': utils.isotime(self.created_at),
+            'updated_at': utils.isotime(self.updated_at),
+            'cluster_id': self.cluster_id,
+            'actor': self.actor,
+            'action': self.action,
+            'params': self.params,
+            'channel': self.channel,
+        }
+        return receiver_dict
