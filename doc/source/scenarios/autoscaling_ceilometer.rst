@@ -205,9 +205,9 @@ following command creates a threshold alarm using aodh alarm service so that:
 .. code-block:: console
 
   $ aodh alarm create \
-    -t threshold -statistics avg \
+    -t threshold --statistic avg \
     -m cpu_util --threshold 70 --comparison-operator gt \
-    --period 60 --evaluation_periods 1 \
+    --period 60 --evaluation-periods 1 \
     --alarm-action $ALRM_URL01 \
     --repeat-actions False \
     --query metadata.user_metadata.cluster_id=$MYCLUSTER_ID
