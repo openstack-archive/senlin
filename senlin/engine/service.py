@@ -339,7 +339,7 @@ class EngineService(service.Service):
         """Validate a profile.
 
         :param context: An instance of the request context.
-        :param name: The name for the profile to be created.
+        :param name: The name of the profile to be validated.
         :param spec: A dictionary containing the spec for the profile.
         :param metadata: A dictionary containing optional key-value pairs to
                          be associated with the profile.
