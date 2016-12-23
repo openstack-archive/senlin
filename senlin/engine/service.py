@@ -273,6 +273,21 @@ class EngineService(service.Service):
                                    {'cred': {'openstack': {'trust': cred}}})
         return {'cred': cred}
 
+    @request_context2
+    def credential_update2(self, ctx, req):
+        """Update a credential based on the context and provided value.
+
+        We may add more parameters in future to the query parameter, for
+        example as Senlin expands its support to non-OpenStack backends.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the CredentialUpdateRequest.
+        :return: A dictionary containing the persistent credential.
+        """
+        cred_obj.Credential.update(ctx, ctx.user, ctx.project,
+                                   {'cred': req.cred})
+        return {'cred': req.cred}
+
     @request_context
     def get_revision(self, context):
         return CONF.revision['senlin_engine_revision']

@@ -29,3 +29,11 @@ class CredentialGetRequest(base.SenlinObject):
         'project': fields.StringField(),
         'query': fields.JsonField(nullable=True, default={})
     }
+
+
+@base.SenlinObjectRegistry.register
+class CredentialUpdateRequest(base.SenlinObject):
+    fields = {
+        'cred': fields.JsonField(),
+        'attrs': fields.JsonField(nullable=True, default={})
+    }
