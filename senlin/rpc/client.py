@@ -73,6 +73,3 @@ class EngineClient(object):
         else:
             client = self._client
         return client.cast(ctxt, method, **kwargs)
-
-    def get_revision(self, ctxt):
-        return self.call(ctxt, self.make_msg('get_revision'))
