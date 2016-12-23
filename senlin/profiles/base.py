@@ -57,7 +57,7 @@ class Profile(object):
     }
 
     properties_schema = {}
-    operations_schema = {}
+    OPERATIONS = {}
 
     def __new__(cls, name, spec, **kwargs):
         """Create a new profile of the appropriate class.
@@ -291,6 +291,11 @@ class Profile(object):
     def get_schema(cls):
         return dict((name, dict(schema))
                     for name, schema in cls.properties_schema.items())
+
+    @classmethod
+    def get_ops(cls):
+        return dict((name, dict(schema))
+                    for name, schema in cls.OPERATIONS.items())
 
     def _init_context(self):
         profile_context = {}
