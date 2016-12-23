@@ -2091,7 +2091,7 @@ class EngineService(service.Service):
         """Get the details about a receiver.
 
         :param ctx: An instance of the request context.
-        :param req: An instance of the ReceiverGetRequestBody object.
+        :param req: An instance of the ReceiverGetRequest object.
         :return: A dictionary containing the details about a receiver or
                  an exception `ResourceNotFound` if no matching object found.
         """
