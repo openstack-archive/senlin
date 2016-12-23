@@ -13,16 +13,12 @@
 """
 Node endpoint for Senlin v1 ReST API.
 """
-import jsonschema
-import six
 from webob import exc
 
 from senlin.api.common import util
 from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
-from senlin.objects import base as obj_base
-from senlin.objects.requests import nodes as vorn
 
 
 class NodeController(wsgi.Controller):
@@ -108,16 +104,8 @@ class NodeController(wsgi.Controller):
     @util.policy_enforce
     def delete(self, req, node_id):
         params = {'identity': node_id}
-        try:
-            norm_req = obj_base.SenlinObject.normalize_req('NodeDeleteRequest',
-                                                           params)
-            obj = vorn.NodeDeleteRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
 
+        obj = util.parse_request('NodeDeleteRequest', req, params)
         res = self.rpc_client.call2(req.context, 'node_delete2', obj)
         action_id = res.pop('action')
         result = {'location': '/actions/%s' % action_id}
@@ -141,15 +129,15 @@ class NodeController(wsgi.Controller):
 
         params = body.get(this_action)
         if this_action == self.NODE_CHECK:
-            res = self._do_check(req.context, node_id, params)
+            res = self._do_check(req, node_id, params)
         else:    # self.NODE_RECOVER
-            res = self._do_recover(req.context, node_id, params)
+            res = self._do_recover(req, node_id, params)
 
         location = {'location': '/actions/%s' % res['action']}
         res.update(location)
         return res
 
-    def _do_check(self, context, node_id, params):
+    def _do_check(self, req, node_id, params):
         if not isinstance(params, dict):
             msg = _("The params provided is not a map.")
             raise exc.HTTPBadRequest(msg)
@@ -158,22 +146,13 @@ class NodeController(wsgi.Controller):
             'identity': node_id,
             'params': params
         }
-        norm_req = obj_base.SenlinObject.normalize_req(
-            'NodeCheckRequest', kwargs)
 
-        try:
-            obj = vorn.NodeCheckRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
-        res = self.rpc_client.call2(context, 'node_check2', obj)
+        obj = util.parse_request('NodeCheckRequest', req, kwargs)
+        res = self.rpc_client.call2(req.context, 'node_check2', obj)
 
         return res
 
-    def _do_recover(self, context, node_id, params):
+    def _do_recover(self, req, node_id, params):
         if not isinstance(params, dict):
             msg = _("The params provided is not a map.")
             raise exc.HTTPBadRequest(msg)
@@ -182,17 +161,8 @@ class NodeController(wsgi.Controller):
             'identity': node_id,
             'params': params
         }
-        norm_req = obj_base.SenlinObject.normalize_req(
-            'NodeRecoverRequest', kwargs)
 
-        try:
-            obj = vorn.NodeRecoverRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except ValueError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
-        res = self.rpc_client.call2(context, 'node_recover2', obj)
+        obj = util.parse_request('NodeRecoverRequest', req, kwargs)
+        res = self.rpc_client.call2(req.context, 'node_recover2', obj)
 
         return res
