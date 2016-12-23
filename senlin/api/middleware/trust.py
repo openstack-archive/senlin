@@ -33,7 +33,9 @@ class TrustMiddleware(wsgi.Middleware):
         rpcc = rpc.EngineClient()
 
         ctx = req.context
-        res = rpcc.credential_get(ctx)
+        params = {'user': ctx.user, 'project': ctx.project}
+        obj = util.parse_request('CredentialGetRequest', req, params)
+        res = rpcc.call2(ctx, 'credential_get2', obj)
         if res:
             trust_id = res.get('trust', None)
             if trust_id:

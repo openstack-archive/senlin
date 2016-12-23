@@ -34,14 +34,19 @@ class TestTrustMiddleware(base.SenlinTestCase):
     def test__get_trust_already_exists(self, mock_rpc):
         x_cred = {'trust': 'FAKE_TRUST_ID'}
         x_rpc = mock.Mock()
-        x_rpc.credential_get.return_value = x_cred
+        x_rpc.call2.return_value = x_cred
         mock_rpc.return_value = x_rpc
 
         result = self.middleware._get_trust(self.req)
 
         self.assertEqual('FAKE_TRUST_ID', result)
         mock_rpc.assert_called_once_with()
-        x_rpc.credential_get.assert_called_once_with(self.context)
+        x_rpc.call2.assert_called_once_with(self.context, 'credential_get2',
+                                            mock.ANY)
+        request = x_rpc.call2.call_args[0][2]
+        self.assertIsInstance(request, vorc.CredentialGetRequest)
+        self.assertEqual(self.context.user, request.user)
+        self.assertEqual(self.context.project, request.project)
 
     @mock.patch.object(context, "get_service_context")
     @mock.patch("senlin.drivers.base.SenlinDriver")
@@ -49,7 +54,7 @@ class TestTrustMiddleware(base.SenlinTestCase):
     def test__get_trust_bad(self, mock_rpc, mock_driver, mock_context):
         x_cred = {'foo': 'bar'}
         x_rpc = mock.Mock()
-        x_rpc.credential_get.return_value = x_cred
+        x_rpc.call2.return_value = x_cred
         mock_rpc.return_value = x_rpc
 
         x_svc_cred = {'uid': 'FAKE_ID', 'passwd': 'FAKE_PASS'}
@@ -65,17 +70,19 @@ class TestTrustMiddleware(base.SenlinTestCase):
 
         result = self.middleware._get_trust(self.req)
         self.assertEqual('FAKE_TRUST_ID', result)
-        x_rpc.call2.assert_called_once_with(self.context,
-                                            'credential_create2',
-                                            mock.ANY)
-        request = x_rpc.call2.call_args[0][2]
+        mock_calls = [mock.call(self.context, 'credential_get2', mock.ANY),
+                      mock.call(self.context, 'credential_create2', mock.ANY)]
+        x_rpc.call2.assert_has_calls(mock_calls)
+        request = x_rpc.call2.call_args_list[0][0][2]
+        self.assertIsInstance(request, vorc.CredentialGetRequest)
+        self.assertEqual(self.context.user, request.user)
+        self.assertEqual(self.context.project, request.project)
+        request = x_rpc.call2.call_args_list[1][0][2]
         self.assertIsInstance(request, vorc.CredentialCreateRequest)
         expected_cred = {
             'openstack': {'trust': 'FAKE_TRUST_ID'}
         }
         self.assertEqual(expected_cred, request.cred)
-        mock_rpc.assert_called_once_with()
-        x_rpc.credential_get.assert_called_once_with(self.context)
         mock_driver.assert_called_once_with()
         x_driver.identity.assert_called_once_with({
             'auth_url': self.context.auth_url,
@@ -94,7 +101,7 @@ class TestTrustMiddleware(base.SenlinTestCase):
     @mock.patch("senlin.rpc.client.EngineClient")
     def test__get_trust_not_found(self, mock_rpc, mock_driver, mock_context):
         x_rpc = mock.Mock()
-        x_rpc.credential_get.return_value = None
+        x_rpc.call2.return_value = None
         mock_rpc.return_value = x_rpc
 
         x_svc_cred = {'uid': 'FAKE_ID', 'passwd': 'FAKE_PASS'}
@@ -110,17 +117,10 @@ class TestTrustMiddleware(base.SenlinTestCase):
 
         result = self.middleware._get_trust(self.req)
         self.assertEqual('FAKE_TRUST_ID', result)
-        x_rpc.call2.assert_called_once_with(self.context,
-                                            'credential_create2',
-                                            mock.ANY)
-        request = x_rpc.call2.call_args[0][2]
-        self.assertIsInstance(request, vorc.CredentialCreateRequest)
-        expected_cred = {
-            'openstack': {'trust': 'FAKE_TRUST_ID'}
-        }
-        self.assertEqual(expected_cred, request.cred)
+        mock_calls = [mock.call(self.context, 'credential_get2', mock.ANY),
+                      mock.call(self.context, 'credential_create2', mock.ANY)]
+        x_rpc.call2.assert_has_calls(mock_calls)
         mock_rpc.assert_called_once_with()
-        x_rpc.credential_get.assert_called_once_with(self.context)
         mock_driver.assert_called_once_with()
         x_driver.identity.assert_called_once_with({
             'auth_url': self.context.auth_url,
@@ -139,7 +139,7 @@ class TestTrustMiddleware(base.SenlinTestCase):
     @mock.patch("senlin.rpc.client.EngineClient")
     def test__get_trust_do_create(self, mock_rpc, mock_driver, mock_context):
         x_rpc = mock.Mock()
-        x_rpc.credential_get.return_value = None
+        x_rpc.call2.return_value = None
         mock_rpc.return_value = x_rpc
 
         x_svc_cred = {'uid': 'FAKE_ID', 'passwd': 'FAKE_PASS'}
@@ -157,16 +157,9 @@ class TestTrustMiddleware(base.SenlinTestCase):
 
         result = self.middleware._get_trust(self.req)
         self.assertEqual('FAKE_TRUST_ID', result)
-        mock_rpc.assert_called_once_with()
-        x_rpc.call2.assert_called_once_with(self.context,
-                                            'credential_create2',
-                                            mock.ANY)
-        request = x_rpc.call2.call_args[0][2]
-        self.assertIsInstance(request, vorc.CredentialCreateRequest)
-        expected_cred = {
-            'openstack': {'trust': 'FAKE_TRUST_ID'}
-        }
-        self.assertEqual(expected_cred, request.cred)
+        mock_calls = [mock.call(self.context, 'credential_get2', mock.ANY),
+                      mock.call(self.context, 'credential_create2', mock.ANY)]
+        x_rpc.call2.assert_has_calls(mock_calls)
         mock_driver.assert_called_once_with()
         x_driver.identity.assert_called_once_with({
             'auth_url': self.context.auth_url,
@@ -188,7 +181,7 @@ class TestTrustMiddleware(base.SenlinTestCase):
     @mock.patch("senlin.rpc.client.EngineClient")
     def test__get_trust_fatal(self, mock_rpc, mock_driver, mock_context):
         x_rpc = mock.Mock()
-        x_rpc.credential_get.return_value = None
+        x_rpc.call2.return_value = None
         mock_rpc.return_value = x_rpc
 
         x_svc_cred = {'uid': 'FAKE_ID', 'passwd': 'FAKE_PASS'}
@@ -208,7 +201,8 @@ class TestTrustMiddleware(base.SenlinTestCase):
 
         self.assertEqual('Boom', six.text_type(ex))
         mock_rpc.assert_called_once_with()
-        x_rpc.credential_get.assert_called_once_with(self.context)
+        x_rpc.call2.assert_called_once_with(self.context, 'credential_get2',
+                                            mock.ANY)
         mock_driver.assert_called_once_with()
         x_driver.identity.assert_called_once_with({
             'auth_url': self.context.auth_url,
