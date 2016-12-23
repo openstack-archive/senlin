@@ -83,6 +83,46 @@ class CredentialTest(base.SenlinTestCase):
         mock_get.assert_called_once_with(
             self.ctx, 'fake_user_id', 'fake_project_id')
 
+    @mock.patch.object(co.Credential, 'get')
+    def test_credential_get2(self, mock_get):
+        x_data = {'openstack': {'foo': 'bar'}}
+        x_cred = mock.Mock(cred=x_data)
+        mock_get.return_value = x_cred
+        req = vorc.CredentialGetRequest(user=self.ctx.user,
+                                        project=self.ctx.project,
+                                        query={'k1': 'v1'})
+
+        result = self.eng.credential_get2(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'foo': 'bar'}, result)
+        mock_get.assert_called_once_with(
+            self.ctx, 'fake_user_id', 'fake_project_id')
+
+    @mock.patch.object(co.Credential, 'get')
+    def test_credential_get2_not_found(self, mock_get):
+        mock_get.return_value = None
+        req = vorc.CredentialGetRequest(user=self.ctx.user,
+                                        project=self.ctx.project)
+
+        result = self.eng.credential_get2(self.ctx, req.obj_to_primitive())
+
+        self.assertIsNone(result)
+        mock_get.assert_called_once_with(
+            self.ctx, 'fake_user_id', 'fake_project_id')
+
+    @mock.patch.object(co.Credential, 'get')
+    def test_credential_get2_data_not_match(self, mock_get):
+        x_cred = mock.Mock(cred={'bogkey': 'bogval'})
+        mock_get.return_value = x_cred
+        req = vorc.CredentialGetRequest(user=self.ctx.user,
+                                        project=self.ctx.project)
+
+        result = self.eng.credential_get2(self.ctx, req.obj_to_primitive())
+
+        self.assertIsNone(result)
+        mock_get.assert_called_once_with(
+            self.ctx, 'fake_user_id', 'fake_project_id')
+
     @mock.patch.object(co.Credential, 'update')
     def test_credential_update(self, mock_update):
         x_cred = 'fake_credential'

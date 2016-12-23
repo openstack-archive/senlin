@@ -37,3 +37,26 @@ class TestCredentialCreate(test_base.SenlinTestCase):
         sot = credentials.CredentialCreateRequest(**body)
         self.assertEqual(body['cred'], sot.cred)
         self.assertEqual(body['attrs'], sot.attrs)
+
+
+class TestCredentialGet(test_base.SenlinTestCase):
+
+    body = {
+        'user': 'test-user',
+        'project': 'test-project'
+    }
+
+    def test_credential_get_request(self):
+        sot = credentials.CredentialGetRequest(**self.body)
+        self.assertEqual('test-user', sot.user)
+        self.assertEqual('test-project', sot.project)
+        sot.obj_set_defaults()
+        self.assertEqual({}, sot.query)
+
+    def test_credential_get_request_full(self):
+        body = copy.deepcopy(self.body)
+        body['query'] = {'foo': 'bar'}
+        sot = credentials.CredentialGetRequest(**body)
+        self.assertEqual('test-user', sot.user)
+        self.assertEqual('test-project', sot.project)
+        self.assertEqual({'foo': 'bar'}, sot.query)

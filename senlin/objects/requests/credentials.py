@@ -20,3 +20,12 @@ class CredentialCreateRequest(base.SenlinObject):
         'cred': fields.JsonField(),
         'attrs': fields.JsonField(nullable=True, default={})
     }
+
+
+@base.SenlinObjectRegistry.register
+class CredentialGetRequest(base.SenlinObject):
+    fields = {
+        'user': fields.StringField(),
+        'project': fields.StringField(),
+        'query': fields.JsonField(nullable=True, default={})
+    }
