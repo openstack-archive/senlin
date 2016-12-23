@@ -158,6 +158,140 @@ class TestNovaV2(base.SenlinTestCase):
         self.assertEqual(target.return_value, res)
         target.assert_called_once_with('fakeid', 'new_password')
 
+    def test_server_pause(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        server = mock.Mock()
+        target = d.conn.compute.pause_server
+
+        res = d.server_pause(server)
+
+        self.assertEqual(target.return_value, res)
+        target.assert_called_once_with(server)
+
+    def test_server_unpause(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        server = mock.Mock()
+        target = d.conn.compute.unpause_server
+
+        res = d.server_unpause(server)
+
+        self.assertEqual(target.return_value, res)
+        target.assert_called_once_with(server)
+
+    def test_server_suspend(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        server = mock.Mock()
+        target = d.conn.compute.suspend_server
+
+        res = d.server_suspend(server)
+
+        self.assertEqual(target.return_value, res)
+        target.assert_called_once_with(server)
+
+    def test_server_resume(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        server = mock.Mock()
+        target = d.conn.compute.resume_server
+
+        res = d.server_resume(server)
+
+        self.assertEqual(target.return_value, res)
+        target.assert_called_once_with(server)
+
+    def test_server_lock(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        server = mock.Mock()
+        target = d.conn.compute.lock_server
+
+        res = d.server_lock(server)
+
+        self.assertEqual(target.return_value, res)
+        target.assert_called_once_with(server)
+
+    def test_server_unlock(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        server = mock.Mock()
+        target = d.conn.compute.unlock_server
+
+        res = d.server_unlock(server)
+
+        self.assertEqual(target.return_value, res)
+        target.assert_called_once_with(server)
+
+    def test_server_start(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        server = mock.Mock()
+        target = d.conn.compute.start_server
+
+        res = d.server_start(server)
+
+        self.assertEqual(target.return_value, res)
+        target.assert_called_once_with(server)
+
+    def test_server_stop(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        server = mock.Mock()
+        target = d.conn.compute.stop_server
+
+        res = d.server_stop(server)
+
+        self.assertEqual(target.return_value, res)
+        target.assert_called_once_with(server)
+
+    def test_server_rescue(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        server = mock.Mock()
+        target = d.conn.compute.rescue_server
+
+        res = d.server_rescue(server)
+
+        self.assertEqual(target.return_value, res)
+        target.assert_called_once_with(server, admin_pass=None, image_ref=None)
+
+    def test_server_rescue_with_params(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        server = mock.Mock()
+        target = d.conn.compute.rescue_server
+
+        res = d.server_rescue(server, admin_pass='PASS', image_ref='IMAGE')
+
+        self.assertEqual(target.return_value, res)
+        target.assert_called_once_with(server, admin_pass='PASS',
+                                       image_ref='IMAGE')
+
+    def test_server_unrescue(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        server = mock.Mock()
+        target = d.conn.compute.unrescue_server
+
+        res = d.server_unrescue(server)
+
+        self.assertEqual(target.return_value, res)
+        target.assert_called_once_with(server)
+
+    def test_server_evacuate(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        server = mock.Mock()
+        target = d.conn.compute.evacuate_server
+
+        res = d.server_evacuate(server)
+
+        self.assertEqual(target.return_value, res)
+        target.assert_called_once_with(server, host=None, admin_pass=None,
+                                       force=None)
+
+    def test_server_evacuate_with_params(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        server = mock.Mock()
+        target = d.conn.compute.evacuate_server
+
+        res = d.server_evacuate(server, host='HOST', admin_pass='PASS',
+                                force='True')
+
+        self.assertEqual(target.return_value, res)
+        target.assert_called_once_with(server, host='HOST', admin_pass='PASS',
+                                       force='True')
+
     def test_wait_for_server(self):
         self.compute.find_server.return_value = 'foo'
 

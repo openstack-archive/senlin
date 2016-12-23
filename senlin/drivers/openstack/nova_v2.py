@@ -91,6 +91,52 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.change_server_password(server, new_password)
 
     @sdk.translate_exception
+    def server_pause(self, server):
+        return self.conn.compute.pause_server(server)
+
+    @sdk.translate_exception
+    def server_unpause(self, server):
+        return self.conn.compute.unpause_server(server)
+
+    @sdk.translate_exception
+    def server_suspend(self, server):
+        return self.conn.compute.suspend_server(server)
+
+    @sdk.translate_exception
+    def server_resume(self, server):
+        return self.conn.compute.resume_server(server)
+
+    @sdk.translate_exception
+    def server_lock(self, server):
+        return self.conn.compute.lock_server(server)
+
+    @sdk.translate_exception
+    def server_unlock(self, server):
+        return self.conn.compute.unlock_server(server)
+
+    @sdk.translate_exception
+    def server_start(self, server):
+        return self.conn.compute.start_server(server)
+
+    @sdk.translate_exception
+    def server_stop(self, server):
+        return self.conn.compute.stop_server(server)
+
+    @sdk.translate_exception
+    def server_rescue(self, server, admin_pass=None, image_ref=None):
+        return self.conn.compute.rescue_server(server, admin_pass=admin_pass,
+                                               image_ref=image_ref)
+
+    @sdk.translate_exception
+    def server_unrescue(self, server):
+        return self.conn.compute.unrescue_server(server)
+
+    @sdk.translate_exception
+    def server_evacuate(self, server, host=None, admin_pass=None, force=None):
+        return self.conn.compute.evacuate_server(
+            server, host=host, admin_pass=admin_pass, force=force)
+
+    @sdk.translate_exception
     def wait_for_server(self, server, status='ACTIVE', failures=['ERROR'],
                         interval=2, timeout=None):
         '''Wait for server creation complete'''
