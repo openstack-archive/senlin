@@ -1977,7 +1977,7 @@ class EngineService(service.Service):
         """List receivers matching the specified criteria.
 
         :param ctx: An instance of the request context.
-        :param req: An instance of the ReceiverListRequestBody object.
+        :param req: An instance of the ReceiverListRequest object.
         :return: A list of `Receiver` object representations.
         """
         req.obj_set_defaults()
