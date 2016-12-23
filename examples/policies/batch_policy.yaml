@@ -11,5 +11,5 @@ properties:
   max_batch_size: 2
 
   # Number of seconds between two consecutive batches of
-  # operaitons. A value of 0 means no pause time.
+  # operations. A value of 0 means no pause time.
   pause_time: 3
