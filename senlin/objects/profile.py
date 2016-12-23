@@ -14,6 +14,7 @@
 from oslo_utils import uuidutils
 
 from senlin.common import exception
+from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.objects import base
 from senlin.objects import fields
@@ -99,3 +100,18 @@ class Profile(base.SenlinObject, base.VersionedObjectDictCompat):
     @classmethod
     def delete(cls, context, obj_id):
         db_api.profile_delete(context, obj_id)
+
+    def to_dict(self):
+        profile_dict = {
+            'id': self.id,
+            'name': self.name,
+            'type': self.type,
+            'user': self.user,
+            'project': self.project,
+            'domain': self.domain,
+            'spec': self.spec,
+            'metadata': self.metadata,
+            'created_at': utils.isotime(self.created_at),
+            'updated_at': utils.isotime(self.updated_at)
+        }
+        return profile_dict

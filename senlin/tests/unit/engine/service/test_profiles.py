@@ -55,23 +55,23 @@ class ProfileTest(base.SenlinTestCase):
             }
         }
 
-    @mock.patch.object(pb.Profile, 'load_all')
-    def test_profile_list2(self, mock_load):
+    @mock.patch.object(po.Profile, 'get_all')
+    def test_profile_list2(self, mock_get):
         x_obj_1 = mock.Mock()
         x_obj_1.to_dict.return_value = {'k': 'v1'}
         x_obj_2 = mock.Mock()
         x_obj_2.to_dict.return_value = {'k': 'v2'}
-        mock_load.return_value = [x_obj_1, x_obj_2]
+        mock_get.return_value = [x_obj_1, x_obj_2]
         req = vorp.ProfileListRequest(project_safe=True)
 
         result = self.eng.profile_list2(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
-        mock_load.assert_called_once_with(self.ctx, project_safe=True)
+        mock_get.assert_called_once_with(self.ctx, project_safe=True)
 
-    @mock.patch.object(pb.Profile, 'load_all')
-    def test_profile_list2_with_params(self, mock_load):
-        mock_load.return_value = []
+    @mock.patch.object(po.Profile, 'get_all')
+    def test_profile_list2_with_params(self, mock_get):
+        mock_get.return_value = []
         marker = uuidutils.generate_uuid()
         params = {
             'limit': 10,
@@ -86,11 +86,11 @@ class ProfileTest(base.SenlinTestCase):
         result = self.eng.profile_list2(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([], result)
-        mock_load.assert_called_once_with(self.ctx, limit=10, marker=marker,
-                                          filters={'name': ['foo'],
-                                                   'type': ['os.nova.server']},
-                                          sort='name:asc',
-                                          project_safe=True)
+        mock_get.assert_called_once_with(self.ctx, limit=10, marker=marker,
+                                         filters={'name': ['foo'],
+                                                  'type': ['os.nova.server']},
+                                         sort='name:asc',
+                                         project_safe=True)
 
     @mock.patch.object(pb.Profile, 'create')
     def test_profile_create2_default(self, mock_create):
@@ -206,21 +206,17 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual('BOOM',
                          six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(po.Profile, 'find')
-    def test_profile_get2(self, mock_find, mock_load):
+    def test_profile_get2(self, mock_find):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
-        x_profile = mock.Mock()
-        x_profile.to_dict.return_value = {'foo': 'bar'}
-        mock_load.return_value = x_profile
+        x_obj.to_dict.return_value = {'foo': 'bar'}
         req = vorp.ProfileGetRequest(identity='FAKE_PROFILE')
 
         result = self.eng.profile_get2(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_PROFILE')
-        mock_load.assert_called_once_with(self.ctx, profile=x_obj)
 
     @mock.patch.object(po.Profile, 'find')
     def test_profile_get2_not_found(self, mock_find):
