@@ -17,12 +17,11 @@ from webob import exc
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 
+from senlin.api.common import util
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import profiles
 from senlin.common import exception as senlin_exc
-from senlin.common.i18n import _
 from senlin.common import policy
-from senlin.objects.requests import profiles as vorp
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.api import shared
 from senlin.tests.unit.common import base
@@ -39,7 +38,10 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cfgopts = DummyConfig()
         self.controller = profiles.ProfileController(options=cfgopts)
 
-    def test_profile_index_normal(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_index_normal(self, mock_call, mock_parse,
+                                  mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/profiles')
 
@@ -58,24 +60,21 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         ]
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_resp)
+        mock_call.return_value = engine_resp
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         result = self.controller.index(req)
-        mock_call.assert_called_with(req.context, 'profile_list2', mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorp.ProfileListRequest)
-        self.assertTrue(request.project_safe)
-        self.assertFalse(request.obj_attr_is_set('name'))
-        self.assertFalse(request.obj_attr_is_set('type'))
-        self.assertFalse(request.obj_attr_is_set('limit'))
-        self.assertFalse(request.obj_attr_is_set('marker'))
-        self.assertFalse(request.obj_attr_is_set('sort'))
 
-        expected = {'profiles': engine_resp}
-        self.assertEqual(expected, result)
+        self.assertEqual(engine_resp, result['profiles'])
+        mock_parse.assert_called_once_with(
+            'ProfileListRequest', req, {'project_safe': True})
+        mock_call.assert_called_once_with(req.context, 'profile_list2', obj)
 
-    def test_profile_index_whitelists_params(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_index_whitelists_params(self, mock_call, mock_parse,
+                                             mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         marker_uuid = uuidutils.generate_uuid()
         params = {
@@ -88,24 +87,29 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
         req = self._get('/profiles', params=params)
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=[])
+        mock_call.return_value = []
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
-        self.controller.index(req)
+        result = self.controller.index(req)
 
-        mock_call.assert_called_with(req.context, 'profile_list2', mock.ANY)
+        self.assertEqual([], result['profiles'])
+        mock_parse.assert_called_once_with(
+            'ProfileListRequest', req,
+            {
+                'sort': 'name:asc',
+                'name': ['foo'],
+                'limit': '20',
+                'marker': marker_uuid,
+                'type': ['fake_type'],
+                'project_safe': True
+            })
+        mock_call.assert_called_once_with(req.context, 'profile_list2', obj)
 
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorp.ProfileListRequest)
-        self.assertEqual(['foo'], request.name)
-        self.assertEqual(['fake_type'], request.type)
-        self.assertEqual(20, request.limit)
-        self.assertEqual(marker_uuid, request.marker)
-        self.assertEqual('name:asc', request.sort)
-        self.assertTrue(request.project_safe)
-
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_profile_index_whitelist_bad_params(self, mock_call, mock_enforce):
+    def test_profile_index_whitelist_bad_params(self, mock_call, mock_parse,
+                                                mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
             'balrog': 'fake_value'
@@ -114,12 +118,14 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
-        self.assertEqual("Invalid parameter balrog", str(ex))
+        self.assertEqual("Invalid parameter balrog", six.text_type(ex))
+        self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_profile_index_global_project_not_bool(self, mock_call,
-                                                   mock_enforce):
+                                                   mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'global_project': 'No'}
         req = self._get('/profiles', params=params)
@@ -129,18 +135,25 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual("Invalid value 'No' specified for 'global_project'",
                          six.text_type(ex))
+        self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
+    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
-    def test_profile_index_limit_non_int(self, mock_call, mock_enforce):
+    def test_profile_index_limit_non_int(self, mock_call, mock_parse,
+                                         mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
 
         params = {'limit': 'abc'}
         req = self._get('/profiles', params=params)
+
+        mock_parse.side_effect = exc.HTTPBadRequest("bad limit")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
-        self.assertEqual("invalid literal for int() with base 10: 'abc'",
-                         six.text_type(ex))
+
+        self.assertEqual("bad limit", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ProfileListRequest', req, mock.ANY)
         self.assertFalse(mock_call.called)
 
     def test_profile_index_denied_policy(self, mock_enforce):
@@ -153,7 +166,10 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_profile_create_success(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_create_success(self, mock_call, mock_parse,
+                                    mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {
             'profile': {
@@ -186,48 +202,59 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._post('/profiles', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_response)
+        mock_call.return_value = engine_response
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         resp = self.controller.create(req, body=body)
 
-        mock_call.assert_called_with(req.context, 'profile_create2', mock.ANY)
+        self.assertEqual(engine_response, resp['profile'])
+        mock_parse.assert_called_once_with(
+            'ProfileCreateRequest', req, body, 'profile')
+        mock_call.assert_called_once_with(
+            req.context, 'profile_create2', obj)
 
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorp.ProfileCreateRequest)
-
-        expected = {'profile': engine_response}
-        self.assertEqual(expected, resp)
-
-    def test_profile_create_with_no_profile(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_create_with_no_profile(self, mock_call, mock_parse,
+                                            mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {'name': 'test_profile'}
 
         req = self._post('/profiles', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+
+        mock_parse.side_effect = exc.HTTPBadRequest("bad body")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("Request body missing 'profile' key.",
-                         six.text_type(ex))
+        self.assertEqual("bad body", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ProfileCreateRequest', mock.ANY, body, 'profile')
         self.assertFalse(mock_call.called)
 
-    def test_profile_create_with_profile_no_spec(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_create_with_profile_no_spec(self, mock_call,
+                                                 mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {'profile': {'name': 'test_profile'}}
 
         req = self._post('/profiles', jsonutils.dumps(body))
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_parse.side_effect = exc.HTTPBadRequest("miss spec")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("'spec' is a required property",
-                         six.text_type(ex))
+        self.assertEqual("miss spec", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ProfileCreateRequest', mock.ANY, body, 'profile')
         self.assertFalse(mock_call.called)
 
-    def test_profile_create_with_bad_type(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_create_with_bad_type(self, mock_call,
+                                          mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         type_name = 'unknown_type'
         body = {
@@ -243,20 +270,27 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
         req = self._post('/profiles', jsonutils.dumps(body))
 
+        obj = mock.Mock()
+        mock_parse.return_value = obj
         error = senlin_exc.ResourceNotFound(type='profile_type', id=type_name)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     side_effect=error)
+        mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
                                               req, body=body)
 
-        mock_call.assert_called_once_with(req.context, 'profile_create2',
-                                          mock.ANY)
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+        mock_parse.assert_called_once_with(
+            'ProfileCreateRequest', mock.ANY, body, 'profile')
+        mock_call.assert_called_once_with(
+            req.context, 'profile_create2', obj)
 
-    def test_profile_create_with_spec_validation_failed(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_create_with_spec_validation_failed(self, mock_call,
+                                                        mock_parse,
+                                                        mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         body = {
             'profile': {
@@ -270,19 +304,23 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             }
         }
         req = self._post('/profiles', jsonutils.dumps(body))
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         msg = 'Spec validation error (param): value'
         error = senlin_exc.InvalidSpec(message=msg)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     side_effect=error)
+        mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.create,
                                               req, body=body)
-        mock_call.assert_called_once_with(req.context, 'profile_create2',
-                                          mock.ANY)
+
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('InvalidSpec', resp.json['error']['type'])
+        mock_parse.assert_called_once_with(
+            'ProfileCreateRequest', mock.ANY, body, 'profile')
+        mock_call.assert_called_once_with(
+            req.context, 'profile_create2', obj)
 
     def test_profile_create_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', False)
@@ -304,7 +342,9 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_profile_get_normal(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_get_normal(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         pid = 'aaaa-bbbb-cccc'
         req = self._get('/profiles/%(profile_id)s' % {'profile_id': pid})
@@ -322,27 +362,30 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'metadata': {},
         }
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_resp)
+        mock_call.return_value = engine_resp
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         result = self.controller.get(req, profile_id=pid)
 
-        mock_call.assert_called_with(req.context, 'profile_get2', mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorp.ProfileGetRequest)
-        self.assertEqual(pid, request.identity)
+        self.assertEqual(engine_resp, result['profile'])
+        mock_parse.assert_called_once_with(
+            'ProfileGetRequest', req, {'identity': pid})
+        mock_call.assert_called_once_with(
+            req.context, 'profile_get2', obj)
 
-        expected = {'profile': engine_resp}
-        self.assertEqual(expected, result)
-
-    def test_profile_get_not_found(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_get_not_found(self, mock_call, mock_parse,
+                                   mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         pid = 'non-existent-profile'
         req = self._get('/profiles/%(profile_id)s' % {'profile_id': pid})
 
         error = senlin_exc.ResourceNotFound(type='profile', id=pid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.get,
@@ -350,6 +393,11 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+
+        mock_parse.assert_called_once_with(
+            'ProfileGetRequest', mock.ANY, {'identity': pid})
+        mock_call.assert_called_once_with(
+            req.context, 'profile_get2', obj)
 
     def test_profile_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)
@@ -363,7 +411,10 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_profile_update_normal(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_update_normal(self, mock_call, mock_parse,
+                                   mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'aaaa-bbbb-cccc'
         body = {
@@ -387,36 +438,42 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             u'metadata': {u'author': u'thomas j'},
         }
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=engine_resp)
+        mock_call.return_value = engine_resp
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
         result = self.controller.update(req, profile_id=pid, body=body)
-        mock_call.assert_called_with(req.context, 'profile_update2', mock.ANY)
 
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorp.ProfileUpdateRequest)
-        self.assertIsInstance(request.profile, vorp.ProfileUpdateRequestBody)
-        self.assertEqual(pid, request.identity)
-        self.assertEqual('profile-2', request.profile.name)
-        self.assertEqual({'author': 'thomas j'}, request.profile.metadata)
-        expected = {'profile': engine_resp}
-        self.assertEqual(expected, result)
+        self.assertEqual(engine_resp, result['profile'])
+        mock_parse.assert_called_once_with(
+            'ProfileUpdateRequest', req, mock.ANY)
+        mock_call.assert_called_once_with(
+            req.context, 'profile_update2', obj)
 
-    def test_profile_update_no_body(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_update_no_body(self, mock_call, mock_parse,
+                                    mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'aaaa-bbbb-cccc'
         body = {'foo': 'bar'}
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
                         jsonutils.dumps(body))
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_parse.side_effect = exc.HTTPBadRequest("bad body")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
                                req, profile_id=pid, body=body)
-        self.assertEqual("Malformed request data, missing 'profile' key in "
-                         "request body.", six.text_type(ex))
+
+        self.assertEqual("Malformed request data, missing 'profile' key "
+                         "in request body.", six.text_type(ex))
+        self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
-    def test_profile_update_no_name(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_update_no_name(self, mock_call, mock_parse,
+                                    mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'aaaa-bbbb-cccc'
         body = {
@@ -426,18 +483,22 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
                         jsonutils.dumps(body))
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value={})
+        mock_call.return_value = {}
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
         result = self.controller.update(req, profile_id=pid, body=body)
-        self.assertEqual({'profile': {}}, result)
 
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorp.ProfileUpdateRequest)
-        self.assertIsInstance(request.profile, vorp.ProfileUpdateRequestBody)
-        self.assertEqual(pid, request.identity)
-        self.assertEqual({'author': 'thomas j'}, request.profile.metadata)
+        self.assertEqual({}, result['profile'])
+        mock_parse.assert_called_once_with(
+            'ProfileUpdateRequest', req, mock.ANY)
+        mock_call.assert_called_once_with(
+            req.context, 'profile_update2', obj)
 
-    def test_profile_update_with_unexpected_field(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_update_with_unexpected_field(self, mock_call,
+                                                  mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'aaaa-bbbb-cccc'
         body = {
@@ -450,16 +511,20 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._put('/profiles/%(profile_id)s' % {'profile_id': pid},
                         jsonutils.dumps(body))
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
+        mock_parse.side_effect = exc.HTTPBadRequest("bad param")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.update,
                                req, profile_id=pid, body=body)
-        msg = _("Additional properties are not allowed "
-                "('foo' was unexpected)")
-        self.assertEqual(msg, six.text_type(ex))
+
+        self.assertEqual("bad param", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ProfileUpdateRequest', req, mock.ANY)
         self.assertFalse(mock_call.called)
 
-    def test_profile_update_not_found(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_update_not_found(self, mock_call, mock_parse,
+                                      mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         pid = 'non-existent-profile'
         body = {
@@ -472,7 +537,6 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                         jsonutils.dumps(body))
 
         error = senlin_exc.ResourceNotFound(type='profile', id=pid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
@@ -500,29 +564,36 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_profile_delete_success(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_delete_success(self, mock_call, mock_parse,
+                                    mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         pid = 'aaaa-bbbb-cccc'
         req = self._delete('/profiles/%(profile_id)s' % {'profile_id': pid})
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=None)
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         self.assertRaises(exc.HTTPNoContent,
                           self.controller.delete, req, profile_id=pid)
 
-        mock_call.assert_called_with(req.context, 'profile_delete2', mock.ANY)
-        request = mock_call.call_args[0][2]
-        self.assertEqual(pid, request.identity)
+        mock_parse.assert_called_once_with(
+            'ProfileDeleteRequest', req, {'identity': pid})
+        mock_call.assert_called_once_with(req.context, 'profile_delete2', obj)
 
-    def test_profile_delete_not_found(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_delete_not_found(self, mock_call, mock_parse,
+                                      mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         pid = 'aaaa-bbbb-cccc'
         req = self._delete('/profiles/%(profile_id)s' % {'profile_id': pid})
 
         error = senlin_exc.ResourceNotFound(type='profile', id=pid)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.delete,
@@ -531,14 +602,21 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
-    def test_profile_delete_resource_in_use(self, mock_enforce):
+        mock_parse.assert_called_once_with(
+            'ProfileDeleteRequest', mock.ANY, {'identity': pid})
+        mock_call.assert_called_once_with(
+            req.context, 'profile_delete2', obj)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_delete_resource_in_use(self, mock_call, mock_parse,
+                                            mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         pid = 'aaaa-bbbb-cccc'
         req = self._delete('/profiles/%(profile_id)s' % {'profile_id': pid})
 
         error = senlin_exc.ResourceInUse(type='profile', id=pid,
                                          reason='still in use')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
@@ -560,19 +638,22 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_profile_validate_version_mismatch(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_validate_version_mismatch(self, mock_call, mock_parse,
+                                               mock_enforce):
         body = {
             'profile': {}
         }
         req = self._post('/profiles/validate', jsonutils.dumps(body),
                          version='1.1')
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
 
         ex = self.assertRaises(senlin_exc.MethodVersionNotFound,
                                self.controller.validate,
                                req, body=body)
 
-        mock_call.assert_not_called()
+        self.assertFalse(mock_parse.called)
+        self.assertFalse(mock_call.called)
         self.assertEqual('API version 1.1 is not supported on this method.',
                          six.text_type(ex))
 
@@ -604,19 +685,29 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    def test_profile_validate_no_body(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_validate_no_body(self, mock_call, mock_parse,
+                                      mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
         body = {'foo': 'bar'}
         req = self._post('/profiles/validate', jsonutils.dumps(body),
                          version='1.2')
 
+        mock_parse.side_effect = exc.HTTPBadRequest("bad param")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.validate,
                                req, body=body)
-        self.assertEqual("Request body missing 'profile' key.",
-                         six.text_type(ex))
+        self.assertEqual("bad param", six.text_type(ex))
 
-    def test_profile_validate_no_spec(self, mock_enforce):
+        mock_parse.assert_called_once_with(
+            'ProfileValidateRequest', req, body, 'profile')
+        self.assertFalse(mock_call.called)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_validate_no_spec(self, mock_call, mock_parse,
+                                      mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
         body = {
             'profile': {}
@@ -624,12 +715,19 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/profiles/validate', jsonutils.dumps(body),
                          version='1.2')
 
+        mock_parse.side_effect = exc.HTTPBadRequest("miss spec")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.validate,
                                req, body=body)
-        self.assertEqual("'spec' is a required property", six.text_type(ex))
+        self.assertEqual("miss spec", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ProfileValidateRequest', req, body, 'profile')
+        self.assertFalse(mock_call.called)
 
-    def test_profile_validate_unsupported_field(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_validate_unsupported_field(self, mock_call,
+                                                mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
         body = {
             'profile': {
@@ -640,14 +738,20 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
         req = self._post('/profiles/validate', jsonutils.dumps(body),
                          version='1.2')
-
+        mock_parse.side_effect = exc.HTTPBadRequest("bad param")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.validate,
                                req, body=body)
-        self.assertEqual("Additional properties are not allowed "
-                         "('foo' was unexpected)", six.text_type(ex))
 
-    def test_profile_validate_invalide_spec(self, mock_enforce):
+        self.assertEqual("bad param", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ProfileValidateRequest', req, body, 'profile')
+        self.assertFalse(mock_call.called)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_validate_invalide_spec(self, mock_call,
+                                            mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
         body = {
             'profile': {
@@ -663,8 +767,9 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         msg = 'Spec validation error'
         error = senlin_exc.InvalidSpec(message=msg)
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         mock_call.side_effect = shared.to_remote_error(error)
+        obj = mock.Mock()
+        mock_parse.return_value = obj
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.validate,
@@ -673,7 +778,10 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('InvalidSpec', resp.json['error']['type'])
 
-    def test_profile_validate_success(self, mock_enforce):
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_validate_success(self, mock_call,
+                                      mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
         spec = {
             'spec': {
@@ -688,14 +796,14 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = self._post('/profiles/validate', jsonutils.dumps(body),
                          version='1.2')
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call2',
-                                     return_value=spec)
-        result = self.controller.validate(req, body=body)
-        mock_call.assert_called_with(req.context,
-                                     'profile_validate2',
-                                     mock.ANY)
-        expected = {'profile': spec}
-        self.assertEqual(expected, result)
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.return_value = spec
 
-        request = mock_call.call_args[0][2]
-        self.assertIsInstance(request, vorp.ProfileValidateRequest)
+        result = self.controller.validate(req, body=body)
+
+        self.assertEqual(spec, result['profile'])
+        mock_parse.assert_called_once_with(
+            'ProfileValidateRequest', req, body, 'profile')
+        mock_call.assert_called_with(
+            req.context, 'profile_validate2', obj)
