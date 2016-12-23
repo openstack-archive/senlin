@@ -97,3 +97,13 @@ class NodeRecoverRequest(base.SenlinObject):
         'identity': fields.StringField(),
         'params': fields.JsonField(nullable=True)
     }
+
+
+@base.SenlinObjectRegistry.register
+class NodeOperationRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'operation': fields.StringField(),
+        'params': fields.JsonField(nullable=True)
+    }

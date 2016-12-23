@@ -191,3 +191,18 @@ class TestNodeRecover(test_base.SenlinTestCase):
     def test_node_recover_request(self):
         sot = nodes.NodeRecoverRequest(**self.body)
         self.assertEqual({'foo': 'bar'}, sot.params)
+
+
+class TestNodeOperation(test_base.SenlinTestCase):
+
+    body = {
+        'identity': 'test-node',
+        'operation': 'dance',
+        'params': {'foo': 'bar'},
+    }
+
+    def test_node_operation_request(self):
+        sot = nodes.NodeOperationRequest(**self.body)
+        self.assertEqual('test-node', sot.identity)
+        self.assertEqual('dance', sot.operation)
+        self.assertEqual({'foo': 'bar'}, sot.params)
