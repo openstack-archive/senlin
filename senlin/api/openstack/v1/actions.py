@@ -11,16 +11,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import jsonschema
-import six
 from webob import exc
 
 from senlin.api.common import util
 from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
-from senlin.objects import base as obj_base
-from senlin.objects.requests import actions as vora
 
 
 class ActionData(object):
@@ -79,16 +75,7 @@ class ActionController(wsgi.Controller):
             params.pop(consts.PARAM_GLOBAL_PROJECT, False))
         params['project_safe'] = project_safe
 
-        try:
-            norm_req = obj_base.SenlinObject.normalize_req(
-                'ActionListRequest', params)
-            obj = vora.ActionListRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except (ValueError) as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
+        obj = util.parse_request('ActionListRequest', req, params)
         actions = self.rpc_client.call2(req.context, "action_list2", obj)
 
         return {'actions': actions}
@@ -107,16 +94,7 @@ class ActionController(wsgi.Controller):
     @util.policy_enforce
     def get(self, req, action_id):
         params = {'identity': action_id}
-        try:
-            norm_req = obj_base.SenlinObject.normalize_req(
-                'ActionGetRequest', params, None)
-            obj = vora.ActionGetRequest.obj_from_primitive(norm_req)
-            jsonschema.validate(norm_req, obj.to_json_schema())
-        except (ValueError) as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex))
-        except jsonschema.exceptions.ValidationError as ex:
-            raise exc.HTTPBadRequest(six.text_type(ex.message))
-
+        obj = util.parse_request('ActionGetRequest', req, params)
         action = self.rpc_client.call2(req.context, 'action_get2', obj)
 
         return {'action': action}
