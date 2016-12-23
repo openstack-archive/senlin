@@ -15,8 +15,10 @@
 from oslo_utils import uuidutils
 
 from senlin.common import exception
+from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.objects import base
+from senlin.objects import dependency as dobj
 from senlin.objects import fields
 
 
@@ -150,3 +152,33 @@ class Action(base.SenlinObject, base.VersionedObjectDictCompat):
     @classmethod
     def delete(cls, context, action_id):
         db_api.action_delete(context, action_id)
+
+    def to_dict(self):
+        if self.id:
+            dep_on = dobj.Dependency.get_depended(self.context, self.id)
+            dep_by = dobj.Dependency.get_dependents(self.context, self.id)
+        else:
+            dep_on = []
+            dep_by = []
+        action_dict = {
+            'id': self.id,
+            'name': self.name,
+            'action': self.action,
+            'target': self.target,
+            'cause': self.cause,
+            'owner': self.owner,
+            'interval': self.interval,
+            'start_time': self.start_time,
+            'end_time': self.end_time,
+            'timeout': self.timeout,
+            'status': self.status,
+            'status_reason': self.status_reason,
+            'inputs': self.inputs,
+            'outputs': self.outputs,
+            'depends_on': dep_on,
+            'depended_by': dep_by,
+            'created_at': utils.isotime(self.created_at),
+            'updated_at': utils.isotime(self.updated_at),
+            'data': self.data,
+        }
+        return action_dict
