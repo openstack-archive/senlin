@@ -84,8 +84,8 @@ specification.
 For more details about policy types and policy management, check the
 :doc:`Policy Types <../user/policy_types>` section and the
 :doc:`Policies <../user/policies>` section in the
-:doc:`User Reference <../user/index>` documentation respectively.
-You may also want to check the 
+:ref:`user-references` documentation respectively.
+You may also want to check the
 :doc:`Cluster-Policy Bindings <../user/bindings>` section in the
-:doc:`User Reference <../user/index>` for more details on managing
-the cluster-policy relationship.
+:ref:`user-references` section for more details on managing the cluster-policy
+relationship.

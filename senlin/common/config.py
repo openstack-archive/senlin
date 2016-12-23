@@ -226,10 +226,10 @@ def list_opts():
     """
     for g, o in wsgi.wsgi_opts():
         yield g, o
-    yield None, cloud_backend_opts
-    yield None, rpc_opts
-    yield None, engine_opts
-    yield None, service_opts
+    yield 'DEFAULT', cloud_backend_opts
+    yield 'DEFAULT', rpc_opts
+    yield 'DEFAULT', engine_opts
+    yield 'DEFAULT', service_opts
     yield authentication_group.name, authentication_opts
     yield revision_group.name, revision_opts
     yield receiver_group.name, receiver_opts

@@ -21,6 +21,12 @@ Senlin is a **clustering service** for OpenStack clouds. It creates and
 operates clusters of homogeneous objects exposed by other OpenStack services.
 The goal is to make orchestration of collections of similar objects easier.
 
+Senlin interacts with other OpenStack services so that clusters of resources
+exposed by those services can be created and operated. These interactions are
+mostly done through the via :term:`profile` plugins. Each profile type
+implementation enable Senlin to create, update, delete a specific type of
+resources.
+
 A :term:`Cluster` can be associated with different :term:`Policy` objects
 that can be checked/enforced at varying enforcement levels. Through service
 APIs, a user can dynamically add :term:`Node` to and remove node from a
@@ -28,12 +34,6 @@ cluster, attach and detach policies, such as *creation policy*, *deletion
 policy*, *load-balancing policy*, *scaling policy*, *health policy* etc.
 Through integration with other OpenStack projects, users will be enabled to
 manage deployments and orchestrations large-scale resource pools much easier.
-
-Currently no other clustering service exists for OpenStack. The developers
-believe cloud operators have a strong desire to create and operate resource
-pools on OpenStack deployments. The *Heat* project provides a preliminary
-support to resource groups but Heat team has achieved a consensus that
-such kind of a service should stand on its own feet.
 
 Senlin is designed to be capable of managing different types of objects. An
 object's lifecycle is managed using :term:`Profile Type` implementations,
