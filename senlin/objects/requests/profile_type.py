@@ -26,3 +26,11 @@ class ProfileTypeGetRequest(base.SenlinObject):
 class ProfileTypeListRequest(base.SenlinObject):
 
     fields = {}
+
+
+@base.SenlinObjectRegistry.register
+class ProfileTypeOpListRequest(base.SenlinObject):
+
+    fields = {
+        'type_name': fields.StringField()
+    }
