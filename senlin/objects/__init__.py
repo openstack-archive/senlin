@@ -32,6 +32,7 @@ def register_all():
     __import__('senlin.objects.profile')
     __import__('senlin.objects.receiver')
     __import__('senlin.objects.requests.actions')
+    __import__('senlin.objects.requests.build_info')
     __import__('senlin.objects.requests.clusters')
     __import__('senlin.objects.requests.cluster_policies')
     __import__('senlin.objects.requests.credentials')
