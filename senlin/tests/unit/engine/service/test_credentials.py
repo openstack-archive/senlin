@@ -51,39 +51,6 @@ class CredentialTest(base.SenlinTestCase):
         )
 
     @mock.patch.object(co.Credential, 'get')
-    def test_credential_get(self, mock_get):
-        x_data = {'openstack': {'foo': 'bar'}}
-        x_cred = mock.Mock(cred=x_data)
-        mock_get.return_value = x_cred
-
-        result = self.eng.credential_get(self.ctx)
-
-        self.assertEqual({'foo': 'bar'}, result)
-        mock_get.assert_called_once_with(
-            self.ctx, 'fake_user_id', 'fake_project_id')
-
-    @mock.patch.object(co.Credential, 'get')
-    def test_credential_get_not_found(self, mock_get):
-        mock_get.return_value = None
-
-        result = self.eng.credential_get(self.ctx)
-
-        self.assertIsNone(result)
-        mock_get.assert_called_once_with(
-            self.ctx, 'fake_user_id', 'fake_project_id')
-
-    @mock.patch.object(co.Credential, 'get')
-    def test_credential_data_not_match(self, mock_get):
-        x_cred = mock.Mock(cred={'bogkey': 'bogval'})
-        mock_get.return_value = x_cred
-
-        result = self.eng.credential_get(self.ctx)
-
-        self.assertIsNone(result)
-        mock_get.assert_called_once_with(
-            self.ctx, 'fake_user_id', 'fake_project_id')
-
-    @mock.patch.object(co.Credential, 'get')
     def test_credential_get2(self, mock_get):
         x_data = {'openstack': {'foo': 'bar'}}
         x_cred = mock.Mock(cred=x_data)

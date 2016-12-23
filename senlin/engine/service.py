@@ -239,24 +239,6 @@ class EngineService(service.Service):
         cred_obj.Credential.update_or_create(ctx, values)
         return {'cred': req.cred}
 
-    @request_context
-    def credential_get(self, context, query=None):
-        """Get the credential based on the context.
-
-        We may add more parameters in future to the query parameter, for
-        example as Senlin expands its support to non-OpenStack backends.
-
-        :param context: The requesting context which contains the user id
-            along with other identity information.
-        :param dict query: Optional query parameters.
-        :return: A dictionary containing the persistent credential, or None
-            if no matching credential is found.
-        """
-        res = cred_obj.Credential.get(context, context.user, context.project)
-        if res is None:
-            return None
-        return res.cred.get('openstack', None)
-
     @request_context2
     def credential_get2(self, ctx, req):
         """Get the credential based on the context.
