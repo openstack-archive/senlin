@@ -1292,7 +1292,7 @@ class EngineService(service.Service):
         """Deflate the size of a cluster by given number (optional).
 
         :param ctx: Request context for the call.
-        :param req: An instance of the ClusterScaleOutRequest object.
+        :param req: An instance of the ClusterScaleInRequest object.
         :return: A dict with the ID of the action fired.
         """
         db_cluster = co.Cluster.find(ctx, req.identity)
