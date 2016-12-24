@@ -202,25 +202,29 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         self.assertEqual(msg, ex.message)
 
     @mock.patch.object(node.Node, 'load')
-    def test_get_specified_node(self, mock_load):
+    def test__get_host_node_found(self, mock_load):
         node = mock.Mock()
         mock_load.return_value = node
         ctx = mock.Mock()
         profile = docker_profile.DockerProfile('container', self.spec)
-        res = profile._get_specified_node(ctx, 'host_node')
+
+        res = profile._get_host(ctx, 'host_node', None)
+
         self.assertEqual(node, res)
         mock_load.assert_called_once_with(ctx, node_id='host_node')
 
     @mock.patch.object(node.Node, 'load')
-    def test_get_specified_node_not_found(self, mock_load):
+    def test__get_host_node_not_found(self, mock_load):
         mock_load.side_effect = exc.ResourceNotFound(type='node',
                                                      id='fake_node')
         profile = docker_profile.DockerProfile('container', self.spec)
-        obj = mock.Mock()
-        ex = self.assertRaises(exc.InternalError,
-                               profile.docker, obj)
-        msg = _('The host node (fake_node) could not be found.')
+        ctx = mock.Mock()
 
+        ex = self.assertRaises(exc.InternalError,
+                               profile._get_host,
+                               ctx, 'fake_node', None)
+
+        msg = _('The host node (fake_node) could not be found.')
         self.assertEqual(msg, ex.message)
 
     @mock.patch.object(docker_profile.DockerProfile, '_get_host_cluster')
