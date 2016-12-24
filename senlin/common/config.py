@@ -113,7 +113,7 @@ cfg.CONF.register_opts(cloud_backend_opts)
 
 # DEFAULT, event dispatchers
 event_opts = [
-    cfg.MultiStrOpt("event_dispatchers", default=['database', 'message'],
+    cfg.MultiStrOpt("event_dispatchers", default=['database'],
                     help=_("Event dispatchers to enable"))]
 cfg.CONF.register_opts(event_opts)
 
