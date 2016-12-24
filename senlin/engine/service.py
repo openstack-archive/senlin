@@ -2212,7 +2212,7 @@ class EngineService(service.Service):
         return results
 
     @request_context2
-    def event_get2(self, context, req):
+    def event_get2(self, ctx, req):
         """Retrieve the event specified.
 
         :param ctx: An instance of the request context.
@@ -2222,7 +2222,7 @@ class EngineService(service.Service):
                  event could be found.
         """
 
-        db_event = event_obj.Event.find(context, req.identity)
+        db_event = event_obj.Event.find(ctx, req.identity)
         evt = db_event.as_dict()
         level = utils.level_from_number(evt['level'])
         evt['level'] = level
