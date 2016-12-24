@@ -156,6 +156,3 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         actual_args, _ = mock_rpc_method.call_args
         for expected_arg, actual_arg in zip(expected_args, actual_args):
             self.assertEqual(expected_arg, actual_arg)
-
-    def test_get_revision(self):
-        self._test_engine_api('get_revision', 'call')

@@ -271,10 +271,6 @@ class EngineService(service.Service):
                                    {'cred': req.cred})
         return {'cred': req.cred}
 
-    @request_context
-    def get_revision(self, context):
-        return CONF.revision['senlin_engine_revision']
-
     @request_context2
     def get_revision2(self, ctx, req):
         return CONF.revision['senlin_engine_revision']
