@@ -1541,7 +1541,7 @@ class EngineService(service.Service):
         """Retrieve the node specified.
 
         :param ctx: An instance of the request context.
-        :param req: An instance of the NodeGetRequestBody object.
+        :param req: An instance of the NodeGetRequest object.
         :return: A dictionary containing the detailed information about a node
                  or an exception of `ResourceNotFound` if no matching node
                  could be found.
