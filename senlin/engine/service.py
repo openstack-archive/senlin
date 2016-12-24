@@ -302,6 +302,22 @@ class EngineService(service.Service):
         }
 
     @request_context2
+    def profile_type_ops(self, ctx, req):
+        """List the operations supported by a profile type.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of ProfileTypeOpListRequest.
+        :return: A dictionary containing the operations supported by the
+                 profile type.
+        """
+        try:
+            pt = environment.global_env().get_profile(req.type_name)
+        except exception.ResourceNotFound as ex:
+            raise exception.BadRequest(msg=six.text_type(ex))
+
+        return {'operations': pt.get_ops()}
+
+    @request_context2
     def profile_list2(self, ctx, req):
         """List profiles matching the specified criteria.
 

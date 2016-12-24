@@ -62,7 +62,16 @@ class DummyProfile(pb.Profile):
             'third key',
         ),
     }
-    OPERATIONS = {}
+    OPERATIONS = {
+        'op1': schema.Operation(
+            'Operation 1',
+            schema={
+                'param1': schema.StringParam(
+                    'description of param1',
+                )
+            }
+        )
+    }
 
     def __init__(self, name, spec, **kwargs):
         super(DummyProfile, self).__init__(name, spec, **kwargs)
@@ -498,6 +507,23 @@ class TestProfileBase(base.SenlinTestCase):
         }
 
         actual = DummyProfile.get_schema()
+        self.assertEqual(expected, actual)
+
+    def test_get_ops(self):
+        expected = {
+            'op1': {
+                'description': 'Operation 1',
+                'parameters': {
+                    'param1': {
+                        'type': 'String',
+                        'required': False,
+                        'description': 'description of param1',
+                    }
+                }
+            },
+        }
+
+        actual = DummyProfile.get_ops()
         self.assertEqual(expected, actual)
 
     @mock.patch.object(pb.Profile, 'load')

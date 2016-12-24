@@ -80,3 +80,39 @@ class ProfileTypeTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_env.assert_called_once_with()
         x_env.get_profile.assert_called_once_with('FAKE_TYPE')
+
+    @mock.patch.object(environment, 'global_env')
+    def test_profile_type_ops(self, mock_env):
+        x_env = mock.Mock()
+        x_profile_type = mock.Mock()
+        x_profile_type.get_ops.return_value = {'foo': 'bar'}
+        x_env.get_profile.return_value = x_profile_type
+        mock_env.return_value = x_env
+
+        req = vorp.ProfileTypeOpListRequest(type_name='FAKE_TYPE')
+        ops = self.eng.profile_type_ops(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'operations': {'foo': 'bar'}}, ops)
+        mock_env.assert_called_once_with()
+        x_env.get_profile.assert_called_once_with('FAKE_TYPE')
+        x_profile_type.get_ops.assert_called_once_with()
+
+    @mock.patch.object(environment, 'global_env')
+    def test_profile_type_ops_not_found(self, mock_env):
+        x_env = mock.Mock()
+        err = exc.ResourceNotFound(type='profile_type', id='FAKE_TYPE')
+        x_env.get_profile.side_effect = err
+        mock_env.return_value = x_env
+        req = vorp.ProfileTypeOpListRequest(type_name='FAKE_TYPE')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.profile_type_ops,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual('The request is malformed: The profile_type '
+                         '(FAKE_TYPE) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+
+        mock_env.assert_called_once_with()
+        x_env.get_profile.assert_called_once_with('FAKE_TYPE')
