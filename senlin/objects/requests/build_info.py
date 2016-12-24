@@ -15,4 +15,5 @@ from senlin.objects import base
 
 @base.SenlinObjectRegistry.register
 class GetRevisionRequest(base.SenlinObject):
-    pass
+
+    fields = {}
