@@ -57,19 +57,6 @@ LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
 
-def request_context(func):
-    @functools.wraps(func)
-    def wrapped(self, ctx, *args, **kwargs):
-        if ctx is not None and not isinstance(ctx,
-                                              senlin_context.RequestContext):
-            ctx = senlin_context.RequestContext.from_dict(ctx.to_dict())
-        try:
-            return func(self, ctx, *args, **kwargs)
-        except exception.SenlinException:
-            raise oslo_messaging.rpc.dispatcher.ExpectedException()
-    return wrapped
-
-
 def request_context2(func):
     @functools.wraps(func)
     def wrapped(self, ctx, req):
