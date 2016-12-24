@@ -933,9 +933,10 @@ class EngineService(service.Service):
         for node in req.nodes:
             try:
                 db_node = node_obj.Node.find(context, node)
-                # Skip node in the same cluster already
+                # Check node status whether in ACTIVE
                 if db_node.status != consts.NS_ACTIVE:
                     bad_nodes.append(db_node.id)
+                # Check the node whether owned by any cluster
                 if db_node.cluster_id:
                     owned_nodes.append(db_node.id)
                 # check profile type matching
