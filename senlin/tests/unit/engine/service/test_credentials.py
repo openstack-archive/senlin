@@ -91,17 +91,6 @@ class CredentialTest(base.SenlinTestCase):
             self.ctx, 'fake_user_id', 'fake_project_id')
 
     @mock.patch.object(co.Credential, 'update')
-    def test_credential_update(self, mock_update):
-        x_cred = 'fake_credential'
-
-        result = self.eng.credential_update(self.ctx, x_cred)
-
-        self.assertEqual({'cred': x_cred}, result)
-        mock_update.assert_called_once_with(
-            self.ctx, 'fake_user_id', 'fake_project_id',
-            {'cred': {'openstack': {'trust': x_cred}}})
-
-    @mock.patch.object(co.Credential, 'update')
     def test_credential_update2(self, mock_update):
         x_cred = 'fake_credential'
         cred = {'openstack': {'trust': x_cred}}

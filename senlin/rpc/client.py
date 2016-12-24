@@ -74,9 +74,5 @@ class EngineClient(object):
             client = self._client
         return client.cast(ctxt, method, **kwargs)
 
-    def credential_update(self, ctxt, cred, attrs=None):
-        return self.call(ctxt, self.make_msg('credential_update', cred=cred,
-                                             attrs=attrs))
-
     def get_revision(self, ctxt):
         return self.call(ctxt, self.make_msg('get_revision'))
