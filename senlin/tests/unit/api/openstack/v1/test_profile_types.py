@@ -144,3 +144,98 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, type_name=type_name)
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_type_ops(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'ops', True)
+        type_name = 'SimpleProfile'
+        req = self._get('/profile_types/%(type)s/ops' % {'type': type_name},
+                        version='1.4')
+
+        engine_response = {
+            'operations': {
+                'Foo': {}, 'Bar': {},
+            }
+        }
+
+        mock_call.return_value = engine_response
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        response = self.controller.ops(req, type_name=type_name)
+
+        self.assertEqual(engine_response, response)
+        mock_parse.assert_called_once_with(
+            'ProfileTypeOpListRequest', req, {'type_name': type_name})
+        mock_call.assert_called_once_with(
+            req.context, 'profile_type_ops', mock.ANY)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_type_ops_with_bad_param(self, mock_call, mock_parse,
+                                             mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'ops', True)
+        type_name = 100
+        req = self._get('/profile_types/%(type)s/ops' % {'type': type_name},
+                        version='1.4')
+        mock_parse.side_effect = exc.HTTPBadRequest("bad param")
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.ops,
+                               req, type_name=type_name)
+
+        self.assertEqual("bad param", six.text_type(ex))
+        mock_parse.assert_called_once_with(
+            'ProfileTypeOpListRequest', req, {'type_name': type_name})
+        mock_call.assert_not_called()
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_type_ops_not_found(self, mock_call, mock_parse,
+                                        mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'ops', True)
+        type_name = 'BogusProfileType'
+        req = self._get('/profile_types/%(type)s/ops' % {'type': type_name},
+                        version='1.4')
+
+        error = senlin_exc.ResourceNotFound(type='profile_type', id=type_name)
+        mock_call.side_effect = shared.to_remote_error(error)
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.ops,
+                                              req, type_name=type_name)
+
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+
+        mock_parse.assert_called_once_with(
+            'ProfileTypeOpListRequest', mock.ANY, {'type_name': type_name})
+        mock_call.assert_called_once_with(
+            req.context, 'profile_type_ops', mock.ANY)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_profile_type_ops_version_mismatch(self, mock_call, mock_enforce):
+        type_name = 'fake'
+        req = self._get('/profile_types/%(type)s/ops' % {'type': type_name},
+                        version='1.1')
+
+        ex = self.assertRaises(senlin_exc.MethodVersionNotFound,
+                               self.controller.ops,
+                               req, type_name=type_name)
+
+        self.assertEqual(0, mock_call.call_count)
+        self.assertEqual('API version 1.1 is not supported on this method.',
+                         six.text_type(ex))
+
+    def test_profile_type_ops_err_denied_policy(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'ops', False)
+        type_name = 'BogusProfileType'
+        req = self._get('/profile_types/%(type)s/ops' % {'type': type_name},
+                        version='1.4')
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.ops,
+                                              req, type_name=type_name)
+        self.assertEqual(403, resp.status_int)
+        self.assertIn('403 Forbidden', six.text_type(resp))

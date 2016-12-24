@@ -33,3 +33,8 @@ it can be used by both users and developers.
 ---
 
    Added ``cluster_replace_nodes`` API.
+
+1.4
+---
+
+   Added ``profile_type_ops`` API.

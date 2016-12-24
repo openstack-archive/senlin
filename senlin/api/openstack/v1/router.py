@@ -57,6 +57,10 @@ class API(wsgi.Router):
                                "/profile-types/{type_name}",
                                action="get",
                                conditions={'method': 'GET'})
+            sub_mapper.connect("profile_type_ops",
+                               "/profile-types/{type_name}/ops",
+                               action="ops",
+                               conditions={'method': 'GET'})
 
         # Profiles
         res = wsgi.Resource(profiles.ProfileController(conf))

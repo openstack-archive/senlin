@@ -39,3 +39,12 @@ class ProfileTypeController(wsgi.Controller):
             'ProfileTypeGetRequest', req, {'type_name': type_name})
         content = self.rpc_client.call2(req.context, 'profile_type_get2', obj)
         return {'profile_type': content}
+
+    @wsgi.Controller.api_version('1.4')
+    @util.policy_enforce
+    def ops(self, req, type_name):
+        """Lists the operations supported by the specified profile type."""
+
+        obj = util.parse_request(
+            'ProfileTypeOpListRequest', req, {'type_name': type_name})
+        return self.rpc_client.call2(req.context, 'profile_type_ops', obj)
