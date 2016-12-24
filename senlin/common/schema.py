@@ -391,6 +391,12 @@ class StringParam(SchemaBase):
             return self.STRING
         return super(StringParam, self).__getitem__(key)
 
+    def validate(self, value):
+        if not isinstance(value, six.string_types):
+            raise TypeError("value is not a string")
+
+        self.validate_constraints(value)
+
 
 class Operation(SchemaBase):
     """Class for specifying operations on profiles."""
@@ -408,6 +414,25 @@ class Operation(SchemaBase):
             if self.schema is None:
                 return {}
             return dict((n, dict(s)) for n, s in self.schema.items())
+
+    def validate(self, data, version=None):
+        for k in data:
+            if k not in self.schema:
+                msg = _("Unrecognizable parameter '%s'") % k
+                raise exc.ESchema(message=msg)
+
+        for (k, s) in self.schema.items():
+            try:
+                if k in data:
+                    s.validate(data[k])
+                elif s.required:
+                    msg = _("Required parameter '%s' not provided") % k
+                    raise exc.ESchema(message=msg)
+
+                if version:
+                    s._validate_version(k, version)
+            except (TypeError, ValueError) as ex:
+                raise exc.ESchema(message=six.text_type(ex))
 
 
 class Spec(collections.Mapping):
