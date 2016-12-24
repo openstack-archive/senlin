@@ -1349,7 +1349,7 @@ class EngineService(service.Service):
 
         :param ctx: An instance of the request context.
         :param req: An instance of the ClusterCollectRequest object.
-        :return: A list containing values of attribute collected from all
+        :return: A dictionary containing values of attribute collected from all
                  nodes.
         """
         # validate 'path' string and return a parser,
