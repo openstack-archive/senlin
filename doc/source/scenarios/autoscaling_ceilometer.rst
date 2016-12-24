@@ -205,7 +205,7 @@ following command creates a threshold alarm using aodh alarm service so that:
 .. code-block:: console
 
   $ aodh alarm create \
-    -t threshold --statistic avg \
+    -t threshold --statistic avg --name cpu-high \
     -m cpu_util --threshold 70 --comparison-operator gt \
     --period 60 --evaluation-periods 1 \
     --alarm-action $ALRM_URL01 \
