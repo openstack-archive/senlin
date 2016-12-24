@@ -180,5 +180,7 @@ class Action(base.SenlinObject, base.VersionedObjectDictCompat):
             'created_at': utils.isotime(self.created_at),
             'updated_at': utils.isotime(self.updated_at),
             'data': self.data,
+            'user': self.user,
+            'project': self.project,
         }
         return action_dict

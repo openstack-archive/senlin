@@ -37,6 +37,8 @@ CLUSTER_ID = 'e1cfd82b-dc95-46ad-86e8-37864d7be1cd'
 OBJID = '571fffb8-f41c-4cbc-945c-cb2937d76f19'
 OWNER_ID = 'c7114713-ee68-409d-ba5d-0560a72a386c'
 ACTION_ID = '4c2cead2-fd74-418a-9d12-bd2d9bd7a812'
+USER_ID = '3c4d64baadcd437d8dd49054899e73dd'
+PROJECT_ID = 'cf7a6ae28dde4f46aa8fe55d318a608f'
 
 
 class DummyAction(ab.Action):
@@ -50,7 +52,7 @@ class ActionBaseTest(base.SenlinTestCase):
     def setUp(self):
         super(ActionBaseTest, self).setUp()
 
-        self.ctx = utils.dummy_context()
+        self.ctx = utils.dummy_context(project=PROJECT_ID, user_id=USER_ID)
         self.action_values = {
             'name': 'FAKE_NAME',
             'cause': 'FAKE_CAUSE',
@@ -66,6 +68,8 @@ class ActionBaseTest(base.SenlinTestCase):
             'created_at': timeutils.utcnow(True),
             'updated_at': None,
             'data': {'data_key': 'data_value'},
+            'user': USER_ID,
+            'user': PROJECT_ID,
         }
 
     def _verify_new_action(self, obj, target, action):
@@ -590,6 +594,8 @@ class ActionBaseTest(base.SenlinTestCase):
             'created_at': ts,
             'updated_at': None,
             'data': {'data_key': 'data_value'},
+            'user': USER_ID,
+            'project': PROJECT_ID,
         }
 
         res = action.to_dict()
