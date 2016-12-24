@@ -177,30 +177,6 @@ class TestContainerDockerProfile(base.SenlinTestCase):
 
         self.assertEqual(msg, ex.message)
 
-    @mock.patch.object(cluster.Cluster, 'load')
-    def test_get_host_cluster(self, mock_load):
-        cluster = mock.Mock()
-        mock_load.return_value = cluster
-        ctx = mock.Mock()
-        profile = docker_profile.DockerProfile('container', self.spec)
-        res = profile._get_host_cluster(ctx, 'host_cluster')
-        self.assertEqual(cluster, res)
-        mock_load.assert_called_once_with(ctx, cluster_id='host_cluster')
-
-    @mock.patch.object(cluster.Cluster, 'load')
-    def test_get_host_cluster_not_found(self, mock_load):
-        mock_load.side_effect = exc.ResourceNotFound(type='cluster',
-                                                     id='host_cluster')
-
-        ctx = mock.Mock()
-        profile = docker_profile.DockerProfile('container', self.spec)
-        ex = self.assertRaises(exc.InternalError,
-                               profile._get_host_cluster,
-                               ctx, 'host_cluster')
-        msg = _("The host cluster (host_cluster) could not be found.")
-
-        self.assertEqual(msg, ex.message)
-
     @mock.patch.object(node.Node, 'load')
     def test__get_host_node_found(self, mock_load):
         node = mock.Mock()
@@ -227,8 +203,8 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         msg = _('The host node (fake_node) could not be found.')
         self.assertEqual(msg, ex.message)
 
-    @mock.patch.object(docker_profile.DockerProfile, '_get_host_cluster')
-    def test_get_random_node(self, mock_cluster):
+    @mock.patch.object(cluster.Cluster, 'load')
+    def test__get_random_node(self, mock_cluster):
         node1 = mock.Mock(status='ERROR')
         node2 = mock.Mock(status='ACTIVE')
         node3 = mock.Mock(status='ACTIVE')
@@ -240,8 +216,22 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         node = profile._get_random_node(ctx, 'host_cluster')
         self.assertIn(node, active_nodes)
 
-    @mock.patch.object(docker_profile.DockerProfile, '_get_host_cluster')
-    def test_get_random_node_empty_cluster(self, mock_cluster):
+    @mock.patch.object(cluster.Cluster, 'load')
+    def test__get_random_node_cluster_not_found(self, mock_load):
+        mock_load.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='host_cluster')
+        ctx = mock.Mock()
+        profile = docker_profile.DockerProfile('container', self.spec)
+
+        ex = self.assertRaises(exc.InternalError,
+                               profile._get_random_node,
+                               ctx, 'host_cluster')
+
+        msg = _("The host cluster (host_cluster) could not be found.")
+        self.assertEqual(msg, ex.message)
+
+    @mock.patch.object(cluster.Cluster, 'load')
+    def test__get_random_node_empty_cluster(self, mock_cluster):
         cluster = mock.Mock(rt={'nodes': []})
         mock_cluster.return_value = cluster
         profile = docker_profile.DockerProfile('container', self.spec)
@@ -253,8 +243,8 @@ class TestContainerDockerProfile(base.SenlinTestCase):
 
         self.assertEqual(msg, ex.message)
 
-    @mock.patch.object(docker_profile.DockerProfile, '_get_host_cluster')
-    def test_get_random_node_no_active_nodes(self, mock_cluster):
+    @mock.patch.object(cluster.Cluster, 'load')
+    def test__get_random_node_no_active_nodes(self, mock_cluster):
         node1 = mock.Mock(status='ERROR')
         node2 = mock.Mock(status='ERROR')
         node3 = mock.Mock(status='ERROR')
