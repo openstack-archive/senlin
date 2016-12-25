@@ -73,8 +73,8 @@ class AllowedValues(BaseConstraint):
 
     def _error(self, value):
         values = ', '.join(str(v) for v in self.allowed)
-        return _('"%(value)s" must be one of the allowed values: '
-                 '%(allowed)s') % dict(value=value, allowed=values)
+        return _("'%(value)s' must be one of the allowed values: "
+                 "%(allowed)s") % dict(value=value, allowed=values)
 
     def _validate(self, value, schema=None, context=None):
         if isinstance(value, list):

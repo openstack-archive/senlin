@@ -15,6 +15,7 @@ import collections
 import mock
 import six
 
+from senlin.common import constraints
 from senlin.common import exception as exc
 from senlin.common import schema
 from senlin.tests.unit.common import base
@@ -615,6 +616,26 @@ class TestStringParam(base.SenlinTestCase):
         self.assertEqual('String', sot['type'])
         self.assertEqual(False, sot['required'])
 
+    def test_validate(self):
+        sot = schema.StringParam()
+        result = sot.validate('foo')
+        self.assertIsNone(result)
+
+    def test_validate_bad_type(self):
+        sot = schema.StringParam()
+        self.assertRaises(TypeError,
+                          sot.validate,
+                          ['123'])
+
+    def test_validate_failed_constraint(self):
+        sot = schema.StringParam(
+            constraints=[constraints.AllowedValues(('abc', 'def'))])
+
+        ex = self.assertRaises(exc.ESchema, sot.validate, '123')
+
+        self.assertEqual("'123' must be one of the allowed values: abc, def",
+                         six.text_type(ex))
+
 
 class TestOperation(base.SenlinTestCase):
 
@@ -628,6 +649,72 @@ class TestOperation(base.SenlinTestCase):
         self.assertEqual('des', sot['description'])
         self.assertEqual({'foo': {'required': False, 'type': 'String'}},
                          sot['parameters'])
+
+    def test_validate(self):
+        sot = schema.Operation('des', schema={'foo': schema.StringParam()})
+        res = sot.validate({'foo': 'bar'})
+        self.assertIsNone(res)
+
+    def test_validate_unrecognizable_param(self):
+        sot = schema.Operation('des', schema={'foo': schema.StringParam()})
+
+        ex = self.assertRaises(exc.ESchema, sot.validate,
+                               {'baar': 'baar'})
+
+        self.assertEqual("Unrecognizable parameter 'baar'", six.text_type(ex))
+
+    def test_validate_failed_type(self):
+        sot = schema.Operation('des', schema={'foo': schema.StringParam()})
+
+        ex = self.assertRaises(exc.ESchema, sot.validate,
+                               {'foo': ['baaar']})
+
+        self.assertEqual("value is not a string",
+                         six.text_type(ex))
+
+    def test_validate_failed_constraint(self):
+        sot = schema.Operation(
+            'des',
+            schema={
+                'foo': schema.StringParam(
+                    constraints=[constraints.AllowedValues(['bar'])])
+            }
+        )
+
+        ex = self.assertRaises(exc.ESchema, sot.validate,
+                               {'foo': 'baaar'})
+
+        self.assertEqual("'baaar' must be one of the allowed values: bar",
+                         six.text_type(ex))
+
+    def test_validate_failed_required(self):
+        sot = schema.Operation(
+            'des',
+            schema={
+                'foo': schema.StringParam(),
+                'bar': schema.StringParam(required=True)
+            }
+        )
+
+        ex = self.assertRaises(exc.ESchema, sot.validate,
+                               {'foo': 'baaar'})
+
+        self.assertEqual("Required parameter 'bar' not provided",
+                         six.text_type(ex))
+
+    def test_validate_failed_version(self):
+        sot = schema.Operation(
+            'des',
+            schema={
+                'foo': schema.StringParam(min_version='2.0'),
+            }
+        )
+
+        ex = self.assertRaises(exc.ESchema, sot.validate,
+                               {'foo': 'baaar'}, '1.0')
+
+        self.assertEqual("foo (min_version=2.0) is not supported by spec "
+                         "version 1.0.", six.text_type(ex))
 
 
 class TestSpec(base.SenlinTestCase):
