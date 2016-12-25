@@ -57,7 +57,7 @@ LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
 
-def request_context2(func):
+def request_context(func):
     @functools.wraps(func)
     def wrapped(self, ctx, req):
         if ctx and not isinstance(ctx, senlin_context.RequestContext):
@@ -207,7 +207,7 @@ class EngineService(service.Service):
             self.cleanup_timer.stop()
             LOG.info(_LI("Finished cleaning up dead services."))
 
-    @request_context2
+    @request_context
     def credential_create(self, ctx, req):
         """Create the credential based on the context.
 
@@ -226,7 +226,7 @@ class EngineService(service.Service):
         cred_obj.Credential.update_or_create(ctx, values)
         return {'cred': req.cred}
 
-    @request_context2
+    @request_context
     def credential_get(self, ctx, req):
         """Get the credential based on the context.
 
@@ -243,7 +243,7 @@ class EngineService(service.Service):
             return None
         return res.cred.get('openstack', None)
 
-    @request_context2
+    @request_context
     def credential_update(self, ctx, req):
         """Update a credential based on the context and provided value.
 
@@ -258,11 +258,11 @@ class EngineService(service.Service):
                                    {'cred': req.cred})
         return {'cred': req.cred}
 
-    @request_context2
+    @request_context
     def get_revision(self, ctx, req):
         return CONF.revision['senlin_engine_revision']
 
-    @request_context2
+    @request_context
     def profile_type_list2(self, ctx, req):
         """List known profile type implementations.
 
@@ -272,7 +272,7 @@ class EngineService(service.Service):
         """
         return environment.global_env().get_profile_types()
 
-    @request_context2
+    @request_context
     def profile_type_get2(self, ctx, req):
         """Get the details about a profile type.
 
@@ -288,7 +288,7 @@ class EngineService(service.Service):
             'schema': data
         }
 
-    @request_context2
+    @request_context
     def profile_type_ops(self, ctx, req):
         """List the operations supported by a profile type.
 
@@ -304,7 +304,7 @@ class EngineService(service.Service):
 
         return {'operations': pt.get_ops()}
 
-    @request_context2
+    @request_context
     def profile_list2(self, ctx, req):
         """List profiles matching the specified criteria.
 
@@ -369,7 +369,7 @@ class EngineService(service.Service):
 
         return profile
 
-    @request_context2
+    @request_context
     def profile_create2(self, ctx, req):
         """Create a profile with the given properties.
 
@@ -403,7 +403,7 @@ class EngineService(service.Service):
 
         return profile.to_dict()
 
-    @request_context2
+    @request_context
     def profile_validate2(self, ctx, req):
         """Validate a profile with the given properties.
 
@@ -417,7 +417,7 @@ class EngineService(service.Service):
 
         return profile.to_dict()
 
-    @request_context2
+    @request_context
     def profile_get2(self, ctx, req):
         """Retrieve the details about a profile.
 
@@ -429,7 +429,7 @@ class EngineService(service.Service):
         profile = profile_obj.Profile.find(ctx, req.identity)
         return profile.to_dict()
 
-    @request_context2
+    @request_context
     def profile_update2(self, ctx, req):
         """Update the properties of a given profile.
 
@@ -461,7 +461,7 @@ class EngineService(service.Service):
         LOG.info(_LI("Profile '%(id)s' is updated."), {'id': req.identity})
         return profile.to_dict()
 
-    @request_context2
+    @request_context
     def profile_delete2(self, ctx, req):
         """Delete the specified profile.
 
@@ -482,7 +482,7 @@ class EngineService(service.Service):
                                           reason=reason)
         LOG.info(_LI("Profile '%s' is deleted."), req.identity)
 
-    @request_context2
+    @request_context
     def policy_type_list2(self, ctx, req):
         """List known policy type implementations.
 
@@ -492,7 +492,7 @@ class EngineService(service.Service):
         """
         return environment.global_env().get_policy_types()
 
-    @request_context2
+    @request_context
     def policy_type_get2(self, ctx, req):
         """Get the details about a policy type.
 
@@ -508,7 +508,7 @@ class EngineService(service.Service):
             'schema': data
         }
 
-    @request_context2
+    @request_context
     def policy_list2(self, ctx, req):
         """List policies matching the specified criteria
 
@@ -570,7 +570,7 @@ class EngineService(service.Service):
 
         return policy
 
-    @request_context2
+    @request_context
     def policy_create2(self, ctx, req):
         """Create a policy with the given name and spec.
 
@@ -597,7 +597,7 @@ class EngineService(service.Service):
                  {'name': name, 'id': policy.id})
         return policy.to_dict()
 
-    @request_context2
+    @request_context
     def policy_get2(self, ctx, req):
         """Retrieve the details about a policy.
 
@@ -608,7 +608,7 @@ class EngineService(service.Service):
         policy = policy_obj.Policy.find(ctx, req.identity)
         return policy.to_dict()
 
-    @request_context2
+    @request_context
     def policy_update2(self, ctx, req):
         """Update the properties of a given policy
 
@@ -634,7 +634,7 @@ class EngineService(service.Service):
 
         return policy.to_dict()
 
-    @request_context2
+    @request_context
     def policy_delete2(self, ctx, req):
         """Delete the specified policy.
 
@@ -653,7 +653,7 @@ class EngineService(service.Service):
                                           reason=reason)
         LOG.info(_LI("Policy '%s' is deleted."), req.identity)
 
-    @request_context2
+    @request_context
     def policy_validate2(self, ctx, req):
         """Validate a policy with the given properties.
 
@@ -667,7 +667,7 @@ class EngineService(service.Service):
 
         return policy.to_dict()
 
-    @request_context2
+    @request_context
     def cluster_list2(self, ctx, req):
         """List clusters matching the specified criteria.
 
@@ -697,7 +697,7 @@ class EngineService(service.Service):
         return [c.to_dict()
                 for c in cluster_mod.Cluster.load_all(ctx, **query)]
 
-    @request_context2
+    @request_context
     def cluster_get2(self, context, req):
         """Retrieve the cluster specified.
 
@@ -721,7 +721,7 @@ class EngineService(service.Service):
         if existing >= maximum:
             raise exception.Forbidden()
 
-    @request_context2
+    @request_context
     def cluster_create2(self, ctx, req):
         """Create a cluster.
 
@@ -786,7 +786,7 @@ class EngineService(service.Service):
         result['action'] = action_id
         return result
 
-    @request_context2
+    @request_context
     def cluster_update2(self, ctx, req):
         """Update a cluster.
 
@@ -850,7 +850,7 @@ class EngineService(service.Service):
         resp['action'] = action_id
         return resp
 
-    @request_context2
+    @request_context
     def cluster_delete2(self, ctx, req):
         """Delete the specified cluster.
 
@@ -908,7 +908,7 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context2
+    @request_context
     def cluster_add_nodes2(self, context, req):
         """Add specified nodes to the specified cluster.
 
@@ -987,7 +987,7 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context2
+    @request_context
     def cluster_del_nodes2(self, ctx, req):
         """Delete specified nodes from the named cluster.
 
@@ -1136,7 +1136,7 @@ class EngineService(service.Service):
 
         return found
 
-    @request_context2
+    @request_context
     def cluster_replace_nodes2(self, ctx, req):
         """Replace the nodes in cluster with specified nodes
 
@@ -1162,7 +1162,7 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context2
+    @request_context
     def cluster_resize2(self, ctx, req):
         """Adjust cluster size parameters.
 
@@ -1253,7 +1253,7 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context2
+    @request_context
     def cluster_scale_out2(self, ctx, req):
         """Inflate the size of a cluster by then given number (optional).
 
@@ -1293,7 +1293,7 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context2
+    @request_context
     def cluster_scale_in2(self, ctx, req):
         """Deflate the size of a cluster by given number (optional).
 
@@ -1333,7 +1333,7 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context2
+    @request_context
     def cluster_collect2(self, ctx, req):
         """Collect a certain attribute across a cluster.
 
@@ -1358,7 +1358,7 @@ class EngineService(service.Service):
 
         return {'cluster_attributes': attrs}
 
-    @request_context2
+    @request_context
     def cluster_check2(self, ctx, req):
         """Check the status of a cluster.
 
@@ -1386,7 +1386,7 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context2
+    @request_context
     def cluster_recover2(self, ctx, req):
         """Recover a cluster to a healthy status.
 
@@ -1415,7 +1415,7 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context2
+    @request_context
     def node_list2(self, ctx, req):
         """List node records matching the specified criteria.
 
@@ -1453,7 +1453,7 @@ class EngineService(service.Service):
         nodes = node_mod.Node.load_all(ctx, **query)
         return [node.to_dict() for node in nodes]
 
-    @request_context2
+    @request_context
     def node_create2(self, ctx, req):
         """Create a node.
 
@@ -1526,7 +1526,7 @@ class EngineService(service.Service):
         result['action'] = action_id
         return result
 
-    @request_context2
+    @request_context
     def node_get2(self, ctx, req):
         """Retrieve the node specified.
 
@@ -1544,7 +1544,7 @@ class EngineService(service.Service):
             res['details'] = node.get_details(ctx)
         return res
 
-    @request_context2
+    @request_context
     def node_update2(self, ctx, req):
         """Update a node with new propertye values.
 
@@ -1606,7 +1606,7 @@ class EngineService(service.Service):
 
         return resp
 
-    @request_context2
+    @request_context
     def node_delete2(self, ctx, req):
         """Delete the specified node.
 
@@ -1644,7 +1644,7 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context2
+    @request_context
     def node_check2(self, ctx, req):
         """Check the health status of specified node.
 
@@ -1671,7 +1671,7 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context2
+    @request_context
     def node_recover2(self, ctx, req):
         """Recover the specified node.
 
@@ -1698,7 +1698,7 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context2
+    @request_context
     def node_op(self, ctx, req):
         """Perform an operation on the specified node.
 
@@ -1742,7 +1742,7 @@ class EngineService(service.Service):
         LOG.info(_LI("Node operation action is queued: %s."), action_id)
         return {'action': action_id}
 
-    @request_context2
+    @request_context
     def cluster_policy_list2(self, ctx, req):
         """List cluster-policy bindings given the cluster identity.
 
@@ -1767,7 +1767,7 @@ class EngineService(service.Service):
 
         return [binding.to_dict() for binding in bindings]
 
-    @request_context2
+    @request_context
     def cluster_policy_get2(self, ctx, req):
         """Get the binding record giving the cluster and policy identity.
 
@@ -1788,7 +1788,7 @@ class EngineService(service.Service):
 
         return binding.to_dict()
 
-    @request_context2
+    @request_context
     def cluster_policy_attach2(self, ctx, req):
         """Attach a policy to the specified cluster.
 
@@ -1828,7 +1828,7 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context2
+    @request_context
     def cluster_policy_detach2(self, ctx, req):
         """Detach a policy from the specified cluster.
 
@@ -1870,7 +1870,7 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context2
+    @request_context
     def cluster_policy_update2(self, ctx, req):
         """Update an existing policy binding on a cluster.
 
@@ -1915,7 +1915,7 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context2
+    @request_context
     def action_list(self, ctx, req):
         """List action records matching the specified criteria.
 
@@ -1951,7 +1951,7 @@ class EngineService(service.Service):
         actions = action_obj.Action.get_all(ctx, **query)
         return [a.to_dict() for a in actions]
 
-    @request_context2
+    @request_context
     def action_create(self, ctx, req):
         """Create an action with given details.
 
@@ -1986,7 +1986,7 @@ class EngineService(service.Service):
                  {'name': req.name, 'id': action_id})
         return {'action': action_id}
 
-    @request_context2
+    @request_context
     def action_get(self, ctx, req):
         """Retrieve the action specified.
 
@@ -2001,7 +2001,7 @@ class EngineService(service.Service):
 
         return action.to_dict()
 
-    @request_context2
+    @request_context
     def action_delete(self, ctx, req):
         """Delete the specified action object.
 
@@ -2021,7 +2021,7 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Action '%s' is deleted."), req.identity)
 
-    @request_context2
+    @request_context
     def receiver_list2(self, ctx, req):
         """List receivers matching the specified criteria.
 
@@ -2056,7 +2056,7 @@ class EngineService(service.Service):
         receivers = receiver_obj.Receiver.get_all(ctx, **query)
         return [r.to_dict() for r in receivers]
 
-    @request_context2
+    @request_context
     def receiver_create2(self, ctx, req):
         """Create a receiver.
 
@@ -2116,7 +2116,7 @@ class EngineService(service.Service):
 
         return receiver.to_dict()
 
-    @request_context2
+    @request_context
     def receiver_get2(self, ctx, req):
         """Get the details about a receiver.
 
@@ -2128,7 +2128,7 @@ class EngineService(service.Service):
         receiver = receiver_obj.Receiver.find(ctx, req.identity)
         return receiver.to_dict()
 
-    @request_context2
+    @request_context
     def receiver_delete2(self, ctx, req):
         """Delete the specified receiver.
 
@@ -2142,7 +2142,7 @@ class EngineService(service.Service):
         receiver_mod.Receiver.delete(ctx, db_receiver.id)
         LOG.info(_LI("Receiver %s is deleted."), req.identity)
 
-    @request_context2
+    @request_context
     def receiver_notify2(self, ctx, req):
         """Handle notification to specified receiver.
 
@@ -2165,7 +2165,7 @@ class EngineService(service.Service):
                                               project_safe=True)
         receiver.notify(ctx)
 
-    @request_context2
+    @request_context
     def webhook_trigger2(self, ctx, req):
         """trigger the webhook.
 
@@ -2204,7 +2204,7 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
-    @request_context2
+    @request_context
     def event_list2(self, ctx, req):
         """List event records matching the specified criteria.
 
@@ -2258,7 +2258,7 @@ class EngineService(service.Service):
 
         return results
 
-    @request_context2
+    @request_context
     def event_get2(self, ctx, req):
         """Retrieve the event specified.
 
