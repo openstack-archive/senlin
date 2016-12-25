@@ -61,7 +61,6 @@ class DockerProfile(base.Profile):
             _('The port number used to connect to docker daemon.'),
             default=2375
         ),
-        # TODO(anyone): Only one of the following properties can be specified.
         HOST_NODE: schema.String(
             _('The node on which container will be launched.')
         ),

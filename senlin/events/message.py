@@ -60,7 +60,6 @@ class MessageEvent(base.EventBackend):
         :param action: An action object for the current operation.
         :param dict kwargs: Other keyword arguments for the operation.
         """
-        # TODO(Qiming): Add filter about levels that should not be logged
         ctx = action.context
         entity = action.entity
         etype = cls._check_entity(entity)
