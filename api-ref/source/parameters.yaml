@@ -834,6 +834,14 @@ oname:
   description: |
     The name of an object associated with the event.
 
+operations:
+  type: object
+  in: body
+  required: True
+  description: |
+    A dictionary containing the description of operations (and parameters)
+    supported by a profile type.
+
 otype:
   type: string
   in: body

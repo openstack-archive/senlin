@@ -90,3 +90,49 @@ Response Example
 
 .. literalinclude:: samples/profile-type-show-response.json
    :language: javascript
+
+
+List profile type operations
+============================
+
+.. rest_method::  GET /v1/profile-types/{profile_type}/ops
+
+  - min_version: 1.4
+
+List operations and parameters supported by a profile type.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 403
+   - 404
+   - 503
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - profile_type: profile_type_url
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - X-OpenStack-Request-Id: request_id
+  - operations: operations
+
+Response Example
+----------------
+
+.. literalinclude:: samples/profile-type-ops-response.json
+   :language: javascript
