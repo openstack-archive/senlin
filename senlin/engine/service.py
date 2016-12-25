@@ -1869,7 +1869,7 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context2
-    def action_list2(self, ctx, req):
+    def action_list(self, ctx, req):
         """List action records matching the specified criteria.
 
         :param ctx: An instance of the request context.
@@ -1905,7 +1905,7 @@ class EngineService(service.Service):
         return [a.to_dict() for a in actions]
 
     @request_context2
-    def action_create2(self, ctx, req):
+    def action_create(self, ctx, req):
         """Create an action with given details.
 
         :param ctx: An instance of the request context.
@@ -1940,7 +1940,7 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context2
-    def action_get2(self, ctx, req):
+    def action_get(self, ctx, req):
         """Retrieve the action specified.
 
         :param ctx: An instance of the request context.
@@ -1955,7 +1955,7 @@ class EngineService(service.Service):
         return action.to_dict()
 
     @request_context2
-    def action_delete2(self, ctx, req):
+    def action_delete(self, ctx, req):
         """Delete the specified action object.
 
         :param ctx: An instance of the request context.
