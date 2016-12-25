@@ -686,3 +686,55 @@ class TestNode(base.SenlinTestCase):
         res = node.do_recover(self.context, **params)
 
         self.assertFalse(res)
+
+    @mock.patch.object(nodem.Node, 'set_status')
+    def test_node_operation(self, mock_set_status):
+        node = nodem.Node('node1', PROFILE_ID, '')
+        node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
+        x_profile = mock.Mock()
+        x_profile.handle_dance = mock.Mock(return_value=True)
+        node.rt['profile'] = x_profile
+
+        inputs = {'operation': 'dance', 'params': {'style': 'tango'}}
+        res = node.do_operation(self.context, **inputs)
+
+        self.assertTrue(res)
+        mock_set_status.assert_has_calls([
+            mock.call(self.context, consts.NS_OPERATING,
+                      reason="Operation 'dance' in progress"),
+            mock.call(self.context, consts.NS_ACTIVE,
+                      reason="Operation 'dance' succeeded")
+        ])
+        x_profile.handle_dance.assert_called_once_with(
+            self.context, node, style='tango')
+
+    def test_node_operation_no_physical_id(self):
+        node = nodem.Node('node1', PROFILE_ID, None)
+        inputs = {'operation': 'dance', 'params': {'style': 'tango'}}
+
+        res = node.do_operation(self.context, **inputs)
+
+        self.assertFalse(res)
+
+    @mock.patch.object(nodem.Node, 'set_status')
+    def test_node_operation_failed_op(self, mock_set_status):
+        node = nodem.Node('node1', PROFILE_ID, '')
+        node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
+        x_profile = mock.Mock()
+        err = exception.EResourceOperation(
+            op='dance', type='container', id='test_id', message='Boom')
+        x_profile.handle_dance = mock.Mock(side_effect=err)
+        node.rt['profile'] = x_profile
+
+        inputs = {'operation': 'dance', 'params': {'style': 'tango'}}
+        res = node.do_operation(self.context, **inputs)
+
+        self.assertFalse(res)
+        mock_set_status.assert_has_calls([
+            mock.call(self.context, consts.NS_OPERATING,
+                      reason="Operation 'dance' in progress"),
+            mock.call(self.context, consts.NS_ERROR,
+                      reason="Failed in dance container test_id: Boom.")
+        ])
+        x_profile.handle_dance.assert_called_once_with(
+            self.context, node, style='tango')

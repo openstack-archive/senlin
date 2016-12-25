@@ -394,3 +394,30 @@ class Node(object):
                         reason=_('Recover succeeded'), **params)
 
         return True
+
+    def do_operation(self, context, **inputs):
+        """Perform an operation on a node.
+
+        :param context: The request context.
+        :param dict inputs: The operation and parameters if any.
+        :returns: A boolean indicating whether the operation was a success.
+        """
+        if not self.physical_id:
+            return False
+
+        op = inputs['operation']
+        params = inputs.get('params', {})
+        self.set_status(context, consts.NS_OPERATING,
+                        reason=_("Operation '%s' in progress") % op)
+
+        try:
+            profile = self.rt['profile']
+            method = getattr(profile, 'handle_' + op)
+            method(context, self, **params)
+        except exc.EResourceOperation as ex:
+            self.set_status(context, consts.NS_ERROR, reason=six.text_type(ex))
+            return False
+
+        self.set_status(context, consts.NS_ACTIVE,
+                        reason=_("Operation '%s' succeeded") % op)
+        return True
