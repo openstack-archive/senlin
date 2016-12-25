@@ -90,11 +90,11 @@ class SenlinPlugin(senlin_utils.SenlinScenario):
         res = self.admin_clients("senlin").cluster_scale_in(cluster.id, count)
         action = self._get_action(res["action"])
         utils.wait_for_status(
-          action,
-          ready_statuses=["SUCCEEDED"],
-          failure_statuses=["FAILED"],
-          update_resource=self._get_action,
-          timeout=senlin_utils.CONF.benchmark.senlin_action_timeout)
+            action,
+            ready_statuses=["SUCCEEDED"],
+            failure_statuses=["FAILED"],
+            update_resource=self._get_action,
+            timeout=senlin_utils.CONF.benchmark.senlin_action_timeout)
 
     @validation.required_openstack(admin=True)
     @validation.required_services(consts.Service.SENLIN)
