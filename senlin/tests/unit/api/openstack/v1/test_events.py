@@ -73,7 +73,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
             {
                 'project_safe': True
             })
-        mock_call.assert_called_once_with(req.context, 'event_list2', obj)
+        mock_call.assert_called_once_with(req.context, 'event_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -114,7 +114,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'oname': ['mynode1']
             })
         mock_call.assert_called_once_with(req.context,
-                                          'event_list2', obj)
+                                          'event_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -190,7 +190,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('Forbidden', resp.json['error']['type'])
         mock_parse.assert_called_once_with(
             "EventListRequest", mock.ANY, {'project_safe': False})
-        mock_call.assert_called_once_with(req.context, 'event_list2', obj)
+        mock_call.assert_called_once_with(req.context, 'event_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -209,7 +209,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual([], resp['events'])
         mock_parse.assert_called_once_with(
             'EventListRequest', req, {'project_safe': True})
-        mock_call.assert_called_once_with(req.context, 'event_list2', obj)
+        mock_call.assert_called_once_with(req.context, 'event_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -269,7 +269,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'EventGetRequest', req, {'identity': event_id})
         mock_call.assert_called_once_with(
-            req.context, 'event_get2', mock.ANY)
+            req.context, 'event_get', mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -291,7 +291,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'EventGetRequest', mock.ANY, {'identity': event_id})
         mock_call.assert_called_once_with(
-            req.context, 'event_get2', mock.ANY)
+            req.context, 'event_get', mock.ANY)
 
     def test_event_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)
