@@ -256,7 +256,7 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual('ACTIVE', node.status)
         self.assertEqual('Creation succeeded', node.status_reason)
         self.assertIsNotNone(node.created_at)
-        self.assertIsNone(node.updated_at)
+        self.assertIsNotNone(node.updated_at)
 
         # update
         node.set_status(self.context, consts.NS_UPDATING,
@@ -264,7 +264,6 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual('UPDATING', node.status)
         self.assertEqual('Update in progress', node.status_reason)
         self.assertIsNotNone(node.created_at)
-        self.assertIsNone(node.updated_at)
 
         node.set_status(self.context, consts.NS_ACTIVE,
                         reason='Update succeeded')
@@ -465,13 +464,16 @@ class TestNode(base.SenlinTestCase):
         self.assertFalse(res)
         self.assertNotEqual(new_id, node.profile_id)
         mock_db.assert_has_calls([
-            mock.call(self.context, node.id,
-                      {'status': 'UPDATING',
-                       'status_reason': 'Update in progress'}),
-            mock.call(self.context, node.id,
-                      {'status': 'ERROR',
-                       'status_reason': 'Failed in updating PROFILE ID: '
-                                        'reason.'})
+            mock.call(
+                self.context, node.id,
+                {'status': 'UPDATING', 'status_reason': 'Update in progress'}
+            ),
+            mock.call(
+                self.context, node.id,
+                {'status': 'ERROR',
+                 'status_reason': 'Failed in updating PROFILE ID: reason.',
+                 'updated_at': mock.ANY}
+            )
         ])
         self.assertEqual(1, mock_update.call_count)
 
