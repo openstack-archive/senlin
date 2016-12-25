@@ -133,9 +133,9 @@ class Json(fields.FieldType):
         if isinstance(value, six.string_types):
             try:
                 return jsonutils.loads(value)
-            except Exception:
-                # TODO(Anyone): emit a useful message here.
-                raise ValueError
+            except ValueError:
+                msg = _("The value (%s) is not a valid JSON.") % value
+                raise ValueError(msg)
         return value
 
     def from_primitive(self, obj, attr, value):
