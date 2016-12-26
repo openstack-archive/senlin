@@ -30,20 +30,20 @@ class ProfileTypeTest(base.SenlinTestCase):
         self.eng = service.EngineService('host-a', 'topic-a')
 
     @mock.patch.object(environment, 'global_env')
-    def test_profile_type_list2(self, mock_env):
+    def test_profile_type_list(self, mock_env):
         x_env = mock.Mock()
         x_env.get_profile_types.return_value = [{'foo': 'bar'}]
         mock_env.return_value = x_env
 
         req = vorp.ProfileTypeListRequest()
-        types = self.eng.profile_type_list2(self.ctx, req.obj_to_primitive())
+        types = self.eng.profile_type_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([{'foo': 'bar'}], types)
         mock_env.assert_called_once_with()
         x_env.get_profile_types.assert_called_once_with()
 
     @mock.patch.object(environment, 'global_env')
-    def test_profile_type_get2(self, mock_env):
+    def test_profile_type_get(self, mock_env):
         x_env = mock.Mock()
         x_profile_type = mock.Mock()
         x_profile_type.get_schema.return_value = {'foo': 'bar'}
@@ -51,7 +51,7 @@ class ProfileTypeTest(base.SenlinTestCase):
         mock_env.return_value = x_env
 
         req = vorp.ProfileTypeGetRequest(type_name='FAKE_TYPE')
-        result = self.eng.profile_type_get2(self.ctx, req.obj_to_primitive())
+        result = self.eng.profile_type_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual(
             {
@@ -64,7 +64,7 @@ class ProfileTypeTest(base.SenlinTestCase):
         x_profile_type.get_schema.assert_called_once_with()
 
     @mock.patch.object(environment, 'global_env')
-    def test_profile_type_get2_nonexist(self, mock_env):
+    def test_profile_type_get_nonexist(self, mock_env):
         x_env = mock.Mock()
         err = exc.ResourceNotFound(type='profile_type', id='FAKE_TYPE')
         x_env.get_profile.side_effect = err
@@ -72,7 +72,7 @@ class ProfileTypeTest(base.SenlinTestCase):
 
         req = vorp.ProfileTypeGetRequest(type_name='FAKE_TYPE')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_type_get2,
+                               self.eng.profile_type_get,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])

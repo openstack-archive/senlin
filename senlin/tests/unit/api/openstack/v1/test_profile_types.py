@@ -53,7 +53,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(engine_response, response['profile_types'])
         mock_parse.assert_called_once_with('ProfileTypeListRequest', req, {})
         mock_call.assert_called_once_with(
-            req.context, 'profile_type_list2', mock.ANY)
+            req.context, 'profile_type_list', mock.ANY)
 
     def test_profile_type_list_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
@@ -90,7 +90,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ProfileTypeGetRequest', req, {'type_name': type_name})
         mock_call.assert_called_once_with(
-            req.context, 'profile_type_get2', mock.ANY)
+            req.context, 'profile_type_get', mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -132,7 +132,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ProfileTypeGetRequest', mock.ANY, {'type_name': type_name})
         mock_call.assert_called_once_with(
-            req.context, 'profile_type_get2', mock.ANY)
+            req.context, 'profile_type_get', mock.ANY)
 
     def test_profile_type_get_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)
