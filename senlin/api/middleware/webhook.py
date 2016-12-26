@@ -58,7 +58,7 @@ class WebhookMiddleware(wsgi.Middleware):
             raise exc.HTTPBadRequest(six.text_type(ex))
         except jsonschema.exceptions.ValidationError as ex:
             raise exc.HTTPBadRequest(six.text_type(ex.message))
-        receiver = rpcc.call2(dbctx, 'receiver_get2', obj)
+        receiver = rpcc.call2(dbctx, 'receiver_get', obj)
 
         svc_ctx = context.get_service_context()
         kwargs = {

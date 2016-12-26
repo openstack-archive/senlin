@@ -2022,7 +2022,7 @@ class EngineService(service.Service):
         LOG.info(_LI("Action '%s' is deleted."), req.identity)
 
     @request_context
-    def receiver_list2(self, ctx, req):
+    def receiver_list(self, ctx, req):
         """List receivers matching the specified criteria.
 
         :param ctx: An instance of the request context.
@@ -2057,7 +2057,7 @@ class EngineService(service.Service):
         return [r.to_dict() for r in receivers]
 
     @request_context
-    def receiver_create2(self, ctx, req):
+    def receiver_create(self, ctx, req):
         """Create a receiver.
 
         :param ctx: An instance of the request context.
@@ -2117,7 +2117,7 @@ class EngineService(service.Service):
         return receiver.to_dict()
 
     @request_context
-    def receiver_get2(self, ctx, req):
+    def receiver_get(self, ctx, req):
         """Get the details about a receiver.
 
         :param ctx: An instance of the request context.
@@ -2129,7 +2129,7 @@ class EngineService(service.Service):
         return receiver.to_dict()
 
     @request_context
-    def receiver_delete2(self, ctx, req):
+    def receiver_delete(self, ctx, req):
         """Delete the specified receiver.
 
         :param ctx: An instance of the request context.
@@ -2143,7 +2143,7 @@ class EngineService(service.Service):
         LOG.info(_LI("Receiver %s is deleted."), req.identity)
 
     @request_context
-    def receiver_notify2(self, ctx, req):
+    def receiver_notify(self, ctx, req):
         """Handle notification to specified receiver.
 
         :param ctx: An instance of the request context.
