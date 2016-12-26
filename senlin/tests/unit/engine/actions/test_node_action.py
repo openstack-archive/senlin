@@ -510,6 +510,36 @@ class NodeActionTest(base.SenlinTestCase):
         node.do_recover.assert_called_once_with(action.context,
                                                 operation=['SWIM', 'DANCE'])
 
+    def test_do_operation_success(self, mock_load):
+        node = mock.Mock(id='NID')
+        mock_load.return_value = node
+        action = node_action.NodeAction(node.id, 'ACTION', self.ctx)
+        action.inputs = {'operation': 'dance', 'params': {}}
+        node.do_operation = mock.Mock(return_value=True)
+
+        res_code, res_msg = action.do_operation()
+
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual("Node operation 'dance' succeeded.", res_msg)
+        node.do_operation.assert_called_once_with(action.context,
+                                                  operation='dance',
+                                                  params={})
+
+    def test_do_operation_failed(self, mock_load):
+        node = mock.Mock(id='NID')
+        mock_load.return_value = node
+        action = node_action.NodeAction(node.id, 'ACTION', self.ctx)
+        action.inputs = {'operation': 'dance', 'params': {}}
+        node.do_operation = mock.Mock(return_value=False)
+
+        res_code, res_msg = action.do_operation()
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual("Node operation 'dance' failed.", res_msg)
+        node.do_operation.assert_called_once_with(action.context,
+                                                  operation='dance',
+                                                  params={})
+
     def test_execute(self, mock_load):
         node = mock.Mock()
         node.id = 'NID'

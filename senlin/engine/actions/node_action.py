@@ -192,6 +192,21 @@ class NodeAction(base.Action):
         else:
             return self.RES_ERROR, _('Node recover failed.')
 
+    @profiler.trace('NodeAction.do_operation', hide_args=False)
+    def do_operation(self):
+        """Handler for the NODE_OPERATION action.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
+        operation = self.inputs['operation']
+        res = self.entity.do_operation(self.context, **self.inputs)
+        if res:
+            return self.RES_OK, _("Node operation '%s' succeeded."
+                                  ) % operation
+        else:
+            return self.RES_ERROR, _("Node operation '%s' failed."
+                                     ) % operation
+
     def _execute(self):
         """Private function that finds out the handler and execute it."""
 
