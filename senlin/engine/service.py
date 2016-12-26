@@ -259,7 +259,7 @@ class EngineService(service.Service):
         return {'cred': req.cred}
 
     @request_context2
-    def get_revision2(self, ctx, req):
+    def get_revision(self, ctx, req):
         return CONF.revision['senlin_engine_revision']
 
     @request_context2

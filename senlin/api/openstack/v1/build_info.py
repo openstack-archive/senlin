@@ -31,7 +31,7 @@ class BuildInfoController(wsgi.Controller):
     @util.policy_enforce
     def build_info(self, req):
         obj = util.parse_request('GetRevisionRequest', req, {})
-        engine_revision = self.rpc_client.call2(req.context, 'get_revision2',
+        engine_revision = self.rpc_client.call2(req.context, 'get_revision',
                                                 obj)
         build_info = {
             'api': {'revision': cfg.CONF.revision['senlin_api_revision']},
