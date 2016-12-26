@@ -1416,7 +1416,7 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context
-    def node_list2(self, ctx, req):
+    def node_list(self, ctx, req):
         """List node records matching the specified criteria.
 
         :param ctx: An instance of the request context.
@@ -1454,7 +1454,7 @@ class EngineService(service.Service):
         return [node.to_dict() for node in nodes]
 
     @request_context
-    def node_create2(self, ctx, req):
+    def node_create(self, ctx, req):
         """Create a node.
 
         :param ctx: An instance of the request context.
@@ -1527,7 +1527,7 @@ class EngineService(service.Service):
         return result
 
     @request_context
-    def node_get2(self, ctx, req):
+    def node_get(self, ctx, req):
         """Retrieve the node specified.
 
         :param ctx: An instance of the request context.
@@ -1545,7 +1545,7 @@ class EngineService(service.Service):
         return res
 
     @request_context
-    def node_update2(self, ctx, req):
+    def node_update(self, ctx, req):
         """Update a node with new propertye values.
 
         :param ctx: An instance of the request context.
@@ -1607,7 +1607,7 @@ class EngineService(service.Service):
         return resp
 
     @request_context
-    def node_delete2(self, ctx, req):
+    def node_delete(self, ctx, req):
         """Delete the specified node.
 
         :param ctx: An instance of the request context.
@@ -1645,7 +1645,7 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context
-    def node_check2(self, ctx, req):
+    def node_check(self, ctx, req):
         """Check the health status of specified node.
 
         :param ctx: An instance of the request context.
@@ -1672,7 +1672,7 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context
-    def node_recover2(self, ctx, req):
+    def node_recover(self, ctx, req):
         """Recover the specified node.
 
         :param ctx: An instance of the request context.

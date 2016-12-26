@@ -54,14 +54,14 @@ class NodeController(wsgi.Controller):
         params['project_safe'] = project_safe
 
         obj = util.parse_request('NodeListRequest', req, params)
-        nodes = self.rpc_client.call2(req.context, 'node_list2', obj)
+        nodes = self.rpc_client.call2(req.context, 'node_list', obj)
         return {'nodes': nodes}
 
     @util.policy_enforce
     def create(self, req, body):
         """Create a new node."""
         obj = util.parse_request('NodeCreateRequest', req, body, 'node')
-        node = self.rpc_client.call2(req.context, 'node_create2',
+        node = self.rpc_client.call2(req.context, 'node_create',
                                      obj.node)
         action_id = node.pop('action')
         result = {
@@ -79,7 +79,7 @@ class NodeController(wsgi.Controller):
                 key, req.params[key])
 
         obj = util.parse_request('NodeGetRequest', req, params)
-        node = self.rpc_client.call2(req.context, 'node_get2', obj)
+        node = self.rpc_client.call2(req.context, 'node_get', obj)
         return {'node': node}
 
     @util.policy_enforce
@@ -92,7 +92,7 @@ class NodeController(wsgi.Controller):
         params['identity'] = node_id
 
         obj = util.parse_request('NodeUpdateRequest', req, params)
-        node = self.rpc_client.call2(req.context, 'node_update2', obj)
+        node = self.rpc_client.call2(req.context, 'node_update', obj)
 
         action_id = node.pop('action')
         result = {
@@ -106,7 +106,7 @@ class NodeController(wsgi.Controller):
         params = {'identity': node_id}
 
         obj = util.parse_request('NodeDeleteRequest', req, params)
-        res = self.rpc_client.call2(req.context, 'node_delete2', obj)
+        res = self.rpc_client.call2(req.context, 'node_delete', obj)
         action_id = res.pop('action')
         result = {'location': '/actions/%s' % action_id}
         return result
@@ -148,7 +148,7 @@ class NodeController(wsgi.Controller):
         }
 
         obj = util.parse_request('NodeCheckRequest', req, kwargs)
-        res = self.rpc_client.call2(req.context, 'node_check2', obj)
+        res = self.rpc_client.call2(req.context, 'node_check', obj)
 
         return res
 
@@ -163,6 +163,6 @@ class NodeController(wsgi.Controller):
         }
 
         obj = util.parse_request('NodeRecoverRequest', req, kwargs)
-        res = self.rpc_client.call2(req.context, 'node_recover2', obj)
+        res = self.rpc_client.call2(req.context, 'node_recover', obj)
 
         return res
