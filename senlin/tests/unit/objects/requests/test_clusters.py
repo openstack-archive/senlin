@@ -285,10 +285,20 @@ class TestClusterAddNodes(test_base.SenlinTestCase):
 class TestClusterDelNodes(test_base.SenlinTestCase):
 
     def test_init(self):
-        sot = clusters.ClusterDelNodesRequest(identity='foo', nodes=['abc'])
+        sot = clusters.ClusterDelNodesRequest(identity='foo', nodes=['abc'],
+                                              destroy_after_deletion=True)
 
         self.assertEqual('foo', sot.identity)
         self.assertEqual(['abc'], sot.nodes)
+        self.assertTrue(sot.destroy_after_deletion)
+
+    def test_init_without_destroy(self):
+        sot = clusters.ClusterDelNodesRequest(identity='foo', nodes=['abc'],
+                                              destroy_after_deletion=False)
+
+        self.assertEqual('foo', sot.identity)
+        self.assertEqual(['abc'], sot.nodes)
+        self.assertFalse(sot.destroy_after_deletion)
 
     def test_init_failed(self):
         ex = self.assertRaises(ValueError,
