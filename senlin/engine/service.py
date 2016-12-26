@@ -1696,6 +1696,50 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context2
+    def node_op(self, ctx, req):
+        """Perform an operation on the specified node.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the NodeOperationRequest object.
+        :return: A dictionary containing the ID of the action triggered by the
+                 recover request.
+        """
+        LOG.info(_LI("Performing operation '%(o)s' on node '%(n)s'."),
+                 {'o': req.operation, 'n': req.identity})
+
+        db_node = node_obj.Node.find(ctx, req.identity)
+        node = node_mod.Node.load(ctx, db_node=db_node)
+        profile = node.rt['profile']
+        if req.operation not in profile.OPERATIONS:
+            msg = _("The requested operation '%(o)s' is not supported by the "
+                    "profile type '%(t)s'."
+                    ) % {'o': req.operation, 't': profile.type}
+            raise exception.BadRequest(msg=msg)
+
+        params = {}
+        if req.obj_attr_is_set('params') and req.params:
+            params = req.params
+            try:
+                profile.OPERATIONS[req.operation].validate(req.params)
+            except exception.ESchema as ex:
+                raise exception.BadRequest(msg=six.text_type(ex))
+
+        kwargs = {
+            'name': 'node_%s_%s' % (req.operation, db_node.id[:8]),
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+            'inputs': {
+                'operation': req.operation,
+                'params': params
+            }
+        }
+        action_id = action_mod.Action.create(ctx, db_node.id,
+                                             consts.NODE_OPERATION, **kwargs)
+        dispatcher.start_action()
+        LOG.info(_LI("Node operation action is queued: %s."), action_id)
+        return {'action': action_id}
+
+    @request_context2
     def cluster_policy_list2(self, ctx, req):
         """List cluster-policy bindings given the cluster identity.
 

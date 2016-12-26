@@ -705,3 +705,99 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual('The node (Bogus) could not be found.',
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(action_mod.Action, 'create')
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(no.Node, 'find')
+    def test_node_op(self, mock_find, mock_node, mock_action, mock_start):
+        x_db_node = mock.Mock(id='12345678AB')
+        mock_find.return_value = x_db_node
+        x_schema = mock.Mock()
+        x_profile = mock.Mock(OPERATIONS={'dance': x_schema})
+        x_node = mock.Mock()
+        x_node.rt = {'profile': x_profile}
+        mock_node.return_value = x_node
+        mock_action.return_value = 'ACTION_ID'
+        params = {'style': 'tango'}
+        req = orno.NodeOperationRequest(identity='FAKE_NODE',
+                                        operation='dance',
+                                        params=params)
+
+        result = self.eng.node_op(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
+        mock_node.assert_called_once_with(self.ctx, db_node=x_db_node)
+        x_schema.validate.assert_called_once_with({'style': 'tango'})
+        mock_action.assert_called_once_with(
+            self.ctx, '12345678AB', consts.NODE_OPERATION,
+            name='node_dance_12345678',
+            cause=action_mod.CAUSE_RPC,
+            status=action_mod.Action.READY,
+            inputs={'operation': 'dance', 'params': {'style': 'tango'}})
+        mock_start.assert_called_once_with()
+
+    @mock.patch.object(no.Node, 'find')
+    def test_node_op_node_not_found(self, mock_find):
+        mock_find.side_effect = exc.ResourceNotFound(type='node', id='Bogus')
+
+        req = orno.NodeOperationRequest(identity='Bogus', operation='dance',
+                                        params={})
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_op,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual('The node (Bogus) could not be found.',
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(no.Node, 'find')
+    def test_node_op_unsupported_operation(self, mock_find, mock_node):
+        x_db_node = mock.Mock(id='12345678AB')
+        mock_find.return_value = x_db_node
+        x_schema = mock.Mock()
+        x_profile = mock.Mock(OPERATIONS={'dance': x_schema}, type='cow')
+        x_node = mock.Mock()
+        x_node.rt = {'profile': x_profile}
+        mock_node.return_value = x_node
+
+        req = orno.NodeOperationRequest(identity='node1', operation='swim',
+                                        params={})
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_op,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: The requested operation "
+                         "'swim' is not supported by the profile type 'cow'.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'node1')
+        mock_node.assert_called_once_with(self.ctx, db_node=x_db_node)
+
+    @mock.patch.object(node_mod.Node, 'load')
+    @mock.patch.object(no.Node, 'find')
+    def test_node_op_bad_parameters(self, mock_find, mock_node):
+        x_db_node = mock.Mock(id='12345678AB')
+        mock_find.return_value = x_db_node
+        x_schema = mock.Mock()
+        x_schema.validate.side_effect = exc.ESchema(message='Boom')
+        x_profile = mock.Mock(OPERATIONS={'dance': x_schema})
+        x_node = mock.Mock()
+        x_node.rt = {'profile': x_profile}
+        mock_node.return_value = x_node
+
+        req = orno.NodeOperationRequest(identity='node1', operation='dance',
+                                        params={'style': 'tango'})
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_op,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The request is malformed: Boom.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'node1')
+        mock_node.assert_called_once_with(self.ctx, db_node=x_db_node)
+        x_schema.validate.assert_called_once_with({'style': 'tango'})
