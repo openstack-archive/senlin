@@ -542,7 +542,7 @@ class EngineService(service.Service):
 
         :param context: An instance of the request context.
         :param spec: A dictionary containing the spec for the policy.
-        :param name: The name for the policy to be created.
+        :param name: The name of the policy to be validated.
         :param validate_props: Whether to validate the value of property.
         :return: Validated policy object.
         """
