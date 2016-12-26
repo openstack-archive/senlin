@@ -42,6 +42,29 @@ level value of the event:
   serious problems encountered by the engine. The engine service may have
   run into some bugs. User intervention is required to do a recovery.
 
+Senlin provides an open architecture for event dispatching. Two of the
+built-in dispatchers are ``database`` and ``message``. The ``database``
+dispatcher dumps the events into database tables and it is enabled by default.
+The ``message`` dispatcher converts the event objects into versioned event
+notifications and published on the global message queue. This dispatcher is
+by default disabled. To enable it, you can add the following line to the
+Senlin configuration file and then restart the senlin engine::
+
+ dispatchers = message
+
+Note that unprocessed event notifications which are not associated with a
+TTL (time to live) value by default will remain queued at the message bus,
+please make sure the Senlin event notifications will be subscribed and
+processed by some services before enabling the ``message`` dispatcher.
+
+Since the event dispatchers are designed as plug-ins, you can develop your own
+event dispatchers and have senlin engine load them on startup. For more
+details on developing and plugging in your own event dispatchers, please refer
+to the :doc:`../developer/plugin_guide` document.
+
+The following sections are about examining events when using the ``database``
+dispatcher which creates database records when events happen.
+
 
 Listing Events
 ~~~~~~~~~~~~~~

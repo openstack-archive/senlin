@@ -26,3 +26,4 @@ describe how to develop and plug your own profile types and/or policy types.
 
    policy_type
    profile_type
+   event_dispatcher

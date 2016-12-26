@@ -43,6 +43,11 @@ This section contains the glossary for the Senlin service.
      The :term:`Action` objects are stored into database for execution. These
      actions may have dependencies among them.
 
+   Dispatcher
+     A dispatcher is a processor that takes a Senlin :term:`Action` as input
+     and then converts it into a desired format for storage or further
+     processing.
+
    Driver
      A driver is a Senlin internal module that enables Senlin :term:`Engine` to
      interact with other :term:`OpenStack` services. The interactions here are
