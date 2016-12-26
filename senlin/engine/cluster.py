@@ -307,6 +307,16 @@ class Cluster(object):
                         _('Recovery in progress'))
         return True
 
+    def do_operation(self, context, **kwargs):
+        """Additional logic at the beginning of cluster recovering process.
+
+        Set cluster status to OPERATING.
+        """
+        operation = kwargs.get("operation", "unknown")
+        self.set_status(context, consts.CS_OPERATING,
+                        _("Operation %s in progress") % operation)
+        return True
+
     def attach_policy(self, ctx, policy_id, values):
         """Attach policy object to the cluster.
 

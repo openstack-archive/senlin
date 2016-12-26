@@ -446,6 +446,16 @@ class TestCluster(base.SenlinTestCase):
                                             'Recovery in progress')
         self.assertTrue(res)
 
+    def test_do_operation(self):
+        cluster = cm.Cluster('test-cluster', 0, PROFILE_ID)
+        mock_status = self.patchobject(cluster, 'set_status')
+
+        res = cluster.do_operation(self.context, operation='dance')
+
+        mock_status.assert_called_once_with(self.context, consts.CS_OPERATING,
+                                            'Operation dance in progress')
+        self.assertTrue(res)
+
     def test_nodes_property(self):
         cluster = cm.Cluster('test-cluster', 0, PROFILE_ID)
         self.assertEqual([], cluster.nodes)
