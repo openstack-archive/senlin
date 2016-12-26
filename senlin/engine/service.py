@@ -208,7 +208,7 @@ class EngineService(service.Service):
             LOG.info(_LI("Finished cleaning up dead services."))
 
     @request_context2
-    def credential_create2(self, ctx, req):
+    def credential_create(self, ctx, req):
         """Create the credential based on the context.
 
         We may add more parameters in future to the query parameter, for
@@ -227,7 +227,7 @@ class EngineService(service.Service):
         return {'cred': req.cred}
 
     @request_context2
-    def credential_get2(self, ctx, req):
+    def credential_get(self, ctx, req):
         """Get the credential based on the context.
 
         We may add more parameters in future to the req.query, for
@@ -244,7 +244,7 @@ class EngineService(service.Service):
         return res.cred.get('openstack', None)
 
     @request_context2
-    def credential_update2(self, ctx, req):
+    def credential_update(self, ctx, req):
         """Update a credential based on the context and provided value.
 
         We may add more parameters in future to the query parameter, for
