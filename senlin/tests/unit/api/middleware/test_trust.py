@@ -41,7 +41,7 @@ class TestTrustMiddleware(base.SenlinTestCase):
 
         self.assertEqual('FAKE_TRUST_ID', result)
         mock_rpc.assert_called_once_with()
-        x_rpc.call2.assert_called_once_with(self.context, 'credential_get2',
+        x_rpc.call2.assert_called_once_with(self.context, 'credential_get',
                                             mock.ANY)
         request = x_rpc.call2.call_args[0][2]
         self.assertIsInstance(request, vorc.CredentialGetRequest)
@@ -70,8 +70,8 @@ class TestTrustMiddleware(base.SenlinTestCase):
 
         result = self.middleware._get_trust(self.req)
         self.assertEqual('FAKE_TRUST_ID', result)
-        mock_calls = [mock.call(self.context, 'credential_get2', mock.ANY),
-                      mock.call(self.context, 'credential_create2', mock.ANY)]
+        mock_calls = [mock.call(self.context, 'credential_get', mock.ANY),
+                      mock.call(self.context, 'credential_create', mock.ANY)]
         x_rpc.call2.assert_has_calls(mock_calls)
         request = x_rpc.call2.call_args_list[0][0][2]
         self.assertIsInstance(request, vorc.CredentialGetRequest)
@@ -117,8 +117,8 @@ class TestTrustMiddleware(base.SenlinTestCase):
 
         result = self.middleware._get_trust(self.req)
         self.assertEqual('FAKE_TRUST_ID', result)
-        mock_calls = [mock.call(self.context, 'credential_get2', mock.ANY),
-                      mock.call(self.context, 'credential_create2', mock.ANY)]
+        mock_calls = [mock.call(self.context, 'credential_get', mock.ANY),
+                      mock.call(self.context, 'credential_create', mock.ANY)]
         x_rpc.call2.assert_has_calls(mock_calls)
         mock_rpc.assert_called_once_with()
         mock_driver.assert_called_once_with()
@@ -157,8 +157,8 @@ class TestTrustMiddleware(base.SenlinTestCase):
 
         result = self.middleware._get_trust(self.req)
         self.assertEqual('FAKE_TRUST_ID', result)
-        mock_calls = [mock.call(self.context, 'credential_get2', mock.ANY),
-                      mock.call(self.context, 'credential_create2', mock.ANY)]
+        mock_calls = [mock.call(self.context, 'credential_get', mock.ANY),
+                      mock.call(self.context, 'credential_create', mock.ANY)]
         x_rpc.call2.assert_has_calls(mock_calls)
         mock_driver.assert_called_once_with()
         x_driver.identity.assert_called_once_with({
@@ -201,7 +201,7 @@ class TestTrustMiddleware(base.SenlinTestCase):
 
         self.assertEqual('Boom', six.text_type(ex))
         mock_rpc.assert_called_once_with()
-        x_rpc.call2.assert_called_once_with(self.context, 'credential_get2',
+        x_rpc.call2.assert_called_once_with(self.context, 'credential_get',
                                             mock.ANY)
         mock_driver.assert_called_once_with()
         x_driver.identity.assert_called_once_with({
