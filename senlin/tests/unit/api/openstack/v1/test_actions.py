@@ -75,7 +75,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ActionListRequest', req, {'project_safe': True})
         mock_call.assert_called_once_with(
-            req.context, 'action_list2', obj)
+            req.context, 'action_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -111,7 +111,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'project_safe': False
             })
         mock_call.assert_called_once_with(
-            req.context, 'action_list2', obj)
+            req.context, 'action_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -184,7 +184,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ActionListRequest', req, {'project_safe': False})
         mock_call.assert_called_once_with(
-            req.context, 'action_list2', obj)
+            req.context, 'action_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -207,7 +207,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('Forbidden', resp.json['error']['type'])
         mock_parse.assert_called_once_with(
             "ActionListRequest", mock.ANY, {'project_safe': True})
-        mock_call.assert_called_once_with(req.context, 'action_list2', obj)
+        mock_call.assert_called_once_with(req.context, 'action_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -272,7 +272,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ActionGetRequest', req, {'identity': action_id})
         mock_call.assert_called_once_with(
-            req.context, 'action_get2', obj)
+            req.context, 'action_get', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -296,7 +296,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ActionGetRequest', mock.ANY, {'identity': action_id})
         mock_call.assert_called_once_with(
-            req.context, 'action_get2', obj)
+            req.context, 'action_get', obj)
 
     def test_action_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)

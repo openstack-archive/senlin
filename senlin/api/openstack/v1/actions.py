@@ -76,7 +76,7 @@ class ActionController(wsgi.Controller):
         params['project_safe'] = project_safe
 
         obj = util.parse_request('ActionListRequest', req, params)
-        actions = self.rpc_client.call2(req.context, "action_list2", obj)
+        actions = self.rpc_client.call2(req.context, "action_list", obj)
 
         return {'actions': actions}
 
@@ -95,6 +95,6 @@ class ActionController(wsgi.Controller):
     def get(self, req, action_id):
         params = {'identity': action_id}
         obj = util.parse_request('ActionGetRequest', req, params)
-        action = self.rpc_client.call2(req.context, 'action_get2', obj)
+        action = self.rpc_client.call2(req.context, 'action_get', obj)
 
         return {'action': action}
