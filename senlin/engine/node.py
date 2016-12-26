@@ -217,8 +217,8 @@ class Node(object):
         now = timeutils.utcnow(True)
         if status == consts.NS_ACTIVE and self.status == consts.NS_CREATING:
             self.created_at = values['created_at'] = now
-        elif status == consts.NS_ACTIVE and self.status == consts.NS_UPDATING:
-            # TODO(Qiming): update_at should be changed unconditionally
+        if status not in [consts.NS_CREATING, consts.NS_UPDATING,
+                          consts.NS_RECOVERING, consts.NS_OPERATING]:
             self.updated_at = values['updated_at'] = now
 
         self.status = status
