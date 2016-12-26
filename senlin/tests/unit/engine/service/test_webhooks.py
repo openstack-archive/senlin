@@ -36,8 +36,8 @@ class WebhookTest(base.SenlinTestCase):
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(ro.Receiver, 'find')
-    def test_webhook_trigger2_with_params(self, mock_get, mock_find,
-                                          mock_action, notify):
+    def test_webhook_trigger_with_params(self, mock_get, mock_find,
+                                         mock_action, notify):
         mock_find.return_value = mock.Mock(id='FAKE_CLUSTER')
         mock_get.return_value = mock.Mock(id='01234567-abcd-efef',
                                           cluster_id='FAKE_CLUSTER',
@@ -48,7 +48,7 @@ class WebhookTest(base.SenlinTestCase):
         body = vorw.WebhookTriggerRequestBody(params={'kee': 'vee'})
         req = vorw.WebhookTriggerRequest(identity='FAKE_RECEIVER',
                                          body=body)
-        res = self.eng.webhook_trigger2(self.ctx, req.obj_to_primitive())
+        res = self.eng.webhook_trigger(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, res)
 
@@ -67,8 +67,8 @@ class WebhookTest(base.SenlinTestCase):
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(ro.Receiver, 'find')
-    def test_webhook_trigger2_no_params(self, mock_get, mock_find,
-                                        mock_action, notify):
+    def test_webhook_trigger_no_params(self, mock_get, mock_find,
+                                       mock_action, notify):
         mock_find.return_value = mock.Mock(id='FAKE_CLUSTER')
         mock_get.return_value = mock.Mock(id='01234567-abcd-efef',
                                           cluster_id='FAKE_CLUSTER',
@@ -79,7 +79,7 @@ class WebhookTest(base.SenlinTestCase):
         body = vorw.WebhookTriggerRequestBody(params={})
         req = vorw.WebhookTriggerRequest(identity='FAKE_RECEIVER',
                                          body=body)
-        res = self.eng.webhook_trigger2(self.ctx, req.obj_to_primitive())
+        res = self.eng.webhook_trigger(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, res)
 
@@ -95,13 +95,13 @@ class WebhookTest(base.SenlinTestCase):
         notify.assert_called_once_with()
 
     @mock.patch.object(ro.Receiver, 'find')
-    def test_webhook_trigger_receiver_not_found2(self, mock_find):
+    def test_webhook_trigger_receiver_not_found(self, mock_find):
         mock_find.side_effect = exception.ResourceNotFound(type='receiver',
                                                            id='RRR')
         body = vorw.WebhookTriggerRequestBody(params=None)
         req = vorw.WebhookTriggerRequest(identity='RRR', body=body)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.webhook_trigger2, self.ctx,
+                               self.eng.webhook_trigger, self.ctx,
                                req.obj_to_primitive())
 
         self.assertEqual(exception.ResourceNotFound, ex.exc_info[0])
@@ -111,7 +111,7 @@ class WebhookTest(base.SenlinTestCase):
 
     @mock.patch.object(ro.Receiver, 'find')
     @mock.patch.object(co.Cluster, 'find')
-    def test_webhook_trigger_cluster_not_found2(self, mock_cluster, mock_find):
+    def test_webhook_trigger_cluster_not_found(self, mock_cluster, mock_find):
         receiver = mock.Mock()
         receiver.cluster_id = 'BOGUS'
         mock_find.return_value = receiver
@@ -120,7 +120,7 @@ class WebhookTest(base.SenlinTestCase):
         body = vorw.WebhookTriggerRequestBody(params=None)
         req = vorw.WebhookTriggerRequest(identity='RRR', body=body)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.webhook_trigger2, self.ctx,
+                               self.eng.webhook_trigger, self.ctx,
                                req.obj_to_primitive())
 
         self.assertEqual(exception.BadRequest, ex.exc_info[0])

@@ -2166,7 +2166,7 @@ class EngineService(service.Service):
         receiver.notify(ctx)
 
     @request_context
-    def webhook_trigger2(self, ctx, req):
+    def webhook_trigger(self, ctx, req):
         """trigger the webhook.
 
         :param ctx: An instance of the request context.

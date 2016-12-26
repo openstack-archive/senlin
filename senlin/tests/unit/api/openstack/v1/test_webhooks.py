@@ -59,7 +59,7 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('/actions/test_action_id', resp['location'])
         mock_parse.assert_called_once_with(
             'WebhookTriggerRequest', req, mock.ANY)
-        mock_call.assert_called_once_with(req.context, 'webhook_trigger2', obj)
+        mock_call.assert_called_once_with(req.context, 'webhook_trigger', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -83,7 +83,7 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('/actions/FAKE_ACTION', resp['location'])
         mock_parse.assert_called_once_with(
             'WebhookTriggerRequest', req, mock.ANY)
-        mock_call.assert_called_once_with(req.context, 'webhook_trigger2', obj)
+        mock_call.assert_called_once_with(req.context, 'webhook_trigger', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
