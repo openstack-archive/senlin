@@ -546,6 +546,7 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_load.return_value = cluster
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
+        action.inputs = {'destroy_after_deletion': False}
         mock_wait.return_value = (action.RES_OK, 'All dependents completed')
         mock_action.return_value = 'NODE_ACTION_ID'
 
@@ -581,6 +582,7 @@ class ClusterActionTest(base.SenlinTestCase):
         # cluster action is real
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
+        action.inputs = {'destroy_after_deletion': False}
         mock_wait.return_value = (action.RES_OK, 'All dependents completed')
         mock_action.side_effect = ['NODE_ACTION_1', 'NODE_ACTION_2']
 
@@ -609,6 +611,7 @@ class ClusterActionTest(base.SenlinTestCase):
         cluster = mock.Mock(id='CLUSTER_ID')
         mock_load.return_value = cluster
         action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
+        action.inputs = {'destroy_after_deletion': False}
 
         # do it
         res_code, res_msg = action._delete_nodes([])
@@ -630,6 +633,7 @@ class ClusterActionTest(base.SenlinTestCase):
         # cluster action is real
         action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
+        action.inputs = {'destroy_after_deletion': False}
         action.data = {
             'deletion': {
                 'destroy_after_deletion': False
@@ -660,6 +664,7 @@ class ClusterActionTest(base.SenlinTestCase):
         # cluster action is real
         action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
+        action.inputs = {'destroy_after_deletion': False}
         action.data = {}
         mock_wait.return_value = (action.RES_TIMEOUT, 'Timeout!')
         mock_action.return_value = 'NODE_ACTION_ID'
