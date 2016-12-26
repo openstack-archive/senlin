@@ -62,7 +62,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_parse.assert_called_once_with('ClusterListRequest', req,
                                            {'project_safe': True})
-        mock_call.assert_called_once_with(req.context, 'cluster_list2', obj)
+        mock_call.assert_called_once_with(req.context, 'cluster_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -98,7 +98,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'project_safe': False
             })
 
-        mock_call.assert_called_once_with(req.context, 'cluster_list2', obj)
+        mock_call.assert_called_once_with(req.context, 'cluster_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -136,7 +136,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('Forbidden', resp.json['error']['type'])
         mock_parse.assert_called_once_with(
             "ClusterListRequest", mock.ANY, {'project_safe': False})
-        mock_call.assert_called_once_with(req.context, 'cluster_list2', obj)
+        mock_call.assert_called_once_with(req.context, 'cluster_list', obj)
 
     def test_index_error_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
@@ -186,7 +186,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('/actions/fake_action', resp['location'])
         mock_parse.assert_called_once_with(
             "ClusterCreateRequest", mock.ANY, body, 'cluster')
-        mock_call.assert_called_once_with(req.context, 'cluster_create2',
+        mock_call.assert_called_once_with(req.context, 'cluster_create',
                                           obj.cluster)
 
     @mock.patch.object(util, 'parse_request')
@@ -223,7 +223,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('BadRequest', resp.json['error']['type'])
         mock_parse.assert_called_once_with(
             "ClusterCreateRequest", mock.ANY, {'foo': 'bar'}, 'cluster')
-        mock_call.assert_called_once_with(req.context, 'cluster_create2',
+        mock_call.assert_called_once_with(req.context, 'cluster_create',
                                           obj.cluster)
 
     def test_create_err_denied_policy(self, mock_enforce):
@@ -259,7 +259,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual({'cluster': {'foo': 'bar'}}, response)
         mock_parse.assert_called_once_with(
             "ClusterGetRequest", req, {'identity': 'cid'})
-        mock_call.assert_called_once_with(req.context, 'cluster_get2', obj)
+        mock_call.assert_called_once_with(req.context, 'cluster_get', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -331,7 +331,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             "ClusterUpdateRequest", req,
             {'identity': 'aaaa-bbbb-cccc', 'foo': 'bar'})
-        mock_call.assert_called_once_with(req.context, 'cluster_update2', obj)
+        mock_call.assert_called_once_with(req.context, 'cluster_update', obj)
 
     def test_update_missing_cluster_key(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -388,7 +388,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             "ClusterUpdateRequest", mock.ANY,
             {'identity': cid, 'profile_id': 'xxxx-yyyy-zzzz'})
-        mock_call.assert_called_once_with(req.context, 'cluster_update2', obj)
+        mock_call.assert_called_once_with(req.context, 'cluster_update', obj)
 
     def test_update_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', False)
@@ -421,7 +421,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ClusterAddNodesRequest', req, {'identity': cid, 'nodes': nodes})
         mock_call.assert_called_once_with(
-            req.context, 'cluster_add_nodes2', obj)
+            req.context, 'cluster_add_nodes', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -458,7 +458,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'ClusterAddNodesRequest', req, {'identity': cid, 'nodes': nodes})
         self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
-            req.context, 'cluster_add_nodes2', obj)
+            req.context, 'cluster_add_nodes', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -476,7 +476,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ClusterDelNodesRequest', req, {'identity': cid, 'nodes': nodes})
         mock_call.assert_called_once_with(
-            req.context, 'cluster_del_nodes2', obj)
+            req.context, 'cluster_del_nodes', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -513,7 +513,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'ClusterDelNodesRequest', req, {'identity': cid, 'nodes': nodes})
         self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
-            req.context, 'cluster_del_nodes2', obj)
+            req.context, 'cluster_del_nodes', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -532,7 +532,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'ClusterReplaceNodesRequest', req,
             {'identity': cid, 'nodes': nodes})
         mock_call.assert_called_once_with(
-            req.context, 'cluster_replace_nodes2', obj)
+            req.context, 'cluster_replace_nodes', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -599,7 +599,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             {'identity': cid, 'nodes': nodes})
         self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
-            req.context, 'cluster_replace_nodes2', obj)
+            req.context, 'cluster_replace_nodes', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -626,7 +626,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         params['identity'] = cid
         mock_parse.assert_called_once_with(
             'ClusterResizeRequest', req, params)
-        mock_call.assert_called_once_with(req.context, 'cluster_resize2', obj)
+        mock_call.assert_called_once_with(req.context, 'cluster_resize', obj)
 
     def test__do_resize_exact_capacity(self, mock_enforce):
         self._test_resize_with_type('EXACT_CAPACITY')
@@ -727,7 +727,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'ClusterResizeRequest', req, {'identity': cid, 'max_size': 200})
         self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
-            req.context, 'cluster_resize2', obj)
+            req.context, 'cluster_resize', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -745,7 +745,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ClusterScaleOutRequest', req, {'identity': cid, 'count': count})
         mock_call.assert_called_once_with(
-            req.context, 'cluster_scale_out2', obj)
+            req.context, 'cluster_scale_out', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -782,7 +782,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'ClusterScaleOutRequest', req, {'identity': cid, 'count': count})
         self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
-            req.context, 'cluster_scale_out2', obj)
+            req.context, 'cluster_scale_out', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -800,7 +800,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ClusterScaleInRequest', req, {'identity': cid, 'count': count})
         mock_call.assert_called_once_with(
-            req.context, 'cluster_scale_in2', obj)
+            req.context, 'cluster_scale_in', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -837,7 +837,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'ClusterScaleInRequest', req, {'identity': cid, 'count': count})
         self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
-            req.context, 'cluster_scale_in2', obj)
+            req.context, 'cluster_scale_in', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -856,7 +856,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'ClusterAttachPolicyRequest', req,
             {'identity': cid, 'policy_id': 'xxxx-yyyy'})
         mock_call.assert_called_once_with(
-            req.context, 'cluster_policy_attach2', obj)
+            req.context, 'cluster_policy_attach', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -910,7 +910,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             {'identity': cid, 'policy_id': 'xxxx-yyyy'})
         self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
-            req.context, 'cluster_policy_attach2', obj)
+            req.context, 'cluster_policy_attach', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -929,7 +929,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'ClusterDetachPolicyRequest', req,
             {'identity': cid, 'policy_id': 'xxxx-yyyy'})
         mock_call.assert_called_once_with(
-            req.context, 'cluster_policy_detach2', obj)
+            req.context, 'cluster_policy_detach', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -983,7 +983,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             {'identity': cid, 'policy_id': 'xxxx-yyyy'})
         self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
-            req.context, 'cluster_policy_detach2', obj)
+            req.context, 'cluster_policy_detach', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -1002,7 +1002,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'ClusterUpdatePolicyRequest', req,
             {'identity': cid, 'policy_id': 'xxxx-yyyy'})
         mock_call.assert_called_once_with(
-            req.context, 'cluster_policy_update2', obj)
+            req.context, 'cluster_policy_update', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -1056,7 +1056,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             {'identity': cid, 'policy_id': 'xxxx-yyyy'})
         self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
-            req.context, 'cluster_policy_update2', obj)
+            req.context, 'cluster_policy_update', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -1075,7 +1075,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ClusterCheckRequest', req,
             {'identity': cid, 'params': {'op': 'value'}})
-        mock_call.assert_called_once_with(req.context, 'cluster_check2', obj)
+        mock_call.assert_called_once_with(req.context, 'cluster_check', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -1113,7 +1113,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'ClusterCheckRequest', req, {'identity': cid, 'params': {}})
         self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
-            req.context, 'cluster_check2', obj)
+            req.context, 'cluster_check', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -1132,7 +1132,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ClusterRecoverRequest', req,
             {'identity': cid, 'params': {'op': 'value'}})
-        mock_call.assert_called_once_with(req.context, 'cluster_recover2', obj)
+        mock_call.assert_called_once_with(req.context, 'cluster_recover', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -1170,7 +1170,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'ClusterRecoverRequest', req, {'identity': cid, 'params': {}})
         self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
-            req.context, 'cluster_recover2', obj)
+            req.context, 'cluster_recover', obj)
 
     def test_cluster_action_missing_action(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -1240,7 +1240,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         resp = self.controller.collect(req, cluster_id=cid, path=path)
 
         self.assertEqual(eng_resp, resp)
-        mock_call.assert_called_once_with(req.context, 'cluster_collect2', obj)
+        mock_call.assert_called_once_with(req.context, 'cluster_collect', obj)
 
     @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_collect_version_mismatch(self, mock_call, mock_enforce):
@@ -1331,7 +1331,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'ClusterCollectRequest', req, {'identity': cid, 'path': path})
         self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
-            req.context, 'cluster_collect2', obj)
+            req.context, 'cluster_collect', obj)
 
     def test_collect_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'collect', False)
@@ -1366,7 +1366,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ClusterDeleteRequest', req, {'identity': cid})
 
-        mock_call.assert_called_with(req.context, 'cluster_delete2', obj)
+        mock_call.assert_called_with(req.context, 'cluster_delete', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
