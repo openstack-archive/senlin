@@ -15,6 +15,7 @@
     "clusters:action": "",
     "clusters:update": "",
     "clusters:collect": "",
+    "clusters:operation": "",
     "profiles:index": "",
     "profiles:create": "",
     "profiles:get": "",

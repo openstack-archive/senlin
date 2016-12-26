@@ -171,6 +171,11 @@ class API(wsgi.Router):
                                action="delete",
                                conditions={'method': 'DELETE'},
                                success=202)
+            sub_mapper.connect("cluster_operation",
+                               "/clusters/{cluster_id}/ops",
+                               action="operation",
+                               conditions={'method': 'POST'},
+                               success=202)
 
         # Nodes
         res = wsgi.Resource(nodes.NodeController(conf))

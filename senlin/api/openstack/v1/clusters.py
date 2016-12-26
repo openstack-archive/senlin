@@ -287,6 +287,32 @@ class ClusterController(wsgi.Controller):
         obj = util.parse_request('ClusterCollectRequest', req, params)
         return self.rpc_client.call2(req.context, 'cluster_collect', obj)
 
+    @wsgi.Controller.api_version('1.4')
+    @util.policy_enforce
+    def operation(self, req, cluster_id, body=None):
+        """Perform specified operation on the specified cluster."""
+        body = body or {}
+        if len(body) < 1:
+            raise exc.HTTPBadRequest(_('No operation specified'))
+
+        if len(body) > 1:
+            raise exc.HTTPBadRequest(_('Multiple operations specified'))
+
+        operation = list(body.keys())[0]
+        params = {
+            'identity': cluster_id,
+            'operation': operation,
+            'params': body[operation].get('params', {}),
+            'filters': body[operation].get('filters', {}),
+        }
+        obj = util.parse_request('ClusterOperationRequest', req, params)
+
+        res = self.rpc_client.call2(req.context, 'cluster_op', obj)
+
+        location = {'location': '/actions/%s' % res['action']}
+        res.update(location)
+        return res
+
     @util.policy_enforce
     def delete(self, req, cluster_id):
         params = {'identity': cluster_id}
