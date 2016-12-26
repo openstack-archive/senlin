@@ -28,6 +28,7 @@
     "nodes:action": "",
     "nodes:update": "",
     "nodes:delete": "",
+    "nodes:operation": "",
     "policies:index": "",
     "policies:create": "",
     "policies:get": "",

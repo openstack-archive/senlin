@@ -166,3 +166,31 @@ class NodeController(wsgi.Controller):
         res = self.rpc_client.call2(req.context, 'node_recover', obj)
 
         return res
+
+    @wsgi.Controller.api_version('1.4')
+    @util.policy_enforce
+    def operation(self, req, node_id, body=None):
+        """Perform the specified operation on the specified node."""
+
+        body = body or {}
+        if len(body) == 0:
+            raise exc.HTTPBadRequest(_('No operation specified.'))
+
+        if len(body) > 1:
+            raise exc.HTTPBadRequest(_('Multiple operations specified.'))
+
+        operation = list(body.keys())[0]
+        params = {
+            'identity': node_id,
+            'operation': operation,
+            'params': body.get(operation),
+        }
+
+        obj = util.parse_request('NodeOperationRequest', req, params)
+        node = self.rpc_client.call2(req.context, 'node_op', obj)
+
+        action_id = node.pop('action')
+        result = {
+            'location': '/actions/%s' % action_id,
+        }
+        return result
