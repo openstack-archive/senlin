@@ -49,13 +49,13 @@ class PolicyController(wsgi.Controller):
         unsafe = util.parse_bool_param(consts.PARAM_GLOBAL_PROJECT, is_global)
         params['project_safe'] = not unsafe
         obj = util.parse_request('PolicyListRequest', req, params)
-        policies = self.rpc_client.call2(req.context, 'policy_list2', obj)
+        policies = self.rpc_client.call2(req.context, 'policy_list', obj)
         return {'policies': policies}
 
     @util.policy_enforce
     def create(self, req, body):
         obj = util.parse_request('PolicyCreateRequest', req, body, 'policy')
-        result = self.rpc_client.call2(req.context, 'policy_create2',
+        result = self.rpc_client.call2(req.context, 'policy_create',
                                        obj.policy)
 
         return {'policy': result}
@@ -65,7 +65,7 @@ class PolicyController(wsgi.Controller):
         """Gets detailed information for a policy"""
         body = {'identity': policy_id}
         obj = util.parse_request('PolicyGetRequest', req, body)
-        policy = self.rpc_client.call2(req.context, 'policy_get2', obj)
+        policy = self.rpc_client.call2(req.context, 'policy_get', obj)
 
         return {'policy': policy}
 
@@ -80,7 +80,7 @@ class PolicyController(wsgi.Controller):
         obj = util.parse_request('PolicyUpdateRequest', req,
                                  {'identity': policy_id,
                                   'policy': body_req})
-        policy = self.rpc_client.call2(req.context, 'policy_update2', obj)
+        policy = self.rpc_client.call2(req.context, 'policy_update', obj)
 
         return {'policy': policy}
 
@@ -88,7 +88,7 @@ class PolicyController(wsgi.Controller):
     def delete(self, req, policy_id):
         body = {'identity': policy_id}
         obj = util.parse_request('PolicyDeleteRequest', req, body)
-        self.rpc_client.call2(req.context, 'policy_delete2', obj)
+        self.rpc_client.call2(req.context, 'policy_delete', obj)
         raise exc.HTTPNoContent()
 
     @wsgi.Controller.api_version('1.2')
@@ -97,7 +97,7 @@ class PolicyController(wsgi.Controller):
         """Validate the policy spec user specified."""
         obj = util.parse_request('PolicyValidateRequest', req, body,
                                  'policy')
-        result = self.rpc_client.call2(req.context, 'policy_validate2',
+        result = self.rpc_client.call2(req.context, 'policy_validate',
                                        obj.policy)
 
         return {'policy': result}

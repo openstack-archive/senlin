@@ -54,7 +54,7 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'PolicyTypeListRequest', req, {})
         mock_call.assert_called_once_with(
-            req.context, 'policy_type_list2', mock.ANY)
+            req.context, 'policy_type_list', mock.ANY)
 
     def test_policy_type_list_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
@@ -91,7 +91,7 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'PolicyTypeGetRequest', req, {'type_name': type_name})
         mock_call.assert_called_once_with(
-            req.context, 'policy_type_get2', mock.ANY)
+            req.context, 'policy_type_get', mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
