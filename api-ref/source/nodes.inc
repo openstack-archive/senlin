@@ -417,3 +417,50 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - Location: location
+
+
+Perform an Operation on a Node
+==============================
+
+.. rest_method::  POST /v1/nodes/{node_id}/ops
+
+   min_version: 1.4
+
+Perform the specified operation on the specified node.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - node_id: node_id_url
+  - operation: operation_request
+
+Request Example
+---------------
+
+.. literalinclude:: samples/node-operation-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
