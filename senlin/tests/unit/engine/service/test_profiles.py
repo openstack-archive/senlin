@@ -56,7 +56,7 @@ class ProfileTest(base.SenlinTestCase):
         }
 
     @mock.patch.object(po.Profile, 'get_all')
-    def test_profile_list2(self, mock_get):
+    def test_profile_list(self, mock_get):
         x_obj_1 = mock.Mock()
         x_obj_1.to_dict.return_value = {'k': 'v1'}
         x_obj_2 = mock.Mock()
@@ -64,13 +64,13 @@ class ProfileTest(base.SenlinTestCase):
         mock_get.return_value = [x_obj_1, x_obj_2]
         req = vorp.ProfileListRequest(project_safe=True)
 
-        result = self.eng.profile_list2(self.ctx, req.obj_to_primitive())
+        result = self.eng.profile_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
         mock_get.assert_called_once_with(self.ctx, project_safe=True)
 
     @mock.patch.object(po.Profile, 'get_all')
-    def test_profile_list2_with_params(self, mock_get):
+    def test_profile_list_with_params(self, mock_get):
         mock_get.return_value = []
         marker = uuidutils.generate_uuid()
         params = {
@@ -83,7 +83,7 @@ class ProfileTest(base.SenlinTestCase):
         }
         req = vorp.ProfileListRequest(**params)
 
-        result = self.eng.profile_list2(self.ctx, req.obj_to_primitive())
+        result = self.eng.profile_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([], result)
         mock_get.assert_called_once_with(self.ctx, limit=10, marker=marker,
@@ -93,7 +93,7 @@ class ProfileTest(base.SenlinTestCase):
                                          project_safe=True)
 
     @mock.patch.object(pb.Profile, 'create')
-    def test_profile_create2_default(self, mock_create):
+    def test_profile_create_default(self, mock_create):
         x_profile = mock.Mock()
         x_profile.to_dict.return_value = {'foo': 'bar'}
         mock_create.return_value = x_profile
@@ -102,12 +102,12 @@ class ProfileTest(base.SenlinTestCase):
                                              metadata={'foo': 'bar'})
         req = vorp.ProfileCreateRequest(profile=body)
 
-        result = self.eng.profile_create2(self.ctx, req.obj_to_primitive())
+        result = self.eng.profile_create(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar'}, result)
 
     @mock.patch.object(po.Profile, 'get_by_name')
-    def test_profile_create2_name_conflict(self, mock_get):
+    def test_profile_create_name_conflict(self, mock_get):
         cfg.CONF.set_override('name_unique', True, enforce_type=True)
         mock_get.return_value = mock.Mock()
 
@@ -123,7 +123,7 @@ class ProfileTest(base.SenlinTestCase):
         body = vorp.ProfileCreateRequestBody(name='FAKE_NAME', spec=spec)
         req = vorp.ProfileCreateRequest(profile=body)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_create2,
+                               self.eng.profile_create,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: A profile named "
@@ -132,7 +132,7 @@ class ProfileTest(base.SenlinTestCase):
         mock_get.assert_called_once_with(self.ctx, 'FAKE_NAME')
 
     @mock.patch.object(pb.Profile, 'create')
-    def test_profile_create2_type_not_found(self, mock_create):
+    def test_profile_create_type_not_found(self, mock_create):
         self._setup_fakes()
         spec = copy.deepcopy(self.spec)
         spec['type'] = 'Bogus'
@@ -140,7 +140,7 @@ class ProfileTest(base.SenlinTestCase):
         req = vorp.ProfileCreateRequest(profile=body)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_create2,
+                               self.eng.profile_create,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -148,19 +148,19 @@ class ProfileTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(pb.Profile, 'create')
-    def test_profile_create2_invalid_spec(self, mock_create):
+    def test_profile_create_invalid_spec(self, mock_create):
         self._setup_fakes()
         mock_create.side_effect = exc.InvalidSpec(message="badbad")
         body = vorp.ProfileCreateRequestBody(name='foo', spec=self.spec)
         req = vorp.ProfileCreateRequest(profile=body)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_create2,
+                               self.eng.profile_create,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
         self.assertEqual("badbad", six.text_type(ex.exc_info[1]))
 
-    def test_profile_validate2(self):
+    def test_profile_validate(self):
         self._setup_fakes()
 
         expected_resp = {
@@ -187,10 +187,10 @@ class ProfileTest(base.SenlinTestCase):
 
         body = vorp.ProfileValidateRequestBody(spec=self.spec)
         request = vorp.ProfileValidateRequest(profile=body)
-        resp = self.eng.profile_validate2(self.ctx, request.obj_to_primitive())
+        resp = self.eng.profile_validate(self.ctx, request.obj_to_primitive())
         self.assertEqual(expected_resp, resp)
 
-    def test_profile_validate2_failed(self):
+    def test_profile_validate_failed(self):
         self._setup_fakes()
 
         mock_do_validate = self.patchobject(fakes.TestProfile, 'do_validate')
@@ -200,31 +200,31 @@ class ProfileTest(base.SenlinTestCase):
         request = vorp.ProfileValidateRequest(profile=body)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_validate2,
+                               self.eng.profile_validate,
                                self.ctx, request.obj_to_primitive())
         self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
         self.assertEqual('BOOM',
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(po.Profile, 'find')
-    def test_profile_get2(self, mock_find):
+    def test_profile_get(self, mock_find):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
         x_obj.to_dict.return_value = {'foo': 'bar'}
         req = vorp.ProfileGetRequest(identity='FAKE_PROFILE')
 
-        result = self.eng.profile_get2(self.ctx, req.obj_to_primitive())
+        result = self.eng.profile_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_PROFILE')
 
     @mock.patch.object(po.Profile, 'find')
-    def test_profile_get2_not_found(self, mock_find):
+    def test_profile_get_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='profile',
                                                      id='Bogus')
         req = vorp.ProfileGetRequest(identity='Bogus')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_get2, self.ctx,
+                               self.eng.profile_get, self.ctx,
                                req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -234,7 +234,7 @@ class ProfileTest(base.SenlinTestCase):
 
     @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(po.Profile, 'find')
-    def test_profile_update2(self, mock_find, mock_load):
+    def test_profile_update(self, mock_find, mock_load):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
         x_profile = mock.Mock()
@@ -247,7 +247,7 @@ class ProfileTest(base.SenlinTestCase):
         req_body = vorp.ProfileUpdateRequestBody(**params)
         req = vorp.ProfileUpdateRequest(identity='PID', profile=req_body)
 
-        result = self.eng.profile_update2(self.ctx, req.obj_to_primitive())
+        result = self.eng.profile_update(self.ctx, req.obj_to_primitive())
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'PID')
         mock_load.assert_called_once_with(self.ctx, profile=x_obj)
@@ -257,7 +257,7 @@ class ProfileTest(base.SenlinTestCase):
 
     @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(po.Profile, 'find')
-    def test_profile_update2_name_none(self, mock_find, mock_load):
+    def test_profile_update_name_none(self, mock_find, mock_load):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
         x_profile = mock.Mock()
@@ -269,7 +269,7 @@ class ProfileTest(base.SenlinTestCase):
         req_body = vorp.ProfileUpdateRequestBody(**params)
         req = vorp.ProfileUpdateRequest(identity='PID', profile=req_body)
 
-        result = self.eng.profile_update2(self.ctx, req.obj_to_primitive())
+        result = self.eng.profile_update(self.ctx, req.obj_to_primitive())
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'PID')
         mock_load.assert_called_once_with(self.ctx, profile=x_obj)
@@ -278,7 +278,7 @@ class ProfileTest(base.SenlinTestCase):
         x_profile.store.assert_called_once_with(self.ctx)
 
     @mock.patch.object(po.Profile, 'find')
-    def test_profile_update2_not_found(self, mock_find):
+    def test_profile_update_not_found(self, mock_find):
 
         mock_find.side_effect = exc.ResourceNotFound(type='profile',
                                                      id='Bogus')
@@ -287,7 +287,7 @@ class ProfileTest(base.SenlinTestCase):
         req = vorp.ProfileUpdateRequest(identity='Bogus', profile=req_body)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_update2,
+                               self.eng.profile_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -297,7 +297,7 @@ class ProfileTest(base.SenlinTestCase):
 
     @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(po.Profile, 'find')
-    def test_profile_update2_no_change(self, mock_find, mock_load):
+    def test_profile_update_no_change(self, mock_find, mock_load):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
         x_profile = mock.Mock()
@@ -309,7 +309,7 @@ class ProfileTest(base.SenlinTestCase):
         req = vorp.ProfileUpdateRequest(identity='PID', profile=req_body)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_update2,
+                               self.eng.profile_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -323,27 +323,27 @@ class ProfileTest(base.SenlinTestCase):
 
     @mock.patch.object(fakes.TestProfile, 'delete')
     @mock.patch.object(po.Profile, 'find')
-    def test_profile_delete2(self, mock_find, mock_delete):
+    def test_profile_delete(self, mock_find, mock_delete):
         self._setup_fakes()
         x_obj = mock.Mock(id='PROFILE_ID', type='TestProfile-1.0')
         mock_find.return_value = x_obj
         mock_delete.return_value = None
 
         req = vorp.ProfileDeleteRequest(identity='PROFILE_ID')
-        result = self.eng.profile_delete2(self.ctx, req.obj_to_primitive())
+        result = self.eng.profile_delete(self.ctx, req.obj_to_primitive())
 
         self.assertIsNone(result)
         mock_find.assert_called_once_with(self.ctx, 'PROFILE_ID')
         mock_delete.assert_called_once_with(self.ctx, 'PROFILE_ID')
 
     @mock.patch.object(po.Profile, 'find')
-    def test_profile_delete2_not_found(self, mock_find):
+    def test_profile_delete_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='profile',
                                                      id='Bogus')
 
         req = vorp.ProfileDeleteRequest(identity='Bogus')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_delete2, self.ctx,
+                               self.eng.profile_delete, self.ctx,
                                req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -353,7 +353,7 @@ class ProfileTest(base.SenlinTestCase):
 
     @mock.patch.object(pb.Profile, 'delete')
     @mock.patch.object(po.Profile, 'find')
-    def test_profile_delete2_profile_in_use(self, mock_find, mock_delete):
+    def test_profile_delete_profile_in_use(self, mock_find, mock_delete):
         self._setup_fakes()
         x_obj = mock.Mock(id='PROFILE_ID', type='TestProfile-1.0')
         mock_find.return_value = x_obj
@@ -362,7 +362,7 @@ class ProfileTest(base.SenlinTestCase):
 
         req = vorp.ProfileDeleteRequest(identity='PROFILE_ID')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_delete2,
+                               self.eng.profile_delete,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])

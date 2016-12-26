@@ -305,7 +305,7 @@ class EngineService(service.Service):
         return {'operations': pt.get_ops()}
 
     @request_context
-    def profile_list2(self, ctx, req):
+    def profile_list(self, ctx, req):
         """List profiles matching the specified criteria.
 
         :param ctx: An instance of the request context.
@@ -370,7 +370,7 @@ class EngineService(service.Service):
         return profile
 
     @request_context
-    def profile_create2(self, ctx, req):
+    def profile_create(self, ctx, req):
         """Create a profile with the given properties.
 
         :param ctx: An instance of the request context.
@@ -404,7 +404,7 @@ class EngineService(service.Service):
         return profile.to_dict()
 
     @request_context
-    def profile_validate2(self, ctx, req):
+    def profile_validate(self, ctx, req):
         """Validate a profile with the given properties.
 
         :param ctx: An instance of the request context.
@@ -418,7 +418,7 @@ class EngineService(service.Service):
         return profile.to_dict()
 
     @request_context
-    def profile_get2(self, ctx, req):
+    def profile_get(self, ctx, req):
         """Retrieve the details about a profile.
 
         :param ctx: An instance of the request context.
@@ -430,7 +430,7 @@ class EngineService(service.Service):
         return profile.to_dict()
 
     @request_context
-    def profile_update2(self, ctx, req):
+    def profile_update(self, ctx, req):
         """Update the properties of a given profile.
 
         :param ctx: An instance of the request context.
@@ -462,7 +462,7 @@ class EngineService(service.Service):
         return profile.to_dict()
 
     @request_context
-    def profile_delete2(self, ctx, req):
+    def profile_delete(self, ctx, req):
         """Delete the specified profile.
 
         :param ctx: An instance of the request context.
