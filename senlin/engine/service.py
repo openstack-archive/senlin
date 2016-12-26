@@ -1416,6 +1416,70 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context
+    def cluster_op(self, ctx, req):
+        """Perform an operation on the specified cluster.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ClusterOperationRequest object.
+        :return: A dictionary containing the ID of the action triggered by the
+                 recover request.
+        """
+        LOG.info(_LI("Performing operation '%(o)s' on cluster '%(n)s'."),
+                 {'o': req.operation, 'n': req.identity})
+
+        db_cluster = co.Cluster.find(ctx, req.identity)
+        cluster = cluster_mod.Cluster.load(ctx, db_cluster=db_cluster)
+        profile = cluster.rt['profile']
+        if req.operation not in profile.OPERATIONS:
+            msg = _("The requested operation '%(o)s' is not supported by the "
+                    "profile type '%(t)s'."
+                    ) % {'o': req.operation, 't': profile.type}
+            raise exception.BadRequest(msg=msg)
+
+        if req.obj_attr_is_set('params') and req.params:
+            params = req.params
+            try:
+                profile.OPERATIONS[req.operation].validate(req.params)
+            except exception.ESchema as ex:
+                raise exception.BadRequest(msg=six.text_type(ex))
+        else:
+            params = {}
+
+        if 'filters' in req and req.filters:
+            errors = []
+            for k in req.filters:
+                if k not in (consts.NODE_NAME, consts.NODE_PROFILE_ID,
+                             consts.NODE_STATUS, consts.NODE_ROLE):
+                    errors.append(_("Filter key '%s' is unsupported") % k)
+            if errors:
+                raise exception.BadRequest(msg='\n'.join(errors))
+            nodes = node_obj.Node.get_all(ctx, filters=req.filters,
+                                          cluster_id=cluster.id)
+        else:
+            nodes = node_obj.Node.get_all(ctx, cluster_id=cluster.id)
+
+        node_ids = [node.id for node in nodes]
+        if not node_ids:
+            msg = _("No node (matching the filter) could be found")
+            raise exception.BadRequest(msg=msg)
+
+        kwargs = {
+            'name': 'cluster_%s_%s' % (req.operation, cluster.id[:8]),
+            'cause': action_mod.CAUSE_RPC,
+            'status': action_mod.Action.READY,
+            'inputs': {
+                'operation': req.operation,
+                'params': params,
+                'nodes': node_ids,
+            }
+        }
+        action_id = action_mod.Action.create(
+            ctx, cluster.id, consts.CLUSTER_OPERATION, **kwargs)
+        dispatcher.start_action()
+        LOG.info(_LI("Cluster operation action is queued: %s."), action_id)
+        return {'action': action_id}
+
+    @request_context
     def node_list(self, ctx, req):
         """List node records matching the specified criteria.
 
