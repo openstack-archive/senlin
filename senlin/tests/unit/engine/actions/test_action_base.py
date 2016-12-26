@@ -69,7 +69,7 @@ class ActionBaseTest(base.SenlinTestCase):
             'updated_at': None,
             'data': {'data_key': 'data_value'},
             'user': USER_ID,
-            'user': PROJECT_ID,
+            'project': PROJECT_ID,
         }
 
     def _verify_new_action(self, obj, target, action):
