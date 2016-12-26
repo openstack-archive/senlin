@@ -46,7 +46,7 @@ class BuildInfoControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('12.34', response['engine']['revision'])
 
         mock_call.assert_called_once_with(req.context,
-                                          'get_revision2', mock.ANY)
+                                          'get_revision', mock.ANY)
         request = mock_call.call_args[0][2]
         self.assertIsInstance(request, vorb.GetRevisionRequest)
 
@@ -63,7 +63,7 @@ class BuildInfoControllerTest(shared.ControllerTest, base.SenlinTestCase):
         response = result['build_info']
         self.assertEqual('test', response['api']['revision'])
         mock_call.assert_called_once_with(req.context,
-                                          'get_revision2', mock.ANY)
+                                          'get_revision', mock.ANY)
         request = mock_call.call_args[0][2]
         self.assertIsInstance(request, vorb.GetRevisionRequest)
 
