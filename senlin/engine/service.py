@@ -2205,7 +2205,7 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context
-    def event_list2(self, ctx, req):
+    def event_list(self, ctx, req):
         """List event records matching the specified criteria.
 
         :param ctx: An instance of the request context.
@@ -2259,7 +2259,7 @@ class EngineService(service.Service):
         return results
 
     @request_context
-    def event_get2(self, ctx, req):
+    def event_get(self, ctx, req):
         """Retrieve the event specified.
 
         :param ctx: An instance of the request context.
