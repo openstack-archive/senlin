@@ -6,11 +6,7 @@ properties:
   detection:
     # Type for health checking, valid values include:
     # NODE_STATUS_POLLING, LB_STATUS_POLLING, VM_LIFECYCLE_EVENTS
-    type: NODE_STATUS_POLLING
-
-    options:
-      # Number of seconds between two adjacent checking
-      interval: 60
+    type: VM_LIFECYCLE_EVENTS
 
   recovery:
     # List of actions that can be retried on a failed node
