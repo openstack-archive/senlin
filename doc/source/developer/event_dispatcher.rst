@@ -27,7 +27,7 @@ which is enabled by default; the latter is referred to as the ``message``
 dispatcher which has to be manually enabled by adding the following line to
 the ``senlin.conf`` file::
 
-  dispatchers = message
+  event_dispatchers = message
 
 However, the distributors or the users can always add their own event
 dispatchers easily when needed.
@@ -116,11 +116,11 @@ Dynamically Enabling/Disabling a Dispatcher
 
 All dispatchers are loaded when the Senlin engine is started, however, they
 can be dynamically enabled or disabled by editing the ``senlin.conf`` file.
-The option ``dispatchers`` in the ``[DEFAULT]`` section is a multi-string
+The option ``event_dispatchers`` in the ``[DEFAULT]`` section is a multi-string
 value option for this purpose. To enable your dispatcher (i.e. ``jsonfile``),
 you will need to add the following line to the ``senlin.conf`` file:
 
 ::
 
-  dispatchers = jsonfile
+  event_dispatchers = jsonfile
 
