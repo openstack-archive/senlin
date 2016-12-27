@@ -200,6 +200,17 @@ class ClusterCollectRequest(base.SenlinObject):
 
 
 @base.SenlinObjectRegistry.register
+class ClusterOperationRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'operation': fields.StringField(),
+        'filters': fields.JsonField(nullable=True, default={}),
+        'params': fields.JsonField(nullable=True, default={}),
+    }
+
+
+@base.SenlinObjectRegistry.register
 class ClusterDeleteRequest(base.SenlinObject):
 
     fields = {

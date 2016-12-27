@@ -523,6 +523,31 @@ class TestClusterCollect(test_base.SenlinTestCase):
         self.assertEqual('path/to/attr', sot.path)
 
 
+class TestClusterOperation(test_base.SenlinTestCase):
+
+    def test_init(self):
+        sot = clusters.ClusterOperationRequest(
+            identity='foo', filters={'role': 'slave'},
+            operation='dance', params={'style': 'tango'})
+
+        self.assertEqual('foo', sot.identity)
+        self.assertEqual('dance', sot.operation)
+        self.assertEqual({'role': 'slave'}, sot.filters)
+        self.assertEqual({'style': 'tango'}, sot.params)
+
+    def test_init_minimal(self):
+        sot = clusters.ClusterOperationRequest(identity='foo',
+                                               operation='dance')
+
+        self.assertEqual('foo', sot.identity)
+        self.assertEqual('dance', sot.operation)
+        self.assertFalse(sot.obj_attr_is_set('filters'))
+        self.assertFalse(sot.obj_attr_is_set('params'))
+        sot.obj_set_defaults()
+        self.assertEqual({}, sot.filters)
+        self.assertEqual({}, sot.params)
+
+
 class TestClusterDelete(test_base.SenlinTestCase):
 
     def test_init(self):
