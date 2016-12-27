@@ -74,7 +74,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(engine_resp, result['receivers'])
         mock_parse.assert_called_once_with(
             'ReceiverListRequest', req, mock.ANY)
-        mock_call.assert_called_with(req.context, 'receiver_list2', obj)
+        mock_call.assert_called_with(req.context, 'receiver_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -112,7 +112,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'type': ['webhook'],
                 'project_safe': True
             })
-        mock_call.assert_called_with(req.context, 'receiver_list2', mock.ANY)
+        mock_call.assert_called_with(req.context, 'receiver_list', mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -239,7 +239,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ReceiverListRequest', req, {'project_safe': False})
         mock_call.assert_called_once_with(
-            req.context, 'receiver_list2', obj)
+            req.context, 'receiver_list', obj)
 
     def test_receiver_index_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
@@ -300,7 +300,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ReceiverCreateRequest', req, body, 'receiver')
         mock_call.assert_called_with(
-            req.context, 'receiver_create2', obj.receiver)
+            req.context, 'receiver_create', obj.receiver)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -436,7 +436,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(engine_resp, result['receiver'])
         mock_parse.assert_called_once_with(
             'ReceiverGetRequest', req, {'identity': wid})
-        mock_call.assert_called_with(req.context, 'receiver_get2', obj)
+        mock_call.assert_called_with(req.context, 'receiver_get', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -484,7 +484,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ReceiverDeleteRequest', req, {'identity': wid})
         mock_call.assert_called_once_with(
-            req.context, 'receiver_delete2', obj)
+            req.context, 'receiver_delete', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -550,7 +550,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                           self.controller.notify, req, receiver_id=wid)
         mock_parse.assert_called_once_with(
             'ReceiverNotifyRequest', req, {'identity': wid})
-        mock_call.assert_called_with(req.context, 'receiver_notify2', obj)
+        mock_call.assert_called_with(req.context, 'receiver_notify', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')

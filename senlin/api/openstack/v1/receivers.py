@@ -51,7 +51,7 @@ class ReceiverController(wsgi.Controller):
         params['project_safe'] = project_safe
 
         obj = util.parse_request('ReceiverListRequest', req, params)
-        receivers = self.rpc_client.call2(req.context, 'receiver_list2', obj)
+        receivers = self.rpc_client.call2(req.context, 'receiver_list', obj)
 
         return {'receivers': receivers}
 
@@ -60,7 +60,7 @@ class ReceiverController(wsgi.Controller):
 
         obj = util.parse_request(
             'ReceiverCreateRequest', req, body, 'receiver')
-        result = self.rpc_client.call2(req.context, 'receiver_create2',
+        result = self.rpc_client.call2(req.context, 'receiver_create',
                                        obj.receiver)
 
         return {'receiver': result}
@@ -69,7 +69,7 @@ class ReceiverController(wsgi.Controller):
     def get(self, req, receiver_id):
         obj = util.parse_request(
             'ReceiverGetRequest', req, {'identity': receiver_id})
-        receiver = self.rpc_client.call2(req.context, 'receiver_get2', obj)
+        receiver = self.rpc_client.call2(req.context, 'receiver_get', obj)
         return {'receiver': receiver}
 
     @util.policy_enforce
@@ -77,7 +77,7 @@ class ReceiverController(wsgi.Controller):
 
         obj = util.parse_request(
             'ReceiverDeleteRequest', req, {'identity': receiver_id})
-        self.rpc_client.call2(req.context, 'receiver_delete2', obj)
+        self.rpc_client.call2(req.context, 'receiver_delete', obj)
         raise exc.HTTPNoContent()
 
     @util.policy_enforce
@@ -85,5 +85,5 @@ class ReceiverController(wsgi.Controller):
 
         obj = util.parse_request(
             'ReceiverNotifyRequest', req, {'identity': receiver_id})
-        self.rpc_client.call2(req.context, 'receiver_notify2', obj)
+        self.rpc_client.call2(req.context, 'receiver_notify', obj)
         raise exc.HTTPNoContent()
