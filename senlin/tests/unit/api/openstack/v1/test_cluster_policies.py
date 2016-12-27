@@ -68,7 +68,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ClusterPolicyListRequest', req, mock.ANY)
         mock_call.assert_called_once_with(
-            req.context, 'cluster_policy_list2', obj)
+            req.context, 'cluster_policy_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -96,7 +96,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'identity': 'FAKE_CLUSTER'
             })
         mock_call.assert_called_once_with(
-            req.context, 'cluster_policy_list2', obj)
+            req.context, 'cluster_policy_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -186,7 +186,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'policy_id': pid
             })
         mock_call.assert_called_once_with(
-            req.context, 'cluster_policy_get2', obj)
+            req.context, 'cluster_policy_get', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -216,7 +216,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'policy_id': 'FAKE_POLICY'
             })
         mock_call.assert_called_once_with(
-            req.context, 'cluster_policy_get2', mock.ANY)
+            req.context, 'cluster_policy_get', mock.ANY)
 
     def test_action_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)

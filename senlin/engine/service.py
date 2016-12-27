@@ -668,7 +668,7 @@ class EngineService(service.Service):
         return policy.to_dict()
 
     @request_context
-    def cluster_list2(self, ctx, req):
+    def cluster_list(self, ctx, req):
         """List clusters matching the specified criteria.
 
         :param ctx: An instance of request context.
@@ -698,7 +698,7 @@ class EngineService(service.Service):
                 for c in cluster_mod.Cluster.load_all(ctx, **query)]
 
     @request_context
-    def cluster_get2(self, context, req):
+    def cluster_get(self, context, req):
         """Retrieve the cluster specified.
 
         :param context: An instance of the request context.
@@ -722,7 +722,7 @@ class EngineService(service.Service):
             raise exception.Forbidden()
 
     @request_context
-    def cluster_create2(self, ctx, req):
+    def cluster_create(self, ctx, req):
         """Create a cluster.
 
         :param ctx: An instance of the request context.
@@ -787,7 +787,7 @@ class EngineService(service.Service):
         return result
 
     @request_context
-    def cluster_update2(self, ctx, req):
+    def cluster_update(self, ctx, req):
         """Update a cluster.
 
         :param ctx: An instance of the request context.
@@ -851,7 +851,7 @@ class EngineService(service.Service):
         return resp
 
     @request_context
-    def cluster_delete2(self, ctx, req):
+    def cluster_delete(self, ctx, req):
         """Delete the specified cluster.
 
         :param ctx: An instance of the request context.
@@ -909,7 +909,7 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context
-    def cluster_add_nodes2(self, context, req):
+    def cluster_add_nodes(self, context, req):
         """Add specified nodes to the specified cluster.
 
         :param context: An instance of the request context.
@@ -988,7 +988,7 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context
-    def cluster_del_nodes2(self, ctx, req):
+    def cluster_del_nodes(self, ctx, req):
         """Delete specified nodes from the named cluster.
 
         :param ctx: An instance of the request context.
@@ -1137,7 +1137,7 @@ class EngineService(service.Service):
         return found
 
     @request_context
-    def cluster_replace_nodes2(self, ctx, req):
+    def cluster_replace_nodes(self, ctx, req):
         """Replace the nodes in cluster with specified nodes
 
         :param ctx: An instance of the request context.
@@ -1163,7 +1163,7 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context
-    def cluster_resize2(self, ctx, req):
+    def cluster_resize(self, ctx, req):
         """Adjust cluster size parameters.
 
         :param ctx: An instance of the request context.
@@ -1254,7 +1254,7 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context
-    def cluster_scale_out2(self, ctx, req):
+    def cluster_scale_out(self, ctx, req):
         """Inflate the size of a cluster by then given number (optional).
 
         :param ctx: Request context for the call.
@@ -1294,7 +1294,7 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context
-    def cluster_scale_in2(self, ctx, req):
+    def cluster_scale_in(self, ctx, req):
         """Deflate the size of a cluster by given number (optional).
 
         :param ctx: Request context for the call.
@@ -1334,7 +1334,7 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context
-    def cluster_collect2(self, ctx, req):
+    def cluster_collect(self, ctx, req):
         """Collect a certain attribute across a cluster.
 
         :param ctx: An instance of the request context.
@@ -1359,7 +1359,7 @@ class EngineService(service.Service):
         return {'cluster_attributes': attrs}
 
     @request_context
-    def cluster_check2(self, ctx, req):
+    def cluster_check(self, ctx, req):
         """Check the status of a cluster.
 
         :param ctx: An instance of the request context.
@@ -1387,7 +1387,7 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context
-    def cluster_recover2(self, ctx, req):
+    def cluster_recover(self, ctx, req):
         """Recover a cluster to a healthy status.
 
         :param ctx: An instance of the request context.
@@ -1743,7 +1743,7 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context
-    def cluster_policy_list2(self, ctx, req):
+    def cluster_policy_list(self, ctx, req):
         """List cluster-policy bindings given the cluster identity.
 
         :param ctx: An instance of the request context.
@@ -1768,7 +1768,7 @@ class EngineService(service.Service):
         return [binding.to_dict() for binding in bindings]
 
     @request_context
-    def cluster_policy_get2(self, ctx, req):
+    def cluster_policy_get(self, ctx, req):
         """Get the binding record giving the cluster and policy identity.
 
         :param ctx: An instance of request context.
@@ -1789,7 +1789,7 @@ class EngineService(service.Service):
         return binding.to_dict()
 
     @request_context
-    def cluster_policy_attach2(self, ctx, req):
+    def cluster_policy_attach(self, ctx, req):
         """Attach a policy to the specified cluster.
 
         This is done via an action because a cluster lock is needed.
@@ -1829,7 +1829,7 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context
-    def cluster_policy_detach2(self, ctx, req):
+    def cluster_policy_detach(self, ctx, req):
         """Detach a policy from the specified cluster.
 
         This is done via an action because cluster lock is needed.
@@ -1871,7 +1871,7 @@ class EngineService(service.Service):
         return {'action': action_id}
 
     @request_context
-    def cluster_policy_update2(self, ctx, req):
+    def cluster_policy_update(self, ctx, req):
         """Update an existing policy binding on a cluster.
 
         This is done via an action because cluster lock is needed.

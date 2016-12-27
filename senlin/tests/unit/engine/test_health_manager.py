@@ -300,7 +300,7 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test__poll_cluster(self, mock_check):
         self.hm._poll_cluster('CLUSTER_ID')
-        mock_check.assert_called_once_with(self.hm.ctx, 'cluster_check2',
+        mock_check.assert_called_once_with(self.hm.ctx, 'cluster_check',
                                            mock.ANY)
         request = mock_check.call_args[0][2]
         self.assertIsInstance(request, vorc.ClusterCheckRequest)
