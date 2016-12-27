@@ -483,7 +483,7 @@ class EngineService(service.Service):
         LOG.info(_LI("Profile '%s' is deleted."), req.identity)
 
     @request_context
-    def policy_type_list2(self, ctx, req):
+    def policy_type_list(self, ctx, req):
         """List known policy type implementations.
 
         :param ctx: An instance of the request context.
@@ -493,7 +493,7 @@ class EngineService(service.Service):
         return environment.global_env().get_policy_types()
 
     @request_context
-    def policy_type_get2(self, ctx, req):
+    def policy_type_get(self, ctx, req):
         """Get the details about a policy type.
 
         :param ctx: An instance of the request context.
@@ -509,7 +509,7 @@ class EngineService(service.Service):
         }
 
     @request_context
-    def policy_list2(self, ctx, req):
+    def policy_list(self, ctx, req):
         """List policies matching the specified criteria
 
         :param ctx: An instance of request context.
@@ -571,7 +571,7 @@ class EngineService(service.Service):
         return policy
 
     @request_context
-    def policy_create2(self, ctx, req):
+    def policy_create(self, ctx, req):
         """Create a policy with the given name and spec.
 
         :param ctx: An instance of the request context.
@@ -598,7 +598,7 @@ class EngineService(service.Service):
         return policy.to_dict()
 
     @request_context
-    def policy_get2(self, ctx, req):
+    def policy_get(self, ctx, req):
         """Retrieve the details about a policy.
 
         :param ctx: An instance of request context.
@@ -609,7 +609,7 @@ class EngineService(service.Service):
         return policy.to_dict()
 
     @request_context
-    def policy_update2(self, ctx, req):
+    def policy_update(self, ctx, req):
         """Update the properties of a given policy
 
         :param ctx: An instance of request context.
@@ -635,7 +635,7 @@ class EngineService(service.Service):
         return policy.to_dict()
 
     @request_context
-    def policy_delete2(self, ctx, req):
+    def policy_delete(self, ctx, req):
         """Delete the specified policy.
 
         :param ctx: An instance of the request context.
@@ -654,7 +654,7 @@ class EngineService(service.Service):
         LOG.info(_LI("Policy '%s' is deleted."), req.identity)
 
     @request_context
-    def policy_validate2(self, ctx, req):
+    def policy_validate(self, ctx, req):
         """Validate a policy with the given properties.
 
         :param ctx: An instance of the request context.

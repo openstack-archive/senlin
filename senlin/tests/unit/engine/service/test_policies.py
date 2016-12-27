@@ -53,7 +53,7 @@ class PolicyTest(base.SenlinTestCase):
         }
 
     @mock.patch.object(po.Policy, 'get_all')
-    def test_policy_list2(self, mock_get):
+    def test_policy_list(self, mock_get):
         x_obj_1 = mock.Mock()
         x_obj_1.to_dict.return_value = {'k': 'v1'}
         x_obj_2 = mock.Mock()
@@ -61,12 +61,12 @@ class PolicyTest(base.SenlinTestCase):
         mock_get.return_value = [x_obj_1, x_obj_2]
         req = orpo.PolicyListRequest(project_safe=True)
 
-        result = self.eng.policy_list2(self.ctx, req.obj_to_primitive())
+        result = self.eng.policy_list(self.ctx, req.obj_to_primitive())
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
         mock_get.assert_called_once_with(self.ctx, project_safe=True)
 
     @mock.patch.object(po.Policy, 'get_all')
-    def test_policy_list2_with_params(self, mock_get):
+    def test_policy_list_with_params(self, mock_get):
         mock_get.return_value = []
         marker = uuidutils.generate_uuid()
         params = {
@@ -79,7 +79,7 @@ class PolicyTest(base.SenlinTestCase):
         }
         req = orpo.PolicyListRequest(**params)
 
-        result = self.eng.policy_list2(self.ctx, req.obj_to_primitive())
+        result = self.eng.policy_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([], result)
         mock_get.assert_called_once_with(
@@ -88,11 +88,11 @@ class PolicyTest(base.SenlinTestCase):
                      'type': ['senlin.policy.scaling-1.0']},
             project_safe=True)
 
-    def test_policy_create2_default(self):
+    def test_policy_create_default(self):
         self._setup_fakes()
         req = orpo.PolicyCreateRequestBody(name='Fake', spec=self.spec)
 
-        result = self.eng.policy_create2(self.ctx, req.obj_to_primitive())
+        result = self.eng.policy_create(self.ctx, req.obj_to_primitive())
 
         self.assertEqual('Fake', result['name'])
         self.assertEqual('TestPolicy-1.0', result['type'])
@@ -101,7 +101,7 @@ class PolicyTest(base.SenlinTestCase):
         self.assertIsNotNone(result['id'])
 
     @mock.patch.object(po.Policy, 'get_by_name')
-    def test_policy_create2_name_conflict(self, mock_get):
+    def test_policy_create_name_conflict(self, mock_get):
         cfg.CONF.set_override('name_unique', True, enforce_type=True)
         mock_get.return_value = mock.Mock()
 
@@ -115,7 +115,7 @@ class PolicyTest(base.SenlinTestCase):
 
         req = orpo.PolicyCreateRequestBody(name='FAKE_NAME', spec=spec)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_create2,
+                               self.eng.policy_create,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The request is malformed: A policy named "
@@ -123,7 +123,7 @@ class PolicyTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_get.assert_called_once_with(self.ctx, 'FAKE_NAME')
 
-    def test_policy_create2_type_not_found(self):
+    def test_policy_create_type_not_found(self):
         # We skip the fakes setup, so we won't get the proper policy type
         spec = {
             'type': 'FakePolicy',
@@ -135,7 +135,7 @@ class PolicyTest(base.SenlinTestCase):
 
         req = orpo.PolicyCreateRequestBody(name='Fake', spec=spec)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_create2,
+                               self.eng.policy_create,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -143,7 +143,7 @@ class PolicyTest(base.SenlinTestCase):
                          "not be found.",
                          six.text_type(ex.exc_info[1]))
 
-    def test_policy_create2_invalid_spec(self):
+    def test_policy_create_invalid_spec(self):
         # This test is for the policy object constructor which may throw
         # exceptions if the spec is invalid
         self._setup_fakes()
@@ -152,13 +152,13 @@ class PolicyTest(base.SenlinTestCase):
 
         req = orpo.PolicyCreateRequestBody(name='Fake', spec=spec)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_create2,
+                               self.eng.policy_create,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.ESchema, ex.exc_info[0])
         self.assertEqual("Required spec item 'KEY2' not provided",
                          six.text_type(ex.exc_info[1]))
 
-    def test_policy_create2_failed_validation(self):
+    def test_policy_create_failed_validation(self):
         self._setup_fakes()
 
         mock_validate = self.patchobject(fakes.TestPolicy, 'validate')
@@ -166,12 +166,12 @@ class PolicyTest(base.SenlinTestCase):
 
         req = orpo.PolicyCreateRequestBody(name='Fake', spec=self.spec)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_create2,
+                               self.eng.policy_create,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
         self.assertEqual('BOOM', six.text_type(ex.exc_info[1]))
 
-    def test_policy_validate2_pass(self):
+    def test_policy_validate_pass(self):
         self._setup_fakes()
 
         expected_resp = {
@@ -195,10 +195,10 @@ class PolicyTest(base.SenlinTestCase):
 
         body = orpo.PolicyValidateRequestBody(spec=self.spec)
 
-        resp = self.eng.policy_validate2(self.ctx, body.obj_to_primitive())
+        resp = self.eng.policy_validate(self.ctx, body.obj_to_primitive())
         self.assertEqual(expected_resp, resp)
 
-    def test_policy_validate2_failed(self):
+    def test_policy_validate_failed(self):
         self._setup_fakes()
         mock_validate = self.patchobject(fakes.TestPolicy, 'validate')
         mock_validate.side_effect = exc.InvalidSpec(message='BOOM')
@@ -206,39 +206,39 @@ class PolicyTest(base.SenlinTestCase):
         body = orpo.PolicyValidateRequestBody(spec=self.spec)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_validate2,
+                               self.eng.policy_validate,
                                self.ctx, body.obj_to_primitive())
         self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
         self.assertEqual('BOOM',
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(po.Policy, 'find')
-    def test_policy_get2(self, mock_find):
+    def test_policy_get(self, mock_find):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
         x_obj.to_dict.return_value = {'foo': 'bar'}
         req = orpo.PolicyGetRequest(identity='FAKE_POLICY')
 
-        result = self.eng.policy_get2(self.ctx, req.obj_to_primitive())
+        result = self.eng.policy_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_POLICY')
 
     @mock.patch.object(po.Policy, 'find')
-    def test_policy_get2_not_found(self, mock_find):
+    def test_policy_get_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='policy',
                                                      id='Fake')
         req = orpo.PolicyGetRequest(identity='POLICY')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_get2,
+                               self.eng.policy_get,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
 
     @mock.patch.object(pb.Policy, 'load')
     @mock.patch.object(po.Policy, 'find')
-    def test_policy_update2(self, mock_find, mock_load):
+    def test_policy_update(self, mock_find, mock_load):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
         x_policy = mock.Mock()
@@ -253,13 +253,13 @@ class PolicyTest(base.SenlinTestCase):
 
         req = orpo.PolicyUpdateRequest(**request)
 
-        result = self.eng.policy_update2(self.ctx, req.obj_to_primitive())
+        result = self.eng.policy_update(self.ctx, req.obj_to_primitive())
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE')
         mock_load.assert_called_once_with(self.ctx, db_policy=x_obj)
 
     @mock.patch.object(po.Policy, 'find')
-    def test_policy_update2_not_found(self, mock_find):
+    def test_policy_update_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='policy',
                                                      id='Fake')
         p_req = orpo.PolicyUpdateRequestBody(name='NEW_NAME')
@@ -271,14 +271,14 @@ class PolicyTest(base.SenlinTestCase):
         req = orpo.PolicyUpdateRequest(**request)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_update2,
+                               self.eng.policy_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
 
     @mock.patch.object(pb.Policy, 'load')
     @mock.patch.object(po.Policy, 'find')
-    def test_policy_update2_no_change(self, mock_find, mock_load):
+    def test_policy_update_no_change(self, mock_find, mock_load):
         x_obj = mock.Mock()
         mock_find.return_value = x_obj
         x_policy = mock.Mock()
@@ -297,7 +297,7 @@ class PolicyTest(base.SenlinTestCase):
         req = orpo.PolicyUpdateRequest(**request)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_update2,
+                               self.eng.policy_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -311,13 +311,13 @@ class PolicyTest(base.SenlinTestCase):
 
     @mock.patch.object(pb.Policy, 'delete')
     @mock.patch.object(po.Policy, 'find')
-    def test_policy_delete2(self, mock_find, mock_delete):
+    def test_policy_delete(self, mock_find, mock_delete):
         x_obj = mock.Mock(id='POLICY_ID')
         mock_find.return_value = x_obj
         mock_delete.return_value = None
 
         req = orpo.PolicyDeleteRequest(identity='POLICY_ID')
-        result = self.eng.policy_delete2(self.ctx, req.obj_to_primitive())
+        result = self.eng.policy_delete(self.ctx, req.obj_to_primitive())
 
         self.assertIsNone(result)
         self.assertEqual('POLICY_ID', req.identity)
@@ -325,13 +325,13 @@ class PolicyTest(base.SenlinTestCase):
         mock_delete.assert_called_once_with(self.ctx, 'POLICY_ID')
 
     @mock.patch.object(po.Policy, 'find')
-    def test_policy_delete2_not_found(self, mock_find):
+    def test_policy_delete_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='policy', id='Bogus')
 
         req = orpo.PolicyDeleteRequest(identity='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_delete2, self.ctx,
+                               self.eng.policy_delete, self.ctx,
                                req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -341,7 +341,7 @@ class PolicyTest(base.SenlinTestCase):
 
     @mock.patch.object(pb.Policy, 'delete')
     @mock.patch.object(po.Policy, 'find')
-    def test_policy_delete2_policy_in_use(self, mock_find, mock_delete):
+    def test_policy_delete_policy_in_use(self, mock_find, mock_delete):
         x_obj = mock.Mock(id='POLICY_ID')
         mock_find.return_value = x_obj
         err = exc.EResourceBusy(type='policy', id='POLICY_ID')
@@ -350,7 +350,7 @@ class PolicyTest(base.SenlinTestCase):
         req = orpo.PolicyDeleteRequest(identity='POLICY_ID')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_delete2, self.ctx,
+                               self.eng.policy_delete, self.ctx,
                                req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])

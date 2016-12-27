@@ -71,7 +71,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_parse.assert_called_once_with('PolicyListRequest', req,
                                            {'project_safe': True})
-        mock_call.assert_called_once_with(req.context, 'policy_list2',
+        mock_call.assert_called_once_with(req.context, 'policy_list',
                                           mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
@@ -110,7 +110,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'sort': 'name:asc',
                 'project_safe': False,
             })
-        mock_call.assert_called_once_with(req.context, 'policy_list2',
+        mock_call.assert_called_once_with(req.context, 'policy_list',
                                           mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
@@ -204,7 +204,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(engine_response, resp['policy'])
         mock_parse.assert_called_once_with(
             'PolicyCreateRequest', req, body, 'policy')
-        mock_call.assert_called_with(req.context, 'policy_create2',
+        mock_call.assert_called_with(req.context, 'policy_create',
                                      mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
@@ -268,7 +268,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('InvalidSpec', resp.json['error']['type'])
         mock_parse.assert_called_once_with(
             'PolicyCreateRequest', mock.ANY, body, 'policy')
-        mock_call.assert_called_once_with(req.context, 'policy_create2',
+        mock_call.assert_called_once_with(req.context, 'policy_create',
                                           obj.policy)
 
     def test_policy_create_denied_policy(self, mock_enforce):
@@ -309,7 +309,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(engine_resp, result['policy'])
         mock_parse.assert_called_once_with(
             'PolicyGetRequest', req, {'identity': pid})
-        mock_call.assert_called_with(req.context, 'policy_get2',
+        mock_call.assert_called_with(req.context, 'policy_get',
                                      mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
@@ -384,7 +384,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'PolicyUpdateRequest', req, {'identity': pid,
                                          'policy': mock.ANY})
-        mock_call.assert_called_with(req.context, 'policy_update2',
+        mock_call.assert_called_with(req.context, 'policy_update',
                                      mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
@@ -511,7 +511,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'PolicyDeleteRequest', req, {'identity': pid})
         mock_call.assert_called_with(
-            req.context, 'policy_delete2', mock.ANY)
+            req.context, 'policy_delete', mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -683,4 +683,4 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'PolicyValidateRequest', req, body, 'policy')
         mock_call.assert_called_with(
-            req.context, 'policy_validate2', mock.ANY)
+            req.context, 'policy_validate', mock.ANY)
