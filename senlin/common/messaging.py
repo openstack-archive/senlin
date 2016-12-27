@@ -22,6 +22,7 @@ from senlin.common import context
 JsonPayloadSerializer = messaging.JsonPayloadSerializer
 
 TRANSPORT = None
+NOTIFICATION_TRANSPORT = None
 NOTIFIER = None
 
 
@@ -62,15 +63,15 @@ class RequestContextSerializer(messaging.Serializer):
 
 def setup(url=None, optional=False):
     """Initialise the oslo_messaging layer."""
-    global TRANSPORT, NOTIFIER
+    global TRANSPORT, GLOBAL_TRANSPORT, NOTIFIER
 
     if url and url.startswith("fake://"):
         # NOTE: oslo_messaging fake driver uses time.sleep
         # for task switch, so we need to monkey_patch it
         eventlet.monkey_patch(time=True)
 
+    messaging.set_transport_defaults('senlin')
     if not TRANSPORT:
-        messaging.set_transport_defaults('senlin')
         exmods = ['senlin.common.exception']
         try:
             TRANSPORT = messaging.get_transport(
@@ -82,19 +83,30 @@ def setup(url=None, optional=False):
                 # so reraise the exception
                 raise
 
-    if not NOTIFIER and TRANSPORT:
+    if not NOTIFIER:
+        exmods = ['senlin.common.exception']
+        try:
+            NOTIFICATION_TRANSPORT = messaging.get_notification_transport(
+                cfg.CONF, allowed_remote_exmods=exmods)
+        except Exception as e:
+            raise
+
         serializer = RequestContextSerializer(JsonPayloadSerializer())
-        NOTIFIER = messaging.Notifier(TRANSPORT, serializer=serializer,
+        NOTIFIER = messaging.Notifier(NOTIFICATION_TRANSPORT,
+                                      serializer=serializer,
                                       topics=['versioned_notifications'])
 
 
 def cleanup():
     """Cleanup the oslo_messaging layer."""
-    global TRANSPORT, NOTIFIER
+    global TRANSPORT, NOTIFICATION_TRANSPORT, NOTIFIER
     if TRANSPORT:
         TRANSPORT.cleanup()
         TRANSPORT = None
     NOTIFIER = None
+    if NOTIFICATION_TRANSPORT:
+        NOTIFICATION_TRANSPORT.cleanup()
+        NOTIFICATION_TRANSPORT = None
 
 
 def get_rpc_server(target, endpoint, serializer=None):
