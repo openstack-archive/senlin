@@ -51,14 +51,14 @@ class ProfileController(wsgi.Controller):
         params['project_safe'] = project_safe
 
         obj = util.parse_request('ProfileListRequest', req, params)
-        profiles = self.rpc_client.call2(req.context, 'profile_list2', obj)
+        profiles = self.rpc_client.call2(req.context, 'profile_list', obj)
         return {'profiles': profiles}
 
     @util.policy_enforce
     def create(self, req, body):
 
         obj = util.parse_request('ProfileCreateRequest', req, body, 'profile')
-        result = self.rpc_client.call2(req.context, 'profile_create2', obj)
+        result = self.rpc_client.call2(req.context, 'profile_create', obj)
         return {'profile': result}
 
     @wsgi.Controller.api_version('1.2')
@@ -67,7 +67,7 @@ class ProfileController(wsgi.Controller):
 
         obj = util.parse_request(
             'ProfileValidateRequest', req, body, 'profile')
-        result = self.rpc_client.call2(req.context, 'profile_validate2', obj)
+        result = self.rpc_client.call2(req.context, 'profile_validate', obj)
         return {'profile': result}
 
     @util.policy_enforce
@@ -75,7 +75,7 @@ class ProfileController(wsgi.Controller):
         params = {'identity': profile_id}
 
         obj = util.parse_request('ProfileGetRequest', req, params)
-        profile = self.rpc_client.call2(req.context, 'profile_get2', obj)
+        profile = self.rpc_client.call2(req.context, 'profile_get', obj)
         return {'profile': profile}
 
     @util.policy_enforce
@@ -91,7 +91,7 @@ class ProfileController(wsgi.Controller):
             'ProfileUpdateRequest', req, {'identity': profile_id,
                                           'profile': body_req})
 
-        profile = self.rpc_client.call2(req.context, 'profile_update2', obj)
+        profile = self.rpc_client.call2(req.context, 'profile_update', obj)
         return {'profile': profile}
 
     @util.policy_enforce
@@ -99,5 +99,5 @@ class ProfileController(wsgi.Controller):
 
         obj = util.parse_request(
             'ProfileDeleteRequest', req, {'identity': profile_id})
-        self.rpc_client.call2(req.context, 'profile_delete2', obj)
+        self.rpc_client.call2(req.context, 'profile_delete', obj)
         raise exc.HTTPNoContent()

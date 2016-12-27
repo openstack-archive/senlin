@@ -69,7 +69,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(engine_resp, result['profiles'])
         mock_parse.assert_called_once_with(
             'ProfileListRequest', req, {'project_safe': True})
-        mock_call.assert_called_once_with(req.context, 'profile_list2', obj)
+        mock_call.assert_called_once_with(req.context, 'profile_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -104,7 +104,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'type': ['fake_type'],
                 'project_safe': True
             })
-        mock_call.assert_called_once_with(req.context, 'profile_list2', obj)
+        mock_call.assert_called_once_with(req.context, 'profile_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -212,7 +212,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ProfileCreateRequest', req, body, 'profile')
         mock_call.assert_called_once_with(
-            req.context, 'profile_create2', obj)
+            req.context, 'profile_create', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -284,7 +284,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ProfileCreateRequest', mock.ANY, body, 'profile')
         mock_call.assert_called_once_with(
-            req.context, 'profile_create2', obj)
+            req.context, 'profile_create', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -320,7 +320,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ProfileCreateRequest', mock.ANY, body, 'profile')
         mock_call.assert_called_once_with(
-            req.context, 'profile_create2', obj)
+            req.context, 'profile_create', obj)
 
     def test_profile_create_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', False)
@@ -372,7 +372,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ProfileGetRequest', req, {'identity': pid})
         mock_call.assert_called_once_with(
-            req.context, 'profile_get2', obj)
+            req.context, 'profile_get', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -397,7 +397,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ProfileGetRequest', mock.ANY, {'identity': pid})
         mock_call.assert_called_once_with(
-            req.context, 'profile_get2', obj)
+            req.context, 'profile_get', obj)
 
     def test_profile_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)
@@ -448,7 +448,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ProfileUpdateRequest', req, mock.ANY)
         mock_call.assert_called_once_with(
-            req.context, 'profile_update2', obj)
+            req.context, 'profile_update', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -493,7 +493,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ProfileUpdateRequest', req, mock.ANY)
         mock_call.assert_called_once_with(
-            req.context, 'profile_update2', obj)
+            req.context, 'profile_update', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -580,7 +580,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_parse.assert_called_once_with(
             'ProfileDeleteRequest', req, {'identity': pid})
-        mock_call.assert_called_once_with(req.context, 'profile_delete2', obj)
+        mock_call.assert_called_once_with(req.context, 'profile_delete', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -605,7 +605,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ProfileDeleteRequest', mock.ANY, {'identity': pid})
         mock_call.assert_called_once_with(
-            req.context, 'profile_delete2', obj)
+            req.context, 'profile_delete', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -806,4 +806,4 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ProfileValidateRequest', req, body, 'profile')
         mock_call.assert_called_with(
-            req.context, 'profile_validate2', obj)
+            req.context, 'profile_validate', obj)
