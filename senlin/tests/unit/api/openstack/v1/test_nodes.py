@@ -74,7 +74,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'NodeListRequest', req, {'project_safe': True})
         mock_call.assert_called_once_with(
-            req.context, 'node_list2', obj)
+            req.context, 'node_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -112,7 +112,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'project_safe': False
             })
         mock_call.assert_called_once_with(
-            req.context, 'node_list2', obj)
+            req.context, 'node_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -154,7 +154,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('Forbidden', resp.json['error']['type'])
         mock_parse.assert_called_once_with(
             "NodeListRequest", mock.ANY, {'project_safe': False})
-        mock_call.assert_called_once_with(req.context, 'node_list2', obj)
+        mock_call.assert_called_once_with(req.context, 'node_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -174,7 +174,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'NodeListRequest', req, {'project_safe': True})
         mock_call.assert_called_once_with(
-            req.context, 'node_list2', obj)
+            req.context, 'node_list', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -235,7 +235,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'project_safe': True
             })
         mock_call.assert_called_once_with(
-            req.context, 'node_list2', obj)
+            req.context, 'node_list', obj)
 
     def test_node_index_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
@@ -285,7 +285,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'NodeCreateRequest', req, body, 'node')
         mock_call.assert_called_once_with(
-            req.context, 'node_create2', mock.ANY)
+            req.context, 'node_create', mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -377,7 +377,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'NodeCreateRequest', mock.ANY, body, 'node')
         mock_call.assert_called_once_with(
-            req.context, 'node_create2', mock.ANY)
+            req.context, 'node_create', mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -407,7 +407,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'NodeCreateRequest', mock.ANY, body, 'node')
         mock_call.assert_called_once_with(
-            req.context, 'node_create2', mock.ANY)
+            req.context, 'node_create', mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -444,7 +444,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(engine_resp, response['node'])
         mock_parse.assert_called_once_with(
             'NodeGetRequest', req, {'identity': node_id})
-        mock_call.assert_called_once_with(req.context, 'node_get2', obj)
+        mock_call.assert_called_once_with(req.context, 'node_get', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -485,7 +485,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'NodeGetRequest', mock.ANY, {'identity': node_id})
         mock_call.assert_called_once_with(
-            req.context, 'node_get2', mock.ANY)
+            req.context, 'node_get', mock.ANY)
 
     def test_node_get_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', False)
@@ -536,7 +536,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'metadata': {},
                 'identity': nid
             })
-        mock_call.assert_called_once_with(req.context, 'node_update2', obj)
+        mock_call.assert_called_once_with(req.context, 'node_update', obj)
         result = {
             'node': engine_response,
             'location': '/actions/%s' % aid,
@@ -587,7 +587,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               self.controller.update,
                                               req, node_id=nid, body=body)
 
-        mock_call.assert_called_with(req.context, 'node_update2', mock.ANY)
+        mock_call.assert_called_with(req.context, 'node_update', mock.ANY)
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
@@ -621,7 +621,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'NodeUpdateRequest', mock.ANY, mock.ANY)
         mock_call.assert_called_once_with(
-            req.context, 'node_update2', mock.ANY)
+            req.context, 'node_update', mock.ANY)
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
         msg = 'The profile (aaaa-bbbb-cccc) could not be found.'
@@ -686,7 +686,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(res, result)
         mock_parse.assert_called_once_with(
             'NodeDeleteRequest', req, {'identity': 'aaaa-bbbb-cccc'})
-        mock_call.assert_called_once_with(req.context, 'node_delete2', obj)
+        mock_call.assert_called_once_with(req.context, 'node_delete', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -759,7 +759,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'NodeCheckRequest', req,
             {'params': {}, 'identity': 'test-node-1'})
-        mock_call.assert_called_once_with(req.context, 'node_check2', obj)
+        mock_call.assert_called_once_with(req.context, 'node_check', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
@@ -805,7 +805,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'NodeRecoverRequest', req,
             {'params': {}, 'identity': 'xxxx-yyyy'})
-        mock_call.assert_called_once_with(req.context, 'node_recover2', obj)
+        mock_call.assert_called_once_with(req.context, 'node_recover', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
