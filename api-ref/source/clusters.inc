@@ -935,3 +935,50 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - Location: location
+
+
+Perform an Operation on a Cluster
+=================================
+
+.. rest_method::  POST /v1/clusters/{cluster_id}/ops
+
+Perform an operation on the specified cluster. The specified operation and its
+associated parameters must validate against the profile type of the cluster.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - cluster_id: cluster_id_url
+  - operation: cluster_operation_request
+
+Request Example
+---------------
+
+.. literalinclude:: samples/cluster-operation-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
