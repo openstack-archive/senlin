@@ -50,7 +50,7 @@ notifications and published on the global message queue. This dispatcher is
 by default disabled. To enable it, you can add the following line to the
 Senlin configuration file and then restart the senlin engine::
 
- dispatchers = message
+ event_dispatchers = message
 
 Note that unprocessed event notifications which are not associated with a
 TTL (time to live) value by default will remain queued at the message bus,
