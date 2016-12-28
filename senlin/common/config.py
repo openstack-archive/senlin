@@ -230,7 +230,9 @@ def list_opts():
     yield 'DEFAULT', rpc_opts
     yield 'DEFAULT', engine_opts
     yield 'DEFAULT', service_opts
+    yield 'DEFAULT', event_opts
     yield authentication_group.name, authentication_opts
+    yield dispatcher_group.name, dispatcher_opts
     yield revision_group.name, revision_opts
     yield receiver_group.name, receiver_opts
     yield zaqar_group.name, zaqar_opts
