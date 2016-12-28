@@ -308,6 +308,8 @@ class TestHealthManager(base.SenlinTestCase):
 
     @mock.patch.object(obj_cluster.Cluster, 'get')
     def test__add_listener(self, mock_get):
+        cfg.CONF.set_override('nova_control_exchange', 'FAKE_NOVA_EXCHANGE',
+                              group='health_manager', enforce_type=True)
         x_listener = mock.Mock()
         mock_add_thread = self.patchobject(self.hm.TG, 'add_thread',
                                            return_value=x_listener)
@@ -321,7 +323,8 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual(x_listener, res)
         mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID')
         mock_add_thread.assert_called_once_with(health_manager.ListenerProc,
-                                                'nova', 'PROJECT_ID',
+                                                'FAKE_NOVA_EXCHANGE',
+                                                'PROJECT_ID',
                                                 'CLUSTER_ID')
 
     @mock.patch.object(obj_cluster.Cluster, 'get')
