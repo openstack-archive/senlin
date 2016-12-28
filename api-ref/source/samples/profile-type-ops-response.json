@@ -1,0 +1,15 @@
+{
+    "operations": {
+        "reboot": {
+            "description": "reboot the specified VM instance",
+            "parameters": {
+                "type": {
+                    "default": "SOFT",
+                    "description": "Type of reboot requested",
+                    "required": false,
+                    "type": "String"
+                }
+            }
+        }
+    }
+}
