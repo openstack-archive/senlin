@@ -1351,6 +1351,87 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_operation(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'operation', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {
+            'dance': {
+                'params': {
+                    'style': 'tango'
+                },
+                'filters': {
+                    'role': 'slave'
+                }
+            }
+        }
+        req = self._post('/clusters/aaaa-bbbb-cccc/ops',
+                         jsonutils.dumps(body), version='1.4')
+        eng_resp = {'action': 'ACTION_ID'}
+        mock_call.return_value = eng_resp
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        resp = self.controller.operation(req, cluster_id=cid, body=body)
+
+        self.assertEqual(eng_resp, resp)
+        mock_call.assert_called_once_with(req.context, 'cluster_op', obj)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_operation_version_mismatch(self, mock_call, mock_enforce):
+        cid = 'aaaa-bbbb-cccc'
+        body = {'dance': {}}
+        req = self._post('/clusters/aaaa-bbbb/ops', jsonutils.dumps(body),
+                         version='1.1')
+
+        ex = self.assertRaises(senlin_exc.MethodVersionNotFound,
+                               self.controller.operation,
+                               req, cluster_id=cid, body=body)
+
+        self.assertEqual(0, mock_call.call_count)
+        self.assertEqual('API version 1.1 is not supported on this method.',
+                         six.text_type(ex))
+
+    def test_operation_no_operations(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'operation', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {}
+        req = self._post('/clusters/aaaa-bbbb-cccc/ops',
+                         jsonutils.dumps(body), version='1.4')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.operation,
+                               req, cluster_id=cid, body=body)
+
+        self.assertEqual("No operation specified", six.text_type(ex))
+
+    def test_operation_multi_operations(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'operation', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'dance': {}, 'sing': {}}
+        req = self._post('/clusters/aaaa-bbbb-cccc/ops',
+                         jsonutils.dumps(body), version='1.4')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.operation,
+                               req, cluster_id=cid, body=body)
+
+        self.assertEqual("Multiple operations specified", six.text_type(ex))
+
+    def test_cluster_operation_err_denied_policy(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'operation', False)
+        body = {'someoperation': {}}
+        req = self._post('/clusters/abc/ops', jsonutils.dumps(body),
+                         version='1.4')
+
+        resp = shared.request_with_middleware(fault.FaultWrapper,
+                                              self.controller.operation,
+                                              req, cluster_id='abc', body=body)
+
+        self.assertEqual(403, resp.status_int)
+        self.assertIn('403 Forbidden', six.text_type(resp))
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
     def test_delete(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         req = mock.Mock(context=self.context)

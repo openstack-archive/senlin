@@ -38,3 +38,4 @@ it can be used by both users and developers.
 ---
 
    Added ``profile_type_ops`` API.
+   Added ``cluster_operation`` API.
