@@ -1705,7 +1705,7 @@ class EngineService(service.Service):
         :param ctx: An instance of the request context.
         :param req: An instance of the NodeOperationRequest object.
         :return: A dictionary containing the ID of the action triggered by the
-                 recover request.
+                 operation request.
         """
         LOG.info(_LI("Performing operation '%(o)s' on node '%(n)s'."),
                  {'o': req.operation, 'n': req.identity})
