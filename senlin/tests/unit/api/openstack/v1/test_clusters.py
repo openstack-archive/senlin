@@ -1178,7 +1178,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {}
         req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
                                req, cluster_id=cid, body=body)
@@ -1191,7 +1191,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {'action_1': {}, 'action_2': {}}
         req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
                                req, cluster_id=cid, body=body)
@@ -1204,7 +1204,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         body = {'fly': None}
         req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
 
-        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call2')
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
                                req, cluster_id=cid, body=body)

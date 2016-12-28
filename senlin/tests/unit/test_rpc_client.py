@@ -124,7 +124,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
 
     def _test_engine_api(self, method, rpc_method, **kwargs):
         ctxt = utils.dummy_context()
-        expected_retval = 'foo' if method == 'call' else None
+        expected_retval = 'foo' if method == 'call2' else None
 
         kwargs.pop('version', None)
 
@@ -143,7 +143,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'webhook_delete',
         ]
 
-        if rpc_method == 'call' and method in cast_and_call:
+        if rpc_method == 'call2' and method in cast_and_call:
             kwargs['cast'] = False
 
         mock_rpc_method = self.patchobject(self.rpcapi, rpc_method,
