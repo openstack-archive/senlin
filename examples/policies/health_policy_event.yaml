@@ -1,4 +1,4 @@
-# Sample health policy based on node health checking
+# Sample health policy based on VM lifecycle events
 type: senlin.policy.health
 version: 1.0
 description: A policy for maintaining node health from a cluster.
@@ -11,5 +11,5 @@ properties:
   recovery:
     # List of actions that can be retried on a failed node
     actions:
-      - REBUILD
-      - RECREATE
+      - name: REBUILD
+      - name: RECREATE
