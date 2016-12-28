@@ -534,6 +534,32 @@ cluster_nodes:
     A list of the UUIDs of node objects which are members of the current
     cluster.
 
+cluster_operation_request:
+  type: object
+  in: body
+  required: True
+  description: |
+    A structured definition of an operation to be performed. The object is
+    usually expressed as::
+
+      <operation_name>: {
+        filters: {
+          <cond_1>: <var_1>,
+          <cond_2>: <var_2>
+        }
+        params: {
+          <param_1>: <value_1>,
+          <param_2>: <value_2>
+          ...
+        }
+      }
+
+    The ``<operation_name>`` specifies the operation to be performed, in which
+    the ``filters`` object contains a collection of filtering rules, and the
+    ``params`` object provide the parameters (if any) to the operation.
+    Each individual operation has its own set of parameters, as supported by
+    the profile type of the target cluster.
+
 cluster_policies:
   type: array
   in: body

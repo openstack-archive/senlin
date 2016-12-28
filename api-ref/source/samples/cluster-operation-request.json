@@ -1,0 +1,10 @@
+{
+    "reboot": {
+        "filters": {
+            "role": "slave"
+        },
+        "params": {
+            "type": "soft"
+        }
+    }
+}
