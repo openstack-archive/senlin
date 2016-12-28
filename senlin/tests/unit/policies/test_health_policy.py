@@ -10,8 +10,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
+
 import mock
+import six
+
 from senlin.common import consts
+from senlin.common import exception as exc
 from senlin.common import scaleutils as su
 from senlin.engine import health_manager
 from senlin.objects import cluster as co
@@ -63,6 +68,20 @@ class TestHealthPolicy(base.SenlinTestCase):
         self.assertEqual(60, self.hp.interval)
         self.assertEqual([{'name': 'REBUILD', 'params': None}],
                          self.hp.recover_actions)
+
+    def test_validate(self):
+        spec = copy.deepcopy(self.spec)
+        spec["properties"]["recovery"]["actions"] = [
+            {"name": "REBUILD"}, {"name": "RECREATE"}
+        ]
+        self.hp = health_policy.HealthPolicy('test-policy', spec)
+
+        ex = self.assertRaises(exc.ESchema,
+                               self.hp.validate,
+                               self.context)
+
+        self.assertEqual("Only one 'actions' is supported for now.",
+                         six.text_type(ex))
 
     @mock.patch.object(health_manager, 'register')
     def test_attach(self, mock_hm_reg):
