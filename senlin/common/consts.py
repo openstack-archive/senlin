@@ -34,6 +34,13 @@ RPC_PARAMS = (
     'show_details', 'sort',
 )
 
+ACTION_CAUSES = (
+    CAUSE_RPC, CAUSE_DERIVED,
+) = (
+    'RPC Request',
+    'Derived Action',
+)
+
 CLUSTER_ACTION_NAMES = (
     CLUSTER_CREATE, CLUSTER_DELETE, CLUSTER_UPDATE,
     CLUSTER_ADD_NODES, CLUSTER_DEL_NODES, CLUSTER_RESIZE,

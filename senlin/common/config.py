@@ -121,9 +121,11 @@ cfg.CONF.register_opts(event_opts)
 dispatcher_group = cfg.OptGroup('dispatchers')
 dispatcher_opts = [
     cfg.StrOpt('priority', default='info',
-               help=_("Lowest event priorities to be dispatched. Valid values "
-                      "include 'critical', 'error', 'warning', 'info' and "
-                      "'debug'."))]
+               choices=("critical", "error", "warning", "info", "debug"),
+               help=_("Lowest event priorities to be dispatched.")),
+    cfg.BoolOpt("exclude_derived_actions", default=True,
+                help=_("Exclude derived actions from events dumping."))]
+
 cfg.CONF.register_group(dispatcher_group)
 cfg.CONF.register_opts(dispatcher_opts, group=dispatcher_group)
 

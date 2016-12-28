@@ -15,6 +15,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 import testtools
 
+from senlin.common import consts
 from senlin.engine import event
 
 
@@ -79,7 +80,7 @@ class TestEvent(testtools.TestCase):
         cfg.CONF.set_override('debug', True, enforce_type=True)
         saved_dispathers = event.dispatchers
         event.dispatchers = mock.Mock()
-        action = mock.Mock()
+        action = mock.Mock(cause=consts.CAUSE_RPC)
         try:
             event._dump(logging.INFO, action, 'Phase1', 'Reason1', 'TS1')
             event.dispatchers.map_method.assert_called_once_with(
@@ -92,7 +93,7 @@ class TestEvent(testtools.TestCase):
         cfg.CONF.set_override('debug', True, enforce_type=True)
         saved_dispathers = event.dispatchers
         event.dispatchers = mock.Mock()
-        action = mock.Mock()
+        action = mock.Mock(cause=consts.CAUSE_RPC)
         try:
             event._dump(logging.INFO, action, 'Phase1', 'Reason1', None)
 
@@ -108,11 +109,39 @@ class TestEvent(testtools.TestCase):
                               enforce_type=True)
         saved_dispathers = event.dispatchers
         event.dispatchers = mock.Mock()
-        action = mock.Mock()
+        action = mock.Mock(cause=consts.CAUSE_RPC)
         try:
             event._dump(logging.INFO, action, 'Phase1', 'Reason1', 'TS1')
 
             self.assertEqual(0, event.dispatchers.map_method.call_count)
+        finally:
+            event.dispatchers = saved_dispathers
+
+    def test__dump_exclude_derived_actions_positive(self):
+        cfg.CONF.set_override('exclude_derived_actions', True,
+                              group='dispatchers', enforce_type=True)
+        saved_dispathers = event.dispatchers
+        event.dispatchers = mock.Mock()
+        action = mock.Mock(cause=consts.CAUSE_DERIVED)
+        try:
+            event._dump(logging.INFO, action, 'Phase1', 'Reason1', 'TS1')
+
+            self.assertEqual(0, event.dispatchers.map_method.call_count)
+        finally:
+            event.dispatchers = saved_dispathers
+
+    def test__dump_exclude_derived_actions_negative(self):
+        cfg.CONF.set_override('exclude_derived_actions', False,
+                              group='dispatchers', enforce_type=True)
+        saved_dispathers = event.dispatchers
+        event.dispatchers = mock.Mock()
+        action = mock.Mock(cause=consts.CAUSE_DERIVED)
+        try:
+            event._dump(logging.INFO, action, 'Phase1', 'Reason1', 'TS1')
+
+            event.dispatchers.map_method.assert_called_once_with(
+                'dump', logging.INFO, action,
+                phase='Phase1', reason='Reason1', timestamp='TS1')
         finally:
             event.dispatchers = saved_dispathers
 
@@ -121,7 +150,7 @@ class TestEvent(testtools.TestCase):
         saved_dispathers = event.dispatchers
         event.dispatchers = mock.Mock()
         event.dispatchers.map_method.side_effect = Exception('fab')
-        action = mock.Mock()
+        action = mock.Mock(cause=consts.CAUSE_RPC)
         try:
             res = event._dump(logging.INFO, action, 'Phase1', 'Reason1', 'TS1')
 
