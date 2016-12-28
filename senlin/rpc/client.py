@@ -43,14 +43,6 @@ class EngineClient(object):
     def make_msg(method, **kwargs):
         return method, kwargs
 
-    def call(self, ctxt, msg, version=None):
-        method, kwargs = msg
-        if version is not None:
-            client = self._client.prepare(version=version)
-        else:
-            client = self._client
-        return client.call(ctxt, method, **kwargs)
-
     def call2(self, ctxt, method, req, version=None):
         """The main entry for invoking engine service.
 
