@@ -22,7 +22,7 @@ class MessageEvent(base.EventBackend):
 
     @classmethod
     def _notify_cluster_action(cls, ctx, level, cluster, action, **kwargs):
-        action_name = cls._get_action_name(action.action)
+        action_name = cls._get_action_name(action)
         priority = utils.level_from_number(level).lower()
         publisher = nobj.NotificationPublisher(
             host=cfg.CONF.host, binary='senlin-engine')
@@ -38,7 +38,7 @@ class MessageEvent(base.EventBackend):
 
     @classmethod
     def _notify_node_action(cls, ctx, level, node, action, **kwargs):
-        action_name = cls._get_action_name(action.action)
+        action_name = cls._get_action_name(action)
         priority = utils.level_from_number(level).lower()
         publisher = nobj.NotificationPublisher(
             host=cfg.CONF.host, binary='senlin-engine')

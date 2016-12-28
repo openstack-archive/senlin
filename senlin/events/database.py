@@ -12,6 +12,7 @@
 
 from oslo_utils import timeutils
 
+from senlin.common import consts
 from senlin.events import base
 from senlin.objects import event as eo
 
@@ -39,6 +40,11 @@ class DBEvent(base.EventBackend):
         # use provided extra data if any
         extra = kwargs.get("extra") or {}
 
+        # Make a guess over the action name
+        action_name = action.action
+        if action_name in (consts.NODE_OPERATION, consts.CLUSTER_OPERATION):
+            action_name = action.inputs.get('operation', action_name)
+
         values = {
             'level': level,
             'timestamp': timestamp,
@@ -48,7 +54,7 @@ class DBEvent(base.EventBackend):
             'cluster_id': cluster_id,
             'user': ctx.user,
             'project': ctx.project,
-            'action': action.action,
+            'action': action_name,
             'status': status,
             'status_reason': reason,
             'meta_data': extra,
