@@ -11,6 +11,7 @@
 # under the License.
 
 from oslo_config import cfg
+from oslo_utils import versionutils
 
 from senlin.common import consts
 from senlin.objects import base
@@ -96,10 +97,28 @@ class ClusterAddNodesRequest(base.SenlinObject):
 @base.SenlinObjectRegistry.register
 class ClusterDelNodesRequest(base.SenlinObject):
 
+    # VERSION 1.0: Initial version
+    # VERSION 1.1: Add field 'destroy_after_deletion'
+    VERSION = '1.1'
+    VERSION_MAP = {
+        '1.4': '1.1',
+    }
+
     fields = {
         'identity': fields.StringField(),
-        'nodes': fields.IdentityListField(min_items=1)
+        'nodes': fields.IdentityListField(min_items=1),
+        'destroy_after_deletion': fields.BooleanField(nullable=True,
+                                                      default=False)
     }
+
+    def obj_make_compatible(self, primitive, target_version):
+        super(ClusterDelNodesRequest, self).obj_make_compatible(
+            primitive, target_version)
+        target_version = versionutils.convert_version_to_tuple(
+            target_version)
+        if target_version < (1, 1):
+            if 'destroy_after_deletion' in primitive:
+                del primitive['destroy_after_deletion']
 
 
 @base.SenlinObjectRegistry.register
