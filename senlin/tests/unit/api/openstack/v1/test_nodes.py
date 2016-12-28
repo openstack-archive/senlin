@@ -902,3 +902,71 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(400, ex.code)
         self.assertIn('Unrecognized action "eat" specified',
                       six.text_type(ex))
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    def test_node_operation(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'operation', True)
+        node_id = 'xxxx-yyyy'
+        body = {'dance': {'style': 'rumba'}}
+        req = self._post('/nodes/%(node_id)s/ops' % {'node_id': node_id},
+                         jsonutils.dumps(body), version='1.4')
+
+        engine_response = {'action': 'action-id'}
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.return_value = engine_response
+
+        response = self.controller.operation(req, node_id=node_id, body=body)
+
+        location = {'location': '/actions/action-id'}
+        engine_response.update(location)
+        self.assertEqual(engine_response, response)
+        mock_parse.assert_called_once_with(
+            'NodeOperationRequest', req,
+            {'identity': 'xxxx-yyyy',
+             'operation': 'dance',
+             'params': {'style': 'rumba'}
+             })
+        mock_call.assert_called_once_with(req.context, 'node_op', obj)
+
+    def test_node_operation_version_mismatch(self, mock_enforce):
+        node_id = 'xxxx-yyyy'
+        body = {}
+        req = self._post('/nodes/%(node_id)s/ops' % {'node_id': node_id},
+                         jsonutils.dumps(body), version='1.3')
+
+        ex = self.assertRaises(senlin_exc.MethodVersionNotFound,
+                               self.controller.operation,
+                               req, node_id=node_id, body=body)
+
+        self.assertEqual("API version 1.3 is not supported on this method.",
+                         six.text_type(ex))
+
+    def test_node_operation_missing_operation(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'operation', True)
+        node_id = 'xxxx-yyyy'
+        body = {}
+        req = self._post('/nodes/%(node_id)s/ops' % {'node_id': node_id},
+                         jsonutils.dumps(body), version='1.4')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.operation, req,
+                               node_id=node_id, body=body)
+
+        self.assertEqual(400, ex.code)
+        self.assertIn('No operation specified.', six.text_type(ex))
+
+    def test_node_operation_multiple_operation(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'operation', True)
+        node_id = 'xxxx-yyyy'
+        body = {'eat': {}, 'sleep': {}}
+        req = self._post('/nodes/%(node_id)s/ops' % {'node_id': node_id},
+                         jsonutils.dumps(body), version='1.4')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.operation,
+                               req, node_id=node_id, body=body)
+
+        self.assertEqual(400, ex.code)
+        self.assertIn('Multiple operations specified.', six.text_type(ex))
