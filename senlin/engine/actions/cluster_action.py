@@ -896,6 +896,50 @@ class ClusterAction(base.Action):
         result = self.RES_OK if res else self.RES_ERROR
         return result, reason
 
+    @profiler.trace('ClusterAction.do_operation', hide_args=False)
+    def do_operation(self):
+        """Handler for CLUSTER_OPERATION action.
+
+        Note that the inputs for the action should contain the following items:
+
+          * ``nodes``: The nodes to operate on;
+          * ``operation``: The operation to be performed;
+          * ``params``: The parameters corresponding to the operation.
+
+        :returns: A tuple containing the result and the corresponding reason.
+        """
+        inputs = copy.deepcopy(self.inputs)
+        operation = inputs['operation']
+        self.entity.do_operation(self.context, operation=operation)
+
+        child = []
+        res = self.RES_OK
+        reason = _("Cluster operation '%s' completed.") % operation
+        nodes = inputs.pop('nodes')
+        for node_id in nodes:
+            action_id = base.Action.create(
+                self.context, node_id, consts.NODE_OPERATION,
+                name='node_%s_%s' % (operation, node_id[:8]),
+                cause=base.CAUSE_DERIVED,
+                inputs=inputs,
+            )
+            child.append(action_id)
+
+        if child:
+            dobj.Dependency.create(self.context, [c for c in child], self.id)
+            for cid in child:
+                ao.Action.update(self.context, cid,
+                                 {'status': base.Action.READY})
+            dispatcher.start_action()
+
+            # Wait for dependent action if any
+            res, new_reason = self._wait_for_dependents()
+            if res != self.RES_OK:
+                reason = new_reason
+
+        self.entity.eval_status(self.context, operation)
+        return res, reason
+
     def _execute(self, **kwargs):
         """Private method for action execution.
 
