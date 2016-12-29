@@ -24,7 +24,7 @@ from senlin.engine import node
 from senlin.objects import cluster as co
 from senlin.objects import node as no
 from senlin.profiles import base as pb
-from senlin.profiles.container import docker as docker_profile
+from senlin.profiles.container import docker as dp
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -51,18 +51,18 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         }
 
     def test_init(self):
-        profile = docker_profile.DockerProfile('t', self.spec)
+        profile = dp.DockerProfile('t', self.spec)
         self.assertIsNone(profile._dockerclient)
         self.assertIsNone(profile.container_id)
         self.assertIsNone(profile.host)
 
-    @mock.patch.object(docker_profile.DockerProfile, 'do_validate')
+    @mock.patch.object(dp.DockerProfile, 'do_validate')
     @mock.patch.object(db_api, 'node_add_dependents')
     @mock.patch.object(db_api, 'cluster_add_dependents')
     def test_create_with_host_node(self, mock_cadd, mock_nadd, mock_validate):
         mock_validate.return_value = None
 
-        profile = docker_profile.DockerProfile.create(
+        profile = dp.DockerProfile.create(
             self.context, 'fake_name', self.spec)
 
         self.assertIsNotNone(profile)
@@ -70,7 +70,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
                                           profile.id, 'profile')
         self.assertEqual(0, mock_cadd.call_count)
 
-    @mock.patch.object(docker_profile.DockerProfile, 'do_validate')
+    @mock.patch.object(dp.DockerProfile, 'do_validate')
     @mock.patch.object(db_api, 'node_add_dependents')
     @mock.patch.object(db_api, 'cluster_add_dependents')
     def test_create_with_host_cluster(self, mock_cadd, mock_nadd,
@@ -80,7 +80,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         del spec['properties']['host_node']
         spec['properties']['host_cluster'] = 'fake_cluster'
 
-        profile = docker_profile.DockerProfile.create(
+        profile = dp.DockerProfile.create(
             self.context, 'fake_name', spec)
 
         self.assertIsNotNone(profile)
@@ -94,10 +94,10 @@ class TestContainerDockerProfile(base.SenlinTestCase):
     @mock.patch.object(db_api, 'cluster_remove_dependents')
     def test_delete_with_host_node(self, mock_cdel, mock_ndel, mock_load,
                                    mock_delete):
-        profile = docker_profile.DockerProfile('t', self.spec)
+        profile = dp.DockerProfile('t', self.spec)
         mock_load.return_value = profile
 
-        res = docker_profile.DockerProfile.delete(self.context, 'FAKE_ID')
+        res = dp.DockerProfile.delete(self.context, 'FAKE_ID')
 
         self.assertIsNone(res)
         mock_load.assert_called_once_with(self.context, profile_id='FAKE_ID')
@@ -115,10 +115,10 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         spec = copy.deepcopy(self.spec)
         del spec['properties']['host_node']
         spec['properties']['host_cluster'] = 'fake_cluster'
-        profile = docker_profile.DockerProfile('fake_name', spec)
+        profile = dp.DockerProfile('fake_name', spec)
         mock_load.return_value = profile
 
-        res = docker_profile.DockerProfile.delete(self.context, 'FAKE_ID')
+        res = dp.DockerProfile.delete(self.context, 'FAKE_ID')
 
         self.assertIsNone(res)
         mock_load.assert_called_once_with(self.context, profile_id='FAKE_ID')
@@ -127,8 +127,8 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         self.assertEqual(0, mock_ndel.call_count)
 
     @mock.patch('senlin.drivers.container.docker_v1.DockerClient')
-    @mock.patch.object(docker_profile.DockerProfile, '_get_host_ip')
-    @mock.patch.object(docker_profile.DockerProfile, '_get_host')
+    @mock.patch.object(dp.DockerProfile, '_get_host_ip')
+    @mock.patch.object(dp.DockerProfile, '_get_host')
     @mock.patch.object(context, 'get_admin_context')
     def test_docker_client(self, mock_ctx, mock_host, mock_ip, mock_client):
         ctx = mock.Mock()
@@ -140,7 +140,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         mock_ip.return_value = fake_ip
         dockerclient = mock.Mock()
         mock_client.return_value = dockerclient
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
         obj = mock.Mock()
         client = profile.docker(obj)
         self.assertEqual(dockerclient, client)
@@ -149,28 +149,28 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         url = 'tcp://1.2.3.4:2375'
         mock_client.assert_called_once_with(url)
 
-    @mock.patch.object(docker_profile.DockerProfile, '_get_host')
+    @mock.patch.object(dp.DockerProfile, '_get_host')
     def test_docker_client_wrong_host_type(self, mock_get):
         profile = mock.Mock(type_name='wrong_type')
         host = mock.Mock(rt={'profile': profile}, physical_id='server1')
         mock_get.return_value = host
         obj = mock.Mock()
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
         ex = self.assertRaises(exc.InternalError,
                                profile.docker, obj)
         msg = _('Type of host node (wrong_type) is not supported')
 
         self.assertEqual(msg, ex.message)
 
-    @mock.patch.object(docker_profile.DockerProfile, '_get_host_ip')
-    @mock.patch.object(docker_profile.DockerProfile, '_get_host')
+    @mock.patch.object(dp.DockerProfile, '_get_host_ip')
+    @mock.patch.object(dp.DockerProfile, '_get_host')
     def test_docker_client_get_host_ip_failed(self, mock_host, mock_ip):
         profile = mock.Mock(type_name='os.nova.server')
         host = mock.Mock(rt={'profile': profile}, physical_id='server1')
         mock_host.return_value = host
         mock_ip.return_value = None
         obj = mock.Mock()
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
         ex = self.assertRaises(exc.InternalError,
                                profile.docker, obj)
         msg = _('Unable to determine the IP address of host node')
@@ -182,7 +182,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         node = mock.Mock()
         mock_load.return_value = node
         ctx = mock.Mock()
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
 
         res = profile._get_host(ctx, 'host_node', None)
 
@@ -193,7 +193,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
     def test__get_host_node_not_found(self, mock_load):
         mock_load.side_effect = exc.ResourceNotFound(type='node',
                                                      id='fake_node')
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
         ctx = mock.Mock()
 
         ex = self.assertRaises(exc.InternalError,
@@ -211,7 +211,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         cluster = mock.Mock(rt={'nodes': [node1, node2, node3]})
         mock_cluster.return_value = cluster
         active_nodes = [node2, node3]
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
         ctx = mock.Mock()
         node = profile._get_random_node(ctx, 'host_cluster')
         self.assertIn(node, active_nodes)
@@ -221,7 +221,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         mock_load.side_effect = exc.ResourceNotFound(type='cluster',
                                                      id='host_cluster')
         ctx = mock.Mock()
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
 
         ex = self.assertRaises(exc.InternalError,
                                profile._get_random_node,
@@ -234,7 +234,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
     def test__get_random_node_empty_cluster(self, mock_cluster):
         cluster = mock.Mock(rt={'nodes': []})
         mock_cluster.return_value = cluster
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
         ctx = mock.Mock()
         ex = self.assertRaises(exc.InternalError,
                                profile._get_random_node,
@@ -250,7 +250,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         node3 = mock.Mock(status='ERROR')
         cluster = mock.Mock(rt={'nodes': [node1, node2, node3]})
         mock_cluster.return_value = cluster
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
         ctx = mock.Mock()
         ex = self.assertRaises(exc.InternalError,
                                profile._get_random_node,
@@ -267,7 +267,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         server = mock.Mock(addresses=addresses)
         cc = mock.Mock()
         cc.server_get.return_value = server
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
         profile._computeclient = cc
         obj = mock.Mock()
         host_ip = profile._get_host_ip(obj, 'fake_node', 'os.nova.server')
@@ -280,7 +280,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
             outputs=[{'output_key': 'fixed_ip', 'output_value': '1.2.3.4'}]
         )
         oc.stack_get.return_value = stack
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
         profile._orchestrationclient = oc
         obj = mock.Mock()
 
@@ -293,7 +293,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         oc = mock.Mock()
         stack = mock.Mock(outputs=None)
         oc.stack_get.return_value = stack
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
         profile._orchestrationclient = oc
         obj = mock.Mock()
 
@@ -309,7 +309,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         spec = copy.deepcopy(self.spec)
         spec['properties']['host_cluster'] = 'fake_cluster'
         obj = mock.Mock()
-        profile = docker_profile.DockerProfile('container', spec)
+        profile = dp.DockerProfile('container', spec)
 
         ex = self.assertRaises(exc.InvalidSpec,
                                profile.do_validate, obj)
@@ -321,7 +321,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         spec = copy.deepcopy(self.spec)
         del spec['properties']['host_node']
         obj = mock.Mock()
-        profile = docker_profile.DockerProfile('container', spec)
+        profile = dp.DockerProfile('container', spec)
 
         ex = self.assertRaises(exc.InvalidSpec,
                                profile.do_validate, obj)
@@ -332,7 +332,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
     @mock.patch.object(no.Node, 'find')
     def test_do_validate_with_node(self, mock_find):
         obj = mock.Mock()
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
         mock_find.return_value = mock.Mock()
 
         res = profile.do_validate(obj)
@@ -343,7 +343,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
     @mock.patch.object(no.Node, 'find')
     def test_do_validate_node_not_found(self, mock_find):
         obj = mock.Mock()
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
         mock_find.side_effect = exc.ResourceNotFound(type='node',
                                                      id='fake_node')
 
@@ -360,7 +360,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         obj = mock.Mock()
         del spec['properties']['host_node']
         spec['properties']['host_cluster'] = 'fake_cluster'
-        profile = docker_profile.DockerProfile('container', spec)
+        profile = dp.DockerProfile('container', spec)
         mock_find.return_value = mock.Mock()
 
         res = profile.do_validate(obj)
@@ -376,7 +376,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         obj = mock.Mock()
         mock_find.side_effect = exc.ResourceNotFound(type='node',
                                                      id='fake_cluster')
-        profile = docker_profile.DockerProfile('container', spec)
+        profile = dp.DockerProfile('container', spec)
 
         ex = self.assertRaises(exc.InvalidSpec,
                                profile.do_validate, obj)
@@ -387,7 +387,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
 
     @mock.patch.object(db_api, 'node_add_dependents')
     @mock.patch.object(context, 'get_admin_context')
-    @mock.patch.object(docker_profile.DockerProfile, 'docker')
+    @mock.patch.object(dp.DockerProfile, 'docker')
     def test_do_create(self, mock_docker, mock_ctx, mock_add):
         ctx = mock.Mock()
         mock_ctx.return_value = ctx
@@ -396,7 +396,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         container = {'Id': 'd' * 64}
         dockerclient.container_create.return_value = container
         container_id = 'd' * 36
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
         host = mock.Mock(id='node_id')
         profile.host = host
         profile.cluster = cluster
@@ -412,17 +412,17 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         }
         dockerclient.container_create.assert_called_once_with(**params)
 
-    @mock.patch.object(docker_profile.DockerProfile, 'docker')
+    @mock.patch.object(dp.DockerProfile, 'docker')
     def test_do_create_failed(self, mock_docker):
         mock_docker.side_effect = exc.InternalError
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
         obj = mock.Mock()
         self.assertRaises(exc.EResourceCreation,
                           profile.do_create, obj)
 
     @mock.patch.object(context, 'get_admin_context')
     @mock.patch.object(db_api, 'node_remove_dependents')
-    @mock.patch.object(docker_profile.DockerProfile, 'docker')
+    @mock.patch.object(dp.DockerProfile, 'docker')
     def test_do_delete(self, mock_docker, mock_rem, mock_ctx):
         obj = mock.Mock(id='container1', physical_id='FAKE_PHYID')
         dockerclient = mock.Mock()
@@ -431,7 +431,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         mock_docker.return_value = dockerclient
         host = mock.Mock(dependents={})
         host.id = 'node_id'
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
         profile.host = host
         profile.id = 'profile_id'
 
@@ -443,15 +443,179 @@ class TestContainerDockerProfile(base.SenlinTestCase):
 
     def test_do_delete_no_physical_id(self):
         obj = mock.Mock(physical_id=None)
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
         self.assertIsNone(profile.do_delete(obj))
 
-    @mock.patch.object(docker_profile.DockerProfile, 'docker')
+    @mock.patch.object(dp.DockerProfile, 'docker')
     def test_do_delete_failed(self, mock_docker):
         obj = mock.Mock(physical_id='FAKE_ID')
         mock_docker.side_effect = exc.InternalError
 
-        profile = docker_profile.DockerProfile('container', self.spec)
+        profile = dp.DockerProfile('container', self.spec)
 
         self.assertRaises(exc.EResourceDeletion,
                           profile.do_delete, obj)
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_handle_reboot(self, mock_docker):
+        x_docker = mock.Mock()
+        x_docker = mock_docker.return_value
+        obj = mock.Mock(physical_id='FAKE_ID')
+
+        docker = dp.DockerProfile('container', self.spec)
+
+        res = docker.handle_reboot(obj)
+
+        self.assertIsNone(res)
+        mock_docker.assert_called_once_with(obj)
+        x_docker.reboot.assert_called_once_with('FAKE_ID')
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_handle_reboot_with_timeout(self, mock_docker):
+        x_docker = mock.Mock()
+        x_docker = mock_docker.return_value
+        obj = mock.Mock(physical_id='FAKE_ID')
+
+        docker = dp.DockerProfile('container', self.spec)
+
+        res = docker.handle_reboot(obj, timeout=200)
+
+        self.assertIsNone(res)
+        mock_docker.assert_called_once_with(obj)
+        x_docker.reboot.assert_called_once_with('FAKE_ID', timeout=200)
+
+    def test_handle_reboot_no_physical_id(self):
+        obj = mock.Mock(physical_id=None)
+        docker = dp.DockerProfile('container', self.spec)
+
+        res = docker.handle_reboot(obj)
+
+        self.assertIsNone(res)
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_handle_reboot_driver_failure(self, mock_docker):
+        mock_docker.side_effect = exc.InternalError(message="Boom")
+        obj = mock.Mock(physical_id='FAKE_ID')
+        docker = dp.DockerProfile('container', self.spec)
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               docker.handle_reboot,
+                               obj)
+
+        self.assertEqual("Failed in rebooting container FAKE_ID: Boom.",
+                         six.text_type(ex))
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_handle_reboot_docker_failure(self, mock_docker):
+        x_docker = mock.Mock()
+        mock_docker.return_value = x_docker
+        x_docker.reboot.side_effect = exc.InternalError(message="Boom")
+        obj = mock.Mock(physical_id='FAKE_ID')
+        docker = dp.DockerProfile('container', self.spec)
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               docker.handle_reboot,
+                               obj)
+
+        self.assertEqual("Failed in rebooting container FAKE_ID: Boom.",
+                         six.text_type(ex))
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_handle_pause(self, mock_docker):
+        x_docker = mock.Mock()
+        x_docker = mock_docker.return_value
+        obj = mock.Mock(physical_id='FAKE_ID')
+
+        docker = dp.DockerProfile('container', self.spec)
+
+        res = docker.handle_pause(obj)
+
+        self.assertIsNone(res)
+        mock_docker.assert_called_once_with(obj)
+        x_docker.pause.assert_called_once_with('FAKE_ID')
+
+    def test_handle_pause_no_physical_id(self):
+        obj = mock.Mock(physical_id=None)
+        docker = dp.DockerProfile('container', self.spec)
+
+        res = docker.handle_pause(obj)
+
+        self.assertIsNone(res)
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_handle_pause_driver_failure(self, mock_docker):
+        mock_docker.side_effect = exc.InternalError(message="Boom")
+        obj = mock.Mock(physical_id='FAKE_ID')
+        docker = dp.DockerProfile('container', self.spec)
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               docker.handle_pause,
+                               obj)
+
+        self.assertEqual("Failed in pausing container FAKE_ID: Boom.",
+                         six.text_type(ex))
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_handle_pause_docker_failure(self, mock_docker):
+        x_docker = mock.Mock()
+        mock_docker.return_value = x_docker
+        x_docker.pause.side_effect = exc.InternalError(message="Boom")
+        obj = mock.Mock(physical_id='FAKE_ID')
+        docker = dp.DockerProfile('container', self.spec)
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               docker.handle_pause,
+                               obj)
+
+        self.assertEqual("Failed in pausing container FAKE_ID: Boom.",
+                         six.text_type(ex))
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_handle_unpause(self, mock_docker):
+        x_docker = mock.Mock()
+        x_docker = mock_docker.return_value
+        obj = mock.Mock(physical_id='FAKE_ID')
+
+        docker = dp.DockerProfile('container', self.spec)
+
+        res = docker.handle_unpause(obj)
+
+        self.assertIsNone(res)
+        mock_docker.assert_called_once_with(obj)
+        x_docker.unpause.assert_called_once_with('FAKE_ID')
+
+    def test_handle_unpause_no_physical_id(self):
+        obj = mock.Mock(physical_id=None)
+        docker = dp.DockerProfile('container', self.spec)
+
+        res = docker.handle_unpause(obj)
+
+        self.assertIsNone(res)
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_handle_unpause_driver_failure(self, mock_docker):
+        mock_docker.side_effect = exc.InternalError(message="Boom")
+        obj = mock.Mock(physical_id='FAKE_ID')
+        docker = dp.DockerProfile('container', self.spec)
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               docker.handle_unpause,
+                               obj)
+
+        self.assertEqual("Failed in unpausing container FAKE_ID: Boom.",
+                         six.text_type(ex))
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_handle_unpause_docker_failure(self, mock_docker):
+        x_docker = mock.Mock()
+        mock_docker.return_value = x_docker
+        x_docker.unpause.side_effect = exc.InternalError(message="Boom")
+        obj = mock.Mock(physical_id='FAKE_ID')
+        docker = dp.DockerProfile('container', self.spec)
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               docker.handle_unpause,
+                               obj)
+
+        self.assertEqual("Failed in unpausing container FAKE_ID: Boom.",
+                         six.text_type(ex))
