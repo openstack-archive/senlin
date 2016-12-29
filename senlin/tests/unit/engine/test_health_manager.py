@@ -297,7 +297,7 @@ class TestHealthManager(base.SenlinTestCase):
             },
             self.hm.registries[1])
 
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test__poll_cluster(self, mock_check):
         self.hm._poll_cluster('CLUSTER_ID')
         mock_check.assert_called_once_with(self.hm.ctx, 'cluster_check',

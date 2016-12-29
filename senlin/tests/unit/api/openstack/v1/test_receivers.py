@@ -38,7 +38,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.controller = receivers.ReceiverController(options=cfgopts)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_index_normal(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/receivers')
@@ -77,7 +77,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_with(req.context, 'receiver_list', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_index_whitelists_params(self, mock_call,
                                               mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -115,7 +115,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_with(req.context, 'receiver_list', mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_index_whitelists_invalid_params(self, mock_call,
                                                       mock_parse,
                                                       mock_enforce):
@@ -133,7 +133,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_index_invalid_type(self, mock_call,
                                          mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -154,7 +154,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_index_invalid_action(self, mock_call,
                                            mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -176,7 +176,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_index_limit_non_int(self, mock_call,
                                           mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -198,7 +198,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_index_invalid_sort(self, mock_call,
                                          mock_parse, mock_enforce):
 
@@ -221,7 +221,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_index_global_project(self, mock_call,
                                            mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -251,7 +251,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_create_success(self, mock_call,
                                      mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -303,7 +303,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'receiver_create', obj.receiver)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_create_with_bad_body(self, mock_call, mock_parse,
                                            mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -322,7 +322,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_create_missing_required_field(self, mock_call,
                                                     mock_parse,
                                                     mock_enforce):
@@ -348,7 +348,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_create_with_bad_type(self, mock_call,
                                            mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -375,7 +375,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_create_illegal_action(self, mock_call,
                                             mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -401,7 +401,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_get_normal(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         wid = 'aaaa-bbbb-cccc'
@@ -439,7 +439,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_with(req.context, 'receiver_get', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_get_not_found(self, mock_call, mock_parse,
                                     mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
@@ -469,7 +469,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_delete_success(self, mock_call, mock_parse,
                                      mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
@@ -487,7 +487,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'receiver_delete', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_delete_err_malformed_receiver_id(self, mock_call,
                                                        mock_parse,
                                                        mock_enforce):
@@ -505,7 +505,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_delete_not_found(self, mock_call, mock_parse,
                                        mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
@@ -535,7 +535,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_notify_success(self, mock_call, mock_parse,
                                      mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'notify')
@@ -553,7 +553,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_with(req.context, 'receiver_notify', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_notify_err_malformed_receiver_id(self, mock_call,
                                                        mock_parse,
                                                        mock_enforce):
@@ -572,7 +572,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_receiver_notify_not_found(self, mock_call, mock_parse,
                                        mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'notify', True)

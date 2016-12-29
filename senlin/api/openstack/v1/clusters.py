@@ -60,15 +60,15 @@ class ClusterController(wsgi.Controller):
         unsafe = util.parse_bool_param(consts.PARAM_GLOBAL_PROJECT, is_global)
         params['project_safe'] = not unsafe
         req_obj = util.parse_request('ClusterListRequest', req, params)
-        clusters = self.rpc_client.call2(req.context, 'cluster_list', req_obj)
+        clusters = self.rpc_client.call(req.context, 'cluster_list', req_obj)
         return {'clusters': clusters}
 
     @util.policy_enforce
     def create(self, req, body):
         """Create a new cluster."""
         obj = util.parse_request('ClusterCreateRequest', req, body, 'cluster')
-        cluster = self.rpc_client.call2(req.context, 'cluster_create',
-                                        obj.cluster)
+        cluster = self.rpc_client.call(req.context, 'cluster_create',
+                                       obj.cluster)
         action_id = cluster.pop('action')
         result = {
             'cluster': cluster,
@@ -81,7 +81,7 @@ class ClusterController(wsgi.Controller):
         """Gets detailed information for a cluster."""
         body = {'identity': cluster_id}
         obj = util.parse_request('ClusterGetRequest', req, body)
-        cluster = self.rpc_client.call2(req.context, 'cluster_get', obj)
+        cluster = self.rpc_client.call(req.context, 'cluster_get', obj)
 
         return {'cluster': cluster}
 
@@ -96,7 +96,7 @@ class ClusterController(wsgi.Controller):
         params['identity'] = cluster_id
 
         obj = util.parse_request('ClusterUpdateRequest', req, params)
-        cluster = self.rpc_client.call2(req.context, 'cluster_update', obj)
+        cluster = self.rpc_client.call(req.context, 'cluster_update', obj)
 
         action_id = cluster.pop('action')
         result = {
@@ -108,12 +108,12 @@ class ClusterController(wsgi.Controller):
     def _add_nodes(self, req, cid, nodes):
         params = {'identity': cid, 'nodes': nodes}
         obj = util.parse_request('ClusterAddNodesRequest', req, params)
-        return self.rpc_client.call2(req.context, 'cluster_add_nodes', obj)
+        return self.rpc_client.call(req.context, 'cluster_add_nodes', obj)
 
     def _del_nodes(self, req, cid, nodes):
         params = {'identity': cid, 'nodes': nodes}
         obj = util.parse_request('ClusterDelNodesRequest', req, params)
-        return self.rpc_client.call2(req.context, 'cluster_del_nodes', obj)
+        return self.rpc_client.call(req.context, 'cluster_del_nodes', obj)
 
     @wsgi.Controller.api_version('1.3')
     def _replace_nodes(self, req, cluster_id, nodes):
@@ -123,8 +123,8 @@ class ClusterController(wsgi.Controller):
 
         params = {'identity': cluster_id, 'nodes': nodes}
         obj = util.parse_request('ClusterReplaceNodesRequest', req, params)
-        return self.rpc_client.call2(req.context, 'cluster_replace_nodes',
-                                     obj)
+        return self.rpc_client.call(req.context, 'cluster_replace_nodes',
+                                    obj)
 
     def _do_resize(self, req, cluster_id, data):
         params = {'identity': cluster_id}
@@ -161,21 +161,21 @@ class ClusterController(wsgi.Controller):
                         ) % {'m': obj.max_size, 'n': obj.min_size}
                 raise exc.HTTPBadRequest(msg)
 
-        return self.rpc_client.call2(req.context, 'cluster_resize', obj)
+        return self.rpc_client.call(req.context, 'cluster_resize', obj)
 
     def _do_scale_out(self, req, cid, count):
         params = {'identity': cid}
         if count is not None:
             params['count'] = count
         obj = util.parse_request('ClusterScaleOutRequest', req, params)
-        return self.rpc_client.call2(req.context, 'cluster_scale_out', obj)
+        return self.rpc_client.call(req.context, 'cluster_scale_out', obj)
 
     def _do_scale_in(self, req, cid, count):
         params = {'identity': cid}
         if count is not None:
             params['count'] = count
         obj = util.parse_request('ClusterScaleInRequest', req, params)
-        return self.rpc_client.call2(req.context, 'cluster_scale_in', obj)
+        return self.rpc_client.call(req.context, 'cluster_scale_in', obj)
 
     def _do_policy_attach(self, req, cid, data):
         if not isinstance(data, dict):
@@ -184,8 +184,8 @@ class ClusterController(wsgi.Controller):
         params = {'identity': cid}
         params.update(data)
         obj = util.parse_request('ClusterAttachPolicyRequest', req, params)
-        return self.rpc_client.call2(req.context,
-                                     'cluster_policy_attach', obj)
+        return self.rpc_client.call(req.context,
+                                    'cluster_policy_attach', obj)
 
     def _do_policy_detach(self, req, cid, data):
         if not isinstance(data, dict):
@@ -195,8 +195,8 @@ class ClusterController(wsgi.Controller):
         params.update(data)
 
         obj = util.parse_request('ClusterDetachPolicyRequest', req, params)
-        return self.rpc_client.call2(req.context,
-                                     'cluster_policy_detach', obj)
+        return self.rpc_client.call(req.context,
+                                    'cluster_policy_detach', obj)
 
     def _do_policy_update(self, req, cid, data):
         if not isinstance(data, dict):
@@ -206,18 +206,18 @@ class ClusterController(wsgi.Controller):
         params.update(data)
 
         obj = util.parse_request('ClusterUpdatePolicyRequest', req, params)
-        return self.rpc_client.call2(req.context,
-                                     'cluster_policy_update', obj)
+        return self.rpc_client.call(req.context,
+                                    'cluster_policy_update', obj)
 
     def _do_check(self, req, cid, data):
         params = {'identity': cid, 'params': data}
         obj = util.parse_request('ClusterCheckRequest', req, params)
-        return self.rpc_client.call2(req.context, 'cluster_check', obj)
+        return self.rpc_client.call(req.context, 'cluster_check', obj)
 
     def _do_recover(self, req, cid, data):
         params = {'identity': cid, 'params': data}
         obj = util.parse_request('ClusterRecoverRequest', req, params)
-        return self.rpc_client.call2(req.context, 'cluster_recover', obj)
+        return self.rpc_client.call(req.context, 'cluster_recover', obj)
 
     @util.policy_enforce
     def action(self, req, cluster_id, body=None):
@@ -285,7 +285,7 @@ class ClusterController(wsgi.Controller):
             'path': stripped_path,
         }
         obj = util.parse_request('ClusterCollectRequest', req, params)
-        return self.rpc_client.call2(req.context, 'cluster_collect', obj)
+        return self.rpc_client.call(req.context, 'cluster_collect', obj)
 
     @wsgi.Controller.api_version('1.4')
     @util.policy_enforce
@@ -307,7 +307,7 @@ class ClusterController(wsgi.Controller):
         }
         obj = util.parse_request('ClusterOperationRequest', req, params)
 
-        res = self.rpc_client.call2(req.context, 'cluster_op', obj)
+        res = self.rpc_client.call(req.context, 'cluster_op', obj)
 
         location = {'location': '/actions/%s' % res['action']}
         res.update(location)
@@ -317,7 +317,7 @@ class ClusterController(wsgi.Controller):
     def delete(self, req, cluster_id):
         params = {'identity': cluster_id}
         obj = util.parse_request('ClusterDeleteRequest', req, params)
-        res = self.rpc_client.call2(req.context, 'cluster_delete', obj)
+        res = self.rpc_client.call(req.context, 'cluster_delete', obj)
 
         action_id = res.pop('action')
         result = {'location': '/actions/%s' % action_id}

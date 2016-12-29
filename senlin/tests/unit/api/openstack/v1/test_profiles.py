@@ -39,7 +39,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.controller = profiles.ProfileController(options=cfgopts)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_index_normal(self, mock_call, mock_parse,
                                   mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -72,7 +72,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'profile_list', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_index_whitelists_params(self, mock_call, mock_parse,
                                              mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -107,7 +107,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'profile_list', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_index_whitelist_bad_params(self, mock_call, mock_parse,
                                                 mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -123,7 +123,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_index_global_project_not_bool(self, mock_call,
                                                    mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -139,7 +139,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_index_limit_non_int(self, mock_call, mock_parse,
                                          mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -167,7 +167,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_create_success(self, mock_call, mock_parse,
                                     mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -215,7 +215,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'profile_create', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_create_with_no_profile(self, mock_call, mock_parse,
                                             mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -234,7 +234,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_create_with_profile_no_spec(self, mock_call,
                                                  mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -252,7 +252,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_create_with_bad_type(self, mock_call,
                                           mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -287,7 +287,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'profile_create', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_create_with_spec_validation_failed(self, mock_call,
                                                         mock_parse,
                                                         mock_enforce):
@@ -343,7 +343,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_get_normal(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         pid = 'aaaa-bbbb-cccc'
@@ -375,7 +375,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'profile_get', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_get_not_found(self, mock_call, mock_parse,
                                    mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
@@ -412,7 +412,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_update_normal(self, mock_call, mock_parse,
                                    mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -451,7 +451,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'profile_update', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_update_no_body(self, mock_call, mock_parse,
                                     mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -471,7 +471,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_update_no_name(self, mock_call, mock_parse,
                                     mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -496,7 +496,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'profile_update', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_update_with_unexpected_field(self, mock_call,
                                                   mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -522,7 +522,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_update_not_found(self, mock_call, mock_parse,
                                       mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -565,7 +565,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_delete_success(self, mock_call, mock_parse,
                                     mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
@@ -583,7 +583,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'profile_delete', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_delete_not_found(self, mock_call, mock_parse,
                                       mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
@@ -608,7 +608,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'profile_delete', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_delete_resource_in_use(self, mock_call, mock_parse,
                                             mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
@@ -639,7 +639,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_validate_version_mismatch(self, mock_call, mock_parse,
                                                mock_enforce):
         body = {
@@ -686,7 +686,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_validate_no_body(self, mock_call, mock_parse,
                                       mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
@@ -705,7 +705,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_validate_no_spec(self, mock_call, mock_parse,
                                       mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
@@ -725,7 +725,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_validate_unsupported_field(self, mock_call,
                                                 mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
@@ -749,7 +749,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_validate_invalide_spec(self, mock_call,
                                             mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
@@ -779,7 +779,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('InvalidSpec', resp.json['error']['type'])
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_validate_success(self, mock_call,
                                       mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)

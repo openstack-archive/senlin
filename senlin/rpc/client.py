@@ -43,7 +43,7 @@ class EngineClient(object):
     def make_msg(method, **kwargs):
         return method, kwargs
 
-    def call2(self, ctxt, method, req, version=None):
+    def call(self, ctxt, method, req, version=None):
         """The main entry for invoking engine service.
 
         :param ctxt: The request context object.

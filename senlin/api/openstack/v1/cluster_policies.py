@@ -47,8 +47,8 @@ class ClusterPolicyController(wsgi.Controller):
         params['identity'] = cluster_id
 
         obj = util.parse_request('ClusterPolicyListRequest', req, params)
-        policies = self.rpc_client.call2(req.context, 'cluster_policy_list',
-                                         obj)
+        policies = self.rpc_client.call(req.context, 'cluster_policy_list',
+                                        obj)
 
         return {'cluster_policies': policies}
 
@@ -57,6 +57,6 @@ class ClusterPolicyController(wsgi.Controller):
 
         params = {'identity': cluster_id, 'policy_id': policy_id}
         obj = util.parse_request('ClusterPolicyGetRequest', req, params)
-        cluster_policy = self.rpc_client.call2(req.context,
-                                               'cluster_policy_get', obj)
+        cluster_policy = self.rpc_client.call(req.context,
+                                              'cluster_policy_get', obj)
         return {'cluster_policy': cluster_policy}

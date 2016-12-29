@@ -35,7 +35,7 @@ class TrustMiddleware(wsgi.Middleware):
         ctx = req.context
         params = {'user': ctx.user, 'project': ctx.project}
         obj = util.parse_request('CredentialGetRequest', req, params)
-        res = rpcc.call2(ctx, 'credential_get', obj)
+        res = rpcc.call(ctx, 'credential_get', obj)
         if res:
             trust_id = res.get('trust', None)
             if trust_id:
@@ -65,7 +65,7 @@ class TrustMiddleware(wsgi.Middleware):
         cred = {'openstack': {'trust': trust.id}}
         params = {'cred': cred}
         obj = util.parse_request('CredentialCreateRequest', req, params)
-        rpcc.call2(ctx, 'credential_create', obj)
+        rpcc.call(ctx, 'credential_create', obj)
 
         return trust.id
 

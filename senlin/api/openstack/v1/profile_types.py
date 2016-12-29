@@ -28,7 +28,7 @@ class ProfileTypeController(wsgi.Controller):
     def index(self, req):
 
         obj = util.parse_request('ProfileTypeListRequest', req, {})
-        types = self.rpc_client.call2(req.context, 'profile_type_list', obj)
+        types = self.rpc_client.call(req.context, 'profile_type_list', obj)
         return {'profile_types': types}
 
     @util.policy_enforce
@@ -37,7 +37,7 @@ class ProfileTypeController(wsgi.Controller):
 
         obj = util.parse_request(
             'ProfileTypeGetRequest', req, {'type_name': type_name})
-        content = self.rpc_client.call2(req.context, 'profile_type_get', obj)
+        content = self.rpc_client.call(req.context, 'profile_type_get', obj)
         return {'profile_type': content}
 
     @wsgi.Controller.api_version('1.4')
@@ -47,4 +47,4 @@ class ProfileTypeController(wsgi.Controller):
 
         obj = util.parse_request(
             'ProfileTypeOpListRequest', req, {'type_name': type_name})
-        return self.rpc_client.call2(req.context, 'profile_type_ops', obj)
+        return self.rpc_client.call(req.context, 'profile_type_ops', obj)

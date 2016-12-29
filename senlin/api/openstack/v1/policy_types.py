@@ -29,7 +29,7 @@ class PolicyTypeController(wsgi.Controller):
         """Gets the supported policy types"""
 
         obj = util.parse_request('PolicyTypeListRequest', req, {})
-        types = self.rpc_client.call2(req.context, 'policy_type_list', obj)
+        types = self.rpc_client.call(req.context, 'policy_type_list', obj)
         return {'policy_types': types}
 
     @util.policy_enforce
@@ -38,5 +38,5 @@ class PolicyTypeController(wsgi.Controller):
 
         obj = util.parse_request(
             'PolicyTypeGetRequest', req, {'type_name': type_name})
-        content = self.rpc_client.call2(req.context, 'policy_type_get', obj)
+        content = self.rpc_client.call(req.context, 'policy_type_get', obj)
         return {'policy_type': content}

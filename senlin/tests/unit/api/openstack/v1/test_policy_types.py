@@ -36,7 +36,7 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.controller = policy_types.PolicyTypeController(options=cfgopts)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_type_list(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/policy_types')
@@ -67,7 +67,7 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_type_get(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         type_name = 'SimplePolicy'
@@ -94,7 +94,7 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'policy_type_get', mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_type_get_not_found(self, mock_call, mock_parse,
                                        mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
@@ -111,7 +111,7 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_type_get_bad_param(self, mock_call, mock_parse,
                                        mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)

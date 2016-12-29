@@ -54,7 +54,7 @@ class EventController(wsgi.Controller):
         params['project_safe'] = project_safe
 
         obj = util.parse_request('EventListRequest', req, params)
-        events = self.rpc_client.call2(req.context, "event_list", obj)
+        events = self.rpc_client.call(req.context, "event_list", obj)
 
         return {'events': events}
 
@@ -63,6 +63,6 @@ class EventController(wsgi.Controller):
 
         obj = util.parse_request('EventGetRequest', req,
                                  {'identity': event_id})
-        event = self.rpc_client.call2(req.context, 'event_get', obj)
+        event = self.rpc_client.call(req.context, 'event_get', obj)
 
         return {'event': event}

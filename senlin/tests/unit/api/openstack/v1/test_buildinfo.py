@@ -29,7 +29,7 @@ class BuildInfoControllerTest(shared.ControllerTest, base.SenlinTestCase):
         super(BuildInfoControllerTest, self).setUp()
         self.controller = build_info.BuildInfoController({})
 
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_default_build_revision(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'build_info', True)
         req = self._get('/build_info')
@@ -51,7 +51,7 @@ class BuildInfoControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIsInstance(request, vorb.GetRevisionRequest)
 
     @mock.patch.object(build_info.cfg, 'CONF')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_response_api_build_revision_from_config_file(
             self, mock_call, mock_conf, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'build_info', True)

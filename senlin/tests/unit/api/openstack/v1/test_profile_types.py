@@ -36,7 +36,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.controller = profile_types.ProfileTypeController(options=cfgopts)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_type_list(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/profile_types')
@@ -66,7 +66,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_type_get(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         type_name = 'SimpleProfile'
@@ -93,7 +93,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'profile_type_get', mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_type_get_with_bad_param(self, mock_call, mock_parse,
                                              mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
@@ -112,7 +112,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_not_called()
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_type_get_not_found(self, mock_call, mock_parse,
                                         mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
@@ -146,7 +146,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_type_ops(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'ops', True)
         type_name = 'SimpleProfile'
@@ -172,7 +172,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'profile_type_ops', mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_type_ops_with_bad_param(self, mock_call, mock_parse,
                                              mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'ops', True)
@@ -191,7 +191,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_not_called()
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_type_ops_not_found(self, mock_call, mock_parse,
                                         mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'ops', True)
@@ -214,7 +214,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(
             req.context, 'profile_type_ops', mock.ANY)
 
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_type_ops_version_mismatch(self, mock_call, mock_enforce):
         type_name = 'fake'
         req = self._get('/profile_types/%(type)s/ops' % {'type': type_name},
