@@ -30,3 +30,16 @@ class DockerClient(object):
     def container_delete(self, container):
         self._dockerclient.remove_container(container)
         return True
+
+    @sdk.translate_exception
+    def restart(self, container, timeout=None):
+        params = {'timeout': timeout} if timeout else {}
+        self._dockerclient.restart(container, **params)
+
+    @sdk.translate_exception
+    def pause(self, container):
+        self._dockerclient.pause(container)
+
+    @sdk.translate_exception
+    def unpause(self, container):
+        self._dockerclient.unpause(container)

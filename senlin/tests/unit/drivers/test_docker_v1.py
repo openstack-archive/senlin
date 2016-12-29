@@ -12,40 +12,73 @@
 
 import mock
 
-from senlin.drivers.container import docker_v1 as docker_driver
+from senlin.drivers.container import docker_v1
 from senlin.tests.unit.common import base
 
 
 class TestDocker(base.SenlinTestCase):
 
-    def setUp(self):
+    @mock.patch("docker.Client")
+    def setUp(self, mock_docker):
         super(TestDocker, self).setUp()
+        self.x_docker = mock.Mock()
+        mock_docker.return_value = self.x_docker
+        self.sot = docker_v1.DockerClient("abc")
 
-        self._dockerclient = mock.Mock()
-
-    @mock.patch('docker.Client')
-    def test_init(self, mock_client):
-        mock_client.return_value = self._dockerclient
+    @mock.patch("docker.Client")
+    def test_init(self, mock_docker):
+        x_docker = mock_docker.return_value
         url = mock.Mock()
-        dockerclient = docker_driver.DockerClient(url)._dockerclient
-        self.assertEqual(self._dockerclient, dockerclient)
 
-    @mock.patch('docker.Client')
-    def test_container_create(self, mock_client):
-        mock_client.return_value = self._dockerclient
-        url = mock.Mock()
-        dockerclient = docker_driver.DockerClient(url)
+        sot = docker_v1.DockerClient(url)
+
+        self.assertEqual(x_docker, sot._dockerclient)
+        mock_docker.assert_called_once_with(base_url=url)
+
+    def test_container_create(self):
         image = mock.Mock()
-        dockerclient.container_create(image)
-        self._dockerclient.create_container.assert_called_once_with(
+
+        self.sot.container_create(image)
+
+        self.x_docker.create_container.assert_called_once_with(
             name=None, image=image, command=None)
 
-    @mock.patch('docker.Client')
-    def test_container_delete(self, mock_client):
-        mock_client.return_value = self._dockerclient
-        url = mock.Mock()
-        dockerclient = docker_driver.DockerClient(url)
+    def test_container_delete(self):
         container = mock.Mock()
-        res = dockerclient.container_delete(container)
+
+        res = self.sot.container_delete(container)
+
         self.assertTrue(res)
-        self._dockerclient.remove_container.assert_called_once_with(container)
+        self.x_docker.remove_container.assert_called_once_with(container)
+
+    def test_restart(self):
+        container = mock.Mock()
+
+        res = self.sot.restart(container)
+
+        self.assertIsNone(res)
+        self.x_docker.restart.assert_called_once_with(container)
+
+    def test_restart_with_wait(self):
+        container = mock.Mock()
+
+        res = self.sot.restart(container, timeout=20)
+
+        self.assertIsNone(res)
+        self.x_docker.restart.assert_called_once_with(container, timeout=20)
+
+    def test_pause(self):
+        container = mock.Mock()
+
+        res = self.sot.pause(container)
+
+        self.assertIsNone(res)
+        self.x_docker.pause.assert_called_once_with(container)
+
+    def test_unpause(self):
+        container = mock.Mock()
+
+        res = self.sot.unpause(container)
+
+        self.assertIsNone(res)
+        self.x_docker.unpause.assert_called_once_with(container)
