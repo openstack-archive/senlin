@@ -80,6 +80,9 @@ class DBAPIClusterTest(base.SenlinTestCase):
                                         is_admin=True)
         ret_cluster = db_api.cluster_get(admin_ctx, cluster.id,
                                          project_safe=True)
+        self.assertIsNone(ret_cluster)
+        ret_cluster = db_api.cluster_get(admin_ctx, cluster.id,
+                                         project_safe=False)
         self.assertEqual(cluster.id, ret_cluster.id)
         self.assertEqual('db_test_cluster_name', ret_cluster.name)
 

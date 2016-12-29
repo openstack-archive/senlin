@@ -85,6 +85,8 @@ class DBAPIReceiverTest(base.SenlinTestCase):
         r = self._create_receiver(self.ctx)
 
         res = db_api.receiver_get(admin_ctx, r.id, project_safe=True)
+        self.assertIsNone(res)
+        res = db_api.receiver_get(admin_ctx, r.id, project_safe=False)
         self.assertIsNotNone(res)
 
     def test_receiver_get_by_short_id(self):

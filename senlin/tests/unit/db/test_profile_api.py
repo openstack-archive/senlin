@@ -58,6 +58,8 @@ class DBAPIProfileTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='a-different-project',
                                         is_admin=True)
         res = db_api.profile_get(admin_ctx, profile.id, project_safe=True)
+        self.assertIsNone(res)
+        res = db_api.profile_get(admin_ctx, profile.id, project_safe=False)
         self.assertIsNotNone(res)
 
     def test_profile_get_not_found(self):

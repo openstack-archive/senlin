@@ -141,17 +141,20 @@ class ThreadGroupManager(object):
 
     def cancel_action(self, action_id):
         '''Cancel an action execution progress.'''
-        action = action_mod.Action.load(self.db_session, action_id)
+        action = action_mod.Action.load(self.db_session, action_id,
+                                        project_safe=False)
         action.signal(action.SIG_CANCEL)
 
     def suspend_action(self, action_id):
         '''Suspend an action execution progress.'''
-        action = action_mod.Action.load(self.db_session, action_id)
+        action = action_mod.Action.load(self.db_session, action_id,
+                                        project_safe=False)
         action.signal(action.SIG_SUSPEND)
 
     def resume_action(self, action_id):
         '''Resume an action execution progress.'''
-        action = action_mod.Action.load(self.db_session, action_id)
+        action = action_mod.Action.load(self.db_session, action_id,
+                                        project_safe=False)
         action.signal(action.SIG_RESUME)
 
     def add_timer(self, interval, func, *args, **kwargs):

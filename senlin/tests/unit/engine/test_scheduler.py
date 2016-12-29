@@ -188,7 +188,8 @@ class SchedulerTest(base.SenlinTestCase):
         tgm = scheduler.ThreadGroupManager()
         tgm.cancel_action('action0123')
 
-        mock_load.assert_called_once_with(tgm.db_session, 'action0123')
+        mock_load.assert_called_once_with(tgm.db_session, 'action0123',
+                                          project_safe=False)
         mock_action.signal.assert_called_once_with(mock_action.SIG_CANCEL)
 
     def test_suspend_action(self):
@@ -198,7 +199,8 @@ class SchedulerTest(base.SenlinTestCase):
         tgm = scheduler.ThreadGroupManager()
         tgm.suspend_action('action0123')
 
-        mock_load.assert_called_once_with(tgm.db_session, 'action0123')
+        mock_load.assert_called_once_with(tgm.db_session, 'action0123',
+                                          project_safe=False)
         mock_action.signal.assert_called_once_with(mock_action.SIG_SUSPEND)
 
     def test_resume_action(self):
@@ -208,7 +210,8 @@ class SchedulerTest(base.SenlinTestCase):
         tgm = scheduler.ThreadGroupManager()
         tgm.resume_action('action0123')
 
-        mock_load.assert_called_once_with(tgm.db_session, 'action0123')
+        mock_load.assert_called_once_with(tgm.db_session, 'action0123',
+                                          project_safe=False)
         mock_action.signal.assert_called_once_with(mock_action.SIG_RESUME)
 
     def test_add_timer(self):

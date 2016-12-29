@@ -215,7 +215,7 @@ class Action(object):
         return cls(obj.target, obj.action, context, **kwargs)
 
     @classmethod
-    def load(cls, context, action_id=None, db_action=None):
+    def load(cls, context, action_id=None, db_action=None, project_safe=True):
         """Retrieve an action from database.
 
         :param context: Instance of request context.
@@ -224,7 +224,8 @@ class Action(object):
         :return: A `Action` object instance.
         """
         if db_action is None:
-            db_action = ao.Action.get(context, action_id)
+            db_action = ao.Action.get(context, action_id,
+                                      project_safe=project_safe)
             if db_action is None:
                 raise exception.ResourceNotFound(type='action', id=action_id)
 
@@ -494,7 +495,7 @@ def ActionProc(context, action_id):
     '''Action process.'''
 
     # Step 1: materialize the action object
-    action = Action.load(context, action_id=action_id)
+    action = Action.load(context, action_id=action_id, project_safe=False)
     if action is None:
         LOG.error(_LE('Action "%s" could not be found.'), action_id)
         return False
