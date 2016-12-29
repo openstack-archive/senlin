@@ -15,37 +15,29 @@ document records more general requirements that needs at least a draft design
 before being worked on.
 
 
--------------
 High Priority
+~~~~~~~~~~~~~
+
+TOSCA support
 -------------
 
-Container Clustering
-^^^^^^^^^^^^^^^^^^^^
+Provide TOSCA support in Senlin(maybe reuse heat-translator/tosca-parser?)
 
-[Austin Discussion: https://etherpad.openstack.org/p/newton-senlin-container]
-We need to add a simple/generic container profile (which can be rebased on
-some other projects later) so that we can experiment with issues unique to
-container cluster management:
+
+Adanced Container Clustering
+----------------------------
+
+Container cluster management:
 
 - Scheduling
 - Networking/Storage
-- APIs
+- APIs/Operations
 - Security issues
 - Dependencies
 
 
-Event Listener
-^^^^^^^^^^^^^^
-
-To make Senlin responsive to events published by other OpenStack services, an
-event subscriber is needed so that Senlin can receive notifications from
-sources such as Ceilometer, Nova, or Zaqar.
-
-This is of a high priority because Senlin needs it as one of its HA solutions.
-
-
-Profile/Policy versioning support
-^^^^^^^^^^^^^^^^^^^^^^
+Better Versioning for Profile/Policy
+------------------------------------
 
 Profile/Policy schema could vary over time for properties being added or
 deprecated. Versioning support is important for keeping backward
@@ -53,7 +45,7 @@ compatibility when profile/policy evolve.
 
 
 Scavenger Process
-^^^^^^^^^^^^^^^^^
+-----------------
 
 Senlin needs a scavenger process that runs as a background daemon. It is
 tasked with cleansing database for old data, e.g. event records. Its behavior
@@ -62,7 +54,7 @@ to be archived in a certain way.
 
 
 Fault Tolerance
-^^^^^^^^^^^^^^^
+---------------
 
 Senlin in most cases will be managing clusters with nodes distributed
 somewhere. One problems inherent to such a distributed architecture is about
@@ -71,8 +63,28 @@ are hardware/software failures expected. Senlin must remain operational in the
 face of such failures.
 
 
-Access Permission Control
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Scaling to Existing Nodes
+-------------------------
+
+[Conclusion from Austin: https://etherpad.openstack.org/p/newton-senlin-as]
+
+Senlin can improve scale-out operation so that it can add existing nodes to
+a cluster when doing scale-out. We are not intended to scale to nodes not
+created by Senlin.
+
+
+Adoption of Nodes
+-----------------
+
+There have been requirements on adopting existing resources (e.g. nova
+servers) to be managed by Senlin.
+
+
+Middle Priority
+~~~~~~~~~~~~~~~
+
+Access Control
+--------------
 
 Currently, all access to Senlin objects like cluster, profile are project_safe
 by default. This is for preventing user manipulating resources belong to other
@@ -82,26 +94,15 @@ cases. Therefore, we may need to provide access permission control in Senlin to
 support this kind of requirement.
 
 
----------------
-Middle Priority
----------------
-
-Support Scheduled Actions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-This is a request to trigger some actions at a specified time. One typical use
-case is to scale up a cluster before weekend or promotion season as a
-preparation for the coming burst of workloads.
-
-
 Blue-Green Deployment
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
 Support to deploy environments using blue-green deployment pattern.
 http://martinfowler.com/bliki/BlueGreenDeployment.html
 
+
 Multi-cloud Support
-^^^^^^^^^^^^^^^^^^^
+-------------------
 
 In some case, user could have the demand to create/scale cluster cross different
 clouds. Therefore, Senlin is supposed to have the ability to manage nodes which
@@ -109,25 +110,8 @@ span cross multiple clouds within the same cluster. Support from both profile
 and policy layers are necessary for providing this ability.
 
 
-User Defined Actions
-^^^^^^^^^^^^^^^^^^^^
-
-Actions in Senlin are mostly built-in ones at present. There are requirements
-to incorporate Shell scripts and/or other structured software configuration
-tools into the whole picture. One of the option is to provide a easy way for
-Senlin to work with Ansible, for example.
-
-
-Event Notification
-^^^^^^^^^^^^^^^^^^
-
-Event notification is a feature that enables an external tool to subscribe to
-events sent from Senlin when interesting things happen. One option is to use
-the messaging service provided by the Zaqar project.
-
-
 Customizable Batch Processing
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------
 
 An important non-functional requirement for Senlin is the scale of clusters it
 can handle. We will strive to make it handle large scale ones, however that
@@ -136,27 +120,27 @@ potential tradeoff is to introduce an option for users to customize the size
 of batches when large number of DB requests pouring in.
 
 
-Container/Docker support
-^^^^^^^^^^^^^^^^^^^^^^^^
+Support to Bare-metal
+---------------------
 
-Using Senlin to manage Container/Docker cluster is possible. We should
-provide related support for users who have this requirement.
+Managing baremetal cluster is a very common requirement from user. It is
+reasonable for Senlin to support it by talking with service like Ironic.
 
 
-
-------------
 Low Priority
-------------
+~~~~~~~~~~~~
 
-Define and Enforce Quotas
-^^^^^^^^^^^^^^^^^^^^^^^^^
+User Defined Actions
+--------------------
 
-There is a potential request to limit how many clusters a user can create, how
-large a cluster can become.
+Actions in Senlin are mostly built-in ones at present. There are requirements
+to incorporate Shell scripts and/or other structured software configuration
+tools into the whole picture. One of the option is to provide a easy way for
+Senlin to work with Ansible, for example.
 
 
 Use Barbican to Store Secrets
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------
 
 Currently, Senlin uses the `cryptography` package for data encryption and
 decryption. There should be support for users to store credentials using the
@@ -164,7 +148,7 @@ Barbican service, in addition to the current solution.
 
 
 Use VPNaaS to Build Cross-Region/Cross-Cloud
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------------------------
 
 When building clusters that span more than one region or cloud, there are
 requirements to place all cluster nodes on the same VPN so that workloads can
@@ -172,7 +156,7 @@ be distributed to the nodes as if they sit on the same network.
 
 
 Vertical Scaling
-^^^^^^^^^^^^^^^^
+----------------
 
 Though Senlin is mainly concerns about the horizontal scaling in/out support,
 there are possibilities/requirements to scale nodes in the vertical direction.
@@ -182,7 +166,7 @@ could be explored.
 
 
 Replace Green Threads with Python Threading
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------------
 
 Senlin is now using green threads (eventlets) for async executions. The
 eventlets execution model is not making the use of multi-processing platforms
@@ -191,7 +175,7 @@ multi-threading is needed.
 
 
 Metrics Collection
-^^^^^^^^^^^^^^^^^^
+------------------
 
 Senlin needs to support metric collections about the clusters and nodes it
 manages. These metrics should be collectable by the ceilometer service, for
@@ -199,7 +183,7 @@ example.
 
 
 AWS Compatible API
-^^^^^^^^^^^^^^^^^^
+------------------
 
 There are requirements for Senlin to provide an AWS compatible API layer so
 that existing workloads can be deployed to Senlin and AWS without needing to
@@ -207,7 +191,7 @@ change a lot of code or configurations.
 
 
 Integration with Mistral
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
 There are cases where the (automated) operations on clusters and nodes form a
 workflow. For example, an event triggers some actions to be executed in
@@ -215,7 +199,7 @@ sequence and those actions in turn triggers other actions to be executed.
 
 
 Support to Suspend/Resume Operations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------
 
 A user may want to suspend/resume a cluster or an individual node. Senlin
 needs to provide a generic definition of 'suspend' and 'resume'. It needs to
@@ -223,7 +207,7 @@ be aware of whether the profile and the driver support such operations.
 
 
 Interaction with Congress
-^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------
 
 This is of low priority because Senlin needs a notification mechanism in place
 before it can talk to Congress. The reason to interact with Congress is that
@@ -232,7 +216,7 @@ to.
 
 
 Investigation of Tooz
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
 There is requirement to manage multiple senlin-engine instances in a
 distributed way. Or, we can use a variant of DLM to manage cluster membership.
@@ -247,37 +231,19 @@ that we don't want to care about. This TODO item is about two things:
 #. Is there a comparison between zookeeper and redis for example.
 
 
-Run Senlin API under Apache
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Support to Scheduled Actions
+----------------------------
 
-Add support to have Senlin API run under Apache.
-
-
-Baremetal Support
-^^^^^^^^^^^^^^^^^
-
-Managing baremetal cluster is a very common requirement from user. It is
-reasonable for Senlin to support it by talking with service like Ironic.
-
-
-TOSCA support
-^^^^^^^^^^^^^
-
-Provide TOSCA support in Senlin(maybe reuse heat-translator/tosca-parser?)
+This is a request to trigger some actions at a specified time. One typical use
+case is to scale up a cluster before weekend or promotion season as a
+preparation for the coming burst of workloads.
 
 
 Dynamic Plugin Loading
-^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
 Design and implement dynamic plugin loading mechanism that allows loading
 plugins from any paths.
 
 
-Scaling to Existing Nodes
-^^^^^^^^^^^^^^^^^^^^^^^^^
 
-[Conclusion from Austin: https://etherpad.openstack.org/p/newton-senlin-as]
-
-Senlin can improve scale-out operation so that it can add existing nodes to
-a cluster when doing scale-out. We are not intended to scale to nodes not
-created by Senlin.
