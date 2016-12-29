@@ -40,7 +40,9 @@ class TestHealthPolicy(base.SenlinTestCase):
                 },
                 'recovery': {
                     'fencing': ['COMPUTE'],
-                    'actions': ['REBUILD']
+                    'actions': [
+                        {'name': 'REBUILD'}
+                    ]
                 }
             }
         }
@@ -59,7 +61,8 @@ class TestHealthPolicy(base.SenlinTestCase):
         self.assertEqual('senlin.policy.health-1.0', self.hp.type)
         self.assertEqual('NODE_STATUS_POLLING', self.hp.check_type)
         self.assertEqual(60, self.hp.interval)
-        self.assertEqual(['REBUILD'], self.hp.recover_actions)
+        self.assertEqual([{'name': 'REBUILD', 'params': None}],
+                         self.hp.recover_actions)
 
     @mock.patch.object(health_manager, 'register')
     def test_attach(self, mock_hm_reg):
@@ -101,7 +104,7 @@ class TestHealthPolicy(base.SenlinTestCase):
         self.assertTrue(res)
         data = {
             'health': {
-                'recover_action': ['REBUILD'],
+                'recover_action': [{'name': 'REBUILD', 'params': None}],
                 'fencing': ['COMPUTE'],
             }
         }

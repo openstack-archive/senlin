@@ -1715,7 +1715,7 @@ class ClusterActionTest(base.SenlinTestCase):
         action.id = 'CLUSTER_ACTION_ID'
         action.data = {
             'health': {
-                'recover_action': ['REBOOT'],
+                'recover_action': [{'name': 'REBOOT', 'params': None}],
             }
         }
 
@@ -1734,7 +1734,7 @@ class ClusterActionTest(base.SenlinTestCase):
             action.context, 'NODE_1', 'NODE_RECOVER',
             name='node_recover_NODE_1',
             cause=ab.CAUSE_DERIVED,
-            inputs={'operation': ['REBOOT']}
+            inputs={'operation': 'REBOOT', 'params': None}
         )
         mock_dep.assert_called_once_with(action.context, ['NODE_RECOVER_ID'],
                                          'CLUSTER_ACTION_ID')

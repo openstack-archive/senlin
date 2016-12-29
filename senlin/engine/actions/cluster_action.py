@@ -654,7 +654,9 @@ class ClusterAction(base.Action):
             recover_action = pd.get('recover_action', None)
             fencing = pd.get('fencing', None)
             if recover_action is not None:
-                inputs['operation'] = recover_action
+                # TODO(Qiming): Implement the support to action sequences
+                inputs['operation'] = recover_action[0]['name']
+                inputs['params'] = recover_action[0]['params']
             if fencing is not None and 'COMPUTE' in fencing:
                 inputs['force'] = True
 
