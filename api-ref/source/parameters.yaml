@@ -860,6 +860,25 @@ oname:
   description: |
     The name of an object associated with the event.
 
+operation_request:
+  type: object
+  in: body
+  required: True
+  description: |
+    A structured definition of an operation to be performed. The object is
+    usually expressed as::
+
+      <operation_name>: {
+        <param_1>: <value_1>
+        <param_2>: <value_2>
+        ...
+      }
+
+    The ``<operation_name>`` specifies the operation to be performed while the
+    ``<param_n>`` keys provide the parameters (if any) to the operation. Each
+    individual operation has its own set of parameters, as supported by the
+    profile type of the target cluster or node.
+
 operations:
   type: object
   in: body
