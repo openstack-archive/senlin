@@ -48,9 +48,17 @@ dispatcher dumps the events into database tables and it is enabled by default.
 The ``message`` dispatcher converts the event objects into versioned event
 notifications and published on the global message queue. This dispatcher is
 by default disabled. To enable it, you can add the following line to the
-Senlin configuration file and then restart the senlin engine::
+``[DEFAULT]`` section of the ``senlin.conf`` file and then restart the service 
+engine::
 
  event_dispatchers = message
+
+Based on your deployment settings, you may need to add the following lines to
+the ``senlin.conf`` file as well. This lines set ``messaging`` as the default
+driver used by the ``oslo.messaging`` package::
+
+  [oslo_messaging_notifications]
+  driver = messaging
 
 Note that unprocessed event notifications which are not associated with a
 TTL (time to live) value by default will remain queued at the message bus,
