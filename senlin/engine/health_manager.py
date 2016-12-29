@@ -146,7 +146,10 @@ class HealthManager(service.Service):
             return
 
         project = cluster.project
-        return self.TG.add_thread(ListenerProc, 'nova', project, cluster_id)
+        nova_exchange = cfg.CONF.health_manager.nova_control_exchange
+        return self.TG.add_thread(ListenerProc,
+                                  nova_exchange,
+                                  project, cluster_id)
 
     def _start_check(self, entry):
         """Routine for starting the checking for a cluster.

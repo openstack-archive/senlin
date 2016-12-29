@@ -233,6 +233,7 @@ def list_opts():
     yield 'DEFAULT', event_opts
     yield authentication_group.name, authentication_opts
     yield dispatcher_group.name, dispatcher_opts
+    yield healthmgr_group.name, healthmgr_opts
     yield revision_group.name, revision_opts
     yield receiver_group.name, receiver_opts
     yield zaqar_group.name, zaqar_opts
