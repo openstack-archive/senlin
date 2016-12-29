@@ -31,10 +31,7 @@ class EngineClient(object):
     """
 
     def __init__(self):
-        if cfg.CONF.rpc_use_object:
-            serializer = object_base.VersionedObjectSerializer()
-        else:
-            serializer = None
+        serializer = object_base.VersionedObjectSerializer()
         self._client = messaging.get_rpc_client(consts.ENGINE_TOPIC,
                                                 cfg.CONF.host,
                                                 serializer=serializer)
