@@ -651,6 +651,13 @@ desired_capacity:
     The desired capacity of a cluster. When creating a cluster, this value is
     set to 0 by default.
 
+destroy_after_deletion:
+  type: boolean
+  in: body
+  required: False
+  description: |
+    Whether deleted nodes to be destroyed right away.
+
 domain:
   type: UUID
   in: body

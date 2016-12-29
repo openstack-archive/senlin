@@ -577,6 +577,7 @@ Request Parameters
   - cluster_id: cluster_id_url
   - action: action_request
   - nodes: cluster_member_nodes
+  - destroy_after_deletion: destroy_after_deletion
 
 
 The ``action_name`` in the request body has to be ``del_nodes``.
