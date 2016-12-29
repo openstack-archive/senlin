@@ -637,6 +637,34 @@ class TestStringParam(base.SenlinTestCase):
                          six.text_type(ex))
 
 
+class TestIntegerParam(base.SenlinTestCase):
+
+    def test_basic(self):
+        sot = schema.IntegerParam()
+        self.assertEqual('Integer', sot['type'])
+        self.assertEqual(False, sot['required'])
+
+    def test_validate(self):
+        sot = schema.IntegerParam()
+        result = sot.validate(123)
+        self.assertIsNone(result)
+
+    def test_validate_bad_type(self):
+        sot = schema.IntegerParam()
+        self.assertRaises(ValueError,
+                          sot.validate,
+                          'not int')
+
+    def test_validate_failed_constraint(self):
+        sot = schema.IntegerParam(
+            constraints=[constraints.AllowedValues((123, 124))])
+
+        ex = self.assertRaises(exc.ESchema, sot.validate, 12)
+
+        self.assertEqual("'12' must be one of the allowed values: 123, 124",
+                         six.text_type(ex))
+
+
 class TestOperation(base.SenlinTestCase):
 
     def test_basic(self):

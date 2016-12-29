@@ -398,6 +398,23 @@ class StringParam(SchemaBase):
         self.validate_constraints(value)
 
 
+class IntegerParam(SchemaBase):
+
+    def __getitem__(self, key):
+        if key == self.TYPE:
+            return self.INTEGER
+        return super(IntegerParam, self).__getitem__(key)
+
+    def validate(self, value):
+        try:
+            int(value)
+        except ValueError:
+            msg = _("The value '%s' is not a valid Integer") % value
+            raise ValueError(msg)
+
+        self.validate_constraints(value)
+
+
 class Operation(SchemaBase):
     """Class for specifying operations on profiles."""
 
