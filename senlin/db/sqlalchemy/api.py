@@ -17,6 +17,7 @@ Implementation of SQLAlchemy backend.
 import six
 import sys
 import threading
+import time
 
 from oslo_config import cfg
 from oslo_db import api as oslo_db_api
@@ -416,8 +417,25 @@ def cluster_lock_acquire(cluster_id, action_id, scope):
                                       action_ids=[six.text_type(action_id)],
                                       semaphore=scope)
             session.add(lock)
-
         return lock.action_ids
+
+
+def _release_cluster_lock(session, lock, action_id, scope):
+
+    success = False
+    if (scope == -1 and lock.semaphore < 0) or lock.semaphore == 1:
+        if six.text_type(action_id) in lock.action_ids:
+            session.delete(lock)
+            success = True
+    elif six.text_type(action_id) in lock.action_ids:
+        if lock.semaphore == 1:
+            session.delete(lock)
+        else:
+            lock.action_ids.remove(six.text_type(action_id))
+            lock.semaphore -= 1
+            lock.save(session)
+        success = True
+    return success
 
 
 def cluster_lock_release(cluster_id, action_id, scope):
@@ -434,21 +452,7 @@ def cluster_lock_release(cluster_id, action_id, scope):
         if lock is None:
             return False
 
-        success = False
-        if scope == -1 or lock.semaphore == 1:
-            if six.text_type(action_id) in lock.action_ids:
-                session.delete(lock)
-                success = True
-        elif action_id in lock.action_ids:
-            if lock.semaphore == 1:
-                session.delete(lock)
-            else:
-                lock.action_ids.remove(six.text_type(action_id))
-                lock.semaphore -= 1
-                lock.save(session)
-            success = True
-
-        return success
+        return _release_cluster_lock(session, lock, action_id, scope)
 
 
 def cluster_lock_steal(cluster_id, action_id):
@@ -1324,6 +1328,26 @@ def service_get(context, service_id):
 
 def service_get_all(context):
     return model_query(context, models.Service).all()
+
+
+def gc_by_engine(context, engine_id):
+    # Get all actions locked by an engine
+    with session_for_write() as session:
+        q_actions = session.query(models.Action).filter_by(owner=engine_id)
+        timestamp = time.time()
+        for a in q_actions.all():
+            # Release all node locks
+            query = session.query(models.NodeLock).filter_by(action_id=a.id)
+            query.delete(synchronize_session=False)
+
+            # Release all cluster locks
+            for cl in session.query(models.ClusterLock).all():
+                res = _release_cluster_lock(session, cl, a.id, -1)
+                if not res:
+                    _release_cluster_lock(session, cl, a.id, 1)
+
+            # mark action failed and relase lock
+            _mark_failed(session, a.id, timestamp, reason="Engine failure")
 
 
 # HealthRegistry
