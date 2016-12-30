@@ -13,6 +13,7 @@
 import mock
 import testtools
 
+from senlin.common import consts
 from senlin.events import base
 from senlin.events import database as DB
 from senlin.objects import event as eo
@@ -88,4 +89,34 @@ class TestDatabase(testtools.TestCase):
                 'status': 'S1',
                 'status_reason': 'R1',
                 'meta_data': {'foo': 'bar'}
+            })
+
+    @mock.patch.object(base.EventBackend, '_check_entity')
+    @mock.patch.object(eo.Event, 'create')
+    def test_dump_operation_action(self, mock_create, mock_check):
+        mock_check.return_value = 'CLUSTER'
+        entity = mock.Mock(id='CLUSTER_ID')
+        entity.name = 'cluster1'
+        action = mock.Mock(context=self.context, action=consts.NODE_OPERATION,
+                           entity=entity, inputs={'operation': 'dance'})
+
+        res = DB.DBEvent.dump('LEVEL', action, phase='STATUS', reason='REASON')
+
+        self.assertIsNone(res)
+        mock_check.assert_called_once_with(entity)
+        mock_create.assert_called_once_with(
+            self.context,
+            {
+                'level': 'LEVEL',
+                'timestamp': mock.ANY,
+                'oid': 'CLUSTER_ID',
+                'otype': 'CLUSTER',
+                'oname': 'cluster1',
+                'cluster_id': 'CLUSTER_ID',
+                'user': self.context.user,
+                'project': self.context.project,
+                'action': 'dance',
+                'status': 'STATUS',
+                'status_reason': 'REASON',
+                'meta_data': {}
             })

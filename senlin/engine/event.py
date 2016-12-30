@@ -41,9 +41,12 @@ def load_dispatcher():
 
 
 def _event_data(action, phase=None, reason=None):
+    action_name = action.action
+    if action_name in [consts.NODE_OPERATION, consts.CLUSTER_OPERATION]:
+        action_name = action.inputs.get('operation', action_name)
     return dict(name=action.entity.name,
                 id=action.entity.id[:8],
-                action=action.action,
+                action=action_name,
                 phase=phase,
                 reason=reason)
 

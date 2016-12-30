@@ -22,8 +22,19 @@ class EventBackend(object):
 
     @classmethod
     def _get_action_name(cls, action):
-        name = action.split('_', 1)
-        return name[1].lower() if len(name) > 1 else 'unknown'
+        """Get action name by inference.
+
+        :param action: An action object.
+        :returns: A string containing the inferred action name.
+        """
+        name = action.action.split('_', 1)
+        if len(name) == 1:
+            return name[0].lower()
+
+        name = name[1].lower()
+        if name == "operation":
+            name = action.inputs.get("operation", name)
+        return name
 
     @classmethod
     def dump(cls, level, action, **kwargs):
