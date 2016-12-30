@@ -234,7 +234,7 @@ class TestJson(TestField):
     def test_stringify(self):
         self.assertEqual("{'k': 'v'}", self.field.stringify({"k": "v"}))
 
-    def test_stingify_invalid(self):
+    def test_stringify_invalid(self):
         self.assertRaises(ValueError,
                           self.field.stringify, self.coerce_bad_values[0])
 
@@ -290,7 +290,7 @@ class TestNotificationPriority(TestField):
     def test_stringify(self):
         self.assertEqual("'warn'", self.field.stringify('warn'))
 
-    def test_stingify_invalid(self):
+    def test_stringify_invalid(self):
         self.assertRaises(ValueError, self.field.stringify, 'warning')
 
 
@@ -310,7 +310,7 @@ class TestNotificationPhase(TestField):
     def test_stringify(self):
         self.assertEqual("'error'", self.field.stringify('error'))
 
-    def test_stingify_invalid(self):
+    def test_stringify_invalid(self):
         self.assertRaises(ValueError, self.field.stringify, 'begin')
 
 
@@ -328,7 +328,7 @@ class TestNotificationAction(TestField):
     def test_stringify(self):
         self.assertEqual("'update'", self.field.stringify('update'))
 
-    def test_stingify_invalid(self):
+    def test_stringify_invalid(self):
         self.assertRaises(ValueError, self.field.stringify, 'magic')
 
 
