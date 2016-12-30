@@ -39,7 +39,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.controller = actions.ActionController(options=cfgopts)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_action_index(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/actions')
@@ -78,7 +78,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'action_list', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_action_index_whitelists_params(self, mock_call,
                                             mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -114,7 +114,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'action_list', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_action_index_whitelists_invalid_params(self, mock_call,
                                                     mock_parse,
                                                     mock_enforce):
@@ -132,7 +132,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_action_index_with_bad_schema(self, mock_call,
                                           mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -150,7 +150,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_action_index_limit_not_int(self, mock_call,
                                         mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -167,7 +167,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_action_index_global_project_true(self, mock_call,
                                               mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -187,7 +187,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'action_list', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_action_index_global_project_false(self, mock_call,
                                                mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -210,7 +210,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'action_list', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_action_index_global_project_not_bool(self, mock_call,
                                                   mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -236,7 +236,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_action_get_success(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         action_id = 'aaaa-bbbb-cccc'
@@ -275,7 +275,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'action_get', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_action_get_not_found(self, mock_call, mock_parse,
                                   mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)

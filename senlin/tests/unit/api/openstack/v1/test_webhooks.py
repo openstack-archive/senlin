@@ -36,7 +36,7 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.controller = webhooks.WebhookController(options=cfgopts)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_webhook_trigger(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'trigger', True)
         body = None
@@ -62,7 +62,7 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'webhook_trigger', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_webhook_trigger_with_params(self, mock_call, mock_parse,
                                          mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'trigger', True)
@@ -86,7 +86,7 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'webhook_trigger', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_webhook_trigger_invalid_params(self, mock_call, mock_parse,
                                             mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'trigger', True)
@@ -104,7 +104,7 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_webhook_trigger_invalid_json(self, mock_call, mock_parse,
                                           mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'trigger', True)

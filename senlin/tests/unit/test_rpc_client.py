@@ -33,7 +33,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         super(EngineRpcAPITestCase, self).setUp()
 
     @mock.patch.object(messaging, 'get_rpc_client')
-    def test_call2(self, mock_client):
+    def test_call(self, mock_client):
         client = mock.Mock()
         mock_client.return_value = client
 
@@ -42,7 +42,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         rpcapi = rpc_client.EngineClient()
 
         # with no version
-        res = rpcapi.call2(self.context, method, req)
+        res = rpcapi.call(self.context, method, req)
 
         self.assertEqual(client, rpcapi._client)
         client.call.assert_called_once_with(self.context, 'fake_method',
@@ -50,7 +50,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         self.assertEqual(res, client.call.return_value)
 
     @mock.patch.object(messaging, 'get_rpc_client')
-    def test_call2_with_version(self, mock_client):
+    def test_call_with_version(self, mock_client):
         client = mock.Mock()
         mock_client.return_value = client
 
@@ -59,7 +59,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
         rpcapi = rpc_client.EngineClient()
 
         # with version
-        res = rpcapi.call2(self.context, method, req, version='123')
+        res = rpcapi.call(self.context, method, req, version='123')
 
         rpcapi._client.prepare.assert_called_once_with(version='123')
         new_client = client.prepare.return_value
@@ -95,7 +95,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
 
     def _test_engine_api(self, method, rpc_method, **kwargs):
         ctxt = utils.dummy_context()
-        expected_retval = 'foo' if method == 'call2' else None
+        expected_retval = 'foo' if method == 'call' else None
 
         kwargs.pop('version', None)
 
@@ -114,7 +114,7 @@ class EngineRpcAPITestCase(base.SenlinTestCase):
             'webhook_delete',
         ]
 
-        if rpc_method == 'call2' and method in cast_and_call:
+        if rpc_method == 'call' and method in cast_and_call:
             kwargs['cast'] = False
 
         mock_rpc_method = self.patchobject(self.rpcapi, rpc_method,

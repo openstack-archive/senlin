@@ -35,7 +35,7 @@ class WebhookController(wsgi.Controller):
             'WebhookTriggerRequest', req, {'identity': webhook_id,
                                            'body': body})
 
-        res = self.rpc_client.call2(req.context, 'webhook_trigger', obj)
+        res = self.rpc_client.call(req.context, 'webhook_trigger', obj)
         location = {'location': '/actions/%s' % res['action']}
         res.update(location)
         return res

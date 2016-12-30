@@ -39,7 +39,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.controller = events.EventController(options=cfgopts)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_event_index(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/events')
@@ -76,7 +76,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'event_list', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_event_index_whitelists_params(self, mock_call, mock_parse,
                                            mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -117,7 +117,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                           'event_list', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_event_index_whitelists_invalid_params(self, mock_call,
                                                    mock_parse,
                                                    mock_enforce):
@@ -135,7 +135,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_event_index_with_bad_schema(self, mock_call, mock_parse,
                                          mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -153,7 +153,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(0, mock_call.call_count)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_event_index_limit_not_int(self, mock_call, mock_parse,
                                        mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -170,7 +170,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_event_index_global_project_true(self, mock_call,
                                              mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -193,7 +193,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'event_list', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_events_index_global_project_false(self, mock_call,
                                                mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -212,7 +212,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'event_list', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_event_index_global_project_not_bool(self, mock_call,
                                                  mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -238,7 +238,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_event_get_success(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         event_id = "2d255b9c-8f36-41a2-a137-c0175ccc29c3"
@@ -272,7 +272,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'event_get', mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_event_get_not_found(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         event_id = 'non-existent-event'

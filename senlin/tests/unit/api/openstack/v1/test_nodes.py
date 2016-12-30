@@ -39,7 +39,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.controller = nodes.NodeController(options=cfgopts)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_index(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/nodes')
@@ -77,7 +77,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'node_list', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_index_whitelists_params(self, mock_call,
                                           mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -115,7 +115,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'node_list', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_index_whitelists_invalid_params(self, mock_call,
                                                   mock_parse,
                                                   mock_enforce):
@@ -134,7 +134,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_parse.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_index_global_project_true(self, mock_call,
                                             mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -157,7 +157,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'node_list', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_index_global_project_false(self, mock_call,
                                              mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -177,7 +177,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'node_list', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_index_global_project_not_bool(self, mock_call,
                                                 mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -193,7 +193,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_index_limit_not_int(self, mock_call,
                                       mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -211,7 +211,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_index_cluster_not_found(self, mock_call,
                                           mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -247,7 +247,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_create_success(self, mock_call,
                                  mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -288,7 +288,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'node_create', mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_create_with_bad_body(self, mock_call,
                                        mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -306,7 +306,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_create_with_missing_profile_id(self, mock_call,
                                                  mock_parse,
                                                  mock_enforce):
@@ -329,7 +329,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_create_with_missing_name(self, mock_call,
                                            mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -351,7 +351,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_create_with_bad_profile(self, mock_call,
                                           mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -380,7 +380,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'node_create', mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_create_with_bad_cluster(self, mock_call,
                                           mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -410,7 +410,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'node_create', mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_get_success(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         node_id = 'aaaa-bbbb-cccc'
@@ -447,7 +447,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'node_get', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_get_show_details_not_bool(self, mock_call,
                                             mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
@@ -466,7 +466,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_get_not_found(self, mock_call,
                                 mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
@@ -500,7 +500,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_update_success(self, mock_call,
                                  mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -544,7 +544,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(result, res)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_update_malformed_request(self, mock_call,
                                            mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -563,7 +563,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_update_not_found(self, mock_call,
                                    mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -595,7 +595,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(msg, resp.json['error']['message'])
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_update_invalid_profile(self, mock_call,
                                          mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -628,7 +628,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(msg, resp.json['error']['message'])
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_update_cluster_id_specified(self, mock_call,
                                               mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -670,7 +670,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_delete_success(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         nid = 'aaaa-bbbb-cccc'
@@ -689,7 +689,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'node_delete', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_delete_err_malformed_node_id(self, mock_call,
                                                mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
@@ -718,7 +718,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_delete_not_found(self, mock_call,
                                    mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
@@ -736,7 +736,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_action_check_success(self, mock_call,
                                        mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -762,7 +762,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'node_check', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_action_check_node_not_found(self, mock_call,
                                               mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -782,7 +782,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_action_recover_success(self, mock_call,
                                          mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -808,7 +808,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'node_recover', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_action_recover_node_not_found(self, mock_call,
                                                 mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -828,7 +828,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_action_invalid_params(self, mock_call,
                                         mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -846,7 +846,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_action_missing_action(self, mock_call,
                                         mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -865,7 +865,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('No action specified.', six.text_type(ex))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_action_multiple_action(self, mock_call,
                                          mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -884,7 +884,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('Multiple actions specified.', six.text_type(ex))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_action_unknown_action(self, mock_call,
                                         mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -904,7 +904,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                       six.text_type(ex))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_operation(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'operation', True)
         node_id = 'xxxx-yyyy'

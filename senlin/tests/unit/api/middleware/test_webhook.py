@@ -131,7 +131,7 @@ class TestWebhookMiddleware(base.SenlinTestCase):
             'id': 'FAKE_ID',
             'actor': {'foo': 'bar'}
         }
-        rpcc.call2.return_value = fake_receiver
+        rpcc.call.return_value = fake_receiver
         mock_client.return_value = rpcc
         dbctx = mock.Mock()
         mock_ctx.return_value = dbctx
@@ -149,8 +149,8 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         mock_token.assert_called_once_with(
             auth_url='AUTH_URL', password='PASSWORD', username='USERNAME',
             user_domain_name='DOMAIN', foo='bar')
-        rpcc.call2.assert_called_with(dbctx, 'receiver_get', mock.ANY)
-        request = rpcc.call2.call_args[0][2]
+        rpcc.call.assert_called_with(dbctx, 'receiver_get', mock.ANY)
+        request = rpcc.call.call_args[0][2]
         self.assertIsInstance(request, vorr.ReceiverGetRequest)
         self.assertEqual('WEBHOOK', request.identity)
 

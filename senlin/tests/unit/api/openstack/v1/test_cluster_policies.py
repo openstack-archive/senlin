@@ -39,7 +39,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.controller = cp_mod.ClusterPolicyController(options=cfgopts)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_cluster_policy_index(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         cid = 'test_cluster'
@@ -71,7 +71,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'cluster_policy_list', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_cluster_policy_index_with_params(self, mock_call, mock_parse,
                                               mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -99,7 +99,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'cluster_policy_list', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_cluster_policy_index_invalid_params(self, mock_call,
                                                  mock_parse,
                                                  mock_enforce):
@@ -119,7 +119,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(0, mock_call.call_count)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_cluster_policy_index_invalid_sort(self, mock_call,
                                                mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -152,7 +152,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_cluster_policy_get_success(self, mock_call,
                                         mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
@@ -189,7 +189,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'cluster_policy_get', obj)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_cluster_policy_get_not_found(self, mock_call,
                                           mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
@@ -234,7 +234,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_action_get_bad_params(self, mock_call, mock_parse,
                                    mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)

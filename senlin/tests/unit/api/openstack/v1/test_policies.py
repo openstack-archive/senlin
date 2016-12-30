@@ -40,7 +40,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.controller = policies.PolicyController(options=cfgopts)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_index_normal(self, mock_call, mock_parse,
                                  mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -75,7 +75,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                           mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_index_whitelists_params(self, mock_call, mock_parse,
                                             mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -114,7 +114,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                           mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_index_whitelist_bad_params(self, mock_call, mock_parse,
                                                mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -131,7 +131,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(0, mock_parse.call_count)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_index_invalid_param(self, mock_call,
                                         mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -163,7 +163,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_create_success(self, mock_call, mock_parse,
                                    mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -208,7 +208,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                      mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_create_no_policy(self, mock_call, mock_parse,
                                      mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -224,7 +224,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_create_bad_policy(self, mock_call, mock_parse,
                                       mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -240,7 +240,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_create_with_spec_validation_failed(self, mock_call,
                                                        mock_parse,
                                                        mock_enforce):
@@ -292,7 +292,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_get_normal(self, mock_call, mock_parse,
                                mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
@@ -313,7 +313,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                      mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_get_not_found(self, mock_call, mock_parse,
                                   mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
@@ -345,7 +345,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_update_normal(self, mock_call, mock_parse,
                                   mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -388,7 +388,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                      mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_update_with_no_name(self, mock_call, mock_parse,
                                         mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -409,7 +409,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_update_with_bad_body(self, mock_call, mock_parse,
                                          mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -428,7 +428,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_parse.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_update_with_unsupported_field(self, mock_call, mock_parse,
                                                   mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -454,7 +454,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_update_not_found(self, mock_call, mock_parse,
                                      mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
@@ -496,7 +496,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_delete_success(self, mock_call, mock_parse,
                                    mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
@@ -514,7 +514,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'policy_delete', mock.ANY)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_delete_not_found(self, mock_call, mock_parse,
                                      mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
@@ -544,7 +544,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
 
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_validate_version_mismatch(self, mock_call, mock_enforce):
         body = {
             'policy': {}
@@ -589,7 +589,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_validate_no_body(self, mock_call, mock_parse,
                                      mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
@@ -606,7 +606,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_validate_no_spec(self, mock_call, mock_parse,
                                      mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
@@ -626,7 +626,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_validate_invalide_spec(self, mock_call, mock_parse,
                                            mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
@@ -656,7 +656,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('InvalidSpec', resp.json['error']['type'])
 
     @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call2')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_validate_success(self, mock_call, mock_parse,
                                      mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
