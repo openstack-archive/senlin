@@ -314,24 +314,6 @@ class TestNotificationPhase(TestField):
         self.assertRaises(ValueError, self.field.stringify, 'begin')
 
 
-class TestNotificationAction(TestField):
-    def setUp(self):
-        super(TestNotificationAction, self).setUp()
-
-        self.field = senlin_fields.NotificationActionField()
-        self.coerce_good_values = [('update', 'update')]
-        self.coerce_bad_values = ['magic']
-
-        self.to_primitive_values = self.coerce_good_values[0:1]
-        self.from_primitive_values = self.coerce_good_values[0:1]
-
-    def test_stringify(self):
-        self.assertEqual("'update'", self.field.stringify('update'))
-
-    def test_stringify_invalid(self):
-        self.assertRaises(ValueError, self.field.stringify, 'magic')
-
-
 class TestName(TestField):
 
     def setUp(self):

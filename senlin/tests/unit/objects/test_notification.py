@@ -104,7 +104,7 @@ class TestNotificationBase(testtools.TestCase):
         self.notification = TestNotification(
             event_type=base.EventType(
                 object='test_object',
-                action=fields.NotificationAction.CLUSTER_UPDATE,
+                action='update',
                 phase=consts.PHASE_START),
             publisher=base.NotificationPublisher.from_service(
                 self.service_obj),
@@ -140,7 +140,7 @@ class TestNotificationBase(testtools.TestCase):
     def test_emit_with_host_and_binary_as_publisher(self, mock_notifier):
         event_type = base.EventType(
             object='test_object',
-            action=fields.NotificationAction.CLUSTER_UPDATE)
+            action='update')
         publisher = base.NotificationPublisher(host='fake-host',
                                                binary='senlin-fake')
 
@@ -164,7 +164,7 @@ class TestNotificationBase(testtools.TestCase):
         noti = TestNotification(
             event_type=base.EventType(
                 object='test_object',
-                action=fields.NotificationAction.CLUSTER_UPDATE),
+                action='update'),
             publisher=base.NotificationPublisher.from_service(
                 self.service_obj),
             priority=consts.PRIO_INFO,

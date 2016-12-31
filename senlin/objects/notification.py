@@ -38,7 +38,7 @@ class EventType(NotificationObject):
 
     fields = {
         'object': fields.StringField(nullable=False),
-        'action': fields.NotificationActionField(nullable=False),
+        'action': fields.StringField(nullable=False),
         'phase': fields.NotificationPhaseField(nullable=True),
     }
 
