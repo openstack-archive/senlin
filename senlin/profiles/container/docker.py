@@ -69,7 +69,31 @@ class DockerProfile(base.Profile):
         ),
     }
 
-    OPERATIONS = {}
+    OP_NAMES = (
+        OP_RESTART, OP_PAUSE, OP_UNPAUSE,
+    ) = (
+        'restart', 'pause', 'unpause',
+    )
+
+    _RESTART_WAIT = (RESTART_WAIT) = ('wait_time')
+
+    OPERATIONS = {
+        OP_RESTART: schema.Operation(
+            _("Restart a container."),
+            schema={
+                RESTART_WAIT: schema.IntegerParam(
+                    _("Number of seconds to wait before killing the "
+                      "container.")
+                )
+            }
+        ),
+        OP_PAUSE: schema.Operation(
+            _("Pause a container.")
+        ),
+        OP_UNPAUSE: schema.Operation(
+            _("Unpause a container.")
+        )
+    }
 
     def __init__(self, type_name, name, **kwargs):
         super(DockerProfile, self).__init__(type_name, name, **kwargs)
@@ -302,4 +326,62 @@ class DockerProfile(base.Profile):
                                         message=six.text_type(ex))
         ctx = context.get_admin_context()
         db_api.node_remove_dependents(ctx, self.host.id, obj.id)
+        return
+
+    def handle_reboot(self, obj, **options):
+        """Handler for a reboot operation.
+
+        :param obj: The node object representing the container.
+        :returns: None
+        """
+        if not obj.physical_id:
+            return
+
+        if 'timeout' in options:
+            params = {'timeout': options['timeout']}
+        else:
+            params = {}
+        try:
+            self.docker(obj).reboot(obj.physical_id, **params)
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(type='container',
+                                         id=obj.physical_id[:8],
+                                         op='rebooting',
+                                         message=six.text_type(ex))
+        return
+
+    def handle_pause(self, obj):
+        """Handler for a pause operation.
+
+        :param obj: The node object representing the container.
+        :returns: None
+        """
+        if not obj.physical_id:
+            return
+
+        try:
+            self.docker(obj).pause(obj.physical_id)
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(type='container',
+                                         id=obj.physical_id[:8],
+                                         op='pausing',
+                                         message=six.text_type(ex))
+        return
+
+    def handle_unpause(self, obj):
+        """Handler for an unpause operation.
+
+        :param obj: The node object representing the container.
+        :returns: None
+        """
+        if not obj.physical_id:
+            return
+
+        try:
+            self.docker(obj).unpause(obj.physical_id)
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(type='container',
+                                         id=obj.physical_id[:8],
+                                         op='unpausing',
+                                         message=six.text_type(ex))
         return
