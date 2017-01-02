@@ -75,12 +75,8 @@ class EngineBasicTest(base.SenlinTestCase):
                                              server=self.eng.host,
                                              topic=self.eng.topic)
 
-        if cfg.CONF.rpc_use_object:
-            self.get_rpc.assert_called_once_with(mock_target, self.eng,
-                                                 serializer=mock.ANY)
-        else:
-            self.get_rpc.assert_called_once_with(mock_target, self.eng,
-                                                 serializer=None)
+        self.get_rpc.assert_called_once_with(mock_target, self.eng,
+                                             serializer=mock.ANY)
 
         self.assertEqual(self.fake_rpc_server, self.eng._rpc_server)
         self.fake_rpc_server.start.assert_called_once_with()

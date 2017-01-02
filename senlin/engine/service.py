@@ -123,10 +123,7 @@ class EngineService(service.Service):
         target = oslo_messaging.Target(version=consts.RPC_API_VERSION,
                                        server=self.host,
                                        topic=self.topic)
-        if CONF.rpc_use_object:
-            serializer = obj_base.VersionedObjectSerializer()
-        else:
-            serializer = None
+        serializer = obj_base.VersionedObjectSerializer()
         self._rpc_server = rpc_messaging.get_rpc_server(
             target, self, serializer=serializer)
         self._rpc_server.start()
