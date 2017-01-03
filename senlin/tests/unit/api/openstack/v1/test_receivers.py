@@ -89,7 +89,8 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'name': 'receiver01',
             'type': 'webhook',
             'cluster_id': '123abc',
-            'action': 'CLUSTER_RESIZE'
+            'action': 'CLUSTER_RESIZE',
+            'user': 'user123'
         }
         req = self._get('/receivers', params=params)
 
@@ -110,7 +111,8 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                 'marker': marker,
                 'cluster_id': ['123abc'],
                 'type': ['webhook'],
-                'project_safe': True
+                'project_safe': True,
+                'user': ['user123']
             })
         mock_call.assert_called_with(req.context, 'receiver_list', mock.ANY)
 

@@ -33,6 +33,7 @@ class ReceiverController(wsgi.Controller):
             consts.RECEIVER_NAME: 'mixed',
             consts.RECEIVER_TYPE: 'mixed',
             consts.RECEIVER_CLUSTER_ID: 'mixed',
+            consts.RECEIVER_USER_ID: 'mixed',
             consts.RECEIVER_ACTION: 'mixed',
             consts.PARAM_LIMIT: 'single',
             consts.PARAM_MARKER: 'single',
