@@ -94,6 +94,7 @@ class TestReceiverList(test_base.SenlinTestCase):
             'type': ['webhook'],
             'action': ['CLUSTER_RESIZE', 'CLUSTER_SCALE_IN'],
             'cluster_id': ['8c3c9af7-d768-4c5a-a21e-5261b22d749d'],
+            'user': ['8cbac8cf571b41bd8e27fb1a4bcaa7d7'],
             'limit': 3,
             'marker': 'f1ed0d50-7651-4599-a8cb-c86e9c7123f5',
             'sort': 'name:asc',
@@ -105,6 +106,7 @@ class TestReceiverList(test_base.SenlinTestCase):
         self.assertEqual(['CLUSTER_RESIZE', 'CLUSTER_SCALE_IN'], sot.action)
         self.assertEqual(['8c3c9af7-d768-4c5a-a21e-5261b22d749d'],
                          sot.cluster_id)
+        self.assertEqual(['8cbac8cf571b41bd8e27fb1a4bcaa7d7'], sot.user)
         self.assertEqual(3, sot.limit)
         self.assertEqual('f1ed0d50-7651-4599-a8cb-c86e9c7123f5', sot.marker)
         self.assertEqual('name:asc', sot.sort)

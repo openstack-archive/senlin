@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_utils import versionutils
+
 from senlin.common import consts
 from senlin.objects import base
 from senlin.objects import fields
@@ -39,6 +41,13 @@ class ReceiverCreateRequest(base.SenlinObject):
 @base.SenlinObjectRegistry.register
 class ReceiverListRequest(base.SenlinObject):
 
+    # VERSION 1.0: Initial version
+    # VERSION 1.1: Add field 'user'
+    VERSION = '1.1'
+    VERSION_MAP = {
+        '1.4': '1.1',
+    }
+
     fields = {
         'name': fields.ListOfStringsField(nullable=True),
         'type': fields.ListOfEnumField(
@@ -50,8 +59,18 @@ class ReceiverListRequest(base.SenlinObject):
         'marker': fields.UUIDField(nullable=True),
         'sort': fields.SortField(
             valid_keys=list(consts.RECEIVER_SORT_KEYS), nullable=True),
-        'project_safe': fields.FlexibleBooleanField(default=True)
+        'project_safe': fields.FlexibleBooleanField(default=True),
+        'user': fields.ListOfStringsField(nullable=True),
     }
+
+    def obj_make_compatible(self, primitive, target_version):
+        super(ReceiverListRequest, self).obj_make_compatible(
+            primitive, target_version)
+        target_version = versionutils.convert_version_to_tuple(
+            target_version)
+        if target_version < (1, 1):
+            if 'user' in primitive:
+                del primitive['user']
 
 
 @base.SenlinObjectRegistry.register
