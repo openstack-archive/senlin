@@ -64,6 +64,10 @@ def _dump(level, action, phase, reason, timestamp):
         if level < bound:
             return
 
+    if cfg.CONF.dispatchers.exclude_derived_actions:
+        if action.cause == consts.CAUSE_DERIVED:
+            return
+
     try:
         dispatchers.map_method("dump", level, action,
                                phase=phase, reason=reason, timestamp=timestamp)
