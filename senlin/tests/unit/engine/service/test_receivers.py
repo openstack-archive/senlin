@@ -55,7 +55,8 @@ class ReceiverTest(base.SenlinTestCase):
         req = orro.ReceiverListRequest(limit=1, marker=marker, sort='name',
                                        type=['webhook'],
                                        action=['CLUSTER_RESIZE'],
-                                       cluster_id=['123abc'])
+                                       cluster_id=['123abc'],
+                                       user=['user123'])
         result = self.eng.receiver_list(self.ctx, req.obj_to_primitive())
 
         self.assertIsInstance(result, list)
@@ -64,7 +65,8 @@ class ReceiverTest(base.SenlinTestCase):
                                          sort='name',
                                          filters={'type': ['webhook'],
                                                   'action': ['CLUSTER_RESIZE'],
-                                                  'cluster_id': ['123abc']},
+                                                  'cluster_id': ['123abc'],
+                                                  'user': ['user123']},
                                          project_safe=True)
 
     @mock.patch.object(ro.Receiver, 'get_all')

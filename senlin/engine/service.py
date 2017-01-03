@@ -2111,6 +2111,8 @@ class EngineService(service.Service):
             filters['action'] = req.action
         if req.obj_attr_is_set('cluster_id'):
             filters['cluster_id'] = req.cluster_id
+        if req.obj_attr_is_set('user'):
+            filters['user'] = req.user
         if filters:
             query['filters'] = filters
 
