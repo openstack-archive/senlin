@@ -833,7 +833,8 @@ class ActionProcTest(base.SenlinTestCase):
         res = ab.ActionProc(self.ctx, 'ACTION_ID')
 
         self.assertTrue(res)
-        mock_load.assert_called_once_with(self.ctx, action_id='ACTION_ID')
+        mock_load.assert_called_once_with(self.ctx, action_id='ACTION_ID',
+                                          project_safe=False)
         mock_event_info.assert_called_once_with(action, 'start')
         mock_status.assert_called_once_with(action.RES_OK, 'BIG SUCCESS')
 
@@ -851,6 +852,7 @@ class ActionProcTest(base.SenlinTestCase):
         res = ab.ActionProc(self.ctx, 'ACTION')
 
         self.assertFalse(res)
-        mock_load.assert_called_once_with(self.ctx, action_id='ACTION')
+        mock_load.assert_called_once_with(self.ctx, action_id='ACTION',
+                                          project_safe=False)
         mock_info.assert_called_once_with(action, 'start')
         mock_status.assert_called_once_with(action.RES_ERROR, 'Boom!')

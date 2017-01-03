@@ -101,6 +101,8 @@ class DBAPIActionTest(base.SenlinTestCase):
         action = _create_action(self.ctx)
         new_ctx = utils.dummy_context(project='another-project', is_admin=True)
         retobj = db_api.action_get(new_ctx, action.id, project_safe=True)
+        self.assertIsNone(retobj)
+        retobj = db_api.action_get(new_ctx, action.id, project_safe=False)
         self.assertIsNotNone(retobj)
 
     def test_action_acquire_random_ready(self):

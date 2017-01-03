@@ -83,6 +83,8 @@ class DBAPINodeTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='a_different_project',
                                         is_admin=True)
         node = db_api.node_get(admin_ctx, res.id, project_safe=True)
+        self.assertIsNone(node)
+        node = db_api.node_get(admin_ctx, res.id, project_safe=False)
         self.assertIsNotNone(node)
 
     def test_node_get_by_name(self):
@@ -150,6 +152,9 @@ class DBAPINodeTest(base.SenlinTestCase):
                                         is_admin=True)
         res = db_api.node_get_by_short_id(admin_ctx, node_id[:11],
                                           project_safe=True)
+        self.assertIsNone(res)
+        res = db_api.node_get_by_short_id(admin_ctx, node_id[:11],
+                                          project_safe=False)
         self.assertIsNotNone(res)
 
     def test_node_get_all(self):

@@ -2186,7 +2186,13 @@ class EngineService(service.Service):
         :return: A dictionary containing the details about a receiver or
                  an exception `ResourceNotFound` if no matching object found.
         """
-        receiver = receiver_obj.Receiver.find(ctx, req.identity)
+        # NOTE: Temporary code to make tempest tests about webhook_trigger
+        #       pass, will remove in latter patches.
+        kwargs = {}
+        if ctx.is_admin is True:
+            kwargs['project_safe'] = False
+
+        receiver = receiver_obj.Receiver.find(ctx, req.identity, **kwargs)
         return receiver.to_dict()
 
     @request_context

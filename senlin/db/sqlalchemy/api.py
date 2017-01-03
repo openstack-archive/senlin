@@ -83,7 +83,7 @@ def query_by_short_id(context, model, short_id, project_safe=True):
     q = model_query(context, model)
     q = q.filter(model.id.like('%s%%' % short_id))
 
-    if not context.is_admin and project_safe:
+    if project_safe:
         q = q.filter_by(project=context.project)
 
     if q.count() == 1:
@@ -98,7 +98,7 @@ def query_by_name(context, model, name, project_safe=True):
     q = model_query(context, model)
     q = q.filter_by(name=name)
 
-    if not context.is_admin and project_safe:
+    if project_safe:
         q = q.filter_by(project=context.project)
 
     if q.count() == 1:
@@ -124,7 +124,7 @@ def cluster_get(context, cluster_id, project_safe=True):
     if cluster is None:
         return None
 
-    if not context.is_admin and project_safe:
+    if project_safe:
         if context.project != cluster.project:
             return None
     return cluster
@@ -228,7 +228,7 @@ def node_get(context, node_id, project_safe=True):
     if not node:
         return None
 
-    if not context.is_admin and project_safe:
+    if project_safe:
         if context.project != node.project:
             return None
 
@@ -521,7 +521,7 @@ def policy_get(context, policy_id, project_safe=True):
     if policy is None:
         return None
 
-    if not context.is_admin and project_safe:
+    if project_safe:
         if context.project != policy.project:
             return None
 
@@ -741,7 +741,7 @@ def profile_get(context, profile_id, project_safe=True):
     if profile is None:
         return None
 
-    if not context.is_admin and project_safe:
+    if project_safe:
         if context.project != profile.project:
             return None
 
@@ -854,7 +854,7 @@ def event_create(context, values):
 
 def event_get(context, event_id, project_safe=True):
     event = model_query(context, models.Event).get(event_id)
-    if not context.is_admin and project_safe and event is not None:
+    if project_safe and event is not None:
         if event.project != context.project:
             return None
 
@@ -891,7 +891,7 @@ def event_get_all(context, limit=None, marker=None, sort=None, filters=None,
 def event_count_by_cluster(context, cluster_id, project_safe=True):
     query = model_query(context, models.Event)
 
-    if not context.is_admin and project_safe:
+    if project_safe:
         query = query.filter_by(project=context.project)
     count = query.filter_by(cluster_id=cluster_id).count()
 
@@ -903,7 +903,7 @@ def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
     query = model_query(context, models.Event)
     query = query.filter_by(cluster_id=cluster_id)
 
-    if not context.is_admin and project_safe:
+    if project_safe:
         query = query.filter_by(project=context.project)
 
     return _event_filter_paginate_query(context, query, filters=filters,
@@ -914,7 +914,7 @@ def event_prune(context, cluster_id, project_safe=True):
     with session_for_write() as session:
         query = session.query(models.Event).with_for_update()
         query = query.filter_by(cluster_id=cluster_id)
-        if not context.is_admin and project_safe:
+        if project_safe:
             query = query.filter_by(project=context.project)
 
         return query.delete(synchronize_session='fetch')
@@ -945,7 +945,7 @@ def action_get(context, action_id, project_safe=True, refresh=False):
         if action is None:
             return None
 
-        if not context.is_admin and project_safe:
+        if project_safe:
             if action.project != context.project:
                 return None
 
@@ -1249,7 +1249,7 @@ def receiver_get(context, receiver_id, project_safe=True):
     if not receiver:
         return None
 
-    if not context.is_admin and project_safe:
+    if project_safe:
         if context.project != receiver.project:
             return None
 
