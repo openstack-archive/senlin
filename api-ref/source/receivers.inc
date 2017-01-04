@@ -40,6 +40,7 @@ Request Parameters
   - type: receiver_type_query
   - cluster_id: cluster_identity_query
   - action: receiver_action_query
+  - user: receiver_user_query
 
 Response Parameters
 -------------------

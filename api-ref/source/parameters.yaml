@@ -212,6 +212,13 @@ receiver_type_query:
   description: |
     Filters the response by the ``type`` property of the receiver.
 
+receiver_user_query:
+  type: string
+  in: query
+  description: |
+    Filters the response by the ``user`` property of the receiver.
+  min_version: 1.4
+
 show_details:
   type: boolean
   in: query
