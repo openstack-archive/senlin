@@ -132,6 +132,12 @@ class ClusteringAPIClient(rest_client.RestClient):
 
         return self.get_resp(resp, body)
 
+    def cluster_collect(self, cluster, path):
+        uri = '{0}/clusters/{1}/attrs/{2}'.format(self.version, cluster, path)
+        resp, body = self.get(uri)
+
+        return self.get_resp(resp, body)
+
     def wait_for_status(self, obj_type, obj_id, expected_status, timeout=None):
         if timeout is None:
             timeout = CONF.clustering.wait_timeout
