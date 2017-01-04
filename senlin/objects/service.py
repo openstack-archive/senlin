@@ -56,3 +56,7 @@ class Service(base.SenlinObject, base.VersionedObjectDictCompat):
     @classmethod
     def delete(cls, context, obj_id):
         db_api.service_delete(context, obj_id)
+
+    @classmethod
+    def gc_by_engine(cls, context, engine_id):
+        db_api.gc_by_engine(context, engine_id)
