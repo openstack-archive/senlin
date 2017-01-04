@@ -101,8 +101,8 @@ cfg.CONF.register_opts(rpc_opts)
 
 # DEFAULT, cloud_backend
 cloud_backend_opts = [
-    cfg.StrOpt('cloud_backend',
-               default='openstack',
+    cfg.StrOpt('cloud_backend', default='openstack',
+               choices=("openstack", "openstack_test"),
                help=_('Default cloud backend to use.'))]
 cfg.CONF.register_opts(cloud_backend_opts)
 
@@ -167,13 +167,11 @@ cfg.CONF.register_opts(revision_opts, group=revision_group)
 # Receiver group
 receiver_group = cfg.OptGroup('receiver')
 receiver_opts = [
-    cfg.StrOpt('host',
-               deprecated_group='webhook',
+    cfg.StrOpt('host', deprecated_group='webhook',
                help=_('The address for notifying and triggering receivers. '
                       'It is useful for case Senlin API service is running '
                       'behind a proxy.')),
-    cfg.PortOpt('port', default=8778,
-                deprecated_group='webhook',
+    cfg.PortOpt('port', default=8778, deprecated_group='webhook',
                 help=_('The port for notifying and triggering receivers. '
                        'It is useful for case Senlin API service is running '
                        'behind a proxy.')),
@@ -186,9 +184,8 @@ cfg.CONF.register_opts(receiver_opts, group=receiver_group)
 
 # Zaqar group
 zaqar_group = cfg.OptGroup(
-    'zaqar',
-    title='Zaqar Options',
-    help='Configuration options for zaqar trustee.')
+    'zaqar', title='Zaqar Options',
+    help=_('Configuration options for zaqar trustee.'))
 
 zaqar_opts = (
     ks_loading.get_auth_common_conf_options() +
