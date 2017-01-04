@@ -14,11 +14,12 @@ import mock
 
 from oslo_config import cfg
 
+from senlin.api.common import util as common_util
+from senlin.api.common import version_request as vr
 from senlin.api.middleware import webhook as webhook_middleware
 from senlin.common import context
 from senlin.common import exception
 from senlin.drivers import base as driver_base
-from senlin.objects.requests import receivers as vorr
 from senlin.rpc import client as rpc
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -108,9 +109,10 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         self.assertRaises(exception.Forbidden, self.middleware._get_token,
                           **self.credential)
 
+    @mock.patch.object(common_util, 'parse_request')
     @mock.patch.object(context, 'RequestContext')
     @mock.patch.object(rpc, 'EngineClient')
-    def test_process_request(self, mock_client, mock_ctx):
+    def test_process_request(self, mock_client, mock_ctx, mock_parse):
         cfg.CONF.set_override('auth_url', 'AUTH_URL', group='authentication',
                               enforce_type=True)
         cfg.CONF.set_override('service_username', 'USERNAME',
@@ -125,6 +127,7 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         req.url = 'http://url1'
         req.params = {'key': 'FAKE_KEY'}
         req.headers = {}
+        req.version_request = vr.APIVersionRequest('1.0')
 
         rpcc = mock.Mock()
         fake_receiver = {
@@ -136,6 +139,9 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         dbctx = mock.Mock()
         mock_ctx.return_value = dbctx
 
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
         fake_return = ('WEBHOOK', {})
         mock_extract = self.patchobject(self.middleware, '_parse_url',
                                         return_value=fake_return)
@@ -144,15 +150,16 @@ class TestWebhookMiddleware(base.SenlinTestCase):
 
         res = self.middleware.process_request(req)
         self.assertIsNone(res)
+
         self.assertEqual('FAKE_TOKEN', req.headers['X-Auth-Token'])
         mock_extract.assert_called_once_with('http://url1')
         mock_token.assert_called_once_with(
             auth_url='AUTH_URL', password='PASSWORD', username='USERNAME',
             user_domain_name='DOMAIN', foo='bar')
-        rpcc.call.assert_called_with(dbctx, 'receiver_get', mock.ANY)
-        request = rpcc.call.call_args[0][2]
-        self.assertIsInstance(request, vorr.ReceiverGetRequest)
-        self.assertEqual('WEBHOOK', request.identity)
+
+        mock_parse.assert_called_once_with('ReceiverGetRequest', req,
+                                           {'identity': 'WEBHOOK'})
+        rpcc.call.assert_called_with(dbctx, 'receiver_get', obj)
 
     def test_process_request_method_not_post(self):
         # Request method is not POST
