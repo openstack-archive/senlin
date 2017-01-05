@@ -200,7 +200,7 @@ in a collaborative way to meet the needs of complicated usage scenarios.
    developer/policies/zone_v1
 
 6.3 Reviewing Patches
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 There are many general guidelines across the community about code reviews, for
 example:
