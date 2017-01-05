@@ -83,7 +83,7 @@ Such a message is used to notify the Senlin service to start an action on a
 specific cluster.
 
 Creating a Webhook Receiver
--------------------------
+---------------------------
 
 1. Create a cluster named "``test-cluster``", with its desired capacity set to
    2, its minimum size set to 1 and its maximum size set to 5, e.g.::
@@ -120,7 +120,7 @@ Creating a Webhook Receiver
      $ curl -X POST <alarm_url>
 
 Creating a Message Receiver
--------------------------
+---------------------------
 
 1. Different from a webhook receiver which can only be used to trigger a
    specific action on a specific cluster, a message receiver is designed
