@@ -445,6 +445,10 @@ def service_get_all(context):
     return IMPL.service_get_all(context)
 
 
+def gc_by_engine(context, engine_id):
+    return IMPL.gc_by_engine(context, engine_id)
+
+
 def registry_create(context, cluster_id, check_type, interval, params,
                     engine_id):
     return IMPL.registry_create(context, cluster_id, check_type, interval,

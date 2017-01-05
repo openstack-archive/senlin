@@ -116,6 +116,7 @@ class EngineBasicTest(base.SenlinTestCase):
 
 
 class EngineStatusTest(base.SenlinTestCase):
+
     def setUp(self):
         super(EngineStatusTest, self).setUp()
         self.eng = service.EngineService('host-a', 'topic-a')
@@ -152,11 +153,13 @@ class EngineStatusTest(base.SenlinTestCase):
         expect_str = 'Service %s update failed' % self.eng.engine_id
         self.assertIn(expect_str, self.LOG.output)
 
+    @mock.patch.object(service_obj.Service, 'gc_by_engine')
     @mock.patch.object(service_obj.Service, 'get_all')
     @mock.patch.object(service_obj.Service, 'delete')
-    def test__service_manage_cleanup(self, mock_delete, mock_get_all):
+    def test__service_manage_cleanup(self, mock_delete, mock_get_all, mock_gc):
         delta = datetime.timedelta(seconds=2 * cfg.CONF.periodic_interval)
         ages_a_go = timeutils.utcnow(True) - delta
         mock_get_all.return_value = [{'id': 'foo', 'updated_at': ages_a_go}]
         self.eng._service_manage_cleanup()
         mock_delete.assert_called_once_with(mock.ANY, 'foo')
+        mock_gc.assert_called_once_with(mock.ANY, 'foo')

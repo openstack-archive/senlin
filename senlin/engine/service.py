@@ -194,6 +194,9 @@ class EngineService(service.Service):
                 continue
             if timeutils.is_older_than(svc['updated_at'], time_window):
                 LOG.info(_LI('Service %s was aborted'), svc['id'])
+                LOG.info(_LI('Breaking locks for dead engine %s'), svc['id'])
+                service_obj.Service.gc_by_engine(ctx, svc['id'])
+                LOG.info(_LI('Done breaking locks for engine %s'), svc['id'])
                 service_obj.Service.delete(ctx, svc['id'])
 
     def service_manage_cleanup(self):
