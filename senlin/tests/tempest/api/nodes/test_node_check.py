@@ -11,15 +11,16 @@
 # under the License.
 
 from tempest.lib import decorators
+from tempest.lib import exceptions
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import utils
 
 
-class TestNodeActionCheck(base.BaseSenlinAPITest):
+class TestNodeCheck(base.BaseSenlinAPITest):
 
     def setUp(self):
-        super(TestNodeActionCheck, self).setUp()
+        super(TestNodeCheck, self).setUp()
         profile_id = utils.create_a_profile(self)
         self.addCleanup(utils.delete_a_profile, self, profile_id)
 
@@ -27,7 +28,7 @@ class TestNodeActionCheck(base.BaseSenlinAPITest):
         self.addCleanup(utils.delete_a_node, self, self.node_id)
 
     @decorators.idempotent_id('ae124bfe-9fcf-4e87-91b7-319102efbdcc')
-    def test_node_action_check(self):
+    def test_check(self):
         params = {
             'check': {
             }
@@ -43,29 +44,28 @@ class TestNodeActionCheck(base.BaseSenlinAPITest):
         self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
 
 
-class TestNodeActionRecover(base.BaseSenlinAPITest):
+class TestNodeCheckNegative(base.BaseSenlinAPITest):
 
-    def setUp(self):
-        super(TestNodeActionRecover, self).setUp()
-        profile_id = utils.create_a_profile(self)
-        self.addCleanup(utils.delete_a_profile, self, profile_id)
-
-        self.node_id = utils.create_a_node(self, profile_id)
-        self.addCleanup(utils.delete_a_node, self, self.node_id)
-
-    @decorators.idempotent_id('217af65a-4029-40ce-a833-74faeac8c1f5')
-    def test_node_action_recover(self):
+    @decorators.idempotent_id('723ea351-1bcb-4d45-bfe7-35c656d29761')
+    def test_param_is_not_map(self):
+        # Check action parameter is not a map
         params = {
-            "recover": {
-                "operation": "REBUILD"
-            }
+            'check': []
         }
-        # Trigger node action
-        res = self.client.trigger_action('nodes', self.node_id, params=params)
 
-        # Verfiy resp code, body and location in headers
-        self.assertEqual(202, res['status'])
-        self.assertIn('actions', res['location'])
+        # Verify badrequest exception(400) is raised.
+        self.assertRaises(exceptions.BadRequest,
+                          self.client.trigger_action,
+                          'nodes', 'node_id', params)
 
-        action_id = res['location'].split('/actions/')[1]
-        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
+    @decorators.idempotent_id('90c46123-f992-4833-859a-46f6d2ccd8e9')
+    def test_node_not_found(self):
+        params = {
+            'check': {}
+        }
+
+        # Verify notfound exception(404) is raised.
+        self.assertRaises(exceptions.NotFound,
+                          self.client.trigger_action,
+                          'nodes', '90c46123-f992-4833-859a-46f6d2ccd8e9',
+                          params)
