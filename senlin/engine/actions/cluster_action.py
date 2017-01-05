@@ -108,6 +108,7 @@ class ClusterAction(base.Action):
 
         nodes = []
         child = []
+        # conunt >= 1
         for m in range(count):
             index = co.Cluster.get_next_index(self.context, self.entity.id)
             kwargs = {
@@ -133,35 +134,31 @@ class ClusterAction(base.Action):
                 'name': 'node_create_%s' % node.id[:8],
                 'cause': base.CAUSE_DERIVED,
             }
-
             action_id = base.Action.create(self.context, node.id,
                                            consts.NODE_CREATE, **kwargs)
             child.append(action_id)
 
-        if child:
-            # Build dependency and make the new action ready
-            dobj.Dependency.create(self.context, [a for a in child], self.id)
-            for cid in child:
-                ao.Action.update(self.context, cid,
-                                 {'status': base.Action.READY})
-            dispatcher.start_action()
+        # Build dependency and make the new action ready
+        dobj.Dependency.create(self.context, [a for a in child], self.id)
+        for cid in child:
+            ao.Action.update(self.context, cid,
+                             {'status': base.Action.READY})
+        dispatcher.start_action()
 
-            # Wait for cluster creation to complete
-            res, reason = self._wait_for_dependents()
-            if res == self.RES_OK:
-                nodes_added = [n.id for n in nodes]
-                self.outputs['nodes_added'] = nodes_added
-                creation = self.data.get('creation', {})
-                creation['nodes'] = nodes_added
-                self.data['creation'] = creation
-                for node in nodes:
-                    self.entity.add_node(node)
-            else:
-                reason = _('Failed in creating nodes.')
+        # Wait for cluster creation to complete
+        res, reason = self._wait_for_dependents()
+        if res == self.RES_OK:
+            nodes_added = [n.id for n in nodes]
+            self.outputs['nodes_added'] = nodes_added
+            creation = self.data.get('creation', {})
+            creation['nodes'] = nodes_added
+            self.data['creation'] = creation
+            for node in nodes:
+                self.entity.add_node(node)
+        else:
+            reason = _('Failed in creating nodes.')
 
-            return res, reason
-
-        return self.RES_OK, ''
+        return res, reason
 
     @profiler.trace('ClusterAction.do_create', hide_args=False)
     def do_create(self):
