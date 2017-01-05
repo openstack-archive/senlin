@@ -25,12 +25,12 @@ class TestSenlinDriver(base.SenlinTestCase):
         plugin1.compute = 'Compute1'
         plugin1.orchestration = 'Orchestration1'
         env = environment.global_env()
-        env.register_driver('cloud_backend_1', plugin1)
-
-        # Using default cloud backend defined in configure file
-        cfg.CONF.set_override('cloud_backend', 'cloud_backend_1',
+        env.register_driver('openstack_test', plugin1)
+        cfg.CONF.set_override('cloud_backend', 'openstack_test',
                               enforce_type=True)
+
         sd = driver_base.SenlinDriver()
+
         self.assertEqual('Compute1', sd.compute)
         self.assertEqual('Orchestration1', sd.orchestration)
 
@@ -39,9 +39,9 @@ class TestSenlinDriver(base.SenlinTestCase):
         plugin2.compute = 'Compute2'
         plugin2.orchestration = 'Orchestration2'
         env = environment.global_env()
-        env.register_driver('cloud_backend_2', plugin2)
+        env.register_driver('openstack_test', plugin2)
 
-        # Using specified cloud backend
-        sd = driver_base.SenlinDriver('cloud_backend_2')
+        sd = driver_base.SenlinDriver('openstack_test')
+
         self.assertEqual('Compute2', sd.compute)
         self.assertEqual('Orchestration2', sd.orchestration)
