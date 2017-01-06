@@ -8,6 +8,9 @@ Concepts
 The Senlin API supports a ''major versions'' expressed in request URLs and
 ''microversions'' which can be sent in HTTP header ``OpenStack-API-Version``.
 
+When the specified ``OpenStack-API-Version`` is not supported by the API
+service, a 406 (NotAcceptable) exception will be raised. Note that this applies
+to all API requests documented in this guide.
 
 List Major Versions
 ===================
