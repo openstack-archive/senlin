@@ -14,6 +14,7 @@ import mock
 from oslo_messaging.rpc import dispatcher as rpc
 import six
 
+from senlin.common import consts
 from senlin.common import exception
 from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
@@ -57,7 +58,7 @@ class WebhookTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'FAKE_CLUSTER', 'DANCE',
             name='webhook_01234567',
-            cause=action_mod.CAUSE_RPC,
+            cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'kee': 'vee', 'foo': 'bar'},
         )
@@ -88,7 +89,7 @@ class WebhookTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'FAKE_CLUSTER', 'DANCE',
             name='webhook_01234567',
-            cause=action_mod.CAUSE_RPC,
+            cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'foo': 'bar'},
         )

@@ -12,6 +12,7 @@
 
 import mock
 
+from senlin.common import consts
 from senlin.engine.actions import base as ab
 from senlin.engine.actions import cluster_action as ca
 from senlin.engine import cluster as cm
@@ -60,13 +61,13 @@ class ClusterOperationTest(base.SenlinTestCase):
                                                      operation='dance')
         mock_action.assert_has_calls([
             mock.call(action.context, 'NODE_ID_1', 'NODE_OPERATION',
-                      name='node_dance_NODE_ID_', cause=ab.CAUSE_DERIVED,
+                      name='node_dance_NODE_ID_', cause=consts.CAUSE_DERIVED,
                       inputs={
                           'operation': 'dance',
                           'params': {'style': 'tango'}
                       }),
             mock.call(action.context, 'NODE_ID_2', 'NODE_OPERATION',
-                      name='node_dance_NODE_ID_', cause=ab.CAUSE_DERIVED,
+                      name='node_dance_NODE_ID_', cause=consts.CAUSE_DERIVED,
                       inputs={
                           'operation': 'dance',
                           'params': {'style': 'tango'}
@@ -114,13 +115,13 @@ class ClusterOperationTest(base.SenlinTestCase):
                                                      operation='dance')
         mock_action.assert_has_calls([
             mock.call(action.context, 'NODE_ID_1', 'NODE_OPERATION',
-                      name='node_dance_NODE_ID_', cause=ab.CAUSE_DERIVED,
+                      name='node_dance_NODE_ID_', cause=consts.CAUSE_DERIVED,
                       inputs={
                           'operation': 'dance',
                           'params': {'style': 'tango'}
                       }),
             mock.call(action.context, 'NODE_ID_2', 'NODE_OPERATION',
-                      name='node_dance_NODE_ID_', cause=ab.CAUSE_DERIVED,
+                      name='node_dance_NODE_ID_', cause=consts.CAUSE_DERIVED,
                       inputs={
                           'operation': 'dance',
                           'params': {'style': 'tango'}

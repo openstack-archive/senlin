@@ -132,7 +132,7 @@ class ClusterAction(base.Action):
 
             kwargs = {
                 'name': 'node_create_%s' % node.id[:8],
-                'cause': base.CAUSE_DERIVED,
+                'cause': consts.CAUSE_DERIVED,
             }
             action_id = base.Action.create(self.context, node.id,
                                            consts.NODE_CREATE, **kwargs)
@@ -209,7 +209,7 @@ class ClusterAction(base.Action):
             for node in nodes:
                 kwargs = {
                     'name': 'node_update_%s' % node[:8],
-                    'cause': base.CAUSE_DERIVED,
+                    'cause': consts.CAUSE_DERIVED,
                     'inputs': {
                         'new_profile_id': profile_id,
                     },
@@ -291,7 +291,7 @@ class ClusterAction(base.Action):
         for node_id in node_ids:
             kwargs = {
                 'name': 'node_delete_%s' % node_id[:8],
-                'cause': base.CAUSE_DERIVED,
+                'cause': consts.CAUSE_DERIVED,
             }
             action_id = base.Action.create(self.context, node_id, action_name,
                                            **kwargs)
@@ -408,7 +408,7 @@ class ClusterAction(base.Action):
             nid = node.id
             kwargs = {
                 'name': 'node_join_%s' % nid[:8],
-                'cause': base.CAUSE_DERIVED,
+                'cause': consts.CAUSE_DERIVED,
                 'inputs': {'cluster_id': self.target},
             }
             action_id = base.Action.create(self.context, nid, consts.NODE_JOIN,
@@ -560,7 +560,7 @@ class ClusterAction(base.Action):
         children = []
         for (original, replacement) in node_dict.items():
             kwargs = {
-                'cause': base.CAUSE_DERIVED,
+                'cause': consts.CAUSE_DERIVED,
             }
 
             # node_leave action
@@ -617,7 +617,7 @@ class ClusterAction(base.Action):
             action_id = base.Action.create(
                 self.context, node_id, consts.NODE_CHECK,
                 name='node_check_%s' % node_id[:8],
-                cause=base.CAUSE_DERIVED,
+                cause=consts.CAUSE_DERIVED,
             )
             child.append(action_id)
 
@@ -665,7 +665,7 @@ class ClusterAction(base.Action):
             action_id = base.Action.create(
                 self.context, node_id, consts.NODE_RECOVER,
                 name='node_recover_%s' % node_id[:8],
-                cause=base.CAUSE_DERIVED, inputs=inputs,
+                cause=consts.CAUSE_DERIVED, inputs=inputs,
             )
             children.append(action_id)
 
@@ -919,7 +919,7 @@ class ClusterAction(base.Action):
             action_id = base.Action.create(
                 self.context, node_id, consts.NODE_OPERATION,
                 name='node_%s_%s' % (operation, node_id[:8]),
-                cause=base.CAUSE_DERIVED,
+                cause=consts.CAUSE_DERIVED,
                 inputs=inputs,
             )
             child.append(action_id)

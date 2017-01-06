@@ -31,15 +31,6 @@ from senlin.policies import base as policy_mod
 wallclock = time.time
 LOG = logging.getLogger(__name__)
 
-# TODO(Qiming): Replace this with definitions in consts
-# Action causes
-CAUSES = (
-    CAUSE_RPC, CAUSE_DERIVED,
-) = (
-    'RPC Request',
-    'Derived Action',
-)
-
 
 class Action(object):
     '''An action can be performed on a cluster or a node of a cluster.'''

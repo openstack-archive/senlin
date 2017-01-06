@@ -203,7 +203,7 @@ class Message(base.Receiver):
 
         kwargs = {
             'name': 'receiver_%s_%s' % (self.id[:8], message['id'][:8]),
-            'cause': action_mod.CAUSE_RPC,
+            'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': params
         }
