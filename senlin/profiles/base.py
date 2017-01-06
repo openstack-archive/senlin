@@ -400,7 +400,7 @@ class Profile(object):
 
     def do_leave(self, obj):
         """For subclass to override to perform extra operations."""
-        LOG.warning(_LW("Join operation not specialized."))
+        LOG.warning(_LW("Leave operation not specialized."))
         return True
 
     def do_rebuild(self, obj):
