@@ -707,8 +707,7 @@ class TestNode(base.SenlinTestCase):
             mock.call(self.context, consts.NS_ACTIVE,
                       reason="Operation 'dance' succeeded")
         ])
-        x_profile.handle_dance.assert_called_once_with(
-            self.context, node, style='tango')
+        x_profile.handle_dance.assert_called_once_with(node, style='tango')
 
     def test_node_operation_no_physical_id(self):
         node = nodem.Node('node1', PROFILE_ID, None)
@@ -738,5 +737,4 @@ class TestNode(base.SenlinTestCase):
             mock.call(self.context, consts.NS_ERROR,
                       reason="Failed in dance container test_id: Boom.")
         ])
-        x_profile.handle_dance.assert_called_once_with(
-            self.context, node, style='tango')
+        x_profile.handle_dance.assert_called_once_with(node, style='tango')
