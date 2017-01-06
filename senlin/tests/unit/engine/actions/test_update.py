@@ -39,7 +39,10 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_load.return_value = cluster
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {'new_profile_id': 'FAKE_PROFILE'}
+        action.inputs = {'name': 'FAKE_NAME',
+                         'metadata': {'foo': 'bar'},
+                         'timeout': 3600,
+                         'new_profile_id': 'FAKE_PROFILE'}
         reason = 'Cluster update completed.'
         mock_update.return_value = (action.RES_OK, reason)
         # do it
@@ -50,6 +53,25 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(reason, res_msg)
         mock_update.assert_called_once_with('FAKE_PROFILE',
                                             [node1, node2])
+
+    @mock.patch.object(ca.ClusterAction, '_update_nodes')
+    def test_do_update_set_status_failed(self, mock_update, mock_load):
+        node1 = mock.Mock(id='fake id 1')
+        node2 = mock.Mock(id='fake id 2')
+        cluster = mock.Mock(id='FAKE_ID', nodes=[node1, node2],
+                            ACTIVE='ACTIVE')
+        mock_load.return_value = cluster
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
+
+        cluster.do_update.return_value = False
+        reason = 'Cluster update failed.'
+        # do it
+        res_code, res_msg = action.do_update()
+
+        # assertions
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual(reason, res_msg)
+        self.assertEqual(0, mock_update.call_count)
 
     @mock.patch.object(ca.ClusterAction, '_update_nodes')
     def test_do_update_multi_failed(self, mock_update, mock_load):
