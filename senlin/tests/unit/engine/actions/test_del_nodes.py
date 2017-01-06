@@ -126,7 +126,7 @@ class ClusterDelNodesTest(base.SenlinTestCase):
         cluster = mock.Mock()
         mock_load.return_value = cluster
         action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx,
-                                  inputs={'candidates': ['NODE_1']})
+                                  inputs={'candidates': ['NODE_1', 'NODE_2']})
         mock_get.return_value = None
 
         # do it
@@ -134,7 +134,7 @@ class ClusterDelNodesTest(base.SenlinTestCase):
 
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
-        self.assertEqual("Node NODE_1 is not found.", res_msg)
+        self.assertEqual("Nodes not found: ['NODE_1', 'NODE_2'].", res_msg)
         expected = {
             'deletion': {
                 'destroy_after_deletion': False,
