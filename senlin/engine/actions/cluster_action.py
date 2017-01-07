@@ -829,7 +829,7 @@ class ClusterAction(base.Action):
         if len(candidates) == 0:
             candidates = scaleutils.nodes_by_random(self.entity.nodes, count)
 
-        #
+        # Sleep period
         self._sleep(grace_period)
 
         result, reason = self._delete_nodes(candidates)
