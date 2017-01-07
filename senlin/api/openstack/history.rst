@@ -56,3 +56,5 @@ it can be used by both users and developers.
    the profile type.
 
  - Added ``user`` query parameter for listing receivers.
+
+ - Added ``destroy_after_deletion`` parameter for deleting cluster members.
