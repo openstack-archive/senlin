@@ -451,9 +451,8 @@ class ClusterAction(base.Action):
         grace_period = 0
         reduce_desired_capacity = True
         pd = self.data.get('deletion', None)
-        if pd:
-            if 'destroy_after_deletion' in pd:
-                destroy_after_deletion = pd['destroy_after_deletion']
+        if pd is not None:
+            destroy_after_deletion = pd.get('destroy_after_deletion', False)
             grace_period = pd.get('grace_period', 0)
             reduce_desired_capacity = pd.get('reduce_desired_capacity', True)
 
@@ -474,14 +473,15 @@ class ClusterAction(base.Action):
 
             # The return value is None if node not found
             if not node:
-                errors.append(_('Node %s is not found.') % node_id)
+                errors.append(node_id)
                 continue
 
             if ((not node.cluster_id) or (node.cluster_id != self.target)):
                 nodes.remove(node_id)
 
         if len(errors) > 0:
-            return self.RES_ERROR, ''.join(errors)
+            msg = _("Nodes not found: %s.") % errors
+            return self.RES_ERROR, msg
 
         reason = _('Completed deleting nodes.')
         if len(nodes) == 0:
