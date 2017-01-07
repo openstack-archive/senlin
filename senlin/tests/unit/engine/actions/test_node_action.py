@@ -72,7 +72,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_count.return_value = 11
         mock_check.return_value = None
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
-                                        cause=base_action.CAUSE_RPC)
+                                        cause=consts.CAUSE_RPC)
 
         # do it
         res_code, res_msg = action.do_create()
@@ -101,7 +101,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_count.return_value = 11
         mock_check.return_value = 'overflow'
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
-                                        cause=base_action.CAUSE_RPC)
+                                        cause=consts.CAUSE_RPC)
 
         # do it
         res_code, res_msg = action.do_create()
@@ -131,7 +131,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_count.return_value = 11
         mock_check.return_value = ''
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
-                                        cause=base_action.CAUSE_RPC)
+                                        cause=consts.CAUSE_RPC)
 
         # do it
         res_code, res_msg = action.do_create()
@@ -186,7 +186,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_count.return_value = 2
         mock_check.return_value = None
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
-                                        cause=base_action.CAUSE_RPC)
+                                        cause=consts.CAUSE_RPC)
 
         # do it
         res_code, res_msg = action.do_delete()
@@ -214,7 +214,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_count.return_value = 2
         mock_check.return_value = 'underflow'
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
-                                        cause=base_action.CAUSE_RPC)
+                                        cause=consts.CAUSE_RPC)
 
         res_code, res_msg = action.do_delete()
 
@@ -242,7 +242,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_count.return_value = 2
         mock_check.return_value = None
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
-                                        cause=base_action.CAUSE_RPC)
+                                        cause=consts.CAUSE_RPC)
 
         res_code, res_msg = action.do_delete()
 
@@ -271,7 +271,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_count.return_value = 2
         mock_check.return_value = None
         action = node_action.NodeAction(
-            node.id, 'ACTION', self.ctx, cause=base_action.CAUSE_RPC,
+            node.id, 'ACTION', self.ctx, cause=consts.CAUSE_RPC,
             data={'deletion': {'grace_period': 10}})
 
         # do it
@@ -304,7 +304,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_check.return_value = None
         action = node_action.NodeAction(
             'NID', 'ACTION', self.ctx,
-            cause=base_action.CAUSE_RPC,
+            cause=consts.CAUSE_RPC,
             data={'deletion': {'reduce_desired_capacity': True}})
 
         # do it
@@ -335,7 +335,7 @@ class NodeActionTest(base.SenlinTestCase):
         mock_check.return_value = None
         action = node_action.NodeAction(
             'NID', 'ACTION', self.ctx,
-            cause=base_action.CAUSE_RPC,
+            cause=consts.CAUSE_RPC,
             data={'deletion': {'reduce_desired_capacity': False}})
 
         # do it
@@ -357,7 +357,7 @@ class NodeActionTest(base.SenlinTestCase):
         node.do_delete.return_value = True
         mock_load.return_value = node
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
-                                        cause=base_action.CAUSE_DERIVED)
+                                        cause=consts.CAUSE_DERIVED)
 
         res_code, res_msg = action.do_delete()
 
@@ -371,7 +371,7 @@ class NodeActionTest(base.SenlinTestCase):
         node.do_delete.return_value = False
         mock_load.return_value = node
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
-                                        cause=base_action.CAUSE_DERIVED)
+                                        cause=consts.CAUSE_DERIVED)
 
         res_code, res_msg = action.do_delete()
 
@@ -633,7 +633,7 @@ class NodeActionTest(base.SenlinTestCase):
         node = mock.Mock(id=node_id, cluster_id='FAKE_CLUSTER')
         mock_load.return_value = node
         action = node_action.NodeAction(node_id, 'NODE_FLY', self.ctx,
-                                        cause=base_action.CAUSE_DERIVED)
+                                        cause=consts.CAUSE_DERIVED)
         action.id = 'ACTION_ID'
         action.owner = 'OWNER'
         mock_exec = self.patchobject(action, '_execute',

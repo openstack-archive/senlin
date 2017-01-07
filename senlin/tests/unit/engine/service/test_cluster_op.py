@@ -72,7 +72,7 @@ class ClusterOpTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.CLUSTER_OPERATION,
             name='cluster_dance_12345678',
-            cause=am.CAUSE_RPC,
+            cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={
                 'operation': 'dance',
@@ -179,7 +179,7 @@ class ClusterOpTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.CLUSTER_OPERATION,
             name='cluster_dance_12345678',
-            cause=am.CAUSE_RPC,
+            cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={
                 'operation': 'dance',
@@ -221,7 +221,7 @@ class ClusterOpTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.CLUSTER_OPERATION,
             name='cluster_dance_12345678',
-            cause=am.CAUSE_RPC,
+            cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={
                 'operation': 'dance',

@@ -63,10 +63,10 @@ class ClusterCheckTest(base.SenlinTestCase):
         mock_action.assert_has_calls([
             mock.call(action.context, 'NODE_1', 'NODE_CHECK',
                       name='node_check_NODE_1',
-                      cause=ab.CAUSE_DERIVED),
+                      cause=consts.CAUSE_DERIVED),
             mock.call(action.context, 'NODE_2', 'NODE_CHECK',
                       name='node_check_NODE_2',
-                      cause=ab.CAUSE_DERIVED)
+                      cause=consts.CAUSE_DERIVED)
         ])
         mock_dep.assert_called_once_with(action.context,
                                          ['NODE_ACTION_1', 'NODE_ACTION_2'],
@@ -127,7 +127,7 @@ class ClusterCheckTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             action.context, 'NODE_1', 'NODE_CHECK',
             name='node_check_NODE_1',
-            cause=ab.CAUSE_DERIVED,
+            cause=consts.CAUSE_DERIVED,
         )
         mock_dep.assert_called_once_with(action.context, ['NODE_ACTION_ID'],
                                          'CLUSTER_ACTION_ID')

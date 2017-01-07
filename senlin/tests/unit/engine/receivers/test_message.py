@@ -18,6 +18,7 @@ from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
 from oslo_utils import uuidutils
 
+from senlin.common import consts
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.drivers import base as driver_base
@@ -617,7 +618,7 @@ class TestMessage(base.SenlinTestCase):
         message.user = 'user1'
         expected_kwargs = {
             'name': 'receiver_ID654321_ID123456',
-            'cause': action_mod.CAUSE_RPC,
+            'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': {}
         }

@@ -167,7 +167,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'NODE_ID', consts.NODE_CREATE,
             name='node_create_NODE_ID',
-            cause=action_mod.CAUSE_RPC,
+            cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY)
         notify.assert_called_once_with()
 
@@ -209,7 +209,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'NODE_ID', consts.NODE_CREATE,
             name='node_create_NODE_ID',
-            cause=action_mod.CAUSE_RPC,
+            cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY)
         notify.assert_called_once_with()
 
@@ -256,7 +256,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'NODE_ID', consts.NODE_CREATE,
             name='node_create_NODE_ID',
-            cause=action_mod.CAUSE_RPC,
+            cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY)
         notify.assert_called_once_with()
 
@@ -436,7 +436,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'FAKE_NODE_ID', consts.NODE_UPDATE,
             name='node_update_FAKE_NOD',
-            cause=action_mod.CAUSE_RPC,
+            cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={
                 'name': 'NODE2',
@@ -487,7 +487,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'FAKE_NODE_ID', consts.NODE_UPDATE,
             name='node_update_FAKE_NOD',
-            cause=action_mod.CAUSE_RPC,
+            cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={
                 'new_profile_id': 'NEW_PROFILE_ID',
@@ -588,7 +588,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.NODE_DELETE,
             name='node_delete_12345678',
-            cause=action_mod.CAUSE_RPC,
+            cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY)
         mock_start.assert_called_once_with()
 
@@ -652,7 +652,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.NODE_CHECK,
             name='node_check_12345678',
-            cause=action_mod.CAUSE_RPC,
+            cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'k1': 'v1'})
         mock_start.assert_called_once_with()
@@ -687,7 +687,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.NODE_RECOVER,
             name='node_recover_12345678',
-            cause=action_mod.CAUSE_RPC,
+            cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'k1': 'v1'})
         mock_start.assert_called_once_with()
@@ -733,7 +733,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.NODE_OPERATION,
             name='node_dance_12345678',
-            cause=action_mod.CAUSE_RPC,
+            cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'operation': 'dance', 'params': {'style': 'tango'}})
         mock_start.assert_called_once_with()

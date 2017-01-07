@@ -14,6 +14,7 @@ import mock
 from oslo_messaging.rpc import dispatcher as rpc
 import six
 
+from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.engine.actions import base as ab
 from senlin.engine import service
@@ -117,7 +118,7 @@ class ActionTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'FAKE_CLUSTER', 'CLUSTER_CREATE',
             name='a1',
-            cause=ab.CAUSE_RPC,
+            cause=consts.CAUSE_RPC,
             status=ab.Action.READY,
             inputs={})
 

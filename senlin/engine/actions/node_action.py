@@ -53,7 +53,7 @@ class NodeAction(base.Action):
         :returns: A tuple containing the result and the corresponding reason.
         """
         cluster_id = self.entity.cluster_id
-        if cluster_id and self.cause == base.CAUSE_RPC:
+        if cluster_id and self.cause == consts.CAUSE_RPC:
             # Check cluster size constraint if target cluster is specified
             cluster = cm.Cluster.load(self.context, cluster_id)
             desired = no.Node.count_by_cluster(self.context, cluster_id)
@@ -66,7 +66,7 @@ class NodeAction(base.Action):
 
         res = self.entity.do_create(self.context)
 
-        if cluster_id and self.cause == base.CAUSE_RPC:
+        if cluster_id and self.cause == consts.CAUSE_RPC:
             # Update cluster's desired_capacity and re-evaluate its status no
             # matter the creation is a success or not because the node object
             # is # already treated as member of the cluster and the node
@@ -85,7 +85,7 @@ class NodeAction(base.Action):
         :returns: A tuple containing the result and the corresponding reason.
         """
         cluster_id = self.entity.cluster_id
-        if cluster_id and self.cause == base.CAUSE_RPC:
+        if cluster_id and self.cause == consts.CAUSE_RPC:
             # If node belongs to a cluster, check size constraint
             # before deleting it
             cluster = cm.Cluster.load(self.context, cluster_id)
@@ -104,7 +104,7 @@ class NodeAction(base.Action):
 
         res = self.entity.do_delete(self.context)
 
-        if cluster_id and self.cause == base.CAUSE_RPC:
+        if cluster_id and self.cause == consts.CAUSE_RPC:
             # check if desired_capacity should be changed
             do_reduce = True
             params = {}
@@ -230,7 +230,7 @@ class NodeAction(base.Action):
         # Since node.cluster_id could be reset to '' during action execution,
         # we record it here for policy check and cluster lock release.
         saved_cluster_id = self.entity.cluster_id
-        if (saved_cluster_id and self.cause == base.CAUSE_RPC):
+        if (saved_cluster_id and self.cause == consts.CAUSE_RPC):
             res = senlin_lock.cluster_lock_acquire(
                 self.context, self.entity.cluster_id, self.id, self.owner,
                 senlin_lock.NODE_SCOPE, False)
@@ -255,7 +255,7 @@ class NodeAction(base.Action):
             else:
                 res, reason = self._execute()
                 if (res == self.RES_OK and saved_cluster_id and
-                        self.cause == base.CAUSE_RPC):
+                        self.cause == consts.CAUSE_RPC):
                     self.policy_check(saved_cluster_id, 'AFTER')
                     if self.data['status'] != pb.CHECK_OK:
                         res = self.RES_ERROR
@@ -264,7 +264,7 @@ class NodeAction(base.Action):
                         res = self.RES_OK
         finally:
             senlin_lock.node_lock_release(self.entity.id, self.id)
-            if saved_cluster_id and self.cause == base.CAUSE_RPC:
+            if saved_cluster_id and self.cause == consts.CAUSE_RPC:
                 senlin_lock.cluster_lock_release(saved_cluster_id, self.id,
                                                  senlin_lock.NODE_SCOPE)
         return res, reason
