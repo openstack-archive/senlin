@@ -54,12 +54,12 @@ The proposed change will include three parts:
 
   recovery:
     actions:
-      - name: node_rebuild
-        type: senlin_operation
-      - name: node_migration
-        type: workflow
-        parameters:
-          host: Target_host
+      - name: REBUILD
+      - name: WORKFLOW
+        params:
+          workflow_name: node_migration
+          inputs:
+            host: Target_host
 
 * example: to add sample workflow definitions and health policy for Senlin
            users to create a end2end story.
