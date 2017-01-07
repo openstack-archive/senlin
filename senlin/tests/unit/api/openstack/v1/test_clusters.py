@@ -466,15 +466,17 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = mock.Mock()
         cid = 'FAKE_ID'
         nodes = ['NODE4']
+        destroy = False
         mock_call.return_value = {'action': 'action-id'}
         obj = mock.Mock()
         mock_parse.return_value = obj
 
-        resp = self.controller._del_nodes(req, cid, nodes)
+        resp = self.controller._del_nodes(req, cid, nodes, destroy)
 
         self.assertEqual({'action': 'action-id'}, resp)
         mock_parse.assert_called_once_with(
-            'ClusterDelNodesRequest', req, {'identity': cid, 'nodes': nodes})
+            'ClusterDelNodesRequest', req, {'identity': cid, 'nodes': nodes,
+                                            'destroy_after_deletion': False})
         mock_call.assert_called_once_with(
             req.context, 'cluster_del_nodes', obj)
 
@@ -484,15 +486,17 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         nodes = ['NODE5']
+        destroy = False
         mock_parse.side_effect = exc.HTTPBadRequest('Boom')
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller._del_nodes,
-                               req, cid, nodes)
+                               req, cid, nodes, destroy)
 
         self.assertEqual("Boom", six.text_type(ex))
         mock_parse.assert_called_once_with(
-            'ClusterDelNodesRequest', req, {'identity': cid, 'nodes': nodes})
+            'ClusterDelNodesRequest', req, {'identity': cid, 'nodes': nodes,
+                                            'destroy_after_deletion': False})
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
@@ -501,16 +505,18 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         nodes = ['NODE6']
+        destroy = False
         obj = mock.Mock()
         mock_parse.return_value = obj
         mock_call.side_effect = senlin_exc.BadRequest(msg='Boom')
 
         ex = self.assertRaises(senlin_exc.BadRequest,
                                self.controller._del_nodes,
-                               req, cid, nodes)
+                               req, cid, nodes, destroy)
 
         mock_parse.assert_called_once_with(
-            'ClusterDelNodesRequest', req, {'identity': cid, 'nodes': nodes})
+            'ClusterDelNodesRequest', req, {'identity': cid, 'nodes': nodes,
+                                            'destroy_after_deletion': False})
         self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_del_nodes', obj)

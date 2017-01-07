@@ -110,8 +110,9 @@ class ClusterController(wsgi.Controller):
         obj = util.parse_request('ClusterAddNodesRequest', req, params)
         return self.rpc_client.call(req.context, 'cluster_add_nodes', obj)
 
-    def _del_nodes(self, req, cid, nodes):
-        params = {'identity': cid, 'nodes': nodes}
+    def _del_nodes(self, req, cid, nodes, destroy):
+        params = {'identity': cid, 'nodes': nodes,
+                  'destroy_after_deletion': destroy}
         obj = util.parse_request('ClusterDelNodesRequest', req, params)
         return self.rpc_client.call(req.context, 'cluster_del_nodes', obj)
 
@@ -239,7 +240,9 @@ class ClusterController(wsgi.Controller):
             res = self._add_nodes(req, cluster_id, nodes)
         elif this_action == self.DEL_NODES:
             nodes = body.get(this_action).get('nodes', [])
-            res = self._del_nodes(req, cluster_id, nodes)
+            destroy = body.get(this_action).get('destroy_after_deletion',
+                                                False)
+            res = self._del_nodes(req, cluster_id, nodes, destroy)
         elif this_action == self.RESIZE:
             data = body.get(this_action)
             res = self._do_resize(req, cluster_id, data)
