@@ -26,10 +26,10 @@ from senlin.tests.unit.common import utils
 
 
 @mock.patch.object(cm.Cluster, 'load')
-class ClusterActionTest(base.SenlinTestCase):
+class ClusterCreateTest(base.SenlinTestCase):
 
     def setUp(self):
-        super(ClusterActionTest, self).setUp()
+        super(ClusterCreateTest, self).setUp()
         self.ctx = utils.dummy_context()
 
     @mock.patch.object(ao.Action, 'update')
