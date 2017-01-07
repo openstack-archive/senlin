@@ -284,7 +284,7 @@ class ClusterAction(base.Action):
         pd = self.data.get('deletion', None)
         if pd is not None:
             destroy = pd.get('destroy_after_deletion', True)
-            if not destroy:
+            if destroy is False:
                 action_name = consts.NODE_LEAVE
 
         child = []
