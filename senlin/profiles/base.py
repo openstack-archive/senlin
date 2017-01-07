@@ -33,7 +33,9 @@ LOG = logging.getLogger(__name__)
 
 
 class Profile(object):
-    '''Base class for profiles.'''
+    """Base class for profiles."""
+
+    VERSIONS = {}
 
     KEYS = (
         TYPE, VERSION, PROPERTIES,

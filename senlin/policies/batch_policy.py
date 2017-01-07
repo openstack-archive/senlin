@@ -51,7 +51,11 @@ class BatchPolicy(base.Policy):
     """Policy for batching the operations on a cluster's nodes."""
 
     VERSION = '1.0'
-
+    VERSIONS = {
+        '1.0': [
+            {'status': consts.EXPERIMENTAL, 'since': '2017.02'}
+        ]
+    }
     PRIORITY = 200
 
     TARGET = [

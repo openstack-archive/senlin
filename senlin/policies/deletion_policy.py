@@ -40,7 +40,11 @@ class DeletionPolicy(base.Policy):
     """
 
     VERSION = '1.0'
-
+    VERSIONS = {
+        '1.0': [
+            {'status': consts.SUPPORTED, 'since': '2016.04'}
+        ]
+    }
     PRIORITY = 400
 
     KEYS = (

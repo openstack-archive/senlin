@@ -32,7 +32,10 @@ CHECK_RESULTS = (
 
 
 class Policy(object):
-    '''Base class for policies.'''
+    """Base class for policies."""
+
+    VERSIONS = {}
+
     PROFILE_TYPE = 'ANY'
 
     KEYS = (

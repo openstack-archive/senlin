@@ -34,6 +34,12 @@ RPC_PARAMS = (
     'show_details', 'sort',
 )
 
+SUPPORT_STATUSES = (
+    EXPERIMENTAL, SUPPORTED, DEPRECATING, UNSUPPORTED,
+) = (
+    'experimental', 'supported', 'deprecated', 'unsupported',
+)
+
 ACTION_CAUSES = (
     CAUSE_RPC, CAUSE_DERIVED,
 ) = (

@@ -26,7 +26,11 @@ class HealthPolicy(base.Policy):
     """Policy for health management of a cluster."""
 
     VERSION = '1.0'
-
+    VERSIONS = {
+        '1.0': [
+            {'status': consts.EXPERIMENTAL, 'since': '2017.02'}
+        ]
+    }
     PRIORITY = 600
 
     TARGET = [
