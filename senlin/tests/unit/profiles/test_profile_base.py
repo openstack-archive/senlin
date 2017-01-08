@@ -161,7 +161,7 @@ class TestProfileBase(base.SenlinTestCase):
         obj.store(self.ctx)
         profile = po.Profile.get(self.ctx, obj.id)
 
-        result = pb.Profile.from_object(profile)
+        result = pb.Profile._from_object(profile)
 
         self.assertEqual(profile.id, result.id)
         self.assertEqual(profile.name, result.name)
@@ -226,7 +226,7 @@ class TestProfileBase(base.SenlinTestCase):
                                          project_safe=True)
 
     @mock.patch.object(po.Profile, 'get_all')
-    @mock.patch.object(pb.Profile, 'from_object')
+    @mock.patch.object(pb.Profile, '_from_object')
     def test_load_all_with_results(self, mock_from, mock_get):
         dbobj = mock.Mock()
         mock_get.return_value = [dbobj]
@@ -242,7 +242,7 @@ class TestProfileBase(base.SenlinTestCase):
         mock_from.assert_called_once_with(dbobj)
 
     @mock.patch.object(po.Profile, 'get_all')
-    @mock.patch.object(pb.Profile, 'from_object')
+    @mock.patch.object(pb.Profile, '_from_object')
     def test_load_all_with_params(self, mock_from, mock_get):
         dbobj = mock.Mock()
         mock_get.return_value = [dbobj]

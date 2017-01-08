@@ -124,7 +124,7 @@ class Profile(object):
         self._orchestrationclient = None
 
     @classmethod
-    def from_object(cls, profile):
+    def _from_object(cls, profile):
         '''Construct a profile from profile object.
 
         :param profile: a profile object that contains all required fields.
@@ -152,7 +152,7 @@ class Profile(object):
             if profile is None:
                 raise exc.ResourceNotFound(type='profile', id=profile_id)
 
-        return cls.from_object(profile)
+        return cls._from_object(profile)
 
     @classmethod
     def load_all(cls, ctx, limit=None, marker=None, sort=None, filters=None,
@@ -164,7 +164,7 @@ class Profile(object):
                                      project_safe=project_safe)
 
         for record in records:
-            yield cls.from_object(record)
+            yield cls._from_object(record)
 
     @classmethod
     def create(cls, ctx, name, spec, metadata=None):
