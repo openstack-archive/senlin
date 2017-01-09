@@ -13,6 +13,7 @@
 from oslo_log import log as logging
 import six
 
+from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.common.i18n import _, _LE
 from senlin.common import schema
@@ -23,11 +24,13 @@ LOG = logging.getLogger(__name__)
 
 
 class StackProfile(base.Profile):
-    '''Profile for an OpenStack Heat stack.
+    """Profile for an OpenStack Heat stack."""
 
-    When this profile is used, the whole cluster is a collection of Heat
-    stacks.
-    '''
+    VERSIONS = {
+        '1.0': [
+            {'status': consts.SUPPORTED, 'since': '2016.04'}
+        ]
+    }
 
     KEYS = (
         CONTEXT, TEMPLATE, TEMPLATE_URL, PARAMETERS,

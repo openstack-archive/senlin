@@ -44,9 +44,12 @@ class AffinityPolicy(base.Policy):
     This policy is expected to be enforced before new member(s) added to an
     existing cluster.
     """
-
     VERSION = '1.0'
-
+    VERSIONS = {
+        '1.0': [
+            {'status': consts.SUPPORTED, 'since': '2016.10'}
+        ]
+    }
     PRIORITY = 300
 
     TARGET = [

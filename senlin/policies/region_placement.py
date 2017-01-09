@@ -37,6 +37,12 @@ class RegionPlacementPolicy(base.Policy):
     """Policy for placing members of a cluster across multiple regions."""
 
     VERSION = '1.0'
+    VERSIONS = {
+        '1.0': [
+            {'status': consts.EXPERIMENTAL, 'since': '2016.04'},
+            {'status': consts.SUPPORTED, 'since': '2016.10'},
+        ]
+    }
 
     PRIORITY = 200
 

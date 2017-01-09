@@ -13,6 +13,7 @@
 import random
 import six
 
+from senlin.common import consts
 from senlin.common import context
 from senlin.common import exception as exc
 from senlin.common.i18n import _
@@ -29,6 +30,11 @@ from senlin.profiles import base
 
 class DockerProfile(base.Profile):
     """Profile for a docker container."""
+    VERSIONS = {
+        '1.0': [
+            {'status': consts.EXPERIMENTAL, 'since': '2017.02'}
+        ]
+    }
 
     _VALID_HOST_TYPES = [
         HOST_NOVA_SERVER, HOST_HEAT_STACK,
