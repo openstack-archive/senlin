@@ -992,7 +992,9 @@ policy_types:
   in: body
   required: True
   description: |
-    A list of policy_type objects.
+    A list of policy_type objects.  Since API micro-version 1.5, each record
+    in the list will have a "support_status" property which contains a list
+    of support status changes.
 
 profile:
   type: object
@@ -1068,7 +1070,9 @@ profile_types:
   in: body
   required: True
   description: |
-    A list of profile_type objects.
+    A list of profile_type objects. Since API micro-version 1.5, each record
+    in the list will have a "support_status" property which contains a list
+    of support status changes.
 
 profiles:
   type: array

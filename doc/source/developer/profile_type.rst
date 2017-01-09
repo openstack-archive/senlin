@@ -92,6 +92,41 @@ indicates the method is not implemented.
   operation by ``REBUILD``.
 
 
+The ``VERSIONS`` Property
+-------------------------
+
+Each profile type class has a ``VERSIONS`` class property that documents the
+changes to the profile type. This information is returned when users request
+to list all profile types supported.
+
+The ``VERSIONS`` property is a dict with version numbers as keys. For each
+specific version, the value is list of support status changes made to the
+profile type. Each change record contains a ``status`` key whose value is one
+of ``EXPERIMENTAL``, ``SUPPORTED``, ``DEPRECATED`` or ``UNSUPPORTED``, and a
+``since`` key whose value is of format ``yyyy.mm`` where ``yyyy`` and ``mm``
+are the year and month of the release that bears the change to the support
+status. For example, the following record indicates that the specific profile
+type was introduced in April, 2016 (i.e. version 1.0 release of Senlin) as
+an experimental feature; later, in October, 2016 (i.e. version 2.0 release of
+Senlin) it has graduated into a mature feature supported by the developer
+team.
+
+.. code:: python
+
+  VERSIONS = {
+    '1.0': [
+        {
+            "status": "EXPERIMENTAL",
+            "since": "2016.04"
+        },
+        {
+            "status": "SUPPORTED",
+            "since": "2016.10"
+        }
+    ]
+  }
+
+
 The ``context`` Property
 ------------------------
 
@@ -221,9 +256,9 @@ that can be found at the root directory of Senlin code base. For example:
 
   [entry_points]
   senlin.profiles =
-      os.heat.stack = senlin.profiles.os.heat.stack:StackProfile
-      os.nova.server = senlin.profiles.os.nova.server:ServerProfile
-      my.cool.profile = <path to the profile module>:<profile class name>
+      os.heat.stack-1.0 = senlin.profiles.os.heat.stack:StackProfile
+      os.nova.server-1.0 = senlin.profiles.os.nova.server:ServerProfile
+      my.cool.profile-1.0 = <path to the profile module>:<profile class name>
 
 Finally, save that file and do a reinstall of the Senlin service, followed by
 a restart of the ``senlin-engine`` process.

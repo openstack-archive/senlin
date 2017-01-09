@@ -1,0 +1,28 @@
+{
+    "profile_types": [
+        {
+            "name": "os.heat.stack",
+            "version": "1.0",
+            "support_status": {
+                "1.0": [
+                    {
+                        "status": "SUPPORTED",
+                        "since": "2016.04"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "os.nova.server",
+            "version": "1.0",
+            "support_status": {
+                "1.0": [
+                    {
+                        "status": "SUPPORTED",
+                        "since": "2016.04"
+                    }
+                ]
+            }
+        }
+    ]
+}
