@@ -15,6 +15,7 @@ Policy type endpoint for Senlin v1 ReST API.
 """
 
 from senlin.api.common import util
+from senlin.api.common import version_request as vr
 from senlin.api.common import wsgi
 
 
@@ -30,7 +31,12 @@ class PolicyTypeController(wsgi.Controller):
 
         obj = util.parse_request('PolicyTypeListRequest', req, {})
         types = self.rpc_client.call(req.context, 'policy_type_list', obj)
-        return {'policy_types': types}
+        result = types
+        if req.version_request <= vr.APIVersionRequest("1.4"):
+            # we return only policy name before microversion 1.5
+            result = [{'name': '-'.join((t['name'], t['version']))}
+                      for t in types]
+        return {'policy_types': result}
 
     @util.policy_enforce
     def get(self, req, type_name):
