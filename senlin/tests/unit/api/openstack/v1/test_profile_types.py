@@ -37,12 +37,63 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_profile_type_list(self, mock_call, mock_parse, mock_enforce):
+    def test_list(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/profile_types')
 
-        engine_response = [{'name': 'os.heat.stack'},
-                           {'name': 'os.nova.server'}]
+        engine_response = [
+            {'name': 'os.heat.stack', 'version': '1.0'},
+            {'name': 'os.nova.server', 'version': '1.0'}
+        ]
+
+        mock_call.return_value = engine_response
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        response = self.controller.index(req)
+
+        self.assertEqual(
+            [{'name': 'os.heat.stack-1.0'}, {'name': 'os.nova.server-1.0'}],
+            response['profile_types'])
+        mock_parse.assert_called_once_with('ProfileTypeListRequest', req, {})
+        mock_call.assert_called_once_with(
+            req.context, 'profile_type_list', mock.ANY)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_list_old_version(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        req = self._get('/profile_types', version='1.3')
+
+        engine_response = [
+            {'name': 'os.heat.stack', 'version': '1.0', 'attr': 'bar'},
+            {'name': 'os.nova.server', 'version': '1.0', 'attr': 'foo'},
+        ]
+
+        mock_call.return_value = engine_response
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        response = self.controller.index(req)
+
+        self.assertEqual(
+            [{'name': 'os.heat.stack-1.0'}, {'name': 'os.nova.server-1.0'}],
+            response['profile_types']
+        )
+        mock_parse.assert_called_once_with('ProfileTypeListRequest', req, {})
+        mock_call.assert_called_once_with(
+            req.context, 'profile_type_list', mock.ANY)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_list_new_version(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        req = self._get('/profile_types', version='1.5')
+
+        engine_response = [
+            {'name': 'os.heat.stack', 'version': '1.0', 'attr': 'bar'},
+            {'name': 'os.nova.server', 'version': '1.0', 'attr': 'foo'},
+        ]
 
         mock_call.return_value = engine_response
         obj = mock.Mock()

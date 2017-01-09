@@ -177,14 +177,18 @@ class TestEnvironment(base.SenlinTestCase):
 
     def test_get_profile_types(self):
         env = environment.Environment()
-        plugin1 = mock.Mock()
-        env.register_profile('foo', plugin1)
-        plugin2 = mock.Mock()
-        env.register_profile('bar', plugin2)
+        plugin1 = mock.Mock(VERSIONS={'k': 'v'})
+        env.register_profile('foo-1.0', plugin1)
+        plugin2 = mock.Mock(VERSIONS={'k': 'v1'})
+        env.register_profile('bar-1.2', plugin2)
 
         actual = env.get_profile_types()
-        self.assertIn({'name': 'foo'}, actual)
-        self.assertIn({'name': 'bar'}, actual)
+        self.assertIn(
+            {'name': 'foo', 'version': '1.0', 'support_status': {'k': 'v'}},
+            actual)
+        self.assertIn(
+            {'name': 'bar', 'version': '1.2', 'support_status': {'k': 'v1'}},
+            actual)
 
     def test_register_and_get_policy(self):
         plugin = mock.Mock()
@@ -200,14 +204,18 @@ class TestEnvironment(base.SenlinTestCase):
 
     def test_get_policy_types(self):
         env = environment.Environment()
-        plugin1 = mock.Mock()
-        env.register_policy('foo', plugin1)
-        plugin2 = mock.Mock()
-        env.register_policy('bar', plugin2)
+        plugin1 = mock.Mock(VERSIONS={'k': 'v'})
+        env.register_policy('foo-0.1', plugin1)
+        plugin2 = mock.Mock(VERSIONS={'k': 'v1'})
+        env.register_policy('bar-0.2', plugin2)
 
         actual = env.get_policy_types()
-        self.assertIn({'name': 'foo'}, actual)
-        self.assertIn({'name': 'bar'}, actual)
+        self.assertIn(
+            {'name': 'foo', 'version': '0.1', 'support_status': {'k': 'v'}},
+            actual)
+        self.assertIn(
+            {'name': 'bar', 'version': '0.2', 'support_status': {'k': 'v1'}},
+            actual)
 
     def test_register_and_get_driver_types(self):
         plugin = mock.Mock()
@@ -223,14 +231,18 @@ class TestEnvironment(base.SenlinTestCase):
 
     def test_get_driver_types(self):
         env = environment.Environment()
-        plugin1 = mock.Mock()
+        plugin1 = mock.Mock(VERSIONS={})
         env.register_driver('foo', plugin1)
-        plugin2 = mock.Mock()
+        plugin2 = mock.Mock(VERSIONS={})
         env.register_driver('bar', plugin2)
 
         actual = env.get_driver_types()
-        self.assertIn({'name': 'foo'}, actual)
-        self.assertIn({'name': 'bar'}, actual)
+        self.assertIn(
+            {'name': 'foo', 'version': '', 'support_status': {}},
+            actual)
+        self.assertIn(
+            {'name': 'bar', 'version': '', 'support_status': {}},
+            actual)
 
     def test_read_global_environment(self):
         mock_dir = self.patchobject(glob, 'glob')

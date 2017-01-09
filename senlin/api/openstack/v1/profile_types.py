@@ -15,6 +15,7 @@ Profile type endpoint for Senlin v1 ReST API.
 """
 
 from senlin.api.common import util
+from senlin.api.common import version_request as vr
 from senlin.api.common import wsgi
 
 
@@ -29,7 +30,12 @@ class ProfileTypeController(wsgi.Controller):
 
         obj = util.parse_request('ProfileTypeListRequest', req, {})
         types = self.rpc_client.call(req.context, 'profile_type_list', obj)
-        return {'profile_types': types}
+        result = types
+        if req.version_request <= vr.APIVersionRequest("1.4"):
+            # We return only profile type name before 1.5
+            result = [{'name': '-'.join((t['name'], t['version']))}
+                      for t in types]
+        return {'profile_types': result}
 
     @util.policy_enforce
     def get(self, req, type_name):

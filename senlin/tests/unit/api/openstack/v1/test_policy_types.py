@@ -37,12 +37,72 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_policy_type_list(self, mock_call, mock_parse, mock_enforce):
+    def test_list(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/policy_types')
 
-        engine_response = [{'name': 'os.heat.stack'},
-                           {'name': 'os.nova.server'}]
+        engine_response = [
+            {'name': 'senlin.policy.p1', 'version': '1.0', 'attr': 'v1'},
+            {'name': 'senlin.policy.p2', 'version': '1.0', 'attr': 'v2'}
+        ]
+
+        mock_call.return_value = engine_response
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        response = self.controller.index(req)
+
+        self.assertEqual(
+            [
+                {'name': 'senlin.policy.p1-1.0'},
+                {'name': 'senlin.policy.p2-1.0'},
+            ],
+            response['policy_types']
+        )
+        mock_parse.assert_called_once_with(
+            'PolicyTypeListRequest', req, {})
+        mock_call.assert_called_once_with(
+            req.context, 'policy_type_list', mock.ANY)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_list_old_version(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        req = self._get('/policy_types', version='1.3')
+
+        engine_response = [
+            {'name': 'senlin.policy.p1', 'version': '1.0'},
+            {'name': 'senlin.policy.p2', 'version': '1.1'}
+        ]
+
+        mock_call.return_value = engine_response
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        response = self.controller.index(req)
+
+        self.assertEqual(
+            [
+                {'name': 'senlin.policy.p1-1.0'},
+                {'name': 'senlin.policy.p2-1.1'}
+            ],
+            response['policy_types']
+        )
+        mock_parse.assert_called_once_with(
+            'PolicyTypeListRequest', req, {})
+        mock_call.assert_called_once_with(
+            req.context, 'policy_type_list', mock.ANY)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_list_new_version(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        req = self._get('/policy_types', version='1.5')
+
+        engine_response = [
+            {'name': 'senlin.policy.p1', 'version': '1.0', 'a1': 'v1'},
+            {'name': 'senlin.policy.p2', 'version': '1.1', 'a2': 'v2'}
+        ]
 
         mock_call.return_value = engine_response
         obj = mock.Mock()
@@ -56,7 +116,7 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(
             req.context, 'policy_type_list', mock.ANY)
 
-    def test_policy_type_list_err_denied_policy(self, mock_enforce):
+    def test_list_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
         req = self._get('/policy_types')
         resp = shared.request_with_middleware(fault.FaultWrapper,
