@@ -245,7 +245,7 @@ response codes, etc.)
 
 
 When Not Using Decorators
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 
 When you don't want to use the ``@api_version`` decorator on a method or you
 want to change behavior within a method (say it leads to simpler or simply a
@@ -288,23 +288,72 @@ the minimum version, and likewise if the maximum version is null there
 is no restriction the maximum version. Alternatively a one sided comparison
 can be used as in the example above.
 
-Other necessary changes
------------------------
 
-If you are adding a patch which adds a new microversion, it is necessary to
-add changes to other places which describe your change:
+Planning and Committing Changes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* Update ``_MAX_API_VERSION`` in ``senlin.api.openstack.versions``
+Once the idea of an API change is discussed with the core team and the
+concensus has been reached to bump the micro-version of Senlin API, you can
+start working on the changes in the following order:
 
-* Add a verbose description to ``senlin/api/openstack/history.rst`` file.
-  There should be enough information for users to understand the details about
-  the changes made.
+1. Prepare the engine and possibly the action layer for the change. One STRICT
+   requirement is that the newly proposed change(s) should not break any
+   existing users.
 
-* Update the expected versions in affected tests, for example in
-  ``senlin.tests.unit.api.openstack.test_versions``.
+2. Add a new versioned object if a new API is introduced; or modify the fields
+   of an existing object representing the API request. You are expected to
+   override the ``obj_make_compatible()`` method to ensure the request formed
+   will work on an older version of engine.
 
-* Make a new commit to python-senlinclient and possibly python-openstacksdk
-  and update corresponding files to enable the newly added microversion API.
+3. If the change is about modifying an existing API, you will need to bump the
+   version of the request object. You are also required to add or change the
+   ``VERSION_MAP`` dictionary of the request object class where the key is the
+   API microversion and the value is the object version. For example:
+
+.. code-block:: python
+
+   @base.SenlinObjectRegistry.register
+   class ClusterDanceRequest(base.SenlinObject):
+
+       # VERSION 1.0: Initial version
+       # VERSION 1.1: Add field 'style'
+       VERSION = '1.1'
+       VERSION_MAP = {
+         'x.y': '1.1'
+       }
+
+       fields = {
+         ...
+         'style': fields.StringField(nullable=True),
+       }
+
+       def obj_make_compatible(self, primitive, target_version):
+          # add the logic to convert the request for a target version
+          ...
+
+
+4. Patch the API layer to introduce the change. This involves changing the
+   ``senlin/api/openstack/history.rst`` file to include the descriptive
+   information about the changes made.
+
+5. Revise the API reference documentation so that the changes are properly
+   documented.
+
+6. Add a release note entry for the API change.
+
+7. Add tempest based API test and functional tests.
+
+8. Update ``_MAX_API_VERSION`` in ``senlin.api.openstack.versions``, if needed.
+   Note that each time we bump the API microversion, we may introduce two or
+   more changes rather than one single change, the update of
+   ``_MAX_API_VERSION`` needs to be done only once if this is the case.
+
+9. Commit patches to the ``python-openstacksdk`` project so that new API
+   changes are accessible from client side.
+
+10. Wait for the new release of ``python-openstacksdk`` project that includes
+    the new changes and then propose changes to ``python-senlinclient``
+    project.
 
 
 Allocating a microversion
