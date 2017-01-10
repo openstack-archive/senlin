@@ -14,6 +14,6 @@ properties:
 
   recovery:
     # List of actions that can be retried on a failed node
+    # REBUILD, RECREATE
     actions:
       - name: REBUILD
-      - name: RECREATE
