@@ -1043,7 +1043,9 @@ profile_type:
   in: body
   required: True
   description: |
-    A structured description of a profile type.
+    A structured description of a profile type. Since API micro-version 1.5,
+    a "support_status" property is returned which contains a list
+    of support status changes.
 
 profile_type_name:
   type: string

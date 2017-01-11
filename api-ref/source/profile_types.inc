@@ -97,7 +97,16 @@ Response Parameters
 Response Example
 ----------------
 
+For API microversion lower than 1.5, the response only contains the name and
+schema of the specified profile type:
+
 .. literalinclude:: samples/profile-type-show-response.json
+   :language: javascript
+
+Since API microversion 1.5, the response contains the support status of the
+specified profile type:
+
+.. literalinclude:: samples/profile-type-show-response-v1.5.json
    :language: javascript
 
 
