@@ -391,10 +391,10 @@ class Action(object):
         """
         reason = self.data['reason']
         if self.data['status'] == policy_mod.CHECK_OK:
-            LOG.debug(self, 'check', reason)
+            EVENT.debug(self, 'check', reason)
             return True
 
-        reason = _("Failed policy '%(name)s': %(reason)s."
+        reason = _("Failed policy '%(name)s': %(reason)s"
                    ) % {'name': name, 'reason': reason}
         EVENT.error(self, consts.PHASE_ERROR, reason)
         return False

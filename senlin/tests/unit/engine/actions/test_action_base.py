@@ -669,6 +669,33 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         self.assertEqual(0, mock_post_op.call_count)
 
     @mock.patch.object(EVENT, 'debug')
+    def test__check_result_true(self, mock_event):
+        cluster_id = CLUSTER_ID
+        action = ab.Action(cluster_id, 'OBJECT_ACTION', self.ctx)
+        action.data['status'] = policy_mod.CHECK_OK
+        action.data['reason'] = "Completed policy checking."
+
+        res = action._check_result('FAKE_POLICY_NAME')
+        self.assertTrue(res)
+        mock_event.assert_called_once_with(action, 'check',
+                                           "Completed policy checking.")
+
+    @mock.patch.object(EVENT, 'error')
+    def test__check_result_false(self, mock_event):
+        cluster_id = CLUSTER_ID
+        action = ab.Action(cluster_id, 'OBJECT_ACTION', self.ctx)
+        action.data['status'] = policy_mod.CHECK_ERROR
+        reason = ("Policy '%s' cooldown is still in progress." %
+                  'FAKE_POLICY_2')
+        action.data['reason'] = reason
+
+        res = action._check_result('FAKE_POLICY_NAME')
+        reason = ("Failed policy '%(name)s': %(reason)s"
+                  ) % {'name': 'FAKE_POLICY_NAME', 'reason': reason}
+        self.assertFalse(res)
+        mock_event.assert_called_once_with(action, 'error', reason)
+
+    @mock.patch.object(EVENT, 'debug')
     @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
     @mock.patch.object(policy_mod.Policy, 'load')
     def test_policy_check_pre_op(self, mock_load, mock_load_all, mock_event):
