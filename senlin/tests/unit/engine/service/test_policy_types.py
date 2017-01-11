@@ -47,6 +47,8 @@ class PolicyTypeTest(base.SenlinTestCase):
         x_env = mock.Mock()
         x_policy_type = mock.Mock()
         x_policy_type.get_schema.return_value = {'foo': 'bar'}
+        x_policy_type.VERSIONS = {'1.0': [{'status': 'supported',
+                                           'since': '2016.04'}]}
         x_env.get_policy.return_value = x_policy_type
         mock_env.return_value = x_env
 
@@ -57,6 +59,8 @@ class PolicyTypeTest(base.SenlinTestCase):
             {
                 'name': 'FAKE_TYPE',
                 'schema': {'foo': 'bar'},
+                'support_status': {'1.0': [{'status': 'supported',
+                                            'since': '2016.04'}]}
             },
             result)
         mock_env.assert_called_once_with()

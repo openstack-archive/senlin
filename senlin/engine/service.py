@@ -506,7 +506,8 @@ class EngineService(service.Service):
 
         return {
             'name': req.type_name,
-            'schema': data
+            'schema': data,
+            'support_status': policy_type.VERSIONS
         }
 
     @request_context

@@ -45,4 +45,9 @@ class PolicyTypeController(wsgi.Controller):
         obj = util.parse_request(
             'PolicyTypeGetRequest', req, {'type_name': type_name})
         content = self.rpc_client.call(req.context, 'policy_type_get', obj)
+        key = 'support_status'
+        if req.version_request <= vr.APIVersionRequest("1.4"):
+            # We return support_status from 1.5
+            if key in content:
+                content.pop(key)
         return {'policy_type': content}
