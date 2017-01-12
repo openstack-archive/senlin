@@ -132,7 +132,16 @@ class HealthManager(service.Service):
         :returns: Nothing.
         """
         req = vorc.ClusterCheckRequest(identity=cluster_id)
-        self.rpc_client.call(self.ctx, 'cluster_check', req)
+
+        cluster = objects.Cluster.get(self.ctx, cluster_id, project_safe=False)
+        if not cluster:
+            LOG.warning(_LW("Cluster (%s) is not found."), cluster_id)
+            return
+
+        ctx = context.get_service_context(user=cluster.user,
+                                          project=cluster.project)
+        ctx = context.RequestContext.from_dict(ctx)
+        self.rpc_client.call(ctx, 'cluster_check', req)
 
     def _add_listener(self, cluster_id):
         """Routine to be executed for adding cluster listener.
