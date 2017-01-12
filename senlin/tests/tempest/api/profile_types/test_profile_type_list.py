@@ -13,10 +13,12 @@
 from tempest.lib import decorators
 
 from senlin.tests.tempest.api import base
+from senlin.tests.tempest.common import utils
 
 
 class TestProfileTypeList(base.BaseSenlinAPITest):
 
+    @utils.api_microversion('1.4')
     @decorators.idempotent_id('fa0cf9e3-5b75-4d4d-9a0f-1748772b65d3')
     def test_profile_type_list(self):
         res = self.client.list_objs('profile-types')
@@ -32,3 +34,22 @@ class TestProfileTypeList(base.BaseSenlinAPITest):
         ]
         for profile_type in expected_profile_types:
             self.assertIn(profile_type, profile_types)
+
+    @utils.api_microversion('1.5')
+    @decorators.idempotent_id('778d41df-0ce0-421f-98e5-2efdcec6d995')
+    def test_profile_type_list_v1_5(self):
+        res = self.client.list_objs('profile-types')
+
+        # Verify resp of profile type list API
+        self.assertEqual(200, res['status'])
+        self.assertIsNotNone(res['body'])
+        profile_types = res['body']
+        expected_names = [
+            'os.nova.server',
+            'os.heat.stack',
+            'container.dockerinc.docker'
+        ]
+        for t in profile_types:
+            self.assertIn(t['name'], expected_names)
+            self.assertIsNotNone(t['support_status'])
+            self.assertIsNotNone(t['version'])

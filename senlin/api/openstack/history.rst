@@ -58,3 +58,10 @@ it can be used by both users and developers.
  - Added ``user`` query parameter for listing receivers.
 
  - Added ``destroy_after_deletion`` parameter for deleting cluster members.
+
+1.5
+---
+
+ - Added ``support_status`` to profile type list.
+
+ - Added ``support_status`` to policy type list.

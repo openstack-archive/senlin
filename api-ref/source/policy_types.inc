@@ -42,7 +42,16 @@ Response Parameters
 Response Example
 ----------------
 
+For API microversion lower than 1.5, the response only contains the name for
+each policy type:
+
 .. literalinclude:: samples/policy-types-list-response.json
+   :language: javascript
+
+Since API microversion 1.5, the response contains the support status of each
+policy type and the version is provided using a separate key:
+
+.. literalinclude:: samples/policy-types-list-response-v1.5.json
    :language: javascript
 
 
