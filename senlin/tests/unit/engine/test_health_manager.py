@@ -16,6 +16,7 @@ import mock
 from oslo_config import cfg
 
 from senlin.common import consts
+from senlin.common import context
 from senlin.common import messaging
 from senlin.engine import health_manager
 from senlin.objects import cluster as obj_cluster
@@ -297,14 +298,38 @@ class TestHealthManager(base.SenlinTestCase):
             },
             self.hm.registries[1])
 
+    @mock.patch.object(obj_cluster.Cluster, 'get')
+    @mock.patch.object(context, 'get_service_context')
+    @mock.patch.object(context.RequestContext, 'from_dict')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__poll_cluster(self, mock_check):
+    def test__poll_cluster(self, mock_check, mock_ctx, mock_sctx, mock_get):
+        x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
+        mock_get.return_value = x_cluster
+        mock_sctx.return_value = {'user': 'USER_ID',
+                                  'project': 'PROJECT_ID', }
+        service_ctx = mock_sctx.return_value
+        mock_ctx.return_value = mock.Mock(user=service_ctx['user'],
+                                          project=service_ctx['project'])
+        ctx = mock_ctx.return_value
         self.hm._poll_cluster('CLUSTER_ID')
-        mock_check.assert_called_once_with(self.hm.ctx, 'cluster_check',
-                                           mock.ANY)
+
+        mock_sctx.assert_called_once_with(user=x_cluster.user,
+                                          project=x_cluster.project)
+        mock_ctx.assert_called_once_with(service_ctx)
+        self.assertEqual('USER_ID', ctx.user)
+        self.assertEqual('PROJECT_ID', ctx.project)
+        self.assertEqual(1, mock_check.call_count)
         request = mock_check.call_args[0][2]
         self.assertIsInstance(request, vorc.ClusterCheckRequest)
         self.assertEqual('CLUSTER_ID', request.identity)
+
+    @mock.patch.object(obj_cluster.Cluster, 'get')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test__poll_cluster_not_found(self, mock_check, mock_get):
+        mock_get.return_value = None
+        self.hm._poll_cluster('CLUSTER_ID')
+
+        self.assertEqual(0, mock_check.call_count)
 
     @mock.patch.object(obj_cluster.Cluster, 'get')
     def test__add_listener(self, mock_get):
