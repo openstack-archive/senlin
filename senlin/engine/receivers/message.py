@@ -251,7 +251,7 @@ class Message(base.Receiver):
             claim = self.zaqar().claim_create(queue_name)
             messages = claim.messages
         except exc.InternalError as ex:
-            LOG.error(_('Failed in claiming message: %s') % ex.message)
+            LOG.error(_('Failed in claiming message: %s') % str(ex))
             return
 
         # Build actions
