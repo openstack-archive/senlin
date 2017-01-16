@@ -346,7 +346,8 @@ class TestHealthManager(base.SenlinTestCase):
 
         # assertions
         self.assertEqual(x_listener, res)
-        mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID')
+        mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
+                                         project_safe=False)
         mock_add_thread.assert_called_once_with(health_manager.ListenerProc,
                                                 'FAKE_NOVA_EXCHANGE',
                                                 'PROJECT_ID',
@@ -362,7 +363,8 @@ class TestHealthManager(base.SenlinTestCase):
 
         # assertions
         self.assertIsNone(res)
-        mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID')
+        mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
+                                         project_safe=False)
         self.assertEqual(0, mock_add_thread.call_count)
 
     def test__start_check_for_polling(self):
