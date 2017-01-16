@@ -53,9 +53,13 @@ class TestClusterCheckNegativeInvalidParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("[u'k1', u'v1'] is not of type 'object', 'null'",
+                         str(message))
 
 
 class TestClusterCheckNegativeNotFound(base.BaseSenlinAPITest):
@@ -67,6 +71,10 @@ class TestClusterCheckNegativeNotFound(base.BaseSenlinAPITest):
         }
 
         # Verify notfound exception(404) is raised.
-        self.assertRaises(exceptions.NotFound,
-                          self.client.trigger_action, 'clusters',
-                          'bbbe3feb-8482-4ae4-9c29-b4732efce931', params)
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.trigger_action, 'clusters',
+                               'bbbe3feb-8482-4ae4-9c29-b4732efce931', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("The cluster (bbbe3feb-8482-4ae4-9c29-b4732efce931) "
+                         "could not be found.", str(message))

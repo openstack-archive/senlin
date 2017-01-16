@@ -24,9 +24,12 @@ class TestClusterActionNegativeCommon(base.BaseSenlinAPITest):
         params = {}
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("No action specified", str(message))
 
     @decorators.idempotent_id('997d2e19-7914-4883-9b6a-86e907898d3b')
     def test_cluster_action_multiple_action_specified(self):
@@ -37,9 +40,12 @@ class TestClusterActionNegativeCommon(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Multiple actions specified", str(message))
 
     @decorators.idempotent_id('43e142ac-9579-40d9-845a-b8190691b91a')
     def test_cluster_action_unrecognized_action(self):
@@ -49,6 +55,10 @@ class TestClusterActionNegativeCommon(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Unrecognized action 'bogus' specified",
+                         str(message))
