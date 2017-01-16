@@ -42,6 +42,17 @@ def do_db_sync():
     api.db_sync(api.get_engine(), CONF.command.version)
 
 
+def do_event_purge():
+    '''Purge the specified event records in senlin's database.'''
+    if CONF.command.age < 0:
+        print("age should be a positive integer!")
+        return
+    api.event_purge(api.get_engine(),
+                    CONF.command.project_id,
+                    CONF.command.granularity,
+                    CONF.command.age)
+
+
 class ServiceManageCommand(object):
     def __init__(self):
         self.ctx = context.get_admin_context()
@@ -116,6 +127,36 @@ def add_command_parsers(subparsers):
     ServiceManageCommand.add_service_parsers(subparsers)
     parser.add_argument('version', nargs='?')
     parser.add_argument('current_version', nargs='?')
+
+    parser = subparsers.add_parser('event_purge')
+    parser.set_defaults(func=do_event_purge)
+    parser.add_argument('-p',
+                        '--project-id',
+                        nargs='?',
+                        metavar='<project1;project2...>',
+                        help='Purge event records with specified project id. '
+                             'This can be specified multiple times, or once '
+                             'with parameters separated by a semicolon.',
+                        action='append')
+    parser.add_argument('-g',
+                        '--granularity',
+                        default='days',
+                        choices=['days', 'hours', 'minutes', 'seconds'],
+                        help='Purge event records which are created '
+                             'in the specified time. The time is '
+                             'specified by age and granularity. '
+                             'The value of granularity should be one of '
+                             'days\hours\minutes\seconds, defaults to days.')
+    parser.add_argument('age',
+                        type=int,
+                        default=30,
+                        help='Purge event records which are created '
+                             'in the specified time. The time is specified '
+                             'by age and granularity. For example, '
+                             'granularity=hours and age=2 means to purge '
+                             'the events which are created two hours ago. '
+                             'Defaults to 30.')
+
 
 command_opt = cfg.SubCommandOpt('command',
                                 title='Commands',

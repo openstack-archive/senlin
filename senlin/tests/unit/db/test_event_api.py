@@ -529,3 +529,22 @@ class DBAPIEventTest(base.SenlinTestCase):
         db_api.event_prune(self.ctx, cluster1.id)
         res = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
         self.assertEqual(0, len(res))
+
+    def test_event_purge(self):
+        cluster1 = shared.create_cluster(self.ctx, self.profile)
+        node1_1 = shared.create_node(self.ctx, cluster1, self.profile)
+        node1_2 = shared.create_node(self.ctx, cluster1, self.profile)
+
+        self.create_event(self.ctx, entity=cluster1, status='start')
+        self.create_event(self.ctx, entity=cluster1, status='end')
+        self.create_event(self.ctx, entity=node1_1, status='start')
+        self.create_event(self.ctx, entity=node1_1, status='end')
+        timestamp = tu.utcnow()
+        self.create_event(self.ctx, timestamp=timestamp,
+                          entity=node1_2, status='start')
+
+        res = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
+        self.assertEqual(5, len(res))
+        db_api.event_purge(project=None, granularity='days', age=5)
+        res = db_api.event_get_all_by_cluster(self.ctx, cluster1.id)
+        self.assertEqual(1, len(res))
