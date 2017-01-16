@@ -14,6 +14,7 @@
 Implementation of SQLAlchemy backend.
 """
 
+import datetime
 import six
 import sys
 import threading
@@ -932,6 +933,24 @@ def event_prune(context, cluster_id, project_safe=True):
         query = query.filter_by(cluster_id=cluster_id)
         if project_safe:
             query = query.filter_by(project=context.project)
+
+        return query.delete(synchronize_session='fetch')
+
+
+def event_purge(project, granularity='days', age=30):
+    with session_for_write() as session:
+        query = session.query(models.Event).with_for_update()
+        if project is not None:
+            query = query.filter(models.Event.project.in_(project))
+        if granularity is not None and age is not None:
+            if granularity == 'days':
+                age = age * 86400
+            elif granularity == 'hours':
+                age = age * 3600
+            elif granularity == 'minutes':
+                age = age * 60
+            time_line = timeutils.utcnow() - datetime.timedelta(seconds=age)
+            query = query.filter(models.Event.timestamp < time_line)
 
         return query.delete(synchronize_session='fetch')
 
