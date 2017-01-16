@@ -22,6 +22,11 @@ class TestActionShowNegativeNotFound(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('26cb0f3a-4e6c-49f6-8475-7cb472933bff')
     def test_action_show_not_found(self):
-        self.assertRaises(exceptions.NotFound,
-                          self.client.get_obj,
-                          'actions', '26cb0f3a-4e6c-49f6-8475-7cb472933bff')
+        ex = self.assertRaises(
+            exceptions.NotFound, self.client.get_obj,
+            'actions', '26cb0f3a-4e6c-49f6-8475-7cb472933bff')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The action (26cb0f3a-4e6c-49f6-8475-7cb472933bff) could not"
+            " be found.", str(message))
