@@ -23,10 +23,15 @@ class TestClusterPolicyShowNegativeClusterNotFound(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('965d7324-e3f7-4d77-8e7f-44c862b851f7')
     def test_cluster_policy_show_cluster_not_found(self):
-        self.assertRaises(exceptions.NotFound,
-                          self.client.get_cluster_policy,
-                          '965d7324-e3f7-4d77-8e7f-44c862b851f7',
-                          'POLICY_ID')
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.get_cluster_policy,
+                               '965d7324-e3f7-4d77-8e7f-44c862b851f7',
+                               'POLICY_ID')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The cluster (965d7324-e3f7-4d77-8e7f-44c862b851f7) "
+            "could not be found.", str(message))
 
 
 class TestClusterPolicyShowNegativePolicyNotFound(base.BaseSenlinAPITest):
@@ -42,10 +47,14 @@ class TestClusterPolicyShowNegativePolicyNotFound(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('e3e24058-ed07-42b6-b47c-a972c6047509')
     def test_cluster_policy_show_policy_not_found(self):
-        self.assertRaises(exceptions.NotFound,
-                          self.client.get_cluster_policy,
-                          self.cluster_id,
-                          'e3e24058-ed07-42b6-b47c-a972c6047509')
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.get_cluster_policy,
+                               self.cluster_id,
+                               'fake_policy')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("The policy (fake_policy) could not be found.",
+                         str(message))
 
 
 class TestClusterPolicyShowNegativeNoPolicyBinding(base.BaseSenlinAPITest):
@@ -64,9 +73,14 @@ class TestClusterPolicyShowNegativeNoPolicyBinding(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('9c9e01fc-dfb9-4a27-9a06-f4d6de2b2d1c')
     def test_cluster_policy_show_no_policy_binding(self):
-        self.assertRaises(exceptions.NotFound,
-                          self.client.get_cluster_policy,
-                          self.cluster_id, self.policy_id)
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.get_cluster_policy,
+                               self.cluster_id, self.policy_id)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The policy (%s) is not found attached to the specified cluster "
+            "(%s)." % (self.policy_id, self.cluster_id), str(message))
 
 
 class TestClusterPolicyShowNegativeBadRequest(base.BaseSenlinAPITest):
@@ -94,6 +108,11 @@ class TestClusterPolicyShowNegativeBadRequest(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('3faaaf65-0606-4853-a660-2bb04f10485b')
     def test_cluster_policy_show_multiple_choice(self):
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.get_cluster_policy,
-                          self.cluster_id, 'test-policy')
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.get_cluster_policy,
+                               self.cluster_id, 'test-policy')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Multiple results found matching the query criteria test-policy. "
+            "Please be more specific.", str(message))
