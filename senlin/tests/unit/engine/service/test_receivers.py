@@ -142,8 +142,7 @@ class ReceiverTest(base.SenlinTestCase):
                                self.eng.receiver_create,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: A receiver named 'r1' "
-                         "already exists.",
+        self.assertEqual("A receiver named 'r1' already exists.",
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(co.Cluster, 'find')
@@ -157,8 +156,7 @@ class ReceiverTest(base.SenlinTestCase):
                                self.eng.receiver_create,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: The referenced cluster "
-                         "(C1) could not be found.",
+        self.assertEqual("The referenced cluster (C1) could not be found.",
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(co.Cluster, 'find')
@@ -204,8 +202,8 @@ class ReceiverTest(base.SenlinTestCase):
                                    self.eng.receiver_create,
                                    self.ctx, req.obj_to_primitive())
             self.assertEqual(exc.BadRequest, ex.exc_info[0])
-            self.assertEqual("The request is malformed: Cluster identity is "
-                             "required for creating webhook receiver.",
+            self.assertEqual("Cluster identity is required for creating "
+                             "webhook receiver.",
                              six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(co.Cluster, 'find')
@@ -223,9 +221,8 @@ class ReceiverTest(base.SenlinTestCase):
                                    self.eng.receiver_create,
                                    self.ctx, req.obj_to_primitive())
             self.assertEqual(exc.BadRequest, ex.exc_info[0])
-            self.assertEqual("The request is malformed: Action name is "
-                             "required for creating webhook receiver.",
-                             six.text_type(ex.exc_info[1]))
+            self.assertEqual("Action name is required for creating webhook "
+                             "receiver.", six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(rb.Receiver, 'create')
     def test_receiver_create_message_succeed(self, mock_create):

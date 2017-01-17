@@ -118,8 +118,7 @@ class PolicyTest(base.SenlinTestCase):
                                self.eng.policy_create,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: A policy named "
-                         "'FAKE_NAME' already exists.",
+        self.assertEqual("A policy named 'FAKE_NAME' already exists.",
                          six.text_type(ex.exc_info[1]))
         mock_get.assert_called_once_with(self.ctx, 'FAKE_NAME')
 
@@ -301,9 +300,8 @@ class PolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual(
-            'The request is malformed: No property needs an update.',
-            six.text_type(ex.exc_info[1]))
+        self.assertEqual('No property needs an update.',
+                         six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE')
         mock_load.assert_called_once_with(self.ctx, db_policy=x_obj)
         self.assertEqual(0, x_policy.store.call_count)

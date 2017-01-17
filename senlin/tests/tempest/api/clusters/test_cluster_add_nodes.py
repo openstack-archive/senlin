@@ -142,8 +142,8 @@ class TestClusterAddNodesNegativeNodeNotFound(base.BaseSenlinAPITest):
 
         message = ex.resp_body['error']['message']
         self.assertEqual(
-            "The request is malformed: Nodes not found: "
-            "[u'5ddf7e5a-3f67-4f1e-af1e-c5a7da319dc0'].", str(message))
+            "Nodes not found: [u'5ddf7e5a-3f67-4f1e-af1e-c5a7da319dc0'].",
+            str(message))
 
 
 class TestClusterAddNodesNegativeNodeNotOrphan(base.BaseSenlinAPITest):
@@ -175,8 +175,8 @@ class TestClusterAddNodesNegativeNodeNotOrphan(base.BaseSenlinAPITest):
 
         message = ex.resp_body['error']['message']
         self.assertEqual(
-            "The request is malformed: Nodes ['%s'] already owned by "
-            "some cluster." % self.node_id, str(message))
+            "Nodes ['%s'] already owned by some cluster." % self.node_id,
+            str(message))
 
 
 class TestClusterAddNodesNegativeProfileTypeUnmatch(base.BaseSenlinAPITest):
@@ -211,8 +211,8 @@ class TestClusterAddNodesNegativeProfileTypeUnmatch(base.BaseSenlinAPITest):
 
         message = ex.resp_body['error']['message']
         self.assertEqual(
-            "The request is malformed: Profile type of nodes ['%s'] does "
-            "not match that of the cluster." % self.node_id, str(message))
+            "Profile type of nodes ['%s'] does not match that of the "
+            "cluster." % self.node_id, str(message))
 
 
 class TestClusterAddNodesNegativeSizeCheckFailed(base.BaseSenlinAPITest):
@@ -245,8 +245,8 @@ class TestClusterAddNodesNegativeSizeCheckFailed(base.BaseSenlinAPITest):
 
         message = ex.resp_body['error']['message']
         self.assertEqual(
-            "The request is malformed: The target capacity (2) is "
-            "greater than the cluster's max_size (1).", str(message))
+            "The target capacity (2) is greater than the cluster's "
+            "max_size (1).", str(message))
 
 
 class TestClusterAddNodesNegativeClusterNotFound(base.BaseSenlinAPITest):

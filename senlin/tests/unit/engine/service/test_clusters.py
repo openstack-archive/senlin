@@ -186,8 +186,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req)
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual(_("The request is malformed: a cluster named "
-                           "'CLUSTER' already exists."),
+        self.assertEqual(_("a cluster named 'CLUSTER' already exists."),
                          six.text_type(ex.exc_info[1]))
         mock_get.assert_called_once_with(self.ctx, 'CLUSTER')
 
@@ -204,8 +203,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req)
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: The specified profile "
-                         "(Bogus) could not be found.",
+        self.assertEqual("The specified profile (Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -225,8 +223,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req)
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: INVALID.",
-                         six.text_type(ex.exc_info[1]))
+        self.assertEqual("INVALID.", six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'PROFILE')
 
     @mock.patch.object(cm.Cluster, 'load')
@@ -356,8 +353,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: "
-                         "The specified profile (Bogus) could not be found.",
+        self.assertEqual("The specified profile (Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
@@ -559,8 +555,8 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req)
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Nodes not found: "
-                         "['NODE1'].", six.text_type(ex.exc_info[1]))
+        self.assertEqual("Nodes not found: ['NODE1'].",
+                         six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_profile.assert_called_once_with(self.ctx, 'FAKE_ID',
                                              project_safe=True)
@@ -583,8 +579,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req)
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Nodes are not ACTIVE: "
-                         "['NODE2'].",
+        self.assertEqual("Nodes are not ACTIVE: ['NODE2'].",
                          six.text_type(ex.exc_info[1]))
 
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
@@ -609,8 +604,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req)
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: "
-                         "Nodes ['NODE3'] already owned by some cluster.",
+        self.assertEqual("Nodes ['NODE3'] already owned by some cluster.",
                          six.text_type(ex.exc_info[1]))
 
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
@@ -638,8 +632,8 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req)
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Profile type of nodes "
-                         "['NODE4'] does not match that of the cluster.",
+        self.assertEqual("Profile type of nodes ['NODE4'] does not "
+                         "match that of the cluster.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_profile.assert_has_calls([
@@ -664,8 +658,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req)
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        msg1 = _("The request is malformed: Nodes ['NODE2'] "
-                 "already owned by some cluster.")
+        msg1 = _("Nodes ['NODE2'] already owned by some cluster.")
         msg2 = _("Nodes are not ACTIVE: ['NODE2'].")
         self.assertIn(msg1, six.text_type(ex.exc_info[1]))
         self.assertIn(msg2, six.text_type(ex.exc_info[1]))
@@ -698,7 +691,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req)
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Failed size checking.",
+        self.assertEqual("Failed size checking.",
                          six.text_type(ex.exc_info[1]))
 
         mock_find.assert_called_once_with(self.ctx, 'C1')
@@ -773,7 +766,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertIn("The request is malformed: Nodes not found",
+        self.assertIn("Nodes not found",
                       six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_node.assert_called_once_with(self.ctx, 'NODE1')
@@ -808,8 +801,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Nodes not members of "
-                         "specified cluster: ['NODE2'].",
+        self.assertEqual("Nodes not members of specified cluster: ['NODE2'].",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_node.assert_called_once_with(self.ctx, 'NODE2')
@@ -828,7 +820,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        msg1 = _("The request is malformed: Nodes not found:")
+        msg1 = _("Nodes not found:")
         msg2 = _("Nodes not members of specified cluster: ['NODE1'].")
         self.assertIn(msg1, six.text_type(ex.exc_info[1]))
         self.assertIn(msg2, six.text_type(ex.exc_info[1]))
@@ -847,8 +839,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Nodes not members of "
-                         "specified cluster: ['NODE3'].",
+        self.assertEqual("Nodes not members of specified cluster: ['NODE3'].",
                          six.text_type(ex.exc_info[1]))
 
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
@@ -871,7 +862,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Failed size checking.",
+        self.assertEqual("Failed size checking.",
                          six.text_type(ex.exc_info[1]))
 
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
@@ -1020,8 +1011,8 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Missing number value for "
-                         "size adjustment.", six.text_type(ex.exc_info[1]))
+        self.assertEqual("Missing number value for size adjustment.",
+                         six.text_type(ex.exc_info[1]))
 
     def test_cluster_resize_number_without_type(self):
         req = orco.ClusterResizeRequest(
@@ -1033,7 +1024,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.eng.cluster_resize,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Missing adjustment_type "
+        self.assertEqual("Missing adjustment_type "
                          "value for size adjustment.",
                          six.text_type(ex.exc_info[1]))
 
@@ -1049,9 +1040,8 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: The 'number' must be "
-                         "positive integer for adjustment type "
-                         "'EXACT_CAPACITY'.",
+        self.assertEqual("The 'number' must be positive integer for "
+                         "adjustment type 'EXACT_CAPACITY'.",
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(co.Cluster, 'find')
@@ -1097,7 +1087,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_count.assert_called_once_with(self.ctx, 'CID')
         mock_check.assert_called_once_with(x_cluster, 5, None, None, True)
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: size check.",
+        self.assertEqual("size check.",
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
@@ -1174,8 +1164,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Count for scale-out "
-                         "request cannot be 0.",
+        self.assertEqual("Count for scale-out request cannot be 0.",
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(su, 'check_size_params')
@@ -1191,7 +1180,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: size limit.",
+        self.assertEqual("size limit.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_check.assert_called_once_with(x_cluster, 6)
@@ -1269,8 +1258,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Count for scale-in "
-                         "request cannot be 0.",
+        self.assertEqual("Count for scale-in request cannot be 0.",
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(su, 'check_size_params')
@@ -1286,7 +1274,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: size limit.",
+        self.assertEqual("size limit.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
         mock_check.assert_called_once_with(x_cluster, 2)
@@ -1645,8 +1633,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: failed.",
-                         six.text_type(ex.exc_info[1]))
+        self.assertEqual("failed.", six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_chk.assert_called_once_with(self.ctx, cluster, nodes)
 

@@ -133,8 +133,7 @@ class ActionTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual('The request is malformed: Cannot find the given '
-                         'cluster: C1.',
+        self.assertEqual("Cannot find the given cluster: C1.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'C1')
 

@@ -110,8 +110,7 @@ class ProfileTypeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual('The request is malformed: The profile_type '
-                         '(FAKE_TYPE) could not be found.',
+        self.assertEqual('The profile_type (FAKE_TYPE) could not be found.',
                          six.text_type(ex.exc_info[1]))
 
         mock_env.assert_called_once_with()

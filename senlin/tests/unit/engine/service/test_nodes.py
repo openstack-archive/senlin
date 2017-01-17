@@ -102,8 +102,7 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual('The request is malformed: Cannot find the given '
-                         'cluster: BOGUS.',
+        self.assertEqual('Cannot find the given cluster: BOGUS.',
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'BOGUS')
 
@@ -272,8 +271,7 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual(_("The request is malformed: The node named "
-                           "(NODE1) already exists."),
+        self.assertEqual(_("The node named (NODE1) already exists."),
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(po.Profile, 'find')
@@ -287,8 +285,7 @@ class NodeTest(base.SenlinTestCase):
                                self.eng.node_create,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: The specified profile "
-                         "(Bogus) could not be found.",
+        self.assertEqual("The specified profile (Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_profile.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -307,8 +304,7 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: The specified cluster "
-                         "(Bogus) could not be found.",
+        self.assertEqual("The specified cluster (Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_profile.assert_called_once_with(self.ctx, 'PROFILE_NAME')
         mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
@@ -332,8 +328,8 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Node and cluster have "
-                         "different profile type, operation aborted.",
+        self.assertEqual("Node and cluster have different profile "
+                         "type, operation aborted.",
                          six.text_type(ex.exc_info[1]))
         mock_profile.assert_has_calls([
             mock.call(self.ctx, 'NODE_PROFILE'),
@@ -523,8 +519,8 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual('The request is malformed: The specified profile '
-                         '(Bogus) could not be found.',
+        self.assertEqual("The specified profile "
+                         "(Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
         mock_profile.assert_called_once_with(self.ctx, 'Bogus')
@@ -545,8 +541,8 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Cannot update a node to "
-                         "a different profile type, operation aborted.",
+        self.assertEqual("Cannot update a node to a different "
+                         "profile type, operation aborted.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
         mock_profile.assert_has_calls([
@@ -567,8 +563,7 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual('The request is malformed: No property needs an '
-                         'update.',
+        self.assertEqual("No property needs an update.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
 
@@ -771,8 +766,8 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: The requested operation "
-                         "'swim' is not supported by the profile type 'cow'.",
+        self.assertEqual("The requested operation 'swim' is not "
+                         "supported by the profile type 'cow'.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'node1')
         mock_node.assert_called_once_with(self.ctx, db_node=x_db_node)
@@ -796,8 +791,7 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Boom.",
-                         six.text_type(ex.exc_info[1]))
+        self.assertEqual("Boom.", six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'node1')
         mock_node.assert_called_once_with(self.ctx, db_node=x_db_node)
         x_schema.validate.assert_called_once_with({'style': 'tango'})

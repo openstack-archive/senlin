@@ -230,8 +230,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: The specified policy "
-                         "(BOGUS) could not be found.",
+        self.assertEqual("The specified policy (BOGUS) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_policy.assert_called_once_with(self.ctx, 'BOGUS')
@@ -295,8 +294,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: The specified policy "
-                         "(Bogus) could not be found.",
+        self.assertEqual("The specified policy (Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_policy.assert_called_once_with(self.ctx, 'Bogus')
@@ -316,8 +314,8 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: The policy (P1) is "
-                         "not attached to the specified cluster (C1).",
+        self.assertEqual("The policy (P1) is not attached to "
+                         "the specified cluster (C1).",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'C1')
         mock_policy.assert_called_once_with(self.ctx, 'P1')
@@ -383,8 +381,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: The specified policy "
-                         "(Bogus) could not be found.",
+        self.assertEqual("The specified policy (Bogus) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'C1')
         mock_policy.assert_called_once_with(self.ctx, 'Bogus')
@@ -405,8 +402,8 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: The policy (P1) is "
-                         "not attached to the specified cluster (C1).",
+        self.assertEqual("The policy (P1) is not attached to the "
+                         "specified cluster (C1).",
                          six.text_type(ex.exc_info[1]))
 
         mock_cluster.assert_called_once_with(self.ctx, 'C1')

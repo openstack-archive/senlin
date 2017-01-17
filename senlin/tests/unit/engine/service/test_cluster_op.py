@@ -113,8 +113,8 @@ class ClusterOpTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: The requested operation "
-                         "'swim' is not supported by the profile type 'cow'.",
+        self.assertEqual("The requested operation 'swim' is not supported "
+                         "by the profile type 'cow'.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'node1')
         mock_cluster.assert_called_once_with(self.ctx, db_cluster=x_db_cluster)
@@ -138,8 +138,7 @@ class ClusterOpTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Boom.",
-                         six.text_type(ex.exc_info[1]))
+        self.assertEqual("Boom.", six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'node1')
         mock_cluster.assert_called_once_with(self.ctx, db_cluster=x_db_cluster)
         x_schema.validate.assert_called_once_with({'style': 'tango'})
@@ -259,8 +258,8 @@ class ClusterOpTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: Filter key 'shape' is "
-                         "unsupported.", six.text_type(ex.exc_info[1]))
+        self.assertEqual("Filter key 'shape' is unsupported.",
+                         six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
         mock_cluster.assert_called_once_with(self.ctx, db_cluster=x_db_cluster)
         self.assertEqual(0, x_schema.validate.call_count)
@@ -290,8 +289,7 @@ class ClusterOpTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The request is malformed: No node (matching the "
-                         "filter) could be found.",
+        self.assertEqual("No node (matching the filter) could be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
         mock_cluster.assert_called_once_with(self.ctx, db_cluster=x_db_cluster)

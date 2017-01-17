@@ -81,7 +81,7 @@ class Forbidden(SenlinException):
 
 
 class BadRequest(SenlinException):
-    msg_fmt = _("The request is malformed: %(msg)s.")
+    msg_fmt = _("%(msg)s.")
 
 
 class InvalidAPIVersionString(SenlinException):

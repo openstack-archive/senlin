@@ -196,9 +196,8 @@ class TestGetPathParser(base.SenlinTestCase):
         err = self.assertRaises(exception.BadRequest,
                                 utils.get_path_parser,
                                 '^foo.bar')
-        self.assertEqual("The request is malformed: Invalid attribute path - "
-                         "Unexpected character: ^.",
-                         six.text_type(err))
+        self.assertEqual("Invalid attribute path - Unexpected "
+                         "character: ^.", six.text_type(err))
 
 
 class EngineDeathTest(base.SenlinTestCase):

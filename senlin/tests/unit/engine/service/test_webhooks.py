@@ -125,8 +125,7 @@ class WebhookTest(base.SenlinTestCase):
                                req.obj_to_primitive())
 
         self.assertEqual(exception.BadRequest, ex.exc_info[0])
-        self.assertEqual('The request is malformed: The referenced cluster '
-                         '(BOGUS) could not be found.',
+        self.assertEqual("The referenced cluster (BOGUS) could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'RRR')
         mock_cluster.assert_called_once_with(self.ctx, 'BOGUS')

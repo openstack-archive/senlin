@@ -212,8 +212,7 @@ class TestExceptionPayload(testtools.TestCase):
         self.assertEqual(self.__module__, pload.module)
         self.assertEqual('test_create_from_exception', pload.function)
         self.assertEqual('BadRequest', pload.exception)
-        self.assertEqual('The request is malformed: It is really bad.',
-                         pload.message)
+        self.assertEqual("It is really bad.", pload.message)
 
     def test_create_from_none(self):
         pload = base.ExceptionPayload.from_exception(None)

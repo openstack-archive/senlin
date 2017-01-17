@@ -456,7 +456,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_parse.assert_called_once_with(
             'ClusterAddNodesRequest', req, {'identity': cid, 'nodes': nodes})
-        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_add_nodes', obj)
 
@@ -517,7 +517,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ClusterDelNodesRequest', req, {'identity': cid, 'nodes': nodes,
                                             'destroy_after_deletion': False})
-        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_del_nodes', obj)
 
@@ -603,7 +603,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ClusterReplaceNodesRequest', req,
             {'identity': cid, 'nodes': nodes})
-        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_replace_nodes', obj)
 
@@ -731,7 +731,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_parse.assert_called_once_with(
             'ClusterResizeRequest', req, {'identity': cid, 'max_size': 200})
-        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_resize', obj)
 
@@ -786,7 +786,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_parse.assert_called_once_with(
             'ClusterScaleOutRequest', req, {'identity': cid, 'count': count})
-        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_scale_out', obj)
 
@@ -841,7 +841,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_parse.assert_called_once_with(
             'ClusterScaleInRequest', req, {'identity': cid, 'count': count})
-        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_scale_in', obj)
 
@@ -914,7 +914,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ClusterAttachPolicyRequest', req,
             {'identity': cid, 'policy_id': 'xxxx-yyyy'})
-        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_policy_attach', obj)
 
@@ -987,7 +987,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ClusterDetachPolicyRequest', req,
             {'identity': cid, 'policy_id': 'xxxx-yyyy'})
-        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_policy_detach', obj)
 
@@ -1060,7 +1060,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ClusterUpdatePolicyRequest', req,
             {'identity': cid, 'policy_id': 'xxxx-yyyy'})
-        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_policy_update', obj)
 
@@ -1117,7 +1117,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_parse.assert_called_once_with(
             'ClusterCheckRequest', req, {'identity': cid, 'params': {}})
-        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_check', obj)
 
@@ -1174,7 +1174,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_parse.assert_called_once_with(
             'ClusterRecoverRequest', req, {'identity': cid, 'params': {}})
-        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_recover', obj)
 
@@ -1335,7 +1335,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_parse.assert_called_once_with(
             'ClusterCollectRequest', req, {'identity': cid, 'path': path})
-        self.assertEqual("The request is malformed: Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_collect', obj)
 
