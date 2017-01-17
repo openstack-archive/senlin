@@ -149,7 +149,7 @@ class HealthManager(service.Service):
         :param cluster_id: The UUID of the cluster to be filtered.
         :returns: Nothing.
         """
-        cluster = objects.Cluster.get(self.ctx, cluster_id)
+        cluster = objects.Cluster.get(self.ctx, cluster_id, project_safe=False)
         if not cluster:
             LOG.warning(_LW("Cluster (%s) is not found."), cluster_id)
             return
