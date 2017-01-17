@@ -60,9 +60,13 @@ class TestClusterAddNodesNegativeInvalidNodesParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Value for 'nodes' must have at least 1 item(s).",
+                         str(message))
 
     @decorators.idempotent_id('6cb029f7-9b72-4f10-a28b-3ed5bd3ed7b0')
     def test_cluster_add_nodes_params_not_list(self):
@@ -73,9 +77,12 @@ class TestClusterAddNodesNegativeInvalidNodesParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Items for 'nodes' must be unique", str(message))
 
     @decorators.idempotent_id('b8ae9b5f-967f-48a6-8e31-c77f86ba06aa')
     def test_cluster_add_nodes_params_empty_list(self):
@@ -86,9 +93,29 @@ class TestClusterAddNodesNegativeInvalidNodesParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Value for 'nodes' must have at least 1 item(s).",
+                         str(message))
+
+    @decorators.idempotent_id('a97f1712-46ba-43c1-abd6-12c209c9d640')
+    def test_cluster_add_mult_node_with_same_name(self):
+        params = {
+            'add_nodes': {
+                'nodes': ['id1', 'id1']
+            }
+        }
+
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Items for 'nodes' must be unique",
+                         str(message))
 
 
 class TestClusterAddNodesNegativeNodeNotFound(base.BaseSenlinAPITest):
@@ -109,9 +136,14 @@ class TestClusterAddNodesNegativeNodeNotFound(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The request is malformed: Nodes not found: "
+            "[u'5ddf7e5a-3f67-4f1e-af1e-c5a7da319dc0'].", str(message))
 
 
 class TestClusterAddNodesNegativeNodeNotOrphan(base.BaseSenlinAPITest):
@@ -137,9 +169,14 @@ class TestClusterAddNodesNegativeNodeNotOrphan(base.BaseSenlinAPITest):
         }
 
         # Verify conflict exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The request is malformed: Nodes ['%s'] already owned by "
+            "some cluster." % self.node_id, str(message))
 
 
 class TestClusterAddNodesNegativeProfileTypeUnmatch(base.BaseSenlinAPITest):
@@ -168,9 +205,14 @@ class TestClusterAddNodesNegativeProfileTypeUnmatch(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The request is malformed: Profile type of nodes ['%s'] does "
+            "not match that of the cluster." % self.node_id, str(message))
 
 
 class TestClusterAddNodesNegativeSizeCheckFailed(base.BaseSenlinAPITest):
@@ -197,9 +239,14 @@ class TestClusterAddNodesNegativeSizeCheckFailed(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The request is malformed: The target capacity (2) is "
+            "greater than the cluster's max_size (1).", str(message))
 
 
 class TestClusterAddNodesNegativeClusterNotFound(base.BaseSenlinAPITest):
@@ -213,6 +260,11 @@ class TestClusterAddNodesNegativeClusterNotFound(base.BaseSenlinAPITest):
         }
 
         # Verify notfound exception(404) is raised.
-        self.assertRaises(exceptions.NotFound,
-                          self.client.trigger_action, 'clusters',
-                          'db0faadf-9cd2-457f-b434-4891b77938ab', params)
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.trigger_action, 'clusters',
+                               'db0faadf-9cd2-457f-b434-4891b77938ab', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The cluster (db0faadf-9cd2-457f-b434-4891b77938ab) "
+            "could not be found.", str(message))
