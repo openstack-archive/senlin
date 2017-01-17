@@ -277,7 +277,7 @@ class TestProfileBase(base.SenlinTestCase):
                                self.ctx, 'my_profile', spec)
 
         self.assertEqual("Failed in creating profile my_profile: The "
-                         "profile_type (bogus-1.0) could not be found.",
+                         "profile_type 'bogus-1.0' could not be found.",
                          six.text_type(ex))
 
     @mock.patch.object(pb.Profile, 'validate')
@@ -290,8 +290,8 @@ class TestProfileBase(base.SenlinTestCase):
                                pb.Profile.create,
                                self.ctx, 'my_profile', self.spec)
 
-        self.assertEqual("Failed in creating profile my_profile: Boom",
-                         six.text_type(ex))
+        self.assertEqual("Failed in creating profile my_profile: "
+                         "Boom", six.text_type(ex))
 
     @mock.patch.object(po.Profile, 'delete')
     def test_delete(self, mock_delete):
@@ -783,8 +783,8 @@ class TestProfileBase(base.SenlinTestCase):
         ex = self.assertRaises(exception.EResourceOperation,
                                profile.do_recover,
                                mock.Mock(id='NODE_ID'), operation='RECREATE')
-        self.assertEqual("Failed in recovering node NODE_ID: "
-                         "Failed in deleting STACK ID: BANG.",
+        self.assertEqual("Failed in recovering node 'NODE_ID': "
+                         "Failed in deleting STACK 'ID': BANG.",
                          six.text_type(ex))
 
     def test_do_recover_with_recreate_failed_create(self):
@@ -796,7 +796,7 @@ class TestProfileBase(base.SenlinTestCase):
         ex = self.assertRaises(exception.EResourceOperation,
                                profile.do_recover,
                                mock.Mock(id='NODE_ID'), operation='RECREATE')
-        msg = ("Failed in recovering node NODE_ID: Failed in creating "
+        msg = ("Failed in recovering node 'NODE_ID': Failed in creating "
                "STACK: BANNG.")
         self.assertEqual(msg, six.text_type(ex))
 

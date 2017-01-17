@@ -218,15 +218,15 @@ class ActionBaseTest(base.SenlinTestCase):
         ex = self.assertRaises(exception.ResourceNotFound,
                                ab.Action.load,
                                self.ctx, 'non-existent', None)
-        self.assertEqual('The action (non-existent) could not be found.',
-                         six.text_type(ex))
+        self.assertEqual("The action 'non-existent' could not be "
+                         "found.", six.text_type(ex))
 
         # not found due to no object
         self.patchobject(ao.Action, 'get', return_value=None)
         ex = self.assertRaises(exception.ResourceNotFound,
                                ab.Action.load,
                                self.ctx, 'whatever', None)
-        self.assertEqual('The action (whatever) could not be found.',
+        self.assertEqual("The action 'whatever' could not be found.",
                          six.text_type(ex))
 
     def test_load_all(self):

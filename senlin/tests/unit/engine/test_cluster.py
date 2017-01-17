@@ -231,7 +231,7 @@ class TestCluster(base.SenlinTestCase):
         ex = self.assertRaises(exception.ResourceNotFound,
                                cm.Cluster.load,
                                self.context, cluster_id=CLUSTER_ID)
-        self.assertEqual('The cluster (%s) could not be found.' % CLUSTER_ID,
+        self.assertEqual("The cluster '%s' could not be found." % CLUSTER_ID,
                          six.text_type(ex))
         mock_get.assert_called_once_with(self.context, CLUSTER_ID,
                                          project_safe=True)

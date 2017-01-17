@@ -192,21 +192,21 @@ class TestFlavorValidation(base.SenlinTestCase):
             validate_result=exc.InternalError(message='BANG'),
             result='FID',
             exception=exc.EResourceUpdate,
-            message='Failed in updating server NOVA_ID: BANG.')),
+            message="Failed in updating server 'NOVA_ID': BANG.")),
         ('update:not_found', dict(
             reason='update',
             success=False,
             validate_result=exc.InternalError(code=404, message='BANG'),
             result='FID',
             exception=exc.EResourceUpdate,
-            message="Failed in updating server NOVA_ID: BANG.")),
+            message="Failed in updating server 'NOVA_ID': BANG.")),
         ('update:disabled', dict(
             reason='update',
             success=False,
             validate_result=[mock.Mock(id='FID', is_disabled=True)],
             result='FID',
             exception=exc.EResourceUpdate,
-            message=("Failed in updating server NOVA_ID: The specified "
+            message=("Failed in updating server 'NOVA_ID': The specified "
                      "flavor 'FLAVOR' is disabled.")))
     ]
 
@@ -293,14 +293,14 @@ class TestImageValidation(base.SenlinTestCase):
             validate_result=exc.InternalError(message='BANG'),
             result='FID',
             exception=exc.EResourceUpdate,
-            message='Failed in updating server NOVA_ID: BANG.')),
+            message="Failed in updating server 'NOVA_ID': BANG.")),
         ('update:not_found', dict(
             reason='update',
             success=False,
             validate_result=exc.InternalError(code=404, message='BANG'),
             result='FID',
             exception=exc.EResourceUpdate,
-            message="Failed in updating server NOVA_ID: BANG.")),
+            message="Failed in updating server 'NOVA_ID': BANG.")),
     ]
 
     def setUp(self):
@@ -386,14 +386,14 @@ class TestKeypairValidation(base.SenlinTestCase):
             validate_result=exc.InternalError(message='BANG'),
             result='FID',
             exception=exc.EResourceUpdate,
-            message='Failed in updating server NOVA_ID: BANG.')),
+            message="Failed in updating server 'NOVA_ID': BANG.")),
         ('update:not_found', dict(
             reason='update',
             success=False,
             validate_result=exc.InternalError(code=404, message='BANG'),
             result='FID',
             exception=exc.EResourceUpdate,
-            message="Failed in updating server NOVA_ID: BANG.")),
+            message="Failed in updating server 'NOVA_ID': BANG.")),
     ]
 
     def setUp(self):
@@ -582,7 +582,7 @@ class TestNetworkValidation(base.SenlinTestCase):
             port_result=[],
             result={},
             exception=exc.EResourceUpdate,
-            message='Failed in updating server NOVA_ID: NET Failure.')),
+            message="Failed in updating server 'NOVA_ID': NET Failure.")),
         ('update:net-n:port-f:fixed_ip-n', dict(
             reason='update',
             success=False,
@@ -591,7 +591,7 @@ class TestNetworkValidation(base.SenlinTestCase):
             port_result=[exc.InternalError(message='PORT Failure')],
             result={},
             exception=exc.EResourceUpdate,
-            message='Failed in updating server NOVA_ID: PORT Failure.')),
+            message="Failed in updating server 'NOVA_ID': PORT Failure.")),
         ('update:net-n:port-active:fixed_ip-n', dict(
             reason='update',
             success=False,
@@ -600,8 +600,8 @@ class TestNetworkValidation(base.SenlinTestCase):
             port_result=[mock.Mock(id='PORT_ID', status='ACTIVE')],
             result={},
             exception=exc.EResourceUpdate,
-            message=('Failed in updating server NOVA_ID: The status of the '
-                     'port PORT must be DOWN.'))),
+            message=("Failed in updating server 'NOVA_ID': The status of the "
+                     "port PORT must be DOWN."))),
         ('update:net-n:port-n:fixed_ip-n', dict(
             reason='update',
             success=False,
@@ -610,7 +610,7 @@ class TestNetworkValidation(base.SenlinTestCase):
             port_result=[],
             result={},
             exception=exc.EResourceUpdate,
-            message=("Failed in updating server NOVA_ID: 'port' is required "
+            message=("Failed in updating server 'NOVA_ID': 'port' is required "
                      "if 'network' is omitted."))),
         ('update:net-n:port-y:fixed_ip-y', dict(
             reason='update',
@@ -620,9 +620,9 @@ class TestNetworkValidation(base.SenlinTestCase):
             port_result=[mock.Mock(id='PORT_ID', status='DOWN')],
             result={},
             exception=exc.EResourceUpdate,
-            message=("Failed in updating server NOVA_ID: The 'port' property "
-                     "and the 'fixed_ip' property cannot be specified at the "
-                     "same time."))),
+            message=("Failed in updating server 'NOVA_ID': The 'port' "
+                     "property and the 'fixed_ip' property cannot be "
+                     "specified at the same time."))),
     ]
 
     def setUp(self):

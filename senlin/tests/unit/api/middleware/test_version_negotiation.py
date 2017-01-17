@@ -246,7 +246,7 @@ class VersionNegotiationTest(base.SenlinTestCase):
         ex = self.assertRaises(webob.exc.HTTPBadRequest,
                                vnf._check_version_request,
                                request, controller)
-        self.assertEqual("API Version String (2.03) is of invalid format. It "
+        self.assertEqual("API Version String '2.03' is of invalid format. It "
                          "must be of format 'major.minor'.",
                          six.text_type(ex))
 
@@ -264,8 +264,8 @@ class VersionNegotiationTest(base.SenlinTestCase):
         ex = self.assertRaises(exception.InvalidGlobalAPIVersion,
                                vnf._check_version_request,
                                request, controller)
-        expected = ("Version 2.3 is not supported by the API. Minimum is "
-                    "%(min_ver)s and maximum is %(max_ver)s." %
+        expected = ("Version '2.3' is not supported by the API. Minimum is "
+                    "'%(min_ver)s' and maximum is '%(max_ver)s'." %
                     {'min_ver': str(minv), 'max_ver': str(maxv)})
         self.assertEqual(expected, six.text_type(ex))
 

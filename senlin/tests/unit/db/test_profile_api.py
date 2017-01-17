@@ -342,7 +342,7 @@ class DBAPIProfileTest(base.SenlinTestCase):
         profile_id = profile.id
         ex = self.assertRaises(exception.EResourceBusy,
                                db_api.profile_delete, self.ctx, profile_id)
-        self.assertEqual('The profile (%s) is busy now.' % profile_id,
+        self.assertEqual("The profile '%s' is busy now." % profile_id,
                          six.text_type(ex))
 
         db_api.cluster_delete(self.ctx, cluster.id)
@@ -355,7 +355,7 @@ class DBAPIProfileTest(base.SenlinTestCase):
         profile_id = profile.id
         ex = self.assertRaises(exception.EResourceBusy,
                                db_api.profile_delete, self.ctx, profile_id)
-        self.assertEqual('The profile (%s) is busy now.' % profile_id,
+        self.assertEqual("The profile '%s' is busy now." % profile_id,
                          six.text_type(ex))
 
         db_api.node_delete(self.ctx, node.id)

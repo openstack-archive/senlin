@@ -285,8 +285,8 @@ class NodeTest(base.SenlinTestCase):
                                self.eng.node_create,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The specified profile (Bogus) could not be found.",
-                         six.text_type(ex.exc_info[1]))
+        self.assertEqual("The specified profile 'Bogus' could not be "
+                         "found.", six.text_type(ex.exc_info[1]))
         mock_profile.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(co.Cluster, 'find')
@@ -304,7 +304,7 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The specified cluster (Bogus) could not be found.",
+        self.assertEqual("The specified cluster 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_profile.assert_called_once_with(self.ctx, 'PROFILE_NAME')
         mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
@@ -384,7 +384,7 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual("The node (Bogus) could not be found.",
+        self.assertEqual("The node 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -501,7 +501,7 @@ class NodeTest(base.SenlinTestCase):
                                req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The node (Bogus) could not be found.',
+        self.assertEqual("The node 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -519,9 +519,8 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The specified profile "
-                         "(Bogus) could not be found.",
-                         six.text_type(ex.exc_info[1]))
+        self.assertEqual("The specified profile 'Bogus' could not be "
+                         "found.", six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
         mock_profile.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -597,7 +596,7 @@ class NodeTest(base.SenlinTestCase):
                                req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The node (Bogus) could not be found.',
+        self.assertEqual("The node 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -613,7 +612,7 @@ class NodeTest(base.SenlinTestCase):
                                    self.ctx, req.obj_to_primitive())
 
             self.assertEqual(exc.ActionInProgress, ex.exc_info[0])
-            self.assertEqual("The node BUSY is in status %s." % bad_status,
+            self.assertEqual("The node 'BUSY' is in status %s." % bad_status,
                              six.text_type(ex.exc_info[1]))
             # skipping assertion on mock_find
 
@@ -627,7 +626,7 @@ class NodeTest(base.SenlinTestCase):
                                self.eng.node_delete,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
-        self.assertEqual("The node node1 cannot be deleted: still depended "
+        self.assertEqual("The node 'node1' cannot be deleted: still depended "
                          "by other clusters and/or nodes.",
                          six.text_type(ex.exc_info[1]))
 
@@ -662,7 +661,7 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The node (Bogus) could not be found.',
+        self.assertEqual("The node 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -697,7 +696,7 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The node (Bogus) could not be found.',
+        self.assertEqual("The node 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -744,7 +743,7 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The node (Bogus) could not be found.',
+        self.assertEqual("The node 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 

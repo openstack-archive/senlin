@@ -415,7 +415,7 @@ class DBAPIActionTest(base.SenlinTestCase):
             ex = self.assertRaises(exception.EResourceBusy,
                                    db_api.action_delete,
                                    self.ctx, action.id)
-            self.assertEqual('The action (%s) is busy now.' % action.id,
+            self.assertEqual("The action '%s' is busy now." % action.id,
                              six.text_type(ex))
 
     def test_action_delete_by_target(self):

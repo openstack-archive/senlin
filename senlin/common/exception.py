@@ -85,22 +85,22 @@ class BadRequest(SenlinException):
 
 
 class InvalidAPIVersionString(SenlinException):
-    msg_fmt = _("API Version String (%(version)s) is of invalid format. It "
+    msg_fmt = _("API Version String '%(version)s' is of invalid format. It "
                 "must be of format 'major.minor'.")
 
 
 class MethodVersionNotFound(SenlinException):
-    msg_fmt = _("API version %(version)s is not supported on this method.")
+    msg_fmt = _("API version '%(version)s' is not supported on this method.")
 
 
 class InvalidGlobalAPIVersion(SenlinException):
-    msg_fmt = _("Version %(req_ver)s is not supported by the API. Minimum is "
-                "%(min_ver)s and maximum is %(max_ver)s.")
+    msg_fmt = _("Version '%(req_ver)s' is not supported by the API. Minimum "
+                "is '%(min_ver)s' and maximum is '%(max_ver)s'.")
 
 
 class MultipleChoices(SenlinException):
-    msg_fmt = _("Multiple results found matching the query criteria %(arg)s. "
-                "Please be more specific.")
+    msg_fmt = _("Multiple results found matching the query criteria "
+                "'%(arg)s'. Please be more specific.")
 
 
 class ResourceNotFound(SenlinException):
@@ -110,7 +110,7 @@ class ResourceNotFound(SenlinException):
     'policy', 'receiver', 'webhook', 'profile_type', 'policy_type',
     'action', 'event' and so on.
     """
-    msg_fmt = _("The %(type)s (%(id)s) could not be found.")
+    msg_fmt = _("The %(type)s '%(id)s' could not be found.")
 
     @staticmethod
     def enhance_msg(enhance, ex):
@@ -125,7 +125,7 @@ class ResourceInUse(SenlinException):
     'policy', 'receiver', 'webhook', 'profile_type', 'policy_type',
     'action', 'event' and so on.
     """
-    msg_fmt = _("The %(type)s %(id)s cannot be deleted: %(reason)s.")
+    msg_fmt = _("The %(type)s '%(id)s' cannot be deleted: %(reason)s.")
 
 
 class ProfileNotSpecified(SenlinException):
@@ -145,12 +145,12 @@ class PolicyNotSpecified(SenlinException):
 
 
 class PolicyBindingNotFound(SenlinException):
-    msg_fmt = _("The policy (%(policy)s) is not found attached to the "
-                "specified cluster (%(identity)s).")
+    msg_fmt = _("The policy '%(policy)s' is not found attached to the "
+                "specified cluster '%(identity)s'.")
 
 
 class PolicyTypeConflict(SenlinException):
-    msg_fmt = _("The policy with type (%(policy_type)s) already exists.")
+    msg_fmt = _("The policy with type '%(policy_type)s' already exists.")
 
 
 class InvalidSpec(SenlinException):
@@ -177,7 +177,7 @@ class RequestLimitExceeded(SenlinException):
 
 
 class ActionInProgress(SenlinException):
-    msg_fmt = _("The %(type)s %(id)s is in status %(status)s.")
+    msg_fmt = _("The %(type)s '%(id)s' is in status %(status)s.")
 
 
 class NodeNotOrphan(SenlinException):
@@ -203,12 +203,12 @@ class InternalError(SenlinException):
 
 class EResourceBusy(InternalError):
     # Internal exception, not to be exposed to end user.
-    msg_fmt = _("The %(type)s (%(id)s) is busy now.")
+    msg_fmt = _("The %(type)s '%(id)s' is busy now.")
 
 
 class TrustNotFound(InternalError):
     # Internal exception, not to be exposed to end user.
-    msg_fmt = _("The trust for trustor (%(trustor)s) could not be found.")
+    msg_fmt = _("The trust for trustor '%(trustor)s' could not be found.")
 
 
 class EResourceCreation(InternalError):
@@ -222,12 +222,12 @@ class EResourceCreation(InternalError):
 
 class EResourceUpdate(InternalError):
     # Used when updating resources from other services
-    msg_fmt = _("Failed in updating %(type)s %(id)s: %(message)s.")
+    msg_fmt = _("Failed in updating %(type)s '%(id)s': %(message)s.")
 
 
 class EResourceDeletion(InternalError):
     # Used when deleting resources from other services
-    msg_fmt = _("Failed in deleting %(type)s %(id)s: %(message)s.")
+    msg_fmt = _("Failed in deleting %(type)s '%(id)s': %(message)s.")
 
 
 class EResourceOperation(InternalError):
@@ -244,7 +244,7 @@ class EResourceOperation(InternalError):
     'ResourceInUse' and so on, or developer can specified message.
     """
     # Used when operating resources from other services
-    msg_fmt = _("Failed in %(op)s %(type)s %(id)s: %(message)s.")
+    msg_fmt = _("Failed in %(op)s %(type)s '%(id)s': %(message)s.")
 
 
 class ESchema(InternalError):
@@ -256,8 +256,8 @@ class InvalidPlugin(InternalError):
 
 
 class PolicyNotAttached(InternalError):
-    msg_fmt = _("The policy (%(policy)s) is not attached to the specified "
-                "cluster (%(cluster)s).")
+    msg_fmt = _("The policy '%(policy)s' is not attached to the specified "
+                "cluster '%(cluster)s'.")
 
 
 class HTTPExceptionDisguise(Exception):

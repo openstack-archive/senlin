@@ -1915,8 +1915,8 @@ class EngineService(service.Service):
 
         binding = cp_obj.ClusterPolicy.get(ctx, db_cluster.id, db_policy.id)
         if binding is None:
-            msg = _("The policy (%(p)s) is not attached to the specified "
-                    "cluster (%(c)s)."
+            msg = _("The policy '%(p)s' is not attached to the specified "
+                    "cluster '%(c)s'."
                     ) % {'p': req.policy_id, 'c': req.identity}
             raise exception.BadRequest(msg=msg)
 
@@ -1956,8 +1956,8 @@ class EngineService(service.Service):
 
         binding = cp_obj.ClusterPolicy.get(ctx, db_cluster.id, db_policy.id)
         if binding is None:
-            msg = _("The policy (%(p)s) is not attached to the specified "
-                    "cluster (%(c)s)."
+            msg = _("The policy '%(p)s' is not attached to the specified "
+                    "cluster '%(c)s'."
                     ) % {'p': req.policy_id, 'c': req.identity}
             raise exception.BadRequest(msg=msg)
 

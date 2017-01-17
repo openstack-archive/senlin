@@ -303,7 +303,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
                                test_stack)
 
         # assertions
-        self.assertEqual('Failed in deleting stack FAKE_ID: Boom.',
+        self.assertEqual("Failed in deleting stack 'FAKE_ID': Boom.",
                          six.text_type(ex))
         oc.stack_delete.assert_called_once_with('FAKE_ID', True)
         self.assertEqual(0, oc.wait_for_stack_delete.call_count)
@@ -321,7 +321,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
                                profile.do_delete, test_stack)
 
         # assertions
-        self.assertEqual('Failed in deleting stack FAKE_ID: Boom.',
+        self.assertEqual("Failed in deleting stack 'FAKE_ID': Boom.",
                          six.text_type(ex))
         oc.stack_delete.assert_called_once_with('FAKE_ID', True)
         oc.wait_for_stack_delete.assert_called_once_with('FAKE_ID')
@@ -512,8 +512,8 @@ class TestHeatStackProfile(base.SenlinTestCase):
         oc.stack_update.assert_called_once_with(
             'FAKE_ID', environment={"new": "env1"})
         self.assertEqual(0, oc.wait_for_stack.call_count)
-        self.assertEqual('Failed in updating stack FAKE_ID: Failed.',
-                         six.text_type(ex))
+        self.assertEqual("Failed in updating stack 'FAKE_ID': "
+                         "Failed.", six.text_type(ex))
 
     def test_do_update_timeout(self):
         profile = stack.StackProfile('t', self.spec)
@@ -534,8 +534,8 @@ class TestHeatStackProfile(base.SenlinTestCase):
             'FAKE_ID', environment={"new": "env1"})
         oc.wait_for_stack.assert_called_once_with(
             'FAKE_ID', 'UPDATE_COMPLETE', timeout=3600)
-        self.assertEqual('Failed in updating stack FAKE_ID: Timeout.',
-                         six.text_type(ex))
+        self.assertEqual("Failed in updating stack 'FAKE_ID': "
+                         "Timeout.", six.text_type(ex))
 
     def test_do_check(self):
         node_obj = mock.Mock(physical_id='FAKE_ID')

@@ -200,7 +200,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
                                profile._get_host,
                                ctx, 'fake_node', None)
 
-        msg = _('The host node (fake_node) could not be found.')
+        msg = _("The host node 'fake_node' could not be found.")
         self.assertEqual(msg, ex.message)
 
     @mock.patch.object(cluster.Cluster, 'load')
@@ -227,7 +227,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
                                profile._get_random_node,
                                ctx, 'host_cluster')
 
-        msg = _("The host cluster (host_cluster) could not be found.")
+        msg = _("The host cluster 'host_cluster' could not be found.")
         self.assertEqual(msg, ex.message)
 
     @mock.patch.object(cluster.Cluster, 'load')
@@ -502,8 +502,8 @@ class TestContainerDockerProfile(base.SenlinTestCase):
                                docker.handle_reboot,
                                obj)
 
-        self.assertEqual("Failed in rebooting container FAKE_ID: Boom.",
-                         six.text_type(ex))
+        self.assertEqual("Failed in rebooting container 'FAKE_ID': "
+                         "Boom.", six.text_type(ex))
 
     @mock.patch.object(dp.DockerProfile, 'docker')
     def test_handle_reboot_docker_failure(self, mock_docker):
@@ -517,8 +517,8 @@ class TestContainerDockerProfile(base.SenlinTestCase):
                                docker.handle_reboot,
                                obj)
 
-        self.assertEqual("Failed in rebooting container FAKE_ID: Boom.",
-                         six.text_type(ex))
+        self.assertEqual("Failed in rebooting container 'FAKE_ID': "
+                         "Boom.", six.text_type(ex))
 
     @mock.patch.object(dp.DockerProfile, 'docker')
     def test_handle_pause(self, mock_docker):
@@ -552,8 +552,8 @@ class TestContainerDockerProfile(base.SenlinTestCase):
                                docker.handle_pause,
                                obj)
 
-        self.assertEqual("Failed in pausing container FAKE_ID: Boom.",
-                         six.text_type(ex))
+        self.assertEqual("Failed in pausing container 'FAKE_ID': "
+                         "Boom.", six.text_type(ex))
 
     @mock.patch.object(dp.DockerProfile, 'docker')
     def test_handle_pause_docker_failure(self, mock_docker):
@@ -567,8 +567,8 @@ class TestContainerDockerProfile(base.SenlinTestCase):
                                docker.handle_pause,
                                obj)
 
-        self.assertEqual("Failed in pausing container FAKE_ID: Boom.",
-                         six.text_type(ex))
+        self.assertEqual("Failed in pausing container 'FAKE_ID': "
+                         "Boom.", six.text_type(ex))
 
     @mock.patch.object(dp.DockerProfile, 'docker')
     def test_handle_unpause(self, mock_docker):
@@ -602,8 +602,8 @@ class TestContainerDockerProfile(base.SenlinTestCase):
                                docker.handle_unpause,
                                obj)
 
-        self.assertEqual("Failed in unpausing container FAKE_ID: Boom.",
-                         six.text_type(ex))
+        self.assertEqual("Failed in unpausing container 'FAKE_ID': "
+                         "Boom.", six.text_type(ex))
 
     @mock.patch.object(dp.DockerProfile, 'docker')
     def test_handle_unpause_docker_failure(self, mock_docker):
@@ -617,5 +617,5 @@ class TestContainerDockerProfile(base.SenlinTestCase):
                                docker.handle_unpause,
                                obj)
 
-        self.assertEqual("Failed in unpausing container FAKE_ID: Boom.",
-                         six.text_type(ex))
+        self.assertEqual("Failed in unpausing container 'FAKE_ID': "
+                         "Boom.", six.text_type(ex))

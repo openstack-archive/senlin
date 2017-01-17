@@ -266,5 +266,5 @@ class TestClusterAddNodesNegativeClusterNotFound(base.BaseSenlinAPITest):
 
         message = ex.resp_body['error']['message']
         self.assertEqual(
-            "The cluster (db0faadf-9cd2-457f-b434-4891b77938ab) "
+            "The cluster 'db0faadf-9cd2-457f-b434-4891b77938ab' "
             "could not be found.", str(message))

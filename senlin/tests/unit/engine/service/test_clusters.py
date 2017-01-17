@@ -203,8 +203,8 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req)
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The specified profile (Bogus) could not be found.",
-                         six.text_type(ex.exc_info[1]))
+        self.assertEqual("The specified profile 'Bogus' could not "
+                         "be found.", six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(service.EngineService, 'check_cluster_quota')
@@ -353,7 +353,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The specified profile (Bogus) could not be found.",
+        self.assertEqual("The specified profile 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
@@ -494,7 +494,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req)
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The cluster (Bogus) could not be found.',
+        self.assertEqual("The cluster 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -750,7 +750,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The cluster (Bogus) could not be found.',
+        self.assertEqual("The cluster 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -1060,7 +1060,7 @@ class ClusterTest(base.SenlinTestCase):
 
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual("The cluster (CLUSTER) could not be found.",
+        self.assertEqual("The cluster 'CLUSTER' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
 
@@ -1127,7 +1127,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The cluster (Bogus) could not be found.',
+        self.assertEqual("The cluster 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -1222,7 +1222,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The cluster (Bogus) could not be found.',
+        self.assertEqual("The cluster 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -1335,7 +1335,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The cluster (Bogus) could not be found.',
+        self.assertEqual("The cluster 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'C1')
 
@@ -1372,7 +1372,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The cluster (Bogus) could not be found.',
+        self.assertEqual("The cluster 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -1798,8 +1798,8 @@ class ClusterTest(base.SenlinTestCase):
                                self.eng.cluster_delete,
                                self.ctx, req.obj_to_primitive())
 
-        msg = _("The cluster FAKE_CLUSTER cannot be deleted: still referenced "
-                "by profile(s): ['profile1'].")
+        msg = _("The cluster 'FAKE_CLUSTER' cannot be deleted: still "
+                "referenced by profile(s): ['profile1'].")
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
         self.assertEqual(msg, six.text_type(ex.exc_info[1]))
 
@@ -1814,7 +1814,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The cluster (Bogus) could not be found.',
+        self.assertEqual("The cluster 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(co.Cluster, 'find')
@@ -1830,8 +1830,9 @@ class ClusterTest(base.SenlinTestCase):
                                    self.ctx, req.obj_to_primitive())
 
             self.assertEqual(exc.ActionInProgress, ex.exc_info[0])
-            self.assertEqual("The cluster BUSY is in status %s." % bad_status,
-                             six.text_type(ex.exc_info[1]))
+            self.assertEqual(
+                "The cluster 'BUSY' is in status %s." % bad_status,
+                six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     @mock.patch.object(co.Cluster, 'find')
@@ -1846,8 +1847,8 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
-        expected_msg = _('The cluster IDENTITY cannot be deleted: '
-                         'there is still policy(s) attached to it.')
+        expected_msg = _("The cluster 'IDENTITY' cannot be deleted: "
+                         "there is still policy(s) attached to it.")
         self.assertEqual(expected_msg, six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'IDENTITY')
         mock_policies.assert_called_once_with(self.ctx, '12345678AB')
@@ -1868,8 +1869,8 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
-        expected_msg = _('The cluster IDENTITY cannot be deleted: '
-                         'there is still receiver(s) associated with it.')
+        expected_msg = _("The cluster 'IDENTITY' cannot be deleted: "
+                         "there is still receiver(s) associated with it.")
         self.assertEqual(expected_msg, six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'IDENTITY')
         mock_policies.assert_called_once_with(self.ctx, '12345678AB')

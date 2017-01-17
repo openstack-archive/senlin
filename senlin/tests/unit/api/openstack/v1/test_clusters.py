@@ -1263,7 +1263,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, cluster_id=cid, path=path)
 
         self.assertEqual(0, mock_call.call_count)
-        self.assertEqual('API version 1.1 is not supported on this method.',
+        self.assertEqual("API version '1.1' is not supported on this method.",
                          six.text_type(ex))
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -1394,7 +1394,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, cluster_id=cid, body=body)
 
         self.assertEqual(0, mock_call.call_count)
-        self.assertEqual('API version 1.1 is not supported on this method.',
+        self.assertEqual("API version '1.1' is not supported on this method.",
                          six.text_type(ex))
 
     def test_operation_no_operations(self, mock_enforce):

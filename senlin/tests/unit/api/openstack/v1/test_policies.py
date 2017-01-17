@@ -557,8 +557,8 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, body=body)
 
         mock_call.assert_not_called()
-        self.assertEqual('API version 1.1 is not supported on this method.',
-                         six.text_type(ex))
+        self.assertEqual("API version '1.1' is not supported on this "
+                         "method.", six.text_type(ex))
 
     def test_profile_validate_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', False)

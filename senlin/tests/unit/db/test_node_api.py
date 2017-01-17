@@ -503,7 +503,7 @@ class DBAPINodeTest(base.SenlinTestCase):
         ex = self.assertRaises(exception.ResourceNotFound,
                                db_api.node_update,
                                self.ctx, 'BogusId', new_attributes)
-        self.assertEqual('The node (BogusId) could not be found.',
+        self.assertEqual("The node 'BogusId' could not be found.",
                          six.text_type(ex))
 
     def test_node_update_cluster_status_updated(self):

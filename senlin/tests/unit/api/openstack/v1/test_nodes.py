@@ -591,7 +591,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
-        msg = 'The node (non-exist-node) could not be found.'
+        msg = "The node 'non-exist-node' could not be found."
         self.assertEqual(msg, resp.json['error']['message'])
 
     @mock.patch.object(util, 'parse_request')
@@ -624,7 +624,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req.context, 'node_update', mock.ANY)
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
-        msg = 'The profile (aaaa-bbbb-cccc) could not be found.'
+        msg = "The profile 'aaaa-bbbb-cccc' could not be found."
         self.assertEqual(msg, resp.json['error']['message'])
 
     @mock.patch.object(util, 'parse_request')
@@ -940,8 +940,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.operation,
                                req, node_id=node_id, body=body)
 
-        self.assertEqual("API version 1.3 is not supported on this method.",
-                         six.text_type(ex))
+        self.assertEqual("API version '1.3' is not supported on this "
+                         "method.", six.text_type(ex))
 
     def test_node_operation_missing_operation(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'operation', True)

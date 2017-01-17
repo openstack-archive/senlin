@@ -169,7 +169,7 @@ class TestEnvironment(base.SenlinTestCase):
 
         ex = self.assertRaises(exception.ResourceNotFound,
                                env.get_profile, 'foo')
-        self.assertEqual('The profile_type (foo) could not be found.',
+        self.assertEqual("The profile_type 'foo' could not be found.",
                          six.text_type(ex))
 
         env.register_profile('foo', plugin)
@@ -196,7 +196,7 @@ class TestEnvironment(base.SenlinTestCase):
 
         ex = self.assertRaises(exception.ResourceNotFound,
                                env.get_policy, 'foo')
-        self.assertEqual('The policy_type (foo) could not be found.',
+        self.assertEqual("The policy_type 'foo' could not be found.",
                          six.text_type(ex))
 
         env.register_policy('foo', plugin)

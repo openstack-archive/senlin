@@ -166,13 +166,13 @@ class TestPolicyBase(base.SenlinTestCase):
         ex = self.assertRaises(exception.ResourceNotFound,
                                pb.Policy.load,
                                self.ctx, 'fake-policy', None)
-        self.assertEqual('The policy (fake-policy) could not be found.',
+        self.assertEqual("The policy 'fake-policy' could not be found.",
                          six.text_type(ex))
 
         ex = self.assertRaises(exception.ResourceNotFound,
                                pb.Policy.load,
                                self.ctx, None, None)
-        self.assertEqual('The policy (None) could not be found.',
+        self.assertEqual("The policy 'None' could not be found.",
                          six.text_type(ex))
 
     def test_load_all(self):
@@ -584,5 +584,5 @@ class TestPolicyBase(base.SenlinTestCase):
                                policy._build_conn_params,
                                'user1', 'project1')
 
-        msg = "The trust for trustor (user1) could not be found."
+        msg = "The trust for trustor 'user1' could not be found."
         self.assertEqual(msg, six.text_type(ex))
