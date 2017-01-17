@@ -32,16 +32,20 @@ class TestClusterCreateNegativeBadRequest(base.BaseSenlinAPITest):
     def test_cluster_create_cluster_data_not_specified(self):
         # cluster key is missing in request data
         params = {
-            'clustre': {
+            'bad': {
                 'profile_id': self.profile_id,
                 'name': 'test-cluster'
             }
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.create_obj,
-                          'clusters', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'clusters', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Request body missing 'cluster' key.",
+                         str(message))
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('3aced30b-ccb2-4e40-90c2-7b6aa205e3d6')
@@ -54,9 +58,32 @@ class TestClusterCreateNegativeBadRequest(base.BaseSenlinAPITest):
             }
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.create_obj,
-                          'clusters', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'clusters', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The specified profile '3aced30b-ccb2-4e40-90c2-7b6aa205e3d6' "
+            "could not be found.", str(message))
+
+    @test.attr(type=['negative'])
+    @decorators.idempotent_id('61b190bb-ef5a-47b3-acbe-6467fbb44439')
+    def test_cluster_create_miss_profile(self):
+        # Invalid profile_id is provided
+        params = {
+            'cluster': {
+                'name': 'test-cluster'
+            }
+        }
+        # Verify badrequest exception(400) is raised.
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'clusters', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("'profile_id' is a required property",
+                         str(message))
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('7eaf60c3-f33d-403b-a4ee-0276ae90928c')
@@ -76,6 +103,10 @@ class TestClusterCreateNegativeBadRequest(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.create_obj,
-                          'clusters', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'clusters', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("The target capacity (2) is less than the "
+                         "specified min_size (5).", str(message))
