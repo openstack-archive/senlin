@@ -173,3 +173,14 @@ class NeutronClient(base.DriverBase):
         self.conn.network.delete_health_monitor(
             hm_id, ignore_missing=ignore_missing)
         return
+
+    @sdk.translate_exception
+    def port_create(self, **attr):
+        res = self.conn.network.create_port(**attr)
+        return res
+
+    @sdk.translate_exception
+    def port_delete(self, port, ignore_missing=True):
+        res = self.conn.network.delete_port(
+            port=port, ignore_missing=ignore_missing)
+        return res
