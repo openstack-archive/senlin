@@ -56,7 +56,7 @@ class TestNodeOperationNegative(base.BaseSenlinAPITest):
         ex = self.assertRaises(exceptions.BadRequest,
                                self.client.trigger_operation,
                                'nodes', 'FAKE_ID', params)
-        self.assertIn('API version 1.3 is not supported', six.text_type(ex))
+        self.assertIn("API version '1.3' is not supported", six.text_type(ex))
 
     @utils.api_microversion('1.4')
     @decorators.idempotent_id('2b53a240-7ec6-4d92-bc2d-aaba2e63ee21')

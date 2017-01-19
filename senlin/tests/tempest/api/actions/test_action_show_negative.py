@@ -28,5 +28,5 @@ class TestActionShowNegativeNotFound(base.BaseSenlinAPITest):
 
         message = ex.resp_body['error']['message']
         self.assertEqual(
-            "The action (26cb0f3a-4e6c-49f6-8475-7cb472933bff) could not"
-            " be found.", str(message))
+            "The action '26cb0f3a-4e6c-49f6-8475-7cb472933bff' could "
+            "not be found.", str(message))

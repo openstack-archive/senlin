@@ -138,7 +138,7 @@ class PolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual("The policy_type (FakePolicy-1.0) could "
+        self.assertEqual("The policy_type 'FakePolicy-1.0' could "
                          "not be found.",
                          six.text_type(ex.exc_info[1]))
 
@@ -333,7 +333,7 @@ class PolicyTest(base.SenlinTestCase):
                                req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The policy (Bogus) could not be found.',
+        self.assertEqual("The policy 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -352,8 +352,8 @@ class PolicyTest(base.SenlinTestCase):
                                req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
-        self.assertEqual(_("The policy POLICY_ID cannot be deleted: still "
-                         "attached to some clusters."),
+        self.assertEqual(_("The policy 'POLICY_ID' cannot be deleted: "
+                         "still attached to some clusters."),
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'POLICY_ID')
         mock_delete.assert_called_once_with(self.ctx, 'POLICY_ID')

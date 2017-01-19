@@ -179,7 +179,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile._update_name,
                                obj, 'NEW_NAME')
 
-        self.assertEqual('Failed in updating server NOVA_ID: BOOM.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': BOOM.",
                          six.text_type(ex))
         cc.server_update.assert_called_once_with('NOVA_ID', name='NEW_NAME')
 
@@ -207,7 +207,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile._update_password,
                                obj, 'NEW_PASSWORD')
 
-        self.assertEqual('Failed in updating server NOVA_ID: BOOM.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': BOOM.",
                          six.text_type(ex))
         cc.server_change_password.assert_called_once_with(
             'NOVA_ID', 'NEW_PASSWORD')
@@ -265,8 +265,8 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile._update_metadata,
                                obj, new_profile)
 
-        self.assertEqual('Failed in updating server NOVA_ID: Nova Error.',
-                         six.text_type(ex))
+        self.assertEqual("Failed in updating server 'NOVA_ID': "
+                         "Nova Error.", six.text_type(ex))
         cc.server_metadata_update.assert_called_once_with(
             'NOVA_ID', {'fooa': 'baaar', 'cluster_node_id': 'NODE_ID'}
         )
@@ -382,8 +382,8 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         cc.server_resize.assert_called_once_with('NOVA_ID', '456')
         cc.server_resize_revert.assert_called_once_with('NOVA_ID')
         cc.wait_for_server.assert_called_once_with('NOVA_ID', 'ACTIVE')
-        self.assertEqual('Failed in updating server NOVA_ID: Resize failed.',
-                         six.text_type(ex))
+        self.assertEqual("Failed in updating server 'NOVA_ID': Resize "
+                         "failed.", six.text_type(ex))
 
     def test__update_flavor_first_wait_for_server_failed(self):
         obj = mock.Mock(physical_id='NOVA_ID')
@@ -416,8 +416,8 @@ class TestNovaServerUpdate(base.SenlinTestCase):
             mock.call('NOVA_ID', 'VERIFY_RESIZE'),
             mock.call('NOVA_ID', 'ACTIVE')])
         cc.server_resize_revert.assert_called_once_with('NOVA_ID')
-        self.assertEqual('Failed in updating server NOVA_ID: TIMEOUT.',
-                         six.text_type(ex))
+        self.assertEqual("Failed in updating server 'NOVA_ID': "
+                         "TIMEOUT.", six.text_type(ex))
 
     def test__update_flavor_resize_failed_revert_failed(self):
         obj = mock.Mock(physical_id='NOVA_ID')
@@ -449,8 +449,8 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         cc.server_resize_revert.assert_called_once_with('NOVA_ID')
         # the wait_for_server wasn't called
         self.assertEqual(0, cc.wait_for_server.call_count)
-        self.assertEqual('Failed in updating server NOVA_ID: Revert.',
-                         six.text_type(ex))
+        self.assertEqual("Failed in updating server 'NOVA_ID': "
+                         "Revert.", six.text_type(ex))
 
     def test__update_flavor_confirm_failed(self):
         obj = mock.Mock(physical_id='NOVA_ID')
@@ -479,7 +479,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         cc.server_resize.assert_called_once_with('NOVA_ID', '456')
         cc.server_resize_confirm.assert_called_once_with('NOVA_ID')
         cc.wait_for_server.assert_called_once_with('NOVA_ID', 'VERIFY_RESIZE')
-        self.assertEqual('Failed in updating server NOVA_ID: Confirm.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': Confirm.",
                          six.text_type(ex))
 
     def test__update_flavor_wait_confirm_failed(self):
@@ -512,7 +512,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
             mock.call('NOVA_ID', 'VERIFY_RESIZE'),
             mock.call('NOVA_ID', 'ACTIVE')
         ])
-        self.assertEqual('Failed in updating server NOVA_ID: Wait.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': Wait.",
                          six.text_type(ex))
 
     def test__update_image(self):
@@ -550,8 +550,8 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile._update_image,
                                obj, new_profile, 'new_name', '')
 
-        msg = ("Failed in updating server NOVA_ID: Updating Nova server with "
-               "image set to None is not supported by Nova.")
+        msg = ("Failed in updating server 'NOVA_ID': Updating Nova server"
+               " with image set to None is not supported by Nova.")
         self.assertEqual(msg, six.text_type(ex))
 
     def test__update_image_new_image_invalid(self):
@@ -571,7 +571,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile._update_image,
                                obj, new_profile, 'new_name', 'new_pass')
 
-        msg = ("Failed in updating server NOVA_ID: BAD.")
+        msg = ("Failed in updating server 'NOVA_ID': BAD.")
         self.assertEqual(msg, six.text_type(ex))
         mock_check.assert_called_once_with(obj, 'new_image', reason='update')
 
@@ -596,7 +596,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile._update_image,
                                obj, new_profile, 'new_name', 'new_pass')
 
-        msg = ("Failed in updating server NOVA_ID: BAD.")
+        msg = ("Failed in updating server 'NOVA_ID': BAD.")
         self.assertEqual(msg, six.text_type(ex))
         mock_check.assert_has_calls([
             mock.call(obj, 'new_image', reason='update'),
@@ -649,7 +649,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile._update_image,
                                obj, new_profile, 'new_name', 'new_pass')
 
-        self.assertEqual('Failed in updating server NOVA_ID: DRIVER.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': DRIVER.",
                          six.text_type(ex))
         mock_check.assert_called_once_with(obj, 'new_image', reason='update')
         cc.server_get.assert_called_once_with('NOVA_ID')
@@ -697,7 +697,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile._update_image,
                                obj, new_profile, 'new_name', 'new_pass')
 
-        self.assertEqual('Failed in updating server NOVA_ID: FAILED.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': FAILED.",
                          six.text_type(ex))
         mock_check.assert_has_calls([
             mock.call(obj, 'new_image', reason='update'),
@@ -726,7 +726,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile._update_image,
                                obj, new_profile, 'new_name', 'new_pass')
 
-        self.assertEqual('Failed in updating server NOVA_ID: TIMEOUT.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': TIMEOUT.",
                          six.text_type(ex))
         mock_check.assert_has_calls([
             mock.call(obj, 'new_image', reason='update'),
@@ -793,7 +793,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile._create_interfaces,
                                obj, networks)
 
-        self.assertEqual('Failed in updating server NOVA_ID: Not valid.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': Not valid.",
                          six.text_type(ex))
         cc.server_get.assert_called_once_with('NOVA_ID')
         self.assertEqual(0, cc.server_interface_create.call_count)
@@ -815,7 +815,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile._create_interfaces,
                                obj, networks)
 
-        self.assertEqual('Failed in updating server NOVA_ID: Driver error.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': Driver error.",
                          six.text_type(ex))
         cc.server_get.assert_called_once_with('NOVA_ID')
         mock_validate.assert_called_once_with(obj, networks[0], 'update')
@@ -878,7 +878,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile._delete_interfaces,
                                obj, mock.Mock())
 
-        self.assertEqual('Failed in updating server NOVA_ID: BANG.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': BANG.",
                          six.text_type(ex))
         cc.server_interface_list.assert_called_once_with('NOVA_ID')
 
@@ -915,7 +915,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile._delete_interfaces,
                                obj, networks)
 
-        self.assertEqual('Failed in updating server NOVA_ID: BANG.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': BANG.",
                          six.text_type(ex))
         cc.server_interface_list.assert_called_once_with('NOVA_ID')
         cc.server_interface_delete.assert_called_once_with('port3', 'NOVA_ID')
@@ -944,7 +944,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile._delete_interfaces,
                                obj, networks)
 
-        self.assertEqual('Failed in updating server NOVA_ID: BANG.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': BANG.",
                          six.text_type(ex))
         cc.server_interface_list.assert_called_once_with('NOVA_ID')
         nc.network_get.assert_called_once_with('net1')
@@ -975,7 +975,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile._delete_interfaces,
                                obj, networks)
 
-        self.assertEqual('Failed in updating server NOVA_ID: BANG.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': BANG.",
                          six.text_type(ex))
         cc.server_interface_list.assert_called_once_with('NOVA_ID')
         nc.network_get.assert_called_once_with('net2')
@@ -1006,7 +1006,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile._delete_interfaces,
                                obj, networks)
 
-        self.assertEqual('Failed in updating server NOVA_ID: BANG.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': BANG.",
                          six.text_type(ex))
         cc.server_interface_list.assert_called_once_with('NOVA_ID')
         nc.network_get.assert_called_once_with('net1')
@@ -1046,7 +1046,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile._delete_interfaces,
                                obj, networks)
 
-        self.assertEqual('Failed in updating server NOVA_ID: BANG.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': BANG.",
                          six.text_type(ex))
         cc.server_interface_list.assert_called_once_with('NOVA_ID')
         nc.network_get.assert_called_once_with('net2')
@@ -1185,7 +1185,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile.do_update,
                                obj, new_profile)
 
-        self.assertEqual('Failed in updating server NOVA_ID: BANG.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': BANG.",
                          six.text_type(ex))
         mock_check_name.assert_called_once_with(obj, new_profile)
         mock_check_password.assert_called_once_with(obj, new_profile)
@@ -1255,8 +1255,8 @@ class TestNovaServerUpdate(base.SenlinTestCase):
 
         mock_update_image.assert_called_with(
             obj, new_profile, 'OLD_NAME', 'OLD_PASS')
-        self.assertEqual('Failed in updating server NOVA_ID: Image Not Found.',
-                         six.text_type(ex))
+        self.assertEqual("Failed in updating server 'NOVA_ID': "
+                         "Image Not Found.", six.text_type(ex))
 
     @mock.patch.object(server.ServerProfile, '_update_flavor')
     def test_do_update_update_flavor_succeeded(self, mock_update_flavor):
@@ -1288,8 +1288,8 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                obj, new_profile)
 
         mock_update_flavor.assert_called_with(obj, new_profile)
-        self.assertEqual('Failed in updating server NOVA_ID: '
-                         'Flavor Not Found.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': "
+                         "Flavor Not Found.",
                          six.text_type(ex))
 
     @mock.patch.object(server.ServerProfile, '_update_flavor')
@@ -1347,7 +1347,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                profile.do_update,
                                obj, new_profile)
 
-        self.assertEqual('Failed in updating server NOVA_ID: BOOM.',
+        self.assertEqual("Failed in updating server 'NOVA_ID': BOOM.",
                          six.text_type(ex))
         mock_check_name.assert_called_once_with(obj, new_profile)
         mock_check_password.assert_called_once_with(obj, new_profile)

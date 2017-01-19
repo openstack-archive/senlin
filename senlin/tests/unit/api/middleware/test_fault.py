@@ -61,14 +61,14 @@ class FaultMiddlewareTest(base.SenlinTestCase):
                                                          id='a'))
 
         expected = {
-            'code': 404,
-            'error': {
-                'code': 404,
-                'message': 'The cluster (a) could not be found.',
-                'type': 'ResourceNotFound'
+            "code": 404,
+            "error": {
+                "code": 404,
+                "message": "The cluster 'a' could not be found.",
+                "type": "ResourceNotFound"
             },
-            'explanation': 'The resource could not be found.',
-            'title': 'Not Found'
+            "explanation": "The resource could not be found.",
+            "title": "Not Found"
         }
         self.assertEqual(expected, msg)
 
@@ -191,14 +191,14 @@ class FaultMiddlewareTest(base.SenlinTestCase):
 
         msg = wrapper._error(ClusterNotFoundChild(type='cluster', id='a'))
         expected = {
-            'code': 404,
-            'error': {
-                'code': 404,
-                'message': 'The cluster (a) could not be found.',
-                'type': 'ClusterNotFoundChild'
+            "code": 404,
+            "error": {
+                "code": 404,
+                "message": "The cluster 'a' could not be found.",
+                "type": "ClusterNotFoundChild"
             },
-            'explanation': 'The resource could not be found.',
-            'title': 'Not Found'
+            "explanation": "The resource could not be found.",
+            "title": "Not Found"
         }
         self.assertEqual(expected, msg)
 
@@ -210,15 +210,15 @@ class FaultMiddlewareTest(base.SenlinTestCase):
 
         msg = wrapper._error(NotMappedException('A message'))
         expected = {
-            'code': 500,
-            'error': {
-                'code': 500,
-                'message': u'A message',
-                'type': 'NotMappedException'
+            "code": 500,
+            "error": {
+                "code": 500,
+                "message": "A message",
+                "type": "NotMappedException"
             },
-            'explanation': ('The server has either erred or is incapable '
-                            'of performing the requested operation.'),
-            'title': 'Internal Server Error'
+            "explanation": ("The server has either erred or is incapable "
+                            "of performing the requested operation."),
+            "title": "Internal Server Error"
         }
         self.assertEqual(expected, msg)
 

@@ -30,7 +30,7 @@ class TestClusterPolicyShowNegativeClusterNotFound(base.BaseSenlinAPITest):
 
         message = ex.resp_body['error']['message']
         self.assertEqual(
-            "The cluster (965d7324-e3f7-4d77-8e7f-44c862b851f7) "
+            "The cluster '965d7324-e3f7-4d77-8e7f-44c862b851f7' "
             "could not be found.", str(message))
 
 
@@ -53,7 +53,7 @@ class TestClusterPolicyShowNegativePolicyNotFound(base.BaseSenlinAPITest):
                                'fake_policy')
 
         message = ex.resp_body['error']['message']
-        self.assertEqual("The policy (fake_policy) could not be found.",
+        self.assertEqual("The policy 'fake_policy' could not be found.",
                          str(message))
 
 
@@ -79,8 +79,8 @@ class TestClusterPolicyShowNegativeNoPolicyBinding(base.BaseSenlinAPITest):
 
         message = ex.resp_body['error']['message']
         self.assertEqual(
-            "The policy (%s) is not found attached to the specified cluster "
-            "(%s)." % (self.policy_id, self.cluster_id), str(message))
+            "The policy '%s' is not found attached to the specified cluster "
+            "'%s'." % (self.policy_id, self.cluster_id), str(message))
 
 
 class TestClusterPolicyShowNegativeBadRequest(base.BaseSenlinAPITest):
@@ -114,5 +114,5 @@ class TestClusterPolicyShowNegativeBadRequest(base.BaseSenlinAPITest):
 
         message = ex.resp_body['error']['message']
         self.assertEqual(
-            "Multiple results found matching the query criteria test-policy. "
-            "Please be more specific.", str(message))
+            "Multiple results found matching the query criteria "
+            "'test-policy'. Please be more specific.", str(message))

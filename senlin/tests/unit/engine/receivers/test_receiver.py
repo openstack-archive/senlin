@@ -222,8 +222,8 @@ class TestReceiver(base.SenlinTestCase):
         ex = self.assertRaises(exception.ResourceNotFound,
                                rb.Receiver.load,
                                self.context, 'fake-receiver', None)
-        self.assertEqual('The receiver (fake-receiver) could not be found.',
-                         six.text_type(ex))
+        self.assertEqual("The receiver 'fake-receiver' could not "
+                         "be found.", six.text_type(ex))
 
     def test_receiver_load_diff_project(self):
         receiver = self._create_receiver('receiver-1', UUID1)
@@ -232,7 +232,7 @@ class TestReceiver(base.SenlinTestCase):
         ex = self.assertRaises(exception.ResourceNotFound,
                                rb.Receiver.load,
                                new_context, UUID1, None)
-        self.assertEqual('The receiver (%s) could not be found.' % UUID1,
+        self.assertEqual("The receiver '%s' could not be found." % UUID1,
                          six.text_type(ex))
 
         res = rb.Receiver.load(new_context, receiver.id, project_safe=False)
@@ -426,5 +426,5 @@ class TestReceiver(base.SenlinTestCase):
         receiver = rb.Receiver.load(self.context, receiver_obj=receiver)
         ex = self.assertRaises(exception.TrustNotFound,
                                receiver._build_conn_params, user, project)
-        msg = "The trust for trustor (user1) could not be found."
+        msg = "The trust for trustor 'user1' could not be found."
         self.assertEqual(msg, six.text_type(ex))

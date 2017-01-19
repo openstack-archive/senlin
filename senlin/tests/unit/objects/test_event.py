@@ -68,6 +68,6 @@ class TestEvent(testtools.TestCase):
         ex = self.assertRaises(exc.ResourceNotFound,
                                eo.Event.find,
                                self.ctx, 'BOGUS')
-        self.assertEqual("The event (BOGUS) could not be found.",
+        self.assertEqual("The event 'BOGUS' could not be found.",
                          six.text_type(ex))
         mock_shortid.assert_called_once_with(self.ctx, 'BOGUS')

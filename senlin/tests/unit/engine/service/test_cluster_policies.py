@@ -98,7 +98,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.eng.cluster_policy_list,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual("The cluster (Bogus) could not be found.",
+        self.assertEqual("The cluster 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -132,7 +132,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.eng.cluster_policy_get,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual("The cluster (cid) could not be found.",
+        self.assertEqual("The cluster 'cid' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'cid')
 
@@ -149,7 +149,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual("The policy (pid) could not be found.",
+        self.assertEqual("The policy 'pid' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'cid')
         mock_policy.assert_called_once_with(self.ctx, 'pid')
@@ -170,8 +170,8 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.PolicyBindingNotFound, ex.exc_info[0])
-        self.assertEqual("The policy (pid) is not found attached to "
-                         "the specified cluster (cid).",
+        self.assertEqual("The policy 'pid' is not found attached to "
+                         "the specified cluster 'cid'.",
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(action_mod.Action, 'create')
@@ -212,7 +212,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual("The cluster (BOGUS) could not be found.",
+        self.assertEqual("The cluster 'BOGUS' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'BOGUS')
 
@@ -230,7 +230,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The specified policy (BOGUS) could not be found.",
+        self.assertEqual("The specified policy 'BOGUS' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_policy.assert_called_once_with(self.ctx, 'BOGUS')
@@ -276,7 +276,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual("The cluster (Bogus) could not be found.",
+        self.assertEqual("The cluster 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -294,7 +294,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The specified policy (Bogus) could not be found.",
+        self.assertEqual("The specified policy 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_policy.assert_called_once_with(self.ctx, 'Bogus')
@@ -314,8 +314,8 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The policy (P1) is not attached to "
-                         "the specified cluster (C1).",
+        self.assertEqual("The policy 'P1' is not attached to "
+                         "the specified cluster 'C1'.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'C1')
         mock_policy.assert_called_once_with(self.ctx, 'P1')
@@ -363,7 +363,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual("The cluster (Bogus) could not be found.",
+        self.assertEqual("The cluster 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -381,7 +381,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The specified policy (Bogus) could not be found.",
+        self.assertEqual("The specified policy 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'C1')
         mock_policy.assert_called_once_with(self.ctx, 'Bogus')
@@ -402,8 +402,8 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The policy (P1) is not attached to the "
-                         "specified cluster (C1).",
+        self.assertEqual("The policy 'P1' is not attached to the "
+                         "specified cluster 'C1'.",
                          six.text_type(ex.exc_info[1]))
 
         mock_cluster.assert_called_once_with(self.ctx, 'C1')

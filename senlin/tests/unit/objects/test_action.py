@@ -84,7 +84,7 @@ class TestAction(testtools.TestCase):
         ex = self.assertRaises(exc.ResourceNotFound,
                                ao.Action.find,
                                self.ctx, 'BOGUS')
-        self.assertEqual("The action (BOGUS) could not be found.",
+        self.assertEqual("The action 'BOGUS' could not be found.",
                          six.text_type(ex))
         mock_name.assert_called_once_with(self.ctx, 'BOGUS')
         mock_shortid.assert_called_once_with(self.ctx, 'BOGUS')

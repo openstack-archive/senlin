@@ -88,6 +88,6 @@ class TestProfile(testtools.TestCase):
                                po.Profile.find,
                                self.ctx, 'Bogus')
 
-        self.assertEqual('The profile (Bogus) could not be found.',
+        self.assertEqual("The profile 'Bogus' could not be found.",
                          six.text_type(ex))
         mock_get_name.assert_called_once_with(self.ctx, 'Bogus')

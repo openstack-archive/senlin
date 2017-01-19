@@ -276,7 +276,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, type_name=type_name)
 
         self.assertEqual(0, mock_call.call_count)
-        self.assertEqual('API version 1.1 is not supported on this method.',
+        self.assertEqual("API version '1.1' is not supported on this method.",
                          six.text_type(ex))
 
     def test_profile_type_ops_err_denied_policy(self, mock_enforce):

@@ -76,5 +76,5 @@ class TestClusterCheckNegativeNotFound(base.BaseSenlinAPITest):
                                'bbbe3feb-8482-4ae4-9c29-b4732efce931', params)
 
         message = ex.resp_body['error']['message']
-        self.assertEqual("The cluster (bbbe3feb-8482-4ae4-9c29-b4732efce931) "
+        self.assertEqual("The cluster 'bbbe3feb-8482-4ae4-9c29-b4732efce931' "
                          "could not be found.", str(message))

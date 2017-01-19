@@ -84,7 +84,7 @@ class TestNode(testtools.TestCase):
         ex = self.assertRaises(exc.ResourceNotFound,
                                no.Node.find,
                                self.ctx, 'BOGUS')
-        self.assertEqual("The node (BOGUS) could not be found.",
+        self.assertEqual("The node 'BOGUS' could not be found.",
                          six.text_type(ex))
         mock_name.assert_called_once_with(self.ctx, 'BOGUS', project_safe=True)
         mock_shortid.assert_called_once_with(self.ctx, 'BOGUS',

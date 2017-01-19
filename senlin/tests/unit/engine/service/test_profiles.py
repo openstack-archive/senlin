@@ -143,8 +143,8 @@ class ProfileTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual("The profile_type (Bogus-1.0) could not be found.",
-                         six.text_type(ex.exc_info[1]))
+        self.assertEqual("The profile_type 'Bogus-1.0' could not be "
+                         "found.", six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(pb.Profile, 'create')
     def test_profile_create_invalid_spec(self, mock_create):
@@ -227,7 +227,7 @@ class ProfileTest(base.SenlinTestCase):
                                req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The profile (Bogus) could not be found.',
+        self.assertEqual("The profile 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -290,7 +290,7 @@ class ProfileTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The profile (Bogus) could not be found.',
+        self.assertEqual("The profile 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -345,7 +345,7 @@ class ProfileTest(base.SenlinTestCase):
                                req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
-        self.assertEqual('The profile (Bogus) could not be found.',
+        self.assertEqual("The profile 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -364,8 +364,8 @@ class ProfileTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
-        self.assertEqual("The profile PROFILE_ID cannot be deleted: still "
-                         "referenced by some clusters and/or nodes.",
+        self.assertEqual("The profile 'PROFILE_ID' cannot be deleted: "
+                         "still referenced by some clusters and/or nodes.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'PROFILE_ID')
         mock_delete.assert_called_once_with(self.ctx, 'PROFILE_ID')

@@ -250,7 +250,6 @@ class ResourceExceptionHandlingTest(base.SenlinTestCase):
 
             def raise_exception(self, req, body):
                 raise self.excpetion_to_raise()
-
         actions = {'action': 'raise_exception', 'body': 'data'}
         env = {'wsgiorg.routing_args': [None, actions]}
         request = wsgi.Request.blank('/tests/123', environ=env)
@@ -361,16 +360,16 @@ class MicroversionTest(base.SenlinTestCase):
 
         ex = self.assertRaises(exception.MethodVersionNotFound,
                                c.index, request)
-        self.assertEqual('API version 1.0 is not supported on this method.',
-                         six.text_type(ex))
+        self.assertEqual("API version '1.0' is not supported on "
+                         "this method.", six.text_type(ex))
 
         res = c.foo(request)
         self.assertEqual({'bar': 'zoo'}, res)
 
         ex = self.assertRaises(exception.MethodVersionNotFound,
                                c.dance, request)
-        self.assertEqual('API version 1.0 is not supported on this method.',
-                         six.text_type(ex))
+        self.assertEqual("API version '1.0' is not supported on "
+                         "this method.", six.text_type(ex))
 
     def test_versioned_request_lower(self):
         data = mock.Mock()
@@ -431,8 +430,8 @@ class MicroversionTest(base.SenlinTestCase):
 
         ex = self.assertRaises(exception.MethodVersionNotFound,
                                c.dance, request)
-        self.assertEqual('API version 3.5 is not supported on this method.',
-                         six.text_type(ex))
+        self.assertEqual("API version '3.5' is not supported on "
+                         "this method.", six.text_type(ex))
 
     def test_vserioned_request_inner_functions(self):
         data = mock.Mock()

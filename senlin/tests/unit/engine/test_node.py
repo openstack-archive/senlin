@@ -107,7 +107,7 @@ class TestNode(base.SenlinTestCase):
         ex = self.assertRaises(exception.ResourceNotFound,
                                nodem.Node.load,
                                self.context, 'non-existent', None)
-        self.assertEqual('The node (non-existent) could not be found.',
+        self.assertEqual("The node 'non-existent' could not be found.",
                          six.text_type(ex))
 
         x_node_id = 'ee96c490-2dee-40c8-8919-4c64b89e326c'
@@ -144,7 +144,7 @@ class TestNode(base.SenlinTestCase):
         ex = self.assertRaises(exception.ResourceNotFound,
                                nodem.Node.load,
                                new_ctx, x_node_id, None)
-        self.assertEqual('The node (%s) could not be found.' % x_node_id,
+        self.assertEqual("The node '%s' could not be found." % x_node_id,
                          six.text_type(ex))
 
         res = nodem.Node.load(new_ctx, x_node_id, project_safe=False)
@@ -377,9 +377,9 @@ class TestNode(base.SenlinTestCase):
         mock_delete.assert_called_once_with(self.context, node)
         mock_status.assert_has_calls([
             mock.call(self.context, consts.NS_DELETING,
-                      'Deletion in progress'),
+                      "Deletion in progress"),
             mock.call(self.context, consts.NS_ERROR,
-                      'Failed in deleting PROFILE NODE_ID: Too Bad.')
+                      "Failed in deleting PROFILE 'NODE_ID': Too Bad.")
         ])
 
     @mock.patch.object(node_obj.Node, 'update')
@@ -466,13 +466,13 @@ class TestNode(base.SenlinTestCase):
         mock_db.assert_has_calls([
             mock.call(
                 self.context, node.id,
-                {'status': 'UPDATING', 'status_reason': 'Update in progress'}
+                {"status": "UPDATING", "status_reason": "Update in progress"}
             ),
             mock.call(
                 self.context, node.id,
-                {'status': 'ERROR',
-                 'status_reason': 'Failed in updating PROFILE ID: reason.',
-                 'updated_at': mock.ANY}
+                {"status": "ERROR",
+                 "status_reason": "Failed in updating PROFILE 'ID': reason.",
+                 "updated_at": mock.ANY}
             )
         ])
         self.assertEqual(1, mock_update.call_count)
@@ -600,7 +600,7 @@ class TestNode(base.SenlinTestCase):
         mock_status.assert_called_once_with(
             self.context,
             consts.NS_ERROR,
-            'Failed in checking server %s: failed get.' % node.physical_id)
+            "Failed in checking server '%s': failed get." % node.physical_id)
 
     def test_node_check_no_physical_id(self):
         node = nodem.Node('node1', PROFILE_ID, '')
@@ -735,6 +735,6 @@ class TestNode(base.SenlinTestCase):
             mock.call(self.context, consts.NS_OPERATING,
                       reason="Operation 'dance' in progress"),
             mock.call(self.context, consts.NS_ERROR,
-                      reason="Failed in dance container test_id: Boom.")
+                      reason="Failed in dance container 'test_id': Boom.")
         ])
         x_profile.handle_dance.assert_called_once_with(node, style='tango')

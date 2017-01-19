@@ -93,8 +93,8 @@ class TestClusterPolicy(base.SenlinTestCase):
         ex = self.assertRaises(exception.PolicyNotAttached,
                                cpm.ClusterPolicy.load,
                                self.context, 'some-cluster', 'any-policy')
-        self.assertEqual('The policy (any-policy) is not attached to the '
-                         'specified cluster (some-cluster).',
+        self.assertEqual("The policy 'any-policy' is not attached to the "
+                         "specified cluster 'some-cluster'.",
                          six.text_type(ex))
 
         cluster = utils.create_cluster(self.context, CLUSTER_ID, PROFILE_ID)

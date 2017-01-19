@@ -88,6 +88,6 @@ class TestPolicy(testtools.TestCase):
                                po.Policy.find,
                                self.ctx, 'Bogus')
 
-        self.assertEqual('The policy (Bogus) could not be found.',
+        self.assertEqual("The policy 'Bogus' could not be found.",
                          six.text_type(ex))
         mock_get_name.assert_called_once_with(self.ctx, 'Bogus')

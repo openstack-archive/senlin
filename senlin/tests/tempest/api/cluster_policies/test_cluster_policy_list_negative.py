@@ -39,7 +39,7 @@ class TestClusterPolicyListNegativeBadRequest(base.BaseSenlinAPITest):
 
         message = ex.resp_body['error']['message']
         self.assertEqual(
-            "The cluster (0259cbac-0fb3-480b-8f23-1ec59616f3af) "
+            "The cluster '0259cbac-0fb3-480b-8f23-1ec59616f3af' "
             "could not be found.", str(message))
 
     @test.attr(type=['negative'])
