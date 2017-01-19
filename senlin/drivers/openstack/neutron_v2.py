@@ -32,6 +32,11 @@ class NeutronClient(base.DriverBase):
         return port
 
     @sdk.translate_exception
+    def security_group_find(self, name_or_id, ignore_missing=False):
+        sg = self.conn.network.find_security_group(name_or_id, ignore_missing)
+        return sg
+
+    @sdk.translate_exception
     def subnet_get(self, name_or_id, ignore_missing=False):
         subnet = self.conn.network.find_subnet(name_or_id, ignore_missing)
         return subnet
