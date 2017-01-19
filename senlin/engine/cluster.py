@@ -91,12 +91,15 @@ class Cluster(object):
         bindings = cpo.ClusterPolicy.get_all(context, self.id)
         for b in bindings:
             # Detect policy type conflicts
-            policy = pcb.Policy.load(context, b.policy_id)
+            policy = pcb.Policy.load(context,
+                                     b.policy_id,
+                                     project_safe=False)
             policies.append(policy)
 
         nodes = node_mod.Node.load_all(context, cluster_id=self.id)
         self.rt = {
-            'profile': pfb.Profile.load(context, profile_id=self.profile_id,
+            'profile': pfb.Profile.load(context,
+                                        profile_id=self.profile_id,
                                         project_safe=False),
             'nodes': [n for n in nodes],
             'policies': policies

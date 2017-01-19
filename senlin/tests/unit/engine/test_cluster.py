@@ -110,7 +110,9 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual([x_policy], rt['policies'])
 
         mock_pb.assert_called_once_with(self.context, CLUSTER_ID)
-        mock_policy.assert_called_once_with(self.context, POLICY_ID)
+        mock_policy.assert_called_once_with(self.context,
+                                            POLICY_ID,
+                                            project_safe=False)
         mock_profile.assert_called_once_with(self.context,
                                              profile_id=PROFILE_ID,
                                              project_safe=False)
