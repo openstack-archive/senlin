@@ -59,34 +59,48 @@ class TestClusterPolicyAttachNegativeInvalidParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("The data provided is not a map",
+                         str(message))
 
     @decorators.idempotent_id('34f6ceec-bde2-4013-87fe-db704ada5987')
-    def test_cluster_policy_attach_missing_profile_id_param(self):
+    def test_cluster_policy_attach_missing_policy_id_param(self):
         params = {
             'policy_attach': {}
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("'policy_id' is a required property",
+                         str(message))
 
     @decorators.idempotent_id('5f5c42be-8ef4-4150-93cf-1e6b2515a293')
     def test_cluster_policy_attach_invalid_enabled_param(self):
         params = {
             'policy_attach': {
                 'policy_id': 'POLICY_ID',
-                'enabled': 'flase'
+                'enabled': 'not-bool'
             }
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Unrecognized value 'not-bool', acceptable values are: '0', '1', "
+            "'f', 'false', 'n', 'no', 'off', 'on', 't', 'true', 'y', 'yes'",
+            str(message))
 
 
 class TestClusterPolicyAttachNegativePolicyNotFound(base.BaseSenlinAPITest):
@@ -107,9 +121,14 @@ class TestClusterPolicyAttachNegativePolicyNotFound(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Additional properties are not allowed (u'poilicy_id' "
+            "was unexpected)", str(message))
 
 
 class TestClusterPolicyAttachNegativeNotFound(base.BaseSenlinAPITest):
@@ -123,6 +142,12 @@ class TestClusterPolicyAttachNegativeNotFound(base.BaseSenlinAPITest):
         }
 
         # Verify notfound exception(404) is raised.
-        self.assertRaises(exceptions.NotFound,
-                          self.client.trigger_action, 'clusters',
-                          '29e66d49-9ffa-47c9-bbe3-e0cf9c3370ee', params)
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.trigger_action, 'clusters',
+                               '29e66d49-9ffa-47c9-bbe3-e0cf9c3370ee',
+                               params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The cluster '29e66d49-9ffa-47c9-bbe3-e0cf9c3370ee' could "
+            "not be found.", str(message))
