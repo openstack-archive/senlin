@@ -114,7 +114,7 @@ When the Senlin API service receives the request, it does the following things:
   - Creating a Zaqar subscription targeting on the queue just created and
     specifying the HTTP subscriber to the following URL::
 
-    http://{host:port}/v1/v1/receivers/{receiver_id}/notify
+      http://{host:port}/v1/v1/receivers/{receiver_id}/notify
 
   - Storing the name of queue into the ``queue_name`` field of the receiver's
     channel.
