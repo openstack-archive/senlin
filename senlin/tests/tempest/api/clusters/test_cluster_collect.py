@@ -62,22 +62,35 @@ class TestClusterCollectNegative(base.BaseSenlinAPITest):
     @decorators.idempotent_id('88fff27d-27eb-4a4d-906b-b3a9761072ba')
     def test_cluster_collect_failed_api_version(self):
         # Collect on a basic path
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.cluster_collect,
-                          'FAKE_CLUSTER', path='name')
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.cluster_collect,
+                               'FAKE_CLUSTER', path='name')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("API version '1.1' is not supported on this method.",
+                         str(message))
 
     @utils.api_microversion('1.2')
     @decorators.idempotent_id('a3d59666-93be-47ee-a484-c248ed2f49fe')
     def test_cluster_collect_failed_path(self):
         # Collect on a basic path
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.cluster_collect,
-                          'FAKE_CLUSTER', path='None')
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.cluster_collect,
+                               'FAKE_CLUSTER', path='None')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Required path attribute is missing.",
+                         str(message))
 
     @utils.api_microversion('1.2')
     @decorators.idempotent_id('a3d59666-93be-47ee-a484-c248ed2f49fe')
     def test_cluster_collect_cluster_not_found(self):
         # Collect on a basic path
-        self.assertRaises(exceptions.NotFound,
-                          self.client.cluster_collect,
-                          'a3d59666-93be-47ee-a484-c248ed2f49fe', path='name')
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.cluster_collect,
+                               'a3d59666-93be-47ee-a484-c248ed2f49fe',
+                               path='name')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("The cluster 'a3d59666-93be-47ee-a484-c248ed2f49fe' "
+                         "could not be found.", str(message))

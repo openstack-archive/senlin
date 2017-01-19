@@ -60,9 +60,13 @@ class TestClusterDelNodesNegativeInvalidNodesParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Value for 'nodes' must have at least 1 item(s).",
+                         str(message))
 
     @decorators.idempotent_id('c15c387c-3c3c-4005-8818-8fc0cdbfe679')
     def test_cluster_del_nodes_params_not_list(self):
@@ -73,9 +77,13 @@ class TestClusterDelNodesNegativeInvalidNodesParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Items for 'nodes' must be unique",
+                         str(message))
 
     @decorators.idempotent_id('662c548d-a89a-40e3-a238-72b2193e5dc2')
     def test_cluster_del_nodes_params_empty_list(self):
@@ -86,9 +94,33 @@ class TestClusterDelNodesNegativeInvalidNodesParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Value for 'nodes' must have at least 1 item(s).",
+                         str(message))
+
+    @decorators.idempotent_id('26479afe-b8bf-4389-85b2-cccf6b83d2b7')
+    def test_cluster_del_nodes_destroy_not_bool(self):
+        params = {
+            'del_nodes': {
+                'nodes': ['fake_id'],
+                'destroy_after_deletion': 'not_bool'
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Unrecognized value 'not_bool', acceptable values are: '0', '1', "
+            "'f', 'false', 'n', 'no', 'off', 'on', 't', 'true', 'y', 'yes'",
+            str(message))
 
 
 class TestClusterDelNodesNegativeNodeNotFound(base.BaseSenlinAPITest):
@@ -109,9 +141,14 @@ class TestClusterDelNodesNegativeNodeNotFound(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Nodes not found: [u'e896948b-44c0-4dfa-9466-407391504833'].",
+            str(message))
 
 
 class TestClusterDelNodesNegativeOrphanNode(base.BaseSenlinAPITest):
@@ -134,9 +171,13 @@ class TestClusterDelNodesNegativeOrphanNode(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Nodes not members of specified cluster: "
+                         "['%s']." % self.node_id, str(message))
 
 
 class TestClusterDelNodesNegativeNodeOfOtherCluster(base.BaseSenlinAPITest):
@@ -161,9 +202,13 @@ class TestClusterDelNodesNegativeNodeOfOtherCluster(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Nodes not members of specified cluster: "
+                         "['%s']." % self.node_id, str(message))
 
 
 class TestClusterDelNodesNegativeSizeCheckFailed(base.BaseSenlinAPITest):
@@ -190,9 +235,13 @@ class TestClusterDelNodesNegativeSizeCheckFailed(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("The target capacity (0) is less than the cluster's "
+                         "min_size (1).", str(message))
 
 
 class TestClusterDelNodesNegativeClusterNotFound(base.BaseSenlinAPITest):
@@ -206,6 +255,11 @@ class TestClusterDelNodesNegativeClusterNotFound(base.BaseSenlinAPITest):
         }
 
         # Verify notfound exception(404) is raised.
-        self.assertRaises(exceptions.NotFound,
-                          self.client.trigger_action, 'clusters',
-                          'dc8f106a-10b7-47a3-8494-c86035207351', params)
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.trigger_action, 'clusters',
+                               'dc8f106a-10b7-47a3-8494-c86035207351', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The cluster 'dc8f106a-10b7-47a3-8494-c86035207351' could not "
+            "be found.", str(message))
