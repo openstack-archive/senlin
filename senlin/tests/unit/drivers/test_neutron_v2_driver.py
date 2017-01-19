@@ -288,3 +288,16 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         self.nc.healthmonitor_delete(healthmonitor_id)
         self.conn.network.delete_health_monitor.assert_called_with(
             healthmonitor_id, ignore_missing=True)
+
+    def test_port_create(self):
+        port_attr = {
+            'network_id': 'foo'
+        }
+        self.nc.port_create(**port_attr)
+        self.conn.network.create_port.assert_called_once_with(
+            network_id='foo')
+
+    def test_port_delete(self):
+        self.nc.port_delete(port='foo')
+        self.conn.network.delete_port.assert_called_once_with(
+            port='foo', ignore_missing=True)
