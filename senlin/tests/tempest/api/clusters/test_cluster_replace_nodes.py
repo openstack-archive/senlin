@@ -64,9 +64,13 @@ class TestClusterReplaceNodesNegativeInvalidParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.cluster_replace_nodes,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.cluster_replace_nodes,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("The data provided is not a map",
+                         str(message))
 
     @utils.api_microversion('1.3')
     @decorators.idempotent_id('600baf2f-e74f-467d-9883-3dcf1c357b57')
@@ -78,9 +82,13 @@ class TestClusterReplaceNodesNegativeInvalidParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.cluster_replace_nodes,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.cluster_replace_nodes,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("The data provided is not a map",
+                         str(message))
 
     @utils.api_microversion('1.3')
     @decorators.idempotent_id('3e227f8f-7da3-4dc1-b647-68ed8fbdd111')
@@ -94,9 +102,13 @@ class TestClusterReplaceNodesNegativeInvalidParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.cluster_replace_nodes,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.cluster_replace_nodes,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Field `nodes[old_node]' cannot be None",
+                         str(message))
 
     @utils.api_microversion('1.3')
     @decorators.idempotent_id('82ebbd5a-47fc-4d32-be3c-7bf3262dd574')
@@ -111,9 +123,13 @@ class TestClusterReplaceNodesNegativeInvalidParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.cluster_replace_nodes,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.cluster_replace_nodes,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Map contains duplicated values",
+                         str(message))
 
 
 class TestClusterReplaceNodesNegativeOldNotFound(base.BaseSenlinAPITest):
@@ -138,9 +154,13 @@ class TestClusterReplaceNodesNegativeOldNotFound(base.BaseSenlinAPITest):
         }
 
         # Verify not found badrequest is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.cluster_replace_nodes,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.cluster_replace_nodes,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Original nodes not found: [u'old_node'].",
+                         str(message))
 
 
 class TestClusterReplaceNodesNegativeNewNotFound(base.BaseSenlinAPITest):
@@ -166,9 +186,13 @@ class TestClusterReplaceNodesNegativeNewNotFound(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.cluster_replace_nodes,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.cluster_replace_nodes,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Replacement nodes not found: [u'new_node'].",
+                         str(message))
 
 
 class TestClusterReplaceNodesNegativeNewNotOrphan(base.BaseSenlinAPITest):
@@ -200,9 +224,14 @@ class TestClusterReplaceNodesNegativeNewNotOrphan(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.cluster_replace_nodes,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.cluster_replace_nodes,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Nodes [u'%s'] already member of a cluster." % self.new_node,
+            str(message))
 
 
 class TestClusterReplaceNodeNegativeProfileUnmatch(base.BaseSenlinAPITest):
@@ -236,9 +265,14 @@ class TestClusterReplaceNodeNegativeProfileUnmatch(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception is raised
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.cluster_replace_nodes, 'clusters',
-                          self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.cluster_replace_nodes,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Profile type of nodes [u'%s'] do not match that of the "
+            "cluster." % self.new_node, str(message))
 
 
 class TestClusterReplaceNodeNegativeOldOrphan(base.BaseSenlinAPITest):
@@ -267,9 +301,15 @@ class TestClusterReplaceNodeNegativeOldOrphan(base.BaseSenlinAPITest):
         }
 
         # Versify badrequest exeception is raised
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.cluster_replace_nodes, 'clusters',
-                          self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.cluster_replace_nodes, 'clusters',
+                               self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The specified nodes [u'%s'] to be replaced are not members "
+            "of the cluster %s." % (self.old_node, self.cluster_id),
+            str(message))
 
 
 class TestClusterReplaceNodeNegativeClusterNotFound(base.BaseSenlinAPITest):
@@ -286,6 +326,12 @@ class TestClusterReplaceNodeNegativeClusterNotFound(base.BaseSenlinAPITest):
         }
 
         # Verify notfound exception(404) is raised.
-        self.assertRaises(exceptions.NotFound,
-                          self.client.cluster_replace_nodes, 'clusters',
-                          'db0faadf-9cd2-457f-b434-4891b77938ab', params)
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.cluster_replace_nodes, 'clusters',
+                               'db0faadf-9cd2-457f-b434-4891b77938ab',
+                               params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The cluster 'db0faadf-9cd2-457f-b434-4891b77938ab' could "
+            "not be found.", str(message))

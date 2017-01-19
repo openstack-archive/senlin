@@ -63,9 +63,14 @@ class TestClusterResizeNegativeInvalidResizeParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Value 'bogus' is not acceptable for field "
+            "'adjustment_type'.", str(message))
 
     @decorators.idempotent_id('cef85ed4-9dd3-4f9f-91fe-4372d9aa8956')
     def test_cluster_resize_missing_adj_type(self):
@@ -78,9 +83,14 @@ class TestClusterResizeNegativeInvalidResizeParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Missing adjustment_type value for size adjustment.",
+            str(message))
 
     @decorators.idempotent_id('e42dd7e1-aa36-4e46-8b5b-2571d00574c9')
     def test_cluster_resize_missing_adj_number(self):
@@ -93,9 +103,14 @@ class TestClusterResizeNegativeInvalidResizeParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Missing number value for size adjustment.",
+            str(message))
 
     @decorators.idempotent_id('7e669b3e-8fbd-4820-a281-7cc4b29c6020')
     def test_cluster_resize_invalid_adj_number(self):
@@ -109,9 +124,14 @@ class TestClusterResizeNegativeInvalidResizeParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The 'number' must be positive integer for adjustment "
+            "type 'EXACT_CAPACITY'.", str(message))
 
     @decorators.idempotent_id('5a069782-d6d8-4389-a68c-beb32375a39e')
     def test_cluster_resize_min_size_over_max_size(self):
@@ -125,9 +145,14 @@ class TestClusterResizeNegativeInvalidResizeParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The specified min_size (20) is greater than the "
+            "specified max_size (10).", str(message))
 
 
 class TestClusterResizeNegativeClusterNotFound(base.BaseSenlinAPITest):
@@ -143,10 +168,15 @@ class TestClusterResizeNegativeClusterNotFound(base.BaseSenlinAPITest):
         }
 
         # Verify notfound exception(404) is raised.
-        self.assertRaises(exceptions.NotFound,
-                          self.client.trigger_action,
-                          'clusters', '087ef694-55d2-4616-a58b-1073cacb2bcd',
-                          params)
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.trigger_action, 'clusters',
+                               '087ef694-55d2-4616-a58b-1073cacb2bcd',
+                               params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The cluster '087ef694-55d2-4616-a58b-1073cacb2bcd' could "
+            "not be found.", str(message))
 
 
 class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
@@ -172,9 +202,14 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The target capacity (6) is greater than the cluster's "
+            "max_size (5).", str(message))
 
     @decorators.idempotent_id('9dcac577-d768-44d1-b119-02d27202ef08')
     def test_cluster_resize_break_lower_limit(self):
@@ -188,9 +223,14 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The target capacity (1) is less than the cluster's "
+            "min_size (2).", str(message))
 
     @decorators.idempotent_id('d7a96d95-2944-4749-be34-cfe39a5dbcb4')
     def test_cluster_resize_max_size_under_current_desired_capacity(self):
@@ -203,9 +243,14 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The specified max_size (2) is less than the current "
+            "desired_capacity (3) of the cluster.", str(message))
 
     @decorators.idempotent_id('3b35938f-a73a-4096-bf13-af3709aed47f')
     def test_cluster_resize_max_size_under_current_min_size(self):
@@ -219,10 +264,14 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
 
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The specified max_size (1) is less than the current "
+            "min_size (2) of the cluster.", str(message))
         # New max_size is lower than current min_size of cluster
         # with strict set to True
         params = {
@@ -233,9 +282,14 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The specified max_size (1) is less than the current min_size "
+            "(2) of the cluster.", str(message))
 
     @decorators.idempotent_id('1d7595a4-a7a8-42a4-9f90-7501a4bbb7e5')
     def test_cluster_resize_min_size_over_current_desired_capacity(self):
@@ -248,9 +302,14 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The specified min_size (4) is greater than the current "
+            "desired_capacity (3) of the cluster.", str(message))
 
     @decorators.idempotent_id('606e5d3f-0857-4bfe-b52d-2ea1ad0cec16')
     def test_cluster_resize_min_size_over_current_max_size(self):
@@ -264,9 +323,14 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The specified min_size (6) is greater than the current "
+            "max_size (5) of the cluster.", str(message))
 
         # New min_size is larger than current max_size of cluster
         # with strict set to True
@@ -278,6 +342,11 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The specified min_size (6) is greater than the current "
+            "max_size (5) of the cluster.", str(message))
