@@ -34,11 +34,10 @@ class HealthPolicy(base.Policy):
     PRIORITY = 600
 
     TARGET = [
-        ('BEFORE', consts.CLUSTER_CHECK),
-        ('BEFORE', consts.CLUSTER_DEL_NODES),
         ('BEFORE', consts.CLUSTER_RECOVER),
-        ('BEFORE', consts.CLUSTER_RESIZE),
+        ('BEFORE', consts.CLUSTER_DEL_NODES),
         ('BEFORE', consts.CLUSTER_SCALE_IN),
+        ('BEFORE', consts.CLUSTER_RESIZE),
         ('BEFORE', consts.NODE_DELETE),
         ('AFTER', consts.CLUSTER_DEL_NODES),
         ('AFTER', consts.CLUSTER_SCALE_IN),
