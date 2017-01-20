@@ -26,18 +26,10 @@ AutoScaling-compatible Query API is in plan.
    :maxdepth: 1
 
    overview
-
-2 Install and Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. toctree::
-   :maxdepth: 1
-
-   overview
    install
    configuration
 
-3 Tutorial
+2 Tutorial
 ~~~~~~~~~~
 
 This tutorial walks you through the Senlin features step-by-step. For more
@@ -49,18 +41,16 @@ details, please check the :ref:`user-references` section.
    tutorial/basics
    tutorial/policies
    tutorial/receivers
-   tutorial/autoscaling
-   tutorial/heat
 
 .. _user-references:
 
-4 User References
+3 User References
 ~~~~~~~~~~~~~~~~~
 
 This section provides a detailed documentation for the concepts and built-in
 policy types.
 
-4.1 Basic Concepts
+3.1 Basic Concepts
 ------------------
 
 .. toctree::
@@ -78,7 +68,7 @@ policy types.
    user/actions
    user/events
 
-4.2 Built-in Policy Types
+3.2 Built-in Policy Types
 -------------------------
 
 The senlin service is released with some built-in policy types that target
@@ -97,13 +87,13 @@ The following is a list of builtin policy types:
    user/policy_types/region_placement
    user/policy_types/zone_placement
 
-5 Usage Scenarios
+4 Usage Scenarios
 ~~~~~~~~~~~~~~~~~
 
 This section provides some guides for typical usage scenarios. More scenarios
 are to be added
 
-5.1 Managing Node Affinity
+4.1 Managing Node Affinity
 --------------------------
 
 Senlin provides an :doc:`Affinity Policy <user/policy_types/affinity>` for
@@ -115,60 +105,31 @@ to use it.
 
    scenarios/affinity
 
-5.2 Building AutoScaling Clusters
+4.2 Building AutoScaling Clusters
 ---------------------------------
-
-The senlin service provides a rich set of facilities for building an
-auto-scaling solution:
-
-- *Operations*: The ``CLUSTER_SCALE_OUT``, ``CLUSTER_SCALE_IN`` operations are
-  the simplest form of commands to scale a cluster. The ``CLUSTER_RESIZE``
-  operation, on the other hand, provides more options for controlling the
-  detailed cluster scaling behavior. These operations can be performed with
-  and without policies attached to a cluster.
-
-- *Policies*:
-  The ``senlin.policy.scaling`` (:doc:`link <user/policy_types/scaling>`) policy
-  can be applied to fine tune the cluster scaling operations.
-  The ``senlin.policy.deletion`` (:doc:`link <user/policy_types/deletion>`)
-  policy can be attached to a cluster to control how nodes are removed from a
-  cluster.
-  The ``senlin.policy.affinity`` (:doc:`link <user/policy_types/affinity>`)
-  policy can be used to control how node affinity or anti-affinity can be
-  enforced.
-  The ``senlin.policy.region_placement``
-  (:doc:`link <user/policy_types/region_placement>`) can be applied to scale a
-  cluster across multiple regions.
-  The ``senlin.policy.zone_placement``
-  (:doc:`link <user/policy_types/zone_placement>`) can be enforced to achieve
-  a cross-availability-zone node distribution.
-
-- *Receivers*: The receiver (:doc:`link <user/receivers>`) concept provides a
-  channel to which you can send signals or alarms from an external monitoring
-  software or service so that scaling operations can be automated.
-
-This section provides some guides on integrating senlin with other services
-so that cluster scaling can be automated.
 
 .. toctree::
    :maxdepth: 1
 
+   scenarios/autoscaling_overview
    scenarios/autoscaling_ceilometer
    scenarios/autoscaling_heat
 
+
 .. _developer-guide:
 
-6. Developer's Guide
+5. Developer's Guide
 ~~~~~~~~~~~~~~~~~~~~
 
-This section targets senlin contributors.
+This section targets senlin developers.
 
-6.1 Understanding the Design
+5.1 Understanding the Design
 ----------------------------
 
 .. toctree::
    :maxdepth: 1
 
+   developer/api_microversion
    developer/authorization
    developer/profile
    developer/cluster
@@ -178,10 +139,9 @@ This section targets senlin contributors.
    developer/receiver
    developer/testing
    developer/plugin_guide
-   developer/api_microversion
    developer/osprofiler
 
-6.2 Built-in Policy Types
+5.2 Built-in Policy Types
 -------------------------
 
 Senlin provides some built-in policy types which can be instantiated and then
@@ -199,7 +159,7 @@ in a collaborative way to meet the needs of complicated usage scenarios.
    developer/policies/scaling_v1
    developer/policies/zone_v1
 
-6.3 Reviewing Patches
+5.3 Reviewing Patches
 ---------------------
 
 There are many general guidelines across the community about code reviews, for
@@ -216,18 +176,17 @@ review experiences that should be practiced.
 
   developer/reviews
 
-
-7 References
+6 References
 ~~~~~~~~~~~~
 
-7.1 API Documentation
+6.1 API Documentation
 ---------------------
 
 Follow the link below for the Senlin API V1 specification:
 
 -  `OpenStack API Complete Reference - Clustering`_
 
-7.2 Man Pages
+6.2 Man Pages
 -------------
 
 .. toctree::
@@ -235,7 +194,7 @@ Follow the link below for the Senlin API V1 specification:
 
    man/index
 
-7.3 Glossary
+6.3 Glossary
 ------------
 
 .. toctree::

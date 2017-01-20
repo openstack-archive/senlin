@@ -173,7 +173,7 @@ command:
 
 For other cluster membership management commands and options, please check the
 :doc:`Cluster Membership <../user/membership>` section in the 
-:ref:`user-references`_ section.
+:ref:`user-references` section.
 
 
 .. _Installation Guide: http://docs.openstack.org/developer/senlin/install.html

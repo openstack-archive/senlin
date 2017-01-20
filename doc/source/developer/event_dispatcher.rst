@@ -56,9 +56,9 @@ Developing A New Event Dispatcher
 
 The first step for adding a new dispatcher is to create a new file containing
 a subclass of ``EventBackend``. In this new class, say ``JsonDispatcher``,
-you will need to implement the ``dump()`` class method as examplified below::
+you will need to implement the ``dump()`` class method as examplified below:
 
-.. code:: python
+.. code-block:: python
 
   class JsonDispatcher(base.EventBackend):
       """Dispatcher for dumping events to a JSON file."""
@@ -76,7 +76,7 @@ virtually no constraints on which properties you will pick and how you want to
 process them.
 
 Finally, the ``**kwargs`` parameter may provide some useful fields for you
-to use::
+to use:
 
 * ``timestamp``: A datetime value that indicates when the event was generated.
 * ``phase``: A string value indicating the phase an action is in. Most of the
