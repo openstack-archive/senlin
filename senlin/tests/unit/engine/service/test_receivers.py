@@ -15,6 +15,7 @@ from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
 import six
 
+from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.engine.receivers import base as rb
 from senlin.engine import service
@@ -105,29 +106,29 @@ class ReceiverTest(base.SenlinTestCase):
             'foo': 'bar'
         }
         mock_create.return_value = fake_receiver
+        req = orro.ReceiverCreateRequestBody(
+            name='r1', type=consts.RECEIVER_WEBHOOK, cluster_id='C1',
+            action=consts.CLUSTER_RESIZE)
 
-        req = orro.ReceiverCreateRequestBody(name='r1', type='webhook',
-                                             cluster_id='C1',
-                                             action='CLUSTER_RESIZE')
         result = self.eng.receiver_create(self.ctx, req.obj_to_primitive())
 
         self.assertIsInstance(result, dict)
         self.assertEqual('FAKE_RECEIVER', result['id'])
         mock_find.assert_called_once_with(self.ctx, 'C1')
         mock_create.assert_called_once_with(
-            self.ctx, 'webhook', fake_cluster, 'CLUSTER_RESIZE',
+            self.ctx, 'webhook', fake_cluster, consts.CLUSTER_RESIZE,
             name='r1', user=self.ctx.user, project=self.ctx.project,
             domain=self.ctx.domain, params={})
 
         # test params passed
         mock_create.reset_mock()
-        req = orro.ReceiverCreateRequestBody(name='r1', type='webhook',
-                                             cluster_id='C1',
-                                             action='CLUSTER_RESIZE',
-                                             params={'FOO': 'BAR'})
+        req = orro.ReceiverCreateRequestBody(
+            name='r1', type=consts.RECEIVER_WEBHOOK, cluster_id='C1',
+            action=consts.CLUSTER_RESIZE, params={'FOO': 'BAR'})
+
         self.eng.receiver_create(self.ctx, req.obj_to_primitive())
         mock_create.assert_called_once_with(
-            self.ctx, 'webhook', fake_cluster, 'CLUSTER_RESIZE',
+            self.ctx, 'webhook', fake_cluster, consts.CLUSTER_RESIZE,
             name='r1', user=self.ctx.user, project=self.ctx.project,
             domain=self.ctx.domain, params={'FOO': 'BAR'})
 
@@ -136,11 +137,13 @@ class ReceiverTest(base.SenlinTestCase):
         cfg.CONF.set_override('name_unique', True, enforce_type=True)
         # Return an existing instance
         mock_get.return_value = mock.Mock()
+        req = orro.ReceiverCreateRequestBody(
+            name='r1', type=consts.RECEIVER_MESSAGE)
 
-        req = orro.ReceiverCreateRequestBody(name='r1', type='message')
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.receiver_create,
                                self.ctx, req.obj_to_primitive())
+
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("A receiver named 'r1' already exists.",
                          six.text_type(ex.exc_info[1]))
@@ -148,15 +151,33 @@ class ReceiverTest(base.SenlinTestCase):
     @mock.patch.object(co.Cluster, 'find')
     def test_receiver_create_webhook_cluster_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='cluster', id='C1')
-        req = orro.ReceiverCreateRequestBody(name='r1', type='webhook',
-                                             cluster_id='C1',
-                                             action='CLUSTER_RESIZE')
+        req = orro.ReceiverCreateRequestBody(
+            name='r1', type=consts.RECEIVER_WEBHOOK, cluster_id='C1',
+            action=consts.CLUSTER_RESIZE)
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.receiver_create,
                                self.ctx, req.obj_to_primitive())
+
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The referenced cluster 'C1' could not be found.",
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(co.Cluster, 'find')
+    def test_receiver_create_webhook_invalid_action(self, mock_find):
+        fake_cluster = mock.Mock()
+        fake_cluster.user = 'someone'
+        mock_find.return_value = fake_cluster
+        req = orro.ReceiverCreateRequestBody(
+            name='r1', type=consts.RECEIVER_WEBHOOK, cluster_id='C1',
+            action=consts.CLUSTER_CREATE)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.receiver_create,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("Action name cannot be any of ['CLUSTER_CREATE'].",
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(co.Cluster, 'find')
@@ -165,9 +186,9 @@ class ReceiverTest(base.SenlinTestCase):
         fake_cluster = mock.Mock()
         fake_cluster.user = 'someone'
         mock_find.return_value = fake_cluster
-        req = orro.ReceiverCreateRequestBody(name='r1', type='webhook',
-                                             cluster_id='C1',
-                                             action='CLUSTER_RESIZE')
+        req = orro.ReceiverCreateRequestBody(
+            name='r1', type=consts.RECEIVER_WEBHOOK, cluster_id='C1',
+            action=consts.CLUSTER_RESIZE)
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.receiver_create,
