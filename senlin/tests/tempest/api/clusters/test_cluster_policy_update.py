@@ -60,9 +60,13 @@ class TestClusterPolicyUpdateNegativeInvalidParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("The data provided is not a map",
+                         str(message))
 
     @decorators.idempotent_id('b47dff55-3ff0-4303-b86e-c4ab5f9a0878')
     def test_cluster_policy_update_missing_profile_id_param(self):
@@ -71,23 +75,33 @@ class TestClusterPolicyUpdateNegativeInvalidParams(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("'policy_id' is a required property",
+                         str(message))
 
     @decorators.idempotent_id('4adb03f4-35e6-40eb-b867-d75315ca8a89')
     def test_cluster_policy_update_invalid_enabled_param(self):
         params = {
             'policy_update': {
                 'policy_id': 'POLICY_ID',
-                'enabled': 'flase'
+                'enabled': 'not-bool'
             }
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', 'cluster_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'cluster_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Unrecognized value 'not-bool', acceptable values are: '0', '1', "
+            "'f', 'false', 'n', 'no', 'off', 'on', 't', 'true', 'y', 'yes'",
+            str(message))
 
 
 class TestClusterPolicyUpdateNegativePolicyNotFound(base.BaseSenlinAPITest):
@@ -103,14 +117,19 @@ class TestClusterPolicyUpdateNegativePolicyNotFound(base.BaseSenlinAPITest):
     def test_cluster_policy_update_policy_not_found(self):
         params = {
             'policy_update': {
-                'poilicy_id': '7528bfa5-2106-459a-9ece-f201498b3ace'
+                'policy_id': '7528bfa5-2106-459a-9ece-f201498b3ace'
             }
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The specified policy '7528bfa5-2106-459a-9ece-f201498b3ace' "
+            "could not be found.", str(message))
 
 
 class TestClusterPolicyUpdateNegativeUnattached(base.BaseSenlinAPITest):
@@ -128,14 +147,19 @@ class TestClusterPolicyUpdateNegativeUnattached(base.BaseSenlinAPITest):
     def test_cluster_policy_update_policy_unattached(self):
         params = {
             'policy_update': {
-                'poilicy_id': self.policy_id
+                'policy_id': self.policy_id
             }
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The policy '%s' is not attached to the specified cluster "
+            "'%s'." % (self.policy_id, self.cluster_id), str(message))
 
 
 class TestClusterPolicyUpdateNegativeNotFound(base.BaseSenlinAPITest):
@@ -150,6 +174,12 @@ class TestClusterPolicyUpdateNegativeNotFound(base.BaseSenlinAPITest):
         }
 
         # Verify notfound exception(404) is raised.
-        self.assertRaises(exceptions.NotFound,
-                          self.client.trigger_action, 'clusters',
-                          'c7605959-3bc9-41e2-9685-7e11fa03b9e6', params)
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.trigger_action, 'clusters',
+                               'c7605959-3bc9-41e2-9685-7e11fa03b9e6',
+                               params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The cluster 'c7605959-3bc9-41e2-9685-7e11fa03b9e6' could "
+            "not be found.", str(message))
