@@ -20,15 +20,55 @@ from senlin.tests.tempest.common import constants
 from senlin.tests.tempest.common import utils
 
 
+class TestClusterUpdateNegativeInvalidParam(base.BaseSenlinAPITest):
+
+    @test.attr(type=['negative'])
+    @decorators.idempotent_id('7bddd411-b890-4a36-a523-3e49b87cb645')
+    def test_cluster_update_cluster_invalid_param(self):
+        params = {
+            'cluster': {
+                'bad': 'invalid'
+            }
+        }
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.update_obj, 'clusters',
+                               'f7a97fce-f495-44a8-b41a-7408139adacf',
+                               params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Additional properties are not allowed (u'bad' was "
+            "unexpected)", str(message))
+
+    @test.attr(type=['negative'])
+    @decorators.idempotent_id('80cd0acd-772f-482f-8c6d-90843d986eb1')
+    def test_cluster_update_cluster_empty_param(self):
+        params = {}
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.update_obj, 'clusters',
+                               '80cd0acd-772f-482f-8c6d-90843d986eb1',
+                               params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Malformed request data, missing 'cluster' key in "
+            "request body.", str(message))
+
+
 class TestClusterUpdateNegativeNotFound(base.BaseSenlinAPITest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('f7a97fce-f495-44a8-b41a-7408139adacf')
     def test_cluster_update_cluster_not_found(self):
-        self.assertRaises(exceptions.NotFound,
-                          self.client.update_obj,
-                          'clusters', 'f7a97fce-f495-44a8-b41a-7408139adacf',
-                          {'cluster': {'name': 'new-name'}})
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.update_obj, 'clusters',
+                               'f7a97fce-f495-44a8-b41a-7408139adacf',
+                               {'cluster': {'name': 'new-name'}})
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The cluster 'f7a97fce-f495-44a8-b41a-7408139adacf' could "
+            "not be found.", str(message))
 
 
 class TestClusterUpdateNegativeProfileNotFound(base.BaseSenlinAPITest):
@@ -53,9 +93,14 @@ class TestClusterUpdateNegativeProfileNotFound(base.BaseSenlinAPITest):
             }
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.update_obj,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.update_obj,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The specified profile 'fb68921d-1fe8-4c14-be9a-51fa43d4f705' "
+            "could not be found.", str(message))
 
 
 class TestClusterUpdateNegativeProfileMultichoices(base.BaseSenlinAPITest):
@@ -87,9 +132,14 @@ class TestClusterUpdateNegativeProfileMultichoices(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.update_obj,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.update_obj,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Multiple results found matching the query criteria 'p-nova'. "
+            "Please be more specific.", str(message))
 
 
 class TestClusterUpdateNegativeProfileTypeUnmatch(base.BaseSenlinAPITest):
@@ -118,9 +168,14 @@ class TestClusterUpdateNegativeProfileTypeUnmatch(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.update_obj,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.update_obj,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Cannot update a cluster to a different profile type, "
+            "operation aborted.", str(message))
 
 
 class TestClusterUpdateNegativeNoPropertyUpdated(base.BaseSenlinAPITest):
@@ -143,6 +198,9 @@ class TestClusterUpdateNegativeNoPropertyUpdated(base.BaseSenlinAPITest):
             'cluster': {}
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.update_obj,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.update_obj,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("No property needs an update.", str(message))

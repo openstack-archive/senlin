@@ -46,6 +46,27 @@ class TestClusterActionScaleIn(base.BaseSenlinAPITest):
         self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
 
 
+class TestClusterScaleInInvalidRequest(base.BaseSenlinAPITest):
+
+    @decorators.idempotent_id('d826dc0f-ef1c-47ee-b31f-3042aaa8ec54')
+    def test_cluster_scale_in_invalid_count(self):
+        params = {
+            "scale_in": {
+                "count": "bad-count"
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'fake', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "invalid literal for int() with base 10: 'bad-count'",
+            str(message))
+
+
 class TestClusterScaleInNegativeBadRequest(base.BaseSenlinAPITest):
 
     def setUp(self):
@@ -66,9 +87,13 @@ class TestClusterScaleInNegativeBadRequest(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Value must be >= 0 for field 'count'.",
+                         str(message))
 
 
 class TestClusterScaleInNegativeNotFound(base.BaseSenlinAPITest):
@@ -82,6 +107,12 @@ class TestClusterScaleInNegativeNotFound(base.BaseSenlinAPITest):
         }
 
         # Verify notfound exception(404) is raised.
-        self.assertRaises(exceptions.NotFound,
-                          self.client.trigger_action, 'clusters',
-                          '0124c7de-66d0-4a84-9c8f-80bc4d246b79', params)
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.trigger_action, 'clusters',
+                               '0124c7de-66d0-4a84-9c8f-80bc4d246b79',
+                               params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The cluster '0124c7de-66d0-4a84-9c8f-80bc4d246b79' could "
+            "not be found.", str(message))

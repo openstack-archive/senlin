@@ -18,16 +18,6 @@ from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import utils
 
 
-class TestClusterShowNegativeNotFound(base.BaseSenlinAPITest):
-
-    @test.attr(type=['negative'])
-    @decorators.idempotent_id('bbc593ff-8556-416e-83c3-384e5c14d363')
-    def test_cluster_show_not_found(self):
-        self.assertRaises(exceptions.NotFound,
-                          self.client.get_obj,
-                          'clusters', 'bbc593ff-8556-416e-83c3-384e5c14d363')
-
-
 class TestClusterShowNegativeBadRequest(base.BaseSenlinAPITest):
 
     def setUp(self):
@@ -44,6 +34,26 @@ class TestClusterShowNegativeBadRequest(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('3365dca5-8895-4dc3-befe-fd15b17c824c')
     def test_cluster_show_multiple_choice(self):
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.get_obj,
-                          'clusters', 'c-01')
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.get_obj,
+                               'clusters', 'c-01')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Multiple results found matching the query criteria "
+            "'c-01'. Please be more specific.", str(message))
+
+
+class TestClusterShowNegativeNotFound(base.BaseSenlinAPITest):
+
+    @decorators.idempotent_id('4706516e-002d-42b2-9805-69058178cd9c')
+    def test_cluster_show_cluster_not_found(self):
+        # Verify notfound exception(404) is raised.
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.get_obj,
+                               'clusters', 'c-01')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The cluster 'c-01' could "
+            "not be found.", str(message))

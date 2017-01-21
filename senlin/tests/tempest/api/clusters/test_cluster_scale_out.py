@@ -65,9 +65,34 @@ class TestClusterScaleOutNegativeBadRequest(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'clusters', self.cluster_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', self.cluster_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Value must be >= 0 for field 'count'.",
+                         str(message))
+
+
+class TestClusterScaleOutInvalidRequest(base.BaseSenlinAPITest):
+
+    @decorators.idempotent_id('7aa3fd0c-c092-4a54-8dae-3814492101b0')
+    def test_cluster_scale_out_invalid_count(self):
+        params = {
+            "scale_out": {
+                "count": "bad-count"
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'clusters', 'fake', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "invalid literal for int() with base 10: 'bad-count'",
+            str(message))
 
 
 class TestClusterScaleOutNegativeNotFound(base.BaseSenlinAPITest):
@@ -81,7 +106,12 @@ class TestClusterScaleOutNegativeNotFound(base.BaseSenlinAPITest):
         }
 
         # Verify notfound exception(404) is raised.
-        self.assertRaises(exceptions.NotFound,
-                          self.client.trigger_action, 'clusters',
-                          'b7038d95-204c-455f-a866-94dc535dd840',
-                          params)
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.trigger_action, 'clusters',
+                               'b7038d95-204c-455f-a866-94dc535dd840',
+                               params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The cluster 'b7038d95-204c-455f-a866-94dc535dd840' could "
+            "not be found.", str(message))
