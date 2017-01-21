@@ -1,0 +1,4 @@
+---
+features:
+  - Profile type list and policy type list now returns the support status
+    for each type since API micro-version 1.5.

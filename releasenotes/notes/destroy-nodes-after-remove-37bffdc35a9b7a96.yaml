@@ -1,0 +1,4 @@
+---
+features:
+  - A new, optional parameter "destroy_after_deletion" is added to the
+    cluster-del-nodes request since API micro-version 1.4.

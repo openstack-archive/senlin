@@ -1,0 +1,4 @@
+---
+fixes:
+  - Removed LB_STATUS_POLLING from health policy since LBaaS still cannot
+    provide reliable node status update.

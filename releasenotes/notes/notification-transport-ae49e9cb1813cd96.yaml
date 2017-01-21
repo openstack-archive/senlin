@@ -1,0 +1,4 @@
+---
+fixes:
+  - Fixed the notification logic so that it uses the proper transport obtained
+    from oslo.messaging.

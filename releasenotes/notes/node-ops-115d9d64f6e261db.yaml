@@ -1,0 +1,4 @@
+---
+features:
+  - New API "node-op" is introduced for triggering profile type specific
+    operations on a node. This is available since API micro-version 1.4.

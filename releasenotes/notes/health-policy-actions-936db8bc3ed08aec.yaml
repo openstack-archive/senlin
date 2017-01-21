@@ -1,0 +1,7 @@
+---
+features:
+  - Health policy recovery actions now contains a list of dictionaries instead
+    of a list of simple names. This is to make room for workflow invocations.
+fixes:
+  - The health policy recovery actions is designed to be a list but the current
+    implementation can only handle one action. This is now explicitly checked.

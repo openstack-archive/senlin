@@ -1,0 +1,4 @@
+---
+features:
+  - A new API "profile-type-ops" is introduced to expose the profile type
+    specific operations' schema to end users.
