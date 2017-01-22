@@ -2154,6 +2154,10 @@ class EngineService(service.Service):
                         "receiver.")
                 raise exception.BadRequest(msg=msg)
             action = req.action
+            invalid_actions = [consts.CLUSTER_CREATE]
+            if action in invalid_actions:
+                msg = _("Action name cannot be any of %s.") % invalid_actions
+                raise exception.BadRequest(msg=msg)
 
             # Check whether cluster identified by cluster_id does exist
             try:
