@@ -184,6 +184,14 @@ class HealthPolicy(base.Policy):
         :param cluster: The target cluster.
         :return: A tuple comprising execution result and policy data.
         """
+        p_type = cluster.rt['profile'].type
+        action_names = [a['name'] for a in self.recover_actions]
+        if p_type != 'os.nova.server':
+            if self.REBUILD in action_names:
+                err_msg = _("Recovery action REBUILD is only applicable to "
+                            "os.nova.server clusters.")
+                return False, err_msg
+
         kwargs = {
             'check_type': self.check_type,
             'interval': self.interval,
