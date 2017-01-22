@@ -189,3 +189,30 @@ class NeutronClient(base.DriverBase):
         res = self.conn.network.delete_port(
             port=port, ignore_missing=ignore_missing)
         return res
+
+    @sdk.translate_exception
+    def port_update(self, port, **attr):
+        res = self.conn.network.update_port(port, **attr)
+        return res
+
+    @sdk.translate_exception
+    def floatingip_find(self, name_or_id, ignore_missing=False):
+        res = self.conn.network.find_ip(
+            name_or_id, ignore_missing=ignore_missing)
+        return res
+
+    @sdk.translate_exception
+    def floatingip_create(self, **attr):
+        res = self.conn.network.create_ip(**attr)
+        return res
+
+    @sdk.translate_exception
+    def floatingip_delete(self, floating_ip, ignore_missing=True):
+        res = self.conn.network.delete_ip(
+            floating_ip, ignore_missing=ignore_missing)
+        return res
+
+    @sdk.translate_exception
+    def floatingip_update(self, floating_ip, **attr):
+        res = self.conn.network.update_ip(floating_ip, **attr)
+        return res

@@ -311,3 +311,32 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         self.nc.port_delete(port='foo')
         self.conn.network.delete_port.assert_called_once_with(
             port='foo', ignore_missing=True)
+
+    def test_port_update(self):
+        attr = {
+            'name': 'new_name'
+        }
+        self.nc.port_update('fake_port', **attr)
+        self.conn.network.update_port.assert_called_once_with(
+            'fake_port', **attr)
+
+    def test_floatingip_create(self):
+        attr = {
+            'network_id': 'foo'
+        }
+        self.nc.floatingip_create(**attr)
+        self.conn.network.create_ip.assert_called_once_with(
+            network_id='foo')
+
+    def test_floatingip_delete(self):
+        self.nc.floatingip_delete(floating_ip='foo')
+        self.conn.network.delete_ip.assert_called_once_with(
+            'foo', ignore_missing=True)
+
+    def test_floatingip_update(self):
+        attr = {
+            'port_id': 'fake_port'
+        }
+        self.nc.floatingip_update('fake_floatingip', **attr)
+        self.conn.network.update_ip.assert_called_once_with(
+            'fake_floatingip', **attr)
