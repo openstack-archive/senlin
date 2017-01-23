@@ -118,6 +118,64 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_get_old_version(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'get', True)
+        type_name = 'SimpleProfile'
+        req = self._get('/profile_types/%(type)s' % {'type': type_name},
+                        version='1.3')
+
+        engine_response = {
+            'name': type_name,
+            'schema': {
+                'Foo': {'type': 'String', 'required': False},
+                'Bar': {'type': 'Integer', 'required': False},
+            }
+        }
+
+        mock_call.return_value = engine_response
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        response = self.controller.get(req, type_name=type_name)
+
+        self.assertEqual(engine_response, response['profile_type'])
+        mock_parse.assert_called_once_with(
+            'ProfileTypeGetRequest', req, {'type_name': type_name})
+        mock_call.assert_called_once_with(
+            req.context, 'profile_type_get', mock.ANY)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_get_new_version(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'get', True)
+        type_name = 'SimpleProfile'
+        req = self._get('/profile_types/%(type)s' % {'type': type_name},
+                        version='1.5')
+
+        engine_response = {
+            'name': type_name,
+            'schema': {
+                'Foo': {'type': 'String', 'required': False},
+                'Bar': {'type': 'Integer', 'required': False},
+            },
+            'support_status': {"1.0": [{"since": "2016.04",
+                                        "status": "supported"}]}
+        }
+
+        mock_call.return_value = engine_response
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        response = self.controller.get(req, type_name=type_name)
+
+        self.assertEqual(engine_response, response['profile_type'])
+        mock_parse.assert_called_once_with('ProfileTypeGetRequest', req,
+                                           {'type_name': type_name})
+        mock_call.assert_called_once_with(
+            req.context, 'profile_type_get', mock.ANY)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_profile_type_get(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         type_name = 'SimpleProfile'

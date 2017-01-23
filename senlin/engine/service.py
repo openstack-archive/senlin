@@ -285,7 +285,8 @@ class EngineService(service.Service):
 
         return {
             'name': req.type_name,
-            'schema': data
+            'schema': data,
+            'support_status': profile.VERSIONS
         }
 
     @request_context

@@ -44,6 +44,11 @@ class ProfileTypeController(wsgi.Controller):
         obj = util.parse_request(
             'ProfileTypeGetRequest', req, {'type_name': type_name})
         content = self.rpc_client.call(req.context, 'profile_type_get', obj)
+        key = 'support_status'
+        if req.version_request <= vr.APIVersionRequest("1.4"):
+            # We return support_status from 1.5
+            if key in content:
+                content.pop(key)
         return {'profile_type': content}
 
     @wsgi.Controller.api_version('1.4')
