@@ -55,9 +55,13 @@ class TestNodeRecoverNegative(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.trigger_action,
-                          'nodes', 'node_id', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.trigger_action,
+                               'nodes', 'node_id', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("The params provided is not a map.",
+                         str(message))
 
     @decorators.idempotent_id('694e59ce-551e-4e77-a684-e77781583e12')
     def test_node_not_found(self):
@@ -66,7 +70,12 @@ class TestNodeRecoverNegative(base.BaseSenlinAPITest):
         }
 
         # Verify notfound exception(404) is raised.
-        self.assertRaises(exceptions.NotFound,
-                          self.client.trigger_action,
-                          'nodes', '694e59ce-551e-4e77-a684-e77781583e12',
-                          params)
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.trigger_action,
+                               'nodes', '694e59ce-551e-4e77-a684-e77781583e12',
+                               params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The node '694e59ce-551e-4e77-a684-e77781583e12' could "
+            "not be found.", str(message))

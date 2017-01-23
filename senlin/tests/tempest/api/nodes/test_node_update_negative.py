@@ -25,10 +25,15 @@ class TestNodeUpdateNegativeNotFound(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('608addc9-cbbe-45cd-a00a-495cae7db400')
     def test_node_update_node_not_found(self):
-        self.assertRaises(exceptions.NotFound,
-                          self.client.update_obj,
-                          'nodes', '608addc9-cbbe-45cd-a00a-495cae7db400',
-                          {'node': {'name': 'new-name'}})
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.update_obj, 'nodes',
+                               '608addc9-cbbe-45cd-a00a-495cae7db400',
+                               {'node': {'name': 'new-name'}})
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The node '608addc9-cbbe-45cd-a00a-495cae7db400' could "
+            "not be found.", str(message))
 
 
 class TestNodeUpdateNegativeProfileNotFound(base.BaseSenlinAPITest):
@@ -53,9 +58,14 @@ class TestNodeUpdateNegativeProfileNotFound(base.BaseSenlinAPITest):
             }
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.update_obj,
-                          'nodes', self.node_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.update_obj,
+                               'nodes', self.node_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The specified profile '3243dd63-1008-4181-849a-0058af975800' "
+            "could not be found.", str(message))
 
 
 class TestNodeUpdateNegativeProfileMultichoices(base.BaseSenlinAPITest):
@@ -87,9 +97,14 @@ class TestNodeUpdateNegativeProfileMultichoices(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.update_obj,
-                          'nodes', self.node_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.update_obj,
+                               'nodes', self.node_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Multiple results found matching the query criteria 'p-nova'. "
+            "Please be more specific.", str(message))
 
 
 class TestNodeUpdateNegativeProfileTypeUnmatch(base.BaseSenlinAPITest):
@@ -118,9 +133,14 @@ class TestNodeUpdateNegativeProfileTypeUnmatch(base.BaseSenlinAPITest):
         }
 
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.update_obj,
-                          'nodes', self.node_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.update_obj,
+                               'nodes', self.node_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Cannot update a node to a different profile type, "
+            "operation aborted.", str(message))
 
 
 class TestNodeUpdateNegativeNoPropertyUpdated(base.BaseSenlinAPITest):
@@ -143,6 +163,10 @@ class TestNodeUpdateNegativeNoPropertyUpdated(base.BaseSenlinAPITest):
             'node': {}
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.update_obj,
-                          'nodes', self.node_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.update_obj,
+                               'nodes', self.node_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("No property needs an update.",
+                         str(message))
