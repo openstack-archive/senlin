@@ -3,7 +3,7 @@
         {
             "name": "senlin.policy.affinity",
             "version": "1.0",
-            "support_status": [
+            "support_status": {
                 "1.0": [
                     {
                         "status": "SUPPORTED",
