@@ -11,6 +11,7 @@
 # under the License.
 
 import copy
+import uuid
 
 from oslo_config import cfg
 from oslo_serialization import jsonutils
@@ -61,7 +62,12 @@ class NonNegativeInteger(fields.FieldType):
 
     @staticmethod
     def coerce(obj, attr, value):
-        v = int(value)
+        try:
+            v = int(value)
+        except (TypeError, ValueError):
+            raise ValueError(_("The value for %(attr)s must be an integer: "
+                               "'%(value)s'.") %
+                             {'attr': attr, 'value': value})
         if v < 0:
             err = _("Value must be >= 0 for field '%s'.") % attr
             raise ValueError(err)
@@ -72,6 +78,31 @@ class NonNegativeInteger(fields.FieldType):
             'type': ['integer', 'string'],
             'minimum': 0
         }
+
+
+# TODO(anyone): currently we force check the UUID format for 'marker'
+# add worning message to other objects ues UUID.
+class UUID(fields.UUID):
+
+    _PATTERN = (r'^[a-fA-F0-9]{8}-?[a-fA-F0-9]{4}-?[a-fA-F0-9]{4}-?[a-fA-F0-9]'
+                r'{4}-?[a-fA-F0-9]{12}$')
+
+    @staticmethod
+    def coerce(obj, attr, value):
+        try:
+            uuid.UUID(str(value))
+        except Exception:
+            if attr == 'marker':
+                raise ValueError(_("The value for %(attr)s is not a valid "
+                                   "UUID: '%(value)s'.") %
+                                 {'attr': attr, 'value': value})
+            else:
+                pass
+
+        return str(value)
+
+    def get_schema(self):
+        return {'type': ['string'], 'pattern': self._PATTERN}
 
 
 # TODO(Qiming): remove this when oslo patch is released
@@ -277,15 +308,15 @@ class Sort(fields.String):
             s_key, _sep, s_dir = s.partition(':')
             err = None
             if not s_key:
-                err = _("missing sort key for '%s'.") % attr
+                err = _("Missing sort key for '%s'.") % attr
                 raise ValueError(err)
 
             if s_key not in self.valid_keys:
-                err = _("unsupported sort key '%(value)s' for '%(attr)s'."
+                err = _("Unsupported sort key '%(value)s' for '%(attr)s'."
                         ) % {'attr': attr, 'value': s_key}
 
             if s_dir and s_dir not in ('asc', 'desc'):
-                err = _("unsupported sort dir '%(value)s' for '%(attr)s'."
+                err = _("Unsupported sort dir '%(value)s' for '%(attr)s'."
                         ) % {'attr': attr, 'value': s_dir}
 
             if err:
@@ -455,6 +486,11 @@ class NotificationPhaseField(fields.BaseEnumField):
 class NameField(fields.AutoTypedField):
 
     AUTO_TYPE = Name()
+
+
+class UUIDField(fields.AutoTypedField):
+
+    AUTO_TYPE = UUID()
 
 
 class CapacityField(fields.AutoTypedField):

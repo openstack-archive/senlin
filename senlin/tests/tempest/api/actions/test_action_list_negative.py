@@ -37,8 +37,9 @@ class TestActionListNegativeBadRequest(base.BaseSenlinAPITest):
                                'actions', {'limit': 'not-int'})
 
         message = ex.resp_body['error']['message']
-        self.assertEqual("invalid literal for int() with base 10: 'not-int'",
-                         str(message))
+        self.assertEqual(
+            "The value for limit must be an integer: 'not-int'.",
+            str(message))
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('d13e3011-32b5-4f9d-bb57-3532c4c46228')
@@ -70,7 +71,7 @@ class TestActionListNegativeBadRequest(base.BaseSenlinAPITest):
                                'actions', {'sort': 'bad-sort'})
 
         message = ex.resp_body['error']['message']
-        self.assertEqual("unsupported sort key 'bad-sort' for 'sort'.",
+        self.assertEqual("Unsupported sort key 'bad-sort' for 'sort'.",
                          str(message))
 
     @test.attr(type=['negative'])
@@ -82,6 +83,5 @@ class TestActionListNegativeBadRequest(base.BaseSenlinAPITest):
 
         message = ex.resp_body['error']['message']
         self.assertEqual(
-            "u'bad-marker' does not match '^[a-fA-F0-9]{8}-?[a-fA-F0-9]"
-            "{4}-?[a-fA-F0-9]{4}-?[a-fA-F0-9]{4}-?[a-fA-F0-9]{12}$'",
+            "The value for marker is not a valid UUID: 'bad-marker'.",
             str(message))

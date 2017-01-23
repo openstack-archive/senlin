@@ -37,7 +37,7 @@ class TestClusterListNegativeBadRequest(base.BaseSenlinAPITest):
                                'clusters', {'limit': 'not-int'})
 
         message = ex.resp_body['error']['message']
-        self.assertEqual("invalid literal for int() with base 10: 'not-int'",
+        self.assertEqual("The value for limit must be an integer: 'not-int'.",
                          str(message))
 
     @test.attr(type=['negative'])
@@ -70,7 +70,7 @@ class TestClusterListNegativeBadRequest(base.BaseSenlinAPITest):
                                'clusters', {'sort': 'bad-sort'})
 
         message = ex.resp_body['error']['message']
-        self.assertEqual("unsupported sort key 'bad-sort' for 'sort'.",
+        self.assertEqual("Unsupported sort key 'bad-sort' for 'sort'.",
                          str(message))
 
     @test.attr(type=['negative'])
@@ -82,8 +82,7 @@ class TestClusterListNegativeBadRequest(base.BaseSenlinAPITest):
 
         message = ex.resp_body['error']['message']
         self.assertEqual(
-            "u'bad-marker' does not match '^[a-fA-F0-9]{8}-?[a-fA-F0-9]"
-            "{4}-?[a-fA-F0-9]{4}-?[a-fA-F0-9]{4}-?[a-fA-F0-9]{12}$'",
+            "The value for marker is not a valid UUID: 'bad-marker'.",
             str(message))
 
     @test.attr(type=['negative'])

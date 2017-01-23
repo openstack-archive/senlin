@@ -51,7 +51,7 @@ class TestClusterPolicyListNegativeBadRequest(base.BaseSenlinAPITest):
                                {'sort': 'bad-sort'})
 
         message = ex.resp_body['error']['message']
-        self.assertEqual("unsupported sort key 'bad-sort' for 'sort'.",
+        self.assertEqual("Unsupported sort key 'bad-sort' for 'sort'.",
                          str(message))
 
     @test.attr(type=['negative'])

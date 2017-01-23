@@ -86,7 +86,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         ex = self.assertRaises(ValueError,
                                orcp.ClusterPolicyListRequest,
                                **params)
-        self.assertEqual("unsupported sort key 'bad' for 'sort'.",
+        self.assertEqual("Unsupported sort key 'bad' for 'sort'.",
                          six.text_type(ex))
 
     @mock.patch.object(co.Cluster, 'find')

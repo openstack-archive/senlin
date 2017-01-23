@@ -569,18 +569,18 @@ class TestSort(TestField):
         ex = self.assertRaises(ValueError,
                                self.field.coerce,
                                obj, 'attr', ':asc')
-        self.assertEqual("missing sort key for 'attr'.", six.text_type(ex))
+        self.assertEqual("Missing sort key for 'attr'.", six.text_type(ex))
 
         ex = self.assertRaises(ValueError,
                                self.field.coerce,
                                obj, 'attr', 'foo:asc')
-        self.assertEqual("unsupported sort key 'foo' for 'attr'.",
+        self.assertEqual("Unsupported sort key 'foo' for 'attr'.",
                          six.text_type(ex))
 
         ex = self.assertRaises(ValueError,
                                self.field.coerce,
                                obj, 'attr', 'key1:down')
-        self.assertEqual("unsupported sort dir 'down' for 'attr'.",
+        self.assertEqual("Unsupported sort dir 'down' for 'attr'.",
                          six.text_type(ex))
 
     def test_get_schema(self):

@@ -115,7 +115,7 @@ class TestProfileList(test_base.SenlinTestCase):
             'name': ['p1'],
             'type': ['os.nova.server-1.0'],
             'limit': 2,
-            'marker': 'FAKE_ID',
+            'marker': 'd8d7dd1e-afd8-4921-83b2-c4ce73b1cb22',
             'sort': 'name:asc',
             'project_safe': False
         }
@@ -123,7 +123,8 @@ class TestProfileList(test_base.SenlinTestCase):
         self.assertEqual(['p1'], sot.name)
         self.assertEqual(['os.nova.server-1.0'], sot.type)
         self.assertEqual(2, sot.limit)
-        self.assertEqual('FAKE_ID', sot.marker)
+        self.assertEqual('d8d7dd1e-afd8-4921-83b2-c4ce73b1cb22',
+                         sot.marker)
         self.assertEqual('name:asc', sot.sort)
         self.assertFalse(sot.project_safe)
 

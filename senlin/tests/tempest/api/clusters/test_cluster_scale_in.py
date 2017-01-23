@@ -63,7 +63,7 @@ class TestClusterScaleInInvalidRequest(base.BaseSenlinAPITest):
 
         message = ex.resp_body['error']['message']
         self.assertEqual(
-            "invalid literal for int() with base 10: 'bad-count'",
+            "The value for count must be an integer: 'bad-count'.",
             str(message))
 
 
