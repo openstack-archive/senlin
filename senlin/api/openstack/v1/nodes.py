@@ -124,7 +124,7 @@ class NodeController(wsgi.Controller):
 
         this_action = list(body.keys())[0]
         if this_action not in self.SUPPORTED_ACTIONS:
-            msg = _('Unrecognized action "%s" specified') % this_action
+            msg = _("Unrecognized action '%s' specified") % this_action
             raise exc.HTTPBadRequest(msg)
 
         params = body.get(this_action)

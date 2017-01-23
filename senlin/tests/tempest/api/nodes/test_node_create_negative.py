@@ -32,24 +32,6 @@ class TestNodeCreateNegativeBadRequest(base.BaseSenlinAPITest):
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
     @test.attr(type=['negative'])
-    @decorators.idempotent_id('80a1bc9c-92bc-47a7-bb69-f51907398c0f')
-    def test_node_create_node_data_not_specified(self):
-        # node key is missing in request data
-        params = {
-            'noed': {
-                'profile_id': self.profile_id,
-                'cluster_id': self.cluster_id,
-                'metadata': {'k1': 'v1'},
-                'role': 'member',
-                'name': 'test-node'
-            }
-        }
-        # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.create_obj,
-                          'nodes', params)
-
-    @test.attr(type=['negative'])
     @decorators.idempotent_id('cbe7827a-60ca-42c0-99d2-38167cb4f46d')
     def test_node_create_profile_invalid(self):
         # Invalid profile_id is provided
@@ -63,9 +45,14 @@ class TestNodeCreateNegativeBadRequest(base.BaseSenlinAPITest):
             }
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.create_obj,
-                          'nodes', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'nodes', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The specified profile 'cbe7827a-60ca-42c0-99d2-38167cb4f46d' "
+            "could not be found.", str(message))
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('960cd427-2487-4c83-b679-1b5e1f9dd985')
@@ -81,9 +68,14 @@ class TestNodeCreateNegativeBadRequest(base.BaseSenlinAPITest):
             }
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.create_obj,
-                          'nodes', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'nodes', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The specified cluster '960cd427-2487-4c83-b679-1b5e1f9dd985' "
+            "could not be found.", str(message))
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('8ddf45a5-f45f-4cc8-813d-2bff75498576')
@@ -99,6 +91,81 @@ class TestNodeCreateNegativeBadRequest(base.BaseSenlinAPITest):
             }
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.create_obj,
-                          'nodes', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'nodes', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Node and cluster have different profile type, "
+            "operation aborted.", str(message))
+
+
+class TestNodeCreateNegativeInvalidRequest(base.BaseSenlinAPITest):
+
+    @decorators.idempotent_id('b109aa66-2a54-493e-8a07-1ea6f20e17ce')
+    def test_node_create_empty_param(self):
+        params = {}
+
+        # Verify badrequest exception(400) is raised.
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'nodes', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Request body missing 'node' key.",
+                         str(message))
+
+    @decorators.idempotent_id('080946ef-a9e0-46b4-add7-da70d05391d6')
+    def test_node_create_unsupported_param(self):
+        params = {
+            'node': {
+                'profile_id': 'fake_profile',
+                'name': 'fake_name',
+                'boo': 'foo'
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'nodes', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Additional properties are not allowed (u'boo' "
+            "was unexpected)", str(message))
+
+    @decorators.idempotent_id('0ac2a77e-082c-47d2-8156-92e7fb43689c')
+    def test_node_create_miss_name(self):
+        params = {
+            'node': {
+                'profile_id': 'fake_profile',
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'nodes', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("'name' is a required property",
+                         str(message))
+
+    @decorators.idempotent_id('39eb68ed-7808-4a73-85b1-83faca124546')
+    def test_node_create_miss_profile(self):
+        params = {
+            'node': {
+                'name': 'fake',
+            }
+        }
+
+        # Verify badrequest exception(400) is raised.
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'nodes', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("'profile_id' is a required property",
+                         str(message))
