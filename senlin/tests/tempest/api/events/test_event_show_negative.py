@@ -22,6 +22,11 @@ class TestEventShowNegativeNotFound(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('318ae275-ed68-48f5-9151-523085107112')
     def test_event_show_not_found(self):
-        self.assertRaises(exceptions.NotFound,
-                          self.client.get_obj,
-                          'events', '318ae275-ed68-48f5-9151-523085107112')
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.get_obj, 'events',
+                               '318ae275-ed68-48f5-9151-523085107112')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The event '318ae275-ed68-48f5-9151-523085107112' could "
+            "not be found.", str(message))
