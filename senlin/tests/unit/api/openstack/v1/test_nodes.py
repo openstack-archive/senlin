@@ -900,7 +900,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
         self.assertEqual(400, ex.code)
-        self.assertIn('Unrecognized action "eat" specified',
+        self.assertIn("Unrecognized action 'eat' specified",
                       six.text_type(ex))
 
     @mock.patch.object(util, 'parse_request')
