@@ -23,10 +23,28 @@ class TestProfileUpdateNegativeNotFound(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('5fe90195-aaed-4c1f-a73a-806b3f044bf8')
     def test_profile_update_profile_not_found(self):
-        self.assertRaises(exceptions.NotFound,
-                          self.client.update_obj,
-                          'profiles', '5fe90195-aaed-4c1f-a73a-806b3f044bf8',
-                          {'profile': {'name': 'new-name'}})
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.update_obj, 'profiles',
+                               '5fe90195-aaed-4c1f-a73a-806b3f044bf8',
+                               {'profile': {'name': 'new-name'}})
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The profile '5fe90195-aaed-4c1f-a73a-806b3f044bf8' "
+            "could not be found.", str(message))
+
+    @test.attr(type=['negative'])
+    @decorators.idempotent_id('5fe90195-aaed-4c1f-a73a-806b3f044bf8')
+    def test_profile_update_profile_no_param(self):
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.update_obj, 'profiles',
+                               '5fe90195-aaed-4c1f-a73a-806b3f044bf8',
+                               {})
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Malformed request data, missing 'profile' key in "
+            "request body.", str(message))
 
 
 class TestProfileUpdateNegativeBadRequest(base.BaseSenlinAPITest):
@@ -46,9 +64,13 @@ class TestProfileUpdateNegativeBadRequest(base.BaseSenlinAPITest):
             'profile': {}
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.update_obj,
-                          'profiles', self.profile_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.update_obj,
+                               'profiles', self.profile_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("No property needs an update.",
+                         str(message))
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('d2ca7de6-0069-48c9-b3de-ee975a2428dc')
@@ -61,6 +83,11 @@ class TestProfileUpdateNegativeBadRequest(base.BaseSenlinAPITest):
             }
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.update_obj,
-                          'profiles', self.profile_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.update_obj,
+                               'profiles', self.profile_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Additional properties are not allowed (u'spec' was "
+            "unexpected)", str(message))

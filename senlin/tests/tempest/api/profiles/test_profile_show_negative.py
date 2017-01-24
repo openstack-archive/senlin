@@ -23,9 +23,14 @@ class TestProfileShowNegativeNotFound(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('887aa1a5-e623-4b49-bdba-e62366b8b636')
     def test_profile_show_not_found(self):
-        self.assertRaises(exceptions.NotFound,
-                          self.client.get_obj,
-                          'profiles', '887aa1a5-e623-4b49-bdba-e62366b8b636')
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.get_obj, 'profiles',
+                               '887aa1a5-e623-4b49-bdba-e62366b8b636')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The profile '887aa1a5-e623-4b49-bdba-e62366b8b636' "
+            "could not be found.", str(message))
 
 
 class TestProfileShowNegativeBadRequest(base.BaseSenlinAPITest):
@@ -40,6 +45,11 @@ class TestProfileShowNegativeBadRequest(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('f0ea4ff1-81f9-49e1-ba1b-40964677f7da')
     def test_profile_show_multiple_choice(self):
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.get_obj,
-                          'profiles', 'p-01')
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.get_obj,
+                               'profiles', 'p-01')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Multiple results found matching the query criteria "
+            "'p-01'. Please be more specific.", str(message))
