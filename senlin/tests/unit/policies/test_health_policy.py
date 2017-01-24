@@ -52,7 +52,8 @@ class TestHealthPolicy(base.SenlinTestCase):
             }
         }
 
-        fake_profile = mock.Mock(type='os.nova.server')
+        fake_profile = mock.Mock(type_name='os.nova.server',
+                                 type='os.nova.server-1.0',)
         fake_node = mock.Mock(status='ACTIVE')
         fake_cluster = mock.Mock(id='CLUSTER_ID', nodes=[fake_node],
                                  rt={'profile': fake_profile})
@@ -110,7 +111,8 @@ class TestHealthPolicy(base.SenlinTestCase):
     @mock.patch.object(health_manager, 'register')
     def test_attach_failed_action_matching(self, mock_hm_reg):
 
-        fake_profile = mock.Mock(type='os.heat.stack')
+        fake_profile = mock.Mock(type_name='os.heat.stack-1.0',
+                                 type='os.heat.stack')
         fake_cluster = mock.Mock(id='CLUSTER_ID', rt={'profile': fake_profile})
 
         res, data = self.hp.attach(fake_cluster)
