@@ -22,7 +22,12 @@ class TestPolicyTypeShowNegative(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('13d70be3-5998-412b-ab75-da72a2f84c75')
     def test_policy_type_show_not_found(self):
-        self.assertRaises(exceptions.NotFound,
-                          self.client.get_obj,
-                          'policy_types',
-                          '13d70be3-5998-412b-ab75-da72a2f84c75')
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.get_obj,
+                               'policy-types',
+                               '13d70be3-5998-412b-ab75-da72a2f84c75')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The policy_type '13d70be3-5998-412b-ab75-da72a2f84c75' "
+            "could not be found.", str(message))

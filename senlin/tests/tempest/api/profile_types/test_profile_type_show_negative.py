@@ -22,7 +22,12 @@ class TestProfileTypeShowNegativeNotFound(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('58181c56-3166-4478-8981-e1d476065f2b')
     def test_profile_type_show_not_found(self):
-        self.assertRaises(exceptions.NotFound,
-                          self.client.get_obj,
-                          'profile_types',
-                          '58181c56-3166-4478-8981-e1d476065f2b')
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.get_obj,
+                               'profile-types',
+                               '58181c56-3166-4478-8981-e1d476065f2b')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The profile_type '58181c56-3166-4478-8981-e1d476065f2b' "
+            "could not be found.", str(message))
