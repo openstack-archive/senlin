@@ -19,6 +19,7 @@ from senlin.common import exception
 from senlin.common.i18n import _, _LE
 from senlin.common import utils
 from senlin.engine import cluster_policy as cpm
+from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
@@ -393,6 +394,12 @@ class Cluster(object):
             return True, _('No update is needed.')
 
         params = {'enabled': bool(enabled)}
+        # disable health check if necessary
+        if existing.type == 'senlin.policy.health':
+            if enabled is True:
+                health_manager.enable(self.id)
+            else:
+                health_manager.disable(self.id)
 
         cpo.ClusterPolicy.update(ctx, self.id, policy_id, params)
         return True, _('Policy updated.')

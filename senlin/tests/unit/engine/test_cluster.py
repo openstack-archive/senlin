@@ -19,6 +19,7 @@ from senlin.common import consts
 from senlin.common import exception
 from senlin.engine import cluster as cm
 from senlin.engine import cluster_policy as cpm
+from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
@@ -710,11 +711,14 @@ class TestCluster(base.SenlinTestCase):
 
         existing = mock.Mock()
         existing.id = POLICY_ID
+        existing.type = "senlin.poicy.foo"
         cluster.rt['policies'] = [existing]
         values = {
             'enabled': False
         }
+
         res, reason = cluster.update_policy(self.context, POLICY_ID, **values)
+
         self.assertTrue(res)
         self.assertEqual('Policy updated.', reason)
         mock_update.assert_called_once_with(
@@ -723,10 +727,11 @@ class TestCluster(base.SenlinTestCase):
     def test_update_policy_not_attached(self):
         cluster = cm.Cluster('test-cluster', 0, PROFILE_ID)
         cluster.rt['policies'] = []
+        values = {'enabled': False}
 
         # do it
-        values = {'enabled': False}
         res, reason = cluster.update_policy(self.context, POLICY_ID, **values)
+
         self.assertFalse(res)
         self.assertEqual('Policy not attached.', reason)
 
@@ -735,13 +740,45 @@ class TestCluster(base.SenlinTestCase):
         existing = mock.Mock()
         existing.id = POLICY_ID
         cluster.rt['policies'] = [existing]
+        values = {}
 
         # do it
-        values = {}
         res, reason = cluster.update_policy(self.context, POLICY_ID, **values)
 
         self.assertTrue(res)
         self.assertEqual('No update is needed.', reason)
+
+    @mock.patch.object(cpo.ClusterPolicy, "update")
+    @mock.patch.object(health_manager, "enable")
+    def test_update_policy_enable_health(self, mock_enable, mock_update):
+        cluster = cm.Cluster('test-cluster', 0, PROFILE_ID, id=CLUSTER_ID)
+        existing = mock.Mock(id=POLICY_ID, type="senlin.policy.health")
+        cluster.rt['policies'] = [existing]
+        values = {"enabled": True}
+
+        # do it
+        res, reason = cluster.update_policy(self.context, POLICY_ID, **values)
+
+        self.assertTrue(res)
+        mock_enable.assert_called_once_with(CLUSTER_ID)
+        mock_update.assert_called_once_with(
+            self.context, CLUSTER_ID, POLICY_ID, {'enabled': True})
+
+    @mock.patch.object(cpo.ClusterPolicy, "update")
+    @mock.patch.object(health_manager, "disable")
+    def test_update_policy_disable_health(self, mock_disable, mock_update):
+        cluster = cm.Cluster('test-cluster', 0, PROFILE_ID, id=CLUSTER_ID)
+        existing = mock.Mock(id=POLICY_ID, type="senlin.policy.health")
+        cluster.rt['policies'] = [existing]
+        values = {"enabled": False}
+
+        # do it
+        res, reason = cluster.update_policy(self.context, POLICY_ID, **values)
+
+        self.assertTrue(res)
+        mock_disable.assert_called_once_with(CLUSTER_ID)
+        mock_update.assert_called_once_with(
+            self.context, CLUSTER_ID, POLICY_ID, {'enabled': False})
 
     def test_get_region_distribution(self):
         cluster = cm.Cluster('test-cluster', 0, PROFILE_ID)
