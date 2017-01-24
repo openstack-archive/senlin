@@ -210,17 +210,17 @@ class HealthManager(service.Service):
         """Load the initial runtime registry with a DB scan."""
         db_registries = objects.HealthRegistry.claim(self.ctx, self.engine_id)
 
-        for cluster in db_registries:
+        for r in db_registries:
             entry = {
-                'cluster_id': cluster.cluster_id,
-                'check_type': cluster.check_type,
-                'interval': cluster.interval,
-                'params': cluster.params,
-                'enabled': True,
+                'cluster_id': r.cluster_id,
+                'check_type': r.check_type,
+                'interval': r.interval,
+                'params': r.params,
+                'enabled': r.enabled,
             }
 
             LOG.info(_LI("Loading cluster %s for health monitoring"),
-                     cluster.cluster_id)
+                     r.cluster_id)
 
             entry = self._start_check(entry)
             if entry:
@@ -293,19 +293,22 @@ class HealthManager(service.Service):
             if entry.get('cluster_id') == cluster_id:
                 self._stop_check(entry)
                 self.rt['registries'].pop(i)
-
         objects.HealthRegistry.delete(ctx, cluster_id)
 
     def enable_cluster(self, ctx, cluster_id, params=None):
         for c in self.rt['registries']:
             if c['cluster_id'] == cluster_id and not c['enabled']:
                 c['enabled'] = True
+                objects.HealthRegistry.update(ctx, cluster_id,
+                                              {'enabled': True})
                 self._start_check(c)
 
     def disable_cluster(self, ctx, cluster_id, params=None):
         for c in self.rt['registries']:
             if c['cluster_id'] == cluster_id and c['enabled']:
                 c['enabled'] = False
+                objects.HealthRegistry.update(ctx, cluster_id,
+                                              {'enabled': False})
                 self._stop_check(c)
 
 

@@ -250,11 +250,13 @@ class TestHealthManager(base.SenlinTestCase):
             mock.Mock(cluster_id='CID1',
                       check_type=consts.NODE_STATUS_POLLING,
                       interval=12,
-                      params={'k1': 'v1'}),
+                      params={'k1': 'v1'},
+                      enabled=True),
             mock.Mock(cluster_id='CID2',
                       check_type=consts.NODE_STATUS_POLLING,
                       interval=34,
-                      params={'k2': 'v2'}),
+                      params={'k2': 'v2'},
+                      enabled=False),
             mock.Mock(cluster_id='CID3',
                       check_type='UNKNOWN_CHECK_TYPE',
                       interval=56,
@@ -294,7 +296,7 @@ class TestHealthManager(base.SenlinTestCase):
                 'interval': 34,
                 'params': {'k2': 'v2'},
                 'timer': timer2,
-                'enabled': True,
+                'enabled': False,
             },
             self.hm.registries[1])
 
@@ -517,8 +519,9 @@ class TestHealthManager(base.SenlinTestCase):
         mock_stop.assert_called_once_with(registry)
         mock_delete.assert_called_once_with(ctx, 'CLUSTER_ID')
 
+    @mock.patch.object(hr.HealthRegistry, 'update')
     @mock.patch.object(health_manager.HealthManager, '_start_check')
-    def test_enable_cluster(self, mock_start):
+    def test_enable_cluster(self, mock_start, mock_update):
         ctx = mock.Mock()
         entry1 = {'cluster_id': 'FAKE_ID', 'enabled': False}
         entry2 = {'cluster_id': 'ANOTHER_CLUSTER', 'enabled': False}
@@ -529,9 +532,11 @@ class TestHealthManager(base.SenlinTestCase):
         mock_start.assert_called_once_with(entry1)
         self.assertIn({'cluster_id': 'FAKE_ID', 'enabled': True},
                       self.hm.rt['registries'])
+        mock_update.assert_called_once_with(ctx, 'FAKE_ID', {'enabled': True})
 
+    @mock.patch.object(hr.HealthRegistry, 'update')
     @mock.patch.object(health_manager.HealthManager, '_stop_check')
-    def test_disable_cluster(self, mock_stop):
+    def test_disable_cluster(self, mock_stop, mock_update):
         ctx = mock.Mock()
         entry1 = {'cluster_id': 'FAKE_ID', 'enabled': True}
         entry2 = {'cluster_id': 'ANOTHER_CLUSTER', 'enabled': True}
@@ -542,3 +547,4 @@ class TestHealthManager(base.SenlinTestCase):
         mock_stop.assert_called_once_with(entry1)
         self.assertIn({'cluster_id': 'FAKE_ID', 'enabled': False},
                       self.hm.rt['registries'])
+        mock_update.assert_called_once_with(ctx, 'FAKE_ID', {'enabled': False})
