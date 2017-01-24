@@ -31,9 +31,14 @@ class TestProfileDeleteNegativeConflict(base.BaseSenlinAPITest):
     @decorators.idempotent_id('8e5e8414-b757-41f4-b633-e0fa83d72ea2')
     def test_profile_delete_conflict(self):
         # Verify conflict exception(409) is raised.
-        self.assertRaises(exceptions.Conflict,
-                          self.client.delete_obj,
-                          'profiles', self.profile_id)
+        ex = self.assertRaises(exceptions.Conflict,
+                               self.client.delete_obj,
+                               'profiles', self.profile_id)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The profile '%s' cannot be deleted: still referenced by "
+            "some clusters and/or nodes." % self.profile_id, str(message))
 
 
 class TestProfileDeleteNegativeNotFound(base.BaseSenlinAPITest):
@@ -42,9 +47,14 @@ class TestProfileDeleteNegativeNotFound(base.BaseSenlinAPITest):
     @decorators.idempotent_id('b6e7911d-5f65-4ec6-a08b-b88809fe2b9e')
     def test_profile_delete_not_found(self):
         # Verify notfound exception(404) is raised.
-        self.assertRaises(exceptions.NotFound,
-                          self.client.delete_obj,
-                          'profiles', 'b6e7911d-5f65-4ec6-a08b-b88809fe2b9e')
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.delete_obj, 'profiles',
+                               'b6e7911d-5f65-4ec6-a08b-b88809fe2b9e')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The profile 'b6e7911d-5f65-4ec6-a08b-b88809fe2b9e' "
+            "could not be found.", str(message))
 
 
 class TestProfileDeleteNegativeBadRequest(base.BaseSenlinAPITest):
@@ -60,6 +70,11 @@ class TestProfileDeleteNegativeBadRequest(base.BaseSenlinAPITest):
     @decorators.idempotent_id('b6e7911d-5f65-4ec6-a08b-b88809fe2b9e')
     def test_profile_delete_multiple_choice(self):
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.delete_obj,
-                          'profiles', 'p-01')
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.delete_obj,
+                               'profiles', 'p-01')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Multiple results found matching the query criteria 'p-01'. "
+            "Please be more specific.", str(message))

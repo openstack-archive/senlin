@@ -30,9 +30,13 @@ class TestProfileCreateNegativeBadRequest(base.BaseSenlinAPITest):
             }
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.create_obj,
-                          'profiles', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'profiles', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Request body missing 'profile' key.",
+                         str(message))
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('c341f22d-833b-4676-8b66-e6cdb0b77abd')
@@ -43,23 +47,46 @@ class TestProfileCreateNegativeBadRequest(base.BaseSenlinAPITest):
             }
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.create_obj,
-                          'profiles', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'profiles', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("'name' is a required property", str(message))
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('5e644149-a7e6-4e93-8220-4a32f98d6e25')
     def test_profile_create_spec_not_specified(self):
         params = {
             'profile': {
-                'name': 'test-profile',
-                'spce': constants.spec_nova_server
+                'name': 'test-profile'
             }
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.create_obj,
-                          'profiles', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'profiles', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("'spec' is a required property", str(message))
+
+    @test.attr(type=['negative'])
+    @decorators.idempotent_id('e2da6964-2cd2-402e-9004-ca6b7e3e63f1')
+    def test_profile_create_invalid_param(self):
+        params = {
+            'profile': {
+                'boo': 'foo'
+            }
+        }
+        # Verify badrequest exception(400) is raised.
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'profiles', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Additional properties are not allowed (u'boo' was "
+            "unexpected)", str(message))
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('591f3670-3fec-4645-bae2-4f6dec28d70c')
@@ -69,13 +96,18 @@ class TestProfileCreateNegativeBadRequest(base.BaseSenlinAPITest):
         params = {
             'profile': {
                 'name': 'test-profile',
-                'spce': spec
+                'spec': spec
             }
         }
-        # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.create_obj,
-                          'profiles', params)
+        # Verify badrequest exception(404) is raised.
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.create_obj,
+                               'profiles', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The profile_type 'senlin.profile.bogus-1.0' could "
+            "not be found.", str(message))
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('66977f7a-5d30-481c-a5ec-a445e80a7c0f')
@@ -85,10 +117,15 @@ class TestProfileCreateNegativeBadRequest(base.BaseSenlinAPITest):
         params = {
             'profile': {
                 'name': 'test-profile',
-                'spce': spec
+                'spec': spec
             }
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.create_obj,
-                          'profiles', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'profiles', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Failed in creating profile test-profile: "
+            "Unrecognizable spec item 'bogus'", str(message))
