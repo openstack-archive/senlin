@@ -32,13 +32,13 @@ class TestPolicyTypeList(base.BaseSenlinAPITest):
 
     @utils.api_microversion('1.5')
     @decorators.idempotent_id('1900b22a-012d-41f0-85a2-8aa6b65ec2ca')
-    def test_profile_type_list_v1_5(self):
+    def test_policy_type_list_v1_5(self):
         res = self.client.list_objs('policy-types')
 
-        # Verify resp of profile type list API
+        # Verify resp of policy type list API
         self.assertEqual(200, res['status'])
         self.assertIsNotNone(res['body'])
-        profile_types = res['body']
+        policy_types = res['body']
         expected_names = [
             'senlin.policy.affinity',
             'senlin.policy.batch',
@@ -49,7 +49,7 @@ class TestPolicyTypeList(base.BaseSenlinAPITest):
             'senlin.policy.scaling',
             'senlin.policy.zone_placement',
         ]
-        for t in profile_types:
+        for t in policy_types:
             self.assertIn(t['name'], expected_names)
             self.assertIsNotNone(t['support_status'])
             self.assertIsNotNone(t['version'])
