@@ -491,10 +491,11 @@ class TestHealthManager(base.SenlinTestCase):
         self.hm.register_cluster(ctx,
                                  cluster_id='CLUSTER_ID',
                                  check_type=consts.NODE_STATUS_POLLING,
-                                 interval=50)
+                                 interval=50, enabled=True)
 
         mock_reg_create.assert_called_once_with(
-            ctx, 'CLUSTER_ID', consts.NODE_STATUS_POLLING, 50, {}, 'ENGINE_ID')
+            ctx, 'CLUSTER_ID', consts.NODE_STATUS_POLLING, 50, {}, 'ENGINE_ID',
+            enabled=True)
         mock_add_tm.assert_called_with(50, mock_poll, None, 'CLUSTER_ID')
         self.assertEqual(1, len(self.hm.registries))
 
