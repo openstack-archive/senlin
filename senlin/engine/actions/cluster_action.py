@@ -653,9 +653,9 @@ class ClusterAction(base.Action):
             if recover_action is not None:
                 # TODO(Qiming): Implement the support to action sequences
                 inputs['operation'] = recover_action[0]['name']
-                inputs['params'] = recover_action[0]['params']
+                inputs['params'] = recover_action[0]['params'] or {}
             if fencing is not None and 'COMPUTE' in fencing:
-                inputs['force'] = True
+                inputs['params']['force'] = True
 
         children = []
         for node in self.entity.nodes:

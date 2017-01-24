@@ -93,6 +93,7 @@ class ClusterRecoverTest(base.SenlinTestCase):
         action.data = {
             'health': {
                 'recover_action': [{'name': 'REBOOT', 'params': None}],
+                'fencing': ['COMPUTE'],
             }
         }
 
@@ -111,7 +112,7 @@ class ClusterRecoverTest(base.SenlinTestCase):
             action.context, 'NODE_1', 'NODE_RECOVER',
             name='node_recover_NODE_1',
             cause=consts.CAUSE_DERIVED,
-            inputs={'operation': 'REBOOT', 'params': None}
+            inputs={'operation': 'REBOOT', 'params': {'force': True}}
         )
         mock_dep.assert_called_once_with(action.context, ['NODE_RECOVER_ID'],
                                          'CLUSTER_ACTION_ID')
