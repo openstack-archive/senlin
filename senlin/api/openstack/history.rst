@@ -67,3 +67,5 @@ it can be used by both users and developers.
  - Added ``support_status`` to policy type list.
 
  - Added ``support_status`` to profile type show.
+
+ - Added ``support_status`` to policy type show.
