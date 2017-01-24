@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import six
 from tempest.lib import decorators
 from tempest.lib import exceptions
 
@@ -56,7 +55,10 @@ class TestNodeOperationNegative(base.BaseSenlinAPITest):
         ex = self.assertRaises(exceptions.BadRequest,
                                self.client.trigger_operation,
                                'nodes', 'FAKE_ID', params)
-        self.assertIn("API version '1.3' is not supported", six.text_type(ex))
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "API version '1.3' is not supported on this method.",
+            str(message))
 
     @utils.api_microversion('1.4')
     @decorators.idempotent_id('2b53a240-7ec6-4d92-bc2d-aaba2e63ee21')
@@ -66,7 +68,10 @@ class TestNodeOperationNegative(base.BaseSenlinAPITest):
         ex = self.assertRaises(exceptions.BadRequest,
                                self.client.trigger_operation,
                                'nodes', 'FAKE_ID', params)
-        self.assertIn('No operation specified', six.text_type(ex))
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("No operation specified.",
+                         str(message))
 
     @utils.api_microversion('1.4')
     @decorators.idempotent_id('b1c3a00b-e00c-4829-ba4a-475f8d34d1d9')
@@ -77,7 +82,9 @@ class TestNodeOperationNegative(base.BaseSenlinAPITest):
                                self.client.trigger_operation,
                                'nodes', 'FAKE_ID', params)
 
-        self.assertIn('Multiple operations specified', six.text_type(ex))
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Multiple operations specified.",
+                         str(message))
 
 
 class TestNodeOperationNegativeEngineFailure(base.BaseSenlinAPITest):
@@ -95,10 +102,15 @@ class TestNodeOperationNegativeEngineFailure(base.BaseSenlinAPITest):
     def test_node_not_found(self):
         params = {'dance': {}}
 
-        self.assertRaises(exceptions.NotFound,
-                          self.client.trigger_operation,
-                          'nodes', 'bbfbd693-4c46-4670-a9d3-5658a43eb0d5',
-                          params)
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.trigger_operation, 'nodes',
+                               'bbfbd693-4c46-4670-a9d3-5658a43eb0d5',
+                               params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The node 'bbfbd693-4c46-4670-a9d3-5658a43eb0d5' could "
+            "not be found.", str(message))
 
     @utils.api_microversion('1.4')
     @decorators.idempotent_id('5c0a23c0-9efe-4d04-9208-0f11da690e79')
@@ -109,8 +121,10 @@ class TestNodeOperationNegativeEngineFailure(base.BaseSenlinAPITest):
                                self.client.trigger_operation,
                                'nodes', self.node_id, params)
 
-        self.assertIn("The requested operation 'dance' is not supported",
-                      six.text_type(ex))
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The requested operation 'dance' is not supported by "
+            "the profile type 'os.nova.server-1.0'.", str(message))
 
     @utils.api_microversion('1.4')
     @decorators.idempotent_id('b00f1ef8-9ae6-4ed3-8622-566e7d0d3a75')
@@ -121,5 +135,7 @@ class TestNodeOperationNegativeEngineFailure(base.BaseSenlinAPITest):
                                self.client.trigger_operation,
                                'nodes', self.node_id, params)
 
-        self.assertIn("'Unknown' must be one of the allowed values",
-                      six.text_type(ex))
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "'Unknown' must be one of the allowed values: SOFT, HARD.",
+            str(message))

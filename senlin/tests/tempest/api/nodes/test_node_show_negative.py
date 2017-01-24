@@ -23,9 +23,14 @@ class TestNodeShowNegativeNotFound(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('f7a2ed7e-bf92-452b-bc76-37a8bbde2169')
     def test_node_show_not_found(self):
-        self.assertRaises(exceptions.NotFound,
-                          self.client.get_obj,
-                          'nodes', 'f7a2ed7e-bf92-452b-bc76-37a8bbde2169')
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.get_obj, 'nodes',
+                               'f7a2ed7e-bf92-452b-bc76-37a8bbde2169')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The node 'f7a2ed7e-bf92-452b-bc76-37a8bbde2169' could "
+            "not be found.", str(message))
 
 
 class TestNodeShowNegativeBadRequest(base.BaseSenlinAPITest):
@@ -42,6 +47,11 @@ class TestNodeShowNegativeBadRequest(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('49db9d49-76f1-47a7-9bd2-5e67311c453c')
     def test_node_show_multiple_choice(self):
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.get_obj,
-                          'nodes', 'n-01')
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.get_obj,
+                               'nodes', 'n-01')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Multiple results found matching the query criteria 'n-01'. "
+            "Please be more specific.", str(message))
