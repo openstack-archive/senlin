@@ -1,0 +1,4 @@
+---
+features:
+  - Docker container profile now supports operations like restart, pause and
+    unpause.

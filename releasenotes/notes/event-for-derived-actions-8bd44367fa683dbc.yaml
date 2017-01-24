@@ -1,0 +1,5 @@
+---
+features:
+  - A configuration option "exclude_derived_actions" is introduced into the
+    "dispatchers" group for controlling whether derived actions should lead
+    into event notifications and/or DB records.

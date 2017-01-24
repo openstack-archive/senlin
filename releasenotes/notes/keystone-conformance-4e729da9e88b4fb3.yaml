@@ -1,0 +1,5 @@
+---
+upgrade:
+  - For resources which has a user, a project and a domain property, the
+    lengths of these columns are increased from 32 chars to 64 chars for a
+    better conformance with Keystone.

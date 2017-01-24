@@ -1,0 +1,4 @@
+---
+fix:
+  - Receiver list now can be filtered by the user who created it. This didn't
+    work before.

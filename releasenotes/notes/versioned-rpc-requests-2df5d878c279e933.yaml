@@ -1,0 +1,5 @@
+---
+features:
+  - RPC requests from the API service to the engine service are fully managed
+    using versioned objects now. This will enable a smooth upgrade for the
+    service in future.

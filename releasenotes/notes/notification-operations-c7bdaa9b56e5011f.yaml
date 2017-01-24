@@ -1,0 +1,4 @@
+---
+fixes:
+  - The notifications of profile type specific operations were not properly
+    reporting the operation's name. This has been fixed.

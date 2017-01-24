@@ -1,0 +1,4 @@
+---
+other:
+  - The retrieval of some resources such as actions and policies are optimized
+    to avoid object instantiation.

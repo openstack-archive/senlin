@@ -1,0 +1,4 @@
+---
+critical:
+  - The problem of having clusters or nodes still locked by actions executed
+    by a dead engine is fixed.
