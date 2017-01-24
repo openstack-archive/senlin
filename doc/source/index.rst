@@ -154,6 +154,7 @@ in a collaborative way to meet the needs of complicated usage scenarios.
 
    developer/policies/affinity_v1
    developer/policies/deletion_v1
+   developer/policies/health_v1
    developer/policies/load_balance_v1
    developer/policies/region_v1
    developer/policies/scaling_v1
