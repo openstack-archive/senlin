@@ -2062,9 +2062,7 @@ class EngineService(service.Service):
                  action or an exception of `ResourceNotFound` if no matching
                  action could be found.
         """
-
         action = action_obj.Action.find(ctx, req.identity)
-
         return action.to_dict()
 
     @request_context

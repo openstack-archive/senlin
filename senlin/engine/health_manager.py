@@ -22,12 +22,15 @@ from oslo_log import log as logging
 import oslo_messaging as messaging
 from oslo_service import service
 from oslo_service import threadgroup
+import six
+import time
 
 from senlin.common import consts
 from senlin.common import context
 from senlin.common.i18n import _LI, _LW
 from senlin.common import messaging as rpc
 from senlin import objects
+from senlin.objects.requests import actions as vora
 from senlin.objects.requests import clusters as vorc
 from senlin.rpc import client as rpc_client
 
@@ -69,10 +72,12 @@ class NotificationEndpoint(object):
             node_id = meta.get('cluster_node_id')
             if node_id:
                 LOG.info(_LI("Requesting node recovery: %s"), node_id)
-                ctx_value = context.get_service_context(
+                ctx_dict = context.get_service_context(
                     project=self.project_id, user=payload['user_id'])
-                ctx = context.RequestContext(**ctx_value)
-                self.rpc.node_recover(ctx, node_id, params)
+                ctx = context.RequestContext.from_dict(ctx_dict)
+                req = objects.NodeRecoverRequest(identity=node_id,
+                                                 params=params)
+                self.rpc.call(ctx, 'node_recover', req)
 
     def warn(self, ctxt, publisher_id, event_type, payload, metadata):
         meta = payload.get('metadata', {})
@@ -125,23 +130,62 @@ class HealthManager(service.Service):
         """
         pass
 
-    def _poll_cluster(self, cluster_id):
+    def _wait_for_action(self, ctx, action_id, timeout):
+        done = False
+        total_sleep = 0
+        req = vora.ActionGetRequest(identity=action_id)
+        while total_sleep < timeout:
+            action = self.rpc_client.call(ctx, 'action_get', req)
+            if action['status'] in ['SUCCEEDED', 'FAILED', 'CANCELLED']:
+                if action['status'] == 'SUCCEEDED':
+                    done = True
+                break
+            time.sleep(2)
+            total_sleep += 2
+
+        if done:
+            return True, ""
+        elif total_sleep > timeout:
+            return False, "Timeout while polling cluster status"
+        else:
+            return False, "Cluster check action failed"
+
+    def _poll_cluster(self, cluster_id, timeout):
         """Routine to be executed for polling cluster status.
 
         :param cluster_id: The UUID of the cluster to be checked.
+        :param timeout: The maximum number of seconds to wait.
         :returns: Nothing.
         """
-        req = vorc.ClusterCheckRequest(identity=cluster_id)
-
         cluster = objects.Cluster.get(self.ctx, cluster_id, project_safe=False)
         if not cluster:
             LOG.warning(_LW("Cluster (%s) is not found."), cluster_id)
             return
 
-        ctx = context.get_service_context(user=cluster.user,
-                                          project=cluster.project)
-        ctx = context.RequestContext.from_dict(ctx)
-        self.rpc_client.call(ctx, 'cluster_check', req)
+        ctx_dict = context.get_service_context(user=cluster.user,
+                                               project=cluster.project)
+        ctx = context.RequestContext.from_dict(ctx_dict)
+        try:
+            req = vorc.ClusterCheckRequest(identity=cluster_id)
+            action = self.rpc_client.call(ctx, 'cluster_check', req)
+        except Exception as ex:
+            LOG.warning(_LW("Failed in triggering RPC for '%(c)s': %(r)s"),
+                        {'c': cluster_id, 'r': six.text_type(ex)})
+            return
+
+        # wait for action to complete
+        res, reason = self._wait_for_action(ctx, action['action'], timeout)
+        if not res:
+            LOG.warning(_LW("%s"), reason)
+            return
+
+        # loop through nodes to trigger recovery
+        nodes = objects.Node.get_all(ctx, cluster_id=cluster_id)
+        for node in nodes:
+            if node.status != 'ACTIVE':
+                LOG.info(_LI("Requesting node recovery: %s"), node.id)
+                req = objects.NodeRecoverRequest(identity=node.id)
+                self.rpc_client.call(ctx, 'node_recover', req)
 
     def _add_listener(self, cluster_id):
         """Routine to be executed for adding cluster listener.
@@ -167,9 +211,10 @@ class HealthManager(service.Service):
         :returns: An updated registry entry record.
         """
         if entry['check_type'] == consts.NODE_STATUS_POLLING:
+            # TODO(anyone): Improve this to use one-shot flavor of timer
             interval = min(entry['interval'], cfg.CONF.periodic_interval_max)
             timer = self.TG.add_timer(interval, self._poll_cluster, None,
-                                      entry['cluster_id'])
+                                      entry['cluster_id'], interval)
             entry['timer'] = timer
         elif entry['check_type'] == consts.VM_LIFECYCLE_EVENTS:
             LOG.info(_LI("Start listening events for cluster (%s)."),

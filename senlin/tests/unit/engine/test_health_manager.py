@@ -21,7 +21,8 @@ from senlin.common import messaging
 from senlin.engine import health_manager
 from senlin.objects import cluster as obj_cluster
 from senlin.objects import health_registry as hr
-from senlin.objects.requests import clusters as vorc
+from senlin.objects import node as obj_node
+from senlin.objects.requests import nodes as vorn
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.common import base
 
@@ -56,7 +57,7 @@ class TestNotificationEndpoint(base.SenlinTestCase):
         self.assertEqual('PROJECT', obj.project_id)
         self.assertEqual('CLUSTER', obj.cluster_id)
 
-    @mock.patch('senlin.common.context.RequestContext')
+    @mock.patch.object(context.RequestContext, 'from_dict')
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info(self, mock_rpc, mock_context, mock_filter):
         x_rpc = mock_rpc.return_value
@@ -80,16 +81,18 @@ class TestNotificationEndpoint(base.SenlinTestCase):
                             payload, metadata)
 
         self.assertIsNone(res)
-        x_rpc.node_recover.assert_called_once_with(
-            call_ctx,
-            'FAKE_NODE',
-            {
-                'event': 'DELETE',
-                'state': 'shutoff',
-                'instance_id': 'PHYSICAL_ID',
-                'timestamp': 'TIMESTAMP',
-                'publisher': 'PUBLISHER',
-            })
+        x_rpc.call.assert_called_once_with(call_ctx, 'node_recover', mock.ANY)
+        req = x_rpc.call.call_args[0][2]
+        self.assertIsInstance(req, vorn.NodeRecoverRequest)
+        self.assertEqual('FAKE_NODE', req.identity)
+        expected_params = {
+            'event': 'DELETE',
+            'state': 'shutoff',
+            'instance_id': 'PHYSICAL_ID',
+            'timestamp': 'TIMESTAMP',
+            'publisher': 'PUBLISHER',
+        }
+        self.assertEqual(expected_params, req.params)
 
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info_no_metadata(self, mock_rpc, mock_filter):
@@ -161,7 +164,7 @@ class TestNotificationEndpoint(base.SenlinTestCase):
         self.assertIsNone(res)
         self.assertEqual(0, x_rpc.node_recover.call_count)
 
-    @mock.patch('senlin.common.context.RequestContext')
+    @mock.patch.object(context.RequestContext, 'from_dict')
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info_default_values(self, mock_rpc, mock_context, mock_filter):
         x_rpc = mock_rpc.return_value
@@ -182,16 +185,18 @@ class TestNotificationEndpoint(base.SenlinTestCase):
                             payload, metadata)
 
         self.assertIsNone(res)
-        x_rpc.node_recover.assert_called_once_with(
-            call_ctx,
-            'NODE_ID',
-            {
-                'event': 'DELETE',
-                'state': 'Unknown',
-                'instance_id': 'Unknown',
-                'timestamp': 'TIMESTAMP',
-                'publisher': 'PUBLISHER',
-            })
+        x_rpc.call.assert_called_once_with(call_ctx, 'node_recover', mock.ANY)
+        req = x_rpc.call.call_args[0][2]
+        self.assertIsInstance(req, vorn.NodeRecoverRequest)
+        self.assertEqual('NODE_ID', req.identity)
+        expected_params = {
+            'event': 'DELETE',
+            'state': 'Unknown',
+            'instance_id': 'Unknown',
+            'timestamp': 'TIMESTAMP',
+            'publisher': 'PUBLISHER',
+        }
+        self.assertEqual(expected_params, req.params)
 
 
 @mock.patch('senlin.engine.health_manager.NotificationEndpoint')
@@ -274,8 +279,8 @@ class TestHealthManager(base.SenlinTestCase):
         # assertions
         mock_claim.assert_called_once_with(self.hm.ctx, self.hm.engine_id)
         mock_calls = [
-            mock.call(12, self.hm._poll_cluster, None, 'CID1'),
-            mock.call(34, self.hm._poll_cluster, None, 'CID2')
+            mock.call(12, self.hm._poll_cluster, None, 'CID1', 12),
+            mock.call(34, self.hm._poll_cluster, None, 'CID2', 34)
         ]
         mock_add_timer.assert_has_calls(mock_calls)
         self.assertEqual(2, len(self.hm.registries))
@@ -300,38 +305,114 @@ class TestHealthManager(base.SenlinTestCase):
             },
             self.hm.registries[1])
 
+    @mock.patch.object(obj_node.Node, 'get_all')
+    @mock.patch.object(health_manager.HealthManager, "_wait_for_action")
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(context, 'get_service_context')
     @mock.patch.object(context.RequestContext, 'from_dict')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__poll_cluster(self, mock_check, mock_ctx, mock_sctx, mock_get):
+    def test__poll_cluster(self, mock_rpc, mock_ctx, mock_sctx, mock_get,
+                           mock_wait, mock_nodes):
         x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
         mock_get.return_value = x_cluster
         mock_sctx.return_value = {'user': 'USER_ID',
                                   'project': 'PROJECT_ID', }
         service_ctx = mock_sctx.return_value
-        mock_ctx.return_value = mock.Mock(user=service_ctx['user'],
-                                          project=service_ctx['project'])
-        ctx = mock_ctx.return_value
-        self.hm._poll_cluster('CLUSTER_ID')
+        ctx = mock.Mock(user=service_ctx['user'],
+                        project=service_ctx['project'])
+        mock_ctx.return_value = ctx
+        mock_wait.return_value = (True, "")
+        x_node = mock.Mock(id='FAKE_NODE', status="ERROR")
+        mock_nodes.return_value = [x_node]
+        x_action_check = {'action': 'CHECK_ID'}
+        x_action_recover = {'action': 'RECOVER_ID'}
+        mock_rpc.side_effect = [x_action_check, x_action_recover]
 
+        # do it
+        self.hm._poll_cluster('CLUSTER_ID', 456)
+
+        mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
+                                         project_safe=False)
         mock_sctx.assert_called_once_with(user=x_cluster.user,
                                           project=x_cluster.project)
         mock_ctx.assert_called_once_with(service_ctx)
         self.assertEqual('USER_ID', ctx.user)
         self.assertEqual('PROJECT_ID', ctx.project)
-        self.assertEqual(1, mock_check.call_count)
-        request = mock_check.call_args[0][2]
-        self.assertIsInstance(request, vorc.ClusterCheckRequest)
-        self.assertEqual('CLUSTER_ID', request.identity)
+        mock_rpc.assert_has_calls([
+            mock.call(ctx, 'cluster_check', mock.ANY),
+            mock.call(ctx, 'node_recover', mock.ANY)
+        ])
+        mock_wait.assert_called_once_with(ctx, "CHECK_ID", 456)
 
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test__poll_cluster_not_found(self, mock_check, mock_get):
         mock_get.return_value = None
-        self.hm._poll_cluster('CLUSTER_ID')
+
+        # do it
+        self.hm._poll_cluster('CLUSTER_ID', 123)
 
         self.assertEqual(0, mock_check.call_count)
+
+    @mock.patch.object(context, 'get_service_context')
+    @mock.patch.object(context.RequestContext, 'from_dict')
+    @mock.patch.object(obj_cluster.Cluster, 'get')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test__poll_cluster_failed_check_rpc(self, mock_check, mock_get,
+                                            mock_ctx, mock_sctx):
+        x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
+        mock_get.return_value = x_cluster
+        mock_sctx.return_value = {'user': 'USER_ID',
+                                  'project': 'PROJECT_ID', }
+        service_ctx = mock_sctx.return_value
+        ctx = mock.Mock(user=service_ctx['user'],
+                        project=service_ctx['project'])
+        mock_ctx.return_value = ctx
+        mock_check.side_effect = Exception("boom")
+
+        # do it
+        self.hm._poll_cluster('CLUSTER_ID', 123)
+
+        mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
+                                         project_safe=False)
+        mock_sctx.assert_called_once_with(user=x_cluster.user,
+                                          project=x_cluster.project)
+        mock_ctx.assert_called_once_with(service_ctx)
+        self.assertEqual('USER_ID', ctx.user)
+        self.assertEqual('PROJECT_ID', ctx.project)
+        mock_check.assert_called_once_with(ctx, 'cluster_check', mock.ANY)
+
+    @mock.patch.object(health_manager.HealthManager, "_wait_for_action")
+    @mock.patch.object(obj_cluster.Cluster, 'get')
+    @mock.patch.object(context, 'get_service_context')
+    @mock.patch.object(context.RequestContext, 'from_dict')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test__poll_cluster_failed_wait(self, mock_rpc, mock_ctx, mock_sctx,
+                                       mock_get, mock_wait):
+        x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
+        mock_get.return_value = x_cluster
+        mock_sctx.return_value = {'user': 'USER_ID',
+                                  'project': 'PROJECT_ID', }
+        service_ctx = mock_sctx.return_value
+        ctx = mock.Mock(user=service_ctx['user'],
+                        project=service_ctx['project'])
+        mock_ctx.return_value = ctx
+        mock_wait.return_value = (False, "bad")
+        x_action_check = {'action': 'CHECK_ID'}
+        mock_rpc.return_value = x_action_check
+
+        # do it
+        self.hm._poll_cluster('CLUSTER_ID', 456)
+
+        mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
+                                         project_safe=False)
+        mock_sctx.assert_called_once_with(user=x_cluster.user,
+                                          project=x_cluster.project)
+        mock_ctx.assert_called_once_with(service_ctx)
+        self.assertEqual('USER_ID', ctx.user)
+        self.assertEqual('PROJECT_ID', ctx.project)
+        mock_rpc.assert_called_once_with(ctx, 'cluster_check', mock.ANY)
+        mock_wait.assert_called_once_with(ctx, "CHECK_ID", 456)
 
     @mock.patch.object(obj_cluster.Cluster, 'get')
     def test__add_listener(self, mock_get):
@@ -385,7 +466,7 @@ class TestHealthManager(base.SenlinTestCase):
         expected['timer'] = x_timer
         self.assertEqual(expected, res)
         mock_add_timer.assert_called_once_with(12, self.hm._poll_cluster, None,
-                                               'CCID')
+                                               'CCID', 12)
 
     def test__start_check_for_listening(self):
         x_listener = mock.Mock()
@@ -496,7 +577,7 @@ class TestHealthManager(base.SenlinTestCase):
         mock_reg_create.assert_called_once_with(
             ctx, 'CLUSTER_ID', consts.NODE_STATUS_POLLING, 50, {}, 'ENGINE_ID',
             enabled=True)
-        mock_add_tm.assert_called_with(50, mock_poll, None, 'CLUSTER_ID')
+        mock_add_tm.assert_called_with(50, mock_poll, None, 'CLUSTER_ID', 50)
         self.assertEqual(1, len(self.hm.registries))
 
     @mock.patch.object(health_manager.HealthManager, '_stop_check')
