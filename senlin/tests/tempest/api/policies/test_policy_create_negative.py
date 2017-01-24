@@ -25,14 +25,17 @@ class TestPolicyCreateNegativeBadRequest(base.BaseSenlinAPITest):
     @decorators.idempotent_id('3fea4aa9-6dee-4202-8611-cf2d008a4d42')
     def test_policy_create_policy_data_not_specified(self):
         params = {
-            'poliyc': {
+            'policy': {
                 'name': 'test-policy'
             }
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.create_obj,
-                          'policies', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'policies', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("'spec' is a required property", str(message))
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('4a4d6c83-f0fa-4c9e-914b-d89478903d95')
@@ -43,23 +46,30 @@ class TestPolicyCreateNegativeBadRequest(base.BaseSenlinAPITest):
             }
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.create_obj,
-                          'policies', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'policies', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("'name' is a required property", str(message))
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('b898de6c-996a-4bc3-bdef-6490e62fb3b0')
-    def test_policy_create_spec_not_specified(self):
+    def test_policy_create_invalid_param(self):
         params = {
             'policy': {
-                'name': 'test-policy',
-                'spce': constants.spec_scaling_policy
+                'boo': 'foo'
             }
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.create_obj,
-                          'policies', params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.create_obj,
+                               'policies', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Additional properties are not allowed (u'boo' was "
+            "unexpected)", str(message))
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('1c0ed145-bca6-4e53-b222-44fc6978eb1f')
@@ -69,13 +79,18 @@ class TestPolicyCreateNegativeBadRequest(base.BaseSenlinAPITest):
         params = {
             'policy': {
                 'name': 'test-policy',
-                'spce': spec
+                'spec': spec
             }
         }
-        # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.create_obj,
-                          'policies', params)
+        # Verify badrequest exception(404) is raised.
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.create_obj,
+                               'policies', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The policy_type 'senlin.policy.bogus-1.0' could "
+            "not be found.", str(message))
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('f55dc7eb-9863-49c2-b001-368d2057c53c')
@@ -85,10 +100,14 @@ class TestPolicyCreateNegativeBadRequest(base.BaseSenlinAPITest):
         params = {
             'policy': {
                 'name': 'test-policy',
-                'spce': spec
+                'spec': spec
             }
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.create_obj,
-                          'policies', params)
+        ex = self.assertRaises(exceptions.ServerFault,
+                               self.client.create_obj,
+                               'policies', params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual("Unrecognizable spec item 'bogus'",
+                         str(message))
