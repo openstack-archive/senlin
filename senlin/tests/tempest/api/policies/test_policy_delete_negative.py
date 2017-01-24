@@ -39,9 +39,14 @@ class TestPolicyDeleteNegativeConflict(base.BaseSenlinAPITest):
     @decorators.idempotent_id('b8b8fca8-962f-4cad-bfca-76683df7b617')
     def test_policy_delete_conflict(self):
         # Verify conflict exception(409) is raised.
-        self.assertRaises(exceptions.Conflict,
-                          self.client.delete_obj,
-                          'policies', self.policy_id)
+        ex = self.assertRaises(exceptions.Conflict,
+                               self.client.delete_obj,
+                               'policies', self.policy_id)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The policy '%s' cannot be deleted: still attached to some "
+            "clusters." % self.policy_id, str(message))
 
 
 class TestPolicyDeleteNegativeNotFound(base.BaseSenlinAPITest):
@@ -50,9 +55,14 @@ class TestPolicyDeleteNegativeNotFound(base.BaseSenlinAPITest):
     @decorators.idempotent_id('5591416f-4646-46c2-83b4-231e72aa4bfe')
     def test_policy_delete_not_found(self):
         # Verify notfound exception(404) is raised.
-        self.assertRaises(exceptions.NotFound,
-                          self.client.delete_obj,
-                          'policies', '5591416f-4646-46c2-83b4-231e72aa4bfe')
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.delete_obj, 'policies',
+                               '5591416f-4646-46c2-83b4-231e72aa4bfe')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The policy '5591416f-4646-46c2-83b4-231e72aa4bfe' "
+            "could not be found.", str(message))
 
 
 class TestPolicyDeleteNegativeBadRequest(base.BaseSenlinAPITest):
@@ -68,6 +78,11 @@ class TestPolicyDeleteNegativeBadRequest(base.BaseSenlinAPITest):
     @decorators.idempotent_id('d6f35043-2db5-49ff-8bc4-ba14a652f748')
     def test_policy_delete_multiple_choice(self):
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.delete_obj,
-                          'policies', 'p-01')
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.delete_obj,
+                               'policies', 'p-01')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Multiple results found matching the query criteria 'p-01'. "
+            "Please be more specific.", str(message))
