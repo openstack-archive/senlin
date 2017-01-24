@@ -46,6 +46,20 @@ class DBAPIRegistryTest(base.SenlinTestCase):
         self.assertEqual(registry.params, ret_registry.params)
         self.assertEqual(registry.engine_id, ret_registry.engine_id)
 
+    def test_registry_update(self):
+        self._create_registry(cluster_id='FAKE_ID',
+                              check_type='NODE_STATUS_POLLING',
+                              interval=60,
+                              params={},
+                              engine_id='DEAD_ENGINE')
+
+        registries = db_api.registry_claim(self.ctx, engine_id='ENGINE_ID')
+        self.assertTrue(registries[0].enabled)
+
+        db_api.registry_update(self.ctx, 'FAKE_ID', {'enabled': False})
+        registries = db_api.registry_claim(self.ctx, engine_id='NEW_ENGINE_ID')
+        self.assertFalse(registries[0].enabled)
+
     def test_registry_claim(self):
         for i in range(2):
             cluster_id = 'cluster-%s' % i

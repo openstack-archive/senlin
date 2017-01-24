@@ -167,6 +167,7 @@ class HealthRegistry(BASE, models.ModelBase):
     check_type = Column('check_type', String(255))
     interval = Column(Integer)
     params = Column(types.Dict)
+    enabled = Column(Boolean)
     engine_id = Column('engine_id', String(36))
 
 

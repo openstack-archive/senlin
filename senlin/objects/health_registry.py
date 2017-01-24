@@ -28,14 +28,20 @@ class HealthRegistry(base.SenlinObject, base.VersionedObjectDictCompat):
         'interval': fields.IntegerField(nullable=True),
         'params': fields.JsonField(nullable=True),
         'engine_id': fields.UUIDField(),
+        'enabled': fields.BooleanField(),
     }
 
     @classmethod
     def create(cls, context, cluster_id, check_type, interval, params,
-               engine_id):
+               engine_id, enabled=True):
         obj = db_api.registry_create(context, cluster_id, check_type,
-                                     interval, params, engine_id)
-        return cls._from_db_object(context, cls(context), obj)
+                                     interval, params, engine_id,
+                                     enabled=enabled)
+        return cls._from_db_object(context, cls(), obj)
+
+    @classmethod
+    def update(cls, context, cluster_id, values):
+        db_api.registry_update(context, cluster_id, values)
 
     @classmethod
     def claim(cls, context, engine_id):

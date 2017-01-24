@@ -455,6 +455,10 @@ def registry_create(context, cluster_id, check_type, interval, params,
                                 params, engine_id)
 
 
+def registry_update(context, cluster_id, values):
+    return IMPL.registry_update(context, cluster_id, values)
+
+
 def registry_delete(context, cluster_id):
     return IMPL.registry_delete(context, cluster_id)
 
