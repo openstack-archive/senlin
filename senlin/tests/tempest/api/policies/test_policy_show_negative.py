@@ -23,9 +23,14 @@ class TestPolicyShowNegativeNotFound(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('f1615466-7fca-4670-8c9a-66cb4bb24e54')
     def test_policy_show_not_found(self):
-        self.assertRaises(exceptions.NotFound,
-                          self.client.get_obj,
-                          'policies', 'f1615466-7fca-4670-8c9a-66cb4bb24e54')
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.get_obj, 'policies',
+                               'f1615466-7fca-4670-8c9a-66cb4bb24e54')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The policy 'f1615466-7fca-4670-8c9a-66cb4bb24e54' "
+            "could not be found.", str(message))
 
 
 class TestPolicyShowNegativeBadRequest(base.BaseSenlinAPITest):
@@ -40,6 +45,11 @@ class TestPolicyShowNegativeBadRequest(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('c2eadbae-29b7-4d12-a407-259f387286f5')
     def test_policy_show_multiple_choice(self):
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.get_obj,
-                          'policies', 'p-01')
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.get_obj,
+                               'policies', 'p-01')
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Multiple results found matching the query criteria 'p-01'. "
+            "Please be more specific.", str(message))

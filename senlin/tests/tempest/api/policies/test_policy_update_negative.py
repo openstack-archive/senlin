@@ -23,10 +23,41 @@ class TestPolicyUpdateNegativeNotFound(base.BaseSenlinAPITest):
     @test.attr(type=['negative'])
     @decorators.idempotent_id('5df90d82-9889-4c6f-824c-30272bcfa767')
     def test_policy_update_policy_not_found(self):
-        self.assertRaises(exceptions.NotFound,
-                          self.client.update_obj,
-                          'policies', '5df90d82-9889-4c6f-824c-30272bcfa767',
-                          {'policy': {'name': 'new-name'}})
+        ex = self.assertRaises(exceptions.NotFound,
+                               self.client.update_obj, 'policies',
+                               '5df90d82-9889-4c6f-824c-30272bcfa767',
+                               {'policy': {'name': 'new-name'}})
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "The policy '5df90d82-9889-4c6f-824c-30272bcfa767' "
+            "could not be found.", str(message))
+
+    @test.attr(type=['negative'])
+    @decorators.idempotent_id('29414add-9cba-4b72-a7bb-36718671dcab')
+    def test_policy_update_policy_invalid_param(self):
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.update_obj, 'policies',
+                               '5df90d82-9889-4c6f-824c-30272bcfa767',
+                               {'policy': {'boo': 'foo'}})
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Additional properties are not allowed (u'boo' was "
+            "unexpected)", str(message))
+
+    @test.attr(type=['negative'])
+    @decorators.idempotent_id('bf26ed1e-1d26-4472-b4c8-0bcca1c0a838')
+    def test_policy_update_policy_empty_param(self):
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.update_obj, 'policies',
+                               '5df90d82-9889-4c6f-824c-30272bcfa767',
+                               {})
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Malformed request data, missing 'policy' key in "
+            "request body.", str(message))
 
 
 class TestPolicyUpdateNegativeBadRequest(base.BaseSenlinAPITest):
@@ -46,9 +77,13 @@ class TestPolicyUpdateNegativeBadRequest(base.BaseSenlinAPITest):
             'policy': {}
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.update_obj,
-                          'policies', self.policy_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.update_obj,
+                               'policies', self.policy_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "'name' is a required property", str(message))
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('d2ca7de6-0069-48c9-b3de-ee975a2428dc')
@@ -63,6 +98,11 @@ class TestPolicyUpdateNegativeBadRequest(base.BaseSenlinAPITest):
             }
         }
         # Verify badrequest exception(400) is raised.
-        self.assertRaises(exceptions.BadRequest,
-                          self.client.update_obj,
-                          'policies', self.policy_id, params)
+        ex = self.assertRaises(exceptions.BadRequest,
+                               self.client.update_obj,
+                               'policies', self.policy_id, params)
+
+        message = ex.resp_body['error']['message']
+        self.assertEqual(
+            "Additional properties are not allowed (u'spec' was "
+            "unexpected)", str(message))
