@@ -183,7 +183,7 @@ class HealthPolicy(base.Policy):
         :param cluster: The target cluster.
         :return: A tuple comprising execution result and policy data.
         """
-        p_type = cluster.rt['profile'].type
+        p_type = cluster.rt['profile'].type_name
         action_names = [a['name'] for a in self.recover_actions]
         if p_type != 'os.nova.server':
             if self.REBUILD in action_names:
