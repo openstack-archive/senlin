@@ -16,15 +16,36 @@ API
 ---
   - Find and fill gaps with API-WG besides the one we already identified.
 
+  - Support "profile-only" parameter to cluster-update API
+
+  - Add support to put a cluster to maintenance mode
+
 ENGINE
 ------
+  - Complete support to list of health recovery actions.
+
+  - Add command "node adopt --profile-type <type> --properties network.id=\
+    <NET_ID> --resource <NOVA_ID>" to adopt existing server node.
+    * The new command should check if the provided properties are sufficient.
+    * There exists a need to snapshot a server before adoption.
+
   - Scaling Improvements [https://etherpad.openstack.org/p/newton-senlin-ha]
-    * Ensure 'desired_capacity' will be controlled by users, not senlin engine
-      or policies.
     * Always do health check before any scaling actions.
 
   - Verify the works to be done after oslo.messaging version bump.
     [https://review.openstack.org/#/c/408114]
+
+  - Try invoke db.sqlalchemy.api.gc_by_engine when attempting stealing during
+    acquire_lock
+
+  - Ensure engine will refresh physical resource status before doing
+    node_recover.
+
+POLICY
+------
+  - Support CLUSTER_RECOVER action in LB policy
+  - Mark node ERROR/WARNING if node cannot be added to the LB pool associated
+    with the cluster
 
 MIDDLE PRIORITY
 ===============
@@ -33,6 +54,15 @@ API
 ---
   - Support advanced filters as suggested by the API WG:
     `Filtering Guidelines`_
+
+ENGINE
+------
+  - Add a new property "fast_scaling" to Cluster
+    * A standby (user invisible) cluster is created containing the extra nodes
+      that amount to max_size - desired_capacity
+  - Perform cluster scaling based on role filters
+  - Perform cluster checking based on role filters
+  - Perform cluster recovery based on role filters
 
 PROFILE
 -------
@@ -49,12 +79,11 @@ POLICY
   - Provide support for watching all objects we created on behalf of users, like
     loadbalancer which is created when attaching lb policy.
   - Leverage other monitoring service for object health status monitoring.
+  - Health policy extension for recovery action selection based on inputs
 
-DB
---
-  - Add db purge (senlin-manage) for deleting events and actions because they
-    accumulate very fast.
-
+CLIENT
+------
+  - Provide role-based filtering when doing 'cluster-run'
 
 LOW PRIORITY
 ============

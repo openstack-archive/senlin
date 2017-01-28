@@ -44,6 +44,14 @@ deprecated. Versioning support is important for keeping backward
 compatibility when profile/policy evolve.
 
 
+Role-specific Profiles
+----------------------
+
+There are needs to have nodes of the same role to share a common profile while
+nodes of different roles having different profiles. The pre-condition for this
+is that the profile-types match.
+
+
 Scavenger Process
 -----------------
 
