@@ -186,7 +186,9 @@ class ProfileTest(base.SenlinTestCase):
 
         body = vorp.ProfileValidateRequestBody(spec=self.spec)
         request = vorp.ProfileValidateRequest(profile=body)
+
         resp = self.eng.profile_validate(self.ctx, request.obj_to_primitive())
+
         self.assertEqual(expected_resp, resp)
 
     def test_profile_validate_failed(self):

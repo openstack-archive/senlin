@@ -11,6 +11,7 @@
 # under the License.
 
 import copy
+import inspect
 
 from oslo_context import context as oslo_context
 from oslo_log import log as logging
@@ -279,12 +280,19 @@ class Profile(object):
         return profile.do_recover(obj, **options)
 
     def validate(self, validate_props=False):
-        '''Validate the schema and the data provided.'''
+        """Validate the schema and the data provided."""
         # general validation
         self.spec_data.validate()
         self.properties.validate()
 
-        # TODO(Anyone): need to check the contents in self.CONTEXT
+        ctx_dict = self.properties.get('context', {})
+        if ctx_dict:
+            argspec = inspect.getargspec(context.RequestContext.__init__)
+            valid_keys = argspec.args
+            bad_keys = [k for k in ctx_dict if k not in valid_keys]
+            if bad_keys:
+                msg = _("Some keys in 'context' are invalid: %s") % bad_keys
+                raise exc.ESchema(message=msg)
 
         if validate_props:
             self.do_validate(obj=self)

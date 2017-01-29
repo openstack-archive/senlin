@@ -557,28 +557,38 @@ class TestProfileBase(base.SenlinTestCase):
     def test_validate_without_properties(self):
         profile = self._create_profile('test_profile')
 
-        profile.spec_data = mock.Mock()
-        profile.properties = mock.Mock()
         profile.do_validate = mock.Mock()
 
         profile.validate()
 
-        profile.spec_data.validate.assert_called_once_with()
-        profile.properties.validate.assert_called_once_with()
         profile.do_validate.assert_not_called()
 
     def test_validate_with_properties(self):
         profile = self._create_profile('test_profile')
 
-        profile.spec_data = mock.Mock()
-        profile.properties = mock.Mock()
         profile.do_validate = mock.Mock()
 
         profile.validate(validate_props=True)
 
-        profile.spec_data.validate.assert_called_once_with()
-        profile.properties.validate.assert_called_once_with()
         profile.do_validate.assert_called_once_with(obj=profile)
+
+    def test_validate_bad_context(self):
+        spec = {
+            "type": "os.dummy",
+            "version": "1.0",
+            "properties": {
+                "context": {
+                    "foo": "bar"
+                },
+                "key1": "value1",
+                "key2": 2,
+            }
+        }
+        profile = DummyProfile("p-bad-ctx", spec, user=self.ctx.user,
+                               project=self.ctx.project,
+                               domain=self.ctx.domain)
+
+        self.assertRaises(exception.ESchema, profile.validate)
 
     @mock.patch.object(senlin_ctx, 'get_service_context')
     def test__init_context(self, mock_get):
