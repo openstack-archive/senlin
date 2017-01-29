@@ -1756,7 +1756,13 @@ class EngineService(service.Service):
             'status': action_mod.Action.READY
         }
         if req.obj_attr_is_set('params') and req.params:
-            kwargs['inputs'] = req.params
+            if 'operation' in req.params:
+                op_name = req.params['operation']
+                kwargs['inputs'] = {'operation': [{'name': op_name}]}
+            else:
+                msg = _("Action parameter is not recognizable.")
+                raise exception.BadRequest(msg=msg)
+
         action_id = action_mod.Action.create(ctx, db_node.id,
                                              consts.NODE_RECOVER, **kwargs)
         dispatcher.start_action()

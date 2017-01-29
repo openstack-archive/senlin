@@ -684,7 +684,7 @@ class TestNode(base.SenlinTestCase):
         node = nodem.Node('node1', PROFILE_ID, None)
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
 
-        params = {'operation': 'foo'}
+        params = {'operation': [{'name': 'foo'}]}
         res = node.do_recover(self.context, **params)
 
         self.assertFalse(res)

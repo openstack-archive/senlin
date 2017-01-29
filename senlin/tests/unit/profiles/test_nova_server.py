@@ -869,7 +869,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile = server.ServerProfile('t', self.spec)
         node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        res = profile.do_recover(node_obj, operation='REBUILD')
+        res = profile.do_recover(node_obj, operation=[{'name': 'REBUILD'}])
 
         self.assertEqual(mock_rebuild.return_value, res)
         mock_rebuild.assert_called_once_with(node_obj)
@@ -879,21 +879,30 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile = server.ServerProfile('t', self.spec)
         node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        res = profile.do_recover(node_obj, operation=['REBUILD'])
+        res = profile.do_recover(node_obj, operation=[{'name': 'REBUILD'}])
 
         self.assertEqual(mock_rebuild.return_value, res)
         mock_rebuild.assert_called_once_with(node_obj)
+
+    @mock.patch.object(profiles_base.Profile, 'do_recover')
+    def test_do_recover_bad_operation(self, mock_base_recover):
+        profile = server.ServerProfile('t', self.spec)
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_recover(node_obj, operation=[{'name': 'BLAHBLAH'}])
+
+        self.assertFalse(res)
 
     @mock.patch.object(profiles_base.Profile, 'do_recover')
     def test_do_recover_fallback(self, mock_base_recover):
         profile = server.ServerProfile('t', self.spec)
         node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        res = profile.do_recover(node_obj, operation='blahblah')
+        res = profile.do_recover(node_obj, operation=[{'name': 'RECREATE'}])
 
         self.assertEqual(mock_base_recover.return_value, res)
-        mock_base_recover.assert_called_once_with(node_obj,
-                                                  operation='blahblah')
+        mock_base_recover.assert_called_once_with(
+            node_obj, operation=[{'name': 'RECREATE'}])
 
     def test_handle_reboot(self):
         obj = mock.Mock(physical_id='FAKE_ID')
