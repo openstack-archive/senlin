@@ -217,14 +217,24 @@ class ServerProfile(base.Profile):
     }
 
     OP_NAMES = (
-        OP_REBOOT, OP_REBUILD, OP_CHANGE_PASSWORD,
+        OP_REBOOT, OP_REBUILD, OP_CHANGE_PASSWORD, OP_PAUSE, OP_UNPAUSE,
+        OP_SUSPEND, OP_RESUME, OP_LOCK, OP_UNLOCK, OP_START, OP_STOP,
+        OP_RESCUE, OP_UNRESCUE, OP_EVACUATE,
     ) = (
-        'reboot', 'rebuild', 'change_password',
+        'reboot', 'rebuild', 'change_password', 'pause', 'unpause',
+        'suspend', 'resume', 'lock', 'unlock', 'start', 'stop',
+        'rescue', 'unrescue', 'evacuate',
     )
 
     REBOOT_TYPE = 'type'
     REBOOT_TYPES = (REBOOT_SOFT, REBOOT_HARD) = ('SOFT', 'HARD')
     ADMIN_PASSWORD = 'admin_pass'
+    RESCUE_IMAGE = 'image_ref'
+    EVACUATE_OPTIONS = (
+        EVACUATE_HOST, EVACUATE_FORCE
+    ) = (
+        'host', 'force'
+    )
 
     OPERATIONS = {
         OP_REBOOT: schema.Operation(
@@ -250,6 +260,52 @@ class ServerProfile(base.Profile):
                 )
             }
         ),
+        OP_PAUSE: schema.Operation(
+            _("Pause the server from running."),
+        ),
+        OP_UNPAUSE: schema.Operation(
+            _("Unpause the server to running state."),
+        ),
+        OP_SUSPEND: schema.Operation(
+            _("Suspend the running of the server."),
+        ),
+        OP_RESUME: schema.Operation(
+            _("Resume the running of the server."),
+        ),
+        OP_LOCK: schema.Operation(
+            _("Lock the server."),
+        ),
+        OP_UNLOCK: schema.Operation(
+            _("Unlock the server."),
+        ),
+        OP_START: schema.Operation(
+            _("Start the server."),
+        ),
+        OP_STOP: schema.Operation(
+            _("Stop the server."),
+        ),
+        OP_RESCUE: schema.Operation(
+            _("Rescue the server."),
+            schema={
+                RESCUE_IMAGE: schema.StringParam(
+                    _("A string referencing the image to use."),
+                ),
+            }
+        ),
+        OP_UNRESCUE: schema.Operation(
+            _("Unrescue the server."),
+        ),
+        OP_EVACUATE: schema.Operation(
+            _("Evacuate the server to a different host."),
+            schema={
+                EVACUATE_HOST: schema.StringParam(
+                    _("The target host to evacuate the server."),
+                ),
+                EVACUATE_FORCE: schema.StringParam(
+                    _("Whether the evacuation should be a forced one.")
+                )
+            }
+        )
     }
 
     def __init__(self, type_name, name, **kwargs):
