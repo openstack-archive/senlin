@@ -161,18 +161,6 @@ class Policy(object):
         return cls._from_object(db_policy)
 
     @classmethod
-    def load_all(cls, context, limit=None, marker=None, sort=None,
-                 filters=None, project_safe=True):
-        """Retrieve all policies from database."""
-
-        objs = po.Policy.get_all(context, limit=limit, marker=marker,
-                                 sort=sort, filters=filters,
-                                 project_safe=project_safe)
-
-        for obj in objs:
-            yield cls._from_object(obj)
-
-    @classmethod
     def delete(cls, context, policy_id):
         po.Policy.delete(context, policy_id)
 

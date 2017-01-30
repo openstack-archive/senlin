@@ -175,47 +175,6 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual("The policy 'None' could not be found.",
                          six.text_type(ex))
 
-    def test_load_all(self):
-        result = pb.Policy.load_all(self.ctx)
-        self.assertEqual([], list(result))
-
-        policy1 = utils.create_policy(self.ctx, UUID1, 'policy-1')
-        policy2 = utils.create_policy(self.ctx, UUID2, 'policy-2')
-
-        result = pb.Policy.load_all(self.ctx)
-        policies = list(result)
-        self.assertEqual(2, len(policies))
-        self.assertEqual(policy1.id, policies[0].id)
-        self.assertEqual(policy2.id, policies[1].id)
-
-    def test_load_all_diff_project(self):
-        utils.create_policy(self.ctx, UUID1, 'policy-1')
-        utils.create_policy(self.ctx, UUID2, 'policy-2')
-
-        new_ctx = utils.dummy_context(project='a-different-project')
-        res = pb.Policy.load_all(new_ctx)
-        self.assertEqual(0, len(list(res)))
-        res = pb.Policy.load_all(new_ctx, project_safe=False)
-        self.assertEqual(2, len(list(res)))
-
-    @mock.patch.object(po.Policy, 'get_all')
-    def test_load_all_with_params(self, mock_get):
-        mock_get.return_value = []
-
-        res = list(pb.Policy.load_all(self.ctx))
-        self.assertEqual([], res)
-        mock_get.assert_called_once_with(self.ctx, limit=None, marker=None,
-                                         sort=None, filters=None,
-                                         project_safe=True)
-        mock_get.reset_mock()
-
-        res = list(pb.Policy.load_all(
-            self.ctx, limit=1, marker='MARKER', sort='K1:asc'))
-        self.assertEqual([], res)
-        mock_get.assert_called_once_with(self.ctx, limit=1, marker='MARKER',
-                                         sort='K1:asc', filters=None,
-                                         project_safe=True)
-
     def test_delete(self):
         policy = utils.create_policy(self.ctx, UUID1)
         policy_id = policy.id
