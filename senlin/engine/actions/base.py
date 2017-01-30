@@ -224,31 +224,6 @@ class Action(object):
         return cls._from_object(db_action)
 
     @classmethod
-    def load_all(cls, context, filters=None, limit=None, marker=None,
-                 sort=None, project_safe=True):
-        """Retrieve all actions of from database.
-
-        :param context: Instance of the request context.
-        :param filters: A dict of key-value pairs for filtering the resulted
-                        list of action objects.
-        :param limit: A number for restricting the number of records returned.
-        :param marker: The ID of the last seen action record. Only records
-                       that appear after this ID will be shown.
-        :param sort: A list of sorting keys (optionally with a sort dir),
-                     separated by commas.
-        :param project_safe: A boolean that indicates whether actions from
-                             other projects will be returned as well.
-        :return: A list of `Action` objects.
-        """
-
-        records = ao.Action.get_all(context, filters=filters, sort=sort,
-                                    limit=limit, marker=marker,
-                                    project_safe=project_safe)
-
-        for record in records:
-            yield cls._from_object(record)
-
-    @classmethod
     def create(cls, context, target, action, **kwargs):
         """Create an action object.
 

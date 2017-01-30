@@ -239,29 +239,6 @@ class TestReceiver(base.SenlinTestCase):
         self.assertIsNotNone(res)
         self.assertEqual(receiver.id, res.id)
 
-    def test_receiver_load_all(self):
-        result = rb.Receiver.load_all(self.context)
-        self.assertEqual([], [w for w in result])
-
-        receiver1 = self._create_receiver('receiver-1', UUID1)
-        receiver2 = self._create_receiver('receiver-2', UUID2)
-
-        result = rb.Receiver.load_all(self.context)
-        receivers = [w for w in result]
-        self.assertEqual(2, len(receivers))
-        self.assertEqual(receiver1.id, receivers[0].id)
-        self.assertEqual(receiver2.id, receivers[1].id)
-
-    def test_receiver_load_all_diff_project(self):
-        self._create_receiver('receiver-1', UUID1)
-        self._create_receiver('receiver-2', UUID2)
-
-        new_context = utils.dummy_context(project='a-different-project')
-        result = rb.Receiver.load_all(new_context)
-        self.assertEqual(0, len(list(result)))
-        result = rb.Receiver.load_all(new_context, project_safe=False)
-        self.assertEqual(2, len(list(result)))
-
     def test_receiver_to_dict(self):
         receiver = self._create_receiver('test-receiver', UUID1)
         self.assertIsNotNone(receiver.id)
