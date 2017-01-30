@@ -28,8 +28,8 @@ class TestCluster(testtools.TestCase):
     def test_find_by_uuid(self, mock_get):
         x_cluster = mock.Mock()
         mock_get.return_value = x_cluster
-
         aid = uuidutils.generate_uuid()
+
         result = co.Cluster.find(self.ctx, aid)
 
         self.assertEqual(x_cluster, result)
@@ -54,8 +54,8 @@ class TestCluster(testtools.TestCase):
     def test_find_by_name(self, mock_get_name):
         x_cluster = mock.Mock()
         mock_get_name.return_value = x_cluster
-
         aid = 'this-is-not-uuid'
+
         result = co.Cluster.find(self.ctx, aid)
 
         self.assertEqual(x_cluster, result)
@@ -67,8 +67,8 @@ class TestCluster(testtools.TestCase):
         x_cluster = mock.Mock()
         mock_get_shortid.return_value = x_cluster
         mock_get_name.return_value = None
-
         aid = 'abcd-1234-abcd'
+
         result = co.Cluster.find(self.ctx, aid, False)
 
         self.assertEqual(x_cluster, result)

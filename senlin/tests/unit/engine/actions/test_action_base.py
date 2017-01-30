@@ -15,6 +15,7 @@ import copy
 import mock
 from oslo_config import cfg
 from oslo_utils import timeutils
+from oslo_utils import uuidutils
 import six
 
 from senlin.common import consts
@@ -22,11 +23,11 @@ from senlin.common import exception
 from senlin.common import utils as common_utils
 from senlin.engine.actions import base as ab
 from senlin.engine import cluster as cluster_mod
-from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import environment
 from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.objects import action as ao
+from senlin.objects import cluster_policy as cpo
 from senlin.objects import dependency as dobj
 from senlin.policies import base as policy_mod
 from senlin.tests.unit.common import base
@@ -513,18 +514,22 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertFalse(res)
         mock_query.assert_called_once_with(action.context, 'FAKE_ID')
 
-    @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
+    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     def test_policy_check_target_invalid(self, mock_load):
         action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
+
         res = action.policy_check('FAKE_CLUSTER', 'WHEN')
+
         self.assertIsNone(res)
         self.assertEqual(0, mock_load.call_count)
 
-    @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
+    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     def test_policy_check_no_bindings(self, mock_load):
         action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
         mock_load.return_value = []
+
         res = action.policy_check('FAKE_CLUSTER', 'BEFORE')
+
         self.assertIsNone(res)
         self.assertEqual(policy_mod.CHECK_OK, action.data['status'])
         mock_load.assert_called_once_with(action.context, 'FAKE_CLUSTER',
@@ -589,15 +594,13 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         return policy
 
     def _create_cp_binding(self, cluster_id, policy_id):
-        values = {'enabled': True}
-
-        pb = cp_mod.ClusterPolicy(cluster_id, policy_id, **values)
-        pb.id = 'FAKE_BINDING_ID'
-        return pb
+        return cpo.ClusterPolicy(cluster_id=cluster_id, policy_id=policy_id,
+                                 enabled=True, id=uuidutils.generate_uuid(),
+                                 last_op=None)
 
     @mock.patch.object(policy_mod.Policy, 'post_op')
     @mock.patch.object(policy_mod.Policy, 'pre_op')
-    @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
+    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     @mock.patch.object(policy_mod.Policy, 'load')
     def test_policy_check_missing_target(self, mock_load, mock_load_all,
                                          mock_pre_op, mock_post_op):
@@ -609,7 +612,7 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
             'properties': {'KEY2': 5},
         }
         policy = fakes.TestPolicy('test-policy', spec)
-        policy.id = 'FAKE_POLICY_ID'
+        policy.id = uuidutils.generate_uuid()
         policy.TARGET = [('BEFORE', 'OBJECT_ACTION')]
         # Note: policy binding is created but not stored
         pb = self._create_cp_binding(cluster_id, policy.id)
@@ -662,7 +665,7 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         mock_event.assert_called_once_with(action, 'error', reason)
 
     @mock.patch.object(EVENT, 'debug')
-    @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
+    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     @mock.patch.object(policy_mod.Policy, 'load')
     def test_policy_check_pre_op(self, mock_load, mock_load_all, mock_event):
         cluster_id = CLUSTER_ID
@@ -673,7 +676,7 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
             'properties': {'KEY2': 5},
         }
         policy = fakes.TestPolicy('test-policy', spec)
-        policy.id = 'FAKE_POLICY_ID'
+        policy.id = uuidutils.generate_uuid()
         policy.TARGET = [('BEFORE', 'OBJECT_ACTION')]
         # Note: policy binding is created but not stored
         pb = self._create_cp_binding(cluster_id, policy.id)
@@ -696,15 +699,13 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         self.assertIsNone(pb.last_op)
 
     @mock.patch.object(EVENT, 'debug')
-    @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
+    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     @mock.patch.object(policy_mod.Policy, 'load')
     def test_policy_check_post_op(self, mock_load, mock_load_all, mock_event):
         cluster_id = CLUSTER_ID
         # Note: policy is mocked
-        policy = mock.Mock()
-        policy.id = 'FAKE_POLICY_ID'
-        policy.TARGET = [('AFTER', 'OBJECT_ACTION')]
-        policy.cooldown = 0
+        policy = mock.Mock(id=uuidutils.generate_uuid(), cooldown=0,
+                           TARGET=[('AFTER', 'OBJECT_ACTION')])
         # Note: policy binding is created but not stored
         pb = self._create_cp_binding(cluster_id, policy.id)
         self.assertIsNone(pb.last_op)
@@ -728,28 +729,30 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         self.assertEqual(0, policy.pre_op.call_count)
         policy.post_op.assert_called_once_with(cluster_id, action)
 
-    @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
+    @mock.patch.object(cpo.ClusterPolicy, 'cooldown_inprogress')
+    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     @mock.patch.object(policy_mod.Policy, 'load')
-    def test_policy_check_cooldown_inprogress(self, mock_load, mock_load_all):
+    def test_policy_check_cooldown_inprogress(self, mock_load, mock_load_all,
+                                              mock_inprogress):
         cluster_id = CLUSTER_ID
         # Note: policy is mocked
-        policy = mock.Mock()
-        policy.id = 'FAKE_POLICY_ID'
-        policy.TARGET = [('AFTER', 'OBJECT_ACTION')]
+        policy_id = uuidutils.generate_uuid()
+        policy = mock.Mock(id=policy_id, TARGET=[('AFTER', 'OBJECT_ACTION')])
         # Note: policy binding is created but not stored
         pb = self._create_cp_binding(cluster_id, policy.id)
-        self.patchobject(pb, 'cooldown_inprogress', return_value=True)
-        self.assertIsNone(pb.last_op)
+        mock_inprogress.return_value = True
         mock_load_all.return_value = [pb]
         mock_load.return_value = policy
         action = ab.Action(cluster_id, 'OBJECT_ACTION', self.ctx)
 
+        # Do it
         res = action.policy_check(CLUSTER_ID, 'AFTER')
 
         self.assertIsNone(res)
         self.assertEqual(policy_mod.CHECK_ERROR, action.data['status'])
-        self.assertEqual('Policy FAKE_POLICY_ID cooldown is still in '
-                         'progress.', six.text_type(action.data['reason']))
+        self.assertEqual(
+            'Policy %s cooldown is still in progress.' % policy_id,
+            six.text_type(action.data['reason']))
         mock_load_all.assert_called_once_with(
             action.context, cluster_id, sort='priority',
             filters={'enabled': True})
@@ -760,24 +763,19 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         self.assertEqual(0, policy.pre_op.call_count)
         self.assertEqual(0, policy.post_op.call_count)
 
-    @mock.patch.object(cp_mod.ClusterPolicy, 'load_all')
+    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     @mock.patch.object(policy_mod.Policy, 'load')
     @mock.patch.object(ab.Action, '_check_result')
     def test_policy_check_abort_in_middle(self, mock_check, mock_load,
                                           mock_load_all):
         cluster_id = CLUSTER_ID
         # Note: both policies are mocked
-        policy1 = mock.Mock()
-        policy1.id = 'FAKE_POLICY_ID_1'
+        policy1 = mock.Mock(id=uuidutils.generate_uuid(), cooldown=0,
+                            TARGET=[('AFTER', 'OBJECT_ACTION')])
         policy1.name = 'P1'
-        policy1.cooldown = 0
-        policy1.TARGET = [('AFTER', 'OBJECT_ACTION')]
-        policy2 = mock.Mock()
-        policy2.id = 'FAKE_POLICY_ID_2'
+        policy2 = mock.Mock(id=uuidutils.generate_uuid(), cooldown=0,
+                            TARGET=[('AFTER', 'OBJECT_ACTION')])
         policy2.name = 'P2'
-        policy2.cooldown = 0
-        policy2.TARGET = [('AFTER', 'OBJECT_ACTION')]
-
         action = ab.Action(cluster_id, 'OBJECT_ACTION', self.ctx)
 
         # Note: policy binding is created but not stored

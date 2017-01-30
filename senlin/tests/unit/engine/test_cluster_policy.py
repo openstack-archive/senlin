@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from datetime import timedelta
 from oslo_utils import timeutils
 import six
 
@@ -120,28 +119,6 @@ class TestClusterPolicy(base.SenlinTestCase):
         self.assertEqual('senlin.policy.dummy-1.0', result.policy_type)
         self.assertEqual('test_policy', result.policy_name)
 
-    def test_cluster_policy_load_all(self):
-        result = cpm.ClusterPolicy.load_all(self.context, 'non-existent')
-        self.assertEqual([], result)
-
-        cluster = utils.create_cluster(self.context, CLUSTER_ID, PROFILE_ID)
-        policy1 = utils.create_policy(self.context,
-                                      'd752f3e4-7be5-41a6-8a36-85bbbdbd7d4a')
-        policy2 = utils.create_policy(self.context,
-                                      '0a2e1240-d34f-4c96-8034-37388cdcdb7b')
-
-        b1 = cpm.ClusterPolicy(cluster.id, policy1.id, enabled=True,
-                               priority=10)
-        b1.store(self.context)
-        b2 = cpm.ClusterPolicy(cluster.id, policy2.id, enabled=False,
-                               priority=20)
-        b2.store(self.context)
-
-        # NOTE: we don't test all other parameters because the db api tests
-        #       already covered that
-        result = cpm.ClusterPolicy.load_all(self.context, CLUSTER_ID)
-        self.assertEqual(2, len(result))
-
     def test_cluster_policy_to_dict(self):
         values = {
             'priority': 12,
@@ -162,13 +139,3 @@ class TestClusterPolicy(base.SenlinTestCase):
         }
 
         self.assertEqual(expected, cp.to_dict())
-
-    def test_cooldown_inprogress(self):
-        values = {
-            'enabled': True,
-            'last_op': timeutils.utcnow(True),
-        }
-        cp = cpm.ClusterPolicy(CLUSTER_ID, POLICY_ID, **values)
-        self.assertTrue(cp.cooldown_inprogress(60))
-        cp.last_op -= timedelta(hours=1)
-        self.assertFalse(cp.cooldown_inprogress(60))

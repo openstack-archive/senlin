@@ -10,8 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_utils import timeutils
-
 from senlin.common import exception
 from senlin.objects import cluster_policy as cpo
 
@@ -90,26 +88,6 @@ class ClusterPolicy(object):
                                               cluster=cluster_id)
 
         return cls._from_object(context, binding)
-
-    @classmethod
-    def load_all(cls, context, cluster_id, filters=None, sort=None):
-        """Retrieve all policies attached to a specific cluster."""
-        bindings = cpo.ClusterPolicy.get_all(context, cluster_id,
-                                             filters=filters,
-                                             sort=sort)
-
-        return [cls._from_object(context, b) for b in bindings]
-
-    def cooldown_inprogress(self, cooldown):
-        if self.last_op:
-            if not timeutils.is_older_than(self.last_op, cooldown):
-                return True
-
-        return False
-
-    def record_last_op(self, context):
-        self.last_op = timeutils.utcnow(True)
-        self.store(context)
 
     def to_dict(self):
         binding_dict = {
