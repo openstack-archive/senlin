@@ -30,7 +30,7 @@ class Node(base.SenlinObject, base.VersionedObjectDictCompat):
         'profile_id': fields.UUIDField(),
         # This field is treated as string because we may store '' into it
         'cluster_id': fields.StringField(),
-        'physical_id': fields.UUIDField(nullable=True),
+        'physical_id': fields.StringField(nullable=True),
         'index': fields.IntegerField(),
         'role': fields.StringField(nullable=True),
         'init_at': fields.DateTimeField(),

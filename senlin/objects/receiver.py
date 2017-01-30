@@ -29,7 +29,7 @@ class Receiver(base.SenlinObject, base.VersionedObjectDictCompat):
         'id': fields.UUIDField(),
         'name': fields.StringField(),
         'type': fields.StringField(),
-        'cluster_id': fields.UUIDField(nullable=True),
+        'cluster_id': fields.StringField(nullable=True),
         'actor': fields.JsonField(nullable=True),
         'action': fields.StringField(nullable=True),
         'params': fields.JsonField(nullable=True),

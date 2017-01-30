@@ -11,11 +11,11 @@
 # under the License.
 
 import copy
-import uuid
 
 from oslo_config import cfg
 from oslo_serialization import jsonutils
 from oslo_utils import strutils
+from oslo_utils import uuidutils
 from oslo_versionedobjects import fields
 import re
 import six
@@ -79,24 +79,17 @@ class NonNegativeInteger(fields.FieldType):
         }
 
 
-# TODO(anyone): currently we force check the UUID format for 'marker'
-# add worning message to other objects ues UUID.
-class UUID(fields.UUID):
+class UUID(fields.FieldType):
 
     _PATTERN = (r'^[a-fA-F0-9]{8}-?[a-fA-F0-9]{4}-?[a-fA-F0-9]{4}-?[a-fA-F0-9]'
                 r'{4}-?[a-fA-F0-9]{12}$')
 
     @staticmethod
     def coerce(obj, attr, value):
-        try:
-            uuid.UUID(str(value))
-        except Exception:
-            if attr == 'marker':
-                raise ValueError(_("The value for %(attr)s is not a valid "
-                                   "UUID: '%(value)s'.") %
-                                 {'attr': attr, 'value': value})
-            else:
-                pass
+        if not uuidutils.is_uuid_like(value):
+            msg = _("The value for %(attr)s is not a valid UUID: '%(value)s'."
+                    ) % {'attr': attr, 'value': value}
+            raise ValueError(msg)
 
         return str(value)
 
