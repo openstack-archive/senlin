@@ -518,7 +518,6 @@ class Cluster(object):
         :param zone: Name of availability zone for filtering.
         :return: A list of nodes that reside in the specified AZ.
         """
-        # TODO(anyone): Improve this to do a forced refresh via get_details?
         result = []
         for node in self.nodes:
             placement = node.data.get('placement', {})

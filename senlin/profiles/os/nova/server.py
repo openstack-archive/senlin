@@ -18,9 +18,11 @@ import six
 
 from senlin.common import constraints
 from senlin.common import consts
+from senlin.common import context
 from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.common import schema
+from senlin.objects import node as node_obj
 from senlin.profiles import base
 
 
@@ -445,6 +447,23 @@ class ServerProfile(base.Profile):
 
         return metadata
 
+    def _update_zone_info(self, obj, server):
+        """Update the actual zone placement data.
+
+        :param obj: The node object associated with this server.
+        :param server: The server object returned from creation.
+        """
+        if server.availability_zone:
+            placement = obj.data.get('placement', None)
+            if not placement:
+                obj.data['placement'] = {'zone': server.availability_zone}
+            else:
+                obj.data['placement'].setdefault('zone',
+                                                 server.availability_zone)
+            # It is safe to use admin context here
+            ctx = context.get_admin_context()
+            node_obj.Node.update(ctx, obj.id, {'data': obj.data})
+
     def do_create(self, obj):
         """Create a server for the node object.
 
@@ -525,6 +544,8 @@ class ServerProfile(base.Profile):
         try:
             server = self.compute(obj).server_create(**kwargs)
             self.compute(obj).wait_for_server(server.id)
+            # Update zone placement info if available
+            self._update_zone_info(obj, server)
             return server.id
         except exc.InternalError as ex:
             if server and server.id:

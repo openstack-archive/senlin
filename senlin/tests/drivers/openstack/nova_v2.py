@@ -55,6 +55,7 @@ class NovaClient(base.DriverBase):
 
         self.fake_server_create = {
             "id": "893c7791-f1df-4c3d-8383-3caae9656c62",
+            "availability_zone": "Zone1",
             "name": "new-server-test",
             "imageRef": "http://localhost/openstack/images/test-image",
             "flavorRef": "http://localhost/openstack/flavors/1",
@@ -92,8 +93,9 @@ class NovaClient(base.DriverBase):
             # the real name of these attrs returned by Nova API could be
             # different, e.g. the name of 'access_ipv4' attribute is actually
             # 'accessIPv4' in server_get API response.
-            "name": "new-server-test",
             "id": "893c7791-f1df-4c3d-8383-3caae9656c62",
+            "name": "new-server-test",
+            "availability_zone": "ZONE1",
             "access_ipv4": "192.168.0.3",
             "access_ipv6": "fe80::ac0e:2aff:fe87:5911",
             "addresses": {
