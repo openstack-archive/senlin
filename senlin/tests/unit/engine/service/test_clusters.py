@@ -1637,18 +1637,22 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_chk.assert_called_once_with(self.ctx, cluster, nodes)
 
-    @mock.patch.object(nm.Node, 'load_all')
+    @mock.patch.object(nm.Node, 'load')
+    @mock.patch.object(no.Node, 'get_all')
     @mock.patch.object(co.Cluster, 'find')
-    def test_cluster_collect(self, mock_find, mock_load):
+    def test_cluster_collect(self, mock_find, mock_get, mock_load):
         x_cluster = mock.Mock(id='FAKE_CLUSTER')
         mock_find.return_value = x_cluster
-        x_node_1 = mock.Mock(id='NODE1', physical_id='PHYID1')
-        x_node_1.to_dict.return_value = {'name': 'node1'}
+        x_obj_1 = mock.Mock(id='NODE1', physical_id='PHYID1')
+        x_obj_1.to_dict.return_value = {'name': 'node1'}
+        x_obj_2 = mock.Mock(id='NODE2', physical_id='PHYID2')
+        x_obj_2.to_dict.return_value = {'name': 'node2'}
+        x_node_1 = mock.Mock()
+        x_node_2 = mock.Mock()
         x_node_1.get_details.return_value = {'ip': '1.2.3.4'}
-        x_node_2 = mock.Mock(id='NODE2', physical_id='PHYID2')
-        x_node_2.to_dict.return_value = {'name': 'node2'}
         x_node_2.get_details.return_value = {'ip': '5.6.7.8'}
-        mock_load.return_value = [x_node_1, x_node_2]
+        mock_get.return_value = [x_obj_1, x_obj_2]
+        mock_load.side_effect = [x_node_1, x_node_2]
         req = orco.ClusterCollectRequest(identity='CLUSTER_ID',
                                          path='details.ip')
 
@@ -1660,10 +1664,14 @@ class ClusterTest(base.SenlinTestCase):
         self.assertIn({'id': 'NODE2', 'value': '5.6.7.8'},
                       res['cluster_attributes'])
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER_ID')
-        mock_load.assert_called_once_with(self.ctx, cluster_id='FAKE_CLUSTER')
-        x_node_1.to_dict.assert_called_once_with()
+        mock_get.assert_called_once_with(self.ctx, cluster_id='FAKE_CLUSTER')
+        mock_load.assert_has_calls([
+            mock.call(self.ctx, db_node=x_obj_1),
+            mock.call(self.ctx, db_node=x_obj_2)
+        ])
+        x_obj_1.to_dict.assert_called_once_with()
         x_node_1.get_details.assert_called_once_with(self.ctx)
-        x_node_2.to_dict.assert_called_once_with()
+        x_obj_2.to_dict.assert_called_once_with()
         x_node_2.get_details.assert_called_once_with(self.ctx)
 
     @mock.patch.object(co.Cluster, 'find')
@@ -1680,9 +1688,9 @@ class ClusterTest(base.SenlinTestCase):
         mock_parser.assert_called_once_with('foo.bar')
         self.assertEqual(0, mock_find.call_count)
 
-    @mock.patch.object(nm.Node, 'load_all')
+    @mock.patch.object(no.Node, 'get_all')
     @mock.patch.object(co.Cluster, 'find')
-    def test_cluster_collect_cluster_not_found(self, mock_find, mock_load):
+    def test_cluster_collect_cluster_not_found(self, mock_find, mock_get):
         cid = 'FAKE_CLUSTER'
         mock_find.side_effect = exc.ResourceNotFound(type='cluster', id=cid)
         req = orco.ClusterCollectRequest(identity=cid, path='foo.bar')
@@ -1693,32 +1701,32 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, err.exc_info[0])
         mock_find.assert_called_once_with(self.ctx, cid)
-        self.assertEqual(0, mock_load.call_count)
+        self.assertEqual(0, mock_get.call_count)
 
-    @mock.patch.object(nm.Node, 'load_all')
+    @mock.patch.object(no.Node, 'get_all')
     @mock.patch.object(co.Cluster, 'find')
-    def test_cluster_collect_no_nodes(self, mock_find, mock_load):
+    def test_cluster_collect_no_nodes(self, mock_find, mock_get):
         x_cluster = mock.Mock(id='FAKE_CLUSTER')
         mock_find.return_value = x_cluster
-        mock_load.return_value = []
+        mock_get.return_value = []
         req = orco.ClusterCollectRequest(identity='CLUSTER_ID', path='barr')
 
         res = self.eng.cluster_collect(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'cluster_attributes': []}, res)
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER_ID')
-        mock_load.assert_called_once_with(self.ctx, cluster_id='FAKE_CLUSTER')
+        mock_get.assert_called_once_with(self.ctx, cluster_id='FAKE_CLUSTER')
 
-    @mock.patch.object(nm.Node, 'load_all')
+    @mock.patch.object(no.Node, 'get_all')
     @mock.patch.object(co.Cluster, 'find')
-    def test_cluster_collect_no_details(self, mock_find, mock_load):
+    def test_cluster_collect_no_details(self, mock_find, mock_get):
         x_cluster = mock.Mock(id='FAKE_CLUSTER')
         mock_find.return_value = x_cluster
         x_node_1 = mock.Mock(id='NODE1', physical_id=None)
         x_node_1.to_dict.return_value = {'name': 'node1'}
         x_node_2 = mock.Mock(id='NODE2', physical_id=None)
         x_node_2.to_dict.return_value = {'name': 'node2'}
-        mock_load.return_value = [x_node_1, x_node_2]
+        mock_get.return_value = [x_node_1, x_node_2]
         req = orco.ClusterCollectRequest(identity='CLUSTER_ID', path='name')
 
         res = self.eng.cluster_collect(self.ctx, req.obj_to_primitive())
@@ -1729,29 +1737,29 @@ class ClusterTest(base.SenlinTestCase):
         self.assertIn({'id': 'NODE2', 'value': 'node2'},
                       res['cluster_attributes'])
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER_ID')
-        mock_load.assert_called_once_with(self.ctx, cluster_id='FAKE_CLUSTER')
+        mock_get.assert_called_once_with(self.ctx, cluster_id='FAKE_CLUSTER')
         x_node_1.to_dict.assert_called_once_with()
         self.assertEqual(0, x_node_1.get_details.call_count)
         x_node_2.to_dict.assert_called_once_with()
         self.assertEqual(0, x_node_2.get_details.call_count)
 
-    @mock.patch.object(nm.Node, 'load_all')
+    @mock.patch.object(no.Node, 'get_all')
     @mock.patch.object(co.Cluster, 'find')
-    def test_cluster_collect_no_match(self, mock_find, mock_load):
+    def test_cluster_collect_no_match(self, mock_find, mock_get):
         x_cluster = mock.Mock(id='FAKE_CLUSTER')
         mock_find.return_value = x_cluster
         x_node_1 = mock.Mock(physical_id=None)
         x_node_1.to_dict.return_value = {'name': 'node1'}
         x_node_2 = mock.Mock(physical_id=None)
         x_node_2.to_dict.return_value = {'name': 'node2'}
-        mock_load.return_value = [x_node_1, x_node_2]
+        mock_get.return_value = [x_node_1, x_node_2]
         req = orco.ClusterCollectRequest(identity='CLUSTER_ID', path='bogus')
 
         res = self.eng.cluster_collect(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'cluster_attributes': []}, res)
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER_ID')
-        mock_load.assert_called_once_with(self.ctx, cluster_id='FAKE_CLUSTER')
+        mock_get.assert_called_once_with(self.ctx, cluster_id='FAKE_CLUSTER')
         x_node_1.to_dict.assert_called_once_with()
         self.assertEqual(0, x_node_1.get_details.call_count)
         x_node_2.to_dict.assert_called_once_with()

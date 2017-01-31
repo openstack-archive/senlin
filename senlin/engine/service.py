@@ -1348,12 +1348,14 @@ class EngineService(service.Service):
         # The function may raise a BadRequest exception.
         parser = utils.get_path_parser(req.path)
         cluster = co.Cluster.find(ctx, req.identity)
-        nodes = node_mod.Node.load_all(ctx, cluster_id=cluster.id)
+        nodes = node_obj.Node.get_all(ctx, cluster_id=cluster.id)
         attrs = []
         for node in nodes:
             info = node.to_dict()
-            if node.physical_id:
-                info['details'] = node.get_details(ctx)
+            if node.physical_id and 'details' in req.path:
+                obj = node_mod.Node.load(ctx, db_node=node)
+                info['details'] = obj.get_details(ctx)
+
             matches = [m.value for m in parser.find(info)]
             if matches:
                 attrs.append({'id': node.id, 'value': matches[0]})
@@ -1516,7 +1518,7 @@ class EngineService(service.Service):
         if filters:
             query['filters'] = filters
 
-        nodes = node_mod.Node.load_all(ctx, **query)
+        nodes = node_obj.Node.get_all(ctx, **query)
         return [node.to_dict() for node in nodes]
 
     @request_context
@@ -1565,18 +1567,24 @@ class EngineService(service.Service):
             index = -1
 
         # Create a node instance
-        kwargs = {
+        values = {
+            'name': req.name or 'node-' + utils.random_name(8),
+            'profile_id': node_profile.id,
+            'cluster_id': cluster_id or '',
+            'physical_id': None,
             'index': index,
-            'role': req.role,
-            'metadata': req.metadata,
+            'role': req.role or '',
+            'metadata': req.metadata or {},
+            'status': consts.NS_INIT,
+            'status_reason': 'Initializing',
+            'data': {},
+            'dependents': {},
+            'init_at': timeutils.utcnow(True),
             'user': ctx.user,
             'project': ctx.project,
             'domain': ctx.domain,
         }
-
-        node = node_mod.Node(req.name, node_profile.id, cluster_id, ctx,
-                             **kwargs)
-        node.store(ctx)
+        node = node_obj.Node.create(ctx, values)
 
         params = {
             'name': 'node_create_%s' % node.id[:8],
@@ -1603,11 +1611,11 @@ class EngineService(service.Service):
                  could be found.
         """
         req.obj_set_defaults()
-        db_node = node_obj.Node.find(ctx, req.identity)
-        node = node_mod.Node.load(ctx, db_node=db_node)
+        node = node_obj.Node.find(ctx, req.identity)
         res = node.to_dict()
         if req.show_details and node.physical_id:
-            res['details'] = node.get_details(ctx)
+            obj = node_mod.Node.load(ctx, db_node=node)
+            res['details'] = obj.get_details(ctx)
         return res
 
     @request_context
@@ -1622,7 +1630,7 @@ class EngineService(service.Service):
         """
         LOG.info(_LI("Updating node '%s'."), req.identity)
 
-        db_node = node_obj.Node.find(ctx, req.identity)
+        node = node_obj.Node.find(ctx, req.identity)
         if req.obj_attr_is_set('profile_id') and req.profile_id is not None:
             try:
                 db_profile = profile_obj.Profile.find(ctx, req.profile_id)
@@ -1632,7 +1640,7 @@ class EngineService(service.Service):
             profile_id = db_profile.id
 
             # check if profile_type matches
-            old_profile = profile_obj.Profile.find(ctx, db_node.profile_id)
+            old_profile = profile_obj.Profile.find(ctx, node.profile_id)
             if old_profile.type != db_profile.type:
                 msg = _('Cannot update a node to a different profile type, '
                         'operation aborted.')
@@ -1643,12 +1651,12 @@ class EngineService(service.Service):
             inputs = {}
 
         if req.obj_attr_is_set('name') and req.name:
-            if req.name != db_node.name:
+            if req.name != node.name:
                 inputs['name'] = req.name
-        if req.obj_attr_is_set('role') and req.role != db_node.role:
+        if req.obj_attr_is_set('role') and req.role != node.role:
             inputs['role'] = req.role
         if req.obj_attr_is_set('metadata'):
-            if req.metadata != db_node.metadata:
+            if req.metadata != node.metadata:
                 inputs['metadata'] = req.metadata
 
         if not inputs:
@@ -1656,17 +1664,16 @@ class EngineService(service.Service):
             raise exception.BadRequest(msg=msg)
 
         params = {
-            'name': 'node_update_%s' % db_node.id[:8],
+            'name': 'node_update_%s' % node.id[:8],
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': inputs,
         }
-        action_id = action_mod.Action.create(ctx, db_node.id,
-                                             consts.NODE_UPDATE, **params)
+        action_id = action_mod.Action.create(ctx, node.id, consts.NODE_UPDATE,
+                                             **params)
         dispatcher.start_action()
         LOG.info(_LI("Node update action is queued: %s."), action_id)
 
-        node = node_mod.Node.load(ctx, db_node=db_node)
         resp = node.to_dict()
         resp['action'] = action_id
 

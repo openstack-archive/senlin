@@ -16,10 +16,8 @@ import six
 
 from senlin.common import consts
 from senlin.common import exception
-from senlin.common import utils as common_utils
 from senlin.engine import node as nodem
 from senlin.objects import node as node_obj
-from senlin.objects import profile as profile_obj
 from senlin.profiles import base as pb
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -95,7 +93,8 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual({}, node_info.data)
 
     def test_node_store_update(self):
-        node = nodem.Node('node1', PROFILE_ID, None)
+        node = nodem.Node('node1', PROFILE_ID, "", user=self.context.user,
+                          project=self.context.project)
         node_id = node.store(self.context)
 
         node.name = 'new_name'
@@ -172,68 +171,6 @@ class TestNode(base.SenlinTestCase):
         mock_init.assert_has_calls([
             mock.call(self.context, x_obj_1),
             mock.call(self.context, x_obj_2)])
-
-    def test_node_to_dict(self):
-        x_node_id = '16e70db8-4f70-4883-96be-cf40264a5abd'
-        node = utils.create_node(self.context, x_node_id, PROFILE_ID,
-                                 CLUSTER_ID)
-        self.assertIsNotNone(node.id)
-        expected = {
-            'id': node.id,
-            'name': node.name,
-            'cluster_id': node.cluster_id,
-            'physical_id': node.physical_id,
-            'profile_id': node.profile_id,
-            'user': node.user,
-            'project': node.project,
-            'domain': node.domain,
-            'index': node.index,
-            'role': node.role,
-            'init_at': common_utils.isotime(node.init_at),
-            'created_at': common_utils.isotime(node.created_at),
-            'updated_at': common_utils.isotime(node.updated_at),
-            'status': node.status,
-            'status_reason': node.status_reason,
-            'data': node.data,
-            'metadata': node.metadata,
-            'dependents': node.dependents,
-            'profile_name': self.profile.name,
-        }
-        result = nodem.Node.load(self.context, x_node_id)
-        dt = result.to_dict()
-        self.assertEqual(expected, dt)
-
-    @mock.patch.object(profile_obj.Profile, 'get')
-    def test_node_to_dict_no_profile(self, mock_profile_get):
-        x_node_id = '11ad5c3d-e1e5-4ed8-8fe3-2938b63a11cb'
-        node = utils.create_node(self.context, x_node_id, PROFILE_ID,
-                                 CLUSTER_ID)
-        self.assertIsNotNone(node.id)
-        expected = {
-            'id': node.id,
-            'name': node.name,
-            'cluster_id': node.cluster_id,
-            'physical_id': node.physical_id,
-            'profile_id': node.profile_id,
-            'user': node.user,
-            'project': node.project,
-            'domain': node.domain,
-            'index': node.index,
-            'role': node.role,
-            'init_at': common_utils.isotime(node.init_at),
-            'created_at': common_utils.isotime(node.created_at),
-            'updated_at': common_utils.isotime(node.updated_at),
-            'status': node.status,
-            'status_reason': node.status_reason,
-            'data': node.data,
-            'metadata': node.metadata,
-            'dependents': node.dependents,
-            'profile_name': 'Unknown',
-        }
-        mock_profile_get.return_value = None
-        result = nodem.Node.load(self.context, x_node_id)
-        dt = result.to_dict()
-        self.assertEqual(expected, dt)
 
     def test_node_set_status(self):
         node = nodem.Node('node1', PROFILE_ID, CLUSTER_ID, self.context)

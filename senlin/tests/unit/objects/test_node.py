@@ -11,19 +11,22 @@
 # under the License.
 
 import mock
+from oslo_utils import timeutils
 from oslo_utils import uuidutils
 import six
-import testtools
 
 from senlin.common import exception as exc
+from senlin.common import utils as common_utils
 from senlin.objects import node as no
+from senlin.tests.unit.common import base
+from senlin.tests.unit.common import utils
 
 
-class TestNode(testtools.TestCase):
+class TestNode(base.SenlinTestCase):
 
     def setUp(self):
         super(TestNode, self).setUp()
-        self.ctx = mock.Mock()
+        self.ctx = utils.dummy_context()
 
     @mock.patch.object(no.Node, 'get')
     def test_find_by_uuid(self, mock_get):
@@ -89,3 +92,45 @@ class TestNode(testtools.TestCase):
         mock_name.assert_called_once_with(self.ctx, 'BOGUS', project_safe=True)
         mock_shortid.assert_called_once_with(self.ctx, 'BOGUS',
                                              project_safe=True)
+
+    def test_to_dict(self):
+        PROFILE_ID = uuidutils.generate_uuid()
+        CLUSTER_ID = uuidutils.generate_uuid()
+        values = {
+            'name': 'test_node',
+            'profile_id': PROFILE_ID,
+            'cluster_id': CLUSTER_ID,
+            'user': self.ctx.user,
+            'project': self.ctx.project,
+            'index': -1,
+            'init_at': timeutils.utcnow(True),
+            'status': 'Initializing',
+        }
+        node = no.Node.create(self.ctx, values)
+        self.assertIsNotNone(node.id)
+
+        expected = {
+            'id': node.id,
+            'name': node.name,
+            'cluster_id': node.cluster_id,
+            'physical_id': node.physical_id,
+            'profile_id': node.profile_id,
+            'user': node.user,
+            'project': node.project,
+            'domain': node.domain,
+            'index': node.index,
+            'role': node.role,
+            'init_at': common_utils.isotime(node.init_at),
+            'created_at': common_utils.isotime(node.created_at),
+            'updated_at': common_utils.isotime(node.updated_at),
+            'status': node.status,
+            'status_reason': node.status_reason,
+            'data': node.data,
+            'metadata': node.metadata,
+            'dependents': node.dependents,
+            'profile_name': node.profile_name,
+        }
+
+        result = no.Node.get(self.ctx, node.id)
+        dt = result.to_dict()
+        self.assertEqual(expected, dt)
