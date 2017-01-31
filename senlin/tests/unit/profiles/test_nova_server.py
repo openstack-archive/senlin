@@ -844,114 +844,6 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         self.assertFalse(res)
 
-    def test_do_rebuild(self):
-        profile = server.ServerProfile('t', self.spec)
-        x_image = {'id': '123'}
-        x_server = mock.Mock(image=x_image)
-        cc = mock.Mock()
-        cc.server_get.return_value = x_server
-        cc.server_rebuild.return_value = True
-        profile._computeclient = cc
-        node_obj = mock.Mock(physical_id='FAKE_ID')
-
-        res = profile.do_rebuild(node_obj)
-
-        self.assertTrue(res)
-        cc.server_get.assert_called_with('FAKE_ID')
-        cc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
-                                                  'FAKE_SERVER_NAME',
-                                                  'adminpass')
-        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
-
-    def test_do_rebuild_server_not_found(self):
-
-        profile = server.ServerProfile('t', self.spec)
-        cc = mock.Mock()
-        err = exc.InternalError(code=404, message='FAKE_ID not found')
-        cc.server_get.side_effect = err
-        profile._computeclient = cc
-        node_obj = mock.Mock(physical_id='FAKE_ID')
-
-        ex = self.assertRaises(exc.EResourceOperation,
-                               profile.do_rebuild,
-                               node_obj)
-
-        self.assertEqual("Failed in rebuilding server 'FAKE_ID': "
-                         "FAKE_ID not found.",
-                         six.text_type(ex))
-        cc.server_get.assert_called_once_with('FAKE_ID')
-
-    def test_do_rebuild_failed_rebuild(self):
-        profile = server.ServerProfile('t', self.spec)
-        x_image = {'id': '123'}
-        x_server = mock.Mock(image=x_image)
-        cc = mock.Mock()
-        cc.server_get.return_value = x_server
-        ex = exc.InternalError(code=500, message='cannot rebuild')
-        cc.server_rebuild.side_effect = ex
-        profile._computeclient = cc
-        node_obj = mock.Mock(physical_id='FAKE_ID')
-
-        ex = self.assertRaises(exc.EResourceOperation,
-                               profile.do_rebuild,
-                               node_obj)
-
-        self.assertEqual("Failed in rebuilding server 'FAKE_ID': "
-                         "cannot rebuild.",
-                         six.text_type(ex))
-        cc.server_get.assert_called_once_with('FAKE_ID')
-        cc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
-                                                  'FAKE_SERVER_NAME',
-                                                  'adminpass')
-        self.assertEqual(0, cc.wait_for_server.call_count)
-
-    def test_do_rebuild_failed_waiting(self):
-        profile = server.ServerProfile('t', self.spec)
-        x_image = {'id': '123'}
-        x_server = mock.Mock(image=x_image)
-        cc = mock.Mock()
-        cc.server_get.return_value = x_server
-        ex = exc.InternalError(code=500, message='timeout')
-        cc.wait_for_server.side_effect = ex
-        profile._computeclient = cc
-        node_obj = mock.Mock(physical_id='FAKE_ID')
-
-        ex = self.assertRaises(exc.EResourceOperation,
-                               profile.do_rebuild,
-                               node_obj)
-
-        self.assertEqual("Failed in rebuilding server 'FAKE_ID': "
-                         "timeout.", six.text_type(ex))
-        cc.server_get.assert_called_once_with('FAKE_ID')
-        cc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
-                                                  'FAKE_SERVER_NAME',
-                                                  'adminpass')
-        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
-
-    def test_do_rebuild_failed_retrieving_server(self):
-        profile = server.ServerProfile('t', self.spec)
-        cc = mock.Mock()
-        cc.server_get.return_value = None
-        profile._computeclient = cc
-        node_obj = mock.Mock(physical_id='FAKE_ID')
-
-        res = profile.do_rebuild(node_obj)
-
-        self.assertFalse(res)
-        cc.server_get.assert_called_once_with('FAKE_ID')
-        self.assertEqual(0, cc.server_rebuild.call_count)
-        self.assertEqual(0, cc.wait_for_server.call_count)
-
-    def test_do_rebuild_no_physical_id(self):
-        profile = server.ServerProfile('t', self.spec)
-        profile._computeclient = mock.Mock()
-
-        test_server = mock.Mock()
-        test_server.physical_id = None
-        # Test path where server doesn't already exist
-        res = profile.do_rebuild(test_server)
-        self.assertFalse(res)
-
     def test_do_check(self):
         profile = server.ServerProfile('t', self.spec)
 
@@ -972,7 +864,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         cc.server_get.assert_called_with('FAKE_ID')
         self.assertTrue(res)
 
-    @mock.patch.object(server.ServerProfile, 'do_rebuild')
+    @mock.patch.object(server.ServerProfile, 'handle_rebuild')
     def test_do_recover_rebuild(self, mock_rebuild):
         profile = server.ServerProfile('t', self.spec)
         node_obj = mock.Mock(physical_id='FAKE_ID')
@@ -982,7 +874,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         self.assertEqual(mock_rebuild.return_value, res)
         mock_rebuild.assert_called_once_with(node_obj)
 
-    @mock.patch.object(server.ServerProfile, 'do_rebuild')
+    @mock.patch.object(server.ServerProfile, 'handle_rebuild')
     def test_do_recover_with_list(self, mock_rebuild):
         profile = server.ServerProfile('t', self.spec)
         node_obj = mock.Mock(physical_id='FAKE_ID')
@@ -1052,6 +944,114 @@ class TestNovaServerBasic(base.SenlinTestCase):
         self.assertFalse(res)
 
         res = profile.handle_reboot(obj, type='foo')
+        self.assertFalse(res)
+
+    def test_handle_rebuild(self):
+        profile = server.ServerProfile('t', self.spec)
+        x_image = {'id': '123'}
+        x_server = mock.Mock(image=x_image)
+        cc = mock.Mock()
+        cc.server_get.return_value = x_server
+        cc.server_rebuild.return_value = True
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.handle_rebuild(node_obj)
+
+        self.assertTrue(res)
+        cc.server_get.assert_called_with('FAKE_ID')
+        cc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
+                                                  'FAKE_SERVER_NAME',
+                                                  'adminpass')
+        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
+
+    def test_handle_rebuild_server_not_found(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        err = exc.InternalError(code=404, message='FAKE_ID not found')
+        cc.server_get.side_effect = err
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               profile.handle_rebuild,
+                               node_obj)
+
+        self.assertEqual("Failed in rebuilding server 'FAKE_ID': "
+                         "FAKE_ID not found.",
+                         six.text_type(ex))
+        cc.server_get.assert_called_once_with('FAKE_ID')
+
+    def test_handle_rebuild_failed_rebuild(self):
+        profile = server.ServerProfile('t', self.spec)
+        x_image = {'id': '123'}
+        x_server = mock.Mock(image=x_image)
+        cc = mock.Mock()
+        cc.server_get.return_value = x_server
+        ex = exc.InternalError(code=500, message='cannot rebuild')
+        cc.server_rebuild.side_effect = ex
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               profile.handle_rebuild,
+                               node_obj)
+
+        self.assertEqual("Failed in rebuilding server 'FAKE_ID': "
+                         "cannot rebuild.",
+                         six.text_type(ex))
+        cc.server_get.assert_called_once_with('FAKE_ID')
+        cc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
+                                                  'FAKE_SERVER_NAME',
+                                                  'adminpass')
+        self.assertEqual(0, cc.wait_for_server.call_count)
+
+    def test_handle_rebuild_failed_waiting(self):
+        profile = server.ServerProfile('t', self.spec)
+        x_image = {'id': '123'}
+        x_server = mock.Mock(image=x_image)
+        cc = mock.Mock()
+        cc.server_get.return_value = x_server
+        ex = exc.InternalError(code=500, message='timeout')
+        cc.wait_for_server.side_effect = ex
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               profile.handle_rebuild,
+                               node_obj)
+
+        self.assertEqual("Failed in rebuilding server 'FAKE_ID': "
+                         "timeout.", six.text_type(ex))
+        cc.server_get.assert_called_once_with('FAKE_ID')
+        cc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
+                                                  'FAKE_SERVER_NAME',
+                                                  'adminpass')
+        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
+
+    def test_handle_rebuild_failed_retrieving_server(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        cc.server_get.return_value = None
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.handle_rebuild(node_obj)
+
+        self.assertFalse(res)
+        cc.server_get.assert_called_once_with('FAKE_ID')
+        self.assertEqual(0, cc.server_rebuild.call_count)
+        self.assertEqual(0, cc.wait_for_server.call_count)
+
+    def test_handle_rebuild_no_physical_id(self):
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = mock.Mock()
+
+        test_server = mock.Mock()
+        test_server.physical_id = None
+
+        res = profile.handle_rebuild(test_server)
+
         self.assertFalse(res)
 
     def test_handle_change_password(self):

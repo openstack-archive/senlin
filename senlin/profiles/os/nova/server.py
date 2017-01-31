@@ -217,9 +217,9 @@ class ServerProfile(base.Profile):
     }
 
     OP_NAMES = (
-        OP_REBOOT, OP_CHANGE_PASSWORD,
+        OP_REBOOT, OP_REBUILD, OP_CHANGE_PASSWORD,
     ) = (
-        'reboot', 'change_password',
+        'reboot', 'rebuild', 'change_password',
     )
 
     REBOOT_TYPE = 'type'
@@ -238,6 +238,9 @@ class ServerProfile(base.Profile):
                     ]
                 )
             }
+        ),
+        OP_REBUILD: schema.Operation(
+            _("Rebuild the server using current image and admin password."),
         ),
         OP_CHANGE_PASSWORD: schema.Operation(
             _("Change the administrator password."),
@@ -979,35 +982,6 @@ class ServerProfile(base.Profile):
         self.compute(obj).server_metadata_delete(obj.physical_id, keys)
         return super(ServerProfile, self).do_leave(obj)
 
-    def do_rebuild(self, obj):
-        if not obj.physical_id:
-            return False
-
-        self.server_id = obj.physical_id
-        driver = self.compute(obj)
-        try:
-            server = driver.server_get(self.server_id)
-        except exc.InternalError as ex:
-            raise exc.EResourceOperation(op='rebuilding', type='server',
-                                         id=self.server_id,
-                                         message=six.text_type(ex))
-
-        if server is None or server.image is None:
-            return False
-
-        image_id = server.image['id']
-        admin_pass = self.properties.get(self.ADMIN_PASS)
-        try:
-            driver.server_rebuild(self.server_id, image_id,
-                                  self.properties.get(self.NAME),
-                                  admin_pass)
-            driver.wait_for_server(self.server_id, 'ACTIVE')
-        except exc.InternalError as ex:
-            raise exc.EResourceOperation(op='rebuilding', type='server',
-                                         id=self.server_id,
-                                         message=six.text_type(ex))
-        return True
-
     def do_check(self, obj):
         if not obj.physical_id:
             return False
@@ -1031,11 +1005,9 @@ class ServerProfile(base.Profile):
 
         if operation and not isinstance(operation, six.string_types):
             operation = operation[0]
-        # TODO(Qiming): Handle the case that the operation contains other
-        #               alternative recover operation
-        # Depends-On: https://review.openstack.org/#/c/359676/
+
         if operation == 'REBUILD':
-            return self.do_rebuild(obj)
+            return self.handle_rebuild(obj)
 
         return super(ServerProfile, self).do_recover(obj, **options)
 
@@ -1051,6 +1023,35 @@ class ServerProfile(base.Profile):
 
         self.compute(obj).server_reboot(obj.physical_id, reboot_type)
         self.compute(obj).wait_for_server(obj.physical_id, 'ACTIVE')
+        return True
+
+    def handle_rebuild(self, obj, **options):
+        if not obj.physical_id:
+            return False
+
+        server_id = obj.physical_id
+        driver = self.compute(obj)
+        try:
+            server = driver.server_get(server_id)
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(op='rebuilding', type='server',
+                                         id=server_id,
+                                         message=six.text_type(ex))
+
+        if server is None or server.image is None:
+            return False
+
+        image_id = server.image['id']
+        admin_pass = self.properties.get(self.ADMIN_PASS)
+        try:
+            driver.server_rebuild(server_id, image_id,
+                                  self.properties.get(self.NAME),
+                                  admin_pass)
+            driver.wait_for_server(server_id, 'ACTIVE')
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(op='rebuilding', type='server',
+                                         id=server_id,
+                                         message=six.text_type(ex))
         return True
 
     def handle_change_password(self, obj, **options):

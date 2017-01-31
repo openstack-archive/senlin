@@ -405,11 +405,6 @@ class Profile(object):
         LOG.warning(_LW("Leave operation not specialized."))
         return True
 
-    def do_rebuild(self, obj):
-        """For subclass to override."""
-        LOG.warning(_LW("Rebuild operation not specialized."))
-        return True
-
     def do_recover(self, obj, **options):
         """Default recover operation.
 

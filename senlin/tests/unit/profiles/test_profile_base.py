@@ -736,7 +736,6 @@ class TestProfileBase(base.SenlinTestCase):
         self.assertEqual({}, profile.do_get_details(mock.Mock()))
         self.assertTrue(profile.do_join(mock.Mock(), mock.Mock()))
         self.assertTrue(profile.do_leave(mock.Mock()))
-        self.assertTrue(profile.do_rebuild(mock.Mock()))
         self.assertTrue(profile.do_validate(mock.Mock()))
 
     def test_do_recover_default(self):
