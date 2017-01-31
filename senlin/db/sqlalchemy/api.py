@@ -276,6 +276,14 @@ def node_get_all_by_cluster(context, cluster_id, project_safe=True):
                                project_safe=project_safe).all()
 
 
+def node_ids_by_cluster(context, cluster_id):
+    """an internal API for getting node IDs."""
+    with session_for_read() as session:
+        nodes = session.query(models.Node.id).filter_by(
+            cluster_id=cluster_id).all()
+        return [n[0] for n in nodes]
+
+
 def node_count_by_cluster(context, cluster_id, **kwargs):
     project_safe = kwargs.pop('project_safe', True)
     query = model_query(context, models.Node)
@@ -614,6 +622,14 @@ def cluster_policy_get_all(context, cluster_id, filters=None, sort=None):
     keys, dirs = utils.get_sort_params(sort)
     return sa_utils.paginate_query(query, models.ClusterPolicies, None,
                                    keys, sort_dirs=dirs).all()
+
+
+def cluster_policy_ids_by_cluster(context, cluster_id):
+    """an internal API for getting cluster IDs."""
+    with session_for_read() as session:
+        policies = session.query(models.ClusterPolicies.policy_id).filter_by(
+            cluster_id=cluster_id).all()
+        return [p[0] for p in policies]
 
 
 def cluster_policy_get_by_type(context, cluster_id, policy_type, filters=None):

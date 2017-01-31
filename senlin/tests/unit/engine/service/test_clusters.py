@@ -22,7 +22,6 @@ from senlin.common.i18n import _
 from senlin.common import scaleutils as su
 from senlin.common import utils as common_utils
 from senlin.engine.actions import base as am
-from senlin.engine import cluster as cm
 from senlin.engine import dispatcher
 from senlin.engine import node as nm
 from senlin.engine import service
@@ -80,23 +79,23 @@ class ClusterTest(base.SenlinTestCase):
             setattr(req_obj, k, v)
         req_base.obj_from_primitive.return_value = req_obj
 
-    @mock.patch.object(cm.Cluster, 'load_all')
-    def test_cluster_list(self, mock_load):
+    @mock.patch.object(co.Cluster, 'get_all')
+    def test_cluster_list(self, mock_get):
         x_obj_1 = mock.Mock()
         x_obj_1.to_dict.return_value = {'k': 'v1'}
         x_obj_2 = mock.Mock()
         x_obj_2.to_dict.return_value = {'k': 'v2'}
-        mock_load.return_value = [x_obj_1, x_obj_2]
+        mock_get.return_value = [x_obj_1, x_obj_2]
         req = orco.ClusterListRequest(project_safe=True)
 
         result = self.eng.cluster_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
-        mock_load.assert_called_once_with(self.ctx, project_safe=True)
+        mock_get.assert_called_once_with(self.ctx, project_safe=True)
 
-    @mock.patch.object(cm.Cluster, 'load_all')
-    def test_cluster_list_with_params(self, mock_load):
-        mock_load.return_value = []
+    @mock.patch.object(co.Cluster, 'get_all')
+    def test_cluster_list_with_params(self, mock_get):
+        mock_get.return_value = []
         marker = uuidutils.generate_uuid()
         req = {
             'limit': 10,
@@ -111,7 +110,7 @@ class ClusterTest(base.SenlinTestCase):
         result = self.eng.cluster_list(self.ctx, req)
 
         self.assertEqual([], result)
-        mock_load.assert_called_once_with(
+        mock_get.assert_called_once_with(
             self.ctx, limit=10, marker=marker, sort='name:asc',
             filters={'name': ['test_cluster'], 'status': ['ACTIVE']},
             project_safe=True)
@@ -119,7 +118,7 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(service.EngineService, 'check_cluster_quota')
     @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(am.Action, 'create')
-    @mock.patch("senlin.engine.cluster.Cluster")
+    @mock.patch.object(co.Cluster, "create")
     @mock.patch.object(po.Profile, 'find')
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_create(self, notify, mock_profile, mock_cluster,
@@ -142,11 +141,12 @@ class ClusterTest(base.SenlinTestCase):
         mock_profile.assert_called_once_with(self.ctx, 'PROFILE')
         mock_check.assert_called_once_with(None, 3, None, None, True)
         mock_cluster.assert_called_once_with(
-            'C1', 3, 'PROFILE_ID',
-            min_size=0, max_size=-1, timeout=3600, metadata={},
-            user=self.ctx.user, project=self.ctx.project,
-            domain=self.ctx.domain)
-        x_cluster.store.assert_called_once_with(self.ctx)
+            self.ctx,
+            dict(name='C1', desired_capacity=3, profile_id='PROFILE_ID',
+                 min_size=0, max_size=-1, timeout=3600, metadata={},
+                 dependents={}, data={}, next_index=1, status='INIT',
+                 status_reason='Initializing', user=self.ctx.user,
+                 project=self.ctx.project, domain=self.ctx.domain))
         mock_action.assert_called_once_with(
             self.ctx,
             '12345678ABC', 'CLUSTER_CREATE',
@@ -226,21 +226,17 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual("INVALID.", six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'PROFILE')
 
-    @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'find')
-    def test_cluster_get(self, mock_find, mock_load):
-        x_obj = mock.Mock()
-        mock_find.return_value = x_obj
+    def test_cluster_get(self, mock_find):
         x_cluster = mock.Mock()
         x_cluster.to_dict.return_value = {'foo': 'bar'}
-        mock_load.return_value = x_cluster
+        mock_find.return_value = x_cluster
         req = orco.ClusterGetRequest(identity='C1')
 
         result = self.eng.cluster_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'C1')
-        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
 
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_get_not_found(self, mock_find):
@@ -255,19 +251,16 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
 
     @mock.patch.object(am.Action, 'create')
-    @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(po.Profile, 'find')
     @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(dispatcher, 'start_action')
-    def test_cluster_update(self, notify, mock_find, mock_profile, mock_load,
+    def test_cluster_update(self, notify, mock_find, mock_profile,
                             mock_action):
-        x_obj = mock.Mock()
-        mock_find.return_value = x_obj
         x_cluster = mock.Mock(id='12345678AB', status='ACTIVE',
                               profile_id='OLD_PROFILE',
                               metadata={'A': 'B'})
         x_cluster.to_dict.return_value = {'foo': 'bar'}
-        mock_load.return_value = x_cluster
+        mock_find.return_value = x_cluster
         old_profile = mock.Mock(type='FAKE_TYPE', id='ID_OLD')
         new_profile = mock.Mock(type='FAKE_TYPE', id='ID_NEW')
         mock_profile.side_effect = [old_profile, new_profile]
@@ -281,7 +274,6 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual({'action': 'ACTION_ID', 'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_ID')
-        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
         mock_profile.assert_has_calls([
             mock.call(self.ctx, 'OLD_PROFILE'),
             mock.call(self.ctx, 'NEW_PROFILE'),
@@ -312,13 +304,10 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req)
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
 
-    @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'find')
-    def test_cluster_update_cluster_bad_status(self, mock_find, mock_load):
-        x_obj = mock.Mock()
-        mock_find.return_value = x_obj
+    def test_cluster_update_cluster_bad_status(self, mock_find):
         x_cluster = mock.Mock(status='ERROR')
-        mock_load.return_value = x_cluster
+        mock_find.return_value = x_cluster
         req = {'identity': 'CLUSTER', 'name': 'new-name'}
         self._prepare_request(req)
 
@@ -331,16 +320,11 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual('Updating a cluster in error state is not supported.',
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
-        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
 
     @mock.patch.object(po.Profile, 'find')
-    @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'find')
-    def test_cluster_update_profile_not_found(self, mock_find, mock_load,
-                                              mock_profile):
-        x_obj = mock.Mock()
-        mock_find.return_value = x_obj
-        mock_load.return_value = mock.Mock(status='ACTIVE',
+    def test_cluster_update_profile_not_found(self, mock_find, mock_profile):
+        mock_find.return_value = mock.Mock(status='ACTIVE',
                                            profile_id='OLD_ID')
         mock_profile.side_effect = [
             mock.Mock(type='FAKE_TYPE', id='OLD_ID'),
@@ -356,21 +340,16 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual("The specified profile 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
-        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
         mock_profile.assert_has_calls([
             mock.call(self.ctx, 'OLD_ID'),
             mock.call(self.ctx, 'Bogus'),
         ])
 
     @mock.patch.object(po.Profile, 'find')
-    @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'find')
-    def test_cluster_update_diff_profile_type(self, mock_find, mock_load,
-                                              mock_profile):
-        x_obj = mock.Mock()
+    def test_cluster_update_diff_profile_type(self, mock_find, mock_profile):
+        x_obj = mock.Mock(status='ACTIVE', profile_id='OLD_ID')
         mock_find.return_value = x_obj
-        mock_load.return_value = mock.Mock(status='ACTIVE',
-                                           profile_id='OLD_ID')
         mock_profile.side_effect = [
             mock.Mock(type='FAKE_TYPE', id='OLD_ID'),
             mock.Mock(type='DIFF_TYPE', id='NEW_ID'),
@@ -384,26 +363,21 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
-        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
         mock_profile.assert_has_calls([
             mock.call(self.ctx, 'OLD_ID'),
             mock.call(self.ctx, 'NEW_PROFILE'),
         ])
 
     @mock.patch.object(am.Action, 'create')
-    @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(po.Profile, 'find')
     @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_update_same_profile(self, notify, mock_find,
-                                         mock_profile, mock_load,
-                                         mock_action):
-        x_obj = mock.Mock()
-        mock_find.return_value = x_obj
+                                         mock_profile, mock_action):
         x_cluster = mock.Mock(id='12345678AB', status='ACTIVE',
                               profile_id='OLD_PROFILE')
         x_cluster.to_dict.return_value = {'foo': 'bar'}
-        mock_load.return_value = x_cluster
+        mock_find.return_value = x_cluster
         old_profile = mock.Mock(type='FAKE_TYPE', id='ID_OLD')
         new_profile = mock.Mock(type='FAKE_TYPE', id='ID_OLD')
         mock_profile.side_effect = [old_profile, new_profile]
@@ -416,7 +390,6 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual({'action': 'ACTION_ID', 'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_ID')
-        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
         mock_profile.assert_has_calls([
             mock.call(self.ctx, 'OLD_PROFILE'),
             mock.call(self.ctx, 'NEW_PROFILE'),
@@ -434,17 +407,14 @@ class ClusterTest(base.SenlinTestCase):
         notify.assert_called_once_with()
 
     @mock.patch.object(am.Action, 'create')
-    @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(dispatcher, 'start_action')
-    def test_cluster_update_same_metadata(self, notify, mock_find, mock_load,
+    def test_cluster_update_same_metadata(self, notify, mock_find,
                                           mock_action):
-        x_obj = mock.Mock()
-        mock_find.return_value = x_obj
         x_cluster = mock.Mock(id='12345678AB', status='ACTIVE',
                               metadata={'K': 'V'})
         x_cluster.to_dict.return_value = {'foo': 'bar'}
-        mock_load.return_value = x_cluster
+        mock_find.return_value = x_cluster
         mock_action.return_value = 'ACTION_ID'
         req = orco.ClusterUpdateRequest(identity='FAKE_ID', name='NEW_NAME',
                                         metadata={'K': 'V'})
@@ -454,7 +424,6 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual({'action': 'ACTION_ID', 'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_ID')
-        mock_load.assert_called_once_with(self.ctx, dbcluster=x_obj)
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', 'CLUSTER_UPDATE',
             name='cluster_update_12345678',
@@ -467,18 +436,16 @@ class ClusterTest(base.SenlinTestCase):
         )
         notify.assert_called_once_with()
 
-    @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'find')
-    def test_cluster_update_no_property_updated(self, mock_find, mock_load):
-        x_obj = mock.Mock()
-        mock_find.return_value = x_obj
-        mock_load.return_value = mock.Mock(status='ACTIVE',
-                                           profile_id='OLD_ID')
+    def test_cluster_update_no_property_updated(self, mock_find):
+        x_cluster = mock.Mock(status='ACTIVE', profile_id='OLD_ID')
+        mock_find.return_value = x_cluster
         req = orco.ClusterUpdateRequest(identity='CLUSTER')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.cluster_update,
                                self.ctx, req.obj_to_primitive())
+
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual('', six.text_type(ex))
 

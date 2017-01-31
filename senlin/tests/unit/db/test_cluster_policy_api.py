@@ -301,3 +301,17 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
         results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
                                                 filters=filters)
         self.assertEqual(0, len(results))
+
+    def test_cluster_policy_ids_by_cluster(self):
+        # prepare
+        ids = []
+        for i in range(3):
+            policy_id = self.create_policy().id
+            ids.append(policy_id)
+            db_api.cluster_policy_attach(self.ctx, self.cluster.id, policy_id,
+                                         {'enabled': True})
+
+        # sorted by enabled, the 2nd and 3rd are unpredictable
+        results = db_api.cluster_policy_ids_by_cluster(self.ctx,
+                                                       self.cluster.id)
+        self.assertEqual(set(ids), set(results))

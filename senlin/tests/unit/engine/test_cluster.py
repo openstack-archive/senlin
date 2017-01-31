@@ -12,7 +12,6 @@
 
 import mock
 from oslo_config import cfg
-from oslo_utils import timeutils
 import six
 
 from senlin.common import consts
@@ -260,48 +259,6 @@ class TestCluster(base.SenlinTestCase):
         mock_init.assert_has_calls([
             mock.call(self.context, x_obj_1),
             mock.call(self.context, x_obj_2)])
-
-    @mock.patch.object(cm.Cluster, '_load_runtime_data')
-    def test_to_dict(self, mock_load):
-        values = {
-            'id': CLUSTER_ID,
-            'profile_id': PROFILE_ID,
-            'name': 'test-cluster',
-            'desired_capacity': 1,
-            'status': 'INIT',
-            'init_at': timeutils.utcnow(True),
-            'user': self.context.user,
-            'project': self.context.project,
-        }
-
-        cluster = co.Cluster.create(self.context, values)
-
-        expected = {
-            'id': CLUSTER_ID,
-            'name': cluster.name,
-            'profile_id': PROFILE_ID,
-            'user': cluster.user,
-            'project': cluster.project,
-            'domain': cluster.domain,
-            'init_at': mock.ANY,
-            'created_at': None,
-            'updated_at': None,
-            'min_size': 0,
-            'max_size': -1,
-            'desired_capacity': 1,
-            'timeout': cfg.CONF.default_action_timeout,
-            'status': 'INIT',
-            'status_reason': None,
-            'metadata': {},
-            'data': None,
-            'dependents': {},
-            'nodes': [],
-            'policies': [],
-            'profile_name': None,
-        }
-
-        result = cm.Cluster.load(self.context, cluster_id=CLUSTER_ID)
-        self.assertEqual(expected, result.to_dict())
 
     @mock.patch.object(co.Cluster, 'update')
     def test_set_status_for_create(self, mock_update):
