@@ -154,7 +154,7 @@ class Node(base.SenlinObject, base.VersionedObjectDictCompat):
 
     @classmethod
     def delete(cls, context, obj_id):
-        db_api.node_delete(context, obj_id)
+        return db_api.node_delete(context, obj_id)
 
     def to_dict(self):
         return {

@@ -280,24 +280,33 @@ class TestNode(base.SenlinTestCase):
         node = nodem.Node('node1', PROFILE_ID, CLUSTER_ID, self.context)
         node.physical_id = uuidutils.generate_uuid()
         node.id = uuidutils.generate_uuid()
+        mock_db_delete.return_value = True
 
         res = node.do_delete(self.context)
 
         self.assertTrue(res)
         mock_delete.assert_called_once_with(self.context, node)
-        mock_db_delete.assert_called_once_with(mock.ANY, node.id)
+        mock_db_delete.assert_called_once_with(self.context, node.id)
         mock_status.assert_called_once_with(self.context, consts.NS_DELETING,
                                             'Deletion in progress')
 
     @mock.patch.object(node_obj.Node, 'delete')
+    @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'delete_object')
-    def test_node_delete_not_created(self, mock_delete, mock_db_delete):
+    def test_node_delete_no_physical_id(self, mock_delete, mock_status,
+                                        mock_db_delete):
         node = nodem.Node('node1', PROFILE_ID, CLUSTER_ID, self.context)
+        node.id = uuidutils.generate_uuid()
         self.assertIsNone(node.physical_id)
+        mock_db_delete.return_value = True
+
         res = node.do_delete(self.context)
+
         self.assertTrue(res)
+        mock_status.assert_called_once_with(self.context, consts.NS_DELETING,
+                                            "Deletion in progress")
         self.assertFalse(mock_delete.called)
-        self.assertTrue(mock_db_delete.called)
+        mock_db_delete.assert_called_once_with(self.context, node.id)
 
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'delete_object')
