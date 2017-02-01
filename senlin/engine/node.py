@@ -227,21 +227,18 @@ class Node(object):
         return True
 
     def do_delete(self, context):
-        if not self.physical_id:
-            no.Node.delete(context, self.id)
-            return True
+        self.set_status(context, consts.NS_DELETING, _('Deletion in progress'))
+        if self.physical_id:
+            try:
+                # The following operation always return True unless exception
+                # is thrown
+                pb.Profile.delete_object(context, self)
+            except exc.EResourceDeletion as ex:
+                self.set_status(context, consts.NS_ERROR, six.text_type(ex))
+                return False
 
-        # TODO(Qiming): check if actions are working on it and can be canceled
-        self.set_status(context, consts.NS_DELETING, 'Deletion in progress')
-        try:
-            # The following operation always return True unless exception
-            # is thrown
-            pb.Profile.delete_object(context, self)
-            no.Node.delete(context, self.id)
-            return True
-        except exc.EResourceDeletion as ex:
-            self.set_status(context, consts.NS_ERROR, six.text_type(ex))
-            return False
+        no.Node.delete(context, self.id)
+        return True
 
     def do_update(self, context, params):
         """Update a node's property.
