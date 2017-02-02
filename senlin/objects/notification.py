@@ -96,23 +96,6 @@ class NotificationBase(NotificationObject):
                    self.payload.obj_to_primitive())
 
 
-# TODO(Qiming): revisit this and see if we should remove it
-def notification_sample(sample):
-    """Class decorator for documentation generation.
-
-    This decorator is used to attach the notification sample information
-    to the notification object for documentation generation purposes.
-
-    :param sample: the path of the sample json file relative to the
-                   doc/notification_samples/ directory in the nova repository
-                   root.
-    """
-    def wrap(cls):
-        cls.sample = sample
-        return cls
-    return wrap
-
-
 @base.SenlinObjectRegistry.register_notification
 class ExceptionPayload(NotificationObject):
 
