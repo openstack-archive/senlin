@@ -56,10 +56,9 @@ class Boolean(fields.FieldType):
         return {'type': ['boolean']}
 
 
-# TODO(Qiming): remove this when oslo patch is released
-# https://review.openstack.org/#/c/360095
 class NonNegativeInteger(fields.FieldType):
-
+    # NOTE: This definition is kept because we want the error message from
+    #       'int' conversion to be user friendly.
     @staticmethod
     def coerce(obj, attr, value):
         try:
