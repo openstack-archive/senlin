@@ -11,7 +11,6 @@
 # under the License.
 
 import copy
-from types import GeneratorType
 
 import mock
 from oslo_context import context as oslo_ctx
@@ -213,51 +212,6 @@ class TestProfileBase(base.SenlinTestCase):
                           self.ctx, profile_id='FAKE_ID')
         mock_get.assert_called_once_with(self.ctx, 'FAKE_ID',
                                          project_safe=True)
-
-    @mock.patch.object(po.Profile, 'get_all')
-    def test_load_all_empty(self, mock_get):
-        mock_get.return_value = []
-        res = pb.Profile.load_all(self.ctx)
-        self.assertIsInstance(res, GeneratorType)
-        value = [v for v in res]
-        self.assertEqual([], value)
-        mock_get.assert_called_once_with(self.ctx, limit=None, marker=None,
-                                         sort=None, filters=None,
-                                         project_safe=True)
-
-    @mock.patch.object(po.Profile, 'get_all')
-    @mock.patch.object(pb.Profile, '_from_object')
-    def test_load_all_with_results(self, mock_from, mock_get):
-        dbobj = mock.Mock()
-        mock_get.return_value = [dbobj]
-        obj = mock.Mock()
-        mock_from.return_value = obj
-        res = pb.Profile.load_all(self.ctx)
-        self.assertIsInstance(res, GeneratorType)
-        value = [v for v in res]
-        self.assertEqual([obj], value)
-        mock_get.assert_called_once_with(self.ctx, limit=None, marker=None,
-                                         sort=None, filters=None,
-                                         project_safe=True)
-        mock_from.assert_called_once_with(dbobj)
-
-    @mock.patch.object(po.Profile, 'get_all')
-    @mock.patch.object(pb.Profile, '_from_object')
-    def test_load_all_with_params(self, mock_from, mock_get):
-        dbobj = mock.Mock()
-        mock_get.return_value = [dbobj]
-        obj = mock.Mock()
-        mock_from.return_value = obj
-        res = pb.Profile.load_all(self.ctx, limit=123, marker='MARKER',
-                                  sort='FOOKEY', filters='BARDICT',
-                                  project_safe=False)
-        self.assertIsInstance(res, GeneratorType)
-        value = [v for v in res]
-        self.assertEqual([obj], value)
-        mock_get.assert_called_once_with(self.ctx, limit=123, marker='MARKER',
-                                         sort='FOOKEY', filters='BARDICT',
-                                         project_safe=False)
-        mock_from.assert_called_once_with(dbobj)
 
     @mock.patch.object(senlin_ctx, 'get_service_context')
     def test_create(self, mock_context):

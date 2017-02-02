@@ -157,18 +157,6 @@ class Profile(object):
         return cls._from_object(profile)
 
     @classmethod
-    def load_all(cls, ctx, limit=None, marker=None, sort=None, filters=None,
-                 project_safe=True):
-        """Retrieve all profiles from database."""
-
-        records = po.Profile.get_all(ctx, limit=limit, marker=marker,
-                                     sort=sort, filters=filters,
-                                     project_safe=project_safe)
-
-        for record in records:
-            yield cls._from_object(record)
-
-    @classmethod
     def create(cls, ctx, name, spec, metadata=None):
         """Create a profile object and validate it.
 
