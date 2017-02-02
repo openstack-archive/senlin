@@ -30,7 +30,7 @@ class Event(base.SenlinObject, base.VersionedObjectDictCompat):
         'oid': fields.UUIDField(),
         'oname': fields.StringField(),
         'otype': fields.StringField(),
-        'cluster_id': fields.UUIDField(nullable=True),
+        'cluster_id': fields.StringField(nullable=True),
         'level': fields.StringField(),
         'user': fields.StringField(),
         'project': fields.StringField(),
