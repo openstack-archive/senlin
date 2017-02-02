@@ -37,7 +37,7 @@ from senlin.rpc import client as rpc_client
 LOG = logging.getLogger(__name__)
 
 
-class NotificationEndpoint(object):
+class NovaNotificationEndpoint(object):
 
     VM_FAILURE_EVENTS = {
         'compute.instance.delete.end': 'DELETE',
@@ -93,13 +93,26 @@ class NotificationEndpoint(object):
 
 
 def ListenerProc(exchange, project_id, cluster_id):
+    """Thread procedure for running a event listener.
+
+    :param exchange: The control exchange for a target service.
+    :param project_id: The ID of the project to filter.
+    :param cluster_id: The ID of the cluster to filter.
+    """
     transport = messaging.get_notification_transport(cfg.CONF)
-    targets = [
-        messaging.Target(topic='versioned_notifications', exchange=exchange),
-    ]
-    endpoints = [
-        NotificationEndpoint(project_id, cluster_id),
-    ]
+
+    if exchange == cfg.CONF.health_manager.nova_control_exchange:
+        targets = [
+            messaging.Target(topic='versioned_notifications',
+                             exchange=exchange),
+        ]
+        endpoints = [
+            NovaNotificationEndpoint(project_id, cluster_id),
+        ]
+    else:  # heat notification
+        LOG.warning(_LW("Heat listener to be added."))
+        return
+
     listener = messaging.get_notification_listener(
         transport, targets, endpoints, executor='threading',
         pool="senlin-listeners")
@@ -197,12 +210,18 @@ class HealthManager(service.Service):
         if not cluster:
             LOG.warning(_LW("Cluster (%s) is not found."), cluster_id)
             return
+        profile = objects.Profile.get(self.ctx, cluster.profile_id,
+                                      project_safe=False)
+        profile_type = profile.type_name.split('-')[0]
+        if profile_type == 'os.nova.server':
+            exchange = cfg.CONF.health_manager.nova_control_exchange
+        elif profile_type == 'os.heat.stack':
+            exchange = cfg.CONF.health_manager.heat_control_exchange
+        else:
+            return None
 
         project = cluster.project
-        nova_exchange = cfg.CONF.health_manager.nova_control_exchange
-        return self.TG.add_thread(ListenerProc,
-                                  nova_exchange,
-                                  project, cluster_id)
+        return self.TG.add_thread(ListenerProc, exchange, project, cluster_id)
 
     def _start_check(self, entry):
         """Routine for starting the checking for a cluster.
@@ -210,25 +229,25 @@ class HealthManager(service.Service):
         :param entry: A dict containing the data associated with the cluster.
         :returns: An updated registry entry record.
         """
-        if entry['check_type'] == consts.NODE_STATUS_POLLING:
+        cid = entry['cluster_id']
+        ctype = entry['check_type']
+        if ctype == consts.NODE_STATUS_POLLING:
             # TODO(anyone): Improve this to use one-shot flavor of timer
             interval = min(entry['interval'], cfg.CONF.periodic_interval_max)
             timer = self.TG.add_timer(interval, self._poll_cluster, None,
-                                      entry['cluster_id'], interval)
+                                      cid, interval)
             entry['timer'] = timer
-        elif entry['check_type'] == consts.LIFECYCLE_EVENTS:
-            LOG.info(_LI("Start listening events for cluster (%s)."),
-                     entry['cluster_id'])
-            listener = self._add_listener(entry['cluster_id'])
+        elif ctype == consts.LIFECYCLE_EVENTS:
+            LOG.info(_LI("Start listening events for cluster (%s)."), cid)
+            listener = self._add_listener(cid)
             if listener:
                 entry['listener'] = listener
             else:
+                LOG.warning(_LW("Error creating listener for cluster %s"), cid)
                 return None
         else:
-            LOG.warning(_LW("Cluster (%(id)s) check type (%(type)s) is "
-                            "invalid."),
-                        {'id': entry['cluster_id'],
-                         'type': entry['check_type']})
+            LOG.warning(_LW("Cluster %(id)s check type %(type)s is invalid."),
+                        {'id': cid, 'type': ctype})
             return None
 
         return entry

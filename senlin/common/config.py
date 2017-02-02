@@ -146,9 +146,10 @@ cfg.CONF.register_opts(authentication_opts, group=authentication_group)
 # Health Manager Group
 healthmgr_group = cfg.OptGroup('health_manager')
 healthmgr_opts = [
-    cfg.StrOpt('nova_control_exchange',
-               default='nova',
-               help="Exchange name for nova notifications"),
+    cfg.StrOpt('nova_control_exchange', default='nova',
+               help=_("Exchange name for nova notifications")),
+    cfg.StrOpt('heat_control_exchange', default='heat',
+               help=_("Exchange name for heat notifications")),
 ]
 cfg.CONF.register_group(healthmgr_group)
 cfg.CONF.register_opts(healthmgr_opts, group=healthmgr_group)
