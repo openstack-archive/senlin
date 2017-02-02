@@ -128,7 +128,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._networkclient = nc
         self._stubout_profile(profile, mock_image=True, mock_flavor=True,
                               mock_keypair=True, mock_net=True)
-
+        mock_zone_info = self.patchobject(profile, '_update_zone_info')
         node_obj = mock.Mock(id='FAKE_NODE_ID', index=123,
                              cluster_id='FAKE_CLUSTER_ID',
                              data={
@@ -138,11 +138,13 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                 }
                              })
         node_obj.name = 'TEST_SERVER'
+        fake_server = mock.Mock(id='FAKE_ID')
+        cc.server_create.return_value = fake_server
 
-        cc.server_create.return_value = mock.Mock(id='FAKE_ID')
-
+        # do it
         server_id = profile.do_create(node_obj)
 
+        # assertion
         attrs = dict(
             adminPass='adminpass',
             availability_zone='AZ1',
@@ -179,6 +181,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         attrs['OS-DCF:diskConfig'] = 'AUTO'
 
         cc.server_create.assert_called_once_with(**attrs)
+        mock_zone_info.assert_called_once_with(node_obj, fake_server)
         self.assertEqual('FAKE_ID', server_id)
 
     def test_do_create_invalid_image(self):
@@ -272,10 +275,14 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._networkclient = nc
         self._stubout_profile(profile, mock_image=True, mock_flavor=True,
                               mock_keypair=True, mock_net=True)
-        cc.server_create.return_value = mock.Mock(id='FAKE_ID')
+        mock_zone_info = self.patchobject(profile, '_update_zone_info')
+        fake_server = mock.Mock(id='FAKE_ID')
+        cc.server_create.return_value = fake_server
 
+        # do it
         server_id = profile.do_create(node_obj)
 
+        # assertions
         attrs = {
             'OS-DCF:diskConfig': 'AUTO',
             'flavorRef': 'FAKE_FLAVOR_ID',
@@ -289,6 +296,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         }
 
         cc.server_create.assert_called_once_with(**attrs)
+        mock_zone_info.assert_called_once_with(node_obj, fake_server)
         self.assertEqual('FAKE_ID', server_id)
 
     def test_do_create_obj_name_cluster_id_is_none(self):
@@ -308,11 +316,12 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._networkclient = nc
         self._stubout_profile(profile, mock_image=True, mock_flavor=True,
                               mock_keypair=True, mock_net=True)
-
+        mock_zone_info = self.patchobject(profile, '_update_zone_info')
         node_obj = mock.Mock(id='FAKE_NODE_ID', cluster_id='', data={},
                              index=None)
         node_obj.name = None
-        cc.server_create.return_value = mock.Mock(id='FAKE_ID')
+        fake_server = mock.Mock(id='FAKE_ID')
+        cc.server_create.return_value = fake_server
 
         server_id = profile.do_create(node_obj)
 
@@ -325,6 +334,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         }
 
         cc.server_create.assert_called_once_with(**attrs)
+        mock_zone_info.assert_called_once_with(node_obj, fake_server)
         self.assertEqual('FAKE_ID', server_id)
 
     def test_do_create_name_property_is_not_defined(self):
@@ -343,14 +353,17 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._networkclient = nc
         self._stubout_profile(profile, mock_image=True, mock_flavor=True,
                               mock_keypair=True, mock_net=True)
+        mock_zone_info = self.patchobject(profile, '_update_zone_info')
 
         node_obj = mock.Mock(id='NODE_ID', cluster_id='', index=-1, data={})
         node_obj.name = 'TEST-SERVER'
+        fake_server = mock.Mock(id='FAKE_ID')
+        cc.server_create.return_value = fake_server
 
-        cc.server_create.return_value = mock.Mock(id='FAKE_ID')
-
+        # do it
         server_id = profile.do_create(node_obj)
 
+        # assertions
         attrs = {
             'OS-DCF:diskConfig': 'AUTO',
             'flavorRef': 'FAKE_FLAVOR_ID',
@@ -360,6 +373,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         }
 
         cc.server_create.assert_called_once_with(**attrs)
+        mock_zone_info.assert_called_once_with(node_obj, fake_server)
         self.assertEqual('FAKE_ID', server_id)
 
     def test_do_create_bdm_v2(self):
@@ -394,10 +408,11 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._networkclient = nc
         self._stubout_profile(profile, mock_image=True, mock_flavor=True,
                               mock_keypair=True, mock_net=True)
-
+        mock_zone_info = self.patchobject(profile, '_update_zone_info')
         node_obj = mock.Mock(id='NODE_ID', cluster_id='', index=-1, data={})
         node_obj.name = None
-        cc.server_create.return_value = mock.Mock(id='FAKE_ID')
+        fake_server = mock.Mock(id='FAKE_ID')
+        cc.server_create.return_value = fake_server
 
         # do it
         server_id = profile.do_create(node_obj)
@@ -417,7 +432,6 @@ class TestNovaServerBasic(base.SenlinTestCase):
         }
         self.assertEqual(expected_volume,
                          profile.properties['block_device_mapping_v2'][0])
-
         attrs = {
             'OS-DCF:diskConfig': 'AUTO',
             'flavorRef': 'FAKE_FLAVOR_ID',
@@ -426,8 +440,8 @@ class TestNovaServerBasic(base.SenlinTestCase):
             'security_groups': [{'name': 'HIGH_SECURITY_GROUP'}],
             'block_device_mapping_v2': bdm_v2
         }
-
         cc.server_create.assert_called_once_with(**attrs)
+        mock_zone_info.assert_called_once_with(node_obj, fake_server)
         self.assertEqual('FAKE_ID', server_id)
 
     def test_do_create_wait_server_timeout(self):
@@ -464,6 +478,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._computeclient = cc
         self._stubout_profile(profile, mock_image=True, mock_flavor=True,
                               mock_keypair=True, mock_net=True)
+        mock_zone_info = self.patchobject(profile, '_update_zone_info')
         node_obj = mock.Mock(id='FAKE_NODE_ID', index=123,
                              cluster_id='FAKE_CLUSTER_ID',
                              data={
@@ -475,11 +490,16 @@ class TestNovaServerBasic(base.SenlinTestCase):
         node_obj.name = 'TEST_SERVER'
         cc.server_create.side_effect = exc.InternalError(
             code=500, message="creation failed.")
+
+        # do it
         ex = self.assertRaises(exc.EResourceCreation, profile.do_create,
                                node_obj)
+
+        # assertions
         self.assertEqual('Failed in creating server: creation failed.',
                          six.text_type(ex))
         self.assertEqual(0, cc.wait_for_server.call_count)
+        self.assertEqual(0, mock_zone_info.call_count)
 
     def test_do_delete_ok(self):
         profile = server.ServerProfile('t', self.spec)
