@@ -80,7 +80,7 @@ of failure detection:
 * ``NODE_STATUS_POLLING``: the *health manager* periodically polls a cluster
   and check if there are nodes inactive.
 
-* ``VM_LIFECYCLE_EVENTS``: the *health manager* listens to event notifications
+* ``LIFECYCLE_EVENTS``: the *health manager* listens to event notifications
   sent by the backend service (e.g. nova-compute).
 
 * ``LB_STATUS_POLLING``: the *health manager* periodically polls the load
@@ -158,12 +158,9 @@ policy which looks like the following example::
   version: 1.0
   properties:
     detection:
-      type: VM_LIFECYCLE_EVENTS
+      type: LIFECYCLE_EVENTS
 
     ...
-
-**NOTE**: The type name ``VM_LIFECYCLE_EVENTS`` are too specific to Nova server
-nodes, this may be changed in future.
 
 When such a policy is attached to a cluster, Senlin registers the cluster to
 the *health manager* engine for failure detection, i.e., node health checking.
