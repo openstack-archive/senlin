@@ -229,40 +229,6 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual("The action 'whatever' could not be found.",
                          six.text_type(ex))
 
-    def test_load_all(self):
-        result = ab.Action.load_all(self.ctx)
-        self.assertEqual([], [c for c in result])
-
-        values = copy.deepcopy(self.action_values)
-        action1 = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, **values)
-        action1.store(self.ctx)
-        action2 = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, **values)
-        action2.store(self.ctx)
-
-        # NOTE: we don't test all other parameters because the db api tests
-        #       already covered that
-        results = list(ab.Action.load_all(self.ctx))
-        actions = [a.id for a in results]
-        self.assertEqual(2, len(actions))
-        self.assertIn(action1.id, actions)
-        self.assertIn(action2.id, actions)
-
-    @mock.patch.object(ao.Action, 'get_all')
-    def test_load_all_with_params(self, mock_call):
-        mock_call.return_value = []
-
-        results = ab.Action.load_all(
-            self.ctx, filters='FAKE_FILTER', limit='FAKE_LIMIT',
-            marker='FAKE_MARKER', sort='FAKE_SORT')
-
-        # the following line is important, or else the generator won't get
-        # called.
-        self.assertEqual([], list(results))
-        mock_call.assert_called_once_with(
-            self.ctx, filters='FAKE_FILTER', limit='FAKE_LIMIT',
-            marker='FAKE_MARKER', sort='FAKE_SORT',
-            project_safe=True)
-
     @mock.patch.object(ab.Action, 'store')
     def test_action_create(self, mock_store):
         mock_store.return_value = 'FAKE_ID'

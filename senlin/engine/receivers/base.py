@@ -164,18 +164,6 @@ class Receiver(object):
 
         return cls._from_object(receiver_obj)
 
-    @classmethod
-    def load_all(cls, context, limit=None, marker=None, sort=None,
-                 filters=None, project_safe=True):
-        """Retrieve all receivers from database."""
-
-        objs = ro.Receiver.get_all(context, limit=limit, marker=marker,
-                                   sort=sort, filters=filters,
-                                   project_safe=project_safe)
-
-        for obj in objs:
-            yield cls._from_object(obj)
-
     def to_dict(self):
         info = {
             'id': self.id,
