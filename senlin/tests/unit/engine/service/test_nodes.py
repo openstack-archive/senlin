@@ -37,28 +37,28 @@ class NodeTest(base.SenlinTestCase):
         self.ctx = utils.dummy_context(project='node_test_project')
         self.eng = service.EngineService('host-a', 'topic-a')
 
-    @mock.patch.object(node_mod.Node, 'load_all')
-    def test_node_list(self, mock_load):
+    @mock.patch.object(no.Node, 'get_all')
+    def test_node_list(self, mock_get):
         obj_1 = mock.Mock()
         obj_1.to_dict.return_value = {'k': 'v1'}
         obj_2 = mock.Mock()
         obj_2.to_dict.return_value = {'k': 'v2'}
-        mock_load.return_value = [obj_1, obj_2]
+        mock_get.return_value = [obj_1, obj_2]
 
         req = orno.NodeListRequest()
         result = self.eng.node_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
-        mock_load.assert_called_once_with(self.ctx, project_safe=True)
+        mock_get.assert_called_once_with(self.ctx, project_safe=True)
 
     @mock.patch.object(co.Cluster, 'find')
-    @mock.patch.object(node_mod.Node, 'load_all')
-    def test_node_list_with_cluster_id(self, mock_load, mock_find):
+    @mock.patch.object(no.Node, 'get_all')
+    def test_node_list_with_cluster_id(self, mock_get, mock_find):
         obj_1 = mock.Mock()
         obj_1.to_dict.return_value = {'k': 'v1'}
         obj_2 = mock.Mock()
         obj_2.to_dict.return_value = {'k': 'v2'}
-        mock_load.return_value = [obj_1, obj_2]
+        mock_get.return_value = [obj_1, obj_2]
         mock_find.return_value = mock.Mock(id='CLUSTER_ID')
 
         req = orno.NodeListRequest(cluster_id='MY_CLUSTER_NAME',
@@ -67,16 +67,16 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
         mock_find.assert_called_once_with(self.ctx, 'MY_CLUSTER_NAME')
-        mock_load.assert_called_once_with(self.ctx, cluster_id='CLUSTER_ID',
-                                          project_safe=True)
+        mock_get.assert_called_once_with(self.ctx, cluster_id='CLUSTER_ID',
+                                         project_safe=True)
 
-    @mock.patch.object(node_mod.Node, 'load_all')
-    def test_node_list_with_params(self, mock_load):
+    @mock.patch.object(no.Node, 'get_all')
+    def test_node_list_with_params(self, mock_get):
         obj_1 = mock.Mock()
         obj_1.to_dict.return_value = {'k': 'v1'}
         obj_2 = mock.Mock()
         obj_2.to_dict.return_value = {'k': 'v2'}
-        mock_load.return_value = [obj_1, obj_2]
+        mock_get.return_value = [obj_1, obj_2]
 
         MARKER_UUID = '2fd5b45f-bae4-4cdb-b283-a71e9f9805c7'
         req = orno.NodeListRequest(status=['ACTIVE'], sort='status',
@@ -85,10 +85,9 @@ class NodeTest(base.SenlinTestCase):
         result = self.eng.node_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
-        mock_load.assert_called_once_with(self.ctx, sort='status', limit=123,
-                                          marker=MARKER_UUID,
-                                          project_safe=True,
-                                          filters={'status': ['ACTIVE']})
+        mock_get.assert_called_once_with(self.ctx, sort='status', limit=123,
+                                         marker=MARKER_UUID, project_safe=True,
+                                         filters={'status': ['ACTIVE']})
 
     @mock.patch.object(co.Cluster, 'find')
     def test_node_list_cluster_not_found(self, mock_find):
@@ -106,15 +105,15 @@ class NodeTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'BOGUS')
 
-    @mock.patch.object(node_mod.Node, 'load_all')
-    def test_node_list_with_project_safe(self, mock_load):
-        mock_load.return_value = []
+    @mock.patch.object(no.Node, 'get_all')
+    def test_node_list_with_project_safe(self, mock_get):
+        mock_get.return_value = []
 
         req = orno.NodeListRequest(project_safe=True)
         result = self.eng.node_list(self.ctx, req.obj_to_primitive())
         self.assertEqual([], result)
-        mock_load.assert_called_once_with(self.ctx, project_safe=True)
-        mock_load.reset_mock()
+        mock_get.assert_called_once_with(self.ctx, project_safe=True)
+        mock_get.reset_mock()
 
         req = orno.NodeListRequest(project_safe=False)
         ex = self.assertRaises(rpc.ExpectedException,
@@ -126,21 +125,21 @@ class NodeTest(base.SenlinTestCase):
         req = orno.NodeListRequest(project_safe=False)
         result = self.eng.node_list(self.ctx, req.obj_to_primitive())
         self.assertEqual([], result)
-        mock_load.assert_called_once_with(self.ctx, project_safe=False)
-        mock_load.reset_mock()
+        mock_get.assert_called_once_with(self.ctx, project_safe=False)
+        mock_get.reset_mock()
 
-    @mock.patch.object(node_mod.Node, 'load_all')
-    def test_node_list_empty(self, mock_load):
-        mock_load.return_value = []
+    @mock.patch.object(no.Node, 'get_all')
+    def test_node_list_empty(self, mock_get):
+        mock_get.return_value = []
 
         req = orno.NodeListRequest()
         result = self.eng.node_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([], result)
-        mock_load.assert_called_once_with(self.ctx, project_safe=True)
+        mock_get.assert_called_once_with(self.ctx, project_safe=True)
 
     @mock.patch.object(action_mod.Action, 'create')
-    @mock.patch('senlin.engine.node.Node')
+    @mock.patch.object(no.Node, 'create')
     @mock.patch.object(po.Profile, 'find')
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_create(self, notify, mock_profile, mock_node, mock_action):
@@ -157,12 +156,24 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual({'foo': 'bar', 'action': 'ACTION_ID'}, result)
         mock_profile.assert_called_once_with(self.ctx, 'PROFILE_NAME')
         mock_node.assert_called_once_with(
-            'NODE1', 'PROFILE_ID', '', self.ctx,
-            index=-1, role='', metadata={},
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain)
-        x_node.store.assert_called_once_with(self.ctx)
+            self.ctx,
+            {
+                'name': 'NODE1',
+                'profile_id': 'PROFILE_ID',
+                'cluster_id': '',
+                'index': -1,
+                'role': '',
+                'metadata': {},
+                'user': self.ctx.user,
+                'project': self.ctx.project,
+                'domain': self.ctx.domain,
+                'data': {},
+                'init_at': mock.ANY,
+                'dependents': {},
+                'physical_id': None,
+                'status': 'INIT',
+                'status_reason': 'Initializing',
+            })
         mock_action.assert_called_once_with(
             self.ctx, 'NODE_ID', consts.NODE_CREATE,
             name='node_create_NODE_ID',
@@ -171,7 +182,7 @@ class NodeTest(base.SenlinTestCase):
         notify.assert_called_once_with()
 
     @mock.patch.object(action_mod.Action, 'create')
-    @mock.patch('senlin.engine.node.Node')
+    @mock.patch.object(no.Node, 'create')
     @mock.patch.object(co.Cluster, 'get_next_index')
     @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(po.Profile, 'find')
@@ -199,12 +210,24 @@ class NodeTest(base.SenlinTestCase):
         mock_profile.assert_called_once_with(self.ctx, 'PROFILE_NAME')
         mock_index.assert_called_once_with(self.ctx, 'CLUSTER_ID')
         mock_node.assert_called_once_with(
-            'NODE1', 'PROFILE_ID', 'CLUSTER_ID', self.ctx,
-            index=12345, role='', metadata={},
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain)
-        x_node.store.assert_called_once_with(self.ctx)
+            self.ctx,
+            {
+                'name': 'NODE1',
+                'profile_id': 'PROFILE_ID',
+                'cluster_id': 'CLUSTER_ID',
+                'index': 12345,
+                'role': '',
+                'metadata': {},
+                'user': self.ctx.user,
+                'project': self.ctx.project,
+                'domain': self.ctx.domain,
+                'data': {},
+                'init_at': mock.ANY,
+                'dependents': {},
+                'physical_id': None,
+                'status': 'INIT',
+                'status_reason': 'Initializing',
+            })
         mock_action.assert_called_once_with(
             self.ctx, 'NODE_ID', consts.NODE_CREATE,
             name='node_create_NODE_ID',
@@ -213,7 +236,7 @@ class NodeTest(base.SenlinTestCase):
         notify.assert_called_once_with()
 
     @mock.patch.object(action_mod.Action, 'create')
-    @mock.patch('senlin.engine.node.Node')
+    @mock.patch.object(no.Node, 'create')
     @mock.patch.object(co.Cluster, 'get_next_index')
     @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(po.Profile, 'find')
@@ -246,12 +269,24 @@ class NodeTest(base.SenlinTestCase):
         ])
         mock_index.assert_called_once_with(self.ctx, 'CLUSTER_ID')
         mock_node.assert_called_once_with(
-            'NODE1', 'NODE_PROFILE_ID', 'CLUSTER_ID', self.ctx,
-            index=12345, role='', metadata={},
-            user=self.ctx.user,
-            project=self.ctx.project,
-            domain=self.ctx.domain)
-        x_node.store.assert_called_once_with(self.ctx)
+            self.ctx,
+            {
+                'name': 'NODE1',
+                'profile_id': 'NODE_PROFILE_ID',
+                'cluster_id': 'CLUSTER_ID',
+                'physical_id': None,
+                'index': 12345,
+                'role': '',
+                'metadata': {},
+                'status': 'INIT',
+                'status_reason': 'Initializing',
+                'user': self.ctx.user,
+                'project': self.ctx.project,
+                'domain': self.ctx.domain,
+                'data': {},
+                'dependents': {},
+                'init_at': mock.ANY,
+            })
         mock_action.assert_called_once_with(
             self.ctx, 'NODE_ID', consts.NODE_CREATE,
             name='node_create_NODE_ID',
@@ -337,30 +372,26 @@ class NodeTest(base.SenlinTestCase):
         ])
         mock_cluster.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
 
-    @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(no.Node, 'find')
-    def test_node_get(self, mock_find, mock_load):
-        x_obj = mock.Mock()
+    def test_node_get(self, mock_find):
+        x_obj = mock.Mock(physical_id='PHYSICAL_ID')
+        x_obj.to_dict.return_value = {'foo': 'bar'}
         mock_find.return_value = x_obj
-        x_node = mock.Mock(physical_id='PHYSICAL_ID')
-        x_node.to_dict.return_value = {'foo': 'bar'}
-        mock_load.return_value = x_node
-
         req = orno.NodeGetRequest(identity='NODE1', show_details=False)
+
         result = self.eng.node_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'NODE1')
-        mock_load.assert_called_once_with(self.ctx, db_node=x_obj)
-        x_node.to_dict.assert_called_once_with()
+        x_obj.to_dict.assert_called_once_with()
 
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(no.Node, 'find')
     def test_node_get_with_details(self, mock_find, mock_load):
-        x_obj = mock.Mock()
+        x_obj = mock.Mock(physical_id='PHYSICAL_ID')
+        x_obj.to_dict.return_value = {'foo': 'bar'}
         mock_find.return_value = x_obj
-        x_node = mock.Mock(physical_id='PHYSICAL_ID')
-        x_node.to_dict.return_value = {'foo': 'bar'}
+        x_node = mock.Mock()
         x_node.get_details.return_value = {'info': 'blahblah'}
         mock_load.return_value = x_node
 
@@ -371,14 +402,14 @@ class NodeTest(base.SenlinTestCase):
                          result)
         mock_find.assert_called_once_with(self.ctx, 'NODE1')
         mock_load.assert_called_once_with(self.ctx, db_node=x_obj)
-        x_node.to_dict.assert_called_once_with()
+        x_obj.to_dict.assert_called_once_with()
         x_node.get_details.assert_called_once_with(self.ctx)
 
     @mock.patch.object(no.Node, 'find')
     def test_node_get_node_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='node', id='Bogus')
-
         req = orno.NodeGetRequest(identity='Bogus', show_details=False)
+
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_get,
                                self.ctx, req.obj_to_primitive())
@@ -388,35 +419,27 @@ class NodeTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
-    @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(no.Node, 'find')
-    def test_node_get_no_physical_id(self, mock_find, mock_load):
-        x_obj = mock.Mock()
+    def test_node_get_no_physical_id(self, mock_find):
+        x_obj = mock.Mock(physical_id=None)
+        x_obj.to_dict.return_value = {'foo': 'bar'}
         mock_find.return_value = x_obj
-        x_node = mock.Mock(physical_id=None)
-        x_node.to_dict.return_value = {'foo': 'bar'}
-        mock_load.return_value = x_node
-
         req = orno.NodeGetRequest(identity='NODE1', show_details=True)
+
         result = self.eng.node_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'NODE1')
-        mock_load.assert_called_once_with(self.ctx, db_node=x_obj)
-        x_node.to_dict.assert_called_once_with()
-        self.assertEqual(0, x_node.get_details.call_count)
+        x_obj.to_dict.assert_called_once_with()
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')
-    @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(no.Node, 'find')
-    def test_node_update(self, mock_find, mock_load, mock_action, mock_start):
+    def test_node_update(self, mock_find, mock_action, mock_start):
         x_obj = mock.Mock(id='FAKE_NODE_ID', name='NODE1', role='ROLE1',
                           metadata={'KEY': 'VALUE'})
+        x_obj.to_dict.return_value = {'foo': 'bar'}
         mock_find.return_value = x_obj
-        x_node = mock.Mock()
-        x_node.to_dict.return_value = {'foo': 'bar'}
-        mock_load.return_value = x_node
         mock_action.return_value = 'ACTION_ID'
 
         req = orno.NodeUpdateRequest(identity='FAKE_NODE',
@@ -442,28 +465,24 @@ class NodeTest(base.SenlinTestCase):
                 }
             })
         mock_start.assert_called_once_with()
-        mock_load.assert_called_once_with(self.ctx, db_node=x_obj)
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(po.Profile, 'find')
-    @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(no.Node, 'find')
-    def test_node_update_new_profile(self, mock_find, mock_load, mock_profile,
+    def test_node_update_new_profile(self, mock_find, mock_profile,
                                      mock_action, mock_start):
         x_obj = mock.Mock(id='FAKE_NODE_ID', role='ROLE1',
                           metadata={'KEY': 'VALUE'},
                           profile_id='OLD_PROFILE_ID')
         x_obj.name = 'NODE1'
+        x_obj.to_dict.return_value = {'foo': 'bar'}
         mock_find.return_value = x_obj
         # Same profile type
         mock_profile.side_effect = [
             mock.Mock(id='NEW_PROFILE_ID', type='PROFILE_TYPE'),
             mock.Mock(id='OLD_PROFILE_ID', type='PROFILE_TYPE'),
         ]
-        x_node = mock.Mock()
-        x_node.to_dict.return_value = {'foo': 'bar'}
-        mock_load.return_value = x_node
         mock_action.return_value = 'ACTION_ID'
 
         # all properties are filtered out except for profile_id
@@ -489,7 +508,6 @@ class NodeTest(base.SenlinTestCase):
                 'new_profile_id': 'NEW_PROFILE_ID',
             })
         mock_start.assert_called_once_with()
-        mock_load.assert_called_once_with(self.ctx, db_node=x_obj)
 
     @mock.patch.object(no.Node, 'find')
     def test_node_update_node_not_found(self, mock_find):

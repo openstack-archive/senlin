@@ -15,6 +15,7 @@
 from oslo_utils import uuidutils
 
 from senlin.common import exception
+from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.objects import base
 from senlin.objects import fields
@@ -44,13 +45,35 @@ class Node(base.SenlinObject, base.VersionedObjectDictCompat):
         'project': fields.StringField(),
         'domain': fields.StringField(nullable=True),
         'dependents': fields.JsonField(nullable=True),
+        'profile_name': fields.StringField(nullable=True),
     }
+
+    @staticmethod
+    def _from_db_object(context, obj, db_obj):
+        if db_obj is None:
+            return None
+        for field in obj.fields:
+            if field == 'metadata':
+                obj['metadata'] = db_obj['meta_data']
+            elif field == 'profile_name':
+                p = db_obj['profile']
+                obj['profile_name'] = p.name if p else 'Unknown'
+            else:
+                obj[field] = db_obj[field]
+
+        obj._context = context
+        obj.obj_reset_changes()
+
+        return obj
 
     @classmethod
     def create(cls, context, values):
         values = cls._transpose_metadata(values)
         obj = db_api.node_create(context, values)
-        return cls._from_db_object(context, cls(context), obj)
+        # NOTE: We need an extra DB call to make sure the profile is loaded
+        #       and bound to the node created.
+        obj = db_api.node_get(context, obj.id)
+        return cls._from_db_object(context, cls(), obj)
 
     @classmethod
     def find(cls, context, identity, project_safe=True):
@@ -132,3 +155,26 @@ class Node(base.SenlinObject, base.VersionedObjectDictCompat):
     @classmethod
     def delete(cls, context, obj_id):
         db_api.node_delete(context, obj_id)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'cluster_id': self.cluster_id,
+            'physical_id': self.physical_id,
+            'profile_id': self.profile_id,
+            'user': self.user,
+            'project': self.project,
+            'domain': self.domain,
+            'index': self.index,
+            'role': self.role,
+            'init_at': utils.isotime(self.init_at),
+            'created_at': utils.isotime(self.created_at),
+            'updated_at': utils.isotime(self.updated_at),
+            'status': self.status,
+            'status_reason': self.status_reason,
+            'data': self.data,
+            'metadata': self.metadata,
+            'dependents': self.dependents,
+            'profile_name': self.profile_name,
+        }

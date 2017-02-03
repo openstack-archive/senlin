@@ -119,6 +119,7 @@ class Node(BASE, TimestampMixin, models.ModelBase):
     meta_data = Column(types.Dict)
     data = Column(types.Dict)
     dependents = Column(types.Dict)
+    profile = relationship(Profile, backref=backref('nodes'))
 
 
 class ClusterLock(BASE, models.ModelBase):

@@ -176,34 +176,6 @@ class Node(object):
             node = cls._from_object(context, obj)
             yield node
 
-    def to_dict(self):
-        if self.rt['profile']:
-            profile_name = self.rt['profile'].name
-        else:
-            profile_name = 'Unknown'
-        node_dict = {
-            'id': self.id,
-            'name': self.name,
-            'cluster_id': self.cluster_id,
-            'physical_id': self.physical_id,
-            'profile_id': self.profile_id,
-            'user': self.user,
-            'project': self.project,
-            'domain': self.domain,
-            'index': self.index,
-            'role': self.role,
-            'init_at': utils.isotime(self.init_at),
-            'created_at': utils.isotime(self.created_at),
-            'updated_at': utils.isotime(self.updated_at),
-            'status': self.status,
-            'status_reason': self.status_reason,
-            'data': self.data,
-            'metadata': self.metadata,
-            'dependents': self.dependents,
-            'profile_name': profile_name,
-        }
-        return node_dict
-
     def set_status(self, context, status, reason=None, **params):
         """Set status of the node.
 
