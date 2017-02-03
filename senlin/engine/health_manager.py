@@ -216,7 +216,7 @@ class HealthManager(service.Service):
             timer = self.TG.add_timer(interval, self._poll_cluster, None,
                                       entry['cluster_id'], interval)
             entry['timer'] = timer
-        elif entry['check_type'] == consts.VM_LIFECYCLE_EVENTS:
+        elif entry['check_type'] == consts.LIFECYCLE_EVENTS:
             LOG.info(_LI("Start listening events for cluster (%s)."),
                      entry['cluster_id'])
             listener = self._add_listener(entry['cluster_id'])

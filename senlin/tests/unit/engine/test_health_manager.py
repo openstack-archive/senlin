@@ -475,7 +475,7 @@ class TestHealthManager(base.SenlinTestCase):
 
         entry = {
             'cluster_id': 'CCID',
-            'check_type': consts.VM_LIFECYCLE_EVENTS,
+            'check_type': consts.LIFECYCLE_EVENTS,
         }
         res = self.hm._start_check(entry)
 
@@ -490,7 +490,7 @@ class TestHealthManager(base.SenlinTestCase):
 
         entry = {
             'cluster_id': 'CCID',
-            'check_type': consts.VM_LIFECYCLE_EVENTS,
+            'check_type': consts.LIFECYCLE_EVENTS,
         }
         res = self.hm._start_check(entry)
 
