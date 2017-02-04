@@ -12,6 +12,8 @@
 
 """Cluster-policy binding object."""
 
+from oslo_utils import timeutils
+
 from senlin.db import api as db_api
 from senlin.objects import base
 from senlin.objects import cluster as cluster_obj
@@ -83,6 +85,13 @@ class ClusterPolicy(base.SenlinObject, base.VersionedObjectDictCompat):
     @classmethod
     def delete(cls, context, cluster_id, policy_id):
         db_api.cluster_policy_detach(context, cluster_id, policy_id)
+
+    def cooldown_inprogress(self, cooldown):
+        last_op = self.last_op
+        if last_op and not timeutils.is_older_than(last_op, cooldown):
+            return True
+
+        return False
 
     def to_dict(self):
         binding_dict = {

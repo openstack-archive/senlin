@@ -22,9 +22,9 @@ from senlin.common import context as req_context
 from senlin.common import exception
 from senlin.common.i18n import _, _LE
 from senlin.common import utils
-from senlin.engine import cluster_policy as cp_mod
 from senlin.engine import event as EVENT
 from senlin.objects import action as ao
+from senlin.objects import cluster_policy as cpo
 from senlin.objects import dependency as dobj
 from senlin.policies import base as policy_mod
 
@@ -386,10 +386,9 @@ class Action(object):
         if target not in ['BEFORE', 'AFTER']:
             return
 
-        # TODO(Anyone): This could use the cluster's runtime data
-        bindings = cp_mod.ClusterPolicy.load_all(self.context, cluster_id,
-                                                 sort='priority',
-                                                 filters={'enabled': True})
+        bindings = cpo.ClusterPolicy.get_all(self.context, cluster_id,
+                                             sort='priority',
+                                             filters={'enabled': True})
         # default values
         self.data['status'] = policy_mod.CHECK_OK
         self.data['reason'] = _('Completed policy checking.')
@@ -400,7 +399,10 @@ class Action(object):
             # cluster, no matter that policy is only interested in the
             # "BEFORE" or "AFTER" or both.
             if target == 'AFTER':
-                pb.record_last_op(self.context)
+                ts = timeutils.utcnow(True)
+                pb.last_op = ts
+                cpo.ClusterPolicy.update(self.context, pb.cluster_id,
+                                         pb.policy_id, {'last_op': ts})
 
             if not policy.need_check(target, self):
                 continue
