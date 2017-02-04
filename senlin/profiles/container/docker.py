@@ -304,7 +304,8 @@ class DockerProfile(base.Profile):
         }
 
         try:
-            ctx = context.get_admin_context()
+            ctx = context.get_service_context(project=obj.project,
+                                              user=obj.user)
             dockerclient = self.docker(obj)
             db_api.node_add_dependents(ctx, self.host.id, obj.id)
             container = dockerclient.container_create(**params)

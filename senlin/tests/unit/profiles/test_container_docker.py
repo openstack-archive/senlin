@@ -178,7 +178,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         self.assertEqual(msg, ex.message)
 
     @mock.patch.object(node.Node, 'load')
-    def test__get_host_node_found(self, mock_load):
+    def test__get_host_node_found_by_node(self, mock_load):
         node = mock.Mock()
         mock_load.return_value = node
         ctx = mock.Mock()
@@ -188,6 +188,18 @@ class TestContainerDockerProfile(base.SenlinTestCase):
 
         self.assertEqual(node, res)
         mock_load.assert_called_once_with(ctx, node_id='host_node')
+
+    @mock.patch.object(dp.DockerProfile, '_get_random_node')
+    def test__get_host_node_found_by_cluster(self, mock_get):
+        node = mock.Mock()
+        mock_get.return_value = node
+        ctx = mock.Mock()
+        profile = dp.DockerProfile('container', self.spec)
+
+        res = profile._get_host(ctx, None, 'host_cluster')
+
+        self.assertEqual(node, res)
+        mock_get.assert_called_once_with(ctx, 'host_cluster')
 
     @mock.patch.object(node.Node, 'load')
     def test__get_host_node_not_found(self, mock_load):
@@ -215,6 +227,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         ctx = mock.Mock()
         node = profile._get_random_node(ctx, 'host_cluster')
         self.assertIn(node, active_nodes)
+        mock_cluster.assert_called_once_with(ctx, cluster_id='host_cluster')
 
     @mock.patch.object(cluster.Cluster, 'load')
     def test__get_random_node_cluster_not_found(self, mock_load):
@@ -386,7 +399,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         mock_find.assert_called_once_with(profile.context, 'fake_cluster')
 
     @mock.patch.object(db_api, 'node_add_dependents')
-    @mock.patch.object(context, 'get_admin_context')
+    @mock.patch.object(context, 'get_service_context')
     @mock.patch.object(dp.DockerProfile, 'docker')
     def test_do_create(self, mock_docker, mock_ctx, mock_add):
         ctx = mock.Mock()
@@ -402,7 +415,9 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         profile.cluster = cluster
         profile.id = 'profile_id'
         obj = mock.Mock(id='fake_con_id')
+
         ret_container_id = profile.do_create(obj)
+
         mock_add.assert_called_once_with(ctx, 'node_id', 'fake_con_id')
         self.assertEqual(container_id, ret_container_id)
         params = {
@@ -412,13 +427,19 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         }
         dockerclient.container_create.assert_called_once_with(**params)
 
+    @mock.patch.object(context, 'get_service_context')
     @mock.patch.object(dp.DockerProfile, 'docker')
-    def test_do_create_failed(self, mock_docker):
+    def test_do_create_failed(self, mock_docker, mock_ctx):
+        mock_ctx.return_value = mock.Mock()
         mock_docker.side_effect = exc.InternalError
+
         profile = dp.DockerProfile('container', self.spec)
+
         obj = mock.Mock()
         self.assertRaises(exc.EResourceCreation,
                           profile.do_create, obj)
+
+        mock_ctx.assert_called_once_with(project=obj.project, user=obj.user)
 
     @mock.patch.object(context, 'get_admin_context')
     @mock.patch.object(db_api, 'node_remove_dependents')
