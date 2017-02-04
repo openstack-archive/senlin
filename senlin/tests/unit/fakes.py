@@ -20,8 +20,11 @@ from senlin.profiles import base as profile_base
 
 
 class TestProfile(profile_base.Profile):
+
     CONTEXT = 'context'
+
     properties_schema = {
+        CONTEXT: schema.Map("context property"),
         'INT': schema.Integer('int property', default=0),
         'STR': schema.String('string property', default='a string'),
         'MAP': schema.Map(
