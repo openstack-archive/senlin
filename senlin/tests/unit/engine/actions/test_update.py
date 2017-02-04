@@ -172,7 +172,7 @@ class ClusterUpdateTest(base.SenlinTestCase):
         action.id = 'CLUSTER_ACTION_ID'
         action.data = {
             'update': {
-                'pause_time': 3,
+                'pause_time': 0.1,
                 'min_in_service': 1,
                 'plan': [{node1.id}, {node2.id}],
             }
