@@ -292,6 +292,16 @@ class TestNovaV2(base.SenlinTestCase):
         target.assert_called_once_with(server, host='HOST', admin_pass='PASS',
                                        force='True')
 
+    def test_server_create_image(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        server = mock.Mock()
+        target = d.conn.compute.create_server_image
+
+        res = d.server_create_image(server, 'snapshot', metadata='meta')
+
+        self.assertEqual(target.return_value, res)
+        target.assert_called_once_with(server, 'snapshot', 'meta')
+
     def test_wait_for_server(self):
         self.compute.find_server.return_value = 'foo'
 

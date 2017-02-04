@@ -137,6 +137,10 @@ class NovaClient(base.DriverBase):
             server, host=host, admin_pass=admin_pass, force=force)
 
     @sdk.translate_exception
+    def server_create_image(self, server, name, metadata=None):
+        return self.conn.compute.create_server_image(server, name, metadata)
+
+    @sdk.translate_exception
     def wait_for_server(self, server, status='ACTIVE', failures=['ERROR'],
                         interval=2, timeout=None):
         '''Wait for server creation complete'''
