@@ -17,7 +17,6 @@ from oslo_utils import timeutils
 from senlin.common import consts
 from senlin.common import exception
 from senlin.common.i18n import _, _LE
-from senlin.common import utils
 from senlin.engine import cluster_policy as cpm
 from senlin.engine import health_manager
 from senlin.engine import node as node_mod
@@ -198,36 +197,6 @@ class Cluster(object):
         for obj in objs:
             cluster = cls._from_object(context, obj)
             yield cluster
-
-    def to_dict(self):
-        info = {
-            'id': self.id,
-            'name': self.name,
-            'profile_id': self.profile_id,
-            'user': self.user,
-            'project': self.project,
-            'domain': self.domain,
-            'init_at': utils.isotime(self.init_at),
-            'created_at': utils.isotime(self.created_at),
-            'updated_at': utils.isotime(self.updated_at),
-            'min_size': self.min_size,
-            'max_size': self.max_size,
-            'desired_capacity': self.desired_capacity,
-            'timeout': self.timeout,
-            'status': self.status,
-            'status_reason': self.status_reason,
-            'metadata': self.metadata,
-            'data': self.data,
-            'dependents': self.dependents,
-            'nodes': [node.id for node in self.rt['nodes']],
-            'policies': [policy.id for policy in self.rt['policies']],
-        }
-        if self.rt['profile']:
-            info['profile_name'] = self.rt['profile'].name
-        else:
-            info['profile_name'] = None
-
-        return info
 
     def set_status(self, context, status, reason=None, **kwargs):
         """Set status of the cluster.

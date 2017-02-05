@@ -12,9 +12,12 @@
 
 """Cluster object."""
 
+from oslo_utils import timeutils
 from oslo_utils import uuidutils
 
+from senlin.common import context as senlin_context
 from senlin.common import exception as exc
+from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.objects import base
 from senlin.objects import fields
@@ -50,6 +53,7 @@ class Cluster(base.SenlinObject, base.VersionedObjectDictCompat):
     @classmethod
     def create(cls, context, values):
         values = cls._transpose_metadata(values)
+        values['init_at'] = timeutils.utcnow(True)
         obj = db_api.cluster_create(context, values)
         return cls._from_db_object(context, cls(context), obj)
 
@@ -105,8 +109,37 @@ class Cluster(base.SenlinObject, base.VersionedObjectDictCompat):
     @classmethod
     def update(cls, context, obj_id, values):
         values = cls._transpose_metadata(values)
+        values['updated_at'] = timeutils.utcnow(True)
         return db_api.cluster_update(context, obj_id, values)
 
     @classmethod
     def delete(cls, context, obj_id):
         db_api.cluster_delete(context, obj_id)
+
+    def to_dict(self):
+        context = senlin_context.get_admin_context()
+        profile = db_api.profile_get(context, self.profile_id,
+                                     project_safe=False)
+        return {
+            'id': self.id,
+            'name': self.name,
+            'profile_id': self.profile_id,
+            'user': self.user,
+            'project': self.project,
+            'domain': self.domain,
+            'init_at': utils.isotime(self.init_at),
+            'created_at': utils.isotime(self.created_at),
+            'updated_at': utils.isotime(self.updated_at),
+            'min_size': self.min_size,
+            'max_size': self.max_size,
+            'desired_capacity': self.desired_capacity,
+            'timeout': self.timeout,
+            'status': self.status,
+            'status_reason': self.status_reason,
+            'metadata': self.metadata or {},
+            'data': self.data or {},
+            'dependents': self.dependents or {},
+            'profile_name': profile.name,
+            'nodes': db_api.node_ids_by_cluster(context, self.id),
+            'policies': db_api.cluster_policy_ids_by_cluster(context, self.id)
+        }

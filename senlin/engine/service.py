@@ -696,8 +696,7 @@ class EngineService(service.Service):
         if filters:
             query['filters'] = filters
 
-        return [c.to_dict()
-                for c in cluster_mod.Cluster.load_all(ctx, **query)]
+        return [c.to_dict() for c in co.Cluster.get_all(ctx, **query)]
 
     @request_context
     def cluster_get(self, context, req):
@@ -707,8 +706,7 @@ class EngineService(service.Service):
         :param req: An instance of the ClusterGetRequest.
         :return: A dictionary containing the details about a cluster.
         """
-        db_cluster = co.Cluster.find(context, req.identity)
-        cluster = cluster_mod.Cluster.load(context, dbcluster=db_cluster)
+        cluster = co.Cluster.find(context, req.identity)
         return cluster.to_dict()
 
     def check_cluster_quota(self, context):
@@ -759,19 +757,24 @@ class EngineService(service.Service):
 
         LOG.info(_LI("Creating cluster '%s'."), req.name)
 
-        kwargs = {
-            'min_size': req.min_size,
-            'max_size': req.max_size,
-            'timeout': req.timeout,
-            'metadata': req.metadata,
+        values = {
+            'name': req.name,
+            'profile_id': db_profile.id,
+            'desired_capacity': req.desired_capacity,
+            'min_size': req.min_size or consts.CLUSTER_DEFAULT_MIN_SIZE,
+            'max_size': req.max_size or consts.CLUSTER_DEFAULT_MAX_DIZE,
+            'next_index': 1,
+            'timeout': req.timeout or cfg.CONF.default_action_timeout,
+            'status': consts.CS_INIT,
+            'status_reason': 'Initializing',
+            'data': {},
+            'metadata': req.metadata or {},
+            'dependents': {},
             'user': ctx.user,
             'project': ctx.project,
             'domain': ctx.domain,
         }
-
-        cluster = cluster_mod.Cluster(req.name, req.desired_capacity,
-                                      db_profile.id, **kwargs)
-        cluster.store(ctx)
+        cluster = co.Cluster.create(ctx, values)
 
         # Build an Action for cluster creation
         kwargs = {
@@ -797,8 +800,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the details about the cluster and the
                  ID of the action triggered by this operation.
         """
-        db_cluster = co.Cluster.find(ctx, req.identity)
-        cluster = cluster_mod.Cluster.load(ctx, dbcluster=db_cluster)
+        cluster = co.Cluster.find(ctx, req.identity)
         if cluster.status == consts.CS_ERROR:
             msg = _('Updating a cluster in error state')
             LOG.error(msg)

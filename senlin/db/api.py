@@ -103,6 +103,10 @@ def node_get_all_by_cluster(context, cluster_id, project_safe=True):
                                         project_safe=project_safe)
 
 
+def node_ids_by_cluster(context, cluster_id):
+    return IMPL.node_ids_by_cluster(context, cluster_id)
+
+
 def node_count_by_cluster(context, cluster_id, **kwargs):
     return IMPL.node_count_by_cluster(context, cluster_id, **kwargs)
 
@@ -184,6 +188,10 @@ def cluster_policy_get(context, cluster_id, policy_id):
 def cluster_policy_get_all(context, cluster_id, filters=None, sort=None):
     return IMPL.cluster_policy_get_all(context, cluster_id, filters=filters,
                                        sort=sort)
+
+
+def cluster_policy_ids_by_cluster(context, cluster_id):
+    return IMPL.cluster_policy_ids_by_cluster(context, cluster_id)
 
 
 def cluster_policy_get_by_type(context, cluster_id, policy_type, filters=None):

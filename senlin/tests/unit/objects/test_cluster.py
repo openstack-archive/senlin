@@ -11,18 +11,22 @@
 # under the License.
 
 import mock
+from oslo_config import cfg
+from oslo_utils import timeutils
 from oslo_utils import uuidutils
-import testtools
 
 from senlin.common import exception as exc
+from senlin.db import api as db_api
 from senlin.objects import cluster as co
+from senlin.tests.unit.common import base
+from senlin.tests.unit.common import utils
 
 
-class TestCluster(testtools.TestCase):
+class TestCluster(base.SenlinTestCase):
 
     def setUp(self):
         super(TestCluster, self).setUp()
-        self.ctx = mock.Mock()
+        self.ctx = utils.dummy_context()
 
     @mock.patch.object(co.Cluster, 'get')
     def test_find_by_uuid(self, mock_get):
@@ -91,3 +95,52 @@ class TestCluster(testtools.TestCase):
                                               project_safe=True)
         mock_get_short_id.assert_called_once_with(self.ctx, 'bogus',
                                                   project_safe=True)
+
+    @mock.patch.object(db_api, 'cluster_policy_ids_by_cluster')
+    @mock.patch.object(db_api, 'node_ids_by_cluster')
+    @mock.patch.object(db_api, 'profile_get')
+    def test_to_dict(self, mock_profile, mock_nodes, mock_bindings):
+        PROFILE_ID = '96f4df4b-889e-4184-ba8d-b5ca122f95bb'
+        values = {
+            'profile_id': PROFILE_ID,
+            'name': 'test-cluster',
+            'desired_capacity': 1,
+            'status': 'INIT',
+            'init_at': timeutils.utcnow(True),
+            'max_size': -1,
+            'min_size': 0,
+            'timeout': cfg.CONF.default_action_timeout,
+            'user': self.ctx.user,
+            'project': self.ctx.project,
+        }
+        cluster = co.Cluster.create(self.ctx, values)
+        fake_profile = mock.Mock()
+        fake_profile.name = 'PROFILEABC'
+        mock_profile.return_value = fake_profile
+        mock_nodes.return_value = ['N1', 'N2']
+        mock_bindings.return_value = ['P1', 'P2']
+        expected = {
+            'id': cluster.id,
+            'name': cluster.name,
+            'profile_id': PROFILE_ID,
+            'user': cluster.user,
+            'project': cluster.project,
+            'domain': cluster.domain,
+            'init_at': mock.ANY,
+            'created_at': None,
+            'updated_at': None,
+            'min_size': 0,
+            'max_size': -1,
+            'desired_capacity': 1,
+            'timeout': cfg.CONF.default_action_timeout,
+            'status': 'INIT',
+            'status_reason': None,
+            'metadata': {},
+            'data': {},
+            'dependents': {},
+            'nodes': ['N1', 'N2'],
+            'policies': ['P1', 'P2'],
+            'profile_name': 'PROFILEABC',
+        }
+
+        self.assertEqual(expected, cluster.to_dict())
