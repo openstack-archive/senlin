@@ -723,6 +723,45 @@ class TestNovaServerBasic(base.SenlinTestCase):
         self.assertEqual(expected, res)
         cc.server_get.assert_called_once_with('FAKE_ID')
 
+    def test_do_get_details_image_no_id_key(self):
+        cc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        # Test normal path
+        nova_server = mock.Mock()
+        nova_server.to_dict.return_value = {
+            'addresses': {
+                'private': [{
+                    'version': 4,
+                    'addr': '10.0.0.3',
+                }]
+            },
+            'flavor': {
+                'id': 'FAKE_FLAVOR',
+            },
+            'id': 'FAKE_ID',
+            'image': {},
+            'security_groups': [{'name': 'default'}],
+        }
+        cc.server_get.return_value = nova_server
+        res = profile.do_get_details(node_obj)
+        expected = {
+            'flavor': 'FAKE_FLAVOR',
+            'id': 'FAKE_ID',
+            'image': {},
+            'addresses': {
+                'private': [{
+                    'version': 4,
+                    'addr': '10.0.0.3',
+                }]
+            },
+            'security_groups': 'default',
+        }
+        self.assertEqual(expected, res)
+        cc.server_get.assert_called_once_with('FAKE_ID')
+
     def test_do_get_details_with_more_network_or_sg(self):
         cc = mock.Mock()
         profile = server.ServerProfile('t', self.spec)
