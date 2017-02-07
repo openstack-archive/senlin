@@ -108,7 +108,7 @@ Managing Affinity using Affinity Policy
 Another option to manage node affinity is to use the affinity policy
 (see :doc:`Affinity Policy <../user/policy_types/affinity>`). By creating and
 attaching an affinity policy to a cluster, you can still control how nodes
-are distributed relative to the underly hosts. See the above link for usage
+are distributed relative to the underlying hosts. See the above link for usage
 of the policy.
 
 
