@@ -35,11 +35,13 @@ Enabling OSProfiler
 To configure DevStack to enable OSProfiler, edit the
 ``${DEVSTACK_DIR}/local.conf`` file and add::
 
-    enable_plugin ceilometer https://git.openstack.org/openstack/ceilometer
     enable_plugin panko https://git.openstack.org/openstack/panko
+    enable_plugin ceilometer https://git.openstack.org/openstack/ceilometer
     enable_plugin osprofiler https://git.openstack.org/openstack/osprofiler
 
 to the ``[[local|localrc]]`` section.
+
+.. note:: The order of enabling plugins matter.
 
 Using OSProfiler
 ~~~~~~~~~~~~~~~~
