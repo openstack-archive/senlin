@@ -710,10 +710,7 @@ class TestProfileBase(base.SenlinTestCase):
         res = profile.do_recover(mock.Mock())
         self.assertTrue(res)
 
-        res = profile.do_recover(mock.Mock(), foo='bar')
-        self.assertTrue(res)
-
-        res = profile.do_recover(mock.Mock(), operation='bar')
+        res = profile.do_recover(mock.Mock(), operation=[{'name': 'bar'}])
         self.assertFalse(res)
 
     def test_do_recover_with_fencing(self):
@@ -722,19 +719,20 @@ class TestProfileBase(base.SenlinTestCase):
         self.patchobject(profile, 'do_delete', return_value=True)
         obj = mock.Mock()
 
-        res = profile.do_recover(obj, ignore_missing=True, force=True)
-        self.assertTrue(res)
+        res = profile.do_recover(obj, ignore_missing=True,
+                                 params={"fence_compute": True})
 
-        profile.do_delete.assert_called_once_with(
-            obj, ignore_missing=True, force=True)
+        self.assertTrue(res)
+        profile.do_delete.assert_called_once_with(obj, force=True)
         profile.do_create.assert_called_once_with(obj)
 
     def test_do_recover_with_recreate_succeeded(self):
         profile = self._create_profile('test-profile')
-
         self.patchobject(profile, 'do_delete', return_value=True)
         self.patchobject(profile, 'do_create', return_value=True)
-        res = profile.do_recover(mock.Mock(), operation='RECREATE')
+        operation = [{"name": "RECREATE"}]
+        res = profile.do_recover(mock.Mock(), operation=operation)
+
         self.assertTrue(res)
 
     def test_do_recover_with_recreate_failed_delete(self):
@@ -742,10 +740,11 @@ class TestProfileBase(base.SenlinTestCase):
         err = exception.EResourceDeletion(type='STACK', id='ID',
                                           message='BANG')
         self.patchobject(profile, 'do_delete', side_effect=err)
+        operation = [{"name": "RECREATE"}]
 
         ex = self.assertRaises(exception.EResourceOperation,
                                profile.do_recover,
-                               mock.Mock(id='NODE_ID'), operation='RECREATE')
+                               mock.Mock(id='NODE_ID'), operation=operation)
         self.assertEqual("Failed in recovering node 'NODE_ID': "
                          "Failed in deleting STACK 'ID': BANG.",
                          six.text_type(ex))
@@ -755,10 +754,12 @@ class TestProfileBase(base.SenlinTestCase):
         self.patchobject(profile, 'do_delete', return_value=True)
         err = exception.EResourceCreation(type='STACK', message='BANNG')
         self.patchobject(profile, 'do_create', side_effect=err)
+        operation = [{"name": "RECREATE"}]
 
         ex = self.assertRaises(exception.EResourceOperation,
                                profile.do_recover,
-                               mock.Mock(id='NODE_ID'), operation='RECREATE')
+                               mock.Mock(id='NODE_ID'), operation=operation)
+
         msg = ("Failed in recovering node 'NODE_ID': Failed in creating "
                "STACK: BANNG.")
         self.assertEqual(msg, six.text_type(ex))

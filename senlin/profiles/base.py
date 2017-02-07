@@ -404,20 +404,26 @@ class Profile(object):
     def do_recover(self, obj, **options):
         """Default recover operation.
 
+        This is provided as a fallback if a specific profile type does not
+        override this method.
+
         :param obj: The node object to operate on.
         :param options: Keyword arguments for the recover operation.
         """
         operation = options.pop('operation', None)
-        # TODO(Qiming): The operation input could be a list of operations.
+
+        # The operation is a list of action names with optional parameters
         if operation and not isinstance(operation, six.string_types):
             operation = operation[0]
 
-        if operation and operation != consts.RECOVER_RECREATE:
+        if operation and operation['name'] != consts.RECOVER_RECREATE:
             LOG.error(_LE("Recover operation not supported: %s"), operation)
             return False
 
+        extra_params = options.get('params', {})
+        fence_compute = extra_params.get('fence_compute', False)
         try:
-            self.do_delete(obj, **options)
+            self.do_delete(obj, force=fence_compute)
         except exc.EResourceDeletion as ex:
             raise exc.EResourceOperation(op='recovering', type='node',
                                          id=obj.id, message=six.text_type(ex))

@@ -338,6 +338,9 @@ class Node(object):
         """recover a node.
 
         This function is supposed to be invoked from a NODE_RECOVER action.
+        :param context: The request context of the action.
+        :param dict options: A map containing the recovery actions (with
+            parameters if any) and fencing settings.
         """
         if not self.physical_id:
             return False

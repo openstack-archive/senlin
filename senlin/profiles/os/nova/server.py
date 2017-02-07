@@ -13,6 +13,7 @@
 import base64
 import copy
 
+from oslo_log import log as logging
 from oslo_utils import encodeutils
 import six
 
@@ -20,10 +21,12 @@ from senlin.common import constraints
 from senlin.common import consts
 from senlin.common import context
 from senlin.common import exception as exc
-from senlin.common.i18n import _
+from senlin.common.i18n import _, _LE
 from senlin.common import schema
 from senlin.objects import node as node_obj
 from senlin.profiles import base
+
+LOG = logging.getLogger(__name__)
 
 
 class ServerProfile(base.Profile):
@@ -1076,15 +1079,26 @@ class ServerProfile(base.Profile):
         return True
 
     def do_recover(self, obj, **options):
-        # NOTE: We do a 'get' not a 'pop' here, because the operations may
-        #       get fall back to the base class for handling
+        """Handler for recover operation.
+
+        :param obj: The node object.
+        :param dict options: A list for operations each of which has a name
+            and optionally a map from parameter to values.
+        """
         operation = options.get('operation', None)
 
         if operation and not isinstance(operation, six.string_types):
             operation = operation[0]
 
-        if operation == 'REBUILD':
-            return self.handle_rebuild(obj)
+        op_name = operation['name']
+        if op_name.upper() != consts.RECOVER_RECREATE:
+            op_params = operation.get('params', {})
+            if op_name.lower() not in self.OP_NAMES:
+                LOG.error(_LE("The operation '%s' is not supported"), op_name)
+                return False
+
+            method = getattr(self, "handle_" + op_name.lower())
+            return method(obj, **op_params)
 
         return super(ServerProfile, self).do_recover(obj, **options)
 
