@@ -11,9 +11,11 @@
 # under the License.
 
 import copy
+import time
 
 import mock
 from oslo_config import cfg
+from oslo_utils import timeutils as tu
 
 from senlin.common import consts
 from senlin.common import context
@@ -26,6 +28,25 @@ from senlin.objects import profile as obj_profile
 from senlin.objects.requests import nodes as vorn
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.common import base
+
+
+class TestChaseUp(base.SenlinTestCase):
+
+    def test_less_than_one_interval(self):
+        start = tu.utcnow(True)
+        # we assume that the delay before next line is < 5 seconds
+        res = hm._chase_up(start, 5)
+
+        self.assertTrue(res <= 5)
+
+    def test_more_than_one_interval(self):
+        start = tu.utcnow(True)
+        time.sleep(2)
+
+        # we assume that the delay before next line is < 5 seconds
+        res = hm._chase_up(start, 1)
+
+        self.assertTrue(res <= 1)
 
 
 @mock.patch('oslo_messaging.NotificationFilter')
@@ -287,7 +308,7 @@ class TestHealthManager(base.SenlinTestCase):
 
         timer1 = mock.Mock()
         timer2 = mock.Mock()
-        mock_add_timer = self.patchobject(self.hm.TG, 'add_timer',
+        mock_add_timer = self.patchobject(self.hm.TG, 'add_dynamic_timer',
                                           side_effect=[timer1, timer2])
 
         # do it
@@ -296,8 +317,8 @@ class TestHealthManager(base.SenlinTestCase):
         # assertions
         mock_claim.assert_called_once_with(self.hm.ctx, self.hm.engine_id)
         mock_calls = [
-            mock.call(12, self.hm._poll_cluster, None, 'CID1', 12),
-            mock.call(34, self.hm._poll_cluster, None, 'CID2', 34)
+            mock.call(self.hm._poll_cluster, None, None, 'CID1', 12),
+            mock.call(self.hm._poll_cluster, None, None, 'CID2', 34)
         ]
         mock_add_timer.assert_has_calls(mock_calls)
         self.assertEqual(2, len(self.hm.registries))
@@ -322,6 +343,7 @@ class TestHealthManager(base.SenlinTestCase):
             },
             self.hm.registries[1])
 
+    @mock.patch.object(hm, "_chase_up")
     @mock.patch.object(obj_node.Node, 'get_all')
     @mock.patch.object(hm.HealthManager, "_wait_for_action")
     @mock.patch.object(obj_cluster.Cluster, 'get')
@@ -329,7 +351,7 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(context.RequestContext, 'from_dict')
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test__poll_cluster(self, mock_rpc, mock_ctx, mock_sctx, mock_get,
-                           mock_wait, mock_nodes):
+                           mock_wait, mock_nodes, mock_chase):
         x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
         mock_get.return_value = x_cluster
         mock_sctx.return_value = {'user': 'USER_ID',
@@ -346,8 +368,9 @@ class TestHealthManager(base.SenlinTestCase):
         mock_rpc.side_effect = [x_action_check, x_action_recover]
 
         # do it
-        self.hm._poll_cluster('CLUSTER_ID', 456)
+        res = self.hm._poll_cluster('CLUSTER_ID', 456)
 
+        self.assertEqual(mock_chase.return_value, res)
         mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
                                          project_safe=False)
         mock_sctx.assert_called_once_with(user=x_cluster.user,
@@ -360,23 +383,28 @@ class TestHealthManager(base.SenlinTestCase):
             mock.call(ctx, 'node_recover', mock.ANY)
         ])
         mock_wait.assert_called_once_with(ctx, "CHECK_ID", 456)
+        mock_chase.assert_called_once_with(mock.ANY, 456)
 
+    @mock.patch.object(hm, "_chase_up")
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__poll_cluster_not_found(self, mock_check, mock_get):
+    def test__poll_cluster_not_found(self, mock_check, mock_get, mock_chase):
         mock_get.return_value = None
 
         # do it
-        self.hm._poll_cluster('CLUSTER_ID', 123)
+        res = self.hm._poll_cluster('CLUSTER_ID', 123)
 
+        self.assertEqual(mock_chase.return_value, res)
         self.assertEqual(0, mock_check.call_count)
+        mock_chase.assert_called_once_with(mock.ANY, 123)
 
+    @mock.patch.object(hm, "_chase_up")
     @mock.patch.object(context, 'get_service_context')
     @mock.patch.object(context.RequestContext, 'from_dict')
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test__poll_cluster_failed_check_rpc(self, mock_check, mock_get,
-                                            mock_ctx, mock_sctx):
+                                            mock_ctx, mock_sctx, mock_chase):
         x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
         mock_get.return_value = x_cluster
         mock_sctx.return_value = {'user': 'USER_ID',
@@ -388,8 +416,9 @@ class TestHealthManager(base.SenlinTestCase):
         mock_check.side_effect = Exception("boom")
 
         # do it
-        self.hm._poll_cluster('CLUSTER_ID', 123)
+        res = self.hm._poll_cluster('CLUSTER_ID', 123)
 
+        self.assertEqual(mock_chase.return_value, res)
         mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
                                          project_safe=False)
         mock_sctx.assert_called_once_with(user=x_cluster.user,
@@ -398,14 +427,16 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual('USER_ID', ctx.user)
         self.assertEqual('PROJECT_ID', ctx.project)
         mock_check.assert_called_once_with(ctx, 'cluster_check', mock.ANY)
+        mock_chase.assert_called_once_with(mock.ANY, 123)
 
+    @mock.patch.object(hm, "_chase_up")
     @mock.patch.object(hm.HealthManager, "_wait_for_action")
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(context, 'get_service_context')
     @mock.patch.object(context.RequestContext, 'from_dict')
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test__poll_cluster_failed_wait(self, mock_rpc, mock_ctx, mock_sctx,
-                                       mock_get, mock_wait):
+                                       mock_get, mock_wait, mock_chase):
         x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
         mock_get.return_value = x_cluster
         mock_sctx.return_value = {'user': 'USER_ID',
@@ -419,8 +450,9 @@ class TestHealthManager(base.SenlinTestCase):
         mock_rpc.return_value = x_action_check
 
         # do it
-        self.hm._poll_cluster('CLUSTER_ID', 456)
+        res = self.hm._poll_cluster('CLUSTER_ID', 456)
 
+        self.assertEqual(mock_chase.return_value, res)
         mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
                                          project_safe=False)
         mock_sctx.assert_called_once_with(user=x_cluster.user,
@@ -430,6 +462,7 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual('PROJECT_ID', ctx.project)
         mock_rpc.assert_called_once_with(ctx, 'cluster_check', mock.ANY)
         mock_wait.assert_called_once_with(ctx, "CHECK_ID", 456)
+        mock_chase.assert_called_once_with(mock.ANY, 456)
 
     @mock.patch.object(obj_profile.Profile, 'get')
     @mock.patch.object(obj_cluster.Cluster, 'get')
@@ -517,7 +550,7 @@ class TestHealthManager(base.SenlinTestCase):
 
     def test__start_check_for_polling(self):
         x_timer = mock.Mock()
-        mock_add_timer = self.patchobject(self.hm.TG, 'add_timer',
+        mock_add_timer = self.patchobject(self.hm.TG, 'add_dynamic_timer',
                                           return_value=x_timer)
 
         entry = {
@@ -530,8 +563,8 @@ class TestHealthManager(base.SenlinTestCase):
         expected = copy.deepcopy(entry)
         expected['timer'] = x_timer
         self.assertEqual(expected, res)
-        mock_add_timer.assert_called_once_with(12, self.hm._poll_cluster, None,
-                                               'CCID', 12)
+        mock_add_timer.assert_called_once_with(
+            self.hm._poll_cluster, None, None, 'CCID', 12)
 
     def test__start_check_for_listening(self):
         x_listener = mock.Mock()
@@ -617,15 +650,15 @@ class TestHealthManager(base.SenlinTestCase):
                                             version=consts.RPC_API_VERSION)
         mock_get_rpc.assert_called_once_with(target, self.hm)
         x_rpc_server.start.assert_called_once_with()
-        mock_add_timer.assert_called_once_with(cfg.CONF.periodic_interval,
-                                               self.hm._dummy_task)
+        mock_add_timer.assert_called_once_with(
+            cfg.CONF.periodic_interval, self.hm._dummy_task)
         mock_load.assert_called_once_with()
 
     @mock.patch.object(hr.HealthRegistry, 'create')
     def test_register_cluster(self, mock_reg_create):
         ctx = mock.Mock()
         timer = mock.Mock()
-        mock_add_tm = self.patchobject(self.hm.TG, 'add_timer',
+        mock_add_tm = self.patchobject(self.hm.TG, 'add_dynamic_timer',
                                        return_value=timer)
         mock_poll = self.patchobject(self.hm, '_poll_cluster',
                                      return_value=mock.Mock())
@@ -642,7 +675,7 @@ class TestHealthManager(base.SenlinTestCase):
         mock_reg_create.assert_called_once_with(
             ctx, 'CLUSTER_ID', consts.NODE_STATUS_POLLING, 50, {}, 'ENGINE_ID',
             enabled=True)
-        mock_add_tm.assert_called_with(50, mock_poll, None, 'CLUSTER_ID', 50)
+        mock_add_tm.assert_called_with(mock_poll, None, None, 'CLUSTER_ID', 50)
         self.assertEqual(1, len(self.hm.registries))
 
     @mock.patch.object(hm.HealthManager, '_stop_check')

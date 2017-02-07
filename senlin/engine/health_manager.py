@@ -22,6 +22,7 @@ from oslo_log import log as logging
 import oslo_messaging as messaging
 from oslo_service import service
 from oslo_service import threadgroup
+from oslo_utils import timeutils
 import six
 import time
 
@@ -35,6 +36,22 @@ from senlin.objects.requests import clusters as vorc
 from senlin.rpc import client as rpc_client
 
 LOG = logging.getLogger(__name__)
+
+
+def _chase_up(start_time, interval):
+    """Utility function to check if there are missed intervals.
+
+    :param start_time: A time object representing the starting time.
+    :param interval: An integer specifying the time interval in seconds.
+    :returns: Number of seconds to sleep before next round.
+    """
+    end_time = timeutils.utcnow(True)
+    elapsed = timeutils.delta_seconds(start_time, end_time)
+    # check if we have missed any intervals?
+    missed = int((elapsed - 0.0000001) / interval)
+    if missed >= 1:
+        LOG.warning(_LW("Poller missed % intervals for checking"), missed)
+    return (missed + 1) * interval - elapsed
 
 
 class NovaNotificationEndpoint(object):
@@ -170,10 +187,11 @@ class HealthManager(service.Service):
         :param timeout: The maximum number of seconds to wait.
         :returns: Nothing.
         """
+        start_time = timeutils.utcnow(True)
         cluster = objects.Cluster.get(self.ctx, cluster_id, project_safe=False)
         if not cluster:
             LOG.warning(_LW("Cluster (%s) is not found."), cluster_id)
-            return
+            return _chase_up(start_time, timeout)
 
         ctx_dict = context.get_service_context(user=cluster.user,
                                                project=cluster.project)
@@ -184,13 +202,13 @@ class HealthManager(service.Service):
         except Exception as ex:
             LOG.warning(_LW("Failed in triggering RPC for '%(c)s': %(r)s"),
                         {'c': cluster_id, 'r': six.text_type(ex)})
-            return
+            return _chase_up(start_time, timeout)
 
         # wait for action to complete
         res, reason = self._wait_for_action(ctx, action['action'], timeout)
         if not res:
             LOG.warning(_LW("%s"), reason)
-            return
+            return _chase_up(start_time, timeout)
 
         # loop through nodes to trigger recovery
         nodes = objects.Node.get_all(ctx, cluster_id=cluster_id)
@@ -199,6 +217,8 @@ class HealthManager(service.Service):
                 LOG.info(_LI("Requesting node recovery: %s"), node.id)
                 req = objects.NodeRecoverRequest(identity=node.id)
                 self.rpc_client.call(ctx, 'node_recover', req)
+
+        return _chase_up(start_time, timeout)
 
     def _add_listener(self, cluster_id):
         """Routine to be executed for adding cluster listener.
@@ -232,10 +252,11 @@ class HealthManager(service.Service):
         cid = entry['cluster_id']
         ctype = entry['check_type']
         if ctype == consts.NODE_STATUS_POLLING:
-            # TODO(anyone): Improve this to use one-shot flavor of timer
             interval = min(entry['interval'], cfg.CONF.periodic_interval_max)
-            timer = self.TG.add_timer(interval, self._poll_cluster, None,
-                                      cid, interval)
+            timer = self.TG.add_dynamic_timer(self._poll_cluster,
+                                              None,  # initial_delay
+                                              None,  # periodic_interval_max
+                                              cid, interval)
             entry['timer'] = timer
         elif ctype == consts.LIFECYCLE_EVENTS:
             LOG.info(_LI("Start listening events for cluster (%s)."), cid)
