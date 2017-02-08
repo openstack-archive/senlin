@@ -68,7 +68,7 @@ version = senlin_version.canonical_version_string()
 #   bug_tag: Tag for categorizing the bug. Must be set manually.
 #   bug_project: Launchpad project to file bugs against.
 # These variables are passed to the logabug code via html_context.
-giturl = u'http://git.openstack.org/cgit/openstack/senlin/tree/doc/source'
+giturl = u'https://git.openstack.org/cgit/openstack/senlin/tree/doc/source'
 git_cmd = ["git", "log", "--pretty=format:'%ad, commit %h", "--date=local",
            "-n1"]
 gitsha = subprocess.Popen(git_cmd,
