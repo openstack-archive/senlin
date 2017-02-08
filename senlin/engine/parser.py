@@ -44,7 +44,7 @@ class YamlLoader(Loader):
         try:
             url = self.normalise_file_path_to_url(self.construct_scalar(node))
             tmpl = urllib.request.urlopen(url).read()
-            return yaml.load(tmpl, Loader)
+            return yaml.safe_load(tmpl)
         except urllib.error.URLError as ex:
             raise IOError('Failed retrieving file %s: %s' %
                           (url, six.text_type(ex)))
