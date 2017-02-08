@@ -61,7 +61,7 @@ cluster:
           port_range_min: 80
           port_range_max: 80
 
-The resource below defines the profile used to create the targetted cluster:
+The resource below defines the profile used to create the targeted cluster:
 
 .. code-block:: yaml
 
