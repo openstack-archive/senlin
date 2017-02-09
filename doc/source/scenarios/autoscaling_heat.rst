@@ -233,7 +233,7 @@ Step one is to generate key-pair using the followed command:
 
 .. code-block:: console
 
-  $ nova keypair-add heat_key
+  $ openstack keypair create heat_key
 
 Step two is to create a heat template as by downloading the template file
 from `heat template`_.
@@ -242,7 +242,7 @@ Step three is to create a heat stack using the followed command:
 
 .. code-block:: console
 
-  $ heat stack-create test -f ./ex_aslb.yaml -p "key_name=heat_key"
+  $ openstack stack create test -t ./ex_aslb.yaml --parameter "key_name=heat_key"
 
 The steps and samples introduced in this tutorial can also work
 well together with composition of ceilometer, Aodh, and Gnocchi

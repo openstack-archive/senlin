@@ -136,7 +136,7 @@ Creating a Cluster
 To create a cluster, you need to provide the ID or name of the profile to be
 associated with the cluster. For example::
 
-  $ senlin cluster-create --profile qstack c3
+  $ senlin cluster-create -p qstack c3
   +------------------+--------------------------------------+
   | Property         | Value                                |
   +------------------+--------------------------------------+

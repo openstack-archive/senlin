@@ -37,7 +37,7 @@ a *server group* by invoking nova command line, e.g.:
 
 ::
 
-  $ nova server-group-create sg01 affinity
+  $ openstack server group create sg01 --policy affinity
   +--------------+------+------------+---------+---------------+---------+----------+
   | Id           | Name | Project Id | User Id | Policies      | Members | Metadata |
   +--------------+------+------------+---------+---------------+---------+----------+
