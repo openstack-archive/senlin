@@ -200,7 +200,8 @@ class HealthManager(service.Service):
             req = vorc.ClusterCheckRequest(identity=cluster_id)
             action = self.rpc_client.call(ctx, 'cluster_check', req)
         except Exception as ex:
-            LOG.warning(_LW("Failed in triggering RPC for '%(c)s': %(r)s"),
+            LOG.warning(_LW("Failed in triggering 'cluster_check' RPC for "
+                        "'%(c)s': %(r)s"),
                         {'c': cluster_id, 'r': six.text_type(ex)})
             return _chase_up(start_time, timeout)
 
