@@ -322,6 +322,9 @@ class LoadBalancingPolicy(base.Policy):
         lb_driver = self.lbaas(cluster.user, cluster.project)
         lb_driver.lb_status_timeout = self.lb_status_timeout
 
+        # TODO(Anyone): Check if existing nodes has conflicts regarding the
+        # subnets. Each VM addresses detail has a key named to the network
+        # which can be used for validation.
         res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec,
                                         self.hm_spec)
         if res is False:
