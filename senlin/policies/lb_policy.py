@@ -262,11 +262,9 @@ class LoadBalancingPolicy(base.Policy):
             },
         ),
         LB_STATUS_TIMEOUT: schema.Integer(
-            _('Time in second to wait for loadbalancer to be ready'
-              '(provisioning_status is ACTIVE and operating_status is '
-              'ONLINE) before and after senlin requests lbaas V2 service '
-              'for lb operations. '),
-            default=600,
+            _('Time in second to wait for loadbalancer to become ready '
+              'after senlin requests LBaaS V2 service for operations.'),
+            default=300,
         )
     }
 

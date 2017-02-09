@@ -66,7 +66,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
                     'url_path': '/index.html',
                     'expected_codes': '200,201,202'
                 },
-                'lb_status_timeout': 600
+                'lb_status_timeout': 300
             }
         }
         self.sd = mock.Mock()
@@ -114,7 +114,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
                     'protocol_port': 80,
                     'admin_state_up': True,
                 },
-                'lb_status_timeout': 600
+                'lb_status_timeout': 300
             }
         }
 
