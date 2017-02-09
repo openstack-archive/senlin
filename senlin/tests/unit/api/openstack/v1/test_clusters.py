@@ -717,6 +717,21 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test__do_resize_empty_params(self, mock_call, mock_parse, _ign):
+        req = mock.Mock()
+        cid = 'aaaa-bbbb-cccc'
+        data = {}
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller._do_resize,
+                               req, cid, data)
+
+        self.assertEqual("Not enough parameters to do resize action.",
+                         six.text_type(ex))
+        self.assertEqual(0, mock_call.call_count)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test__do_resize_failed_engine(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
