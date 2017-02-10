@@ -81,7 +81,7 @@ validates if the provided regions are still valid and usable.
 Node Distribution
 ~~~~~~~~~~~~~~~~~
 
-After a region placement polic is attached to a cluster and enabled, all
+After a region placement policy is attached to a cluster and enabled, all
 future node creations (by cluster scaling for example) will trigger an
 evaluation of the policy.
 

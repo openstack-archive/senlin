@@ -77,7 +77,7 @@ still valid and usable.
 Node Distribution
 ~~~~~~~~~~~~~~~~~
 
-After a zone placement polic is attached to a cluster and enabled, all future
+After a zone placement policy is attached to a cluster and enabled, all future
 node creations (by cluster scaling for example) will trigger an evaluation of
 the policy. Similarly, a node deletion action will also trigger an evaluation
 of it because the policy's goal is to maintain the node distribution based on
