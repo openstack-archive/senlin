@@ -48,7 +48,7 @@ spec:
 
 .. code-block:: console
 
-  $ senlin profile-create -s sample_server.yaml pserver
+  $ openstack cluster profile create --spec-file sample_server.yaml pserver
 
 Then you can create a cluster using the profile named "``pserver``":
 
@@ -92,7 +92,7 @@ from the following command, you will find the IP address for the specific node:
 
 .. code-block:: console
 
-  $ senlin node-show -D 14936837-1459-416b-a1f3-dea026f6cffc
+  $ openstack cluster node show 14936837-1459-416b-a1f3-dea026f6cffc
   ...
   | details | +-----------+--------------------------------------+ |
   |         | | property  | value                                | |
@@ -126,7 +126,7 @@ by two nodes every time it is triggered:
 
 .. code-block:: console
 
-  $ senlin receiver-create -a CLUSTER_SCALE_OUT -P count=2 -c mycluster r_01
+  $ openstack cluster receiver create --action CLUSTER_SCALE_OUT --params count=2 --cluster mycluster r_01
   +------------+----------------------------------------------------------------------------+
   | Property   | Value                                                                      |
   +------------+----------------------------------------------------------------------------+
@@ -262,11 +262,11 @@ following command:
 
 .. code-block:: console
 
-  $ senlin cluster-show $MYCLUSTER_ID
+  $ openstack cluster show $MYCLUSTER_ID
 
 Optionally, you can use the following command to check if the anticipated
 action was triggered and executed:
 
 .. code-block:: console
 
-  $ senlin action-list -f target=$MYCLUSTER_ID
+  $ openstack cluster action list --filters target=$MYCLUSTER_ID

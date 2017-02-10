@@ -70,11 +70,11 @@ can try expanding the cluster, followed by shrinking it:
 
 .. code-block:: console
 
-  $ senlin cluster-node-list mycluster
-  $ senlin cluster-scale-out mycluster
-  $ senlin cluster-node-list mycluster
-  $ senlin cluster-scale-in mycluster
-  $ senlin cluster-node-list mycluster
+  $ openstack cluster members list mycluster
+  $ openstack cluster expand mycluster
+  $ openstack cluster members list mycluster
+  $ openstack cluster shrink mycluster
+  $ openstack cluster members list mycluster
 
 After the scale-in operation is completed, you will find that the oldest
 node from the cluster is removed. If you want to remove the youngest node

@@ -81,7 +81,7 @@ nodes in the cluster.
 .. code-block:: console
 
   $ senlin cluster-create -p myserver -c 1 mycluster
-  $ senlin cluster-show mycluster
+  $ openstack cluster show mycluster
 
 For more details, check the :doc:`Creating a Cluster <../user/clusters>`
 section in the :ref:`user-references` documentation.
@@ -95,15 +95,15 @@ use the following command:
 
 .. code-block:: console
 
-  $ senlin cluster-scale-out mycluster
-  $ senlin cluster-show mycluster
+  $ openstack cluster expand mycluster
+  $ openstack cluster show mycluster
 
 To decrease the size of the cluster, use the following command:
 
 .. code-block:: console
 
-  $ senlin cluster-scale-in mycluster
-  $ senlin cluster-show mycluster
+  $ openstack cluster shrink mycluster
+  $ openstack cluster show mycluster
 
 For more details, please check the :doc:`Resizing a Cluster <../user/clusters>`
 section in the :ref:`user-references` section.
@@ -117,8 +117,8 @@ Yet another way to change the size of a cluster is to use the command
 
 .. code-block:: console
 
-  $ senlin cluster-resize --capacity 2 mycluster
-  $ senlin cluster-show mycluster
+  $ openstack cluster resize --capacity 2 mycluster
+  $ openstack cluster show mycluster
 
 The ``cluster-resize`` command supports more flexible options to control how
 a cluster is resized. For more details, please check the
@@ -135,7 +135,7 @@ then add it to a cluster. To create a node using a given profile:
 .. code-block:: console
 
   $ senlin node-create -p myserver newnode
-  $ senlin node-show newnode
+  $ openstack cluster node show newnode
 
 For other options supported by the ``node-create`` command, please check the
 :doc:`Creating a Node <../user/nodes>` subsection in the
@@ -150,10 +150,10 @@ to the cluster using the ``cluster-node-add`` command:
 
 .. code-block:: console
 
-  $ senlin cluster-node-add -n newnode mycluster
-  $ senlin cluster-node-list mycluster
-  $ senlin cluster-show mycluster
-  $ senlin node-show newnode
+  $ openstack cluster members add --nodes newnode mycluster
+  $ openstack cluster members list mycluster
+  $ openstack cluster show mycluster
+  $ openstack cluster node show newnode
 
 After the operation is completed, you will see that the node becomes a member
 of the target cluster, with an index value assigned.
@@ -166,13 +166,13 @@ command:
 
 .. code-block:: console
 
-  $ senlin cluster-node-del -n oldnode mycluster
-  $ senlin cluster-node-list mycluster
-  $ senlin cluster-show mycluster
-  $ senlin node-show oldnode
+  $ openstack cluster members del --nodes oldnode mycluster
+  $ openstack cluster members list mycluster
+  $ openstack cluster show mycluster
+  $ openstack cluster node show oldnode
 
 For other cluster membership management commands and options, please check the
-:doc:`Cluster Membership <../user/membership>` section in the 
+:doc:`Cluster Membership <../user/membership>` section in the
 :ref:`user-references` section.
 
 
