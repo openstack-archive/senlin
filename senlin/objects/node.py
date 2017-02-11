@@ -124,17 +124,15 @@ class Node(base.SenlinObject, base.VersionedObjectDictCompat):
 
     @classmethod
     def get_all(cls, context, **kwargs):
-        # TODO(anyone): This has to be improved. 1. The DB API called always
-        # does pagination which is an overkill. 2. we may need a new API for
-        # getting node IDs only since that is a common case for internal use.
+        # TODO(anyone): This has to be improved. The DB API called always
+        # does pagination which is an overkill.
         objs = db_api.node_get_all(context, **kwargs)
         return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
     @classmethod
     def get_all_by_cluster(cls, context, cluster_id, **kwargs):
-        # TODO(anyone): This has to be improved. 1. The DB API called doesn't
-        # support filters. 2. we may need a new API for getting node IDs only
-        # since that is a common case for internal use.
+        # TODO(anyone): This has to be improved. The DB API called doesn't
+        # support filters.
         objs = db_api.node_get_all_by_cluster(context, cluster_id, **kwargs)
         return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
