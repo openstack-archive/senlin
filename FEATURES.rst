@@ -135,6 +135,15 @@ Managing baremetal cluster is a very common requirement from user. It is
 reasonable for Senlin to support it by talking with service like Ironic.
 
 
+Improve health schedule
+-----------------------
+Schedule which engine to handle which clusters health registries can be
+improved. For example:1. When first engine start it will run all health
+registries. 2. When the other engine start it can send a broadcast
+message which carried its handling capacity and said it want to assume
+some health registries.
+
+
 Low Priority
 ~~~~~~~~~~~~
 
