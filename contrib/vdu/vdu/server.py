@@ -64,9 +64,9 @@ class ServerProfile(base.Profile):
     )
 
     NETWORK_KEYS = (
-        PORT, FIXED_IP, NETWORK,
+        PORT, FIXED_IP, NETWORK, PORT_SECURITY_GROUPS,
     ) = (
-        'port', 'fixed_ip', 'network',
+        'port', 'fixed_ip', 'network', 'security_groups',
     )
 
     PERSONALITY_KEYS = (
@@ -182,6 +182,14 @@ class ServerProfile(base.Profile):
                     ),
                     FIXED_IP: schema.String(
                         _('Fixed IP to be used by the network.'),
+                    ),
+                    PORT_SECURITY_GROUPS: schema.List(
+                        _('A list of security groups to be attached to '
+                          'this port.'),
+                        schema=schema.String(
+                            _('Name of a security group'),
+                            required=True,
+                        ),
                     ),
                 },
             ),
@@ -484,6 +492,18 @@ class ServerProfile(base.Profile):
                 else:
                     result[self.FIXED_IP] = fixed_ip
 
+        # Check security_groups
+        security_groups = network.get(self.PORT_SECURITY_GROUPS)
+        if security_groups:
+            result[self.PORT_SECURITY_GROUPS] = []
+            try:
+                for sg in security_groups:
+                    sg_obj = self.network(obj).security_group_find(
+                        sg, ignore_missing=False)
+                    result[self.PORT_SECURITY_GROUPS].append(sg_obj.id)
+            except exc.InternalError as ex:
+                error = six.text_type(ex)
+
         if error:
             if reason == 'create':
                 raise exc.EResourceCreation(type='server', message=error)
@@ -512,6 +532,9 @@ class ServerProfile(base.Profile):
         fixed_ip = net_spec.get(self.FIXED_IP, None)
         if fixed_ip:
             port_attr['fixed_ips'] = [fixed_ip]
+        security_groups = net_spec.get(self.PORT_SECURITY_GROUPS, [])
+        if security_groups:
+            port_attr['security_groups'] = security_groups
         port = self.network(obj).port_create(**port_attr)
         return port
 
