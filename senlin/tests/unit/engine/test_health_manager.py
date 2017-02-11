@@ -21,6 +21,7 @@ from senlin.common import consts
 from senlin.common import context
 from senlin.common import messaging
 from senlin.engine import health_manager as hm
+from senlin import objects
 from senlin.objects import cluster as obj_cluster
 from senlin.objects import health_registry as hr
 from senlin.objects import node as obj_node
@@ -288,7 +289,8 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual(0, len(self.hm.rt['registries']))
 
     @mock.patch.object(hr.HealthRegistry, 'claim')
-    def test__load_runtime_registry(self, mock_claim):
+    @mock.patch.object(objects.HealthRegistry, 'update')
+    def test__load_runtime_registry(self, mock_update, mock_claim):
         mock_claim.return_value = [
             mock.Mock(cluster_id='CID1',
                       check_type=consts.NODE_STATUS_POLLING,
@@ -310,7 +312,6 @@ class TestHealthManager(base.SenlinTestCase):
         timer2 = mock.Mock()
         mock_add_timer = self.patchobject(self.hm.TG, 'add_dynamic_timer',
                                           side_effect=[timer1, timer2])
-
         # do it
         self.hm._load_runtime_registry()
 
@@ -318,7 +319,6 @@ class TestHealthManager(base.SenlinTestCase):
         mock_claim.assert_called_once_with(self.hm.ctx, self.hm.engine_id)
         mock_calls = [
             mock.call(self.hm._poll_cluster, None, None, 'CID1', 12),
-            mock.call(self.hm._poll_cluster, None, None, 'CID2', 34)
         ]
         mock_add_timer.assert_has_calls(mock_calls)
         self.assertEqual(2, len(self.hm.registries))
@@ -338,7 +338,6 @@ class TestHealthManager(base.SenlinTestCase):
                 'check_type': consts.NODE_STATUS_POLLING,
                 'interval': 34,
                 'params': {'k2': 'v2'},
-                'timer': timer2,
                 'enabled': False,
             },
             self.hm.registries[1])
@@ -676,6 +675,31 @@ class TestHealthManager(base.SenlinTestCase):
             ctx, 'CLUSTER_ID', consts.NODE_STATUS_POLLING, 50, {}, 'ENGINE_ID',
             enabled=True)
         mock_add_tm.assert_called_with(mock_poll, None, None, 'CLUSTER_ID', 50)
+        self.assertEqual(1, len(self.hm.registries))
+
+    @mock.patch.object(hr.HealthRegistry, 'create')
+    def test_register_cluster_not_enabled(self, mock_reg_create):
+        ctx = mock.Mock()
+        timer = mock.Mock()
+        mock_add_tm = self.patchobject(self.hm.TG, 'add_dynamic_timer',
+                                       return_value=timer)
+        mock_poll = self.patchobject(self.hm, '_poll_cluster',
+                                     return_value=mock.Mock())
+        x_reg = mock.Mock(cluster_id='CLUSTER_ID',
+                          check_type=consts.NODE_STATUS_POLLING,
+                          interval=50, params={}, enabled=False)
+        mock_reg_create.return_value = x_reg
+
+        self.hm.register_cluster(ctx,
+                                 cluster_id='CLUSTER_ID',
+                                 check_type=consts.NODE_STATUS_POLLING,
+                                 interval=50, enabled=x_reg.enabled)
+
+        mock_reg_create.assert_called_once_with(
+            ctx, 'CLUSTER_ID', consts.NODE_STATUS_POLLING, 50, {}, 'ENGINE_ID',
+            enabled=False)
+        mock_add_tm.assert_not_called()
+        mock_poll.assert_not_called()
         self.assertEqual(1, len(self.hm.registries))
 
     @mock.patch.object(hm.HealthManager, '_stop_check')
