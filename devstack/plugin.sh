@@ -17,7 +17,6 @@ if is_service_enabled sl-api sl-eng; then
         if is_service_enabled horizon; then
             echo_summary "Installing senlin dashboard"
             install_senlin_dashboard
-            cleanup_senlin_dashboard
         fi
         cleanup_senlin
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
