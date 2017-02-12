@@ -44,7 +44,7 @@ The Base Class ``EventBackend``
 
 All event dispatchers are expected to subclass the base class ``EventBackend``
 in the ``senlin.events.base`` module. The only requirement for a dispatcher
-subclass is to override the ``dump()`` method that implments the processing
+subclass is to override the ``dump()`` method that implements the processing
 logic.
 
 
