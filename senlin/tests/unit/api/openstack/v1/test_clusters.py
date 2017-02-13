@@ -407,37 +407,44 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__add_nodes(self, mock_call, mock_parse, mock_enforce):
+    def test__do_add_nodes(self, mock_call, mock_parse, mock_enforce):
         req = mock.Mock()
         cid = 'FAKE_ID'
-        nodes = ['NODE1']
+        data = dict(nodes=['NODE1'])
         mock_call.return_value = {'action': 'action-id'}
         obj = mock.Mock()
         mock_parse.return_value = obj
 
-        resp = self.controller._add_nodes(req, cid, nodes)
+        resp = self.controller._do_add_nodes(req, cid, data)
 
         self.assertEqual({'action': 'action-id'}, resp)
         mock_parse.assert_called_once_with(
-            'ClusterAddNodesRequest', req, {'identity': cid, 'nodes': nodes})
+            'ClusterAddNodesRequest',
+            req,
+            {'identity': cid, 'nodes': data['nodes']}
+        )
         mock_call.assert_called_once_with(
             req.context, 'cluster_add_nodes', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__add_nodes_failed_request(self, mock_call, mock_parse, _ignore):
+    def test__do_add_nodes_failed_request(self, mock_call,
+                                          mock_parse, _ignore):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
-        nodes = ['NODE2']
+        data = dict(nodes=['NODE2'])
         mock_parse.side_effect = exc.HTTPBadRequest('Boom')
 
         ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller._add_nodes,
-                               req, cid, nodes)
+                               self.controller._do_add_nodes,
+                               req, cid, data)
 
         self.assertEqual("Boom", six.text_type(ex))
         mock_parse.assert_called_once_with(
-            'ClusterAddNodesRequest', req, {'identity': cid, 'nodes': nodes})
+            'ClusterAddNodesRequest',
+            req,
+            {'identity': cid, 'nodes': data['nodes']}
+        )
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
@@ -445,77 +452,81 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test__add_nodes_failed_engine(self, mock_call, mock_parse, _ignore):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
-        nodes = ['NODE3']
+        data = dict(nodes=['NODE3'])
         obj = mock.Mock()
         mock_parse.return_value = obj
         mock_call.side_effect = senlin_exc.BadRequest(msg='Boom')
 
         ex = self.assertRaises(senlin_exc.BadRequest,
-                               self.controller._add_nodes,
-                               req, cid, nodes)
+                               self.controller._do_add_nodes,
+                               req, cid, data)
 
         mock_parse.assert_called_once_with(
-            'ClusterAddNodesRequest', req, {'identity': cid, 'nodes': nodes})
+            'ClusterAddNodesRequest',
+            req,
+            {'identity': cid, 'nodes': data['nodes']}
+        )
         self.assertEqual("Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_add_nodes', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__del_nodes(self, mock_call, mock_parse, _ignore):
+    def test__do_del_nodes(self, mock_call, mock_parse, _ignore):
         req = mock.Mock()
         cid = 'FAKE_ID'
-        nodes = ['NODE4']
-        destroy = False
+        data = dict(nodes=['NODE4'], destroy=False)
         mock_call.return_value = {'action': 'action-id'}
         obj = mock.Mock()
         mock_parse.return_value = obj
 
-        resp = self.controller._del_nodes(req, cid, nodes, destroy)
+        resp = self.controller._do_del_nodes(req, cid, data)
 
         self.assertEqual({'action': 'action-id'}, resp)
         mock_parse.assert_called_once_with(
-            'ClusterDelNodesRequest', req, {'identity': cid, 'nodes': nodes,
+            'ClusterDelNodesRequest', req, {'identity': cid,
+                                            'nodes': data['nodes'],
                                             'destroy_after_deletion': False})
         mock_call.assert_called_once_with(
             req.context, 'cluster_del_nodes', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__del_nodes_failed_request(self, mock_call, mock_parse, _ignore):
+    def test__do_del_nodes_failed_request(self, mock_call,
+                                          mock_parse, _ignore):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
-        nodes = ['NODE5']
-        destroy = False
+        data = dict(nodes=['NODE5'], destroy=False)
         mock_parse.side_effect = exc.HTTPBadRequest('Boom')
 
         ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller._del_nodes,
-                               req, cid, nodes, destroy)
+                               self.controller._do_del_nodes,
+                               req, cid, data)
 
         self.assertEqual("Boom", six.text_type(ex))
         mock_parse.assert_called_once_with(
-            'ClusterDelNodesRequest', req, {'identity': cid, 'nodes': nodes,
+            'ClusterDelNodesRequest', req, {'identity': cid,
+                                            'nodes': data['nodes'],
                                             'destroy_after_deletion': False})
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__del_nodes_failed_engine(self, mock_call, mock_parse, _ignore):
+    def test__do_del_nodes_failed_engine(self, mock_call, mock_parse, _ignore):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
-        nodes = ['NODE6']
-        destroy = False
+        data = dict(nodes=['NODE6'], destroy=False)
         obj = mock.Mock()
         mock_parse.return_value = obj
         mock_call.side_effect = senlin_exc.BadRequest(msg='Boom')
 
         ex = self.assertRaises(senlin_exc.BadRequest,
-                               self.controller._del_nodes,
-                               req, cid, nodes, destroy)
+                               self.controller._do_del_nodes,
+                               req, cid, data)
 
         mock_parse.assert_called_once_with(
-            'ClusterDelNodesRequest', req, {'identity': cid, 'nodes': nodes,
+            'ClusterDelNodesRequest', req, {'identity': cid,
+                                            'nodes': data['nodes'],
                                             'destroy_after_deletion': False})
         self.assertEqual("Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
@@ -523,32 +534,34 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__replace_nodes(self, mock_call, mock_parse, _ignore):
+    def test__do_replace_nodes(self, mock_call, mock_parse, _ignore):
         req = mock.Mock()
         cid = 'FAKE_ID'
-        nodes = {'OLD': 'NEW'}
+        data = dict(nodes={'OLD': 'NEW'})
         mock_call.return_value = {'action': 'action-id'}
         obj = mock.Mock()
         mock_parse.return_value = obj
 
-        resp = self.controller._replace_nodes(req, cid, nodes)
+        resp = self.controller._do_replace_nodes(req, cid, data)
 
         self.assertEqual({'action': 'action-id'}, resp)
         mock_parse.assert_called_once_with(
-            'ClusterReplaceNodesRequest', req,
-            {'identity': cid, 'nodes': nodes})
+            'ClusterReplaceNodesRequest',
+            req,
+            {'identity': cid, 'nodes': data['nodes']}
+        )
         mock_call.assert_called_once_with(
             req.context, 'cluster_replace_nodes', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__replace_nodes_none(self, mock_call, mock_parse, _ign):
+    def test__do_replace_nodes_none(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
-
+        data = dict(nodes=None)
         ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller._replace_nodes,
-                               req, cid, None)
+                               self.controller._do_replace_nodes,
+                               req, cid, data)
 
         self.assertEqual("The data provided is not a map", six.text_type(ex))
         self.assertEqual(0, mock_parse.call_count)
@@ -556,13 +569,13 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__replace_nodes_not_map(self, mock_call, mock_parse, _ign):
+    def test__do_replace_nodes_not_map(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
-        nodes = ['abc', 'def']
+        data = dict(nodes=['abc', 'def'])
         ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller._replace_nodes,
-                               req, cid, nodes)
+                               self.controller._do_replace_nodes,
+                               req, cid, data)
 
         self.assertEqual("The data provided is not a map", six.text_type(ex))
         self.assertEqual(0, mock_parse.call_count)
@@ -570,46 +583,52 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__replace_nodes_failed_request(self, mock_call, mock_parse, _ign):
+    def test__do_replace_nodes_failed_request(self, mock_call,
+                                              mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
-        nodes = {'OLD': 'NEW'}
+        data = dict(nodes={'OLD': 'NEW'})
         mock_parse.side_effect = exc.HTTPBadRequest('Boom')
 
         ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller._replace_nodes,
-                               req, cid, nodes)
+                               self.controller._do_replace_nodes,
+                               req, cid, data)
 
         self.assertEqual("Boom", six.text_type(ex))
         mock_parse.assert_called_once_with(
-            'ClusterReplaceNodesRequest', req,
-            {'identity': cid, 'nodes': nodes})
+            'ClusterReplaceNodesRequest',
+            req,
+            {'identity': cid, 'nodes': data['nodes']}
+        )
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__replace_nodes_failed_engine(self, mock_call, mock_parse, _ign):
+    def test__do_replace_nodes_failed_engine(self, mock_call,
+                                             mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
-        nodes = {'OLD': 'NEW'}
+        data = dict(nodes={'OLD': 'NEW'})
         obj = mock.Mock()
         mock_parse.return_value = obj
         mock_call.side_effect = senlin_exc.BadRequest(msg='Boom')
 
         ex = self.assertRaises(senlin_exc.BadRequest,
-                               self.controller._replace_nodes,
-                               req, cid, nodes)
+                               self.controller._do_replace_nodes,
+                               req, cid, data)
 
         mock_parse.assert_called_once_with(
-            'ClusterReplaceNodesRequest', req,
-            {'identity': cid, 'nodes': nodes})
+            'ClusterReplaceNodesRequest',
+            req,
+            {'identity': cid, 'nodes': data['nodes']}
+        )
         self.assertEqual("Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_replace_nodes', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def _test_resize_with_type(self, adj_type, mock_call, mock_parse):
+    def _test_do_resize_with_type(self, adj_type, mock_call, mock_parse):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {
@@ -635,13 +654,13 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_call.assert_called_once_with(req.context, 'cluster_resize', obj)
 
     def test__do_resize_exact_capacity(self, mock_enforce):
-        self._test_resize_with_type('EXACT_CAPACITY')
+        self._test_do_resize_with_type('EXACT_CAPACITY')
 
     def test__do_resize_with_change_capacity(self, mock_enforce):
-        self._test_resize_with_type('CHANGE_IN_CAPACITY')
+        self._test_do_resize_with_type('CHANGE_IN_CAPACITY')
 
     def test__do_resize_with_change_percentage(self, mock_enforce):
-        self._test_resize_with_type('CHANGE_IN_PERCENTAGE')
+        self._test_do_resize_with_type('CHANGE_IN_PERCENTAGE')
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -740,16 +759,19 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test__do_scale_out(self, mock_call, mock_parse, _ignore):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
-        count = 1
+        data = dict(count=1)
         mock_call.return_value = {'action': 'action-id'}
         obj = mock.Mock()
         mock_parse.return_value = obj
 
-        resp = self.controller._do_scale_out(req, cid, count)
+        resp = self.controller._do_scale_out(req, cid, data)
 
         self.assertEqual({'action': 'action-id'}, resp)
         mock_parse.assert_called_once_with(
-            'ClusterScaleOutRequest', req, {'identity': cid, 'count': count})
+            'ClusterScaleOutRequest',
+            req,
+            {'identity': cid, 'count': data['count']}
+        )
         mock_call.assert_called_once_with(
             req.context, 'cluster_scale_out', obj)
 
@@ -758,16 +780,19 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test__do_scale_out_failed_request(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
-        count = 2
+        data = dict(count=2)
         mock_parse.side_effect = exc.HTTPBadRequest('Boom')
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller._do_scale_out,
-                               req, cid, count)
+                               req, cid, data)
 
         self.assertEqual("Boom", six.text_type(ex))
         mock_parse.assert_called_once_with(
-            'ClusterScaleOutRequest', req, {'identity': cid, 'count': count})
+            'ClusterScaleOutRequest',
+            req,
+            {'identity': cid, 'count': data['count']}
+        )
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
@@ -775,17 +800,20 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test__do_scale_out_failed_engine(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
-        count = 3
+        data = dict(count=3)
         obj = mock.Mock()
         mock_parse.return_value = obj
         mock_call.side_effect = senlin_exc.BadRequest(msg='Boom')
 
         ex = self.assertRaises(senlin_exc.BadRequest,
                                self.controller._do_scale_out,
-                               req, cid, count)
+                               req, cid, data)
 
         mock_parse.assert_called_once_with(
-            'ClusterScaleOutRequest', req, {'identity': cid, 'count': count})
+            'ClusterScaleOutRequest',
+            req,
+            {'identity': cid, 'count': data['count']}
+        )
         self.assertEqual("Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_scale_out', obj)
@@ -795,16 +823,19 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test__do_scale_in(self, mock_call, mock_parse, _ignore):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
-        count = 4
+        data = dict(count=4)
         mock_call.return_value = {'action': 'action-id'}
         obj = mock.Mock()
         mock_parse.return_value = obj
 
-        resp = self.controller._do_scale_in(req, cid, count)
+        resp = self.controller._do_scale_in(req, cid, data)
 
         self.assertEqual({'action': 'action-id'}, resp)
         mock_parse.assert_called_once_with(
-            'ClusterScaleInRequest', req, {'identity': cid, 'count': count})
+            'ClusterScaleInRequest',
+            req,
+            {'identity': cid, 'count': data['count']}
+        )
         mock_call.assert_called_once_with(
             req.context, 'cluster_scale_in', obj)
 
@@ -813,16 +844,19 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test__do_scale_in_failed_request(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
-        count = 5
+        data = dict(count=5)
         mock_parse.side_effect = exc.HTTPBadRequest('Boom')
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller._do_scale_in,
-                               req, cid, count)
+                               req, cid, data)
 
         self.assertEqual("Boom", six.text_type(ex))
         mock_parse.assert_called_once_with(
-            'ClusterScaleInRequest', req, {'identity': cid, 'count': count})
+            'ClusterScaleInRequest',
+            req,
+            {'identity': cid, 'count': data['count']}
+        )
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
@@ -830,17 +864,20 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test__do_scale_in_failed_engine(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
-        count = 6
+        data = dict(count=6)
         obj = mock.Mock()
         mock_parse.return_value = obj
         mock_call.side_effect = senlin_exc.BadRequest(msg='Boom')
 
         ex = self.assertRaises(senlin_exc.BadRequest,
                                self.controller._do_scale_in,
-                               req, cid, count)
+                               req, cid, data)
 
         mock_parse.assert_called_once_with(
-            'ClusterScaleInRequest', req, {'identity': cid, 'count': count})
+            'ClusterScaleInRequest',
+            req,
+            {'identity': cid, 'count': data['count']}
+        )
         self.assertEqual("Boom.", six.text_type(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_scale_in', obj)
