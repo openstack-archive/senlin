@@ -449,7 +449,7 @@ class ServerProfile(base.Profile):
                 if reason == 'update':
                     result['net_id'] = net.id
                 else:
-                    result['uuid'] = net.id
+                    result[self.NETWORK] = net.id
             except exc.InternalError as ex:
                 error = six.text_type(ex)
 
@@ -465,7 +465,7 @@ class ServerProfile(base.Profile):
                 if reason == 'update':
                     result['port_id'] = port.id
                 else:
-                    result['port'] = port.id
+                    result[self.PORT] = port.id
             except exc.InternalError as ex:
                 error = six.text_type(ex)
         elif port_ident is None and net_ident is None:
@@ -482,7 +482,7 @@ class ServerProfile(base.Profile):
                 if reason == 'update':
                     result['fixed_ips'] = [{'ip_address': fixed_ip}]
                 else:
-                    result['fixed_ip'] = fixed_ip
+                    result[self.FIXED_IP] = fixed_ip
 
         if error:
             if reason == 'create':
@@ -494,6 +494,70 @@ class ServerProfile(base.Profile):
                 raise exc.InvalidSpec(message=error)
 
         return result
+
+    def _get_port(self, obj, net_spec):
+        """ Fetch or Create a port.
+
+        :param obj: The node object.
+        :param net_spec: The parameters to create a port.
+        :returns: Created port object.
+        """
+        port_id = net_spec.get(self.PORT, None)
+        if port_id:
+            port = self.network(obj).port_find(port_id)
+            return port
+        port_attr = {
+            'network_id': net_spec.get(self.NETWORK),
+        }
+        fixed_ip = net_spec.get(self.FIXED_IP, None)
+        if fixed_ip:
+            port_attr['fixed_ips'] = [fixed_ip]
+        port = self.network(obj).port_create(**port_attr)
+        return port
+
+    def _delete_ports(self, obj, port_ids):
+        """ Delete ports
+
+        :param obj: The node object
+        :param port_ids: A list of port IDs to be deleted.
+        """
+        for port_id in port_ids:
+            self.network(obj).port_delete(port_id)
+        node_data = obj.data
+        node_data.pop('internal_ports', None)
+        node_obj.Node.update(self.context, obj.id, {'data': node_data})
+
+    def _create_ports_from_properties(self, obj, networks, action_type):
+        """ Create or find ports based on networks property.
+
+        :param obj: The node object.
+        :param networks: The networks property used for node.
+        :param action_type: Either 'create' or 'update'.
+
+        :return ports: A list of created port's attributes.
+        """
+        internal_ports = obj.data.get('internal_ports', [])
+        if not networks:
+            return []
+        created_ports = []
+        for net_spec in networks:
+            net = self._validate_network(obj, net_spec, action_type)
+            # Create port
+            try:
+                port = self._get_port(obj, net)
+            except exc.InternalError as ex:
+                self._delete_ports(obj, internal_ports)
+                raise ex
+            port_id = port.id
+            port_attrs = port.to_dict()
+            if self.PORT not in net:
+                internal_ports.append(port_id)
+            created_ports.append(port_attrs)
+        if internal_ports:
+            node_data = obj.data
+            node_data.update(internal_ports=internal_ports)
+            node_obj.Node.update(self.context, obj.id, {'data': node_data})
+        return created_ports
 
     def _build_metadata(self, obj, usermeta):
         """Build custom metadata for server.
@@ -582,10 +646,10 @@ class ServerProfile(base.Profile):
 
         networks = self.properties[self.NETWORKS]
         if networks is not None:
-            kwargs['networks'] = []
-            for net_spec in networks:
-                net = self._validate_network(obj, net_spec, 'create')
-                kwargs['networks'].append(net)
+            ports = self._create_ports_from_properties(
+                obj, networks, 'create')
+            kwargs['networks'] = [
+                {'port': port['id']} for port in ports]
 
         secgroups = self.properties[self.SECURITY_GROUPS]
         if secgroups:
@@ -625,6 +689,7 @@ class ServerProfile(base.Profile):
                   caught.
         :raises: `EResourceDeletion` if interaction with compute service fails.
         """
+        internal_ports = obj.data.get('internal_ports', [])
         if not obj.physical_id:
             return True
 
@@ -639,6 +704,8 @@ class ServerProfile(base.Profile):
             else:
                 driver.server_delete(server_id, ignore_missing)
             driver.wait_for_server_delete(server_id)
+            if internal_ports:
+                self._delete_ports(obj, internal_ports)
             return True
         except exc.InternalError as ex:
             raise exc.EResourceDeletion(type='server', id=server_id,

@@ -1,0 +1,17 @@
+type: os.senlin.vdu
+version: 1.0
+properties:
+  flavor: m1.tiny
+  image: "cirros-0.3.4-x86_64-uec"
+  networks:
+   - network: private
+     security_groups:
+       - default
+     floating_network: public
+  metadata:
+    test_key: test_value
+  user_data: |
+    #!/bin/sh
+    echo 'hello, {{ word }}'
+    echo '{{ ports.0.fixed_ips.0.ip_address }}'
+    echo '{{ ports.0.floating_ip_address }}'
