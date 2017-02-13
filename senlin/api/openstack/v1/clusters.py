@@ -105,19 +105,23 @@ class ClusterController(wsgi.Controller):
         }
         return result
 
-    def _add_nodes(self, req, cid, nodes):
+    def _do_add_nodes(self, req, cid, data):
+        nodes = data.get('nodes', [])
         params = {'identity': cid, 'nodes': nodes}
         obj = util.parse_request('ClusterAddNodesRequest', req, params)
         return self.rpc_client.call(req.context, 'cluster_add_nodes', obj)
 
-    def _del_nodes(self, req, cid, nodes, destroy):
+    def _do_del_nodes(self, req, cid, data):
+        nodes = data.get('nodes', [])
+        destroy = data.get('destroy_after_deletion', False)
         params = {'identity': cid, 'nodes': nodes,
                   'destroy_after_deletion': destroy}
         obj = util.parse_request('ClusterDelNodesRequest', req, params)
         return self.rpc_client.call(req.context, 'cluster_del_nodes', obj)
 
     @wsgi.Controller.api_version('1.3')
-    def _replace_nodes(self, req, cluster_id, nodes):
+    def _do_replace_nodes(self, req, cluster_id, data):
+        nodes = data.get('nodes', [])
         if not nodes or not isinstance(nodes, dict):
             msg = _("The data provided is not a map")
             raise exc.HTTPBadRequest(msg)
@@ -169,14 +173,16 @@ class ClusterController(wsgi.Controller):
 
         return self.rpc_client.call(req.context, 'cluster_resize', obj)
 
-    def _do_scale_out(self, req, cid, count):
+    def _do_scale_out(self, req, cid, data):
+        count = data.get('count', None)
         params = {'identity': cid}
         if count is not None:
             params['count'] = count
         obj = util.parse_request('ClusterScaleOutRequest', req, params)
         return self.rpc_client.call(req.context, 'cluster_scale_out', obj)
 
-    def _do_scale_in(self, req, cid, count):
+    def _do_scale_in(self, req, cid, data):
+        count = data.get('count', None)
         params = {'identity': cid}
         if count is not None:
             params['count'] = count
@@ -240,41 +246,13 @@ class ClusterController(wsgi.Controller):
             msg = _("Unrecognized action '%s' specified") % this_action
             raise exc.HTTPBadRequest(msg)
 
-        if this_action == self.ADD_NODES:
-            nodes = body.get(this_action).get('nodes', [])
-            res = self._add_nodes(req, cluster_id, nodes)
-        elif this_action == self.DEL_NODES:
-            nodes = body.get(this_action).get('nodes', [])
-            destroy = body.get(this_action).get('destroy_after_deletion',
-                                                False)
-            res = self._del_nodes(req, cluster_id, nodes, destroy)
-        elif this_action == self.RESIZE:
-            data = body.get(this_action)
-            res = self._do_resize(req, cluster_id, data)
-        elif this_action == self.SCALE_OUT:
-            count = body.get(this_action).get('count')
-            res = self._do_scale_out(req, cluster_id, count)
-        elif this_action == self.SCALE_IN:
-            count = body.get(this_action).get('count')
-            res = self._do_scale_in(req, cluster_id, count)
-        elif this_action == self.POLICY_ATTACH:
-            data = body.get(this_action)
-            res = self._do_policy_attach(req, cluster_id, data)
-        elif this_action == self.POLICY_DETACH:
-            data = body.get(this_action)
-            res = self._do_policy_detach(req, cluster_id, data)
-        elif this_action == self.POLICY_UPDATE:
-            data = body.get(this_action)
-            res = self._do_policy_update(req, cluster_id, data)
-        elif this_action == self.CHECK:
-            data = body.get(this_action)
-            res = self._do_check(req, cluster_id, data)
-        elif this_action == self.RECOVER:
-            data = body.get(this_action)
-            res = self._do_recover(req, cluster_id, data)
-        else:  # this_action == self.REPLACE_NODES:
-            data = body.get(this_action).get('nodes')
-            res = self._replace_nodes(req, cluster_id, data)
+        do_func_name = "_do_" + this_action
+        if not hasattr(self, do_func_name):
+            raise exc.HTTPBadRequest(_('Unsupported action'))
+
+        do_func = getattr(self, do_func_name)
+        data = body.get(this_action, {})
+        res = do_func(req, cluster_id, data)
 
         location = {'location': '/actions/%s' % res['action']}
         res.update(location)
