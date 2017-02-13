@@ -76,7 +76,7 @@ class TestPolicy(policy_base.Policy):
     def __init__(self, name, spec, **kwargs):
         super(TestPolicy, self).__init__(name, spec, **kwargs)
 
-    def attach(self, cluster):
+    def attach(self, cluster, enabled=True):
         return True, {}
 
     def detach(self, cluster):

@@ -321,7 +321,8 @@ class Cluster(object):
                 return False, reason
 
         # invoke policy callback
-        res, data = policy.attach(self)
+        enabled = bool(values.get('enabled', True))
+        res, data = policy.attach(self, enabled=enabled)
         if not res:
             return False, data
 
