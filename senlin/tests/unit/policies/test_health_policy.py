@@ -103,6 +103,7 @@ class TestHealthPolicy(base.SenlinTestCase):
             'check_type': self.hp.check_type,
             'interval': self.hp.interval,
             'params': {},
+            'enabled': True
         }
         mock_hm_reg.assert_called_once_with('CLUSTER_ID',
                                             engine_id=None,

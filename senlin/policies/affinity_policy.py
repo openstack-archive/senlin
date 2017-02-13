@@ -128,10 +128,11 @@ class AffinityPolicy(base.Policy):
 
         return True
 
-    def attach(self, cluster):
+    def attach(self, cluster, enabled=True):
         """Routine to be invoked when policy is to be attached to a cluster.
 
-        :para cluster: The target cluster to attach to;
+        :para cluster: The cluster to which the policy is being attached to.
+        :param enabled: The attached cluster policy is enabled or disabled.
         :returns: When the operation was successful, returns a tuple (True,
                   message); otherwise, return a tuple (False, error).
         """

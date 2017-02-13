@@ -303,10 +303,11 @@ class LoadBalancingPolicy(base.Policy):
                     ) % {'key': self.VIP_SUBNET, 'value': name_or_id}
             raise exc.InvalidSpec(message=msg)
 
-    def attach(self, cluster):
+    def attach(self, cluster, enabled=True):
         """Routine to be invoked when policy is to be attached to a cluster.
 
-        :param cluster: The target cluster to be attached to;
+        :param cluster: The cluster to which the policy is being attached to.
+        :param enabled: The attached cluster policy is enabled or disabled.
         :returns: When the operation was successful, returns a tuple (True,
                   message); otherwise, return a tuple (False, error).
         """

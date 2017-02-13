@@ -298,10 +298,11 @@ class Policy(object):
         self._lbaasclient = driver.SenlinDriver().loadbalancing(params)
         return self._lbaasclient
 
-    def attach(self, cluster):
+    def attach(self, cluster, enabled=True):
         '''Method to be invoked before policy is attached to a cluster.
 
-        :param cluster: the cluster to which the policy is being attached to.
+        :param cluster: The cluster to which the policy is being attached to.
+        :param enabled: The attached cluster policy is enabled or disabled.
         :returns: (True, message) if the operation is successful, or (False,
                  error) otherwise.
         '''

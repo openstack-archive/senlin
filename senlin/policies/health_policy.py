@@ -175,12 +175,13 @@ class HealthPolicy(base.Policy):
         # TODO(Qiming): Add detection of duplicated action names when
         # support to list of actions is implemented.
 
-    def attach(self, cluster):
+    def attach(self, cluster, enabled=True):
         """"Hook for policy attach.
 
         Register the cluster for health management.
 
-        :param cluster: The target cluster.
+        :param cluster: The cluster to which the policy is being attached to.
+        :param enabled: The attached cluster policy is enabled or disabled.
         :return: A tuple comprising execution result and policy data.
         """
         p_type = cluster.rt['profile'].type_name
@@ -195,6 +196,7 @@ class HealthPolicy(base.Policy):
             'check_type': self.check_type,
             'interval': self.interval,
             'params': {},
+            'enabled': enabled
         }
 
         health_manager.register(cluster.id, engine_id=None, **kwargs)
