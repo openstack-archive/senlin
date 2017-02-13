@@ -184,3 +184,125 @@ has been successfully attached to your cluster. For example:
 
 The output above shows you that the cluster has a load-balancer created for
 you and the VIP used to access that cluster is "11.22.33.44".
+
+Similar to the pool properties discussed in previous subsection, for the
+virtual IP address, you can also specify the expected network protocol and
+port number to use where clients will be accessing it. The default value for
+``vip.protocol`` is "``HTTP``" and the default port number is 80. Both can be
+customized to suit your needs.
+
+Another useful feature provided by the LBaaS service is the cap of maximum
+number of connections per second. This is a limit set on a per-VIP basis. By
+default, Senlin sets the ``vip.connection_limit`` to -1 which means there is
+no upper bound for connection numbers. You may want to customize this value
+to restrict the number of connection requests per second for your service.
+
+The last property in the ``vip`` group is ``admin_state_up`` which is default
+to "``True``". In some rare cases, you may want to set it to "``False``" for
+the purpose of debugging.
+
+
+Health Monitor
+~~~~~~~~~~~~~~
+
+Since a load-balancer sits in front of all nodes in a pool, it has to be aware
+of the health status of all member nodes so as to properly and reliably route
+client requests to the active nodes for processing. The problem is that there
+are so many different applications or web services each exhibit a different
+runtime behavior. It is hard to come up with an approach generic and powerful
+enough to detect all kinds of node failures.
+
+The LBaaS that backs the Senlin load-balancing policy supports four types of
+node failure detections, all generic enough to serve a wide range of
+applications.
+
+- ``PING``: The load-balancer pings every pool members to detect if they are
+  still reachable.
+
+- ``TCP``: The load-balancer attempts a telnet connection to the protocol port
+  configured for the pool thus determines if a node is still alive.
+
+- ``HTTP``: The load-balancer attempts a HTTP request (specified in the
+  ``health_monitor.http_method`` property) to specific URL (configured in the
+  ``health_monitor.url_path`` property) and then determines if a node is still
+  active by comparing the result code to the expected value (configured in the
+  ``health_monitor.expected_codes``.
+
+- ``HTTPS``: The load-balancer checks nodes' aliveness by sending a HTTPS
+  request using the same values as those in the case of ``HTTP``.
+
+The ``health_monitor.expected_codes`` field accepts a string value, but you
+can specify multiple HTTP status codes that can be treated as an indicator of
+node's aliveness:
+
+- A single value, such as ``200``;
+
+- A list of values separated by commas, such as ``200, 202``;
+
+- A range of values, such as ``200-204``.
+
+To make the failure detection reliable, you may want to check and customize
+the following properties in the ``health_monitor`` group.
+
+- ``timeout``: The maximum time in milliseconds that a monitor waits for a
+  response from a node before it claims the node unreachable. The default is
+  5.
+
+- ``max_retries``: The number of allowed connection failures before the monitor
+  concludes that node inactive. The default is 3.
+
+- ``delay``: The time in milliseconds between sending two consequtive requests
+  (probes) to pool members. The default is 10.
+
+A careful experimentation is usually warranted to come up with reasonable
+values for these fields in a specific environment.
+
+
+LB Status Timeout
+~~~~~~~~~~~~~~~~~
+
+Due to the way the LBaaS service is implemented, creating load balancers and
+health monitors, updating load balancer pools all take considerable time. In
+some deployment scenarios, it make take the load balancer several minutes to
+become operative again after an update operation.
+
+The ``lb_status_timeout`` option is provided since version 1.1 of the
+load-balancing policy to mitigate this effect. In real production environment,
+you are expected to set this value based on some careful dry-runs.
+
+
+Validation
+~~~~~~~~~~
+
+When creating a new load-balancing policy object, Senlin checks if the subnet
+provided are actually known to the Neutron network service. Or else, the
+policy creation will fail.
+
+
+Updates to the Cluster and Nodes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a load-balancing policy has been successfully attached to a cluster, you
+can observe the VIP address from the ``data`` property of the cluster, as
+described above.
+
+You can also check the ``data`` property of nodes in the cluster. Each node
+will have a ``lb_member`` key in its data property indicating the ID of the
+said node in the load-balancer pool.
+
+When the load-balancing policy is detached from a cluster successfully. These
+data will be automatically removed, and the related resources created at the
+LBaaS side are deleted transparently.
+
+
+Node Deletion
+~~~~~~~~~~~~~
+
+In the case where there is a :ref:`ref-deletion-policy` attached to the same
+cluster, the deletion policy will elect the victims to be removed from a
+cluster before the load-balancing policy gets a chance to remove those nodes
+from the load-balancing pool.
+
+However, when there is no such a deletion policy in place, the load-balancing
+policy will try to figure out the number of nodes to delete (if needed) and
+randomly choose the victim nodes for deletion.
