@@ -297,9 +297,9 @@ class HealthManager(service.Service):
         db_registries = objects.HealthRegistry.claim(self.ctx, self.engine_id)
 
         for r in db_registries:
-            # Claiming indicates we claim a health registry which's engine has
-            # die and it updated engine_id to self engine. But we may not start
-            # check alawys.
+            # Claiming indicates we claim a health registry who's engine was
+            # dead, and we will update the health registry's engine_id with
+            # current engine id. But we may not start check always.
             entry = {
                 'cluster_id': r.cluster_id,
                 'check_type': r.check_type,
