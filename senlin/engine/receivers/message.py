@@ -251,7 +251,7 @@ class Message(base.Receiver):
             claim = self.zaqar().claim_create(queue_name)
             messages = claim.messages
         except exc.InternalError as ex:
-            LOG.error(_('Failed in claiming message: %s') % str(ex))
+            LOG.error(_('Failed in claiming message: %s'), str(ex))
             return
 
         # Build actions
@@ -262,8 +262,7 @@ class Message(base.Receiver):
                     action_id = self._build_action(context, message)
                     actions.append(action_id)
                 except exc.InternalError as ex:
-                    LOG.error(_('Failed in building action: %s'
-                                ) % ex.message)
+                    LOG.error(_('Failed in building action: %s'), ex.message)
                 try:
                     self.zaqar().message_delete(queue_name, message['id'],
                                                 claim.id)

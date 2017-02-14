@@ -293,7 +293,7 @@ class LoadBalancerDriver(base.DriverBase):
             return None
         res = self._wait_for_lb_ready(lb_id)
         if res is False:
-            LOG.error(_LE('Failed in creating pool member (%s).') % member.id)
+            LOG.error(_LE('Failed in creating pool member (%s).'), member.id)
             return None
 
         return member.id
@@ -327,7 +327,7 @@ class LoadBalancerDriver(base.DriverBase):
             return None
         res = self._wait_for_lb_ready(lb_id)
         if res is False:
-            LOG.error(_LE('Failed in deleting pool member (%s).') % member_id)
+            LOG.error(_LE('Failed in deleting pool member (%s).'), member_id)
             return None
 
         return True

@@ -98,14 +98,14 @@ class NovaNotificationEndpoint(object):
     def warn(self, ctxt, publisher_id, event_type, payload, metadata):
         meta = payload.get('metadata', {})
         if meta.get('cluster_id') == self.cluster_id:
-            LOG.warning("publisher=%s" % publisher_id)
-            LOG.warning("event_type=%s" % event_type)
+            LOG.warning("publisher=%s", publisher_id)
+            LOG.warning("event_type=%s", event_type)
 
     def debug(self, ctxt, publisher_id, event_type, payload, metadata):
         meta = payload.get('metadata', {})
         if meta.get('cluster_id') == self.cluster_id:
-            LOG.debug("publisher=%s" % publisher_id)
-            LOG.debug("event_type=%s" % event_type)
+            LOG.debug("publisher=%s", publisher_id)
+            LOG.debug("event_type=%s", event_type)
 
 
 class HeatNotificationEndpoint(object):
