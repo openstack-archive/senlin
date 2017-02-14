@@ -89,9 +89,8 @@ class NovaNotificationEndpoint(object):
             node_id = meta.get('cluster_node_id')
             if node_id:
                 LOG.info(_LI("Requesting node recovery: %s"), node_id)
-                ctx_dict = context.get_service_credentials(
-                    project=self.project_id, user=payload['user_id'])
-                ctx = context.RequestContext.from_dict(ctx_dict)
+                ctx = context.get_service_context(project=self.project_id,
+                                                  user=payload['user_id'])
                 req = objects.NodeRecoverRequest(identity=node_id,
                                                  params=params)
                 self.rpc.call(ctx, 'node_recover', req)
@@ -193,9 +192,8 @@ class HealthManager(service.Service):
             LOG.warning(_LW("Cluster (%s) is not found."), cluster_id)
             return _chase_up(start_time, timeout)
 
-        ctx_dict = context.get_service_credentials(user=cluster.user,
-                                                   project=cluster.project)
-        ctx = context.RequestContext.from_dict(ctx_dict)
+        ctx = context.get_service_context(user=cluster.user,
+                                          project=cluster.project)
         try:
             req = vorc.ClusterCheckRequest(identity=cluster_id)
             action = self.rpc_client.call(ctx, 'cluster_check', req)

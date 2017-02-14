@@ -109,7 +109,9 @@ def get_service_credentials(**kwargs):
 
 def get_service_context(**kwargs):
     """Get a customized service context."""
-    return get_service_credentials(**kwargs)
+    identity_service = driver_base.SenlinDriver().identity
+    creds = identity_service.get_service_credentials(**kwargs)
+    return RequestContext.from_dict(creds)
 
 
 def get_admin_context():
