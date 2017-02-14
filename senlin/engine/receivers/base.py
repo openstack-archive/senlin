@@ -232,8 +232,7 @@ class Receiver(object):
             'user_domain_name': service_creds.get('user_domain_name')
         }
 
-        cred = co.Credential.get(oslo_context.get_current(),
-                                 user, project)
+        cred = co.Credential.get(oslo_context.get_current(), user, project)
         if cred is None:
             raise exception.TrustNotFound(trustor=user)
         params['trust_id'] = cred.cred['openstack']['trust']
