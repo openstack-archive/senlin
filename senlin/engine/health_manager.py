@@ -342,14 +342,14 @@ class HealthManager(service.Service):
 
     def register_cluster(self, ctx, cluster_id, check_type, interval=None,
                          params=None, enabled=True):
-        r"""Register cluster for health checking.
+        """Register cluster for health checking.
 
         :param ctx: The context of notify request.
         :param cluster_id: The ID of the cluster to be checked.
         :param check_type: A string indicating the type of checks.
         :param interval: An optional integer indicating the length of checking
                          periods in seconds.
-        :param \*\*params: Other parameters for the health check.
+        :param dict params: Other parameters for the health check.
         :return: None
         """
         params = params or {}
