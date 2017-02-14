@@ -206,7 +206,7 @@ class Receiver(object):
 
     def _get_base_url(self):
         base = None
-        service_cred = senlin_context.get_service_context()
+        service_cred = senlin_context.get_service_credentials()
         kc = driver_base.SenlinDriver().identity(service_cred)
         try:
             base = kc.get_senlin_endpoint()
@@ -224,7 +224,7 @@ class Receiver(object):
         :returns: A dict containing the required parameters for connection
                   creation.
         """
-        service_creds = senlin_context.get_service_context()
+        service_creds = senlin_context.get_service_credentials()
         params = {
             'username': service_creds.get('username'),
             'password': service_creds.get('password'),

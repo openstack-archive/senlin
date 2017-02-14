@@ -97,9 +97,9 @@ class TestProfileBase(base.SenlinTestCase):
 
         return profile
 
-    @mock.patch.object(senlin_ctx, 'get_service_context')
-    def test_init(self, mock_ctx):
-        mock_ctx.return_value = {'foo': 'bar'}
+    @mock.patch.object(senlin_ctx, 'get_service_credentials')
+    def test_init(self, mock_creds):
+        mock_creds.return_value = {'foo': 'bar'}
         profile = self._create_profile('test-profile')
 
         self.assertIsNone(profile.id)
@@ -128,9 +128,9 @@ class TestProfileBase(base.SenlinTestCase):
         self.assertIsNone(profile._networkclient)
         self.assertIsNone(profile._orchestrationclient)
 
-    @mock.patch.object(senlin_ctx, 'get_service_context')
-    def test_init_with_context(self, mock_ctx):
-        mock_ctx.return_value = {'foo': 'bar'}
+    @mock.patch.object(senlin_ctx, 'get_service_credentials')
+    def test_init_with_context(self, mock_creds):
+        mock_creds.return_value = {'foo': 'bar'}
         profile = self._create_profile('test-profile',
                                        pid='FAKE_ID', context={'bar': 'foo'})
         self.assertEqual({'bar': 'foo'}, profile.context)
@@ -213,9 +213,9 @@ class TestProfileBase(base.SenlinTestCase):
         mock_get.assert_called_once_with(self.ctx, 'FAKE_ID',
                                          project_safe=True)
 
-    @mock.patch.object(senlin_ctx, 'get_service_context')
-    def test_create(self, mock_context):
-        mock_context.return_value = {}
+    @mock.patch.object(senlin_ctx, 'get_service_credentials')
+    def test_create(self, mock_creds):
+        mock_creds.return_value = {}
         res = pb.Profile.create(self.ctx, 'my_profile', self.spec)
 
         self.assertIsInstance(res, pb.Profile)
@@ -235,9 +235,9 @@ class TestProfileBase(base.SenlinTestCase):
                          six.text_type(ex))
 
     @mock.patch.object(pb.Profile, 'validate')
-    @mock.patch.object(senlin_ctx, 'get_service_context')
-    def test_create_failed_validation(self, mock_context, mock_validate):
-        mock_context.return_value = {}
+    @mock.patch.object(senlin_ctx, 'get_service_credentials')
+    def test_create_failed_validation(self, mock_creds, mock_validate):
+        mock_creds.return_value = {}
         mock_validate.side_effect = exception.ESchema(message="Boom")
 
         ex = self.assertRaises(exception.InvalidSpec,
@@ -544,10 +544,10 @@ class TestProfileBase(base.SenlinTestCase):
 
         self.assertRaises(exception.ESchema, profile.validate)
 
-    @mock.patch.object(senlin_ctx, 'get_service_context')
-    def test__init_context(self, mock_get):
+    @mock.patch.object(senlin_ctx, 'get_service_credentials')
+    def test__init_context(self, mock_creds):
         fake_ctx = mock.Mock()
-        mock_get.return_value = fake_ctx
+        mock_creds.return_value = fake_ctx
 
         # _init_context() is called from __init__
         self._create_profile('test-profile')
@@ -557,10 +557,10 @@ class TestProfileBase(base.SenlinTestCase):
             mock.call('project_name', None),
             mock.call('project_domain_name', None),
         ])
-        mock_get.assert_called_once_with()
+        mock_creds.assert_called_once_with()
 
-    @mock.patch.object(senlin_ctx, 'get_service_context')
-    def test__init_context_for_real(self, mock_get):
+    @mock.patch.object(senlin_ctx, 'get_service_credentials')
+    def test__init_context_for_real(self, mock_creds):
         fake_ctx = {
             'project_name': 'this project',
             'project_domain_name': 'this domain',
@@ -568,12 +568,12 @@ class TestProfileBase(base.SenlinTestCase):
             'user_id': 'fake_user',
             'foo': 'bar',
         }
-        mock_get.return_value = fake_ctx
+        mock_creds.return_value = fake_ctx
 
         # _init_context() is called from __init__
         profile = self._create_profile('test-profile')
 
-        mock_get.assert_called_once_with()
+        mock_creds.assert_called_once_with()
         expected = {
             'auth_url': 'some url',
             'user_id': 'fake_user',
@@ -581,8 +581,8 @@ class TestProfileBase(base.SenlinTestCase):
         }
         self.assertEqual(expected, profile.context)
 
-    @mock.patch.object(senlin_ctx, 'get_service_context')
-    def test__init_context_for_real_with_data(self, mock_get):
+    @mock.patch.object(senlin_ctx, 'get_service_credentials')
+    def test__init_context_for_real_with_data(self, mock_creds):
         fake_ctx = {
             'project_name': 'this project',
             'project_domain_name': 'this domain',
@@ -590,7 +590,7 @@ class TestProfileBase(base.SenlinTestCase):
             'user_id': 'fake_user',
             'foo': 'bar',
         }
-        mock_get.return_value = fake_ctx
+        mock_creds.return_value = fake_ctx
         self.spec['properties']['context'] = {
             'region_name': 'region_dist'
         }
@@ -598,7 +598,7 @@ class TestProfileBase(base.SenlinTestCase):
         # _init_context() is called from __init__
         profile = self._create_profile('test-profile')
 
-        mock_get.assert_called_once_with(region_name='region_dist')
+        mock_creds.assert_called_once_with(region_name='region_dist')
         expected = {
             'auth_url': 'some url',
             'user_id': 'fake_user',

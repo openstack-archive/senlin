@@ -481,9 +481,9 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual((True, None), res)
 
     @mock.patch.object(co.Credential, 'get')
-    @mock.patch.object(senlin_ctx, 'get_service_context')
+    @mock.patch.object(senlin_ctx, 'get_service_credentials')
     @mock.patch.object(oslo_ctx, 'get_current')
-    def test_build_conn_params(self, mock_get_current, mock_get_service_ctx,
+    def test_build_conn_params(self, mock_get_current, mock_get_service_creds,
                                mock_cred_get):
         service_cred = {
             'auth_url': 'AUTH_URL',
@@ -504,7 +504,7 @@ class TestPolicyBase(base.SenlinTestCase):
         }
 
         cred = mock.Mock(cred=cred_info)
-        mock_get_service_ctx.return_value = service_cred
+        mock_get_service_creds.return_value = service_cred
         mock_get_current.return_value = current_ctx
         mock_cred_get.return_value = cred
         policy = self._create_policy('test-policy')
@@ -519,14 +519,14 @@ class TestPolicyBase(base.SenlinTestCase):
             'trust_id': 'TRUST_ID'
         }
         self.assertEqual(expected_result, res)
-        mock_get_service_ctx.assert_called_once_with()
+        mock_get_service_creds.assert_called_once_with()
         mock_cred_get.assert_called_once_with(current_ctx, 'user1', 'project1')
 
     @mock.patch.object(co.Credential, 'get')
-    @mock.patch.object(senlin_ctx, 'get_service_context')
+    @mock.patch.object(senlin_ctx, 'get_service_credentials')
     @mock.patch.object(oslo_ctx, 'get_current')
     def test_build_conn_params_trust_not_found(
-            self, mock_get_current, mock_get_service_ctx, mock_cred_get):
+            self, mock_get_current, mock_get_service_creds, mock_cred_get):
 
         service_cred = {
             'auth_url': 'AUTH_URL',
@@ -535,7 +535,7 @@ class TestPolicyBase(base.SenlinTestCase):
             'password': '123'
         }
 
-        mock_get_service_ctx.return_value = service_cred
+        mock_get_service_creds.return_value = service_cred
         mock_cred_get.return_value = None
         policy = self._create_policy('test-policy')
 
