@@ -48,7 +48,7 @@ class TrustMiddleware(wsgi.Middleware):
             'user_id': ctx.user,
         }
         kc = driver_base.SenlinDriver().identity(params)
-        service_cred = context.get_service_context()
+        service_cred = context.get_service_credentials()
         admin_id = kc.get_user_id(**service_cred)
         try:
             trust = kc.trust_get_by_trustor(ctx.user, admin_id, ctx.project)
