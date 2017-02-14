@@ -1006,8 +1006,12 @@ class ServerProfile(base.Profile):
         if server is None:
             return {}
         server_data = server.to_dict()
+        if 'id' in server_data['image']:
+            image_id = server_data['image']['id']
+        else:
+            image_id = server_data['image']
         details = {
-            'image': server_data['image']['id'],
+            'image': image_id,
             'flavor': server_data['flavor']['id'],
         }
         for key in known_keys:
