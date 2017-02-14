@@ -300,7 +300,7 @@ class Profile(object):
         if self.CONTEXT in self.properties:
             profile_context = self.properties[self.CONTEXT] or {}
 
-        ctx_dict = context.get_service_context(**profile_context)
+        ctx_dict = context.get_service_credentials(**profile_context)
 
         ctx_dict.pop('project_name', None)
         ctx_dict.pop('project_domain_name', None)

@@ -347,7 +347,7 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(obj_node.Node, 'get_all')
     @mock.patch.object(hm.HealthManager, "_wait_for_action")
     @mock.patch.object(obj_cluster.Cluster, 'get')
-    @mock.patch.object(context, 'get_service_context')
+    @mock.patch.object(context, 'get_service_credentials')
     @mock.patch.object(context.RequestContext, 'from_dict')
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test__poll_cluster(self, mock_rpc, mock_ctx, mock_sctx, mock_get,
@@ -399,7 +399,7 @@ class TestHealthManager(base.SenlinTestCase):
         mock_chase.assert_called_once_with(mock.ANY, 123)
 
     @mock.patch.object(hm, "_chase_up")
-    @mock.patch.object(context, 'get_service_context')
+    @mock.patch.object(context, 'get_service_credentials')
     @mock.patch.object(context.RequestContext, 'from_dict')
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -432,7 +432,7 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(hm, "_chase_up")
     @mock.patch.object(hm.HealthManager, "_wait_for_action")
     @mock.patch.object(obj_cluster.Cluster, 'get')
-    @mock.patch.object(context, 'get_service_context')
+    @mock.patch.object(context, 'get_service_credentials')
     @mock.patch.object(context.RequestContext, 'from_dict')
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test__poll_cluster_failed_wait(self, mock_rpc, mock_ctx, mock_sctx,

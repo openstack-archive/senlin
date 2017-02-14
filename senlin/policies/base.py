@@ -227,7 +227,7 @@ class Policy(object):
         :param user: the user for which the trust will be checked.
         :param object: the user for which the trust will be checked.
         """
-        service_creds = senlin_context.get_service_context()
+        service_creds = senlin_context.get_service_credentials()
         params = {
             'username': service_creds.get('username'),
             'password': service_creds.get('password'),
