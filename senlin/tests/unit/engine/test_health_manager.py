@@ -346,18 +346,13 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(obj_node.Node, 'get_all')
     @mock.patch.object(hm.HealthManager, "_wait_for_action")
     @mock.patch.object(obj_cluster.Cluster, 'get')
-    @mock.patch.object(context, 'get_service_credentials')
-    @mock.patch.object(context.RequestContext, 'from_dict')
+    @mock.patch.object(context, 'get_service_context')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__poll_cluster(self, mock_rpc, mock_ctx, mock_sctx, mock_get,
+    def test__poll_cluster(self, mock_rpc, mock_ctx, mock_get,
                            mock_wait, mock_nodes, mock_chase):
         x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
         mock_get.return_value = x_cluster
-        mock_sctx.return_value = {'user': 'USER_ID',
-                                  'project': 'PROJECT_ID', }
-        service_ctx = mock_sctx.return_value
-        ctx = mock.Mock(user=service_ctx['user'],
-                        project=service_ctx['project'])
+        ctx = mock.Mock()
         mock_ctx.return_value = ctx
         mock_wait.return_value = (True, "")
         x_node = mock.Mock(id='FAKE_NODE', status="ERROR")
@@ -372,11 +367,8 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual(mock_chase.return_value, res)
         mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
                                          project_safe=False)
-        mock_sctx.assert_called_once_with(user=x_cluster.user,
-                                          project=x_cluster.project)
-        mock_ctx.assert_called_once_with(service_ctx)
-        self.assertEqual('USER_ID', ctx.user)
-        self.assertEqual('PROJECT_ID', ctx.project)
+        mock_ctx.assert_called_once_with(user=x_cluster.user,
+                                         project=x_cluster.project)
         mock_rpc.assert_has_calls([
             mock.call(ctx, 'cluster_check', mock.ANY),
             mock.call(ctx, 'node_recover', mock.ANY)
@@ -398,19 +390,14 @@ class TestHealthManager(base.SenlinTestCase):
         mock_chase.assert_called_once_with(mock.ANY, 123)
 
     @mock.patch.object(hm, "_chase_up")
-    @mock.patch.object(context, 'get_service_credentials')
-    @mock.patch.object(context.RequestContext, 'from_dict')
+    @mock.patch.object(context, 'get_service_context')
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test__poll_cluster_failed_check_rpc(self, mock_check, mock_get,
-                                            mock_ctx, mock_sctx, mock_chase):
+                                            mock_ctx, mock_chase):
         x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
         mock_get.return_value = x_cluster
-        mock_sctx.return_value = {'user': 'USER_ID',
-                                  'project': 'PROJECT_ID', }
-        service_ctx = mock_sctx.return_value
-        ctx = mock.Mock(user=service_ctx['user'],
-                        project=service_ctx['project'])
+        ctx = mock.Mock()
         mock_ctx.return_value = ctx
         mock_check.side_effect = Exception("boom")
 
@@ -420,29 +407,20 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual(mock_chase.return_value, res)
         mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
                                          project_safe=False)
-        mock_sctx.assert_called_once_with(user=x_cluster.user,
-                                          project=x_cluster.project)
-        mock_ctx.assert_called_once_with(service_ctx)
-        self.assertEqual('USER_ID', ctx.user)
-        self.assertEqual('PROJECT_ID', ctx.project)
+        mock_ctx.assert_called_once_with(user='USER_ID', project='PROJECT_ID')
         mock_check.assert_called_once_with(ctx, 'cluster_check', mock.ANY)
         mock_chase.assert_called_once_with(mock.ANY, 123)
 
     @mock.patch.object(hm, "_chase_up")
     @mock.patch.object(hm.HealthManager, "_wait_for_action")
     @mock.patch.object(obj_cluster.Cluster, 'get')
-    @mock.patch.object(context, 'get_service_credentials')
-    @mock.patch.object(context.RequestContext, 'from_dict')
+    @mock.patch.object(context, 'get_service_context')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__poll_cluster_failed_wait(self, mock_rpc, mock_ctx, mock_sctx,
+    def test__poll_cluster_failed_wait(self, mock_rpc, mock_ctx,
                                        mock_get, mock_wait, mock_chase):
         x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
         mock_get.return_value = x_cluster
-        mock_sctx.return_value = {'user': 'USER_ID',
-                                  'project': 'PROJECT_ID', }
-        service_ctx = mock_sctx.return_value
-        ctx = mock.Mock(user=service_ctx['user'],
-                        project=service_ctx['project'])
+        ctx = mock.Mock()
         mock_ctx.return_value = ctx
         mock_wait.return_value = (False, "bad")
         x_action_check = {'action': 'CHECK_ID'}
@@ -454,11 +432,7 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual(mock_chase.return_value, res)
         mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
                                          project_safe=False)
-        mock_sctx.assert_called_once_with(user=x_cluster.user,
-                                          project=x_cluster.project)
-        mock_ctx.assert_called_once_with(service_ctx)
-        self.assertEqual('USER_ID', ctx.user)
-        self.assertEqual('PROJECT_ID', ctx.project)
+        mock_ctx.assert_called_once_with(user='USER_ID', project='PROJECT_ID')
         mock_rpc.assert_called_once_with(ctx, 'cluster_check', mock.ANY)
         mock_wait.assert_called_once_with(ctx, "CHECK_ID", 456)
         mock_chase.assert_called_once_with(mock.ANY, 456)
