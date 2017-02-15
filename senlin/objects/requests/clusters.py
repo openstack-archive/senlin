@@ -81,7 +81,7 @@ class ClusterUpdateRequest(base.SenlinObject):
         'name': fields.NameField(nullable=True),
         'profile_id': fields.StringField(nullable=True),
         'metadata': fields.JsonField(nullable=True),
-        'timeout': fields.IntegerField(nullable=True),
+        'timeout': fields.NonNegativeIntegerField(nullable=True),
     }
 
 
