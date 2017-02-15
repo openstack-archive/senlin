@@ -1,0 +1,4 @@
+---
+fixes:
+  - A nova server, if booted from volume, will not return a valid image ID.
+    This situation is now taken care of.
