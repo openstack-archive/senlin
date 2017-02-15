@@ -362,8 +362,9 @@ class HealthManager(service.Service):
                 'enabled': r.enabled,
             }
 
-            LOG.info(_LI("Loading cluster %s for health monitoring"),
-                     r.cluster_id)
+            LOG.info(_LI("Loading cluster %(c)s enalbed=%(e)s for "
+                         "health monitoring"),
+                     {'c': r.cluster_id, 'e': r.enabled})
 
             if r.enabled:
                 entry = self._start_check(entry)
