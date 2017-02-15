@@ -41,6 +41,7 @@ details, please check the :ref:`user-references` section.
    tutorial/basics
    tutorial/policies
    tutorial/receivers
+   tutorial/autoscaling
 
 .. _user-references:
 
