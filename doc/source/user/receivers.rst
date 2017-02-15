@@ -72,71 +72,72 @@ Combining the :option:`--marker` option and the :option:`--limit` option
 enables you to do pagination on the results returned from the server.
 
 
-Creating a Receiver
-~~~~~~~~~~~~~~~~~~~
+Creating and Using a Receiver
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Currently, we support two receiver types: ``webhook`` and ``message``. For
-the former one, a permanent webhook url is generated for users to trigger
+Currently, Senlin supports two receiver types: "``webhook``" and "``message``".
+For the former one, a permanent webhook url is generated for users to trigger
 a specific action on a given cluster by sending a HTTP POST request. For the
 latter one, a Zaqar message queue is created for users to post a message.
-Such a message is used to notify the Senlin service to start an action on a
+Such a message is used to notify the Senlin service to initiate an action on a
 specific cluster.
 
-Creating a Webhook Receiver
----------------------------
+Webhook Receiver
+----------------
 
-1. Create a cluster named "``test-cluster``", with its desired capacity set to
-   2, its minimum size set to 1 and its maximum size set to 5, e.g.::
+When creating a webhook receiver, you are expected to use the option
+:option:`--cluster` to specify the target cluster and the option
+:option:`--action` to specify the action name. By default, the
+:program:`openstack cluster receiver create` command line creates a receiver
+of type "``webhook``". User can also explicitly specify the receiver type
+using the option :option:`--type`, for example:
 
-      $ senlin cluster-create --profile $PROFILE_ID \
-          --desired-capacity 2 --min-size 1 --max-size 5 \
-          test-cluster
+.. code-block:: console
 
-2. Attach a ScalingPolicy to the cluster::
+  $ openstack cluster receiver create \
+     --cluster test-cluster \
+     --action CLUSTER_SCALE_OUT \
+     --type webhook \
+     test-receiver
 
-      $ openstack cluster policy attach --policy $POLICY_ID test-cluster
+Senlin service will return the receiver information with its channel ready to
+receive HTTP POST requests. For a webhook receiver, this means you can check
+the "``alarm_url``" field of the "``channel``" property. You can use this URL
+to trigger the action you specified.
 
-3. Create a webhook receiver, use the option :option:`--cluster` to specify
-   "``test-cluster``" as the targeted cluster and use the option
-   :option:`--action` to specify "``CLUSTER_SCALE_OUT``" or
-   "``CLUSTER_SCALE_IN``" as the action name. By default, the
-   :program:`openstack cluster receiver create` command line creates a
-   receiver of type :term:`webhook`. User can also explicitly specify the
-   receiver type using the option :option:`--type`, for example::
+The following command triggers the receiver by sending a ``POST`` request to
+the URL obtained from its ``channel`` property, for example:
 
-     $ openstack cluster receiver create \
-         --cluster test-cluster \
-         --action CLUSTER_SCALE_OUT \
-         --type webhook \
-         test-receiver
+.. code-block:: console
 
-   Senlin service will return the receiver information with its channel ready
-   to receive signals. For a webhook receiver, this means you can check the
-   "``alarm_url``" field of the "``channel``" property. You can use this url
-   to trigger the action you specified.
+  $ curl -X POST <alarm_url>
 
-4. Trigger the receiver by sending a ``POST`` request to its URL, for example::
 
-     $ curl -X POST <alarm_url>
+Message Receiver
+----------------
 
-Creating a Message Receiver
----------------------------
+A message receiver is different from a webhook receiver in that it can trigger
+different actions on different clusters. Therefore, option :option:`--cluster`
+and option :option:`--action` can be omitted when creating a message receiver.
+Senlin will check if the incoming message contains such properties.
 
-1. Different from a webhook receiver which can only be used to trigger a
-   specific action on a specific cluster, a message receiver is designed
-   to trigger different actions on different clusters. Therefore, option
-   :option:`--cluster` and option :option:`--action` could be omitted
-   when creating a message receiver. Users need to specify the receiver
-   type ``message`` using the option :option:`--type`, for example::
+You will need to specify the receiver type "``message``" using the option
+:option:`--type` when creating a message receiver, for example:
 
-     $ openstack cluster receiver create \
-         --type message \
-         test-receiver
+.. code-block:: console
 
-   Senlin service will return the receiver information with its channel ready
-   to receive messages. For a message receiver, this means you can check the
-   "``queue_name``" field of the "``channel``" property and then send messages
-   with the following format to this Zaqar queue to request Senlin service::
+  $ openstack cluster receiver create \
+      --type message \
+      test-receiver
+
+Senlin service will return the receiver information with its channel ready to
+receive messages. For a message receiver, this means you can check the
+"``queue_name``" field of the "``channel``" property.
+
+Once a message receiver is created, you (or some software) can send messages
+with the following format to the named Zaqar queue to request Senlin service:
+
+.. code-block:: python
 
     {
       "messages": [
@@ -151,11 +152,12 @@ Creating a Message Receiver
       ]
     }
 
-   Examples for sending message to Zaqar queue can be found here:
+More examples on sending message to a Zaqar queue can be found here:
 
-       http://git.openstack.org/cgit/openstack/python-zaqarclient/tree/examples
+http://git.openstack.org/cgit/openstack/python-zaqarclient/tree/examples
 
-   Note: Users are allowed to trigger multiple actions at the same time by
-   sending more than one message to a Zaqar queue in the same request. In that
-   case, the order of actions generated depends on how Zaqar sorts those
-   messages.
+.. note::
+
+  Users are permitted to trigger multiple actions at the same time by sending
+  more than one message to a Zaqar queue in the same request. In that case,
+  the order of actions generated depends on how Zaqar sorts those messages.
