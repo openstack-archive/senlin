@@ -1038,15 +1038,6 @@ def action_check_status(context, action_id, timestamp):
         return action.status
 
 
-def action_delete_by_target(context, target, exceptions=None):
-    with session_for_write() as session:
-        q = session.query(models.Action).\
-            filter(models.Action.target == target)
-        if exceptions:
-            q = q.filter(~models.Action.action.in_(exceptions))
-        return q.delete(synchronize_session='fetch')
-
-
 def dependency_get_depended(context, action_id):
     with session_for_read() as session:
         q = session.query(models.ActionDependency).filter_by(
@@ -1268,6 +1259,31 @@ def action_delete(context, action_id):
 
             raise exception.EResourceBusy(type='action', id=action_id)
         session.delete(action)
+
+
+def action_delete_by_target(context, target, action=None,
+                            action_excluded=None, status=None,
+                            project_safe=True):
+    if action and action_excluded:
+        msg = _("action and action_excluded cannot be specified "
+                "both.")
+        LOG.warning(msg)
+        return None
+
+    with session_for_write() as session:
+        q = session.query(models.Action).\
+            filter_by(target=target)
+
+        if project_safe:
+            q = q.filter_by(project=context.project)
+
+        if action:
+            q = q.filter(models.Action.action.in_(action))
+        if action_excluded:
+            q = q.filter(~models.Action.action.in_(action_excluded))
+        if status:
+            q = q.filter(models.Action.status.in_(status))
+        return q.delete(synchronize_session='fetch')
 
 
 # Receivers
