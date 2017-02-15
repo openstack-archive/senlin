@@ -13,7 +13,9 @@
 import base64
 import copy
 
+import jinja2
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 import six
 
@@ -23,6 +25,7 @@ from senlin.common import context
 from senlin.common import exception as exc
 from senlin.common.i18n import _, _LE
 from senlin.common import schema
+from senlin.objects import cluster as cluster_obj
 from senlin.objects import node as node_obj
 from senlin.profiles import base
 
@@ -702,6 +705,34 @@ class ServerProfile(base.Profile):
             ctx = context.get_admin_context()
             node_obj.Node.update(ctx, obj.id, {'data': obj.data})
 
+    def _preprocess_user_data(self, obj, extra={}):
+        """ Get jinja2 parameters from metadata['config']
+
+        :param obj: The node object
+        :param extra: The existing parameters to be merged.
+        :returns: jinja2 parameters to be used.
+        """
+        def _to_json(astr):
+            try:
+                ret = jsonutils.loads(astr)
+                return ret
+            except (ValueError, TypeError):
+                return astr
+
+        n_config = _to_json(obj.metadata.get('config', {}))
+        # Check node's metadata
+        if isinstance(n_config, dict):
+            extra.update(n_config)
+        # Check cluster's metadata
+        if obj.cluster_id:
+            ctx = context.get_service_context(
+                user=obj.user, project=obj.project)
+            cluster = cluster_obj.Cluster.get(ctx, obj.cluster_id)
+            c_config = _to_json(cluster.metadata.get('config', {}))
+            if isinstance(c_config, dict):
+                extra.update(c_config)
+        return extra
+
     def do_create(self, obj):
         """Create a server for the node object.
 
@@ -751,17 +782,31 @@ class ServerProfile(base.Profile):
             kwargs['block_device_mapping_v2'] = self._resolve_bdm(
                 block_device_mapping_v2)
 
-        user_data = self.properties[self.USER_DATA]
-        if user_data is not None:
-            ud = encodeutils.safe_encode(user_data)
-            kwargs['user_data'] = encodeutils.safe_decode(base64.b64encode(ud))
-
+        jj_vars = {}
         networks = self.properties[self.NETWORKS]
         if networks is not None:
             ports = self._create_ports_from_properties(
                 obj, networks, 'create')
+            jj_vars['ports'] = ports
             kwargs['networks'] = [
                 {'port': port['id']} for port in ports]
+
+        # Get user_data parameters from metadata
+        jj_vars = self._preprocess_user_data(obj, jj_vars)
+
+        user_data = self.properties[self.USER_DATA]
+        if user_data is not None:
+            # Use jinja2 to replace variables defined in user_data
+            try:
+                jj_t = jinja2.Template(user_data)
+                user_data = jj_t.render(**jj_vars)
+            except (jinja2.exceptions.UndefinedError, ValueError) as ex:
+                # (TODO) Handle jinja2 error, for now I just let it pass
+                # and use the original user_data
+                pass
+            ud = encodeutils.safe_encode(user_data)
+            kwargs['user_data'] = encodeutils.safe_decode(
+                base64.b64encode(ud))
 
         secgroups = self.properties[self.SECURITY_GROUPS]
         if secgroups:
