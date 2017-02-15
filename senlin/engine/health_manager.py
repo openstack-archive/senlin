@@ -31,8 +31,6 @@ from senlin.common import context
 from senlin.common.i18n import _LI, _LW
 from senlin.common import messaging as rpc
 from senlin import objects
-from senlin.objects.requests import actions as vora
-from senlin.objects.requests import clusters as vorc
 from senlin.rpc import client as rpc_client
 
 LOG = logging.getLogger(__name__)
@@ -214,7 +212,7 @@ class HealthManager(service.Service):
     def _wait_for_action(self, ctx, action_id, timeout):
         done = False
         total_sleep = 0
-        req = vora.ActionGetRequest(identity=action_id)
+        req = objects.ActionGetRequest(identity=action_id)
         while total_sleep < timeout:
             action = self.rpc_client.call(ctx, 'action_get', req)
             if action['status'] in ['SUCCEEDED', 'FAILED', 'CANCELLED']:
@@ -247,7 +245,7 @@ class HealthManager(service.Service):
         ctx = context.get_service_context(user=cluster.user,
                                           project=cluster.project)
         try:
-            req = vorc.ClusterCheckRequest(identity=cluster_id)
+            req = objects.ClusterCheckRequest(identity=cluster_id)
             action = self.rpc_client.call(ctx, 'cluster_check', req)
         except Exception as ex:
             LOG.warning(_LW("Failed in triggering 'cluster_check' RPC for "
