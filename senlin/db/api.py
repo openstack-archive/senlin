@@ -344,8 +344,11 @@ def action_check_status(context, action_id, timestamp):
     return IMPL.action_check_status(context, action_id, timestamp)
 
 
-def action_delete_by_target(context, target, exceptions=None):
-    return IMPL.action_check_status(context, target, exceptions=exceptions)
+def action_delete_by_target(context, target, action=None,
+                            action_excluded=None, status=None):
+    return IMPL.action_delete_by_target(context, target, action=action,
+                                        action_excluded=action_excluded,
+                                        status=status)
 
 
 def dependency_add(context, depended, dependent):

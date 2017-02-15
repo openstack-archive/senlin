@@ -153,6 +153,21 @@ class Action(base.SenlinObject, base.VersionedObjectDictCompat):
     def delete(cls, context, action_id):
         db_api.action_delete(context, action_id)
 
+    @classmethod
+    def delete_by_target(cls, context, target, action=None,
+                         action_excluded=None, status=None):
+        """Delete an action with the target and other given params.
+
+        :param target: The ID of the target cluster/node
+        :param action: A list of actions to be included.
+        :param action_excluded: A list of actions to be excluded.
+        :param status: A list of statuses to be delete filtered.
+        :return: None.
+        """
+        return db_api.action_delete_by_target(context, target, action=action,
+                                              action_excluded=action_excluded,
+                                              status=status)
+
     def to_dict(self):
         if self.id:
             dep_on = dobj.Dependency.get_depended(self.context, self.id)
