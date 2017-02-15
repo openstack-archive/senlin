@@ -1,0 +1,4 @@
+---
+features:
+  - The health manager is improved to use dynamic timers instead of fix
+    interval timers when polling cluster's status.

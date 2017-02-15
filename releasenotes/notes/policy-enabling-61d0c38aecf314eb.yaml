@@ -1,0 +1,5 @@
+---
+fixes:
+  - When attaching a policy (especially a health policy) to a cluster, users
+    may choose to keep the policy disabled. This has to be considered in the
+    health manager and other places. This issue is fixed.
