@@ -25,7 +25,7 @@ you can create a receiver for this task:
 
 .. code-block:: console
 
-  $ senlin receiver-create --type webhook --cluster mycluster \
+  $ openstack cluster receiver create --type webhook --cluster mycluster \
       --action CLUSTER_SCALE_OUT so_receiver_1
   +------------+---------------------------------------------------+
   | Property   | Value                                             |
