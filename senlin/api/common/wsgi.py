@@ -208,7 +208,7 @@ class Server(object):
             self.pool.spawn_n(self._single_run, self.application, self.sock)
             return
 
-        LOG.info(_LI("Starting %d workers") % self.conf.workers)
+        LOG.info(_LI("Starting %d workers"), self.conf.workers)
         signal.signal(signal.SIGTERM, self.kill_children)
         signal.signal(signal.SIGINT, self.kill_children)
         signal.signal(signal.SIGHUP, self.hup)
@@ -627,7 +627,7 @@ class Resource(object):
             action_result = self.dispatch(self.controller, action,
                                           request, **action_args)
         except TypeError as err:
-            LOG.error(_LE('Exception handling resource: %s') % err)
+            LOG.error(_LE('Exception handling resource: %s'), err)
             msg = _('The server could not comply with the request since '
                     'it is either malformed or otherwise incorrect.')
             err = exc.HTTPBadRequest(msg)

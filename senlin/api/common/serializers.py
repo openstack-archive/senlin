@@ -84,7 +84,7 @@ class JSONResponseSerializer(object):
             return six.text_type(obj)
 
         response = jsonutils.dumps(data, default=sanitizer, sort_keys=True)
-        LOG.debug("JSON response : %s" % response)
+        LOG.debug("JSON response : %s", response)
         return response
 
     def default(self, response, result):

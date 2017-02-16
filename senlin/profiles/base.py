@@ -466,6 +466,5 @@ class Profile(object):
             return True
 
         msg = ", ".join(non_updatables)
-        LOG.error(_LE("The following properties are not updatable: %s."
-                      ) % msg)
+        LOG.error(_LE("The following properties are not updatable: %s."), msg)
         return False
