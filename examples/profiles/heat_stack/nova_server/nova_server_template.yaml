@@ -16,7 +16,7 @@ parameters:
   image:
     type: string
     description: Name or ID of the image to use for the instance.
-    default: cirros-0.3.4-x86_64-uec
+    default: cirros-0.3.5-x86_64-disk
   public_net:
     type: string
     description: ID or name of public network where floating IP to be created
