@@ -606,6 +606,7 @@ class ServerProfile(base.Profile):
         try:
             server = self.compute(obj).server_create(**kwargs)
             self.compute(obj).wait_for_server(server.id)
+            server = self.compute(obj).server_get(server.id)
             # Update zone placement info if available
             self._update_zone_info(obj, server)
             return server.id

@@ -140,6 +140,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         node_obj.name = 'TEST_SERVER'
         fake_server = mock.Mock(id='FAKE_ID')
         cc.server_create.return_value = fake_server
+        cc.server_get.return_value = fake_server
 
         # do it
         server_id = profile.do_create(node_obj)
@@ -181,6 +182,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         attrs['OS-DCF:diskConfig'] = 'AUTO'
 
         cc.server_create.assert_called_once_with(**attrs)
+        cc.server_get.assert_called_once_with('FAKE_ID')
         mock_zone_info.assert_called_once_with(node_obj, fake_server)
         self.assertEqual('FAKE_ID', server_id)
 
@@ -278,6 +280,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         mock_zone_info = self.patchobject(profile, '_update_zone_info')
         fake_server = mock.Mock(id='FAKE_ID')
         cc.server_create.return_value = fake_server
+        cc.server_get.return_value = fake_server
 
         # do it
         server_id = profile.do_create(node_obj)
@@ -296,6 +299,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         }
 
         cc.server_create.assert_called_once_with(**attrs)
+        cc.server_get.assert_called_once_with('FAKE_ID')
         mock_zone_info.assert_called_once_with(node_obj, fake_server)
         self.assertEqual('FAKE_ID', server_id)
 
@@ -322,6 +326,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         node_obj.name = None
         fake_server = mock.Mock(id='FAKE_ID')
         cc.server_create.return_value = fake_server
+        cc.server_get.return_value = fake_server
 
         server_id = profile.do_create(node_obj)
 
@@ -334,6 +339,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         }
 
         cc.server_create.assert_called_once_with(**attrs)
+        cc.server_get.assert_called_once_with('FAKE_ID')
         mock_zone_info.assert_called_once_with(node_obj, fake_server)
         self.assertEqual('FAKE_ID', server_id)
 
@@ -359,6 +365,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         node_obj.name = 'TEST-SERVER'
         fake_server = mock.Mock(id='FAKE_ID')
         cc.server_create.return_value = fake_server
+        cc.server_get.return_value = fake_server
 
         # do it
         server_id = profile.do_create(node_obj)
@@ -373,6 +380,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         }
 
         cc.server_create.assert_called_once_with(**attrs)
+        cc.server_get.assert_called_once_with('FAKE_ID')
         mock_zone_info.assert_called_once_with(node_obj, fake_server)
         self.assertEqual('FAKE_ID', server_id)
 
@@ -413,6 +421,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         node_obj.name = None
         fake_server = mock.Mock(id='FAKE_ID')
         cc.server_create.return_value = fake_server
+        cc.server_get.return_value = fake_server
 
         # do it
         server_id = profile.do_create(node_obj)
@@ -441,6 +450,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
             'block_device_mapping_v2': bdm_v2
         }
         cc.server_create.assert_called_once_with(**attrs)
+        cc.server_get.assert_called_once_with('FAKE_ID')
         mock_zone_info.assert_called_once_with(node_obj, fake_server)
         self.assertEqual('FAKE_ID', server_id)
 
