@@ -26,7 +26,6 @@ from senlin.objects import cluster as obj_cluster
 from senlin.objects import health_registry as hr
 from senlin.objects import node as obj_node
 from senlin.objects import profile as obj_profile
-from senlin.objects.requests import nodes as vorn
 from senlin.rpc import client as rpc_client
 from senlin.tests.unit.common import base
 
@@ -106,7 +105,7 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
         self.assertIsNone(res)
         x_rpc.call.assert_called_once_with(call_ctx, 'node_recover', mock.ANY)
         req = x_rpc.call.call_args[0][2]
-        self.assertIsInstance(req, vorn.NodeRecoverRequest)
+        self.assertIsInstance(req, objects.NodeRecoverRequest)
         self.assertEqual('FAKE_NODE', req.identity)
         expected_params = {
             'event': 'DELETE',
@@ -210,7 +209,7 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
         self.assertIsNone(res)
         x_rpc.call.assert_called_once_with(call_ctx, 'node_recover', mock.ANY)
         req = x_rpc.call.call_args[0][2]
-        self.assertIsInstance(req, vorn.NodeRecoverRequest)
+        self.assertIsInstance(req, objects.NodeRecoverRequest)
         self.assertEqual('NODE_ID', req.identity)
         expected_params = {
             'event': 'DELETE',
@@ -273,7 +272,7 @@ class TestHeatNotificationEndpoint(base.SenlinTestCase):
         self.assertIsNone(res)
         x_rpc.call.assert_called_once_with(call_ctx, 'node_recover', mock.ANY)
         req = x_rpc.call.call_args[0][2]
-        self.assertIsInstance(req, vorn.NodeRecoverRequest)
+        self.assertIsInstance(req, objects.NodeRecoverRequest)
         self.assertEqual('FAKE_NODE', req.identity)
         expected_params = {
             'event': 'DELETE',
@@ -392,7 +391,7 @@ class TestHeatNotificationEndpoint(base.SenlinTestCase):
         self.assertIsNone(res)
         x_rpc.call.assert_called_once_with(call_ctx, 'node_recover', mock.ANY)
         req = x_rpc.call.call_args[0][2]
-        self.assertIsInstance(req, vorn.NodeRecoverRequest)
+        self.assertIsInstance(req, objects.NodeRecoverRequest)
         self.assertEqual('NODE_ID', req.identity)
         expected_params = {
             'event': 'DELETE',
