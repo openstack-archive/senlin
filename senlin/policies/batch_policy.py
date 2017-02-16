@@ -79,12 +79,11 @@ class BatchPolicy(base.Policy):
             default=1,
         ),
         MAX_BATCH_SIZE: schema.Integer(
-            _('Maximum number of nodes that can be updated at the same '
-              'time.'),
+            _('Maximum number of nodes that will be updated in parallel.'),
             default=-1,
         ),
         PAUSE_TIME: schema.Integer(
-            _('Number of seconds between update batches if any.'),
+            _('Interval in seconds between update batches if any.'),
             default=60,
         )
     }
