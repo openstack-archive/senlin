@@ -47,7 +47,7 @@ class NovaClient(base.DriverBase):
             },
             "minDisk": 0,
             "minRam": 0,
-            "name": "cirros-0.3.4-x86_64-uec",
+            "name": "cirros-0.3.5-x86_64-disk",
             "progress": 100,
             "status": "ACTIVE",
             "updated": "2011-01-01T01:02:03Z"
