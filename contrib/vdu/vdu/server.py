@@ -555,7 +555,7 @@ class ServerProfile(base.Profile):
         return result
 
     def _get_port(self, obj, net_spec):
-        """ Fetch or Create a port.
+        """Fetch or create a port.
 
         :param obj: The node object.
         :param net_spec: The parameters to create a port.
@@ -578,7 +578,7 @@ class ServerProfile(base.Profile):
         return port
 
     def _delete_ports(self, obj, port_ids):
-        """ Delete ports
+        """Delete ports.
 
         :param obj: The node object
         :param port_ids: A list of port IDs to be deleted.
@@ -590,7 +590,7 @@ class ServerProfile(base.Profile):
         node_obj.Node.update(self.context, obj.id, {'data': node_data})
 
     def _get_floating_ip(self, obj, fip_spec, port_id):
-        """ Find or Create a floating ip
+        """Find or Create a floating IP.
 
         :param obj: The node object.
         :param fip_spec: The parameters to create a floating ip
@@ -616,10 +616,10 @@ class ServerProfile(base.Profile):
         return fip
 
     def _delete_floating_ips(self, obj, floating_ips):
-        """ Delete floating IPs
+        """Delete floating IPs.
 
-        :param obj: The node object
-        :param floating_ips: A list of floating IP id
+        :param obj: The node object.
+        :param floating_ips: A list of floating IP id.
         """
         for fip_id in floating_ips:
             self.network(obj).floatingip_delete(fip_id)
@@ -628,13 +628,13 @@ class ServerProfile(base.Profile):
         node_obj.Node.update(self.context, obj.id, {'data': node_data})
 
     def _create_ports_from_properties(self, obj, networks, action_type):
-        """ Create or find ports based on networks property.
+        """Create or find ports based on networks property.
 
         :param obj: The node object.
         :param networks: The networks property used for node.
         :param action_type: Either 'create' or 'update'.
 
-        :return ports: A list of created port's attributes.
+        :returns: A list of created port's attributes.
         """
         internal_ports = obj.data.get('internal_ports', [])
         floating_ips = obj.data.get('floating_ips', [])
@@ -657,7 +657,9 @@ class ServerProfile(base.Profile):
             if 'floating_ip_id' in net or self.FLOATING_NETWORK in net:
                 try:
                     fip = self._get_floating_ip(obj, net, port_id)
-                    port_attrs.update({'floating_ip_address': fip.floating_ip_address})
+                    port_attrs.update(
+                        {'floating_ip_address': fip.floating_ip_address}
+                    )
                     if self.FLOATING_NETWORK in net:
                         floating_ips.append(fip.id)
                 except exc.InternalError as ex:
