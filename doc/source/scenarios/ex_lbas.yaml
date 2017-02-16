@@ -12,7 +12,7 @@ parameters:
   image:
     description: Name or ID of the image to use for the instances.
     type: string
-    default: cirros-0.3.4-x86_64-uec
+    default: cirros-0.3.5-x86_64-disk
   key_name:
     description: Name of an existing key pair to use for the instances.
     type: string
