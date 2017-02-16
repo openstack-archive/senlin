@@ -14,6 +14,7 @@ from oslo_config import cfg
 
 from senlin.common import constraints
 from senlin.common import consts
+from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.common import scaleutils as su
 from senlin.common import schema
@@ -133,6 +134,22 @@ class ScalingPolicy(base.Policy):
 
         self.best_effort = adjustment[self.BEST_EFFORT]
         self.cooldown = adjustment[self.COOLDOWN]
+
+    def validate(self, context, validate_props=False):
+        super(ScalingPolicy, self).validate(context, validate_props)
+
+        if self.adjustment_number is not None and self.adjustment_number <= 0:
+            msg = _("the 'number' for 'adjustment' must be > 0")
+            raise exc.InvalidSpec(message=msg)
+
+        if (self.adjustment_min_step is not None and
+                self.adjustment_min_step < 0):
+            msg = _("the 'min_step' for 'adjustment' must be >= 0")
+            raise exc.InvalidSpec(message=msg)
+
+        if self.cooldown is not None and self.cooldown < 0:
+            msg = _("the 'cooldown' for 'adjustment' must be >= 0")
+            raise exc.InvalidSpec(message=msg)
 
     def _calculate_adjustment_count(self, current_size):
         """Calculate adjustment count based on current_size.

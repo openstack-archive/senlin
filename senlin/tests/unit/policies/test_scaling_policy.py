@@ -11,8 +11,10 @@
 # under the License.
 
 import mock
+import six
 
 from senlin.common import consts
+from senlin.common import exception as exc
 from senlin.objects import node as no
 from senlin.policies import base as pb
 from senlin.policies import scaling_policy as sp
@@ -96,6 +98,39 @@ class TestScalingPolicy(base.SenlinTestCase):
         self.assertEqual(1, policy.adjustment_min_step)
         self.assertFalse(policy.best_effort)
         self.assertEqual(0, policy.cooldown)
+
+    def test_validate(self):
+        self.spec['properties']['adjustment'] = {}
+        policy = sp.ScalingPolicy('p1', self.spec)
+
+        policy.validate(self.context)
+
+    def test_validate_bad_number(self):
+        self.spec['properties']['adjustment'] = {"number": -1}
+        policy = sp.ScalingPolicy('p1', self.spec)
+
+        ex = self.assertRaises(exc.InvalidSpec, policy.validate, self.context)
+
+        self.assertEqual("the 'number' for 'adjustment' must be > 0",
+                         six.text_type(ex))
+
+    def test_validate_bad_min_step(self):
+        self.spec['properties']['adjustment'] = {"min_step": -1}
+        policy = sp.ScalingPolicy('p1', self.spec)
+
+        ex = self.assertRaises(exc.InvalidSpec, policy.validate, self.context)
+
+        self.assertEqual("the 'min_step' for 'adjustment' must be >= 0",
+                         six.text_type(ex))
+
+    def test_validate_bad_cooldown(self):
+        self.spec['properties']['adjustment'] = {"cooldown": -1}
+        policy = sp.ScalingPolicy('p1', self.spec)
+
+        ex = self.assertRaises(exc.InvalidSpec, policy.validate, self.context)
+
+        self.assertEqual("the 'cooldown' for 'adjustment' must be >= 0",
+                         six.text_type(ex))
 
     def test_calculate_adjustment_count(self):
         adjustment = self.spec['properties']['adjustment']
