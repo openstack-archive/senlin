@@ -71,14 +71,6 @@ class HealthPolicy(base.Policy):
         'actions', 'fencing'
     )
 
-    RECOVERY_ACTION_VALUES = (
-        REBUILD, RECREATE,
-        # REBOOT, MIGRATE, EVACUATE,
-    ) = (
-        "REBUILD", "RECREATE",
-        # 'REBOOT', 'MIGRATE', 'EVACUATE',
-    )
-
     FENCING_OPTION_VALUES = (
         COMPUTE,
         # STORAGE, NETWORK,
@@ -129,7 +121,7 @@ class HealthPolicy(base.Policy):
                                 _("Name of action to execute."),
                                 constraints=[
                                     constraints.AllowedValues(
-                                        RECOVERY_ACTION_VALUES),
+                                        consts.RECOVERY_ACTIONS),
                                 ],
                                 required=True
                             ),
@@ -187,8 +179,13 @@ class HealthPolicy(base.Policy):
         p_type = cluster.rt['profile'].type_name
         action_names = [a['name'] for a in self.recover_actions]
         if p_type != 'os.nova.server':
-            if self.REBUILD in action_names:
+            if consts.RECOVER_REBUILD in action_names:
                 err_msg = _("Recovery action REBUILD is only applicable to "
+                            "os.nova.server clusters.")
+                return False, err_msg
+
+            if consts.RECOVER_REBOOT in action_names:
+                err_msg = _("Recovery action REBOOT is only applicable to "
                             "os.nova.server clusters.")
                 return False, err_msg
 
