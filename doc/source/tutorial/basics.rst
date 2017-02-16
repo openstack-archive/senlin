@@ -48,7 +48,7 @@ The **spec** assumes that:
 
 - you have a nova keypair named ``oskey``, and
 - you have a neutron network named ``private``, and
-- there is a glance image named ``cirros-0.3.4-x86_64-uec``
+- there is a glance image named ``cirros-0.3.5-x86_64-disk``
 
 You may have to change the values based on your environment setup before using
 this file to create a profile. After the **spec** file is modified properly,

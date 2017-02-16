@@ -36,7 +36,7 @@ and save it to a file, e.g. :file:`sample_server.yaml`:
   properties:
     name: cirros_server
     flavor: m1.tiny
-    image: cirros-0.3.4-x86_64-uec
+    image: cirros-0.3.5-x86_64-disk
     key_name: oskey
     networks:
       - network: private
