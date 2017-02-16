@@ -829,10 +829,12 @@ class EngineService(service.Service):
                 req.metadata != cluster.metadata):
             inputs['metadata'] = copy.deepcopy(req.metadata)
 
-        if req.obj_attr_is_set(consts.CLUSTER_TIMEOUT):
+        if (req.obj_attr_is_set(consts.CLUSTER_TIMEOUT) and
+                req.timeout != cluster.timeout):
             inputs['timeout'] = req.timeout
 
-        if req.obj_attr_is_set(consts.CLUSTER_NAME):
+        if (req.obj_attr_is_set(consts.CLUSTER_NAME) and
+                req.name != cluster.name):
             inputs['name'] = req.name
 
         if not inputs:
