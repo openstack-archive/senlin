@@ -96,13 +96,13 @@ class TestHeatStackProfile(base.SenlinTestCase):
         oc = mock.Mock()
         profile = stack.StackProfile('t', self.spec)
         profile._orchestrationclient = oc
-        test_stack = mock.Mock()
-        test_stack.name = 'test_stack'
+        node = mock.Mock(id='NODE_ID', cluster_id='CLUSTER_ID', index=123)
+        node.name = 'test_node'
         fake_stack = mock.Mock(id='FAKE_ID')
         oc.stack_create = mock.Mock(return_value=fake_stack)
 
         # do it
-        res = profile.do_create(test_stack)
+        res = profile.do_create(node)
 
         # assertions
         kwargs = {
@@ -114,6 +114,11 @@ class TestHeatStackProfile(base.SenlinTestCase):
             'parameters': self.spec['properties']['parameters'],
             'files': self.spec['properties']['files'],
             'environment': self.spec['properties']['environment'],
+            'tags': [
+                'cluster_id=CLUSTER_ID',
+                'cluster_node_id=NODE_ID',
+                'cluster_node_index=123'
+            ]
         }
         self.assertEqual('FAKE_ID', res)
         oc.stack_create.assert_called_once_with(**kwargs)
@@ -138,13 +143,13 @@ class TestHeatStackProfile(base.SenlinTestCase):
         oc = mock.Mock()
         profile = stack.StackProfile('t', spec)
         profile._orchestrationclient = oc
-        test_stack = mock.Mock()
-        test_stack.name = 'test_stack'
+        node = mock.Mock(id='NODE_ID', cluster_id='CLUSTER_ID', index=123)
+        node.name = 'test_node'
         fake_stack = mock.Mock(id='FAKE_ID')
         oc.stack_create = mock.Mock(return_value=fake_stack)
 
         # do it
-        res = profile.do_create(test_stack)
+        res = profile.do_create(node)
 
         # assertions
         kwargs = {
@@ -156,6 +161,11 @@ class TestHeatStackProfile(base.SenlinTestCase):
             'parameters': spec['properties']['parameters'],
             'files': spec['properties']['files'],
             'environment': spec['properties']['environment'],
+            'tags': [
+                'cluster_id=CLUSTER_ID',
+                'cluster_node_id=NODE_ID',
+                'cluster_node_index=123'
+            ]
         }
         self.assertEqual('FAKE_ID', res)
         oc.stack_create.assert_called_once_with(**kwargs)
@@ -168,15 +178,15 @@ class TestHeatStackProfile(base.SenlinTestCase):
         profile = stack.StackProfile('t', spec)
         oc = mock.Mock()
         profile._orchestrationclient = oc
-        test_stack = mock.Mock()
-        test_stack.name = 'test_stack'
+        node = mock.Mock(id='NODE_ID', cluster_id='CLUSTER_ID', index=123)
+        node.name = 'test_node'
         fake_stack = mock.Mock(id='FAKE_ID')
 
         oc.stack_create = mock.Mock(return_value=fake_stack)
         oc.wait_for_stack = mock.Mock()
 
         # do it
-        res = profile.do_create(test_stack)
+        res = profile.do_create(node)
 
         # assertions
         self.assertEqual('FAKE_ID', res)
@@ -189,6 +199,11 @@ class TestHeatStackProfile(base.SenlinTestCase):
             'parameters': self.spec['properties']['parameters'],
             'files': self.spec['properties']['files'],
             'environment': self.spec['properties']['environment'],
+            'tags': [
+                'cluster_id=CLUSTER_ID',
+                'cluster_node_id=NODE_ID',
+                'cluster_node_index=123'
+            ]
         }
         oc.stack_create.assert_called_once_with(**kwargs)
         oc.wait_for_stack.assert_called_once_with('FAKE_ID', 'CREATE_COMPLETE',
@@ -198,8 +213,8 @@ class TestHeatStackProfile(base.SenlinTestCase):
         oc = mock.Mock()
         profile = stack.StackProfile('t', self.spec)
 
-        stack_node = mock.Mock()
-        stack_node.name = 'test_stack'
+        node = mock.Mock(id='NODE_ID', cluster_id='CLUSTER_ID', index=123)
+        node.name = 'test_node'
         err = exc.InternalError(code=400, message='Too Bad')
         oc.stack_create = mock.Mock(side_effect=err)
         profile._orchestrationclient = oc
@@ -207,7 +222,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         # do it
         ex = self.assertRaises(exc.EResourceCreation,
                                profile.do_create,
-                               stack_node)
+                               node)
 
         # assertions
         self.assertEqual('Failed in creating stack: Too Bad.',
@@ -221,6 +236,11 @@ class TestHeatStackProfile(base.SenlinTestCase):
             'parameters': self.spec['properties']['parameters'],
             'files': self.spec['properties']['files'],
             'environment': self.spec['properties']['environment'],
+            'tags': [
+                'cluster_id=CLUSTER_ID',
+                'cluster_node_id=NODE_ID',
+                'cluster_node_index=123'
+            ]
         }
         oc.stack_create.assert_called_once_with(**call_args)
         self.assertEqual(0, oc.wait_for_stack.call_count)
@@ -230,8 +250,8 @@ class TestHeatStackProfile(base.SenlinTestCase):
         del spec['properties']['timeout']
         profile = stack.StackProfile('t', spec)
         oc = mock.Mock()
-        stack_node = mock.Mock()
-        stack_node.name = 'test_stack'
+        node = mock.Mock(id='NODE_ID', cluster_id='CLUSTER_ID', index=123)
+        node.name = 'test_node'
         fake_stack = mock.Mock(id='FAKE_ID')
 
         oc.stack_create = mock.Mock(return_value=fake_stack)
@@ -242,7 +262,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         # do it
         ex = self.assertRaises(exc.EResourceCreation,
                                profile.do_create,
-                               stack_node)
+                               node)
 
         # assertions
         self.assertEqual('Failed in creating stack: Timeout.',
@@ -256,6 +276,11 @@ class TestHeatStackProfile(base.SenlinTestCase):
             'parameters': self.spec['properties']['parameters'],
             'files': self.spec['properties']['files'],
             'environment': self.spec['properties']['environment'],
+            'tags': [
+                'cluster_id=CLUSTER_ID',
+                'cluster_node_id=NODE_ID',
+                'cluster_node_index=123'
+            ]
         }
         oc.stack_create.assert_called_once_with(**kwargs)
         oc.wait_for_stack.assert_called_once_with('FAKE_ID', 'CREATE_COMPLETE',
