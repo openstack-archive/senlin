@@ -645,9 +645,8 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         action.data['reason'] = "Completed policy checking."
 
         res = action._check_result('FAKE_POLICY_NAME')
+
         self.assertTrue(res)
-        mock_event.assert_called_once_with(action, 'check',
-                                           "Completed policy checking.")
 
     @mock.patch.object(EVENT, 'error')
     def test__check_result_false(self, mock_event):
