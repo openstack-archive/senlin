@@ -1,0 +1,4 @@
+---
+fixes:
+  - The bug where the availability zone info from a nova server deployment
+    was not available has been fixed.
