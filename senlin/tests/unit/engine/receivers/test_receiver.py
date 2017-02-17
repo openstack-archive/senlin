@@ -287,10 +287,10 @@ class TestReceiver(base.SenlinTestCase):
         mock_receiver.release_channel.assert_called_once_with(self.context)
         mock_delete.assert_called_once_with(self.context, 'test-receiver-id')
 
-    @mock.patch.object(context, "get_service_context")
+    @mock.patch.object(context, "get_service_credentials")
     @mock.patch.object(driver_base, "SenlinDriver")
     def test__get_base_url_succeeded(self, mock_senlin_driver,
-                                     mock_get_service_context):
+                                     mock_get_service_creds):
         cfg.CONF.set_override('default_region_name', 'RegionOne',
                               enforce_type=True)
         fake_driver = mock.Mock()
@@ -298,7 +298,7 @@ class TestReceiver(base.SenlinTestCase):
         fake_cred = mock.Mock()
         mock_senlin_driver.return_value = fake_driver
         fake_driver.identity.return_value = fake_kc
-        mock_get_service_context.return_value = fake_cred
+        mock_get_service_creds.return_value = fake_cred
 
         fake_kc.get_senlin_endpoint.return_value = "http://web.com:1234/v1"
 
@@ -308,13 +308,13 @@ class TestReceiver(base.SenlinTestCase):
 
         res = receiver._get_base_url()
         self.assertEqual("http://web.com:1234/v1", res)
-        mock_get_service_context.assert_called_once_with()
+        mock_get_service_creds.assert_called_once_with()
         fake_kc.get_senlin_endpoint.assert_called_once_with()
 
-    @mock.patch.object(context, "get_service_context")
+    @mock.patch.object(context, "get_service_credentials")
     @mock.patch.object(driver_base, "SenlinDriver")
     def test__get_base_url_failed_get_endpoint_exception(
-            self, mock_senlin_driver, mock_get_service_context):
+            self, mock_senlin_driver, mock_get_service_creds):
         cfg.CONF.set_override('default_region_name', 'RegionOne',
                               enforce_type=True)
         fake_driver = mock.Mock()
@@ -322,7 +322,7 @@ class TestReceiver(base.SenlinTestCase):
         fake_cred = mock.Mock()
         mock_senlin_driver.return_value = fake_driver
         fake_driver.identity.return_value = fake_kc
-        mock_get_service_context.return_value = fake_cred
+        mock_get_service_creds.return_value = fake_cred
 
         fake_kc.get_senlin_endpoint.side_effect = exception.InternalError(
             message='Error!')
@@ -333,13 +333,13 @@ class TestReceiver(base.SenlinTestCase):
 
         res = receiver._get_base_url()
         self.assertIsNone(res)
-        mock_get_service_context.assert_called_once_with()
+        mock_get_service_creds.assert_called_once_with()
         fake_kc.get_senlin_endpoint.assert_called_once_with()
 
     @mock.patch.object(co.Credential, 'get')
-    @mock.patch.object(context, 'get_service_context')
+    @mock.patch.object(context, 'get_service_credentials')
     @mock.patch.object(oslo_ctx, 'get_current')
-    def test_build_conn_params(self, mock_get_current, mock_get_service_ctx,
+    def test_build_conn_params(self, mock_get_current, mock_get_service_creds,
                                mock_cred_get):
         user = 'user1'
         project = 'project1'
@@ -363,7 +363,7 @@ class TestReceiver(base.SenlinTestCase):
 
         cred = mock.Mock()
         cred.cred = cred_info
-        mock_get_service_ctx.return_value = service_cred
+        mock_get_service_creds.return_value = service_cred
         mock_get_current.return_value = current_ctx
         mock_cred_get.return_value = cred
 
@@ -378,14 +378,14 @@ class TestReceiver(base.SenlinTestCase):
         }
         res = receiver._build_conn_params(user, project)
         self.assertEqual(expected_result, res)
-        mock_get_service_ctx.assert_called_once_with()
+        mock_get_service_creds.assert_called_once_with()
         mock_cred_get.assert_called_once_with(current_ctx, user, project)
 
     @mock.patch.object(co.Credential, 'get')
-    @mock.patch.object(context, 'get_service_context')
+    @mock.patch.object(context, 'get_service_credentials')
     @mock.patch.object(oslo_ctx, 'get_current')
     def test_build_conn_params_trust_not_found(
-            self, mock_get_current, mock_get_service_ctx, mock_cred_get):
+            self, mock_get_current, mock_get_service_creds, mock_cred_get):
 
         user = 'user1'
         project = 'project1'
@@ -396,7 +396,7 @@ class TestReceiver(base.SenlinTestCase):
             'password': '123'
         }
 
-        mock_get_service_ctx.return_value = service_cred
+        mock_get_service_creds.return_value = service_cred
         mock_cred_get.return_value = None
 
         receiver = self._create_receiver('receiver-1', UUID1)
