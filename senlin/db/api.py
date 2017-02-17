@@ -483,3 +483,8 @@ def db_sync(engine, version=None):
 def db_version(engine):
     """Display the current database version."""
     return IMPL.db_version(engine)
+
+
+def event_purge(engine, project, granularity, age):
+    """Purge the event records in database."""
+    return IMPL.event_purge(project, granularity, age)
