@@ -405,6 +405,7 @@ class TestHeatNotificationEndpoint(base.SenlinTestCase):
         self.assertEqual(expected_params, req.params)
 
 
+@mock.patch('senlin.engine.health_manager.HeatNotificationEndpoint')
 @mock.patch('senlin.engine.health_manager.NovaNotificationEndpoint')
 @mock.patch('oslo_messaging.Target')
 @mock.patch('oslo_messaging.get_notification_transport')
@@ -412,7 +413,8 @@ class TestHeatNotificationEndpoint(base.SenlinTestCase):
 class TestListenerProc(base.SenlinTestCase):
 
     def test_listener_proc_nova(self, mock_listener, mock_transport,
-                                mock_target, mock_endpoint):
+                                mock_target, mock_novaendpoint,
+                                mock_heatendpoint):
         cfg.CONF.set_override('nova_control_exchange', 'FAKE_EXCHANGE',
                               group='health_manager', enforce_type=True)
 
@@ -423,7 +425,7 @@ class TestListenerProc(base.SenlinTestCase):
         x_target = mock.Mock()
         mock_target.return_value = x_target
         x_endpoint = mock.Mock()
-        mock_endpoint.return_value = x_endpoint
+        mock_novaendpoint.return_value = x_endpoint
 
         res = hm.ListenerProc('FAKE_EXCHANGE', 'PROJECT_ID', 'CLUSTER_ID')
 
@@ -431,25 +433,35 @@ class TestListenerProc(base.SenlinTestCase):
         mock_transport.assert_called_once_with(cfg.CONF)
         mock_target.assert_called_once_with(topic="versioned_notifications",
                                             exchange='FAKE_EXCHANGE')
-        mock_endpoint.assert_called_once_with('PROJECT_ID', 'CLUSTER_ID')
+        mock_novaendpoint.assert_called_once_with('PROJECT_ID', 'CLUSTER_ID')
         mock_listener.assert_called_once_with(
             x_transport, [x_target], [x_endpoint],
             executor='threading', pool="senlin-listeners")
         x_listener.start.assert_called_once_with()
 
-    def test_listener_proc_others(self, mock_listener, mock_transport,
-                                  mock_target, mock_endpoint):
+    def test_listener_proc_heat(self, mock_listener, mock_transport,
+                                mock_target, mock_novaendpoint,
+                                mock_heatendpoint):
+        x_listener = mock.Mock()
+        mock_listener.return_value = x_listener
         x_transport = mock.Mock()
         mock_transport.return_value = x_transport
+        x_target = mock.Mock()
+        mock_target.return_value = x_target
+        x_endpoint = mock.Mock()
+        mock_heatendpoint.return_value = x_endpoint
 
-        res = hm.ListenerProc('BOGUS', 'PROJECT_ID', 'CLUSTER_ID')
+        res = hm.ListenerProc('heat', 'PROJECT_ID', 'CLUSTER_ID')
 
         self.assertIsNone(res)
-
         mock_transport.assert_called_once_with(cfg.CONF)
-        self.assertFalse(mock_listener.called)
-        self.assertFalse(mock_target.called)
-        self.assertFalse(mock_endpoint.called)
+        mock_target.assert_called_once_with(topic="notifications",
+                                            exchange='heat')
+        mock_heatendpoint.assert_called_once_with('PROJECT_ID', 'CLUSTER_ID')
+        mock_listener.assert_called_once_with(
+            x_transport, [x_target], [x_endpoint],
+            executor='threading', pool="senlin-listeners")
+        x_listener.start.assert_called_once_with()
 
 
 class TestHealthManager(base.SenlinTestCase):

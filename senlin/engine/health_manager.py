@@ -178,8 +178,12 @@ def ListenerProc(exchange, project_id, cluster_id):
             NovaNotificationEndpoint(project_id, cluster_id),
         ]
     else:  # heat notification
-        LOG.warning(_LW("Heat listener to be added."))
-        return
+        targets = [
+            messaging.Target(topic='notifications', exchange=exchange),
+        ]
+        endpoints = [
+            HeatNotificationEndpoint(project_id, cluster_id),
+        ]
 
     listener = messaging.get_notification_listener(
         transport, targets, endpoints, executor='threading',
