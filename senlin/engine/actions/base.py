@@ -366,7 +366,6 @@ class Action(object):
         """
         reason = self.data['reason']
         if self.data['status'] == policy_mod.CHECK_OK:
-            EVENT.debug(self, 'check', reason)
             return True
 
         reason = _("Failed policy '%(name)s': %(reason)s"
