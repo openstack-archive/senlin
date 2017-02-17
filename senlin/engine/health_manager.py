@@ -297,6 +297,9 @@ class HealthManager(service.Service):
         db_registries = objects.HealthRegistry.claim(self.ctx, self.engine_id)
 
         for r in db_registries:
+            # Claiming indicates we claim a health registry which's engine has
+            # die and it updated engine_id to self engine. But we may not start
+            # check alawys.
             entry = {
                 'cluster_id': r.cluster_id,
                 'check_type': r.check_type,
@@ -308,7 +311,8 @@ class HealthManager(service.Service):
             LOG.info(_LI("Loading cluster %s for health monitoring"),
                      r.cluster_id)
 
-            entry = self._start_check(entry)
+            if r.enabled:
+                entry = self._start_check(entry)
             if entry:
                 self.rt['registries'].append(entry)
 
@@ -365,7 +369,9 @@ class HealthManager(service.Service):
             'enabled': registry.enabled
         }
 
-        self._start_check(entry)
+        if registry.enabled:
+            self._start_check(entry)
+
         self.rt['registries'].append(entry)
 
     def unregister_cluster(self, ctx, cluster_id):
