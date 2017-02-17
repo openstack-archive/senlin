@@ -505,7 +505,7 @@ class TestCluster(base.SenlinTestCase):
 
         values = {'enabled': True}
         res, reason = cluster.attach_policy(self.context, POLICY_ID, values)
-        policy.attach.assert_called_once_with(cluster)
+        policy.attach.assert_called_once_with(cluster, enabled=True)
         mock_load.assert_called_once_with(self.context, POLICY_ID)
         mock_cp.assert_called_once_with(CLUSTER_ID, POLICY_ID, priority=10,
                                         enabled=True, data=None)
@@ -588,7 +588,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertTrue(res)
         self.assertEqual('Policy attached.', reason)
 
-        policy.attach.assert_called_once_with(cluster)
+        policy.attach.assert_called_once_with(cluster, enabled=True)
         mock_load.assert_called_once_with(self.context, new_policy_id)
         mock_cp.assert_called_once_with(cluster.id, new_policy_id, priority=10,
                                         enabled=True, data=None)
@@ -609,7 +609,7 @@ class TestCluster(base.SenlinTestCase):
 
         self.assertFalse(res)
         self.assertEqual('Bad things happened.', reason)
-        policy.attach.assert_called_once_with(cluster)
+        policy.attach.assert_called_once_with(cluster, enabled=True)
         mock_load.assert_called_once_with(self.context, new_id)
 
     @mock.patch.object(cpo.ClusterPolicy, 'delete')
