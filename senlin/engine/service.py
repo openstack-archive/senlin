@@ -762,7 +762,7 @@ class EngineService(service.Service):
             'profile_id': db_profile.id,
             'desired_capacity': req.desired_capacity,
             'min_size': req.min_size or consts.CLUSTER_DEFAULT_MIN_SIZE,
-            'max_size': req.max_size or consts.CLUSTER_DEFAULT_MAX_DIZE,
+            'max_size': req.max_size or consts.CLUSTER_DEFAULT_MAX_SIZE,
             'next_index': 1,
             'timeout': req.timeout or cfg.CONF.default_action_timeout,
             'status': consts.CS_INIT,
