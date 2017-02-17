@@ -128,20 +128,25 @@ class ClusterController(wsgi.Controller):
                                     obj)
 
     def _do_resize(self, req, cluster_id, data):
-        params = {'identity': cluster_id}
-        if consts.ADJUSTMENT_TYPE in data:
+        params = {}
+        if data.get(consts.ADJUSTMENT_TYPE, None):
             params['adjustment_type'] = data.get(consts.ADJUSTMENT_TYPE)
-        if consts.ADJUSTMENT_NUMBER in data:
+        if data.get(consts.ADJUSTMENT_NUMBER, None) is not None:
             params['number'] = data.get(consts.ADJUSTMENT_NUMBER)
-        if consts.ADJUSTMENT_MIN_SIZE in data:
+        if data.get(consts.ADJUSTMENT_MIN_SIZE, None) is not None:
             params['min_size'] = data.get(consts.ADJUSTMENT_MIN_SIZE)
-        if consts.ADJUSTMENT_MAX_SIZE in data:
+        if data.get(consts.ADJUSTMENT_MAX_SIZE, None) is not None:
             params['max_size'] = data.get(consts.ADJUSTMENT_MAX_SIZE)
-        if consts.ADJUSTMENT_MIN_STEP in data:
+        if data.get(consts.ADJUSTMENT_MIN_STEP, None) is not None:
             params['min_step'] = data.get(consts.ADJUSTMENT_MIN_STEP)
-        if consts.ADJUSTMENT_STRICT in data:
+        if data.get(consts.ADJUSTMENT_STRICT, None) is not None:
             params['strict'] = data.get(consts.ADJUSTMENT_STRICT)
 
+        if not params:
+            msg = _("Not enough parameters to do resize action.")
+            raise exc.HTTPBadRequest(msg)
+
+        params['identity'] = cluster_id
         obj = util.parse_request('ClusterResizeRequest', req, params)
 
         if (obj.obj_attr_is_set('adjustment_type') and
