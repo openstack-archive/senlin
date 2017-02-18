@@ -157,7 +157,7 @@ class HealthManager(service.Service):
         The task is here so that the service always has something to wait()
         on, or else the process will exit.
         """
-        pass
+        self._load_runtime_registry()
 
     def _wait_for_action(self, ctx, action_id, timeout):
         done = False
@@ -326,7 +326,6 @@ class HealthManager(service.Service):
         server = rpc.get_rpc_server(self.target, self)
         server.start()
         self.TG.add_timer(cfg.CONF.periodic_interval, self._dummy_task)
-        self._load_runtime_registry()
 
     def stop(self):
         self.TG.stop_timers()
