@@ -436,6 +436,87 @@ class ClusterTest(base.SenlinTestCase):
         )
         notify.assert_called_once_with()
 
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(co.Cluster, 'find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_update_same_timeout(self, notify, mock_find,
+                                         mock_action):
+        x_cluster = mock.Mock(id='12345678AB', status='ACTIVE',
+                              timeout=10)
+        x_cluster.to_dict.return_value = {'foo': 'bar'}
+        x_cluster.timeout = 10
+        mock_find.return_value = x_cluster
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterUpdateRequest(identity='FAKE_ID', name='NEW_NAME',
+                                        timeout=10)
+
+        # do it
+        result = self.eng.cluster_update(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID', 'foo': 'bar'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_action.assert_called_once_with(
+            self.ctx, '12345678AB', 'CLUSTER_UPDATE',
+            name='cluster_update_12345678',
+            status=am.Action.READY,
+            cause=consts.CAUSE_RPC,
+            inputs={
+                # Note timeout is not included in the inputs
+                'name': 'NEW_NAME',
+            },
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(co.Cluster, 'find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_update_same_name(self, notify, mock_find,
+                                      mock_action):
+        x_cluster = mock.Mock(id='12345678AB', status='ACTIVE',
+                              name='OLD_NAME', timeout=10)
+        x_cluster.name = 'OLD_NAME'
+        x_cluster.to_dict.return_value = {'foo': 'bar'}
+        mock_find.return_value = x_cluster
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterUpdateRequest(identity='FAKE_ID', name='OLD_NAME',
+                                        timeout=100)
+
+        # do it
+        result = self.eng.cluster_update(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID', 'foo': 'bar'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_ID')
+        mock_action.assert_called_once_with(
+            self.ctx, '12345678AB', 'CLUSTER_UPDATE',
+            name='cluster_update_12345678',
+            status=am.Action.READY,
+            cause=consts.CAUSE_RPC,
+            inputs={
+                # Note name is not included in the inputs
+                'timeout': 100,
+            },
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(co.Cluster, 'find')
+    def test_cluster_update_all_property_same(self, mock_find):
+        x_cluster = mock.Mock(id='12345678AB', status='ACTIVE',
+                              name='OLD_NAME', timeout=10)
+        x_cluster.name = 'OLD_NAME'
+        x_cluster.timeout = 10
+        mock_find.return_value = x_cluster
+
+        # Notice that name and timeout are all not changed.
+        req = orco.ClusterUpdateRequest(identity='CLUSTER', name='OLD_NAME',
+                                        timeout=10)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_update,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual('', six.text_type(ex))
+
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_update_no_property_updated(self, mock_find):
         x_cluster = mock.Mock(status='ACTIVE', profile_id='OLD_ID')
