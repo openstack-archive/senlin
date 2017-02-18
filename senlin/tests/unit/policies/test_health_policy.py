@@ -110,7 +110,7 @@ class TestHealthPolicy(base.SenlinTestCase):
                                             **kwargs)
 
     @mock.patch.object(health_manager, 'register')
-    def test_attach_failed_action_matching(self, mock_hm_reg):
+    def test_attach_failed_action_matching_rebuild(self, mock_hm_reg):
 
         fake_profile = mock.Mock(type_name='os.heat.stack-1.0',
                                  type='os.heat.stack')
@@ -120,6 +120,22 @@ class TestHealthPolicy(base.SenlinTestCase):
 
         self.assertFalse(res)
         self.assertEqual("Recovery action REBUILD is only applicable to "
+                         "os.nova.server clusters.", data)
+
+    @mock.patch.object(health_manager, 'register')
+    def test_attach_failed_action_matching_reboot(self, mock_hm_reg):
+        spec = copy.deepcopy(self.spec)
+        spec['properties']['recovery']['actions'] = [{'name': 'REBOOT'}]
+        hp = health_policy.HealthPolicy('test-policy-1', spec)
+
+        fake_profile = mock.Mock(type_name='os.heat.stack-1.0',
+                                 type='os.heat.stack')
+        fake_cluster = mock.Mock(id='CLUSTER_ID', rt={'profile': fake_profile})
+
+        res, data = hp.attach(fake_cluster)
+
+        self.assertFalse(res)
+        self.assertEqual("Recovery action REBOOT is only applicable to "
                          "os.nova.server clusters.", data)
 
     @mock.patch.object(health_manager, 'unregister')
