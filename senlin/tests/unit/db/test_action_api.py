@@ -433,7 +433,21 @@ class DBAPIActionTest(base.SenlinTestCase):
         actions = db_api.action_get_all(self.ctx)
         self.assertEqual(3, len(actions))
 
-    def test_action_delete_by_target_with_exceptions(self):
+    def test_action_delete_by_target_with_action(self):
+        for name in ['CLUSTER_CREATE', 'CLUSTER_DELETE', 'CLUSTER_DELETE']:
+            action = _create_action(self.ctx, action=name, target='CLUSTER_ID')
+            self.assertIsNotNone(action)
+
+        actions = db_api.action_get_all(self.ctx)
+        self.assertEqual(3, len(actions))
+
+        db_api.action_delete_by_target(self.ctx, 'CLUSTER_ID',
+                                       action=['CLUSTER_DELETE'])
+        actions = db_api.action_get_all(self.ctx)
+        self.assertEqual(1, len(actions))
+        self.assertEqual('CLUSTER_CREATE', actions[0].action)
+
+    def test_action_delete_by_target_with_action_excluded(self):
         for name in ['CLUSTER_CREATE', 'CLUSTER_RESIZE', 'CLUSTER_DELETE']:
             action = _create_action(self.ctx, action=name, target='CLUSTER_ID')
             self.assertIsNotNone(action)
@@ -442,7 +456,39 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertEqual(3, len(actions))
 
         db_api.action_delete_by_target(self.ctx, 'CLUSTER_ID',
-                                       ['CLUSTER_DELETE'])
+                                       action_excluded=['CLUSTER_DELETE'])
         actions = db_api.action_get_all(self.ctx)
         self.assertEqual(1, len(actions))
         self.assertEqual('CLUSTER_DELETE', actions[0].action)
+
+    def test_action_delete_by_target_with_status(self):
+        action1 = _create_action(self.ctx, action='CLUSTER_CREATE',
+                                 target='CLUSTER_ID', status='SUCCEEDED')
+        action2 = _create_action(self.ctx, action='CLUSTER_DELETE',
+                                 target='CLUSTER_ID', status='INIT')
+        self.assertIsNotNone(action1)
+        self.assertIsNotNone(action2)
+
+        actions = db_api.action_get_all(self.ctx)
+        self.assertEqual(2, len(actions))
+
+        db_api.action_delete_by_target(self.ctx, 'CLUSTER_ID',
+                                       status=['SUCCEEDED'])
+        actions = db_api.action_get_all(self.ctx)
+        self.assertEqual(1, len(actions))
+        self.assertEqual('CLUSTER_DELETE', actions[0].action)
+
+    def test_action_delete_by_target_both_specified(self):
+        for name in ['CLUSTER_CREATE', 'CLUSTER_RESIZE', 'CLUSTER_DELETE']:
+            action = _create_action(self.ctx, action=name, target='CLUSTER_ID')
+            self.assertIsNotNone(action)
+
+        actions = db_api.action_get_all(self.ctx)
+        self.assertEqual(3, len(actions))
+
+        db_api.action_delete_by_target(self.ctx, 'CLUSTER_ID',
+                                       action=['CLUSTER_CREATE'],
+                                       action_excluded=['CLUSTER_DELETE'])
+
+        actions = db_api.action_get_all(self.ctx)
+        self.assertEqual(3, len(actions))
