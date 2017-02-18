@@ -108,6 +108,58 @@ class NovaNotificationEndpoint(object):
             LOG.debug("event_type=%s" % event_type)
 
 
+class HeatNotificationEndpoint(object):
+
+    STACK_FAILURE_EVENTS = {
+        'orchestration.stack.delete.end': 'DELETE',
+    }
+
+    def __init__(self, project_id, cluster_id):
+        self.filter_rule = messaging.NotificationFilter(
+            publisher_id='^orchestration.*',
+            event_type='^orchestration\.stack\..*',
+            context={'project_id': '^%s$' % project_id})
+        self.project_id = project_id
+        self.cluster_id = cluster_id
+        self.rpc = rpc_client.EngineClient()
+
+    def info(self, ctxt, publisher_id, event_type, payload, metadata):
+        if event_type not in self.STACK_FAILURE_EVENTS:
+            return
+
+        tags = payload['tags']
+        if tags is None or tags == []:
+            return
+
+        cluster_id = None
+        node_id = None
+        for tag in tags:
+            if cluster_id is None:
+                start = tag.find('cluster_id')
+                if start == 0 and tag[11:] == self.cluster_id:
+                    cluster_id = tag[11:]
+            if node_id is None:
+                start = tag.find('cluster_node_id')
+                if start == 0:
+                    node_id = tag[16:]
+
+        if cluster_id is None or node_id is None:
+            return
+
+        params = {
+            'event': self.STACK_FAILURE_EVENTS[event_type],
+            'state': payload.get('state', 'Unknown'),
+            'stack_id': payload.get('stack_identity', 'Unknown'),
+            'timestamp': metadata['timestamp'],
+            'publisher': publisher_id,
+        }
+        LOG.info(_LI("Requesting stack recovery: %s"), node_id)
+        ctx = context.get_service_context(project=self.project_id,
+                                          user=payload['user_identity'])
+        req = objects.NodeRecoverRequest(identity=node_id, params=params)
+        self.rpc.call(ctx, 'node_recover', req)
+
+
 def ListenerProc(exchange, project_id, cluster_id):
     """Thread procedure for running a event listener.
 
