@@ -156,6 +156,12 @@ class StackProfile(base.Profile):
             'parameters': self.properties[self.PARAMETERS],
             'files': self.properties[self.FILES],
             'environment': self.properties[self.ENVIRONMENT],
+            # TODO(Qiming): expose tags to user in spec
+            'tags': [
+                'cluster_id=%s' % obj.cluster_id,
+                'cluster_node_id=%s' % obj.id,
+                'cluster_node_index=%s' % obj.index
+            ]
         }
 
         try:
