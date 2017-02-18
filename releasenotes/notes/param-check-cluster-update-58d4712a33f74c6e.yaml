@@ -1,0 +1,4 @@
+---
+fixes:
+  - The parameter checking for the cluster update operation may incorrectly
+    parse the provided value(s). This bug has been fixed.

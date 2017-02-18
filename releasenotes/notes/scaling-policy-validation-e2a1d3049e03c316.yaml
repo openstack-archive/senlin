@@ -1,0 +1,4 @@
+---
+features:
+  - The numeric properties in the spec for a scaling policy now have stricter
+    validations.
