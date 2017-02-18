@@ -116,8 +116,8 @@ class ScalingPolicy(base.Policy):
         :param name: Name for the policy object.
         :param spec: A dictionary containing the detailed specification for
                      the policy.
-        :param \*\*kwargs: Other optional parameters for policy object
-                           creation.
+        :param dict kwargs: Other optional parameters for policy object
+                            creation.
         :return: An object of `ScalingPolicy`.
         """
         super(ScalingPolicy, self).__init__(name, spec, **kwargs)
