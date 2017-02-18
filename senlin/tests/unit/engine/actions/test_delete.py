@@ -175,7 +175,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
         self.assertEqual('Failed in deleting nodes.', res_msg)
         self.assertEqual({}, action.data)
 
-    def test_do_delete_success(self, mock_load):
+    @mock.patch.object(ao.Action, 'delete_by_target')
+    def test_do_delete_success(self, mock_action, mock_load):
         node1 = mock.Mock(id='NODE_1')
         node2 = mock.Mock(id='NODE_2')
         cluster = mock.Mock(id='FAKE_CLUSTER', nodes=[node1, node2],
@@ -200,6 +201,10 @@ class ClusterDeleteTest(base.SenlinTestCase):
                                                    'Deletion in progress.')
         mock_delete.assert_called_once_with(['NODE_1', 'NODE_2'])
         cluster.do_delete.assert_called_once_with(action.context)
+        mock_action.assert_called_once_with(
+            action.context, 'FAKE_CLUSTER',
+            action_excluded=['CLUSTER_DELETE'],
+            status=['SUCCEEDED', 'FAILED'])
 
     def test_do_delete_with_batch_policy(self, mock_load):
         node1 = mock.Mock(id='NODE_1')

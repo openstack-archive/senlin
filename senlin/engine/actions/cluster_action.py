@@ -18,7 +18,7 @@ from oslo_utils import timeutils
 from osprofiler import profiler
 
 from senlin.common import consts
-from senlin.common.i18n import _, _LI
+from senlin.common.i18n import _, _LI, _LW
 from senlin.common import scaleutils
 from senlin.common import utils
 from senlin.engine.actions import base
@@ -361,6 +361,17 @@ class ClusterAction(base.Action):
             self.entity.eval_status(self.context, consts.CLUSTER_DELETE)
             return self.RES_ERROR, _('Cannot delete cluster object.')
 
+        # Remove all action records which target on deleted
+        # cluster except the on-going CLUSTER_DELETE action from DB
+        try:
+            ao.Action.delete_by_target(
+                self.context, self.target,
+                action_excluded=[consts.CLUSTER_DELETE],
+                status=[consts.ACTION_SUCCEEDED,
+                        consts.ACTION_FAILED])
+        except Exception as ex:
+            LOG.warning(_LW('Failed to clean cluster action records: %s'),
+                        ex)
         return self.RES_OK, reason
 
     @profiler.trace('ClusterAction.do_add_nodes', hide_args=False)

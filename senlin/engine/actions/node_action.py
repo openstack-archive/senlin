@@ -12,18 +12,22 @@
 
 import eventlet
 
+from oslo_log import log as logging
 from osprofiler import profiler
 
 from senlin.common import consts
-from senlin.common.i18n import _
+from senlin.common.i18n import _, _LW
 from senlin.common import scaleutils as su
 from senlin.engine.actions import base
 from senlin.engine import cluster as cm
 from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.engine import senlin_lock
+from senlin.objects import action as ao
 from senlin.objects import node as no
 from senlin.policies import base as pb
+
+LOG = logging.getLogger(__name__)
 
 
 class NodeAction(base.Action):
@@ -115,10 +119,20 @@ class NodeAction(base.Action):
                 params = {'desired_capacity': desired}
             cluster.eval_status(self.context, consts.NODE_DELETE, **params)
 
-        if res:
-            return self.RES_OK, _('Node deleted successfully.')
-        else:
+        if not res:
             return self.RES_ERROR, _('Node deletion failed.')
+
+        # Remove all action records which target on deleted
+        # node except the on-going NODE_DELETE action from DB
+        try:
+            ao.Action.delete_by_target(
+                self.context, self.target,
+                action_excluded=[consts.NODE_DELETE],
+                status=[consts.ACTION_SUCCEEDED, consts.ACTION_FAILED])
+        except Exception as ex:
+            LOG.warning(_LW('Failed to clean node action records: %s'),
+                        ex)
+        return self.RES_OK, _('Node deleted successfully.')
 
     @profiler.trace('NodeAction.do_update', hide_args=False)
     def do_update(self):

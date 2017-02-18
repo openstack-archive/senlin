@@ -21,6 +21,7 @@ from senlin.engine import cluster as cluster_mod
 from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.engine import senlin_lock as lock
+from senlin.objects import action as ao
 from senlin.objects import node as node_obj
 from senlin.policies import base as policy_mod
 from senlin.tests.unit.common import base
@@ -146,7 +147,8 @@ class NodeActionTest(base.SenlinTestCase):
         cluster.eval_status.assert_called_once_with(
             action.context, consts.NODE_CREATE, desired_capacity=11)
 
-    def test_do_delete_okay(self, mock_load):
+    @mock.patch.object(ao.Action, 'delete_by_target')
+    def test_do_delete_okay(self, mock_action, mock_load):
         node = mock.Mock(id='NID')
         node.do_delete = mock.Mock(return_value=True)
         mock_load.return_value = node
@@ -159,6 +161,9 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Node deleted successfully.', res_msg)
         node.do_delete.assert_called_once_with(action.context)
+        mock_action.assert_called_once_with(
+            action.context, 'ID', action_excluded=['NODE_DELETE'],
+            status=['SUCCEEDED', 'FAILED'])
 
     def test_do_delete_failed(self, mock_load):
         node = mock.Mock(id='NID')
