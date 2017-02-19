@@ -15,7 +15,6 @@ import mock
 from senlin.engine.actions import base as ab
 from senlin.engine.actions import cluster_action as ca
 from senlin.engine import cluster as cm
-from senlin.engine import event as EVENT
 from senlin.engine import senlin_lock
 from senlin.policies import base as pb
 from senlin.tests.unit.common import base
@@ -49,10 +48,8 @@ class ClusterActionTest(base.SenlinTestCase):
             mock.call('FAKE_CLUSTER', 'BEFORE'),
             mock.call('FAKE_CLUSTER', 'AFTER')])
 
-    @mock.patch.object(EVENT, 'error')
     @mock.patch.object(ab.Action, 'policy_check')
-    def test_execute_failed_policy_check(self, mock_check, mock_error,
-                                         mock_load):
+    def test_execute_failed_policy_check(self, mock_check, mock_load):
         cluster = mock.Mock()
         cluster.id = 'FAKE_CLUSTER'
         mock_load.return_value = cluster
@@ -68,13 +65,9 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Policy check failure: Something is wrong.', res_msg)
         mock_check.assert_called_once_with('FAKE_CLUSTER', 'BEFORE')
-        mock_error.assert_called_once_with(
-            action, 'error', 'Policy check failure: Something is wrong.')
 
-    @mock.patch.object(EVENT, 'error')
     @mock.patch.object(ab.Action, 'policy_check')
-    def test_execute_unsupported_action(self, mock_check, mock_error,
-                                        mock_load):
+    def test_execute_unsupported_action(self, mock_check, mock_load):
         cluster = mock.Mock()
         cluster.id = 'FAKE_CLUSTER'
         mock_load.return_value = cluster
@@ -89,11 +82,8 @@ class ClusterActionTest(base.SenlinTestCase):
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Unsupported action: CLUSTER_DANCE.', res_msg)
         mock_check.assert_called_once_with('FAKE_CLUSTER', 'BEFORE')
-        mock_error.assert_called_once_with(
-            action, 'error', 'Unsupported action: CLUSTER_DANCE.')
 
-    @mock.patch.object(EVENT, 'error')
-    def test_execute_post_check_failed(self, mock_error, mock_load):
+    def test_execute_post_check_failed(self, mock_load):
         def fake_check(cluster_id, target):
             if target == 'BEFORE':
                 action.data = {
@@ -122,8 +112,6 @@ class ClusterActionTest(base.SenlinTestCase):
         mock_check.assert_has_calls([
             mock.call('FAKE_CLUSTER', 'BEFORE'),
             mock.call('FAKE_CLUSTER', 'AFTER')])
-        mock_error.assert_called_once_with(
-            action, 'error', 'Policy check failure: Policy checking failed.')
 
     @mock.patch.object(senlin_lock, 'cluster_lock_acquire')
     @mock.patch.object(senlin_lock, 'cluster_lock_release')
