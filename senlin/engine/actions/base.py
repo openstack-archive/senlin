@@ -368,9 +368,8 @@ class Action(object):
         if self.data['status'] == policy_mod.CHECK_OK:
             return True
 
-        reason = _("Failed policy '%(name)s': %(reason)s"
-                   ) % {'name': name, 'reason': reason}
-        EVENT.error(self, consts.PHASE_ERROR, reason)
+        self.data['reason'] = _("Failed policy '%(name)s': %(reason)s"
+                                ) % {'name': name, 'reason': reason}
         return False
 
     def policy_check(self, cluster_id, target):
