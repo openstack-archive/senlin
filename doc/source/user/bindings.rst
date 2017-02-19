@@ -54,7 +54,7 @@ one of ``asc`` and ``desc``. When omitted, Senlin sorts a given key using
 For example, the following command line sorts the policy bindings using the
 ``enabled`` property in descending order::
 
-  $ openstack cluster policy binding list --sort enabled:desc
+  $ openstack cluster policy binding list --sort enabled:desc c3
 
 When sorting the list of policies, ``enabled`` is the only key you can specify
 for sorting.
