@@ -24,7 +24,6 @@ from senlin.common import utils
 from senlin.engine.actions import base
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
-from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
@@ -951,7 +950,6 @@ class ClusterAction(base.Action):
         self.policy_check(self.entity.id, 'BEFORE')
         if self.data['status'] != policy_mod.CHECK_OK:
             reason = _('Policy check failure: %s') % self.data['reason']
-            EVENT.error(self, consts.PHASE_ERROR, reason)
             return self.RES_ERROR, reason
 
         result = self.RES_OK
@@ -960,7 +958,6 @@ class ClusterAction(base.Action):
         method = getattr(self, method_name, None)
         if method is None:
             reason = _('Unsupported action: %s.') % self.action
-            EVENT.error(self, consts.PHASE_ERROR, reason)
             return self.RES_ERROR, reason
 
         result, reason = method()
@@ -970,7 +967,6 @@ class ClusterAction(base.Action):
             self.policy_check(self.entity.id, 'AFTER')
             if self.data['status'] != policy_mod.CHECK_OK:
                 reason = _('Policy check failure: %s') % self.data['reason']
-                EVENT.error(self, consts.PHASE_ERROR, reason)
                 return self.RES_ERROR, reason
 
         return result, reason

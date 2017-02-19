@@ -388,6 +388,30 @@ class ActionBaseTest(base.SenlinTestCase):
     @mock.patch.object(ao.Action, 'mark_succeeded')
     @mock.patch.object(ao.Action, 'mark_failed')
     @mock.patch.object(ao.Action, 'abandon')
+    def test_set_status_dump_event(self, mock_abandon, mark_fail,
+                                   mark_succeed, mock_warning, mock_error,
+                                   mock_info):
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id='FAKE_ID')
+        action.entity = mock.Mock()
+
+        action.set_status(action.RES_OK, 'FAKE_SUCCEEDED')
+        mock_info.assert_called_once_with(action, consts.PHASE_END,
+                                          'FAKE_SUCCEEDED')
+
+        action.set_status(action.RES_ERROR, 'FAKE_ERROR')
+        mock_error.assert_called_once_with(action, consts.PHASE_ERROR,
+                                           'FAKE_ERROR')
+
+        action.set_status(action.RES_RETRY, 'FAKE_RETRY')
+        mock_warning.assert_called_once_with(action, consts.PHASE_ERROR,
+                                             'FAKE_RETRY')
+
+    @mock.patch.object(EVENT, 'info')
+    @mock.patch.object(EVENT, 'error')
+    @mock.patch.object(EVENT, 'warning')
+    @mock.patch.object(ao.Action, 'mark_succeeded')
+    @mock.patch.object(ao.Action, 'mark_failed')
+    @mock.patch.object(ao.Action, 'abandon')
     def test_set_status_reason_is_none(self, mock_abandon, mark_fail,
                                        mark_succeed, mock_warning, mock_error,
                                        mock_info):
@@ -637,8 +661,7 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         self.assertEqual(0, mock_pre_op.call_count)
         self.assertEqual(0, mock_post_op.call_count)
 
-    @mock.patch.object(EVENT, 'debug')
-    def test__check_result_true(self, mock_event):
+    def test__check_result_true(self):
         cluster_id = CLUSTER_ID
         action = ab.Action(cluster_id, 'OBJECT_ACTION', self.ctx)
         action.data['status'] = policy_mod.CHECK_OK
@@ -648,8 +671,7 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
 
         self.assertTrue(res)
 
-    @mock.patch.object(EVENT, 'error')
-    def test__check_result_false(self, mock_event):
+    def test__check_result_false(self):
         cluster_id = CLUSTER_ID
         action = ab.Action(cluster_id, 'OBJECT_ACTION', self.ctx)
         action.data['status'] = policy_mod.CHECK_ERROR
@@ -661,12 +683,10 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         reason = ("Failed policy '%(name)s': %(reason)s"
                   ) % {'name': 'FAKE_POLICY_NAME', 'reason': reason}
         self.assertFalse(res)
-        mock_event.assert_called_once_with(action, 'error', reason)
 
-    @mock.patch.object(EVENT, 'debug')
     @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     @mock.patch.object(policy_mod.Policy, 'load')
-    def test_policy_check_pre_op(self, mock_load, mock_load_all, mock_event):
+    def test_policy_check_pre_op(self, mock_load, mock_load_all):
         cluster_id = CLUSTER_ID
         # Note: policy is mocked
         spec = {
@@ -697,10 +717,9 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         # last_op was not updated
         self.assertIsNone(pb.last_op)
 
-    @mock.patch.object(EVENT, 'debug')
     @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     @mock.patch.object(policy_mod.Policy, 'load')
-    def test_policy_check_post_op(self, mock_load, mock_load_all, mock_event):
+    def test_policy_check_post_op(self, mock_load, mock_load_all):
         cluster_id = CLUSTER_ID
         # Note: policy is mocked
         policy = mock.Mock(id=uuidutils.generate_uuid(), cooldown=0,
