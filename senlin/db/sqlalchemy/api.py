@@ -1434,8 +1434,10 @@ def registry_claim(context, engine_id):
         if svc_ids:
             q_reg = q_reg.filter(
                 models.HealthRegistry.engine_id.notin_(svc_ids))
-        q_reg.update({'engine_id': engine_id}, synchronize_session=False)
+
         result = q_reg.all()
+        q_reg.update({'engine_id': engine_id}, synchronize_session=False)
+
         return result
 
 

@@ -71,8 +71,8 @@ class DBAPIRegistryTest(base.SenlinTestCase):
 
         registries = db_api.registry_claim(self.ctx, engine_id='ENGINE_ID')
         self.assertEqual(2, len(registries))
-        self.assertEqual('ENGINE_ID', registries[0].engine_id)
-        self.assertEqual('ENGINE_ID', registries[1].engine_id)
+        self.assertEqual('DEAD_ENGINE', registries[0].engine_id)
+        self.assertEqual('DEAD_ENGINE', registries[1].engine_id)
 
     @mock.patch.object(db_utils, 'is_service_dead')
     def test_registry_claim_with_dead_engine(self, mock_check):
@@ -89,7 +89,7 @@ class DBAPIRegistryTest(base.SenlinTestCase):
         registries = db_api.registry_claim(self.ctx, engine_id='ENGINE_ID')
 
         self.assertEqual(1, len(registries))
-        self.assertEqual('ENGINE_ID', registries[0].engine_id)
+        self.assertEqual('SERVICE_ID_DEAD', registries[0].engine_id)
 
     def test_registry_delete(self):
         registry = self._create_registry('CLUSTER_ID',
