@@ -1395,14 +1395,22 @@ class EngineService(service.Service):
             ctx.user = db_cluster.user
             ctx.project = db_cluster.project
 
-        params = {
+        kwargs = {
             'name': 'cluster_check_%s' % db_cluster.id[:8],
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': req.params if req.obj_attr_is_set('params') else {}
         }
+        need_delete = kwargs['inputs'].get('delete_check_action', False)
+        # delete some records of CLUSTER_CHECK
+        if need_delete:
+            action_obj.Action.delete_by_target(
+                ctx, db_cluster.id, action=[consts.CLUSTER_CHECK],
+                status=[consts.ACTION_SUCCEEDED, consts.ACTION_FAILED])
+
         action_id = action_mod.Action.create(ctx, db_cluster.id,
-                                             consts.CLUSTER_CHECK, **params)
+                                             consts.CLUSTER_CHECK,
+                                             **kwargs)
         dispatcher.start_action()
         LOG.info("Cluster check action queued: %s.", action_id)
 

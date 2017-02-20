@@ -25,6 +25,7 @@ from senlin.engine.actions import base as am
 from senlin.engine import dispatcher
 from senlin.engine import node as nm
 from senlin.engine import service
+from senlin.objects import action as ao
 from senlin.objects import base as obj_base
 from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
@@ -1396,11 +1397,64 @@ class ClusterTest(base.SenlinTestCase):
         )
         notify.assert_called_once_with()
 
+    @mock.patch.object(ao.Action, 'delete_by_target')
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(co.Cluster, 'find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_check_with_delete(self, notify, mock_find, mock_action,
+                                       mock_delete):
+        x_cluster = mock.Mock(id='CID', user='USER', project='PROJECT')
+        mock_find.return_value = x_cluster
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterCheckRequest(identity='C1',
+                                       params={'delete_check_action': True})
+
+        res = self.eng.cluster_check(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, res)
+        mock_find.assert_called_once_with(self.ctx, 'C1')
+        mock_delete.assert_called_once_with(
+            self.ctx, 'CID', action=['CLUSTER_CHECK'],
+            status=['SUCCEEDED', 'FAILED']
+        )
+        mock_action.assert_called_once_with(
+            self.ctx, 'CID', consts.CLUSTER_CHECK,
+            name='cluster_check_CID',
+            cause=consts.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={'delete_check_action': True},
+        )
+        notify.assert_called_once_with()
+
     @mock.patch.object(am.Action, 'create')
     @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(dispatcher, 'start_action')
     def test_cluster_check_user_is_none(self, notify, mock_find, mock_action):
         x_cluster = mock.Mock(id='CID', project='PROJECT')
+        mock_find.return_value = x_cluster
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterCheckRequest(identity='C1')
+
+        result = self.eng.cluster_check(self.ctx, req.obj_to_primitive())
+
+        self.assertIsNotNone(x_cluster.user)
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'C1')
+        mock_action.assert_called_once_with(
+            self.ctx, 'CID', consts.CLUSTER_CHECK,
+            name='cluster_check_CID',
+            cause=consts.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={},
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(co.Cluster, 'find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_check_project_is_none(self, notify, mock_find,
+                                           mock_action):
+        x_cluster = mock.Mock(id='CID', user='USER')
         mock_find.return_value = x_cluster
         mock_action.return_value = 'ACTION_ID'
         req = orco.ClusterCheckRequest(identity='C1')

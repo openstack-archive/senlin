@@ -247,8 +247,10 @@ class HealthManager(service.Service):
 
         ctx = context.get_service_context(user=cluster.user,
                                           project=cluster.project)
+        params = {'delete_check_action': True}
         try:
-            req = objects.ClusterCheckRequest(identity=cluster_id)
+            req = objects.ClusterCheckRequest(identity=cluster_id,
+                                              params=params)
             action = self.rpc_client.call(ctx, 'cluster_check', req)
         except Exception as ex:
             LOG.warning("Failed in triggering 'cluster_check' RPC for "

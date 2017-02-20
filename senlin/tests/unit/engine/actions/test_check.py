@@ -63,10 +63,72 @@ class ClusterCheckTest(base.SenlinTestCase):
         mock_action.assert_has_calls([
             mock.call(action.context, 'NODE_1', 'NODE_CHECK',
                       name='node_check_NODE_1',
-                      cause=consts.CAUSE_DERIVED),
+                      cause=consts.CAUSE_DERIVED,
+                      inputs={}),
             mock.call(action.context, 'NODE_2', 'NODE_CHECK',
                       name='node_check_NODE_2',
-                      cause=consts.CAUSE_DERIVED)
+                      cause=consts.CAUSE_DERIVED,
+                      inputs={})
+        ])
+        mock_dep.assert_called_once_with(action.context,
+                                         ['NODE_ACTION_1', 'NODE_ACTION_2'],
+                                         'CLUSTER_ACTION_ID')
+        mock_update.assert_has_calls([
+            mock.call(action.context, 'NODE_ACTION_1', {'status': 'READY'}),
+            mock.call(action.context, 'NODE_ACTION_2', {'status': 'READY'}),
+        ])
+        mock_start.assert_called_once_with()
+        mock_wait.assert_called_once_with()
+        cluster.eval_status.assert_called_once_with(
+            action.context, consts.CLUSTER_CHECK)
+
+    @mock.patch.object(ao.Action, 'update')
+    @mock.patch.object(ab.Action, 'create')
+    @mock.patch.object(ao.Action, 'delete_by_target')
+    @mock.patch.object(dobj.Dependency, 'create')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
+    def test_do_check_need_delete(self, mock_wait, mock_start, mock_dep,
+                                  mock_delete, mock_action, mock_update,
+                                  mock_load):
+        node1 = mock.Mock(id='NODE_1')
+        node2 = mock.Mock(id='NODE_2')
+        cluster = mock.Mock(id='FAKE_ID', status='old status',
+                            status_reason='old reason')
+        cluster.nodes = [node1, node2]
+        cluster.do_check.return_value = True
+        mock_load.return_value = cluster
+        mock_action.side_effect = ['NODE_ACTION_1', 'NODE_ACTION_2']
+        action = ca.ClusterAction('FAKE_CLUSTER', 'CLUSTER_CHECK', self.ctx,
+                                  inputs={'delete_check_action': True})
+        action.id = 'CLUSTER_ACTION_ID'
+
+        mock_wait.return_value = (action.RES_OK, 'Everything is Okay')
+
+        # do it
+        res_code, res_msg = action.do_check()
+
+        # assertions
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Cluster checking completed.', res_msg)
+
+        mock_load.assert_called_once_with(action.context, 'FAKE_CLUSTER')
+        cluster.do_check.assert_called_once_with(action.context)
+        mock_delete.assert_has_calls([
+            mock.call(action.context, 'NODE_1', action=['NODE_CHECK'],
+                      status=['SUCCEEDED', 'FAILED']),
+            mock.call(action.context, 'NODE_2', action=['NODE_CHECK'],
+                      status=['SUCCEEDED', 'FAILED'])
+        ])
+        mock_action.assert_has_calls([
+            mock.call(action.context, 'NODE_1', 'NODE_CHECK',
+                      name='node_check_NODE_1',
+                      cause=consts.CAUSE_DERIVED,
+                      inputs={'delete_check_action': True}),
+            mock.call(action.context, 'NODE_2', 'NODE_CHECK',
+                      name='node_check_NODE_2',
+                      cause=consts.CAUSE_DERIVED,
+                      inputs={'delete_check_action': True})
         ])
         mock_dep.assert_called_once_with(action.context,
                                          ['NODE_ACTION_1', 'NODE_ACTION_2'],
@@ -127,6 +189,7 @@ class ClusterCheckTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             action.context, 'NODE_1', 'NODE_CHECK',
             name='node_check_NODE_1',
+            inputs={},
             cause=consts.CAUSE_DERIVED,
         )
         mock_dep.assert_called_once_with(action.context, ['NODE_ACTION_ID'],

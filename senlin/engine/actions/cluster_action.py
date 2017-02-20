@@ -620,11 +620,20 @@ class ClusterAction(base.Action):
         reason = _('Cluster checking completed.')
         for node in self.entity.nodes:
             node_id = node.id
+            need_delete = self.inputs.get('delete_check_action', False)
+            # delete some records of NODE_CHECK
+            if need_delete:
+                ao.Action.delete_by_target(
+                    self.context, node_id, action=[consts.NODE_CHECK],
+                    status=[consts.ACTION_SUCCEEDED, consts.ACTION_FAILED])
+
+            name = 'node_check_%s' % node_id[:8]
             action_id = base.Action.create(
-                self.context, node_id, consts.NODE_CHECK,
-                name='node_check_%s' % node_id[:8],
+                self.context, node_id, consts.NODE_CHECK, name=name,
                 cause=consts.CAUSE_DERIVED,
+                inputs=self.inputs
             )
+
             child.append(action_id)
 
         if child:
