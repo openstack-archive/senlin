@@ -202,6 +202,26 @@ class NeutronClient(base.DriverBase):
         return res
 
     @sdk.translate_exception
+    def floatingip_list(self, fixed_ip=None,
+                        floating_ip=None, floating_network=None,
+                        port=None, router=None, status=None):
+        filters = {}
+        if fixed_ip:
+            filters['fixed_ip_address'] = fixed_ip
+        if floating_ip:
+            filters['floating_ip_address'] = floating_ip
+        if floating_network:
+            filters['floating_network_id'] = floating_network
+        if port:
+            filters['port_id'] = port
+        if router:
+            filters['router_id'] = router
+        if status:
+            filters['status'] = status
+        res = self.conn.network.ips(**filters)
+        return list(res)
+
+    @sdk.translate_exception
     def floatingip_create(self, **attr):
         res = self.conn.network.create_ip(**attr)
         return res
