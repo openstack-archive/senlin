@@ -23,7 +23,7 @@ class DBAPIRegistryTest(base.SenlinTestCase):
         super(DBAPIRegistryTest, self).setUp()
         self.ctx = utils.dummy_context()
 
-        db_api.service_create(self.ctx, 'SERVICE_ID')
+        db_api.service_create('SERVICE_ID')
 
     def _create_registry(self, cluster_id, check_type, interval, params,
                          engine_id):
@@ -76,7 +76,7 @@ class DBAPIRegistryTest(base.SenlinTestCase):
 
     @mock.patch.object(db_utils, 'is_service_dead')
     def test_registry_claim_with_dead_engine(self, mock_check):
-        db_api.service_create(self.ctx, 'SERVICE_ID_DEAD')
+        db_api.service_create('SERVICE_ID_DEAD')
         self._create_registry(
             cluster_id='CLUSTER_1', check_type='NODE_STATUS_POLLING',
             interval=60, params={}, engine_id='SERVICE_ID')

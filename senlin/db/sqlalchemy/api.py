@@ -1341,8 +1341,7 @@ def receiver_delete(context, receiver_id):
         session.delete(receiver)
 
 
-def service_create(context, service_id, host=None, binary=None,
-                   topic=None):
+def service_create(service_id, host=None, binary=None, topic=None):
     with session_for_write() as session:
         time_now = timeutils.utcnow(True)
         svc = models.Service(id=service_id, host=host, binary=binary,
@@ -1352,7 +1351,7 @@ def service_create(context, service_id, host=None, binary=None,
         return svc
 
 
-def service_update(context, service_id, values=None):
+def service_update(service_id, values=None):
     with session_for_write() as session:
         service = session.query(models.Service).get(service_id)
         if not service:
@@ -1367,21 +1366,23 @@ def service_update(context, service_id, values=None):
         return service
 
 
-def service_delete(context, service_id):
+def service_delete(service_id):
     with session_for_write() as session:
         session.query(models.Service).filter_by(
             id=service_id).delete(synchronize_session='fetch')
 
 
-def service_get(context, service_id):
-    return model_query(context, models.Service).get(service_id)
+def service_get(service_id):
+    with session_for_read() as session:
+        return session.query(models.Service).get(service_id)
 
 
-def service_get_all(context):
-    return model_query(context, models.Service).all()
+def service_get_all():
+    with session_for_read() as session:
+        return session.query(models.Service).all()
 
 
-def gc_by_engine(context, engine_id):
+def gc_by_engine(engine_id):
     # Get all actions locked by an engine
     with session_for_write() as session:
         q_actions = session.query(models.Action).filter_by(owner=engine_id)

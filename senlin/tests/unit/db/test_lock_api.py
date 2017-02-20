@@ -245,7 +245,7 @@ class GCByEngineTest(base.SenlinTestCase):
         db_api.cluster_lock_acquire(self.cluster.id, action.id, -1)
 
         # do it
-        db_api.gc_by_engine(self.ctx, engine_id)
+        db_api.gc_by_engine(engine_id)
 
         # assertion
         observed = db_api.cluster_lock_acquire(self.cluster.id, UUID2, -1)
@@ -275,7 +275,7 @@ class GCByEngineTest(base.SenlinTestCase):
         db_api.node_lock_acquire(self.cluster.id, action.id)
 
         # do it
-        db_api.gc_by_engine(self.ctx, engine_id)
+        db_api.gc_by_engine(engine_id)
 
         # assertion
         # even a read lock is okay now
@@ -311,7 +311,7 @@ class GCByEngineTest(base.SenlinTestCase):
         db_api.node_lock_acquire(self.node.id, action.id)
 
         # do it
-        db_api.gc_by_engine(self.ctx, engine_id)
+        db_api.gc_by_engine(engine_id)
 
         # assertion
         # a read lock is okay now and cluster lock state not broken
