@@ -320,6 +320,25 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         self.conn.network.update_port.assert_called_once_with(
             'fake_port', **attr)
 
+    def test_floatingip_find(self):
+        floatingip_id = 'fake_id'
+        fip_obj = mock.Mock()
+
+        self.conn.network.find_ip.return_value = fip_obj
+        res = self.nc.floatingip_find(floatingip_id)
+        self.conn.network.find_ip.assert_called_once_with(
+            floatingip_id, ignore_missing=False)
+        self.assertEqual(fip_obj, res)
+
+    def test_floatingip_list_by_port_id(self):
+        port_id = 'port_id'
+        fip_obj_iter = iter([mock.Mock()])
+
+        self.conn.network.ips.return_value = fip_obj_iter
+        res = self.nc.floatingip_list(port=port_id)
+        self.conn.network.ips.assert_called_once_with(port_id=port_id)
+        self.assertEqual(1, len(res))
+
     def test_floatingip_create(self):
         attr = {
             'network_id': 'foo'
