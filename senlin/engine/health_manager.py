@@ -48,7 +48,7 @@ def _chase_up(start_time, interval):
     # check if we have missed any intervals?
     missed = int((elapsed - 0.0000001) / interval)
     if missed >= 1:
-        LOG.warning(_LW("Poller missed % intervals for checking"), missed)
+        LOG.warning(_LW("Poller missed %s intervals for checking"), missed)
     return (missed + 1) * interval - elapsed
 
 
