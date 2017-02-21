@@ -360,7 +360,7 @@ class HealthManager(service.Service):
                 'enabled': r.enabled,
             }
 
-            LOG.info(_LI("Loading cluster %(c)s enalbed=%(e)s for "
+            LOG.info(_LI("Loading cluster %(c)s enabled=%(e)s for "
                          "health monitoring"),
                      {'c': r.cluster_id, 'e': r.enabled})
 
