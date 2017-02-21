@@ -709,7 +709,7 @@ class EngineService(service.Service):
 
         :param context: An instance of the request context.
         :return: None if cluster creation is okay, or an exception of type
-                 `Forbbiden` if number of clusters reaches the maximum.
+                 `Forbidden` if number of clusters reaches the maximum.
         """
         existing = co.Cluster.count_all(context)
         maximum = CONF.max_clusters_per_project
@@ -1944,7 +1944,7 @@ class EngineService(service.Service):
                                              consts.CLUSTER_DETACH_POLICY,
                                              **params)
         dispatcher.start_action()
-        LOG.info(_LI("Policy dettach action queued: %s."), action_id)
+        LOG.info(_LI("Policy detach action queued: %s."), action_id)
 
         return {'action': action_id}
 
