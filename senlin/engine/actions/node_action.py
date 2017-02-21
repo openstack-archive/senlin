@@ -190,9 +190,9 @@ class NodeAction(base.Action):
         """
         res = self.entity.do_check(self.context)
         if res:
-            return self.RES_OK, _('Node status is ACTIVE.')
+            return self.RES_OK, _('Node check succeeded.')
         else:
-            return self.RES_ERROR, _('Node status is not ACTIVE.')
+            return self.RES_ERROR, _('Node check failed.')
 
     @profiler.trace('NodeAction.do_recover', hide_args=False)
     def do_recover(self):
