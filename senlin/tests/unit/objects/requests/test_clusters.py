@@ -265,6 +265,19 @@ class TestClusterUpdate(test_base.SenlinTestCase):
         self.assertEqual({'newkey': 'newvalue'}, sot.metadata)
         self.assertEqual(4567, sot.timeout)
 
+    def test_init_with_profile_only(self):
+        sot = clusters.ClusterUpdateRequest(identity='foo', name='new-name',
+                                            profile_id='new-profile',
+                                            metadata={'newkey': 'newvalue'},
+                                            timeout=4567, profile_only=True)
+
+        self.assertEqual('foo', sot.identity)
+        self.assertEqual('new-name', sot.name)
+        self.assertEqual('new-profile', sot.profile_id)
+        self.assertEqual({'newkey': 'newvalue'}, sot.metadata)
+        self.assertEqual(4567, sot.timeout)
+        self.assertTrue(sot.profile_only)
+
 
 class TestClusterAddNodes(test_base.SenlinTestCase):
 

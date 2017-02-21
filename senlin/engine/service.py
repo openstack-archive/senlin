@@ -832,6 +832,9 @@ class EngineService(service.Service):
                 req.name != cluster.name):
             inputs['name'] = req.name
 
+        if req.obj_attr_is_set(consts.CLUSTER_PROFILE_ONLY):
+            inputs['profile_only'] = req.profile_only
+
         if not inputs:
             msg = _("No property needs an update.")
             raise exception.BadRequest(msg=msg)

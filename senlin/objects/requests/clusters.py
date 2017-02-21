@@ -76,13 +76,31 @@ class ClusterGetRequest(base.SenlinObject):
 @base.SenlinObjectRegistry.register
 class ClusterUpdateRequest(base.SenlinObject):
 
+    # VERSION 1.0: Initial version
+    # VERSION 1.1: Add field 'profile_only'
+    VERSION = '1.1'
+    VERSION_MAP = {
+        '1.6': '1.1',
+    }
+
     fields = {
         'identity': fields.StringField(),
         'name': fields.NameField(nullable=True),
         'profile_id': fields.StringField(nullable=True),
         'metadata': fields.JsonField(nullable=True),
         'timeout': fields.NonNegativeIntegerField(nullable=True),
+        'profile_only': fields.BooleanField(nullable=True,
+                                            default=False),
     }
+
+    def obj_make_compatible(self, primitive, target_version):
+        super(ClusterUpdateRequest, self).obj_make_compatible(
+            primitive, target_version)
+        target_version = versionutils.convert_version_to_tuple(
+            target_version)
+        if target_version < (1, 1):
+            if 'profile_only' in primitive:
+                del primitive['profile_only']
 
 
 @base.SenlinObjectRegistry.register
