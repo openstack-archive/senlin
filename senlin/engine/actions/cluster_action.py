@@ -258,6 +258,7 @@ class ClusterAction(base.Action):
         metadata = self.inputs.get('metadata')
         timeout = self.inputs.get('timeout')
         profile_id = self.inputs.get('new_profile_id')
+        profile_only = self.inputs.get('profile_only')
 
         if name is not None:
             self.entity.name = name
@@ -270,6 +271,14 @@ class ClusterAction(base.Action):
         reason = _('Cluster update completed.')
         if profile_id is None:
             self.entity.eval_status(self.context, consts.CLUSTER_UPDATE,
+                                    updated_at=timeutils.utcnow(True))
+            return self.RES_OK, reason
+
+        # profile_only's type is bool
+        if profile_only:
+            self.entity.profile_id = profile_id
+            self.entity.eval_status(self.context, consts.CLUSTER_UPDATE,
+                                    profile_id=profile_id,
                                     updated_at=timeutils.utcnow(True))
             return self.RES_OK, reason
 

@@ -106,6 +106,23 @@ class ClusterUpdateTest(base.SenlinTestCase):
         cluster.eval_status.assert_called_once_with(
             action.context, consts.CLUSTER_UPDATE, updated_at=mock.ANY)
 
+    def test_do_update_profile_only(self, mock_load):
+        cluster = mock.Mock(id='FAKE_ID', nodes=[], ACTIVE='ACTIVE')
+        mock_load.return_value = cluster
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
+        action.inputs = {'name': 'FAKE_NAME',
+                         'metadata': {'foo': 'bar'},
+                         'timeout': 3600,
+                         'new_profile_id': 'FAKE_PROFILE',
+                         'profile_only': True}
+        res_code, res_msg = action.do_update()
+
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Cluster update completed.', res_msg)
+        cluster.eval_status.assert_called_once_with(
+            action.context, consts.CLUSTER_UPDATE, profile_id='FAKE_PROFILE',
+            updated_at=mock.ANY)
+
     def test_do_update_empty_cluster(self, mock_load):
         cluster = mock.Mock(id='FAKE_ID', nodes=[], ACTIVE='ACTIVE')
         mock_load.return_value = cluster
