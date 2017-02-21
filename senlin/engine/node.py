@@ -332,7 +332,7 @@ class Node(object):
             self.set_status(context, consts.NS_ERROR,
                             _("Check: Node is not ACTIVE."))
 
-        return res
+        return True
 
     def do_recover(self, context, **options):
         """recover a node.
