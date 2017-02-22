@@ -16,8 +16,6 @@ API
 ---
   - Find and fill gaps with API-WG besides the one we already identified.
 
-  - Support "profile-only" parameter to cluster-update API
-
   - Add support to put a cluster to maintenance mode
 
 ENGINE
