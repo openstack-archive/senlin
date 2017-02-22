@@ -33,9 +33,6 @@ ENGINE
   - Verify the works to be done after oslo.messaging version bump.
     [https://review.openstack.org/#/c/408114]
 
-  - Try invoke db.sqlalchemy.api.gc_by_engine when attempting stealing during
-    acquire_lock
-
   - Ensure engine will refresh physical resource status before doing
     node_recover.
 
