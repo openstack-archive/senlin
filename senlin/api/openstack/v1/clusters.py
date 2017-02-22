@@ -121,7 +121,7 @@ class ClusterController(wsgi.Controller):
 
     @wsgi.Controller.api_version('1.3')
     def _do_replace_nodes(self, req, cluster_id, data):
-        nodes = data.get('nodes', [])
+        nodes = data.get('nodes', {})
         if not nodes or not isinstance(nodes, dict):
             msg = _("The data provided is not a map")
             raise exc.HTTPBadRequest(msg)
