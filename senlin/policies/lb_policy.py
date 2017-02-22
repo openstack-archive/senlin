@@ -466,6 +466,7 @@ class LoadBalancingPolicy(base.Policy):
         pool_id = policy_data['pool']
 
         # Remove nodes that will be deleted from lb pool
+        failed_nodes = []
         for node_id in candidates:
             node = nm.Node.load(action.context, node_id=node_id)
             member_id = node.data.get('lb_member', None)
@@ -476,10 +477,18 @@ class LoadBalancingPolicy(base.Policy):
 
             res = lb_driver.member_remove(lb_id, pool_id, member_id)
             if res is not True:
-                action.data['status'] = base.CHECK_ERROR
-                action.data['reason'] = _('Failed in removing deleted '
-                                          'node(s) from lb pool.')
-                return
+                failed_nodes.append(node.id)
+                node.status = consts.NS_WARNING
+                node.status_reason = _('Failed in removing node from lb pool.')
+
+            node.data.pop('lb_member', None)
+            node.store(action.context)
+
+        if failed_nodes:
+            error = _('Failed in removing deleted node(s) from lb pool: %s'
+                      ) % failed_nodes
+            action.data['status'] = base.CHECK_ERROR
+            action.data['reason'] = error
 
         return
 
@@ -516,6 +525,7 @@ class LoadBalancingPolicy(base.Policy):
         subnet = self.pool_spec.get(self.POOL_SUBNET)
 
         # Add new nodes to lb pool
+        failed_nodes = []
         for node_id in nodes_added:
             node = nm.Node.load(action.context, node_id=node_id)
             member_id = node.data.get('lb_member', None)
@@ -527,12 +537,17 @@ class LoadBalancingPolicy(base.Policy):
             member_id = lb_driver.member_add(node, lb_id, pool_id, port,
                                              subnet)
             if member_id is None:
-                action.data['status'] = base.CHECK_ERROR
-                action.data['reason'] = _('Failed in adding new node(s) '
-                                          'into lb pool.')
-                return
+                failed_nodes.append(node.id)
+                node.status = consts.NS_WARNING
+                node.status_reason = _('Failed in adding node into lb pool.')
+            else:
+                node.data.update({'lb_member': member_id})
 
-            node.data.update({'lb_member': member_id})
             node.store(action.context)
+
+        if failed_nodes:
+            error = _('Failed in adding nodes into lb pool: %s') % failed_nodes
+            action.data['status'] = base.CHECK_ERROR
+            action.data['reason'] = error
 
         return

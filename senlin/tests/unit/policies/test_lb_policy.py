@@ -644,7 +644,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
     def test_post_op_add_nodes_failed(self, m_cluster_get, m_node_load,
                                       m_extract, m_load):
         cluster_id = 'CLUSTER_ID'
-        node1 = mock.Mock(data={})
+        node1 = mock.Mock(id='NODE_ID', data={})
         action = mock.Mock(data={'creation': {'nodes': ['NODE1_ID']}},
                            context='action_context',
                            action=consts.CLUSTER_RESIZE)
@@ -663,10 +663,15 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
         self.assertIsNone(res)
         self.assertEqual(policy_base.CHECK_ERROR, action.data['status'])
-        self.assertEqual('Failed in adding new node(s) into lb pool.',
-                         action.data['reason'])
+        self.assertEqual("Failed in adding nodes into lb pool: "
+                         "['NODE_ID']", action.data['reason'])
         self.lb_driver.member_add.assert_called_once_with(
             node1, 'LB_ID', 'POOL_ID', 80, 'test-subnet')
+        self.assertEqual(consts.NS_WARNING, node1.status)
+        self.assertEqual('Failed in adding node into lb pool.',
+                         node1.status_reason)
+        self.assertEqual({}, node1.data)
+        node1.store.assert_called_once_with(action.context)
 
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(co.Cluster, 'get')
@@ -759,8 +764,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
     def test_pre_op_del_nodes_failed(self, m_cluster_get, m_node_load,
                                      m_extract, m_load):
         cluster_id = 'CLUSTER_ID'
-        node1 = mock.Mock()
-        node1.data = {'lb_member': 'MEMBER1_ID'}
+        node1 = mock.Mock(id='NODE_ID', data={'lb_member': 'MEMBER1_ID'})
         action = mock.Mock(
             action=consts.CLUSTER_RESIZE,
             context='action_context',
@@ -780,7 +784,12 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
         self.assertIsNone(res)
         self.assertEqual(policy_base.CHECK_ERROR, action.data['status'])
-        self.assertEqual('Failed in removing deleted node(s) from lb pool.',
-                         action.data['reason'])
+        self.assertEqual("Failed in removing deleted node(s) from lb pool: "
+                         "['NODE_ID']", action.data['reason'])
         self.lb_driver.member_remove.assert_called_once_with(
             'LB_ID', 'POOL_ID', 'MEMBER1_ID')
+        self.assertEqual(consts.NS_WARNING, node1.status)
+        self.assertEqual('Failed in removing node from lb pool.',
+                         node1.status_reason)
+        self.assertEqual({}, node1.data)
+        node1.store.assert_called_once_with(action.context)

@@ -41,9 +41,8 @@ ENGINE
 
 POLICY
 ------
+
   - Support CLUSTER_RECOVER action in LB policy
-  - Mark node ERROR/WARNING if node cannot be added to the LB pool associated
-    with the cluster
 
 MIDDLE PRIORITY
 ===============
