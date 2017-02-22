@@ -1095,15 +1095,17 @@ class ServerProfile(base.Profile):
         if operation and not isinstance(operation, six.string_types):
             operation = operation[0]
 
-        op_name = operation['name']
-        if op_name.upper() != consts.RECOVER_RECREATE:
-            op_params = operation.get('params', {})
-            if op_name.lower() not in self.OP_NAMES:
-                LOG.error(_LE("The operation '%s' is not supported"), op_name)
-                return False
+        if operation is not None and 'name' in operation:
+            op_name = operation['name']
+            if op_name.upper() != consts.RECOVER_RECREATE:
+                op_params = operation.get('params', {})
+                if op_name.lower() not in self.OP_NAMES:
+                    LOG.error(_LE("The operation '%s' is not supported"),
+                              op_name)
+                    return False
 
-            method = getattr(self, "handle_" + op_name.lower())
-            return method(obj, **op_params)
+                method = getattr(self, "handle_" + op_name.lower())
+                return method(obj, **op_params)
 
         return super(ServerProfile, self).do_recover(obj, **options)
 
