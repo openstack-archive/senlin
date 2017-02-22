@@ -21,7 +21,7 @@ Cluster-Policy Bindings
 Concept
 ~~~~~~~
 
-A :term:`Policy` object can attached to at least one :term:`Cluster` at the
+A :term:`Policy` object can be attached to at least one :term:`Cluster` at the
 same time. A cluster at any time can have more than one Policy objects
 attached to it.
 
@@ -100,10 +100,10 @@ cluster ``c3``, with its enabled status set to ``True``::
 
   $ openstack cluster policy attach --enabled True --policy up01 c3
 
-Note that most of the time, Senlin doesn't more than one policy of the same
-type to be attached to the same cluster. This restriction is relaxed for some
-policy types. For example, when working with policies about scaling, you can
-actually attach more than one policy instances to the same cluster, each of
+Note that most of the time, Senlin doesn't allow more than one policy of the
+same type to be attached to the same cluster. This restriction is relaxed for
+some policy types. For example, when working with policies about scaling, you
+can actually attach more than one policy instances to the same cluster, each of
 which is about a specific scenario.
 
 For the identifiers specified for the cluster and the policy, you can use the
