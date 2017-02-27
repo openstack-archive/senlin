@@ -1762,12 +1762,15 @@ class EngineService(service.Service):
         kwargs = {
             'name': 'node_recover_%s' % db_node.id[:8],
             'cause': consts.CAUSE_RPC,
-            'status': action_mod.Action.READY
+            'status': action_mod.Action.READY,
+            'inputs': {}
         }
         if req.obj_attr_is_set('params') and req.params:
+            if 'check' in req.params:
+                kwargs['inputs']['check'] = req.params['check']
             if 'operation' in req.params:
                 op_name = req.params['operation']
-                kwargs['inputs'] = {'operation': [{'name': op_name}]}
+                kwargs['inputs']['operation'] = [{'name': op_name}]
             else:
                 msg = _("Action parameter is not recognizable.")
                 raise exception.BadRequest(msg=msg)

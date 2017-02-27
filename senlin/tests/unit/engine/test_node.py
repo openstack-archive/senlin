@@ -603,6 +603,85 @@ class TestNode(base.SenlinTestCase):
                       reason='Recover succeeded')])
 
     @mock.patch.object(nodem.Node, 'set_status')
+    def test_node_recover_check_active(self, mock_status):
+        node = nodem.Node('node1', PROFILE_ID, None)
+        node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
+        mock_check = self.patchobject(pb.Profile, 'check_object')
+        mock_check.return_value = True
+
+        res = node.do_recover(self.context, check=True)
+
+        self.assertTrue(res)
+        mock_check.assert_called_once_with(self.context, node)
+        mock_status.assert_called_once_with(self.context, consts.NS_ACTIVE,
+                                            reason='Recover: Node is ACTIVE.')
+
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(pb.Profile, 'recover_object')
+    def test_node_recover_check_error(self, mock_recover, mock_status):
+        def set_status(*args, **kwargs):
+            if args[1] == 'ACTIVE':
+                node.physical_id = new_id
+
+        node = nodem.Node('node1', PROFILE_ID, '')
+        node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
+        new_id = '166db83b-b4a4-49ef-96a8-6c0fdd882d1a'
+        mock_recover.return_value = new_id
+        mock_status.side_effect = set_status
+        mock_check = self.patchobject(pb.Profile, 'check_object')
+        mock_check.return_value = False
+
+        res = node.do_recover(self.context, check=True)
+
+        self.assertTrue(res)
+        mock_check.assert_called_once_with(self.context, node)
+        mock_recover.assert_called_once_with(self.context, node, check=True)
+        self.assertEqual('node1', node.name)
+        self.assertEqual(new_id, node.physical_id)
+        self.assertEqual(PROFILE_ID, node.profile_id)
+        mock_status.assert_has_calls([
+            mock.call(self.context, 'RECOVERING',
+                      reason='Recover in progress'),
+            mock.call(self.context, consts.NS_ACTIVE,
+                      reason='Recover succeeded',
+                      physical_id=new_id)])
+
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(pb.Profile, 'recover_object')
+    def test_node_recover_check_exception(self, mock_recover, mock_status):
+        def set_status(*args, **kwargs):
+            if args[1] == 'ACTIVE':
+                node.physical_id = new_id
+
+        node = nodem.Node('node1', PROFILE_ID, '')
+        node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
+        new_id = '166db83b-b4a4-49ef-96a8-6c0fdd882d1a'
+        mock_recover.return_value = new_id
+        mock_status.side_effect = set_status
+        mock_check = self.patchobject(pb.Profile, 'check_object')
+        mock_check.side_effect = exception.EResourceOperation(
+            op='checking',
+            type='server',
+            id=node.physical_id,
+            reason='Boom!'
+        )
+
+        res = node.do_recover(self.context, check=True)
+
+        self.assertTrue(res)
+        mock_check.assert_called_once_with(self.context, node)
+        mock_recover.assert_called_once_with(self.context, node, check=True)
+        self.assertEqual('node1', node.name)
+        self.assertEqual(new_id, node.physical_id)
+        self.assertEqual(PROFILE_ID, node.profile_id)
+        mock_status.assert_has_calls([
+            mock.call(self.context, 'RECOVERING',
+                      reason='Recover in progress'),
+            mock.call(self.context, consts.NS_ACTIVE,
+                      reason='Recover succeeded',
+                      physical_id=new_id)])
+
+    @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'recover_object')
     def test_node_recover_failed_recover(self, mock_recover, mock_status):
         node = nodem.Node('node1', PROFILE_ID, None)
