@@ -12,7 +12,7 @@ properties:
 
     # Name or ID of subnet for the port on which members can be
     # connected.
-    subnet: private
+    subnet: private-subnet
 
     # Valid values include: ROUND_ROBIN, LEAST_CONNECTIONS, SOURCE_IP
     lb_method: ROUND_ROBIN
@@ -26,7 +26,7 @@ properties:
 
   vip:
     # Name or ID of Subnet on which VIP address will be allocated
-    subnet: public
+    subnet: public-subnet
 
     # IP adddress of the VIP
     # address: <ADDRESS>
