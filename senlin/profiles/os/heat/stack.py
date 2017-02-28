@@ -299,6 +299,65 @@ class StackProfile(base.Profile):
                 }
             }
 
+    def _refresh_tags(self, current, node, add=False):
+        """Refresh tag list.
+
+        :param current: Current list of tags.
+        :param node: The node object.
+        :param add: Flag indicating whether new tags are added.
+        :returns: (tags, updated) where tags contains a new list of tags and
+                  updated indicates whether new tag list differs from the old
+                  one.
+        """
+        tags = []
+        for tag in current:
+            if tag.find('cluster_id=') == 0:
+                continue
+            elif tag.find('cluster_node_id=') == 0:
+                continue
+            elif tag.find('cluster_node_index=') == 0:
+                continue
+            tags.append(tag)
+
+        if add:
+            tags.append('cluster_id=' + node.cluster_id)
+            tags.append('cluster_node_id=' + node.id)
+            tags.append('cluster_node_index=%s' % node.index)
+
+        return (tags, tags != current)
+
+    def do_join(self, obj, cluster_id):
+        if not obj.physical_id:
+            return False
+
+        hc = self.orchestration(obj)
+        try:
+            stack = hc.stack_get(obj.physical_id)
+            tags, updated = self._refresh_tags(stack.tags, obj, True)
+            if updated:
+                hc.stack_update(obj.physical_id, {'tags': tags})
+        except exc.InternalError as ex:
+            LOG.error(_LE('Failed in updating stack tags: %s.'), ex)
+            return False
+
+        return True
+
+    def do_leave(self, obj):
+        if not obj.physical_id:
+            return False
+
+        hc = self.orchestration(obj)
+        try:
+            stack = hc.stack_get(obj.physical_id)
+            tags, updated = self._refresh_tags(stack.tags, obj, False)
+            if updated:
+                hc.stack_update(obj.physical_id, {'tags': tags})
+        except exc.InternalError as ex:
+            LOG.error(_LE('Failed in updating stack tags: %s.'), ex)
+            return False
+
+        return True
+
     def handle_abandon(self, obj, **options):
         """Handler for abandoning a heat stack node."""
         pass
