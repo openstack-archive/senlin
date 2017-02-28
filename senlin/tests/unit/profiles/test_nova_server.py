@@ -933,6 +933,21 @@ class TestNovaServerBasic(base.SenlinTestCase):
         cc.server_get.assert_called_with('FAKE_ID')
         self.assertTrue(res)
 
+    @mock.patch.object(server.ServerProfile, 'do_delete')
+    @mock.patch.object(server.ServerProfile, 'do_create')
+    def test_do_recover_operation_is_none(self, mock_create, mock_delete):
+        profile = server.ServerProfile('t', self.spec)
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        mock_delete.return_value = None
+        mock_create.return_value = True
+
+        res = profile.do_recover(node_obj, operation=None)
+
+        self.assertTrue(res)
+        mock_delete.assert_called_once_with(node_obj, force=False)
+        mock_create.assert_called_once_with(node_obj)
+
     @mock.patch.object(server.ServerProfile, 'handle_rebuild')
     def test_do_recover_rebuild(self, mock_rebuild):
         profile = server.ServerProfile('t', self.spec)
