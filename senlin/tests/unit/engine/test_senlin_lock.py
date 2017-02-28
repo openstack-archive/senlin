@@ -17,6 +17,7 @@ from senlin.engine import senlin_lock as lockm
 from senlin.objects import action as ao
 from senlin.objects import cluster_lock as clo
 from senlin.objects import node_lock as nlo
+from senlin.objects import service as svco
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -42,14 +43,14 @@ class SenlinLockTest(base.SenlinTestCase):
                                              lockm.CLUSTER_SCOPE)
 
     @mock.patch.object(common_utils, 'is_engine_dead')
-    @mock.patch.object(ao.Action, 'mark_failed')
+    @mock.patch.object(svco.Service, 'gc_by_engine')
     @mock.patch.object(clo.ClusterLock, "acquire")
     @mock.patch.object(clo.ClusterLock, "steal")
     def test_cluster_lock_acquire_dead_owner(self, mock_steal, mock_acquire,
-                                             mock_action_fail, mock_dead):
+                                             mock_gc, mock_dead):
         mock_dead.return_value = True
-        mock_acquire.side_effect = ['ACTION_ABC']
-        mock_steal.side_effect = ['ACTION_XYZ']
+        mock_acquire.return_value = ['ACTION_ABC']
+        mock_steal.return_value = ['ACTION_XYZ']
 
         res = lockm.cluster_lock_acquire(self.ctx, 'CLUSTER_A', 'ACTION_XYZ',
                                          'NEW_ENGINE')
@@ -58,9 +59,7 @@ class SenlinLockTest(base.SenlinTestCase):
         mock_acquire.assert_called_once_with("CLUSTER_A", "ACTION_XYZ",
                                              lockm.CLUSTER_SCOPE)
         mock_steal.assert_called_once_with('CLUSTER_A', 'ACTION_XYZ')
-        mock_action_fail.assert_called_once_with(
-            self.ctx, 'ACTION_ABC', mock.ANY,
-            'Engine died when executing this action.')
+        mock_gc.assert_called_once_with(mock.ANY)
 
     @mock.patch.object(common_utils, 'is_engine_dead')
     @mock.patch.object(clo.ClusterLock, "acquire")

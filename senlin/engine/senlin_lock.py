@@ -16,6 +16,7 @@ import time
 
 from senlin.common.i18n import _, _LE, _LI
 from senlin.common import utils
+from senlin import objects
 from senlin.objects import action as ao
 from senlin.objects import cluster_lock as cl_obj
 from senlin.objects import node_lock as nl_obj
@@ -69,10 +70,10 @@ def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
             'c': cluster_id,
             'a': owners[0]
         })
-        reason = _('Engine died when executing this action.')
+        dead_engine = action.owner
         owners = cl_obj.ClusterLock.steal(cluster_id, action_id)
-        # Mark the old action to failed.
-        ao.Action.mark_failed(context, action.id, time.time(), reason)
+        # Cleanse locks affected by the dead engine
+        objects.Service.gc_by_engine(dead_engine)
         return action_id in owners
 
     LOG.error(_LE('Cluster is already locked by action %(old)s, '
