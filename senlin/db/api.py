@@ -98,8 +98,9 @@ def node_get_all(context, cluster_id=None, limit=None, marker=None, sort=None,
                              project_safe=project_safe)
 
 
-def node_get_all_by_cluster(context, cluster_id, project_safe=True):
-    return IMPL.node_get_all_by_cluster(context, cluster_id,
+def node_get_all_by_cluster(context, cluster_id, filters=None,
+                            project_safe=True):
+    return IMPL.node_get_all_by_cluster(context, cluster_id, filters=filters,
                                         project_safe=project_safe)
 
 

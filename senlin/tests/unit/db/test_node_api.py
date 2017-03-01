@@ -36,10 +36,10 @@ class DBAPINodeTest(base.SenlinTestCase):
         self.cluster = shared.create_cluster(self.ctx, self.profile)
 
     def test_node_create(self):
-        nodes = db_api.node_get_all_by_cluster(self.ctx, self.cluster.id)
-        self.assertEqual(0, len(nodes))
         res = shared.create_node(self.ctx, self.cluster, self.profile)
+
         node = db_api.node_get(self.ctx, res.id)
+
         self.assertIsNotNone(node)
         self.assertEqual('test_node_name', node.name)
         self.assertEqual(UUID1, node.physical_id)
@@ -54,18 +54,14 @@ class DBAPINodeTest(base.SenlinTestCase):
         self.assertEqual(self.cluster.id, node.cluster_id)
         self.assertEqual(self.profile.id, node.profile_id)
 
-        nodes = db_api.node_get_all_by_cluster(self.ctx, self.cluster.id)
-        self.assertEqual(1, len(nodes))
-
     def test_node_get(self):
         res = shared.create_node(self.ctx, self.cluster, self.profile)
+
         node = db_api.node_get(self.ctx, res.id)
         self.assertIsNotNone(node)
 
         node = db_api.node_get(self.ctx, UUID2)
         self.assertIsNone(node)
-        nodes = db_api.node_get_all_by_cluster(self.ctx, self.cluster.id)
-        self.assertEqual(1, len(nodes))
 
     def test_node_get_diff_project(self):
         res = shared.create_node(self.ctx, self.cluster, self.profile)
@@ -371,7 +367,7 @@ class DBAPINodeTest(base.SenlinTestCase):
         results = db_api.node_get_all(admin_ctx, project_safe=False)
         self.assertEqual(2, len(results))
 
-    def test_node_get_by_cluster(self):
+    def test_get_all_by_cluster(self):
         cluster1 = shared.create_cluster(self.ctx, self.profile)
 
         node0 = shared.create_node(self.ctx, None, self.profile)
@@ -398,7 +394,25 @@ class DBAPINodeTest(base.SenlinTestCase):
         self.assertEqual(1, len(nodes))
         self.assertEqual(node3.id, nodes[0].id)
 
-    def test_node_get_by_cluster_diff_project(self):
+    def test_get_all_by_cluster_with_filters(self):
+        cluster1 = shared.create_cluster(self.ctx, self.profile)
+
+        shared.create_node(self.ctx, None, self.profile, role="slave")
+        node1 = shared.create_node(self.ctx, self.cluster, self.profile,
+                                   role="slave")
+        shared.create_node(self.ctx, self.cluster, self.profile, role="master")
+        shared.create_node(self.ctx, cluster1, self.profile, role="unknown")
+
+        nodes = db_api.node_get_all_by_cluster(self.ctx, self.cluster.id,
+                                               filters={"role": ["slave"]})
+        self.assertEqual(1, len(nodes))
+        self.assertEqual(node1.id, nodes[0].id)
+
+        nodes = db_api.node_get_all_by_cluster(self.ctx, cluster1.id,
+                                               filters={"role": "master"})
+        self.assertEqual(0, len(nodes))
+
+    def test_get_all_by_cluster_diff_project(self):
         shared.create_cluster(self.ctx, self.profile)
 
         node1 = shared.create_node(self.ctx, self.cluster, self.profile)
@@ -416,7 +430,7 @@ class DBAPINodeTest(base.SenlinTestCase):
                                                project_safe=False)
         self.assertEqual(2, len(nodes))
 
-    def test_node_get_by_cluster_admin_context(self):
+    def test_get_all_by_cluster_admin_context(self):
         shared.create_cluster(self.ctx, self.profile)
 
         node1 = shared.create_node(self.ctx, self.cluster, self.profile)

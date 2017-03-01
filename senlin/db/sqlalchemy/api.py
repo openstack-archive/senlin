@@ -272,9 +272,15 @@ def node_get_all(context, cluster_id=None, limit=None, marker=None, sort=None,
                                    marker=marker, sort_dirs=dirs).all()
 
 
-def node_get_all_by_cluster(context, cluster_id, project_safe=True):
-    return _query_node_get_all(context, cluster_id=cluster_id,
-                               project_safe=project_safe).all()
+def node_get_all_by_cluster(context, cluster_id, filters=None,
+                            project_safe=True):
+
+    query = _query_node_get_all(context, cluster_id=cluster_id,
+                                project_safe=project_safe)
+    if filters:
+        query = utils.exact_filter(query, models.Node, filters)
+
+    return query.all()
 
 
 def node_ids_by_cluster(context, cluster_id):
