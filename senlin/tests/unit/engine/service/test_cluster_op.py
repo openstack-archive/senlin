@@ -37,7 +37,7 @@ class ClusterOpTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(am.Action, 'create')
-    @mock.patch.object(no.Node, 'get_all_by_cluster')
+    @mock.patch.object(no.Node, 'ids_by_cluster')
     @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_op(self, mock_find, mock_cluster, mock_nodes, mock_action,
@@ -52,10 +52,7 @@ class ClusterOpTest(base.SenlinTestCase):
         mock_action.return_value = 'ACTION_ID'
         params = {'style': 'tango'}
         filters = {'role': 'slave'}
-        mock_nodes.return_value = [
-            mock.Mock(id='NODE1'),
-            mock.Mock(id='NODE2')
-        ]
+        mock_nodes.return_value = ['NODE1', 'NODE2']
         req = orco.ClusterOperationRequest(identity='FAKE_CLUSTER',
                                            operation='dance',
                                            params=params,
@@ -145,7 +142,7 @@ class ClusterOpTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(am.Action, 'create')
-    @mock.patch.object(no.Node, 'get_all_by_cluster')
+    @mock.patch.object(no.Node, 'ids_by_cluster')
     @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_op_no_parameters(self, mock_find, mock_cluster,
@@ -159,10 +156,7 @@ class ClusterOpTest(base.SenlinTestCase):
         mock_cluster.return_value = x_cluster
         mock_action.return_value = 'ACTION_ID'
         filters = {'role': 'slave'}
-        mock_nodes.return_value = [
-            mock.Mock(id='NODE1'),
-            mock.Mock(id='NODE2')
-        ]
+        mock_nodes.return_value = ['NODE1', 'NODE2']
         req = orco.ClusterOperationRequest(identity='FAKE_CLUSTER',
                                            operation='dance',
                                            filters=filters)
@@ -190,7 +184,7 @@ class ClusterOpTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(am.Action, 'create')
-    @mock.patch.object(no.Node, 'get_all_by_cluster')
+    @mock.patch.object(no.Node, 'ids_by_cluster')
     @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_op_no_filters(self, mock_find, mock_cluster,
@@ -203,10 +197,7 @@ class ClusterOpTest(base.SenlinTestCase):
         x_cluster.rt = {'profile': x_profile}
         mock_cluster.return_value = x_cluster
         mock_action.return_value = 'ACTION_ID'
-        mock_nodes.return_value = [
-            mock.Mock(id='NODE1'),
-            mock.Mock(id='NODE2')
-        ]
+        mock_nodes.return_value = ['NODE1', 'NODE2']
         req = orco.ClusterOperationRequest(identity='FAKE_CLUSTER',
                                            operation='dance')
 
@@ -231,7 +222,7 @@ class ClusterOpTest(base.SenlinTestCase):
         mock_start.assert_called_once_with()
 
     @mock.patch.object(am.Action, 'create')
-    @mock.patch.object(no.Node, 'get_all_by_cluster')
+    @mock.patch.object(no.Node, 'ids_by_cluster')
     @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_op_bad_filters(self, mock_find, mock_cluster,
@@ -244,10 +235,7 @@ class ClusterOpTest(base.SenlinTestCase):
         x_cluster.rt = {'profile': x_profile}
         mock_cluster.return_value = x_cluster
         mock_action.return_value = 'ACTION_ID'
-        mock_nodes.return_value = [
-            mock.Mock(id='NODE1'),
-            mock.Mock(id='NODE2')
-        ]
+        mock_nodes.return_value = ['NODE1', 'NODE2']
         filters = {'shape': 'round'}
         req = orco.ClusterOperationRequest(identity='FAKE_CLUSTER',
                                            operation='dance',
@@ -267,7 +255,7 @@ class ClusterOpTest(base.SenlinTestCase):
         self.assertEqual(0, mock_action.call_count)
 
     @mock.patch.object(am.Action, 'create')
-    @mock.patch.object(no.Node, 'get_all_by_cluster')
+    @mock.patch.object(no.Node, 'ids_by_cluster')
     @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_op_no_nodes_found(self, mock_find, mock_cluster,
@@ -279,6 +267,7 @@ class ClusterOpTest(base.SenlinTestCase):
         x_cluster = mock.Mock(id='12345678AB')
         x_cluster.rt = {'profile': x_profile}
         mock_cluster.return_value = x_cluster
+        mock_nodes.return_value = []
         mock_action.return_value = 'ACTION_ID'
         filters = {'role': 'slave'}
         req = orco.ClusterOperationRequest(identity='FAKE_CLUSTER',

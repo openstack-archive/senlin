@@ -1459,12 +1459,11 @@ class EngineService(service.Service):
                     errors.append(_("Filter key '%s' is unsupported") % k)
             if errors:
                 raise exception.BadRequest(msg='\n'.join(errors))
-            nodes = node_obj.Node.get_all_by_cluster(ctx, cluster.id,
-                                                     filters=req.filters)
+            node_ids = node_obj.Node.ids_by_cluster(ctx, cluster.id,
+                                                    filters=req.filters)
         else:
-            nodes = node_obj.Node.get_all_by_cluster(ctx, cluster.id)
+            node_ids = node_obj.Node.ids_by_cluster(ctx, cluster.id)
 
-        node_ids = [node.id for node in nodes]
         if not node_ids:
             msg = _("No node (matching the filter) could be found")
             raise exception.BadRequest(msg=msg)
