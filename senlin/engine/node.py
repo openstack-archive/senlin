@@ -345,6 +345,18 @@ class Node(object):
         if not self.physical_id:
             return False
 
+        if options.get('check', False):
+            res = False
+            try:
+                res = pb.Profile.check_object(context, self)
+            except exc.EResourceOperation:
+                pass
+
+            if res:
+                self.set_status(context, consts.NS_ACTIVE,
+                                reason=_("Recover: Node is ACTIVE."))
+                return True
+
         self.set_status(context, consts.NS_RECOVERING,
                         reason=_('Recover in progress'))
 

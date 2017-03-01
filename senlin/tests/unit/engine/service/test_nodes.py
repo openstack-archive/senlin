@@ -704,6 +704,27 @@ class NodeTest(base.SenlinTestCase):
             inputs={'operation': [{'name': 'some_action'}]})
         mock_start.assert_called_once_with()
 
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(action_mod.Action, 'create')
+    @mock.patch.object(no.Node, 'find')
+    def test_node_recover_with_check(self, mock_find, mock_action, mock_start):
+        mock_find.return_value = mock.Mock(id='12345678AB')
+        mock_action.return_value = 'ACTION_ID'
+
+        params = {'check': True, 'operation': 'some_action'}
+        req = orno.NodeRecoverRequest(identity='FAKE_NODE', params=params)
+        result = self.eng.node_recover(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
+        mock_action.assert_called_once_with(
+            self.ctx, '12345678AB', consts.NODE_RECOVER,
+            name='node_recover_12345678',
+            cause=consts.CAUSE_RPC,
+            status=action_mod.Action.READY,
+            inputs={'check': True, 'operation': [{'name': 'some_action'}]})
+        mock_start.assert_called_once_with()
+
     @mock.patch.object(no.Node, 'find')
     def test_node_recover_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='node', id='Bogus')
