@@ -541,7 +541,7 @@ class TestHealthManager(base.SenlinTestCase):
             self.hm.registries[1])
 
     @mock.patch.object(hm, "_chase_up")
-    @mock.patch.object(obj_node.Node, 'get_all')
+    @mock.patch.object(obj_node.Node, 'get_all_by_cluster')
     @mock.patch.object(hm.HealthManager, "_wait_for_action")
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(context, 'get_service_context')

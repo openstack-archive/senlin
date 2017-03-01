@@ -1350,7 +1350,7 @@ class EngineService(service.Service):
         # The function may raise a BadRequest exception.
         parser = utils.get_path_parser(req.path)
         cluster = co.Cluster.find(ctx, req.identity)
-        nodes = node_obj.Node.get_all(ctx, cluster_id=cluster.id)
+        nodes = node_obj.Node.get_all_by_cluster(ctx, cluster.id)
         attrs = []
         for node in nodes:
             info = node.to_dict()
@@ -1459,10 +1459,10 @@ class EngineService(service.Service):
                     errors.append(_("Filter key '%s' is unsupported") % k)
             if errors:
                 raise exception.BadRequest(msg='\n'.join(errors))
-            nodes = node_obj.Node.get_all(ctx, filters=req.filters,
-                                          cluster_id=cluster.id)
+            nodes = node_obj.Node.get_all_by_cluster(ctx, cluster.id,
+                                                     filters=req.filters)
         else:
-            nodes = node_obj.Node.get_all(ctx, cluster_id=cluster.id)
+            nodes = node_obj.Node.get_all_by_cluster(ctx, cluster.id)
 
         node_ids = [node.id for node in nodes]
         if not node_ids:

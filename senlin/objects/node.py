@@ -130,10 +130,10 @@ class Node(base.SenlinObject, base.VersionedObjectDictCompat):
         return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
     @classmethod
-    def get_all_by_cluster(cls, context, cluster_id, **kwargs):
-        # TODO(anyone): This has to be improved. The DB API called doesn't
-        # support filters.
-        objs = db_api.node_get_all_by_cluster(context, cluster_id, **kwargs)
+    def get_all_by_cluster(cls, context, cluster_id, filters=None,
+                           project_safe=True):
+        objs = db_api.node_get_all_by_cluster(
+            context, cluster_id, filters=filters, project_safe=project_safe)
         return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
     @classmethod

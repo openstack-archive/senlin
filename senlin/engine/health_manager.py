@@ -264,7 +264,7 @@ class HealthManager(service.Service):
             return _chase_up(start_time, timeout)
 
         # loop through nodes to trigger recovery
-        nodes = objects.Node.get_all(ctx, cluster_id=cluster_id)
+        nodes = objects.Node.get_all_by_cluster(ctx, cluster_id)
         for node in nodes:
             if node.status != 'ACTIVE':
                 LOG.info(_LI("Requesting node recovery: %s"), node.id)
