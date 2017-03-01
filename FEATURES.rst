@@ -21,10 +21,10 @@ High Priority
 TOSCA support
 -------------
 
-Provide TOSCA support in Senlin(maybe reuse heat-translator/tosca-parser?)
+Provide TOSCA support in Senlin (maybe reuse heat-translator/tosca-parser?)
 
 
-Adanced Container Clustering
+Advanced Container Clustering
 ----------------------------
 
 Container cluster management:
@@ -195,7 +195,7 @@ Metrics Collection
 ------------------
 
 Senlin needs to support metric collections about the clusters and nodes it
-manages. These metrics should be collectable by the ceilometer service, for
+manages. These metrics should be collectible by the ceilometer service, for
 example.
 
 
