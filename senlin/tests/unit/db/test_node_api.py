@@ -498,7 +498,7 @@ class DBAPINodeTest(base.SenlinTestCase):
                                            project_safe=False)
         self.assertEqual(2, res)
 
-    def test_nodeids_by_cluster(self):
+    def test_ids_by_cluster(self):
         node0 = shared.create_node(self.ctx, None, self.profile)
         node1 = shared.create_node(self.ctx, self.cluster, self.profile)
         node2 = shared.create_node(self.ctx, self.cluster, self.profile)
@@ -506,6 +506,23 @@ class DBAPINodeTest(base.SenlinTestCase):
         results = db_api.node_ids_by_cluster(self.ctx, self.cluster.id)
         self.assertEqual(2, len(results))
         self.assertEqual(set([node1.id, node2.id]), set(results))
+
+        # retrieve orphan nodes
+        results = db_api.node_ids_by_cluster(self.ctx, '')
+        self.assertEqual(1, len(results))
+        self.assertEqual(node0.id, results[0])
+
+    def test_ids_by_cluster_with_filters(self):
+        node0 = shared.create_node(self.ctx, None, self.profile,
+                                   role='slave')
+        node1 = shared.create_node(self.ctx, self.cluster, self.profile,
+                                   role='master')
+        shared.create_node(self.ctx, self.cluster, self.profile)
+
+        results = db_api.node_ids_by_cluster(self.ctx, self.cluster.id,
+                                             filters={'role': 'master'})
+        self.assertEqual(1, len(results))
+        self.assertEqual(node1.id, results[0])
 
         # retrieve orphan nodes
         results = db_api.node_ids_by_cluster(self.ctx, '')
