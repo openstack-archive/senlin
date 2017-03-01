@@ -57,6 +57,7 @@ class LoadBalancingPolicy(base.Policy):
         ('AFTER', consts.CLUSTER_ADD_NODES),
         ('AFTER', consts.CLUSTER_SCALE_OUT),
         ('AFTER', consts.CLUSTER_RESIZE),
+        ('AFTER', consts.NODE_RECOVER),
         ('AFTER', consts.NODE_CREATE),
         ('BEFORE', consts.CLUSTER_DEL_NODES),
         ('BEFORE', consts.CLUSTER_SCALE_IN),
@@ -503,6 +504,23 @@ class LoadBalancingPolicy(base.Policy):
 
         return failed_nodes
 
+    def _get_post_candidates(self, action):
+        # This method will parse action data passed from action layer
+        candidates = []
+        if action.action == consts.NODE_CREATE:
+            candidates = [action.node.id]
+        elif action.action == consts.NODE_RECOVER:
+            recovery = action.outputs.get('recovery', None)
+            if recovery is not None and 'action' in recovery:
+                action_name = recovery['action']
+                if action_name.upper() == consts.RECOVER_RECREATE:
+                    candidates = recovery.get('node', [])
+        else:
+            creation = action.data.get('creation', None)
+            candidates = creation.get('nodes', []) if creation else []
+
+        return candidates
+
     def pre_op(self, cluster_id, action):
         """Routine to be called before an action has been executed.
 
@@ -549,23 +567,20 @@ class LoadBalancingPolicy(base.Policy):
         """
         # TODO(Yanyanhu): Need special handling for cross-az scenario
         # which is supported by Neutron lbaas.
-        if action.action == consts.NODE_CREATE:
-            nodes_added = [action.node.id]
-        else:
-            creation = action.data.get('creation', None)
-            nodes_added = creation.get('nodes', []) if creation else []
-            if len(nodes_added) == 0:
-                return
+        candidates = self._get_post_candidates(action)
+        if len(candidates) == 0:
+            return
 
         db_cluster = co.Cluster.get(action.context, cluster_id)
         lb_driver = self.lbaas(db_cluster.user, db_cluster.project)
         lb_driver.lb_status_timeout = self.lb_status_timeout
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
                                                self.id)
-
+        if action.action == consts.NODE_RECOVER:
+            self._remove_member(candidates, cp, action, lb_driver,
+                                handle_err=False)
         # Add new nodes to lb pool
-        failed_nodes = self._add_member(nodes_added, cp, action, lb_driver)
-
+        failed_nodes = self._add_member(candidates, cp, action, lb_driver)
         if failed_nodes:
             error = _('Failed in adding nodes into lb pool: %s') % failed_nodes
             action.data['status'] = base.CHECK_ERROR

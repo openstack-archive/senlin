@@ -266,6 +266,65 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.assertEqual((False, 'Failed in adding node into lb pool'), res)
         self.lb_driver.lb_delete.assert_called_once_with(**lb_data)
 
+    def test_get_post_candidates_node_create(self):
+        action = mock.Mock(action=consts.NODE_CREATE,
+                           node=mock.Mock(id='NODE'))
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+
+        candidates = policy._get_post_candidates(action)
+
+        self.assertEqual(['NODE'], candidates)
+
+    def test_post_candidates_node_recover(self):
+        action = mock.Mock(action=consts.NODE_RECOVER,
+                           outputs={
+                               'recovery': {
+                                   'action': consts.RECOVER_RECREATE,
+                                   'node': ['NODE1_ID']
+                               }
+                           })
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+
+        candidates = policy._get_post_candidates(action)
+
+        self.assertEqual(['NODE1_ID'], candidates)
+
+    def test_post_candidates_node_recover_reboot(self):
+        action = mock.Mock(action=consts.NODE_RECOVER,
+                           outputs={
+                               'recovery': {
+                                   'action': consts.RECOVER_REBOOT,
+                                   'node': ['NODE1_ID']
+                               }
+                           })
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+
+        candidates = policy._get_post_candidates(action)
+
+        self.assertEqual([], candidates)
+
+    def test_post_candidates_node_recover_empty(self):
+        action = mock.Mock(action=consts.NODE_RECOVER,
+                           outputs={})
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+
+        candidates = policy._get_post_candidates(action)
+
+        self.assertEqual([], candidates)
+
+    def test_post_candidates_cluster_resize(self):
+        action = mock.Mock(action=consts.CLUSTER_RESIZE,
+                           data={
+                               'creation': {
+                                   'nodes': ['NODE1_ID', 'NODE2_ID']
+                               }
+                           })
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+
+        candidates = policy._get_post_candidates(action)
+
+        self.assertEqual(['NODE1_ID', 'NODE2_ID'], candidates)
+
     def test_get_delete_candidates_for_node_delete(self):
         action = mock.Mock(action=consts.NODE_DELETE, inputs={}, data={},
                            node=mock.Mock(id='NODE_ID'))
@@ -606,7 +665,9 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
     @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_add_member')
-    def test_post_op_node_create(self, m_add, m_cluster_get,
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_get_post_candidates')
+    def test_post_op_node_create(self, m_get, m_remove, m_add, m_cluster_get,
                                  m_candidates, m_load):
         ctx = mock.Mock()
         cid = 'CLUSTER_ID'
@@ -617,7 +678,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         cp = mock.Mock()
         m_load.return_value = cp
         m_add.return_value = []
-        m_candidates.return_value = ['NODE_ID']
+        m_get.return_value = ['NODE_ID']
 
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
         policy._lbaasclient = self.lb_driver
@@ -626,13 +687,17 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
         # assertion
         self.assertIsNone(res)
+        m_get.assert_called_once_with(action)
         m_cluster_get.assert_called_once_with(ctx, 'CLUSTER_ID')
         m_load.assert_called_once_with(ctx, cid, policy.id)
         m_add.assert_called_once_with(['NODE_ID'], cp, action, self.lb_driver)
+        self.assertFalse(m_remove.called)
 
     @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_add_member')
-    def test_post_op_add_nodes(self, m_add, m_cluster_get,
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_get_post_candidates')
+    def test_post_op_add_nodes(self, m_get, m_remove, m_add, m_cluster_get,
                                m_candidates, m_load):
         cid = 'CLUSTER_ID'
         cluster = mock.Mock(user='user1', project='project1')
@@ -645,7 +710,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
                                }
                            })
         candidates = ['NODE1_ID', 'NODE2_ID']
-        m_candidates.return_value = candidates
+        m_get.return_value = candidates
         cp = mock.Mock()
         m_load.return_value = cp
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
@@ -656,14 +721,54 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
         # assertions
         self.assertIsNone(res)
+        m_get.assert_called_once_with(action)
         m_cluster_get.assert_called_once_with('action_context', 'CLUSTER_ID')
         m_load.assert_called_once_with('action_context', cid, policy.id)
         m_add.assert_called_once_with(candidates, cp, action, self.lb_driver)
+        self.assertFalse(m_remove.called)
 
     @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_add_member')
-    def test_post_op_add_nodes_failed(self, m_add, m_cluster_get,
-                                      m_candidates, m_load):
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_get_post_candidates')
+    def test_post_op_node_recover(self, m_get, m_remove, m_add,
+                                  m_cluster_get, m_candidates, m_load):
+        cid = 'CLUSTER_ID'
+        cluster = mock.Mock(user='user1', project='project1')
+        m_cluster_get.return_value = cluster
+        action = mock.Mock(context='action_context',
+                           action=consts.NODE_RECOVER,
+                           data={},
+                           outputs={
+                               'recovery': {
+                                   'action': consts.RECOVER_RECREATE,
+                                   'node': ['NODE1']
+                               }
+                           })
+        m_get.return_value = ['NODE1']
+        cp = mock.Mock()
+        m_load.return_value = cp
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        policy._lbaasclient = self.lb_driver
+
+        # do it
+        res = policy.post_op(cid, action)
+
+        # assertions
+        self.assertIsNone(res)
+        m_get.assert_called_once_with(action)
+        m_cluster_get.assert_called_once_with('action_context', 'CLUSTER_ID')
+        m_load.assert_called_once_with('action_context', cid, policy.id)
+        m_add.assert_called_once_with(['NODE1'], cp, action, self.lb_driver)
+        m_remove.assert_called_once_with(['NODE1'], cp, action, self.lb_driver,
+                                         handle_err=False)
+
+    @mock.patch.object(co.Cluster, 'get')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_add_member')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_get_post_candidates')
+    def test_post_op_clusterresize_failed(self, m_get, m_remove, m_add,
+                                          m_cluster_get, m_candidates, m_load):
         cluster_id = 'CLUSTER_ID'
         action = mock.Mock(data={'creation': {'nodes': ['NODE1_ID']}},
                            context='action_context',
@@ -671,6 +776,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
         cp = mock.Mock()
         m_load.return_value = cp
+        m_get.return_value = ['NODE1_ID']
         m_add.return_value = ['NODE1_ID']
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
         policy._lbaasclient = self.lb_driver
@@ -681,7 +787,9 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         self.assertEqual(policy_base.CHECK_ERROR, action.data['status'])
         self.assertEqual("Failed in adding nodes into lb pool: "
                          "['NODE1_ID']", action.data['reason'])
+        m_get.assert_called_once_with(action)
         m_add.assert_called_once_with(['NODE1_ID'], cp, action, self.lb_driver)
+        self.assertFalse(m_remove.called)
 
     @mock.patch.object(no.Node, 'get')
     @mock.patch.object(no.Node, 'update')
