@@ -37,7 +37,7 @@ class ClusterOpTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(am.Action, 'create')
-    @mock.patch.object(no.Node, 'get_all')
+    @mock.patch.object(no.Node, 'get_all_by_cluster')
     @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_op(self, mock_find, mock_cluster, mock_nodes, mock_action,
@@ -67,8 +67,8 @@ class ClusterOpTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
         mock_cluster.assert_called_once_with(self.ctx, db_cluster=x_db_cluster)
         x_schema.validate.assert_called_once_with({'style': 'tango'})
-        mock_nodes.assert_called_once_with(self.ctx, filters={'role': 'slave'},
-                                           cluster_id='12345678AB')
+        mock_nodes.assert_called_once_with(self.ctx, '12345678AB',
+                                           filters={'role': 'slave'})
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.CLUSTER_OPERATION,
             name='cluster_dance_12345678',
@@ -145,7 +145,7 @@ class ClusterOpTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(am.Action, 'create')
-    @mock.patch.object(no.Node, 'get_all')
+    @mock.patch.object(no.Node, 'get_all_by_cluster')
     @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_op_no_parameters(self, mock_find, mock_cluster,
@@ -173,8 +173,8 @@ class ClusterOpTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
         mock_cluster.assert_called_once_with(self.ctx, db_cluster=x_db_cluster)
         self.assertEqual(0, x_schema.validate.call_count)
-        mock_nodes.assert_called_once_with(self.ctx, filters={'role': 'slave'},
-                                           cluster_id='12345678AB')
+        mock_nodes.assert_called_once_with(self.ctx, '12345678AB',
+                                           filters={'role': 'slave'})
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.CLUSTER_OPERATION,
             name='cluster_dance_12345678',
@@ -190,7 +190,7 @@ class ClusterOpTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(am.Action, 'create')
-    @mock.patch.object(no.Node, 'get_all')
+    @mock.patch.object(no.Node, 'get_all_by_cluster')
     @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_op_no_filters(self, mock_find, mock_cluster,
@@ -216,7 +216,7 @@ class ClusterOpTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
         mock_cluster.assert_called_once_with(self.ctx, db_cluster=x_db_cluster)
         self.assertEqual(0, x_schema.validate.call_count)
-        mock_nodes.assert_called_once_with(self.ctx, cluster_id='12345678AB')
+        mock_nodes.assert_called_once_with(self.ctx, '12345678AB')
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.CLUSTER_OPERATION,
             name='cluster_dance_12345678',
@@ -231,7 +231,7 @@ class ClusterOpTest(base.SenlinTestCase):
         mock_start.assert_called_once_with()
 
     @mock.patch.object(am.Action, 'create')
-    @mock.patch.object(no.Node, 'get_all')
+    @mock.patch.object(no.Node, 'get_all_by_cluster')
     @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_op_bad_filters(self, mock_find, mock_cluster,
@@ -267,7 +267,7 @@ class ClusterOpTest(base.SenlinTestCase):
         self.assertEqual(0, mock_action.call_count)
 
     @mock.patch.object(am.Action, 'create')
-    @mock.patch.object(no.Node, 'get_all')
+    @mock.patch.object(no.Node, 'get_all_by_cluster')
     @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_op_no_nodes_found(self, mock_find, mock_cluster,
@@ -293,6 +293,6 @@ class ClusterOpTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
         mock_cluster.assert_called_once_with(self.ctx, db_cluster=x_db_cluster)
-        mock_nodes.assert_called_once_with(self.ctx, filters={'role': 'slave'},
-                                           cluster_id='12345678AB')
+        mock_nodes.assert_called_once_with(self.ctx, '12345678AB',
+                                           filters={'role': 'slave'})
         self.assertEqual(0, mock_action.call_count)
