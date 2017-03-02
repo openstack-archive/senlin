@@ -440,6 +440,69 @@ class LoadBalancingPolicy(base.Policy):
 
         return candidates
 
+    def _remove_member(self, candidates, policy, action, driver,
+                       handle_err=True):
+        # Load policy data
+        policy_data = self._extract_policy_data(policy.data)
+        lb_id = policy_data['loadbalancer']
+        pool_id = policy_data['pool']
+
+        failed_nodes = []
+        for node_id in candidates:
+            node = no.Node.get(action.context, node_id=node_id)
+            node_data = node.data or {}
+            member_id = node_data.get('lb_member', None)
+            if member_id is None:
+                LOG.warning(_LW('Node %(n)s not found in lb pool %(p)s.'),
+                            {'n': node_id, 'p': pool_id})
+                continue
+
+            res = driver.member_remove(lb_id, pool_id, member_id)
+            values = {}
+            if res is not True and handle_err is True:
+                failed_nodes.append(node.id)
+                values['status'] = consts.NS_WARNING
+                values['status_reason'] = _(
+                    'Failed in removing node from lb pool.')
+            else:
+                node.data.pop('lb_member', None)
+                values['data'] = node.data
+            no.Node.update(action.context, node_id, values)
+
+        return failed_nodes
+
+    def _add_member(self, candidates, policy, action, driver):
+        # Load policy data
+        policy_data = self._extract_policy_data(policy.data)
+        lb_id = policy_data['loadbalancer']
+        pool_id = policy_data['pool']
+        port = self.pool_spec.get(self.POOL_PROTOCOL_PORT)
+        subnet = self.pool_spec.get(self.POOL_SUBNET)
+
+        failed_nodes = []
+        for node_id in candidates:
+            node = no.Node.get(action.context, node_id=node_id)
+            node_data = node.data or {}
+            member_id = node_data.get('lb_member', None)
+            if member_id:
+                LOG.warning(_LW('Node %(n)s already in lb pool %(p)s.'),
+                            {'n': node_id, 'p': pool_id})
+                continue
+
+            member_id = driver.member_add(node, lb_id, pool_id, port, subnet)
+            values = {}
+            if member_id is None:
+                failed_nodes.append(node.id)
+                values['status'] = consts.NS_WARNING
+                values['status_reason'] = _(
+                    'Failed in adding node into lb pool.')
+            else:
+                node.data.update({'lb_member': member_id})
+                values['data'] = node.data
+            no.Node.update(action.context, node_id, values)
+
+        return failed_nodes
+
     def pre_op(self, cluster_id, action):
         """Routine to be called before an action has been executed.
 
@@ -461,28 +524,9 @@ class LoadBalancingPolicy(base.Policy):
         lb_driver.lb_status_timeout = self.lb_status_timeout
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
                                                self.id)
-        policy_data = self._extract_policy_data(cp.data)
-        lb_id = policy_data['loadbalancer']
-        pool_id = policy_data['pool']
 
         # Remove nodes that will be deleted from lb pool
-        failed_nodes = []
-        for node_id in candidates:
-            node = nm.Node.load(action.context, node_id=node_id)
-            member_id = node.data.get('lb_member', None)
-            if member_id is None:
-                LOG.warning(_LW('Node %(n)s not found in lb pool %(p)s.'),
-                            {'n': node_id, 'p': pool_id})
-                continue
-
-            res = lb_driver.member_remove(lb_id, pool_id, member_id)
-            if res is not True:
-                failed_nodes.append(node.id)
-                node.status = consts.NS_WARNING
-                node.status_reason = _('Failed in removing node from lb pool.')
-
-            node.data.pop('lb_member', None)
-            node.store(action.context)
+        failed_nodes = self._remove_member(candidates, cp, action, lb_driver)
 
         if failed_nodes:
             error = _('Failed in removing deleted node(s) from lb pool: %s'
@@ -518,32 +562,9 @@ class LoadBalancingPolicy(base.Policy):
         lb_driver.lb_status_timeout = self.lb_status_timeout
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
                                                self.id)
-        policy_data = self._extract_policy_data(cp.data)
-        lb_id = policy_data['loadbalancer']
-        pool_id = policy_data['pool']
-        port = self.pool_spec.get(self.POOL_PROTOCOL_PORT)
-        subnet = self.pool_spec.get(self.POOL_SUBNET)
 
         # Add new nodes to lb pool
-        failed_nodes = []
-        for node_id in nodes_added:
-            node = nm.Node.load(action.context, node_id=node_id)
-            member_id = node.data.get('lb_member', None)
-            if member_id:
-                LOG.warning(_LW('Node %(n)s already in lb pool %(p)s.'),
-                            {'n': node_id, 'p': pool_id})
-                continue
-
-            member_id = lb_driver.member_add(node, lb_id, pool_id, port,
-                                             subnet)
-            if member_id is None:
-                failed_nodes.append(node.id)
-                node.status = consts.NS_WARNING
-                node.status_reason = _('Failed in adding node into lb pool.')
-            else:
-                node.data.update({'lb_member': member_id})
-
-            node.store(action.context)
+        failed_nodes = self._add_member(nodes_added, cp, action, lb_driver)
 
         if failed_nodes:
             error = _('Failed in adding nodes into lb pool: %s') % failed_nodes
