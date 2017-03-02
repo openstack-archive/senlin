@@ -58,8 +58,7 @@ class TestClusterCheckNegativeInvalidParams(base.BaseSenlinAPITest):
                                'clusters', 'cluster_id', params)
 
         message = ex.resp_body['error']['message']
-        self.assertEqual("[u'k1', u'v1'] is not of type 'object', 'null'",
-                         str(message))
+        self.assertEqual("The data provided is not a map", str(message))
 
 
 class TestClusterCheckNegativeNotFound(base.BaseSenlinAPITest):

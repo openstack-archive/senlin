@@ -190,9 +190,6 @@ class ClusterController(wsgi.Controller):
         return self.rpc_client.call(req.context, 'cluster_scale_in', obj)
 
     def _do_policy_attach(self, req, cid, data):
-        if not isinstance(data, dict):
-            msg = _("The data provided is not a map")
-            raise exc.HTTPBadRequest(msg)
         params = {'identity': cid}
         params.update(data)
         obj = util.parse_request('ClusterAttachPolicyRequest', req, params)
@@ -200,9 +197,6 @@ class ClusterController(wsgi.Controller):
                                     'cluster_policy_attach', obj)
 
     def _do_policy_detach(self, req, cid, data):
-        if not isinstance(data, dict):
-            msg = _("The data provided is not a map")
-            raise exc.HTTPBadRequest(msg)
         params = {'identity': cid}
         params.update(data)
 
@@ -211,9 +205,6 @@ class ClusterController(wsgi.Controller):
                                     'cluster_policy_detach', obj)
 
     def _do_policy_update(self, req, cid, data):
-        if not isinstance(data, dict):
-            msg = _("The data provided is not a map")
-            raise exc.HTTPBadRequest(msg)
         params = {'identity': cid}
         params.update(data)
 
@@ -252,6 +243,10 @@ class ClusterController(wsgi.Controller):
 
         do_func = getattr(self, do_func_name)
         data = body.get(this_action, {})
+        if not isinstance(data, dict):
+            msg = _("The data provided is not a map")
+            raise exc.HTTPBadRequest(msg)
+
         res = do_func(req, cluster_id, data)
 
         location = {'location': '/actions/%s' % res['action']}
