@@ -283,12 +283,14 @@ def node_get_all_by_cluster(context, cluster_id, filters=None,
     return query.all()
 
 
-def node_ids_by_cluster(context, cluster_id):
+def node_ids_by_cluster(context, cluster_id, filters=None):
     """an internal API for getting node IDs."""
     with session_for_read() as session:
-        nodes = session.query(models.Node.id).filter_by(
-            cluster_id=cluster_id).all()
-        return [n[0] for n in nodes]
+        query = session.query(models.Node.id).filter_by(cluster_id=cluster_id)
+        if filters:
+            query = utils.exact_filter(query, models.Node, filters)
+
+        return [n[0] for n in query.all()]
 
 
 def node_count_by_cluster(context, cluster_id, **kwargs):

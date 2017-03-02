@@ -104,8 +104,8 @@ def node_get_all_by_cluster(context, cluster_id, filters=None,
                                         project_safe=project_safe)
 
 
-def node_ids_by_cluster(context, cluster_id):
-    return IMPL.node_ids_by_cluster(context, cluster_id)
+def node_ids_by_cluster(context, cluster_id, filters=None):
+    return IMPL.node_ids_by_cluster(context, cluster_id, filters=None)
 
 
 def node_count_by_cluster(context, cluster_id, **kwargs):

@@ -137,6 +137,11 @@ class Node(base.SenlinObject, base.VersionedObjectDictCompat):
         return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
     @classmethod
+    def ids_by_cluster(cls, context, cluster_id, filters=None):
+        """An internal API for retrieving node ids only."""
+        return db_api.node_ids_by_cluster(context, cluster_id, filters=filters)
+
+    @classmethod
     def count_by_cluster(cls, context, cluster_id, **kwargs):
         return db_api.node_count_by_cluster(context, cluster_id, **kwargs)
 
