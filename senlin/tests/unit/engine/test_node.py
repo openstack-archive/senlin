@@ -567,8 +567,9 @@ class TestNode(base.SenlinTestCase):
         new_id = '166db83b-b4a4-49ef-96a8-6c0fdd882d1a'
         mock_recover.return_value = new_id
         mock_status.side_effect = set_status
+        action = mock.Mock()
 
-        res = node.do_recover(self.context, foo='bar', koo='zar')
+        res = node.do_recover(self.context, action, foo='bar', koo='zar')
 
         self.assertTrue(res)
         mock_recover.assert_called_once_with(self.context, node, foo='bar',
@@ -589,8 +590,9 @@ class TestNode(base.SenlinTestCase):
         node = nodem.Node('node1', PROFILE_ID, None)
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         mock_recover.return_value = node.physical_id
+        action = mock.Mock()
 
-        res = node.do_recover(self.context)
+        res = node.do_recover(self.context, action)
 
         self.assertTrue(res)
         mock_recover.assert_called_once_with(self.context, node)
@@ -608,8 +610,9 @@ class TestNode(base.SenlinTestCase):
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         mock_check = self.patchobject(pb.Profile, 'check_object')
         mock_check.return_value = True
+        action = mock.Mock()
 
-        res = node.do_recover(self.context, check=True)
+        res = node.do_recover(self.context, action, check=True)
 
         self.assertTrue(res)
         mock_check.assert_called_once_with(self.context, node)
@@ -630,8 +633,9 @@ class TestNode(base.SenlinTestCase):
         mock_status.side_effect = set_status
         mock_check = self.patchobject(pb.Profile, 'check_object')
         mock_check.return_value = False
+        action = mock.Mock()
 
-        res = node.do_recover(self.context, check=True)
+        res = node.do_recover(self.context, action, check=True)
 
         self.assertTrue(res)
         mock_check.assert_called_once_with(self.context, node)
@@ -645,6 +649,79 @@ class TestNode(base.SenlinTestCase):
             mock.call(self.context, consts.NS_ACTIVE,
                       reason='Recover succeeded',
                       physical_id=new_id)])
+
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(pb.Profile, 'recover_object')
+    def test_node_recover_recreate(self, mock_recover, mock_status):
+        def set_status(*args, **kwargs):
+            if args[1] == 'ACTIVE':
+                node.physical_id = new_id
+
+        node = nodem.Node('node1', PROFILE_ID, '', id='fake')
+        node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
+        new_id = '166db83b-b4a4-49ef-96a8-6c0fdd882d1a'
+        mock_recover.return_value = new_id
+        mock_status.side_effect = set_status
+        mock_check = self.patchobject(pb.Profile, 'check_object')
+        mock_check.return_value = False
+        action = mock.Mock(outputs={})
+
+        res = node.do_recover(self.context, action, check=True,
+                              operation=[{'name': 'RECREATE'}])
+
+        self.assertTrue(res)
+        mock_check.assert_called_once_with(self.context, node)
+        mock_recover.assert_called_once_with(
+            self.context, node, check=True, operation=[{'name': 'RECREATE'}])
+        self.assertEqual('node1', node.name)
+        self.assertEqual(new_id, node.physical_id)
+        self.assertEqual(PROFILE_ID, node.profile_id)
+        mock_status.assert_has_calls([
+            mock.call(self.context, 'RECOVERING',
+                      reason='Recover in progress'),
+            mock.call(self.context, consts.NS_ACTIVE,
+                      reason='Recover succeeded',
+                      physical_id=new_id)])
+        self.assertEqual(
+            {'recovery': {'action': 'RECREATE', 'node': ['fake']}},
+            action.outputs)
+
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(pb.Profile, 'recover_object')
+    def test_node_recover_mult_rebuild(self, mock_recover, mock_status):
+        def set_status(*args, **kwargs):
+            if args[1] == 'ACTIVE':
+                node.physical_id = new_id
+
+        node = nodem.Node('node1', PROFILE_ID, '', id='fake')
+        node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
+        new_id = '166db83b-b4a4-49ef-96a8-6c0fdd882d1a'
+        mock_recover.return_value = new_id
+        mock_status.side_effect = set_status
+        mock_check = self.patchobject(pb.Profile, 'check_object')
+        mock_check.return_value = False
+        action = mock.Mock(outputs={})
+
+        res = node.do_recover(self.context, action, check=True,
+                              operation=[{'name': 'REBOOT'},
+                                         {'name': 'REBUILD'}])
+
+        self.assertTrue(res)
+        mock_check.assert_called_once_with(self.context, node)
+        mock_recover.assert_called_once_with(
+            self.context, node, check=True, operation=[{'name': 'REBOOT'},
+                                                       {'name': 'REBUILD'}])
+        self.assertEqual('node1', node.name)
+        self.assertEqual(new_id, node.physical_id)
+        self.assertEqual(PROFILE_ID, node.profile_id)
+        mock_status.assert_has_calls([
+            mock.call(self.context, 'RECOVERING',
+                      reason='Recover in progress'),
+            mock.call(self.context, consts.NS_ACTIVE,
+                      reason='Recover succeeded',
+                      physical_id=new_id)])
+        self.assertEqual({'recovery': {'action': 'REBOOT', 'node': ['fake']}},
+                         action.outputs)
 
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'recover_object')
@@ -665,8 +742,9 @@ class TestNode(base.SenlinTestCase):
             id=node.physical_id,
             reason='Boom!'
         )
+        action = mock.Mock()
 
-        res = node.do_recover(self.context, check=True)
+        res = node.do_recover(self.context, action, check=True)
 
         self.assertTrue(res)
         mock_check.assert_called_once_with(self.context, node)
@@ -687,8 +765,9 @@ class TestNode(base.SenlinTestCase):
         node = nodem.Node('node1', PROFILE_ID, None)
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         mock_recover.return_value = None
+        action = mock.Mock()
 
-        res = node.do_recover(self.context)
+        res = node.do_recover(self.context, action)
 
         self.assertFalse(res)
         mock_status.assert_has_calls([
@@ -699,8 +778,9 @@ class TestNode(base.SenlinTestCase):
 
     def test_node_recover_no_physical_id(self):
         node = nodem.Node('node1', PROFILE_ID, None)
+        action = mock.Mock()
 
-        res = node.do_recover(self.context)
+        res = node.do_recover(self.context, action)
 
         self.assertFalse(res)
 
@@ -708,10 +788,11 @@ class TestNode(base.SenlinTestCase):
     def test_node_recover_operation_not_support(self, mock_set_status):
         node = nodem.Node('node1', PROFILE_ID, None)
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
+        action = mock.Mock(outputs={})
 
         params = {'operation': [{'name': 'foo'}]}
-        res = node.do_recover(self.context, **params)
-
+        res = node.do_recover(self.context, action, **params)
+        self.assertEqual({}, action.outputs)
         self.assertFalse(res)
 
     @mock.patch.object(nodem.Node, 'set_status')
