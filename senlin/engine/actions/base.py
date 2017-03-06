@@ -336,8 +336,8 @@ class Action(object):
         return status
 
     def is_timeout(self):
-        time_lapse = wallclock() - self.start_time
-        return time_lapse > self.timeout
+        time_elapse = wallclock() - self.start_time
+        return time_elapse > self.timeout
 
     def _check_signal(self):
         # Check timeout first, if true, return timeout message
