@@ -200,7 +200,7 @@ class NodeAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        res = self.entity.do_recover(self.context, **self.inputs)
+        res = self.entity.do_recover(self.context, self, **self.inputs)
         if res:
             return self.RES_OK, _('Node recovered successfully.')
         else:

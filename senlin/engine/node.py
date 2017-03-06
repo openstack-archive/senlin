@@ -334,7 +334,7 @@ class Node(object):
 
         return True
 
-    def do_recover(self, context, **options):
+    def do_recover(self, context, action, **options):
         """recover a node.
 
         This function is supposed to be invoked from a NODE_RECOVER action.
@@ -376,6 +376,16 @@ class Node(object):
             params['physical_id'] = physical_id
         self.set_status(context, consts.NS_ACTIVE,
                         reason=_('Recover succeeded'), **params)
+
+        # Check action type
+        recovery = {}
+        operation = options.get('operation', None)
+        if operation and not isinstance(operation, six.string_types):
+            operation = operation[0]
+        if operation is not None and 'name' in operation:
+            recovery['action'] = operation['name'].upper()
+            recovery['node'] = [self.id]
+            action.outputs['recovery'] = recovery
 
         return True
 

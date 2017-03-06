@@ -498,7 +498,7 @@ class NodeActionTest(base.SenlinTestCase):
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Node recovered successfully.', res_msg)
-        node.do_recover.assert_called_once_with(action.context,
+        node.do_recover.assert_called_once_with(action.context, action,
                                                 operation=['SWIM', 'DANCE'])
 
     def test_do_recover_failed(self, mock_load):
@@ -512,7 +512,7 @@ class NodeActionTest(base.SenlinTestCase):
         res_code, res_msg = action.do_recover()
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Node recover failed.', res_msg)
-        node.do_recover.assert_called_once_with(action.context,
+        node.do_recover.assert_called_once_with(action.context, action,
                                                 operation=['SWIM', 'DANCE'])
 
     def test_do_operation_success(self, mock_load):
