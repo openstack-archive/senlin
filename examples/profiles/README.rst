@@ -17,7 +17,7 @@ To create a os.heat.stack profile::
 To create a container.dockerinc.docker profile::
 
   $ cd ./docker_container
-  $ openstack cluster profile create --spec-file docker_basic.yaml
+  $ openstack cluster profile create --spec-file docker_basic.yaml my_docker
 
 To get help on the command line options for creating profiles::
 
