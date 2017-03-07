@@ -65,8 +65,8 @@ The output from the command will be something like this:
 From the output of the ``openstack cluster receiver create`` command,
 you can see:
 
-- There is a ``type`` property whose value is set to ``webhook`` which is the
-  only receiver type senlin supports today.
+- There is a ``type`` property whose value is set to ``webhook`` default which is one of
+  the receiver types senlin supports.
 - There is a ``channel`` property which contains an ``alarm_url`` key. The
   value of the ``alarm_url`` is the endpoint for your to post a request.
 
