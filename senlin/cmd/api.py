@@ -24,6 +24,7 @@ from oslo_service import systemd
 import six
 
 from senlin.api.common import wsgi
+from senlin.common import config
 from senlin.common.i18n import _LI
 from senlin.common import messaging
 from senlin.common import profiler
@@ -40,6 +41,7 @@ def main():
         logging.register_options(cfg.CONF)
         cfg.CONF(project='senlin', prog='senlin-api',
                  version=version.version_info.version_string())
+        config.set_config_defaults()
         logging.setup(cfg.CONF, 'senlin-api')
         objects.register_all()
         messaging.setup()

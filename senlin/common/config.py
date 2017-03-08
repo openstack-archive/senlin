@@ -17,6 +17,7 @@ import socket
 
 from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
+from oslo_middleware import cors
 from osprofiler import opts as profiler
 
 from senlin.api.common import wsgi
@@ -233,3 +234,24 @@ def list_opts():
     yield receiver_group.name, receiver_opts
     yield zaqar_group.name, zaqar_opts
     yield profiler.list_opts()[0]
+
+
+def set_config_defaults():
+    """Update default configuration options for oslo.middleware."""
+    cors.set_defaults(
+        allow_headers=['X-Auth-Token',
+                       'X-Identity-Status',
+                       'X-Roles',
+                       'X-Service-Catalog',
+                       'X-User-Id',
+                       'X-Tenant-Id',
+                       'X-OpenStack-Request-ID'],
+        expose_headers=['X-Auth-Token',
+                        'X-Subject-Token',
+                        'X-Service-Token',
+                        'X-OpenStack-Request-ID'],
+        allow_methods=['GET',
+                       'PUT',
+                       'POST',
+                       'DELETE',
+                       'PATCH'])
