@@ -569,20 +569,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_replace_nodes_not_map(self, mock_call, mock_parse, _ign):
-        req = mock.Mock()
-        cid = 'aaaa-bbbb-cccc'
-        data = dict(nodes=['abc', 'def'])
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller._do_replace_nodes,
-                               req, cid, data)
-
-        self.assertEqual("The data provided is not a map", six.text_type(ex))
-        self.assertEqual(0, mock_parse.call_count)
-        self.assertFalse(mock_call.called)
-
-    @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test__do_replace_nodes_failed_request(self, mock_call,
                                               mock_parse, _ign):
         req = mock.Mock()
@@ -918,21 +904,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_policy_attach_not_map(self, mock_call, mock_parse, _ign):
-        req = mock.Mock()
-        cid = 'aaaa-bbbb-cccc'
-        data = ['xxxx-yyyy']
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller._do_policy_attach,
-                               req, cid, data)
-
-        self.assertEqual("The data provided is not a map", six.text_type(ex))
-        self.assertEqual(0, mock_parse.call_count)
-        self.assertEqual(0, mock_call.called)
-
-    @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test__do_policy_attach_failed_request(self, mock_call, mock_parse, _i):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
@@ -991,21 +962,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_policy_detach_not_map(self, mock_call, mock_parse, _ign):
-        req = mock.Mock()
-        cid = 'aaaa-bbbb-cccc'
-        data = ['xxxx-yyyy']
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller._do_policy_detach,
-                               req, cid, data)
-
-        self.assertEqual("The data provided is not a map", six.text_type(ex))
-        self.assertEqual(0, mock_parse.call_count)
-        self.assertEqual(0, mock_call.called)
-
-    @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test__do_policy_detach_failed_request(self, mock_call, mock_parse, _i):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
@@ -1061,21 +1017,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             {'identity': cid, 'policy_id': 'xxxx-yyyy'})
         mock_call.assert_called_once_with(
             req.context, 'cluster_policy_update', obj)
-
-    @mock.patch.object(util, 'parse_request')
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_policy_update_not_map(self, mock_call, mock_parse, _ign):
-        req = mock.Mock()
-        cid = 'aaaa-bbbb-cccc'
-        data = ['xxxx-yyyy']
-
-        ex = self.assertRaises(exc.HTTPBadRequest,
-                               self.controller._do_policy_update,
-                               req, cid, data)
-
-        self.assertEqual("The data provided is not a map", six.text_type(ex))
-        self.assertEqual(0, mock_parse.call_count)
-        self.assertEqual(0, mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -1283,6 +1224,20 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
+
+    def test_cluster_action_data_not_map(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        cid = 'aaaa-bbbb-cccc'
+        body = {'resize': ['param1', 'param2']}
+
+        req = self._post('/clusters/%s/actions' % cid, jsonutils.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.action,
+                               req, cluster_id=cid, body=body)
+        self.assertEqual('The data provided is not a map', six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')

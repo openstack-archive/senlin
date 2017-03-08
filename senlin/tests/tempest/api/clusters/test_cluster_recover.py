@@ -61,7 +61,7 @@ class TestClusterRecoverNegativeInvalidParams(base.BaseSenlinAPITest):
 
         message = ex.resp_body['error']['message']
         self.assertEqual(
-            "[u'k1', u'v1'] is not of type 'object', 'null'",
+            "The data provided is not a map",
             str(message))
 
 
