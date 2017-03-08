@@ -110,7 +110,7 @@ see the returned list starts. In other words, you don't want to see those
 nodes with IDs that is or come before the one you specify. You can use the
 option :option:`--marker <ID>` for this purpose. For example::
 
-  $ openstack node-list --marker 765385ed-f480-453a-8601-6fb256f512fc
+  $ openstack cluster node list --marker 765385ed-f480-453a-8601-6fb256f512fc
 
 With option :option:`--marker` and option :option:`--limit`, you will be able
 to control how many node records you will get from each request.
