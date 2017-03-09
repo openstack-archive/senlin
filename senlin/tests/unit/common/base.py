@@ -100,7 +100,7 @@ class SenlinTestCase(testscenarios.WithScenarios,
     # NOTE(pshchelo): this overrides the testtools.TestCase.patch method
     # that does simple monkey-patching in favor of mock's patching
     def patch(self, target, **kwargs):
-        mockfixture = self.useFixture(mockpatch.Patch(target, **kwargs))
+        mockfixture = self.useFixture(fixtures.MockPatch(target, **kwargs))
         return mockfixture.mock
 
     def assertJsonEqual(self, expected, observed):
