@@ -402,7 +402,16 @@ Request Parameters
   - node_id: node_id_url
   - action: action_request
 
-The ``action_name`` in the body must be ``recover``.
+The ``action_name`` in the body must be ``recover``. The valid parameters
+include:
+
+- ``operation``: A string specifying the action to be performed for node
+  recovery.
+
+- ``check``: A boolean specifying whether the engine should check the node's
+  actual status before performing the recovery action. This parameter is added
+  since microversion 1.6.
+
 
 Request Example
 ---------------

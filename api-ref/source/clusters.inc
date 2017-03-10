@@ -254,6 +254,7 @@ Request Parameters
   - profile_id: profile_identity
   - timeout: timeout_req
   - metadata: metadata_req
+  - profile_only: profile_only
 
 Request Example
 ---------------
@@ -921,7 +922,15 @@ Request Parameters
   - action: action_request
   - params: recover_params
 
-The ``action_name`` in the request body has to be ``recover``.
+The ``action_name`` in the body must be ``recover``. The valid parameters
+include:
+
+- ``operation``: A string specifying the action to be performed for node
+  recovery.
+
+- ``check``: A boolean specifying whether the engine should check the actual
+  statuses of cluster nodes before performing the recovery action. This
+  parameter is added since microversion 1.6 and it defaults to False.
 
 Request Example
 ---------------

@@ -1,5 +1,6 @@
 {
     "recover": {
-        "operation": "rebuild"
+        "operation": "rebuild",
+        "check": false
     }
 }
