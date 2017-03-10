@@ -1,0 +1,8 @@
+type: senlin.policy.affinity
+version: 1.0
+properties:
+  servergroup:
+    name: web_servers
+    policies: anti-affinity
+  availability_zone: az01
+  enable_drs_extension: false
