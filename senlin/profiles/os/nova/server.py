@@ -1048,6 +1048,86 @@ class ServerProfile(base.Profile):
 
         return dict((k, details[k]) for k in sorted(details))
 
+    def do_adopt(self, obj, overrides=None, snapshot=False):
+        """Adopt an existing server node for management.
+
+        :param obj: A node object for this operation. It could be a puppet
+            node that provides only 'user', 'project' and 'physical_id'
+            properties when doing a preview. It can be a real Node object for
+            node adoption.
+        :param overrides: A dict containing the properties that will be
+            overridden when generating a profile for the server.
+        :param snapshot: A boolean flag indicating whether the profile should
+            attempt a snapshot operation before adopting the server. If set to
+            True, the ID of the snapshot will be used as the image ID.
+
+        :returns: A dict containing the spec created from the server object or
+            a dict containing error information if failure occurred.
+        """
+        driver = self.compute(obj)
+
+        # TODO(Qiming): Add snapshot support
+        # snapshot = driver.snapshot_create(...)
+
+        error = {}
+        try:
+            server = driver.server_get(obj.physical_id)
+        except exc.InternalError as ex:
+            error = {'code': ex.code, 'message': six.text_type(ex)}
+
+        if error:
+            return {'Error': error}
+
+        spec = {}
+        # Context?
+        # TODO(Qiming): Need to fetch admin password from a different API
+        disk_config = server.disk_config
+        spec[self.AUTO_DISK_CONFIG] = disk_config and disk_config == 'AUTO'
+
+        spec[self.AVAILABILITY_ZONE] = server.availability_zone
+
+        # TODO(Anyone): verify if this needs a format conversion
+        bdm = server.block_device_mapping
+        spec[self.BLOCK_DEVICE_MAPPING_V2] = bdm
+
+        spec[self.CONFIG_DRIVE] = server.has_config_drive
+        spec[self.FLAVOR] = server.flavor['id']
+        spec[self.IMAGE] = server.image['id'] or server.image
+        spec[self.KEY_NAME] = server.key_name
+
+        # metadata
+        metadata = server.metadata or {}
+        metadata.pop('cluster_id', None)
+        metadata.pop('cluster_node_id', None)
+        metadata.pop('cluster_node_index', None)
+        spec[self.METADATA] = metadata
+
+        # name
+        spec[self.NAME] = server.name
+
+        networks = server.addresses
+        net_list = []
+        for network, interfaces in networks.items():
+            for intf in interfaces:
+                ip_type = intf.get('OS-EXT-IPS:type')
+                if ip_type == 'fixed':
+                    net_list.append({self.NETWORK: network})
+
+        spec[self.NETWORKS] = net_list
+        # NOTE: the personality attribute is missing for ever.
+        spec[self.SECURITY_GROUPS] = [
+            sg['name'] for sg in server.security_groups
+        ]
+        # TODO(Qiming): get server user_data and parse it.
+        # Note: user_data is returned in 2.3 microversion API, in a different
+        # property name.
+        # spec[self.USER_DATA] = server.user_data
+
+        if overrides:
+            spec.update(overrides)
+
+        return spec
+
     def do_join(self, obj, cluster_id):
         if not obj.physical_id:
             return False

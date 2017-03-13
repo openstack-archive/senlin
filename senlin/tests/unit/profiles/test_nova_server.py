@@ -859,28 +859,126 @@ class TestNovaServerBasic(base.SenlinTestCase):
         self.assertEqual(expected, res)
         cc.server_get.assert_called_once_with('FAKE_ID')
 
-    def test_do_join_successful(self):
+    def test_do_adopt(self):
         profile = server.ServerProfile('t', self.spec)
-
-        cluster_id = "FAKE_CLUSTER_ID"
+        x_server = mock.Mock(
+            disk_config="",
+            availability_zone="AZ01",
+            block_device_mapping={"foo": "bar"},
+            has_config_drive=False,
+            flavor={"id": "FLAVOR_ID"},
+            image={"id": "IMAGE_ID"},
+            key_name="FAKE_KEY",
+            metadata={
+                "mkey": "mvalue",
+                "cluster_id": "CLUSTER_ID",
+                "cluster_node_id": "NODE_ID",
+                "cluster_node_index": 123
+            },
+            addresses={
+                "NET1": [{
+                    "OS-EXT-IPS:type": "fixed",
+                    "addr": "ADDR1"
+                }],
+                "NET2": [{
+                    "OS-EXT-IPS:type": "fixed",
+                    "addr": "ADDR2"
+                }],
+            },
+            security_groups=[{'name': 'GROUP1'}, {'name': 'GROUP2'}]
+        )
+        x_server.name = "FAKE_NAME"
         cc = mock.Mock()
-        cc.server_metadata_get.return_value = {'FOO': 'BAR'}
-        cc.server_metadata_update.return_value = {'cluster_id': cluster_id}
+        cc.server_get.return_value = x_server
         profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        node_obj = mock.Mock(physical_id='FAKE_ID', index=567)
+        res = profile.do_adopt(node_obj)
 
-        res = profile.do_join(node_obj, cluster_id)
+        self.assertEqual('', res['auto_disk_config'])
+        self.assertEqual('AZ01', res['availability_zone'])
+        self.assertEqual({'foo': 'bar'}, res['block_device_mapping_v2'])
+        self.assertFalse(res['config_drive'])
+        self.assertEqual('FLAVOR_ID', res['flavor'])
+        self.assertEqual('IMAGE_ID', res['image'])
+        self.assertEqual('FAKE_KEY', res['key_name'])
+        self.assertEqual({'mkey': 'mvalue'}, res['metadata'])
+        self.assertIn({'network': 'NET1'}, res['networks'])
+        self.assertIn({'network': 'NET2'}, res['networks'])
+        self.assertIn('GROUP1', res['security_groups'])
+        self.assertIn('GROUP2', res['security_groups'])
+        cc.server_get.assert_called_once_with('FAKE_ID')
 
-        self.assertTrue(res)
-        cc.server_metadata_get.assert_called_once_with('FAKE_ID')
-        expected_metadata = {
-            'cluster_id': 'FAKE_CLUSTER_ID',
-            'cluster_node_index': '567',
-            'FOO': 'BAR'
+    def test_do_adopt_failed_get(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        err = exc.InternalError(code=404, message='No Server found for ID')
+        cc.server_get.side_effect = err
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_adopt(node_obj)
+
+        expected = {
+            'Error': {
+                'code': 404,
+                'message': 'No Server found for ID',
+            }
         }
-        cc.server_metadata_update.assert_called_once_with(
-            'FAKE_ID', expected_metadata)
+        self.assertEqual(expected, res)
+        cc.server_get.assert_called_once_with('FAKE_ID')
+
+    def test_do_adopt_with_overrides(self):
+        profile = server.ServerProfile('t', self.spec)
+        x_server = mock.Mock(
+            disk_config="",
+            availability_zone="AZ01",
+            block_device_mapping={"foo": "bar"},
+            has_config_drive=False,
+            flavor={"id": "FLAVOR_ID"},
+            image={"id": "IMAGE_ID"},
+            key_name="FAKE_KEY",
+            metadata={
+                "mkey": "mvalue",
+                "cluster_id": "CLUSTER_ID",
+                "cluster_node_id": "NODE_ID",
+                "cluster_node_index": 123
+            },
+            addresses={
+                "NET1": [{
+                    "OS-EXT-IPS:type": "fixed",
+                }],
+                "NET2": [{
+                    "OS-EXT-IPS:type": "fixed",
+                }],
+            },
+            security_groups=[{'name': 'GROUP1'}, {'name': 'GROUP2'}]
+        )
+        x_server.name = "FAKE_NAME"
+        cc = mock.Mock()
+        cc.server_get.return_value = x_server
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+        overrides = {
+            'networks': [{"network": "NET3"}]
+        }
+
+        res = profile.do_adopt(node_obj, overrides=overrides)
+
+        self.assertEqual('', res['auto_disk_config'])
+        self.assertEqual('AZ01', res['availability_zone'])
+        self.assertEqual({'foo': 'bar'}, res['block_device_mapping_v2'])
+        self.assertFalse(res['config_drive'])
+        self.assertEqual('FLAVOR_ID', res['flavor'])
+        self.assertEqual('IMAGE_ID', res['image'])
+        self.assertEqual('FAKE_KEY', res['key_name'])
+        self.assertEqual({'mkey': 'mvalue'}, res['metadata'])
+        self.assertIn({'network': 'NET3'}, res['networks'])
+        self.assertNotIn({'network': 'NET1'}, res['networks'])
+        self.assertNotIn({'network': 'NET2'}, res['networks'])
+        self.assertIn('GROUP1', res['security_groups'])
+        self.assertIn('GROUP2', res['security_groups'])
+        cc.server_get.assert_called_once_with('FAKE_ID')
 
     def test_do_join_server_not_created(self):
         # Test path where server not specified
