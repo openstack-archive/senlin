@@ -69,3 +69,16 @@ it can be used by both users and developers.
  - Added ``support_status`` to profile type show.
 
  - Added ``support_status`` to policy type show.
+
+1.6
+---
+
+ - Added ``profile_only`` parameter to cluster update request.
+
+ - Added ``check`` parameter to node recover request. When this parameter is
+   specified, the engine will check if the node is active before performing
+   a recover operation.
+
+ - Added ``check`` parameter to cluster recover request. When this parameter
+   is specified, the engine will check if the nodes are active before
+   performing a recover operation.

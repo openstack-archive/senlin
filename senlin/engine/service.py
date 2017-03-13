@@ -1408,6 +1408,9 @@ class EngineService(service.Service):
             ctx.user = db_cluster.user
             ctx.project = db_cluster.project
 
+        # TODO(anyone): should check if the 'params' attribute, if set,
+        # contains valid fields. This can be done by modeling the 'params'
+        # attribute into a separate object.
         params = {
             'name': 'cluster_recover_%s' % db_cluster.id[:8],
             'cause': consts.CAUSE_RPC,

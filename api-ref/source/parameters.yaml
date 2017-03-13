@@ -1040,6 +1040,16 @@ profile_name:
   description: |
     The name of the profile.
 
+profile_only:
+  type: boolean
+  in: body
+  required: False
+  description: |
+    Whether the update of profile is limited to the target cluster. All nodes
+    in the cluster will be updated with the specified new profile if this
+    parameter is set to False. The default value is False.
+  min_version: 1.6
+
 profile_spec:
   type: object
   in: body

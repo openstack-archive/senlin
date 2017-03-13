@@ -89,8 +89,7 @@ class ClusterUpdateRequest(base.SenlinObject):
         'profile_id': fields.StringField(nullable=True),
         'metadata': fields.JsonField(nullable=True),
         'timeout': fields.NonNegativeIntegerField(nullable=True),
-        'profile_only': fields.BooleanField(nullable=True,
-                                            default=False),
+        'profile_only': fields.BooleanField(nullable=True, default=False),
     }
 
     def obj_make_compatible(self, primitive, target_version):
