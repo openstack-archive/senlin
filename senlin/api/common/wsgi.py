@@ -246,11 +246,11 @@ class Server(object):
         called in the event of a configuration reload.
 
         When called for the first time a new socket is created.
-        If reloading and either bind_host or bind port have been
-        changed the existing socket must be closed and a new
+        If reloading and either bind_host or bind_port have been
+        changed, the existing socket must be closed and a new
         socket opened (laws of physics).
 
-        In all other cases (bind_host/bind_port have not changed)
+        In all other cases (bind_host/bind_port have not been changed)
         the existing socket is reused.
 
         :param old_conf: Cached old configuration settings (if any)
