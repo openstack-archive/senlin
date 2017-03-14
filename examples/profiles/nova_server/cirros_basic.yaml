@@ -10,5 +10,5 @@ properties:
   metadata:
     test_key: test_value
   user_data: >
-    #!/bin/bash
+    #!/bin/sh
     echo 'hello, world' > /tmp/test_file
