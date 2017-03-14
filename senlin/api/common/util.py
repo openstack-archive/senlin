@@ -77,6 +77,7 @@ def parse_request(name, req, body, key=None):
     # Do version coversion if necessary
     if obj is not None and version != req_cls.VERSION:
         obj.obj_make_compatible(primitive, version)
+        return req_cls.obj_from_primitive(primitive)
 
     return obj
 

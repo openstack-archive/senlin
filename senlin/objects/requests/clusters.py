@@ -89,7 +89,7 @@ class ClusterUpdateRequest(base.SenlinObject):
         'profile_id': fields.StringField(nullable=True),
         'metadata': fields.JsonField(nullable=True),
         'timeout': fields.NonNegativeIntegerField(nullable=True),
-        'profile_only': fields.BooleanField(nullable=True, default=False),
+        'profile_only': fields.BooleanField(nullable=True),
     }
 
     def obj_make_compatible(self, primitive, target_version):
@@ -98,8 +98,8 @@ class ClusterUpdateRequest(base.SenlinObject):
         target_version = versionutils.convert_version_to_tuple(
             target_version)
         if target_version < (1, 1):
-            if 'profile_only' in primitive:
-                del primitive['profile_only']
+            if 'profile_only' in primitive['senlin_object.data']:
+                del primitive['senlin_object.data']['profile_only']
 
 
 @base.SenlinObjectRegistry.register

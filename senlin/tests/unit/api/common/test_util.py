@@ -213,7 +213,7 @@ class TestParseRequest(base.SenlinTestCase):
 
         self.assertIsNotNone(res)
         mock_cls.assert_called_once_with('FakeReq')
-        mock_construct.assert_called_once_with(primitive)
+        self.assertEqual(2, mock_construct.call_count)
         obj.obj_make_compatible.assert_called_once_with(primitive, '1.0')
 
 

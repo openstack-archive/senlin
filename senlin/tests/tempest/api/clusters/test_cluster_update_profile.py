@@ -23,8 +23,8 @@ class TestClusterUpdateProfile(base.BaseSenlinAPITest):
     def setUp(self):
         super(TestClusterUpdateProfile, self).setUp()
 
-        profile_id = utils.create_a_profile(self)
-        self.addCleanup(utils.delete_a_profile, self, profile_id)
+        self.old_profile_id = utils.create_a_profile(self)
+        self.addCleanup(utils.delete_a_profile, self, self.old_profile_id)
 
         # create a new profile
         new_spec = copy.deepcopy(constants.spec_nova_server)
@@ -33,8 +33,12 @@ class TestClusterUpdateProfile(base.BaseSenlinAPITest):
         self.new_profile_id = utils.create_a_profile(self, new_spec)
         self.addCleanup(utils.delete_a_profile, self, self.new_profile_id)
 
-        self.cluster_id = utils.create_a_cluster(self, profile_id)
+        self.cluster_id = utils.create_a_cluster(self, self.old_profile_id)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
+
+        self.node1_id = utils.create_a_node(
+            self, self.old_profile_id, name='N01', cluster_id=self.cluster_id)
+        self.addCleanup(utils.delete_a_node, self, self.node1_id)
 
     @decorators.idempotent_id('abff7891-21af-4c37-a8df-5bc7379ce349')
     def test_cluster_update_profile(self):
@@ -60,3 +64,61 @@ class TestClusterUpdateProfile(base.BaseSenlinAPITest):
         # Wait for cluster update to be done before moving on
         action_id = res['location'].split('/actions/')[1]
         self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
+
+    @utils.api_microversion('1.6')
+    @decorators.idempotent_id('686cd38a-16eb-4364-b495-367fc7c8bb26')
+    def test_cluster_update_profile_profile_only(self):
+        # Update cluster with new profile
+        params = {
+            'cluster': {
+                'profile_id': self.new_profile_id,
+                'profile_only': True
+            }
+        }
+        res = self.client.update_obj('clusters', self.cluster_id, params)
+
+        # Verify resp of cluster update API
+        self.assertEqual(202, res['status'])
+        self.assertIsNotNone(res['body'])
+        self.assertIn('actions', res['location'])
+
+        # Wait for cluster update to be done before moving on
+        action_id = res['location'].split('/actions/')[1]
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
+
+        # verify cluster profile id changed
+        res = self.client.get_obj('clusters', self.cluster_id)
+        self.assertEqual(self.new_profile_id, res['body']['profile_id'])
+
+        # verify node profile id not changed.
+        res = self.client.get_obj('nodes', self.node1_id)
+        self.assertEqual(self.old_profile_id, res['body']['profile_id'])
+
+    @utils.api_microversion('1.5')
+    @decorators.idempotent_id('8a67876f-e9ea-4cbe-807a-73eefe482536')
+    def test_cluster_update_profile_profile_only_backward(self):
+        # Update cluster with new profile
+        params = {
+            'cluster': {
+                'profile_id': self.new_profile_id,
+                'profile_only': True
+            }
+        }
+        res = self.client.update_obj('clusters', self.cluster_id, params)
+
+        # Verify resp of cluster update API
+        self.assertEqual(202, res['status'])
+        self.assertIsNotNone(res['body'])
+        self.assertIn('actions', res['location'])
+
+        # Wait for cluster update to be done before moving on
+        action_id = res['location'].split('/actions/')[1]
+        self.client.wait_for_status('actions', action_id, 'SUCCEEDED')
+
+        # verify cluster profile id changed
+        res = self.client.get_obj('clusters', self.cluster_id)
+        self.assertEqual(self.new_profile_id, res['body']['profile_id'])
+
+        # verify node profile id not changed.
+        res = self.client.get_obj('nodes', self.node1_id)
+        self.assertEqual(self.new_profile_id, res['body']['profile_id'])
