@@ -559,12 +559,15 @@ class ServerProfile(base.Profile):
 
         :param obj: The node object.
         :param net_spec: The parameters to create a port.
-        :returns: Created port object.
+        :returns: Created port object and error message.
         """
         port_id = net_spec.get(self.PORT, None)
         if port_id:
-            port = self.network(obj).port_find(port_id)
-            return port
+            try:
+                port = self.network(obj).port_find(port_id)
+                return port, None
+            except exc.InternalError as ex:
+                return None, ex
         port_attr = {
             'network_id': net_spec.get(self.NETWORK),
         }
@@ -574,19 +577,34 @@ class ServerProfile(base.Profile):
         security_groups = net_spec.get(self.PORT_SECURITY_GROUPS, [])
         if security_groups:
             port_attr['security_groups'] = security_groups
-        port = self.network(obj).port_create(**port_attr)
-        return port
+        try:
+            port = self.network(obj).port_create(**port_attr)
+            return port, None
+        except exc.InternalError as ex:
+            return None, ex
 
-    def _delete_ports(self, obj, port_ids):
+    def _delete_ports(self, obj, ports):
         """Delete ports.
 
         :param obj: The node object
-        :param port_ids: A list of port IDs to be deleted.
+        :param ports: A list of internal ports.
+        :returns: None for succeed or error for failure.
         """
-        for port_id in port_ids:
-            self.network(obj).port_delete(port_id)
+        for port in ports:
+            # remove port created by senlin
+            if port.get('remove', False):
+                try:
+                    self.network(obj).port_delete(port['id'])
+                    # remove floating IP created by senlin
+                    if port.get('floating', None) and port[
+                            'floating'].get('remove', False):
+                        self.network(obj).floatingip_delete(
+                            port['floating']['id'])
+                except exc.InternalError as ex:
+                    return ex
+                ports.remove(port)
         node_data = obj.data
-        node_data.pop('internal_ports', None)
+        node_data['internal_ports'] = ports
         node_obj.Node.update(self.context, obj.id, {'data': node_data})
 
     def _get_floating_ip(self, obj, fip_spec, port_id):
@@ -595,15 +613,18 @@ class ServerProfile(base.Profile):
         :param obj: The node object.
         :param fip_spec: The parameters to create a floating ip
         :param port_id: The port ID to associate with
-        :returns: A floating IP object.
+        :returns: A floating IP object and error message.
         """
         floating_ip_id = fip_spec.get('floating_ip_id', None)
         if floating_ip_id:
-            fip = self.network(obj).floatingip_find(floating_ip_id)
-            if fip.port_id is None:
-                attr = {'port_id': port_id}
-                fip = self.network(obj).floatingip_update(fip, **attr)
-            return fip
+            try:
+                fip = self.network(obj).floatingip_find(floating_ip_id)
+                if fip.port_id is None:
+                    attr = {'port_id': port_id}
+                    fip = self.network(obj).floatingip_update(fip, **attr)
+                return fip, None
+            except exc.InternalError as ex:
+                return None, ex
         net_id = fip_spec.get(self.FLOATING_NETWORK)
         fip_addr = fip_spec.get(self.FLOATING_IP)
         attr = {
@@ -612,20 +633,11 @@ class ServerProfile(base.Profile):
         }
         if fip_addr:
             attr.update({'floating_ip_address': fip_addr})
-        fip = self.network(obj).floatingip_create(**attr)
-        return fip
-
-    def _delete_floating_ips(self, obj, floating_ips):
-        """Delete floating IPs.
-
-        :param obj: The node object.
-        :param floating_ips: A list of floating IP id.
-        """
-        for fip_id in floating_ips:
-            self.network(obj).floatingip_delete(fip_id)
-        node_data = obj.data
-        node_data.pop('floating_ips', None)
-        node_obj.Node.update(self.context, obj.id, {'data': node_data})
+        try:
+            fip = self.network(obj).floatingip_create(**attr)
+            return fip, None
+        except exc.InternalError as ex:
+            return None, ex
 
     def _create_ports_from_properties(self, obj, networks, action_type):
         """Create or find ports based on networks property.
@@ -637,44 +649,49 @@ class ServerProfile(base.Profile):
         :returns: A list of created port's attributes.
         """
         internal_ports = obj.data.get('internal_ports', [])
-        floating_ips = obj.data.get('floating_ips', [])
         if not networks:
             return []
         created_ports = []
         for net_spec in networks:
             net = self._validate_network(obj, net_spec, action_type)
             # Create port
-            try:
-                port = self._get_port(obj, net)
-            except exc.InternalError as ex:
-                self._delete_ports(obj, internal_ports)
-                raise ex
-            port_id = port.id
-            port_attrs = port.to_dict()
+            port, ex = self._get_port(obj, net)
+            if ex:
+                d_ex = self._delete_ports(obj, internal_ports)
+                if d_ex:
+                    raise d_ex
+                else:
+                    raise ex
+            port_attrs = {
+                'id': port.id,
+                'network_id': port.network_id,
+                'security_group_ids': port.security_group_ids,
+                'fixed_ips': port.fixed_ips
+            }
             if self.PORT not in net:
-                internal_ports.append(port_id)
+                port_attrs.update({'remove': True})
             # Create floating ip
             if 'floating_ip_id' in net or self.FLOATING_NETWORK in net:
-                try:
-                    fip = self._get_floating_ip(obj, net, port_id)
-                    port_attrs.update(
-                        {'floating_ip_address': fip.floating_ip_address}
-                    )
-                    if self.FLOATING_NETWORK in net:
-                        floating_ips.append(fip.id)
-                except exc.InternalError as ex:
-                    self._delete_floating_ips(obj, floating_ips)
-                    raise ex
-            created_ports.append(port_attrs)
+                fip, ex = self._get_floating_ip(obj, net, port_attrs['id'])
+                if ex:
+                    d_ex = self._delete_ports(obj, internal_ports)
+                    if d_ex:
+                        raise d_ex
+                    else:
+                        raise ex
+                port_attrs['floating'] = {
+                    'id': fip.id,
+                    'floating_ip_address': fip.floating_ip_address,
+                    'floating_network_id': fip.floating_network_id,
+                }
+                if self.FLOATING_NETWORK in net:
+                    port_attrs['floating'].update({'remove': True})
+            internal_ports.append(port_attrs)
         if internal_ports:
             node_data = obj.data
             node_data.update(internal_ports=internal_ports)
             node_obj.Node.update(self.context, obj.id, {'data': node_data})
-        if floating_ips:
-            node_data = obj.data
-            node_data.update(floating_ips=floating_ips)
-            node_obj.Node.update(self.context, obj.id, {'data': node_data})
-        return created_ports
+        return internal_ports
 
     def _build_metadata(self, obj, usermeta):
         """Build custom metadata for server.
@@ -849,7 +866,6 @@ class ServerProfile(base.Profile):
         :raises: `EResourceDeletion` if interaction with compute service fails.
         """
         internal_ports = obj.data.get('internal_ports', [])
-        floating_ips = obj.data.get('floating_ips', [])
         if not obj.physical_id:
             return True
 
@@ -866,8 +882,6 @@ class ServerProfile(base.Profile):
             driver.wait_for_server_delete(server_id)
             if internal_ports:
                 self._delete_ports(obj, internal_ports)
-            if floating_ips:
-                self._delete_floating_ips(obj, floating_ips)
             return True
         except exc.InternalError as ex:
             raise exc.EResourceDeletion(type='server', id=server_id,
