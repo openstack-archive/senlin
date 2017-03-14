@@ -466,10 +466,7 @@ class ServerProfile(base.Profile):
         if net_ident:
             try:
                 net = self.network(obj).network_get(net_ident)
-                if reason == 'update':
-                    result['net_id'] = net.id
-                else:
-                    result[self.NETWORK] = net.id
+                result[self.NETWORK] = net.id
             except exc.InternalError as ex:
                 error = six.text_type(ex)
 
@@ -481,11 +478,7 @@ class ServerProfile(base.Profile):
                 if port.status != 'DOWN':
                     error = _("The status of the port %(port)s must be DOWN"
                               ) % {'port': port_ident}
-
-                if reason == 'update':
-                    result['port_id'] = port.id
-                else:
-                    result[self.PORT] = port.id
+                result[self.PORT] = port.id
             except exc.InternalError as ex:
                 error = six.text_type(ex)
         elif port_ident is None and net_ident is None:
@@ -499,10 +492,7 @@ class ServerProfile(base.Profile):
                           "property cannot be specified at the same time"
                           ) % {'port': self.PORT, 'fixed_ip': self.FIXED_IP}
             else:
-                if reason == 'update':
-                    result['fixed_ips'] = [{'ip_address': fixed_ip}]
-                else:
-                    result[self.FIXED_IP] = fixed_ip
+                result[self.FIXED_IP] = fixed_ip
 
         # Check security_groups
         security_groups = network.get(self.PORT_SECURITY_GROUPS)
@@ -881,7 +871,9 @@ class ServerProfile(base.Profile):
                 driver.server_delete(server_id, ignore_missing)
             driver.wait_for_server_delete(server_id)
             if internal_ports:
-                self._delete_ports(obj, internal_ports)
+                ex = self._delete_ports(obj, internal_ports)
+                if ex:
+                    raise ex
             return True
         except exc.InternalError as ex:
             raise exc.EResourceDeletion(type='server', id=server_id,
@@ -1054,7 +1046,7 @@ class ServerProfile(base.Profile):
                                       message=six.text_type(ex))
         return True
 
-    def _create_interfaces(self, obj, networks):
+    def _update_network_add_port(self, obj, networks):
         """Create new interfaces for the server node.
 
         :param obj: The node object to operate.
@@ -1070,17 +1062,61 @@ class ServerProfile(base.Profile):
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
                                       message=six.text_type(ex))
 
-        for net_spec in networks:
-            net_attrs = self._validate_network(obj, net_spec, 'update')
-            if net_attrs:
-                try:
-                    cc.server_interface_create(server, **net_attrs)
-                except exc.InternalError as ex:
-                    raise exc.EResourceUpdate(type='server',
-                                              id=obj.physical_id,
-                                              message=six.text_type(ex))
+        ports = self._create_ports_from_properties(
+            obj, networks, 'update')
+        for port in ports:
+            params = {'port': port['id']}
+            try:
+                cc.server_interface_create(server, **params)
+            except exc.InternalError as ex:
+                raise exc.EResourceUpdate(type='server',
+                                          id=obj.physical_id,
+                                          message=six.text_type(ex))
 
-    def _delete_interfaces(self, obj, networks):
+    def _find_port_by_net_spec(self, obj, net_spec, ports):
+        """ Find existing ports match with specific network properties.
+
+        :param obj: The node object.
+        :param net_spec: Network property of this profile.
+        :param ports: A list of ports which attached to this server.
+        :returns: A list of candidate ports matching this network spec.
+        """
+        # (TODO): handle security_groups
+        net = self._validate_network(obj, net_spec, 'update')
+        selected_ports = []
+        for p in ports:
+            floating = p.get('floating', {})
+            floating_network = net.get(self.FLOATING_NETWORK, None)
+            if floating_network and floating.get(
+                    'floating_network_id') != floating_network:
+                continue
+            floating_ip_address = net.get(self.FLOATING_IP, None)
+            if floating_ip_address and floating.get(
+                    'floating_ip_address') != floating_ip_address:
+                continue
+            # If network properties didn't contain floating ip,
+            # then we should better not make a port with floating ip
+            # as candidate.
+            if (floating and not floating_network
+                    and not floating_ip_address):
+                continue
+            port_id = net.get(self.PORT, None)
+            if port_id and p['id'] != port_id:
+                continue
+            fixed_ip = net.get(self.FIXED_IP, None)
+            if fixed_ip:
+                fixed_ips = [ff['ip_address'] for ff in p['fixed_ips']]
+                if fixed_ip not in fixed_ips:
+                    continue
+            network = net.get(self.NETWORK, None)
+            if network:
+                net_id = self.network(obj).network_get(network)
+                if p['network_id'] != net_id:
+                    continue
+            selected_ports.append(p)
+        return selected_ports
+
+    def _update_network_remove_port(self, obj, networks):
         """Delete existing interfaces from the node.
 
         :param obj: The node object to operate.
@@ -1089,59 +1125,31 @@ class ServerProfile(base.Profile):
         :returns: ``None``
         :raises: ``EResourceUpdate``
         """
-        def _get_network(nc, net_id, server_id):
-            try:
-                net = nc.network_get(net_id)
-                return net.id
-            except exc.InternalError as ex:
-                raise exc.EResourceUpdate(type='server', id=server_id,
-                                          message=six.text_type(ex))
-
-        def _do_delete(port_id, server_id):
-            try:
-                cc.server_interface_delete(port_id, server_id)
-            except exc.InternalError as ex:
-                raise exc.EResourceUpdate(type='server', id=server_id,
-                                          message=six.text_type(ex))
-
         cc = self.compute(obj)
         nc = self.network(obj)
-        try:
-            existing = list(cc.server_interface_list(obj.physical_id))
-        except exc.InternalError as ex:
-            raise exc.EResourceUpdate(type='server', id=obj.physical_id,
-                                      message=six.text_type(ex))
-
-        ports = []
-        for intf in existing:
-            fixed_ips = [addr['ip_address'] for addr in intf.fixed_ips]
-            ports.append({
-                'id': intf.port_id,
-                'net': intf.net_id,
-                'ips': fixed_ips
-            })
+        internal_ports = obj.data.get('internal_ports', [])
 
         for n in networks:
-            network = n.get('network', None)
-            port = n.get('port', None)
-            fixed_ip = n.get('fixed_ip', None)
-            if port:
-                for p in ports:
-                    if p['id'] == port:
-                        ports.remove(p)
-                        _do_delete(port, obj.physical_id)
-            elif fixed_ip:
-                net_id = _get_network(nc, network, obj.physical_id)
-                for p in ports:
-                    if (fixed_ip in p['ips'] and net_id == p['net']):
-                        ports.remove(p)
-                        _do_delete(p['id'], obj.physical_id)
-            elif port is None and fixed_ip is None:
-                net_id = _get_network(nc, network, obj.physical_id)
-                for p in ports:
-                    if p['net'] == net_id:
-                        ports.remove(p)
-                        _do_delete(p['id'], obj.physical_id)
+            candidate_ports = self._find_port_by_net_spec(
+                obj, n, internal_ports)
+            port = candidate_ports[0]
+            try:
+                # Detach port from server
+                cc.server_interface_delete(port['id'], obj.physical_id)
+                # delete port if created by senlin
+                if port.get('remove', False):
+                    nc.port_delete(port['id'], ignore_missing=True)
+                # delete floating IP if created by senlin
+                if (port.get('floating', None) and
+                        port['floating'].get('remove', False)):
+                    nc.floatingip_delete(port['floating']['id'],
+                                         ignore_missing=True)
+            except exc.InternalError as ex:
+                raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                          message=six.text_type(ex))
+            internal_ports.remove(port)
+        obj.data['internal_ports'] = internal_ports
+        node_obj.Node.update(self.context, obj.id, {'data': obj.data})
 
     def _update_network(self, obj, new_profile):
         """Updating server network interfaces.
@@ -1162,11 +1170,11 @@ class ServerProfile(base.Profile):
 
         # Detach some existing interfaces
         if networks_delete:
-            self._delete_interfaces(obj, networks_delete)
+            self._update_network_remove_port(obj, networks_delete)
 
         # Attach new interfaces
         if networks_create:
-            self._create_interfaces(obj, networks_create)
+            self._update_network_add_port(obj, networks_create)
         return
 
     def do_update(self, obj, new_profile=None, **params):
