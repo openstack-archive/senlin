@@ -16,7 +16,7 @@ class VersionedMethod(object):
     def __init__(self, name, min_version, max_version, func):
         """Versioning information for a single method
 
-        Minimum and maximums are inclusive
+        Minimums and maximums are inclusive
         :param name: Name of the method
         :param min_version: Minimum acceptable version
         :param max_version: Maximum acceptable_version
