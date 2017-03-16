@@ -664,6 +664,7 @@ destroy_after_deletion:
   required: False
   description: |
     Whether deleted nodes to be destroyed right away.
+  min_version: 1.4
 
 domain:
   type: UUID

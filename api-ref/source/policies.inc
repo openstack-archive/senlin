@@ -5,6 +5,7 @@ Policies (policies)
 Lists all policies and creates, shows information for, updates, and deletes a
 policy.
 
+
 List policies
 =============
 
@@ -297,6 +298,8 @@ Validate policy
 .. rest_method::  POST /v1/policies/validate
 
 Validates a policy.
+
+This API is only available since API microversion 1.2.
 
 Response Codes
 --------------
