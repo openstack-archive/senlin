@@ -9,6 +9,6 @@ properties:
    - network: private
   metadata:
     test_key: test_value
-  user_data: >
+  user_data: |
     #!/bin/sh
     echo 'hello, world' > /tmp/test_file
