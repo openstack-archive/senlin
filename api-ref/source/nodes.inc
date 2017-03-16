@@ -437,6 +437,8 @@ Perform an Operation on a Node
 
 Perform the specified operation on the specified node.
 
+This API is only available since API microversion 1.4.
+
 Response Codes
 --------------
 

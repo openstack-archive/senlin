@@ -603,9 +603,9 @@ Replace nodes in a Cluster
 
 .. rest_method::  POST /v1/clusters/{cluster_id}/actions
 
-  - min_version: 1.3
-
 Replace the specified nodes in a cluster.
+
+This API is only available since API microversion 1.3.
 
 Response Codes
 --------------
@@ -798,14 +798,15 @@ Response Parameters
   - X-OpenStack-Request-ID: request_id
   - Location: location
 
+
 Collect Attributes Across a Cluster
 ===================================
 
 .. rest_method::  GET /v1/clusters/{cluster_id}/attrs/{path}
 
-  - min_version: 1.2
-
 Aggregate an attribute value across all nodes in a cluster.
+
+This API is only available since API microversion 1.2.
 
 Response Codes
 --------------
@@ -954,6 +955,8 @@ Perform an Operation on a Cluster
 
 Perform an operation on the specified cluster. The specified operation and its
 associated parameters must validate against the profile type of the cluster.
+
+This API is only available since API microversion 1.4.
 
 Response Codes
 --------------

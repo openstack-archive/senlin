@@ -115,9 +115,9 @@ List profile type operations
 
 .. rest_method::  GET /v1/profile-types/{profile_type}/ops
 
-  - min_version: 1.4
-
 List operations and parameters supported by a profile type.
+
+This API is only available since API microversion 1.4.
 
 Response Codes
 --------------

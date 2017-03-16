@@ -295,6 +295,8 @@ Validate profile
 
 Validates a profile.
 
+This API is only available since API microversion 1.2.
+
 Response Codes
 --------------
 
