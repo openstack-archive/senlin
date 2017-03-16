@@ -114,11 +114,9 @@ class TestHeatStackProfile(base.SenlinTestCase):
             'parameters': self.spec['properties']['parameters'],
             'files': self.spec['properties']['files'],
             'environment': self.spec['properties']['environment'],
-            'tags': [
-                'cluster_id=CLUSTER_ID',
-                'cluster_node_id=NODE_ID',
-                'cluster_node_index=123'
-            ]
+            'tags': ",".join(['cluster_node_id=NODE_ID',
+                              'cluster_id=CLUSTER_ID',
+                              'cluster_node_index=123'])
         }
         self.assertEqual('FAKE_ID', res)
         oc.stack_create.assert_called_once_with(**kwargs)
@@ -161,11 +159,9 @@ class TestHeatStackProfile(base.SenlinTestCase):
             'parameters': spec['properties']['parameters'],
             'files': spec['properties']['files'],
             'environment': spec['properties']['environment'],
-            'tags': [
-                'cluster_id=CLUSTER_ID',
-                'cluster_node_id=NODE_ID',
-                'cluster_node_index=123'
-            ]
+            'tags': ",".join(['cluster_node_id=NODE_ID',
+                              'cluster_id=CLUSTER_ID',
+                              'cluster_node_index=123'])
         }
         self.assertEqual('FAKE_ID', res)
         oc.stack_create.assert_called_once_with(**kwargs)
@@ -199,11 +195,9 @@ class TestHeatStackProfile(base.SenlinTestCase):
             'parameters': self.spec['properties']['parameters'],
             'files': self.spec['properties']['files'],
             'environment': self.spec['properties']['environment'],
-            'tags': [
-                'cluster_id=CLUSTER_ID',
-                'cluster_node_id=NODE_ID',
-                'cluster_node_index=123'
-            ]
+            'tags': ",".join(['cluster_node_id=NODE_ID',
+                              'cluster_id=CLUSTER_ID',
+                              'cluster_node_index=123'])
         }
         oc.stack_create.assert_called_once_with(**kwargs)
         oc.wait_for_stack.assert_called_once_with('FAKE_ID', 'CREATE_COMPLETE',
@@ -236,11 +230,9 @@ class TestHeatStackProfile(base.SenlinTestCase):
             'parameters': self.spec['properties']['parameters'],
             'files': self.spec['properties']['files'],
             'environment': self.spec['properties']['environment'],
-            'tags': [
-                'cluster_id=CLUSTER_ID',
-                'cluster_node_id=NODE_ID',
-                'cluster_node_index=123'
-            ]
+            'tags': ",".join(['cluster_node_id=NODE_ID',
+                              'cluster_id=CLUSTER_ID',
+                              'cluster_node_index=123'])
         }
         oc.stack_create.assert_called_once_with(**call_args)
         self.assertEqual(0, oc.wait_for_stack.call_count)
@@ -276,11 +268,9 @@ class TestHeatStackProfile(base.SenlinTestCase):
             'parameters': self.spec['properties']['parameters'],
             'files': self.spec['properties']['files'],
             'environment': self.spec['properties']['environment'],
-            'tags': [
-                'cluster_id=CLUSTER_ID',
-                'cluster_node_id=NODE_ID',
-                'cluster_node_index=123'
-            ]
+            'tags': ",".join(['cluster_node_id=NODE_ID',
+                              'cluster_id=CLUSTER_ID',
+                              'cluster_node_index=123'])
         }
         oc.stack_create.assert_called_once_with(**kwargs)
         oc.wait_for_stack.assert_called_once_with('FAKE_ID', 'CREATE_COMPLETE',
@@ -652,85 +642,77 @@ class TestHeatStackProfile(base.SenlinTestCase):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock()
 
-        res = profile._refresh_tags([], node, False)
+        res = profile._refresh_tags("", node, False)
 
-        self.assertEqual(([], False), res)
+        self.assertEqual(("", False), res)
 
     def test__refresh_tags_with_contents_no_add(self):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock()
 
-        res = profile._refresh_tags(['foo'], node, False)
+        res = profile._refresh_tags('foo', node, False)
 
-        self.assertEqual((['foo'], False), res)
+        self.assertEqual(('foo', False), res)
 
     def test__refresh_tags_deleted_no_add(self):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock()
 
-        res = profile._refresh_tags(
-            ['cluster_id=FOO', 'bar'], node, False)
+        res = profile._refresh_tags('cluster_id=FOO,bar', node, False)
 
-        self.assertEqual((['bar'], True), res)
+        self.assertEqual(('bar', True), res)
 
     def test__refresh_tags_empty_and_add(self):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock(id='NODE_ID', cluster_id='CLUSTER_ID', index=123)
 
-        res = profile._refresh_tags([], node, True)
+        res = profile._refresh_tags("", node, True)
 
-        expected = [
-            'cluster_id=CLUSTER_ID',
-            'cluster_node_id=NODE_ID',
-            'cluster_node_index=123'
-        ]
+        expected = ",".join(['cluster_id=CLUSTER_ID',
+                             'cluster_node_id=NODE_ID',
+                             'cluster_node_index=123'])
         self.assertEqual((expected, True), res)
 
     def test__refresh_tags_with_contents_and_add(self):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock(id='NODE_ID', cluster_id='CLUSTER_ID', index=123)
 
-        res = profile._refresh_tags(['foo'], node, True)
+        res = profile._refresh_tags('foo', node, True)
 
-        expected = [
-            'foo',
-            'cluster_id=CLUSTER_ID',
-            'cluster_node_id=NODE_ID',
-            'cluster_node_index=123',
-        ]
+        expected = ",".join(['foo',
+                             'cluster_id=CLUSTER_ID',
+                             'cluster_node_id=NODE_ID',
+                             'cluster_node_index=123'])
         self.assertEqual((expected, True), res)
 
     def test__refresh_tags_deleted_and_add(self):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock(id='NODE_ID', cluster_id='CLUSTER_ID', index=123)
 
-        res = profile._refresh_tags(
-            ['cluster_id=FOO', 'bar'], node, True)
+        res = profile._refresh_tags('cluster_id=FOO,bar', node, True)
 
-        expected = [
-            'bar',
-            'cluster_id=CLUSTER_ID',
-            'cluster_node_id=NODE_ID',
-            'cluster_node_index=123',
-        ]
+        expected = ",".join(['bar',
+                             'cluster_id=CLUSTER_ID',
+                             'cluster_node_id=NODE_ID',
+                             'cluster_node_index=123'])
         self.assertEqual((expected, True), res)
 
     def test_do_join(self):
         profile = stack.StackProfile('t', self.spec)
         oc = mock.Mock()
         profile._orchestrationclient = oc
-        x_stack = mock.Mock(tags=['foo'])
+        x_stack = mock.Mock(tags='foo')
         oc.stack_get.return_value = x_stack
         node = mock.Mock(physical_id='STACK_ID')
         mock_tags = self.patchobject(profile, '_refresh_tags',
-                                     return_value=(['bar'], True))
+                                     return_value=('bar', True))
 
         res = profile.do_join(node, 'CLUSTER_ID')
 
         self.assertTrue(res)
         oc.stack_get.assert_called_once_with('STACK_ID')
-        mock_tags.assert_called_once_with(['foo'], node, True)
-        oc.stack_update.assert_called_once_with('STACK_ID', {'tags': ['bar']})
+        mock_tags.assert_called_once_with('foo', node, True)
+        oc.stack_update.assert_called_once_with('STACK_ID', {'tags': 'bar'})
 
     def test_do_join_no_physical_id(self):
         profile = stack.StackProfile('t', self.spec)
@@ -757,54 +739,54 @@ class TestHeatStackProfile(base.SenlinTestCase):
         profile = stack.StackProfile('t', self.spec)
         oc = mock.Mock()
         profile._orchestrationclient = oc
-        x_stack = mock.Mock(tags=['foo'])
+        x_stack = mock.Mock(tags='foo')
         oc.stack_get.return_value = x_stack
         node = mock.Mock(physical_id='STACK_ID')
         mock_tags = self.patchobject(profile, '_refresh_tags',
-                                     return_value=(['foo'], False))
+                                     return_value=('foo', False))
 
         res = profile.do_join(node, 'CLUSTER_ID')
 
         self.assertTrue(res)
         oc.stack_get.assert_called_once_with('STACK_ID')
-        mock_tags.assert_called_once_with(['foo'], node, True)
+        mock_tags.assert_called_once_with('foo', node, True)
         self.assertEqual(0, oc.stack_update.call_count)
 
     def test_do_join_failed_update(self):
         profile = stack.StackProfile('t', self.spec)
         oc = mock.Mock()
         profile._orchestrationclient = oc
-        x_stack = mock.Mock(tags=['foo'])
+        x_stack = mock.Mock(tags='foo')
         oc.stack_get.return_value = x_stack
         err = exc.InternalError(code=400, message='Boom')
         oc.stack_update.side_effect = err
         node = mock.Mock(physical_id='STACK_ID')
         mock_tags = self.patchobject(profile, '_refresh_tags',
-                                     return_value=(['bar'], True))
+                                     return_value=('bar', True))
 
         res = profile.do_join(node, 'CLUSTER_ID')
 
         self.assertFalse(res)
         oc.stack_get.assert_called_once_with('STACK_ID')
-        mock_tags.assert_called_once_with(['foo'], node, True)
-        oc.stack_update.assert_called_once_with('STACK_ID', {'tags': ['bar']})
+        mock_tags.assert_called_once_with('foo', node, True)
+        oc.stack_update.assert_called_once_with('STACK_ID', {'tags': 'bar'})
 
     def test_do_leave(self):
         profile = stack.StackProfile('t', self.spec)
         oc = mock.Mock()
         profile._orchestrationclient = oc
-        x_stack = mock.Mock(tags=['foo'])
+        x_stack = mock.Mock(tags='foo')
         oc.stack_get.return_value = x_stack
         node = mock.Mock(physical_id='STACK_ID')
         mock_tags = self.patchobject(profile, '_refresh_tags',
-                                     return_value=(['bar'], True))
+                                     return_value=('bar', True))
 
         res = profile.do_leave(node)
 
         self.assertTrue(res)
         oc.stack_get.assert_called_once_with('STACK_ID')
-        mock_tags.assert_called_once_with(['foo'], node, False)
-        oc.stack_update.assert_called_once_with('STACK_ID', {'tags': ['bar']})
+        mock_tags.assert_called_once_with('foo', node, False)
+        oc.stack_update.assert_called_once_with('STACK_ID', {'tags': 'bar'})
 
     def test_do_leave_no_physical_id(self):
         profile = stack.StackProfile('t', self.spec)
@@ -831,34 +813,34 @@ class TestHeatStackProfile(base.SenlinTestCase):
         profile = stack.StackProfile('t', self.spec)
         oc = mock.Mock()
         profile._orchestrationclient = oc
-        x_stack = mock.Mock(tags=['foo'])
+        x_stack = mock.Mock(tags='foo')
         oc.stack_get.return_value = x_stack
         node = mock.Mock(physical_id='STACK_ID')
         mock_tags = self.patchobject(profile, '_refresh_tags',
-                                     return_value=(['foo'], False))
+                                     return_value=('foo', False))
 
         res = profile.do_leave(node)
 
         self.assertTrue(res)
         oc.stack_get.assert_called_once_with('STACK_ID')
-        mock_tags.assert_called_once_with(['foo'], node, False)
+        mock_tags.assert_called_once_with('foo', node, False)
         self.assertEqual(0, oc.stack_update.call_count)
 
     def test_do_leave_failed_update(self):
         profile = stack.StackProfile('t', self.spec)
         oc = mock.Mock()
         profile._orchestrationclient = oc
-        x_stack = mock.Mock(tags=['foo'])
+        x_stack = mock.Mock(tags='foo')
         oc.stack_get.return_value = x_stack
         err = exc.InternalError(code=400, message='Boom')
         oc.stack_update.side_effect = err
         node = mock.Mock(physical_id='STACK_ID')
         mock_tags = self.patchobject(profile, '_refresh_tags',
-                                     return_value=(['bar'], True))
+                                     return_value=('bar', True))
 
         res = profile.do_leave(node)
 
         self.assertFalse(res)
         oc.stack_get.assert_called_once_with('STACK_ID')
-        mock_tags.assert_called_once_with(['foo'], node, False)
-        oc.stack_update.assert_called_once_with('STACK_ID', {'tags': ['bar']})
+        mock_tags.assert_called_once_with('foo', node, False)
+        oc.stack_update.assert_called_once_with('STACK_ID', {'tags': 'bar'})
