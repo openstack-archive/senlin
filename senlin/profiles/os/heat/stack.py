@@ -147,6 +147,10 @@ class StackProfile(base.Profile):
         :param obj: The node object to operate on.
         :returns: The UUID of the heat stack created.
         """
+        tags = ["cluster_node_id=%s" % obj.id]
+        if obj.cluster_id:
+            tags.append('cluster_id=%s' % obj.cluster_id)
+            tags.append('cluster_node_index=%s' % obj.index)
         kwargs = {
             'stack_name': obj.name + '-' + utils.random_name(8),
             'template': self.properties[self.TEMPLATE],
@@ -156,12 +160,7 @@ class StackProfile(base.Profile):
             'parameters': self.properties[self.PARAMETERS],
             'files': self.properties[self.FILES],
             'environment': self.properties[self.ENVIRONMENT],
-            # TODO(Qiming): expose tags to user in spec
-            'tags': [
-                'cluster_id=%s' % obj.cluster_id,
-                'cluster_node_id=%s' % obj.id,
-                'cluster_node_index=%s' % obj.index
-            ]
+            'tags': ",".join(tags)
         }
 
         try:
@@ -298,6 +297,67 @@ class StackProfile(base.Profile):
                     'message': six.text_type(ex)
                 }
             }
+
+    def _refresh_tags(self, current, node, add=False):
+        """Refresh tag list.
+
+        :param current: Current list of tags.
+        :param node: The node object.
+        :param add: Flag indicating whether new tags are added.
+        :returns: (tags, updated) where tags contains a new list of tags and
+                  updated indicates whether new tag list differs from the old
+                  one.
+        """
+        tags = []
+        for tag in current.split(","):
+            if tag.find('cluster_id=') == 0:
+                continue
+            elif tag.find('cluster_node_id=') == 0:
+                continue
+            elif tag.find('cluster_node_index=') == 0:
+                continue
+            if tag.strip() != "":
+                tags.append(tag.strip())
+
+        if add:
+            tags.append('cluster_id=' + node.cluster_id)
+            tags.append('cluster_node_id=' + node.id)
+            tags.append('cluster_node_index=%s' % node.index)
+
+        tag_str = ",".join(tags)
+        return (tag_str, tag_str != current)
+
+    def do_join(self, obj, cluster_id):
+        if not obj.physical_id:
+            return False
+
+        hc = self.orchestration(obj)
+        try:
+            stack = hc.stack_get(obj.physical_id)
+            tags, updated = self._refresh_tags(stack.tags, obj, True)
+            if updated:
+                hc.stack_update(obj.physical_id, {'tags': tags})
+        except exc.InternalError as ex:
+            LOG.error(_LE('Failed in updating stack tags: %s.'), ex)
+            return False
+
+        return True
+
+    def do_leave(self, obj):
+        if not obj.physical_id:
+            return False
+
+        hc = self.orchestration(obj)
+        try:
+            stack = hc.stack_get(obj.physical_id)
+            tags, updated = self._refresh_tags(stack.tags, obj, False)
+            if updated:
+                hc.stack_update(obj.physical_id, {'tags': tags})
+        except exc.InternalError as ex:
+            LOG.error(_LE('Failed in updating stack tags: %s.'), ex)
+            return False
+
+        return True
 
     def handle_abandon(self, obj, **options):
         """Handler for abandoning a heat stack node."""
