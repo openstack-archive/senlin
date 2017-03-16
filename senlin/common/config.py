@@ -91,11 +91,11 @@ cfg.CONF.register_opts(engine_opts)
 
 # DEFAULT, host
 rpc_opts = [
-    cfg.StrOpt('host',
-               default=socket.gethostname(),
-               help=_('Name of the engine node. This can be an opaque '
-                      'identifier. It is not necessarily a hostname, FQDN, '
-                      'or IP address.'))
+    cfg.HostAddressOpt('host',
+                       default=socket.gethostname(),
+                       help=_('Name of the engine node. This can be an opaque '
+                              'identifier. It is not necessarily a hostname, '
+                              'FQDN or IP address.'))
 ]
 cfg.CONF.register_opts(rpc_opts)
 
