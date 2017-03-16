@@ -147,6 +147,10 @@ class StackProfile(base.Profile):
         :param obj: The node object to operate on.
         :returns: The UUID of the heat stack created.
         """
+        tags = ["cluster_node_id=%s" % obj.id]
+        if obj.cluster_id:
+            tags.append('cluster_id=%s' % obj.cluster_id)
+            tags.append('cluster_node_index=%s' % obj.index)
         kwargs = {
             'stack_name': obj.name + '-' + utils.random_name(8),
             'template': self.properties[self.TEMPLATE],
@@ -156,12 +160,7 @@ class StackProfile(base.Profile):
             'parameters': self.properties[self.PARAMETERS],
             'files': self.properties[self.FILES],
             'environment': self.properties[self.ENVIRONMENT],
-            # TODO(Qiming): expose tags to user in spec
-            'tags': [
-                'cluster_id=%s' % obj.cluster_id,
-                'cluster_node_id=%s' % obj.id,
-                'cluster_node_index=%s' % obj.index
-            ]
+            'tags': ",".join(tags)
         }
 
         try:
@@ -310,21 +309,23 @@ class StackProfile(base.Profile):
                   one.
         """
         tags = []
-        for tag in current:
+        for tag in current.split(","):
             if tag.find('cluster_id=') == 0:
                 continue
             elif tag.find('cluster_node_id=') == 0:
                 continue
             elif tag.find('cluster_node_index=') == 0:
                 continue
-            tags.append(tag)
+            if tag.strip() != "":
+                tags.append(tag.strip())
 
         if add:
             tags.append('cluster_id=' + node.cluster_id)
             tags.append('cluster_node_id=' + node.id)
             tags.append('cluster_node_index=%s' % node.index)
 
-        return (tags, tags != current)
+        tag_str = ",".join(tags)
+        return (tag_str, tag_str != current)
 
     def do_join(self, obj, cluster_id):
         if not obj.physical_id:
