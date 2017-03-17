@@ -72,6 +72,10 @@ class TestHeatV1(base.SenlinTestCase):
         self.hc.stack_check('stack_id')
         self.orch.check_stack.assert_called_once_with('stack_id')
 
+    def test_stack_get_template(self):
+        self.hc.stack_get_template('stack_id')
+        self.orch.get_stack_template.assert_called_once_with('stack_id')
+
     def test_wait_for_stack(self):
         self.hc.wait_for_stack('FAKE_ID', 'STATUS', [], 100, 200)
         self.orch.find_stack.assert_called_once_with('FAKE_ID', False)
