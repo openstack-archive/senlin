@@ -565,15 +565,19 @@ class TestNode(base.SenlinTestCase):
         node = nodem.Node('node1', PROFILE_ID, '')
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         new_id = '166db83b-b4a4-49ef-96a8-6c0fdd882d1a'
+
+        # action = node_action.NodeAction(node.id, 'ACTION', self.ctx)
+
         mock_recover.return_value = new_id
         mock_status.side_effect = set_status
         action = mock.Mock()
+        action.inputs = {'operation': ['SWIM', 'DANCE']}
 
-        res = node.do_recover(self.context, action, foo='bar', koo='zar')
+        res = node.do_recover(self.context, action)
 
         self.assertTrue(res)
-        mock_recover.assert_called_once_with(self.context, node, foo='bar',
-                                             koo='zar')
+        mock_recover.assert_called_once_with(
+            self.context, node, **action.inputs)
         self.assertEqual('node1', node.name)
         self.assertEqual(new_id, node.physical_id)
         self.assertEqual(PROFILE_ID, node.profile_id)
@@ -590,7 +594,7 @@ class TestNode(base.SenlinTestCase):
         node = nodem.Node('node1', PROFILE_ID, None)
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         mock_recover.return_value = node.physical_id
-        action = mock.Mock()
+        action = mock.Mock(inputs={})
 
         res = node.do_recover(self.context, action)
 
@@ -610,9 +614,9 @@ class TestNode(base.SenlinTestCase):
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         mock_check = self.patchobject(pb.Profile, 'check_object')
         mock_check.return_value = True
-        action = mock.Mock()
+        action = mock.Mock(inputs={'check': True})
 
-        res = node.do_recover(self.context, action, check=True)
+        res = node.do_recover(self.context, action)
 
         self.assertTrue(res)
         mock_check.assert_called_once_with(self.context, node)
@@ -633,13 +637,14 @@ class TestNode(base.SenlinTestCase):
         mock_status.side_effect = set_status
         mock_check = self.patchobject(pb.Profile, 'check_object')
         mock_check.return_value = False
-        action = mock.Mock()
+        action = mock.Mock(inputs={'check': True})
 
-        res = node.do_recover(self.context, action, check=True)
+        res = node.do_recover(self.context, action)
 
         self.assertTrue(res)
         mock_check.assert_called_once_with(self.context, node)
-        mock_recover.assert_called_once_with(self.context, node, check=True)
+        mock_recover.assert_called_once_with(
+            self.context, node, **action.inputs)
         self.assertEqual('node1', node.name)
         self.assertEqual(new_id, node.physical_id)
         self.assertEqual(PROFILE_ID, node.profile_id)
@@ -664,15 +669,16 @@ class TestNode(base.SenlinTestCase):
         mock_status.side_effect = set_status
         mock_check = self.patchobject(pb.Profile, 'check_object')
         mock_check.return_value = False
-        action = mock.Mock(outputs={})
+        action = mock.Mock(
+            outputs={}, inputs={'operation': [{'name': 'RECREATE'}],
+                                'check': True})
 
-        res = node.do_recover(self.context, action, check=True,
-                              operation=[{'name': 'RECREATE'}])
+        res = node.do_recover(self.context, action)
 
         self.assertTrue(res)
         mock_check.assert_called_once_with(self.context, node)
         mock_recover.assert_called_once_with(
-            self.context, node, check=True, operation=[{'name': 'RECREATE'}])
+            self.context, node, **action.inputs)
         self.assertEqual('node1', node.name)
         self.assertEqual(new_id, node.physical_id)
         self.assertEqual(PROFILE_ID, node.profile_id)
@@ -700,17 +706,17 @@ class TestNode(base.SenlinTestCase):
         mock_status.side_effect = set_status
         mock_check = self.patchobject(pb.Profile, 'check_object')
         mock_check.return_value = False
-        action = mock.Mock(outputs={})
+        action = mock.Mock(
+            outputs={}, inputs={'operation': [{'name': 'REBOOT'},
+                                              {'name': 'REBUILD'}],
+                                'check': True})
 
-        res = node.do_recover(self.context, action, check=True,
-                              operation=[{'name': 'REBOOT'},
-                                         {'name': 'REBUILD'}])
+        res = node.do_recover(self.context, action)
 
         self.assertTrue(res)
         mock_check.assert_called_once_with(self.context, node)
         mock_recover.assert_called_once_with(
-            self.context, node, check=True, operation=[{'name': 'REBOOT'},
-                                                       {'name': 'REBUILD'}])
+            self.context, node, **action.inputs)
         self.assertEqual('node1', node.name)
         self.assertEqual(new_id, node.physical_id)
         self.assertEqual(PROFILE_ID, node.profile_id)
@@ -742,13 +748,15 @@ class TestNode(base.SenlinTestCase):
             id=node.physical_id,
             reason='Boom!'
         )
-        action = mock.Mock()
+        action = mock.Mock(inputs={'operation': ['boom'],
+                                   'check': True})
 
-        res = node.do_recover(self.context, action, check=True)
+        res = node.do_recover(self.context, action)
 
         self.assertTrue(res)
         mock_check.assert_called_once_with(self.context, node)
-        mock_recover.assert_called_once_with(self.context, node, check=True)
+        mock_recover.assert_called_once_with(
+            self.context, node, **action.inputs)
         self.assertEqual('node1', node.name)
         self.assertEqual(new_id, node.physical_id)
         self.assertEqual(PROFILE_ID, node.profile_id)
@@ -765,7 +773,7 @@ class TestNode(base.SenlinTestCase):
         node = nodem.Node('node1', PROFILE_ID, None)
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         mock_recover.return_value = None
-        action = mock.Mock()
+        action = mock.Mock(inputs={'operation': [{'name': 'RECREATE'}]})
 
         res = node.do_recover(self.context, action)
 
@@ -788,10 +796,10 @@ class TestNode(base.SenlinTestCase):
     def test_node_recover_operation_not_support(self, mock_set_status):
         node = nodem.Node('node1', PROFILE_ID, None)
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
-        action = mock.Mock(outputs={})
+        action = mock.Mock(
+            outputs={}, inputs={'operation': [{'name': 'foo'}]})
 
-        params = {'operation': [{'name': 'foo'}]}
-        res = node.do_recover(self.context, action, **params)
+        res = node.do_recover(self.context, action)
         self.assertEqual({}, action.outputs)
         self.assertFalse(res)
 
