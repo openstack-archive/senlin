@@ -170,7 +170,7 @@ class TestParseLevelValues(base.SenlinTestCase):
         self.assertEqual([logging.ERROR], res)
 
     def test_multi_values(self):
-        res = utils.parse_level_values(['WARNING', 'ERROR'])
+        res = utils.parse_level_values(['WARN', 'ERROR'])
         self.assertEqual([logging.WARNING, logging.ERROR], res)
 
     def test_with_invalid_values(self):
