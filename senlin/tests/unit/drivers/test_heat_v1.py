@@ -72,6 +72,14 @@ class TestHeatV1(base.SenlinTestCase):
         self.hc.stack_check('stack_id')
         self.orch.check_stack.assert_called_once_with('stack_id')
 
+    def test_stack_get_environment(self):
+        self.hc.stack_get_environment('stack_id')
+        self.orch.get_stack_environment.assert_called_once_with('stack_id')
+
+    def test_stack_get_files(self):
+        self.hc.stack_get_files('stack_id')
+        self.orch.get_stack_files.assert_called_once_with('stack_id')
+
     def test_stack_get_template(self):
         self.hc.stack_get_template('stack_id')
         self.orch.get_stack_template.assert_called_once_with('stack_id')
