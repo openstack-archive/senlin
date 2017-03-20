@@ -23,6 +23,7 @@ import oslo_i18n as i18n
 from oslo_log import log as logging
 
 from senlin.api.common import wsgi
+from senlin.common import config
 from senlin.common import messaging
 from senlin.common import profiler
 from senlin import version
@@ -35,6 +36,7 @@ def init_app():
     cfg.CONF(project='senlin', prog='senlin-api',
              version=version.version_info.version_string())
     logging.setup(cfg.CONF, 'senlin-api')
+    config.set_config_defaults()
     messaging.setup()
 
     profiler.setup('senlin-api', cfg.CONF.host)
