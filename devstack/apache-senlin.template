@@ -11,6 +11,7 @@ Listen %PORT%
       ErrorLogFormat "%{cu}t %M"
     </IfVersion>
     ErrorLog /var/log/%APACHE_NAME%/senlin-api.log
+    CustomLog /var/log/%APACHE_NAME%/senlin_api_access.log combined
 
     <Directory %SENLIN_BIN_DIR%>
         <IfVersion >= 2.4>
