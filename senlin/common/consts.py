@@ -260,7 +260,7 @@ ACTION_STATUSES = (
 EVENT_LEVELS = {
     'CRITICAL': logging.CRITICAL,
     'ERROR': logging.ERROR,
-    'WARNING': logging.WARNING,
+    'WARN': logging.WARNING,
     'INFO': logging.INFO,
     'DEBUG': logging.DEBUG,
 }

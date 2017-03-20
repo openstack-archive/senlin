@@ -237,6 +237,20 @@ class TestMessageEvent(testtools.TestCase):
         mock_notify.assert_called_once_with(self.ctx, logging.INFO, entity,
                                             action)
 
+    @mock.patch.object(MSG.MessageEvent, '_notify_cluster_action')
+    @mock.patch.object(base.EventBackend, '_check_entity')
+    def test_dump_cluster_action_event_warn(self, mock_check, mock_notify):
+        mock_check.return_value = 'CLUSTER'
+        entity = mock.Mock()
+        action = mock.Mock(context=self.ctx, entity=entity)
+
+        res = MSG.MessageEvent.dump(logging.WARNING, action)
+
+        self.assertIsNone(res)
+        mock_check.assert_called_once_with(entity)
+        mock_notify.assert_called_once_with(self.ctx, logging.WARNING,
+                                            entity, action)
+
     @mock.patch.object(MSG.MessageEvent, '_notify_node_action')
     @mock.patch.object(base.EventBackend, '_check_entity')
     def test_dump_node_action_event(self, mock_check, mock_notify):
