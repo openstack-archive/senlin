@@ -20,7 +20,7 @@ from oslo_utils import timeutils
 from senlin.common import consts
 from senlin.common import context as req_context
 from senlin.common import exception
-from senlin.common.i18n import _, _LE
+from senlin.common.i18n import _
 from senlin.common import utils
 from senlin.engine import event as EVENT
 from senlin.objects import action as ao
@@ -272,8 +272,8 @@ class Action(object):
             expected = (self.SUSPENDED)
 
         if self.status not in expected:
-            LOG.error(_LE("Action (%(id)s) is in status (%(actual)s) while "
-                          "expected status should be one of (%(expected)s)."),
+            LOG.error("Action (%(id)s) is in status (%(actual)s) while "
+                      "expected status should be one of (%(expected)s).",
                       dict(id=self.id[:8], expected=expected,
                            actual=self.status))
             return
@@ -464,7 +464,7 @@ def ActionProc(context, action_id):
     # Step 1: materialize the action object
     action = Action.load(context, action_id=action_id, project_safe=False)
     if action is None:
-        LOG.error(_LE('Action "%s" could not be found.'), action_id)
+        LOG.error('Action "%s" could not be found.', action_id)
         return False
 
     EVENT.info(action, consts.PHASE_START)
@@ -481,10 +481,10 @@ def ActionProc(context, action_id):
         # executed.
         result = action.RES_ERROR
         reason = six.text_type(ex)
-        LOG.exception(_LE('Unexpected exception occurred during action '
-                          '%(action)s (%(id)s) execution: %(reason)s'),
+        LOG.exception('Unexpected exception occurred during action '
+                      '%(action)s (%(id)s) execution: %(reason)s',
                       {'action': action.action, 'id': action.id,
-                      'reason': reason})
+                       'reason': reason})
         success = False
     finally:
         # NOTE: locks on action is eventually released here by status update

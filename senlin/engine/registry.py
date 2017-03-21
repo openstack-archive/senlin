@@ -14,7 +14,6 @@ import itertools
 
 from oslo_log import log as logging
 
-from senlin.common.i18n import _LI, _LW
 
 LOG = logging.getLogger(__name__)
 
@@ -81,7 +80,7 @@ class Registry(object):
         registry = self._registry
         if info is None:
             # delete this entry.
-            msg = _LW("Removing %(item)s from registry")
+            msg = "Removing %(item)s from registry"
             LOG.warning(msg, {'item': name})
             registry.pop(name, None)
             return
@@ -94,10 +93,10 @@ class Registry(object):
                 'old': str(registry[name].plugin),
                 'new': str(info.plugin)
             }
-            LOG.warning(_LW('Changing %(name)s from %(old)s to %(new)s'),
+            LOG.warning('Changing %(name)s from %(old)s to %(new)s',
                         details)
         else:
-            msg = _LI('Registering %(name)s -> %(value)s')
+            msg = 'Registering %(name)s -> %(value)s'
             LOG.info(msg, {'name': name, 'value': str(info.plugin)})
 
         info.user_provided = not self.is_global

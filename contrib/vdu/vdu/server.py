@@ -23,7 +23,7 @@ from senlin.common import constraints
 from senlin.common import consts
 from senlin.common import context
 from senlin.common import exception as exc
-from senlin.common.i18n import _, _LE
+from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.objects import cluster as cluster_obj
 from senlin.objects import node as node_obj
@@ -1345,7 +1345,7 @@ class ServerProfile(base.Profile):
         if op_name.upper() != consts.RECOVER_RECREATE:
             op_params = operation.get('params', {})
             if op_name.lower() not in self.OP_NAMES:
-                LOG.error(_LE("The operation '%s' is not supported"), op_name)
+                LOG.error("The operation '%s' is not supported", op_name)
                 return False
 
             method = getattr(self, "handle_" + op_name.lower())

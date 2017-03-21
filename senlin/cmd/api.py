@@ -25,7 +25,6 @@ import six
 
 from senlin.api.common import wsgi
 from senlin.common import config
-from senlin.common.i18n import _LI
 from senlin.common import messaging
 from senlin.common import profiler
 from senlin import objects
@@ -50,7 +49,7 @@ def main():
 
         host = cfg.CONF.senlin_api.bind_host
         port = cfg.CONF.senlin_api.bind_port
-        LOG.info(_LI('Starting Senlin API on %(host)s:%(port)s'),
+        LOG.info('Starting Senlin API on %(host)s:%(port)s',
                  {'host': host, 'port': port})
         profiler.setup('senlin-api', host)
         server = wsgi.Server('senlin-api', cfg.CONF.senlin_api)

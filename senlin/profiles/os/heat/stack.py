@@ -15,7 +15,7 @@ import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
-from senlin.common.i18n import _, _LE
+from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.common import utils
 from senlin.profiles import base
@@ -278,7 +278,7 @@ class StackProfile(base.Profile):
             hc.stack_check(stack_id)
             hc.wait_for_stack(stack_id, 'CHECK_COMPLETE', timeout=timeout)
         except exc.InternalError as ex:
-            LOG.error(_LE('Failed in checking stack: %s.'), ex)
+            LOG.error('Failed in checking stack: %s.', ex)
             return False
 
         return True
@@ -338,7 +338,7 @@ class StackProfile(base.Profile):
             if updated:
                 hc.stack_update(obj.physical_id, {'tags': tags})
         except exc.InternalError as ex:
-            LOG.error(_LE('Failed in updating stack tags: %s.'), ex)
+            LOG.error('Failed in updating stack tags: %s.', ex)
             return False
 
         return True
@@ -354,7 +354,7 @@ class StackProfile(base.Profile):
             if updated:
                 hc.stack_update(obj.physical_id, {'tags': tags})
         except exc.InternalError as ex:
-            LOG.error(_LE('Failed in updating stack tags: %s.'), ex)
+            LOG.error('Failed in updating stack tags: %s.', ex)
             return False
 
         return True

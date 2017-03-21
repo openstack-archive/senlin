@@ -17,7 +17,7 @@ from oslo_context import context as oslo_context
 from oslo_log import log as logging
 
 from senlin.common import exception
-from senlin.common.i18n import _, _LE
+from senlin.common.i18n import _
 from senlin.drivers import base
 from senlin.drivers.openstack import neutron_v2 as neutronclient
 
@@ -55,8 +55,8 @@ class LoadBalancerDriver(base.DriverBase):
             try:
                 lb = self.nc().loadbalancer_get(lb_id)
             except exception.InternalError as ex:
-                msg = _LE('Failed in getting loadbalancer: %s.'
-                          ) % six.text_type(ex)
+                msg = ('Failed in getting loadbalancer: %s.'
+                       % six.text_type(ex))
                 LOG.exception(msg)
                 return False
             if lb is None:
@@ -93,7 +93,7 @@ class LoadBalancerDriver(base.DriverBase):
         try:
             subnet = self.nc().subnet_get(vip['subnet'])
         except exception.InternalError as ex:
-            msg = _LE('Failed in getting subnet: %s.') % six.text_type(ex)
+            msg = 'Failed in getting subnet: %s.' % six.text_type(ex)
             LOG.exception(msg)
             return False, msg
         subnet_id = subnet.id
@@ -102,8 +102,8 @@ class LoadBalancerDriver(base.DriverBase):
                                                vip.get('address', None),
                                                vip['admin_state_up'])
         except exception.InternalError as ex:
-            msg = _LE('Failed in creating loadbalancer: %s.'
-                      ) % six.text_type(ex)
+            msg = ('Failed in creating loadbalancer: %s.'
+                   % six.text_type(ex))
             LOG.exception(msg)
             return False, msg
         result['loadbalancer'] = lb.id
@@ -111,7 +111,7 @@ class LoadBalancerDriver(base.DriverBase):
 
         res = self._wait_for_lb_ready(lb.id)
         if res is False:
-            msg = _LE('Failed in creating loadbalancer (%s).') % lb.id
+            msg = 'Failed in creating loadbalancer (%s).' % lb.id
             del result['vip_address']
             _cleanup(msg, **result)
             return False, msg
@@ -124,14 +124,13 @@ class LoadBalancerDriver(base.DriverBase):
                                                          None),
                                                  vip['admin_state_up'])
         except exception.InternalError as ex:
-            msg = _LE('Failed in creating lb listener: %s.'
-                      ) % six.text_type(ex)
+            msg = 'Failed in creating lb listener: %s.' % six.text_type(ex)
             LOG.exception(msg)
             return False, msg
         result['listener'] = listener.id
         res = self._wait_for_lb_ready(lb.id)
         if res is False:
-            msg = _LE('Failed in creating listener (%s).') % listener.id
+            msg = 'Failed in creating listener (%s).' % listener.id
             del result['vip_address']
             _cleanup(msg, **result)
             return res, msg
@@ -142,14 +141,13 @@ class LoadBalancerDriver(base.DriverBase):
                                          pool['protocol'],
                                          pool['admin_state_up'])
         except exception.InternalError as ex:
-            msg = _LE('Failed in creating lb pool: %s.'
-                      ) % six.text_type(ex)
+            msg = 'Failed in creating lb pool: %s.' % six.text_type(ex)
             LOG.exception(msg)
             return False, msg
         result['pool'] = pool.id
         res = self._wait_for_lb_ready(lb.id)
         if res is False:
-            msg = _LE('Failed in creating pool (%s).') % pool.id
+            msg = 'Failed in creating pool (%s).' % pool.id
             del result['vip_address']
             _cleanup(msg, **result)
             return res, msg
@@ -167,15 +165,14 @@ class LoadBalancerDriver(base.DriverBase):
                 pool.id, hm['admin_state_up'], hm['http_method'],
                 hm['url_path'], hm['expected_codes'])
         except exception.InternalError as ex:
-            msg = _LE('Failed in creating lb health monitor: %s.'
-                      ) % six.text_type(ex)
+            msg = ('Failed in creating lb health monitor: %s.'
+                   % six.text_type(ex))
             LOG.exception(msg)
             return False, msg
         result['healthmonitor'] = health_monitor.id
         res = self._wait_for_lb_ready(lb.id)
         if res is False:
-            msg = _LE('Failed in creating health monitor (%s).'
-                      ) % health_monitor.id
+            msg = 'Failed in creating health monitor (%s).' % health_monitor.id
             del result['vip_address']
             _cleanup(msg, **result)
             return res, msg
@@ -195,14 +192,14 @@ class LoadBalancerDriver(base.DriverBase):
             try:
                 self.nc().healthmonitor_delete(healthmonitor_id)
             except exception.InternalError as ex:
-                msg = _LE('Failed in deleting healthmonitor: %s.'
-                          ) % six.text_type(ex)
+                msg = ('Failed in deleting healthmonitor: %s.'
+                       % six.text_type(ex))
                 LOG.exception(msg)
                 return False, msg
             res = self._wait_for_lb_ready(lb_id)
             if res is False:
-                msg = _LE('Failed in deleting healthmonitor '
-                          '(%s).') % healthmonitor_id
+                msg = ('Failed in deleting healthmonitor '
+                       '(%s).') % healthmonitor_id
                 return False, msg
 
         pool_id = kwargs.pop('pool', None)
@@ -210,13 +207,13 @@ class LoadBalancerDriver(base.DriverBase):
             try:
                 self.nc().pool_delete(pool_id)
             except exception.InternalError as ex:
-                msg = _LE('Failed in deleting lb pool: %s.'
-                          ) % six.text_type(ex)
+                msg = ('Failed in deleting lb pool: %s.'
+                       % six.text_type(ex))
                 LOG.exception(msg)
                 return False, msg
             res = self._wait_for_lb_ready(lb_id)
             if res is False:
-                msg = _LE('Failed in deleting pool (%s).') % pool_id
+                msg = 'Failed in deleting pool (%s).' % pool_id
                 return False, msg
 
         listener_id = kwargs.pop('listener', None)
@@ -224,19 +221,19 @@ class LoadBalancerDriver(base.DriverBase):
             try:
                 self.nc().listener_delete(listener_id)
             except exception.InternalError as ex:
-                msg = _LE('Failed in deleting listener: %s.'
-                          ) % six.text_type(ex)
+                msg = ('Failed in deleting listener: %s.'
+                       % six.text_type(ex))
                 LOG.exception(msg)
                 return False, msg
             res = self._wait_for_lb_ready(lb_id)
             if res is False:
-                msg = _LE('Failed in deleting listener (%s).') % listener_id
+                msg = 'Failed in deleting listener (%s).' % listener_id
                 return False, msg
 
         self.nc().loadbalancer_delete(lb_id)
         res = self._wait_for_lb_ready(lb_id, ignore_not_found=True)
         if res is False:
-            msg = _LE('Failed in deleting loadbalancer (%s).') % lb_id
+            msg = 'Failed in deleting loadbalancer (%s).' % lb_id
             return False, msg
 
         return True, _('LB deletion succeeded')
@@ -257,8 +254,8 @@ class LoadBalancerDriver(base.DriverBase):
             net = self.nc().network_get(net_id)
         except exception.InternalError as ex:
             resource = 'subnet' if subnet in ex.message else 'network'
-            msg = _LE('Failed in getting %(resource)s: %(msg)s.'
-                      ) % {'resource': resource, 'msg': six.text_type(ex)}
+            msg = ('Failed in getting %(resource)s: %(msg)s.'
+                   % {'resource': resource, 'msg': six.text_type(ex)})
             LOG.exception(msg)
             return None
         net_name = net.name
@@ -266,7 +263,7 @@ class LoadBalancerDriver(base.DriverBase):
         node_detail = node.get_details(oslo_context.get_current())
         addresses = node_detail.get('addresses')
         if net_name not in addresses:
-            msg = _LE('Node is not in subnet %(subnet)s')
+            msg = 'Node is not in subnet %(subnet)s'
             LOG.error(msg, {'subnet': subnet})
             return None
 
@@ -282,18 +279,18 @@ class LoadBalancerDriver(base.DriverBase):
             # timeout, exception will be raised to fail member_add.
             res = self._wait_for_lb_ready(lb_id)
             if not res:
-                msg = _LE('Loadbalancer %s is not ready.') % lb_id
+                msg = 'Loadbalancer %s is not ready.' % lb_id
                 raise exception.Error(msg)
             member = self.nc().pool_member_create(pool_id, address, port,
                                                   subnet_obj.id)
         except (exception.InternalError, exception.Error) as ex:
-            msg = _LE('Failed in creating lb pool member: %s.'
-                      ) % six.text_type(ex)
+            msg = ('Failed in creating lb pool member: %s.'
+                   % six.text_type(ex))
             LOG.exception(msg)
             return None
         res = self._wait_for_lb_ready(lb_id)
         if res is False:
-            LOG.error(_LE('Failed in creating pool member (%s).'), member.id)
+            LOG.error('Failed in creating pool member (%s).', member.id)
             return None
 
         return member.id
@@ -316,18 +313,18 @@ class LoadBalancerDriver(base.DriverBase):
             # timeout, exception will be raised to fail member_remove.
             res = self._wait_for_lb_ready(lb_id)
             if not res:
-                msg = _LE('Loadbalancer %s is not ready.') % lb_id
+                msg = 'Loadbalancer %s is not ready.' % lb_id
                 raise exception.Error(msg)
             self.nc().pool_member_delete(pool_id, member_id)
         except (exception.InternalError, exception.Error) as ex:
-            msg = _LE('Failed in removing member %(m)s from pool %(p)s: '
-                      '%(ex)s') % {'m': member_id, 'p': pool_id,
-                                   'ex': six.text_type(ex)}
+            msg = ('Failed in removing member %(m)s from pool %(p)s: '
+                   '%(ex)s' % {'m': member_id, 'p': pool_id,
+                               'ex': six.text_type(ex)})
             LOG.exception(msg)
             return None
         res = self._wait_for_lb_ready(lb_id)
         if res is False:
-            LOG.error(_LE('Failed in deleting pool member (%s).'), member_id)
+            LOG.error('Failed in deleting pool member (%s).', member_id)
             return None
 
         return True

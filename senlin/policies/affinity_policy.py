@@ -25,7 +25,7 @@ from senlin.common import constraints
 from senlin.common import consts
 from senlin.common import context
 from senlin.common import exception as exc
-from senlin.common.i18n import _, _LE
+from senlin.common.i18n import _
 from senlin.common import scaleutils as su
 from senlin.common import schema
 from senlin.common import utils
@@ -159,7 +159,7 @@ class AffinityPolicy(base.Policy):
             except exc.InternalError as ex:
                 msg = _("Failed in retrieving servergroup '%s'."
                         ) % group_name
-                LOG.exception(_LE('%(msg)s: %(ex)s') % {
+                LOG.exception('%(msg)s: %(ex)s' % {
                               'msg': msg, 'ex': six.text_type(ex)})
                 return False, msg
 
@@ -186,7 +186,7 @@ class AffinityPolicy(base.Policy):
                     policies=[group.get(self.GROUP_POLICIES)])
             except Exception as ex:
                 msg = _('Failed in creating servergroup.')
-                LOG.exception(_LE('%(msg)s: %(ex)s') % {
+                LOG.exception('%(msg)s: %(ex)s' % {
                     'msg': msg, 'ex': six.text_type(ex)})
                 return False, msg
 
@@ -226,7 +226,7 @@ class AffinityPolicy(base.Policy):
                 nc.server_group_delete(group_id)
             except Exception as ex:
                 msg = _('Failed in deleting servergroup.')
-                LOG.exception(_LE('%(msg)s: %(ex)s') % {
+                LOG.exception('%(msg)s: %(ex)s' % {
                     'msg': msg, 'ex': six.text_type(ex)})
                 return False, msg
 

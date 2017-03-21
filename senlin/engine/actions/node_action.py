@@ -16,7 +16,7 @@ from oslo_log import log as logging
 from osprofiler import profiler
 
 from senlin.common import consts
-from senlin.common.i18n import _, _LW
+from senlin.common.i18n import _
 from senlin.common import scaleutils as su
 from senlin.engine.actions import base
 from senlin.engine import cluster as cm
@@ -130,7 +130,7 @@ class NodeAction(base.Action):
                 action_excluded=[consts.NODE_DELETE],
                 status=[consts.ACTION_SUCCEEDED, consts.ACTION_FAILED])
         except Exception as ex:
-            LOG.warning(_LW('Failed to clean node action records: %s'),
+            LOG.warning('Failed to clean node action records: %s',
                         ex)
         return self.RES_OK, _('Node deleted successfully.')
 

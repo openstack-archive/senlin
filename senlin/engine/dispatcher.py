@@ -17,7 +17,6 @@ import oslo_messaging
 from oslo_service import service
 
 from senlin.common import consts
-from senlin.common.i18n import _LI
 from senlin.common import messaging as messaging
 
 LOG = logging.getLogger(__name__)
@@ -77,11 +76,11 @@ class Dispatcher(service.Service):
     def stop(self):
         super(Dispatcher, self).stop()
         # Wait for all action threads to be finished
-        LOG.info(_LI("Stopping all action threads of engine %s"),
+        LOG.info("Stopping all action threads of engine %s",
                  self.engine_id)
         # Stop ThreadGroup gracefully
         self.TG.stop(True)
-        LOG.info(_LI("All action threads have been finished"))
+        LOG.info("All action threads have been finished")
 
 
 def notify(method, engine_id=None, **kwargs):

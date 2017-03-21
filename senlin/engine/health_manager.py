@@ -28,7 +28,6 @@ import time
 
 from senlin.common import consts
 from senlin.common import context
-from senlin.common.i18n import _LI, _LW
 from senlin.common import messaging as rpc
 from senlin import objects
 from senlin.rpc import client as rpc_client
@@ -48,7 +47,7 @@ def _chase_up(start_time, interval):
     # check if we have missed any intervals?
     missed = int((elapsed - 0.0000001) / interval)
     if missed >= 1:
-        LOG.warning(_LW("Poller missed %s intervals for checking"), missed)
+        LOG.warning("Poller missed %s intervals for checking", missed)
     return (missed + 1) * interval - elapsed
 
 
@@ -86,7 +85,7 @@ class NovaNotificationEndpoint(object):
             }
             node_id = meta.get('cluster_node_id')
             if node_id:
-                LOG.info(_LI("Requesting node recovery: %s"), node_id)
+                LOG.info("Requesting node recovery: %s", node_id)
                 ctx = context.get_service_context(project=self.project_id,
                                                   user=payload['user_id'])
                 req = objects.NodeRecoverRequest(identity=node_id,
@@ -151,7 +150,7 @@ class HeatNotificationEndpoint(object):
             'timestamp': metadata['timestamp'],
             'publisher': publisher_id,
         }
-        LOG.info(_LI("Requesting stack recovery: %s"), node_id)
+        LOG.info("Requesting stack recovery: %s", node_id)
         ctx = context.get_service_context(project=self.project_id,
                                           user=payload['user_identity'])
         req = objects.NodeRecoverRequest(identity=node_id, params=params)
@@ -243,7 +242,7 @@ class HealthManager(service.Service):
         start_time = timeutils.utcnow(True)
         cluster = objects.Cluster.get(self.ctx, cluster_id, project_safe=False)
         if not cluster:
-            LOG.warning(_LW("Cluster (%s) is not found."), cluster_id)
+            LOG.warning("Cluster (%s) is not found.", cluster_id)
             return _chase_up(start_time, timeout)
 
         ctx = context.get_service_context(user=cluster.user,
@@ -252,22 +251,22 @@ class HealthManager(service.Service):
             req = objects.ClusterCheckRequest(identity=cluster_id)
             action = self.rpc_client.call(ctx, 'cluster_check', req)
         except Exception as ex:
-            LOG.warning(_LW("Failed in triggering 'cluster_check' RPC for "
-                        "'%(c)s': %(r)s"),
+            LOG.warning("Failed in triggering 'cluster_check' RPC for "
+                        "'%(c)s': %(r)s",
                         {'c': cluster_id, 'r': six.text_type(ex)})
             return _chase_up(start_time, timeout)
 
         # wait for action to complete
         res, reason = self._wait_for_action(ctx, action['action'], timeout)
         if not res:
-            LOG.warning(_LW("%s"), reason)
+            LOG.warning("%s", reason)
             return _chase_up(start_time, timeout)
 
         # loop through nodes to trigger recovery
         nodes = objects.Node.get_all_by_cluster(ctx, cluster_id)
         for node in nodes:
             if node.status != 'ACTIVE':
-                LOG.info(_LI("Requesting node recovery: %s"), node.id)
+                LOG.info("Requesting node recovery: %s", node.id)
                 req = objects.NodeRecoverRequest(identity=node.id)
                 self.rpc_client.call(ctx, 'node_recover', req)
 
@@ -281,7 +280,7 @@ class HealthManager(service.Service):
         """
         cluster = objects.Cluster.get(self.ctx, cluster_id, project_safe=False)
         if not cluster:
-            LOG.warning(_LW("Cluster (%s) is not found."), cluster_id)
+            LOG.warning("Cluster (%s) is not found.", cluster_id)
             return
         profile = objects.Profile.get(self.ctx, cluster.profile_id,
                                       project_safe=False)
@@ -312,15 +311,15 @@ class HealthManager(service.Service):
                                               cid, interval)
             entry['timer'] = timer
         elif ctype == consts.LIFECYCLE_EVENTS:
-            LOG.info(_LI("Start listening events for cluster (%s)."), cid)
+            LOG.info("Start listening events for cluster (%s).", cid)
             listener = self._add_listener(cid)
             if listener:
                 entry['listener'] = listener
             else:
-                LOG.warning(_LW("Error creating listener for cluster %s"), cid)
+                LOG.warning("Error creating listener for cluster %s", cid)
                 return None
         else:
-            LOG.warning(_LW("Cluster %(id)s check type %(type)s is invalid."),
+            LOG.warning("Cluster %(id)s check type %(type)s is invalid.",
                         {'id': cid, 'type': ctype})
             return None
 
@@ -360,8 +359,8 @@ class HealthManager(service.Service):
                 'enabled': r.enabled,
             }
 
-            LOG.info(_LI("Loading cluster %(c)s enabled=%(e)s for "
-                         "health monitoring"),
+            LOG.info("Loading cluster %(c)s enabled=%(e)s for "
+                     "health monitoring",
                      {'c': r.cluster_id, 'e': r.enabled})
 
             if r.enabled:

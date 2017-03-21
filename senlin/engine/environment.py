@@ -19,7 +19,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 
 from senlin.common import exception
-from senlin.common.i18n import _, _LE, _LI
+from senlin.common.i18n import _
 from senlin.engine import parser
 from senlin.engine import registry
 
@@ -160,20 +160,20 @@ class Environment(object):
         try:
             files = glob.glob(os.path.join(env_dir, '*'))
         except OSError as ex:
-            LOG.error(_LE('Failed to read %s'), env_dir)
+            LOG.error('Failed to read %s', env_dir)
             LOG.exception(ex)
             return
 
         for fname in files:
             try:
                 with open(fname) as f:
-                    LOG.info(_LI('Loading environment from %s'), fname)
+                    LOG.info('Loading environment from %s', fname)
                     self.load(self.parse(f.read()))
             except ValueError as vex:
-                LOG.error(_LE('Failed to parse %s'), fname)
+                LOG.error('Failed to parse %s', fname)
                 LOG.exception(six.text_type(vex))
             except IOError as ioex:
-                LOG.error(_LE('Failed to read %s'), fname)
+                LOG.error('Failed to read %s', fname)
                 LOG.exception(six.text_type(ioex))
 
 

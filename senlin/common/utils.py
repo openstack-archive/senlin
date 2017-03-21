@@ -28,7 +28,7 @@ from six.moves import urllib
 
 from senlin.common import consts
 from senlin.common import exception
-from senlin.common.i18n import _, _LI
+from senlin.common.i18n import _
 from senlin.objects import service as service_obj
 
 cfg.CONF.import_opt('max_response_size', 'senlin.common.config')
@@ -95,7 +95,7 @@ def url_fetch(url, allowed_schemes=('http', 'https')):
     the allowed_schemes argument.
     Raise an IOError if getting the data fails.
     '''
-    LOG.info(_LI('Fetching data from %s'), url)
+    LOG.info('Fetching data from %s', url)
 
     components = urllib.parse.urlparse(url)
 

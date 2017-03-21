@@ -14,7 +14,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 import time
 
-from senlin.common.i18n import _, _LE, _LI
+from senlin.common.i18n import _
 from senlin.common import utils
 from senlin import objects
 from senlin.objects import action as ao
@@ -65,19 +65,17 @@ def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
     action = ao.Action.get(context, owners[0])
     if (action and action.owner and action.owner != engine and
             utils.is_engine_dead(context, action.owner)):
-        LOG.info(_LI('The cluster %(c)s is locked by dead action %(a)s, '
-                     'try to steal the lock.'), {
-            'c': cluster_id,
-            'a': owners[0]
-        })
+        LOG.info('The cluster %(c)s is locked by dead action %(a)s, '
+                 'try to steal the lock.',
+                 {'c': cluster_id, 'a': owners[0]})
         dead_engine = action.owner
         owners = cl_obj.ClusterLock.steal(cluster_id, action_id)
         # Cleanse locks affected by the dead engine
         objects.Service.gc_by_engine(dead_engine)
         return action_id in owners
 
-    LOG.error(_LE('Cluster is already locked by action %(old)s, '
-                  'action %(new)s failed grabbing the lock'),
+    LOG.error('Cluster is already locked by action %(old)s, '
+              'action %(new)s failed grabbing the lock',
               {'old': str(owners), 'new': action_id})
 
     return False
@@ -121,18 +119,16 @@ def node_lock_acquire(context, node_id, action_id, engine=None,
     action = ao.Action.get(context, owner)
     if (action and action.owner and action.owner != engine and
             utils.is_engine_dead(context, action.owner)):
-        LOG.info(_LI('The node %(n)s is locked by dead action %(a)s, '
-                     'try to steal the lock.'), {
-            'n': node_id,
-            'a': owner
-        })
+        LOG.info('The node %(n)s is locked by dead action %(a)s, '
+                 'try to steal the lock.',
+                 {'n': node_id, 'a': owner})
         reason = _('Engine died when executing this action.')
         nl_obj.NodeLock.steal(node_id, action_id)
         ao.Action.mark_failed(context, action.id, time.time(), reason)
         return True
 
-    LOG.error(_LE('Node is already locked by action %(old)s, '
-                  'action %(new)s failed grabbing the lock'),
+    LOG.error('Node is already locked by action %(old)s, '
+              'action %(new)s failed grabbing the lock',
               {'old': owner, 'new': action_id})
 
     return False
