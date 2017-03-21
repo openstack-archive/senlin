@@ -62,7 +62,7 @@ Install Senlin Server
 ::
 
   $ cd /opt/stack
-  $ git clone http://git.openstack.org/openstack/senlin.git
+  $ git clone https://git.openstack.org/openstack/senlin.git
 
 2. Install Senlin with required packages.
 
@@ -160,7 +160,7 @@ Install Senlin Client
 ::
 
   $ cd /opt/stack
-  $ git clone http://git.openstack.org/openstack/python-senlinclient.git
+  $ git clone https://git.openstack.org/openstack/python-senlinclient.git
 
 2. Install senlin client.
 
