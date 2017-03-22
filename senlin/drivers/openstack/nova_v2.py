@@ -13,7 +13,6 @@
 from oslo_config import cfg
 from oslo_log import log
 
-from senlin.common.i18n import _LW
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
 
@@ -219,7 +218,7 @@ class NovaClient(base.DriverBase):
             if az in names:
                 found.append(az)
             else:
-                LOG.warning(_LW("Availability zone '%s' is not available."),
+                LOG.warning("Availability zone '%s' is not available.",
                             az)
         return found
 

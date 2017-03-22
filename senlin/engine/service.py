@@ -25,7 +25,7 @@ import six
 from senlin.common import consts
 from senlin.common import context as senlin_context
 from senlin.common import exception
-from senlin.common.i18n import _, _LE, _LI
+from senlin.common.i18n import _
 from senlin.common import messaging as rpc_messaging
 from senlin.common import scaleutils as su
 from senlin.common import schema
@@ -117,7 +117,7 @@ class EngineService(service.Service):
                                                 self.dispatcher_topic,
                                                 consts.RPC_API_VERSION,
                                                 self.TG)
-        LOG.info(_LI("Starting dispatcher for engine %s"), self.engine_id)
+        LOG.info("Starting dispatcher for engine %s", self.engine_id)
         self.dispatcher.start()
 
         target = oslo_messaging.Target(version=consts.RPC_API_VERSION,
@@ -137,7 +137,7 @@ class EngineService(service.Service):
         self.health_mgr = health_manager.HealthManager(
             self, self.health_mgr_topic, consts.RPC_API_VERSION)
 
-        LOG.info(_LI("Starting health manager for engine %s"), self.engine_id)
+        LOG.info("Starting health manager for engine %s", self.engine_id)
         self.health_mgr.start()
 
         # we may want to make the clean-up attempts configurable.
@@ -149,30 +149,30 @@ class EngineService(service.Service):
 
     def _stop_rpc_server(self):
         # Stop RPC connection to prevent new requests
-        LOG.info(_LI("Stopping engine service..."))
+        LOG.info("Stopping engine service...")
         try:
             self._rpc_server.stop()
             self._rpc_server.wait()
-            LOG.info(_LI('Engine service stopped successfully'))
+            LOG.info('Engine service stopped successfully')
         except Exception as ex:
-            LOG.error(_LE('Failed to stop engine service: %s'),
+            LOG.error('Failed to stop engine service: %s',
                       six.text_type(ex))
 
     def stop(self):
         self._stop_rpc_server()
 
         # Notify dispatcher to stop all action threads it started.
-        LOG.info(_LI("Stopping dispatcher for engine %s"), self.engine_id)
+        LOG.info("Stopping dispatcher for engine %s", self.engine_id)
         self.dispatcher.stop()
 
         # Notify health_manager to stop
-        LOG.info(_LI("Stopping health manager for engine %s"), self.engine_id)
+        LOG.info("Stopping health manager for engine %s", self.engine_id)
         self.health_mgr.stop()
 
         self.TG.stop()
 
         service_obj.Service.delete(self.engine_id)
-        LOG.info(_LI('Engine %s is deleted'), self.engine_id)
+        LOG.info('Engine %s is deleted', self.engine_id)
 
         super(EngineService, self).stop()
 
@@ -188,19 +188,19 @@ class EngineService(service.Service):
             if svc['id'] == self.engine_id:
                 continue
             if timeutils.is_older_than(svc['updated_at'], time_window):
-                LOG.info(_LI('Service %s was aborted'), svc['id'])
-                LOG.info(_LI('Breaking locks for dead engine %s'), svc['id'])
+                LOG.info('Service %s was aborted', svc['id'])
+                LOG.info('Breaking locks for dead engine %s', svc['id'])
                 service_obj.Service.gc_by_engine(svc['id'])
-                LOG.info(_LI('Done breaking locks for engine %s'), svc['id'])
+                LOG.info('Done breaking locks for engine %s', svc['id'])
                 service_obj.Service.delete(svc['id'])
 
     def service_manage_cleanup(self):
         self._service_manage_cleanup()
         self.cleanup_count += 1
-        LOG.info(_LI('Service chean-up attempt count: %s'), self.cleanup_count)
+        LOG.info('Service chean-up attempt count: %s', self.cleanup_count)
         if self.cleanup_count >= 2:
             self.cleanup_timer.stop()
-            LOG.info(_LI("Finished cleaning up dead services."))
+            LOG.info("Finished cleaning up dead services.")
 
     @request_context
     def credential_create(self, ctx, req):
@@ -360,7 +360,7 @@ class EngineService(service.Service):
             profile.validate(validate_props=validate_props)
         except exception.ESchema as ex:
             msg = six.text_type(ex)
-            LOG.error(_LE("Failed in validating profile: %s"), msg)
+            LOG.error("Failed in validating profile: %s", msg)
             raise exception.InvalidSpec(message=msg)
 
         return profile
@@ -385,7 +385,7 @@ class EngineService(service.Service):
         if req.profile.obj_attr_is_set('metadata'):
             metadata = req.profile.metadata
 
-        LOG.info(_LI("Creating profile '%s'."), name)
+        LOG.info("Creating profile '%s'.", name)
 
         # NOTE: we get the Profile subclass directly to ensure we are calling
         # the correct methods.
@@ -394,7 +394,7 @@ class EngineService(service.Service):
         cls = environment.global_env().get_profile(type_str)
         profile = cls.create(ctx, name, req.profile.spec, metadata=metadata)
 
-        LOG.info(_LI("Profile %(name)s is created: %(id)s."),
+        LOG.info("Profile %(name)s is created: %(id)s.",
                  {'name': name, 'id': profile.id})
 
         return profile.to_dict()
@@ -435,7 +435,7 @@ class EngineService(service.Service):
                   or an exception `ResourceNotFound` if no matching profile is
                   found.
         """
-        LOG.info(_LI("Updating profile '%(id)s.'"), {'id': req.identity})
+        LOG.info("Updating profile '%(id)s.'", {'id': req.identity})
         db_profile = profile_obj.Profile.find(ctx, req.identity)
         profile = profile_base.Profile.load(ctx, profile=db_profile)
         changed = False
@@ -454,7 +454,7 @@ class EngineService(service.Service):
             msg = _("No property needs an update.")
             raise exception.BadRequest(msg=msg)
 
-        LOG.info(_LI("Profile '%(id)s' is updated."), {'id': req.identity})
+        LOG.info("Profile '%(id)s' is updated.", {'id': req.identity})
         return profile.to_dict()
 
     @request_context
@@ -467,7 +467,7 @@ class EngineService(service.Service):
                  profile is referenced by certain clusters/nodes.
         """
         db_profile = profile_obj.Profile.find(ctx, req.identity)
-        LOG.info(_LI("Deleting profile '%s'."), req.identity)
+        LOG.info("Deleting profile '%s'.", req.identity)
 
         cls = environment.global_env().get_profile(db_profile.type)
         try:
@@ -476,7 +476,7 @@ class EngineService(service.Service):
             reason = _("still referenced by some clusters and/or nodes.")
             raise exception.ResourceInUse(type='profile', id=db_profile.id,
                                           reason=reason)
-        LOG.info(_LI("Profile '%s' is deleted."), req.identity)
+        LOG.info("Profile '%s' is deleted.", req.identity)
 
     @request_context
     def policy_type_list(self, ctx, req):
@@ -562,7 +562,7 @@ class EngineService(service.Service):
             policy.validate(context, validate_props=validate_props)
         except exception.InvalidSpec as ex:
             msg = six.text_type(ex)
-            LOG.error(_LE("Failed in validating policy: %s"), msg)
+            LOG.error("Failed in validating policy: %s", msg)
             raise exception.InvalidSpec(message=msg)
 
         return policy
@@ -586,11 +586,11 @@ class EngineService(service.Service):
 
         policy = self._validate_policy(ctx, req.spec, name=name)
 
-        LOG.info(_LI("Creating policy %(type)s '%(name)s'"),
+        LOG.info("Creating policy %(type)s '%(name)s'",
                  {'type': policy.type, 'name': policy.name})
 
         policy.store(ctx)
-        LOG.info(_LI("Policy '%(name)s' is created: %(id)s."),
+        LOG.info("Policy '%(name)s' is created: %(id)s.",
                  {'name': name, 'id': policy.id})
         return policy.to_dict()
 
@@ -619,11 +619,11 @@ class EngineService(service.Service):
         changed = False
         if (req.policy.name is not None and
                 req.policy.name != policy.name):
-            LOG.info(_LI("Updating policy '%s'."), req.identity)
+            LOG.info("Updating policy '%s'.", req.identity)
             policy.name = req.policy.name
             changed = True
             policy.store(ctx)
-            LOG.info(_LI("Policy '%s' is updated."), req.identity)
+            LOG.info("Policy '%s' is updated.", req.identity)
 
         if not changed:
             msg = _("No property needs an update.")
@@ -641,14 +641,14 @@ class EngineService(service.Service):
                  policy is still attached to certain clusters.
         """
         db_policy = policy_obj.Policy.find(ctx, req.identity)
-        LOG.info(_LI("Deleting policy '%s'."), req.identity)
+        LOG.info("Deleting policy '%s'.", req.identity)
         try:
             policy_base.Policy.delete(ctx, db_policy.id)
         except exception.EResourceBusy:
             reason = _("still attached to some clusters")
             raise exception.ResourceInUse(type='policy', id=req.identity,
                                           reason=reason)
-        LOG.info(_LI("Policy '%s' is deleted."), req.identity)
+        LOG.info("Policy '%s' is deleted.", req.identity)
 
     @request_context
     def policy_validate(self, ctx, req):
@@ -750,7 +750,7 @@ class EngineService(service.Service):
         # set defaults to the request object
         req.obj_set_defaults()
 
-        LOG.info(_LI("Creating cluster '%s'."), req.name)
+        LOG.info("Creating cluster '%s'.", req.name)
 
         values = {
             'name': req.name,
@@ -780,7 +780,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(ctx, cluster.id,
                                              consts.CLUSTER_CREATE, **kwargs)
         dispatcher.start_action()
-        LOG.info(_LI("Cluster create action queued: %s."), action_id)
+        LOG.info("Cluster create action queued: %s.", action_id)
 
         result = cluster.to_dict()
         result['action'] = action_id
@@ -801,7 +801,7 @@ class EngineService(service.Service):
             LOG.error(msg)
             raise exception.FeatureNotSupported(feature=msg)
 
-        LOG.info(_LI("Updating cluster '%s'."), req.identity)
+        LOG.info("Updating cluster '%s'.", req.identity)
 
         inputs = {}
         if (req.obj_attr_is_set(consts.CLUSTER_PROFILE) and
@@ -848,7 +848,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(ctx, cluster.id,
                                              consts.CLUSTER_UPDATE, **kwargs)
         dispatcher.start_action()
-        LOG.info(_LI("Cluster update action queued: %s."), action_id)
+        LOG.info("Cluster update action queued: %s.", action_id)
 
         resp = cluster.to_dict()
         resp['action'] = action_id
@@ -862,7 +862,7 @@ class EngineService(service.Service):
         :param req: An instance of the ClusterDeleteRequest object.
         :return: A dictionary containing the ID of the action triggered.
         """
-        LOG.info(_LI('Deleting cluster %s'), req.identity)
+        LOG.info('Deleting cluster %s', req.identity)
 
         # 'cluster' below is a DB object.
         cluster = co.Cluster.find(ctx, req.identity)
@@ -908,7 +908,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(ctx, cluster.id,
                                              consts.CLUSTER_DELETE, **params)
         dispatcher.start_action()
-        LOG.info(_LI("Cluster delete action queued: %s"), action_id)
+        LOG.info("Cluster delete action queued: %s", action_id)
 
         return {'action': action_id}
 
@@ -920,7 +920,7 @@ class EngineService(service.Service):
         :param req: An instance of the ClusterAddNodesRequest object.
         :return: A dictionary containing the ID of the action triggered.
         """
-        LOG.info(_LI("Adding nodes '%(nodes)s' to cluster '%(cluster)s'."),
+        LOG.info("Adding nodes '%(nodes)s' to cluster '%(cluster)s'.",
                  {'cluster': req.identity, 'nodes': req.nodes})
 
         db_cluster = co.Cluster.find(context, req.identity)
@@ -987,7 +987,7 @@ class EngineService(service.Service):
                                              consts.CLUSTER_ADD_NODES,
                                              **params)
         dispatcher.start_action()
-        LOG.info(_LI("Cluster add nodes action queued: %s."), action_id)
+        LOG.info("Cluster add nodes action queued: %s.", action_id)
 
         return {'action': action_id}
 
@@ -999,7 +999,7 @@ class EngineService(service.Service):
         :param req: An instance of the ClusterDelNodesRequest object.
         :return: A dictionary containing the ID of the action triggered.
         """
-        LOG.info(_LI("Deleting nodes '%(nodes)s' from cluster '%(cluster)s'."),
+        LOG.info("Deleting nodes '%(nodes)s' from cluster '%(cluster)s'.",
                  {'cluster': req.identity, 'nodes': req.nodes})
         db_cluster = co.Cluster.find(ctx, req.identity)
         found = []
@@ -1060,7 +1060,7 @@ class EngineService(service.Service):
                                              consts.CLUSTER_DEL_NODES,
                                              **params)
         dispatcher.start_action()
-        LOG.info(_LI("Cluster delete nodes action queued: %s."), action_id)
+        LOG.info("Cluster delete nodes action queued: %s.", action_id)
 
         return {'action': action_id}
 
@@ -1148,7 +1148,7 @@ class EngineService(service.Service):
         :param req: An object of ClusterReplaceNodesRequest.
         :return: A dictionary containing the ID of the action triggered.
         """
-        LOG.info(_LI("Replace nodes of the cluster '%s'."), req.identity)
+        LOG.info("Replace nodes of the cluster '%s'.", req.identity)
         db_cluster = co.Cluster.find(ctx, req.identity)
 
         nodes = self._validate_replace_nodes(ctx, db_cluster, req.nodes)
@@ -1162,7 +1162,7 @@ class EngineService(service.Service):
                                              consts.CLUSTER_REPLACE_NODES,
                                              **kwargs)
         dispatcher.start_action()
-        LOG.info(_LI("Cluster replace nodes action queued: %s."), action_id)
+        LOG.info("Cluster replace nodes action queued: %s.", action_id)
 
         return {'action': action_id}
 
@@ -1228,10 +1228,10 @@ class EngineService(service.Service):
         if res:
             raise exception.BadRequest(msg=res)
 
-        fmt = _LI("Resizing cluster '%(cluster)s': type=%(adj_type)s, "
-                  "number=%(number)s, min_size=%(min_size)s, "
-                  "max_size=%(max_size)s, min_step=%(min_step)s, "
-                  "strict=%(strict)s.")
+        fmt = _("Resizing cluster '%(cluster)s': type=%(adj_type)s, "
+                "number=%(number)s, min_size=%(min_size)s, "
+                "max_size=%(max_size)s, min_step=%(min_step)s, "
+                "strict=%(strict)s.")
         LOG.info(fmt, {'cluster': req.identity, 'adj_type': adj_type,
                        'number': number, 'min_size': min_size,
                        'max_size': max_size, 'min_step': min_step,
@@ -1253,7 +1253,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(
             ctx, db_cluster.id, consts.CLUSTER_RESIZE, **params)
         dispatcher.start_action()
-        LOG.info(_LI("Cluster resize action queued: %s."), action_id)
+        LOG.info("Cluster resize action queued: %s.", action_id)
 
         return {'action': action_id}
 
@@ -1276,11 +1276,11 @@ class EngineService(service.Service):
             if err:
                 raise exception.BadRequest(msg=err)
 
-            LOG.info(_LI('Scaling out cluster %(name)s by %(delta)s nodes'),
+            LOG.info('Scaling out cluster %(name)s by %(delta)s nodes',
                      {'name': req.identity, 'delta': req.count})
             inputs = {'count': req.count}
         else:
-            LOG.info(_LI('Scaling out cluster %s'), db_cluster.name)
+            LOG.info('Scaling out cluster %s', db_cluster.name)
             inputs = {}
 
         params = {
@@ -1293,7 +1293,7 @@ class EngineService(service.Service):
                                              consts.CLUSTER_SCALE_OUT,
                                              **params)
         dispatcher.start_action()
-        LOG.info(_LI("Cluster Scale out action queued: %s"), action_id)
+        LOG.info("Cluster Scale out action queued: %s", action_id)
 
         return {'action': action_id}
 
@@ -1316,11 +1316,11 @@ class EngineService(service.Service):
             if err:
                 raise exception.BadRequest(msg=err)
 
-            LOG.info(_LI('Scaling in cluster %(name)s by %(delta)s nodes'),
+            LOG.info('Scaling in cluster %(name)s by %(delta)s nodes',
                      {'name': req.identity, 'delta': req.count})
             inputs = {'count': req.count}
         else:
-            LOG.info(_LI('Scaling in cluster %s'), db_cluster.name)
+            LOG.info('Scaling in cluster %s', db_cluster.name)
             inputs = {}
 
         params = {
@@ -1333,7 +1333,7 @@ class EngineService(service.Service):
                                              consts.CLUSTER_SCALE_IN,
                                              **params)
         dispatcher.start_action()
-        LOG.info(_LI("Cluster Scale in action queued: %s."), action_id)
+        LOG.info("Cluster Scale in action queued: %s.", action_id)
 
         return {'action': action_id}
 
@@ -1372,7 +1372,7 @@ class EngineService(service.Service):
         :param req: An instance of the ClusterCheckRequest object.
         :return: A dictionary containing the ID of the action triggered.
         """
-        LOG.info(_LI("Checking cluster '%s'."), req.identity)
+        LOG.info("Checking cluster '%s'.", req.identity)
         db_cluster = co.Cluster.find(ctx, req.identity)
         # cope with cluster check request from engine internal
         if not ctx.user or not ctx.project:
@@ -1388,7 +1388,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(ctx, db_cluster.id,
                                              consts.CLUSTER_CHECK, **params)
         dispatcher.start_action()
-        LOG.info(_LI("Cluster check action queued: %s."), action_id)
+        LOG.info("Cluster check action queued: %s.", action_id)
 
         return {'action': action_id}
 
@@ -1400,7 +1400,7 @@ class EngineService(service.Service):
         :param req: An instance of a ClusterRecoverRequest object.
         :return: A dictionary containing the ID of the action triggered.
         """
-        LOG.info(_LI("Recovering cluster '%s'."), req.identity)
+        LOG.info("Recovering cluster '%s'.", req.identity)
         db_cluster = co.Cluster.find(ctx, req.identity)
 
         # cope with cluster check request from engine internal
@@ -1420,7 +1420,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(ctx, db_cluster.id,
                                              consts.CLUSTER_RECOVER, **params)
         dispatcher.start_action()
-        LOG.info(_LI("Cluster recover action queued: %s."), action_id)
+        LOG.info("Cluster recover action queued: %s.", action_id)
 
         return {'action': action_id}
 
@@ -1433,7 +1433,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the ID of the action triggered by the
                  recover request.
         """
-        LOG.info(_LI("Performing operation '%(o)s' on cluster '%(n)s'."),
+        LOG.info("Performing operation '%(o)s' on cluster '%(n)s'.",
                  {'o': req.operation, 'n': req.identity})
 
         db_cluster = co.Cluster.find(ctx, req.identity)
@@ -1484,7 +1484,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(
             ctx, cluster.id, consts.CLUSTER_OPERATION, **kwargs)
         dispatcher.start_action()
-        LOG.info(_LI("Cluster operation action is queued: %s."), action_id)
+        LOG.info("Cluster operation action is queued: %s.", action_id)
         return {'action': action_id}
 
     @request_context
@@ -1540,7 +1540,7 @@ class EngineService(service.Service):
                         ) % {"name": req.name}
                 raise exception.BadRequest(msg=msg)
 
-        LOG.info(_LI("Creating node '%s'."), req.name)
+        LOG.info("Creating node '%s'.", req.name)
 
         try:
             node_profile = profile_obj.Profile.find(ctx, req.profile_id)
@@ -1598,7 +1598,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(ctx, node.id,
                                              consts.NODE_CREATE, **params)
         dispatcher.start_action()
-        LOG.info(_LI("Node create action queued: %s."), action_id)
+        LOG.info("Node create action queued: %s.", action_id)
 
         result = node.to_dict()
         result['action'] = action_id
@@ -1632,7 +1632,7 @@ class EngineService(service.Service):
                  node along with the ID of the action triggered by this
                  request.
         """
-        LOG.info(_LI("Updating node '%s'."), req.identity)
+        LOG.info("Updating node '%s'.", req.identity)
 
         node = node_obj.Node.find(ctx, req.identity)
         if req.obj_attr_is_set('profile_id') and req.profile_id is not None:
@@ -1676,7 +1676,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(ctx, node.id, consts.NODE_UPDATE,
                                              **params)
         dispatcher.start_action()
-        LOG.info(_LI("Node update action is queued: %s."), action_id)
+        LOG.info("Node update action is queued: %s.", action_id)
 
         resp = node.to_dict()
         resp['action'] = action_id
@@ -1692,7 +1692,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the ID of the action triggered by
                  this request.
         """
-        LOG.info(_LI('Deleting node %s'), req.identity)
+        LOG.info('Deleting node %s', req.identity)
 
         node = node_obj.Node.find(ctx, req.identity)
 
@@ -1717,7 +1717,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(ctx, node.id,
                                              consts.NODE_DELETE, **params)
         dispatcher.start_action()
-        LOG.info(_LI("Node delete action is queued: %s."), action_id)
+        LOG.info("Node delete action is queued: %s.", action_id)
 
         return {'action': action_id}
 
@@ -1730,7 +1730,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the ID of the action triggered by
                  this request.
         """
-        LOG.info(_LI("Checking node '%s'."), req.identity)
+        LOG.info("Checking node '%s'.", req.identity)
 
         db_node = node_obj.Node.find(ctx, req.identity)
 
@@ -1744,7 +1744,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(ctx, db_node.id,
                                              consts.NODE_CHECK, **kwargs)
         dispatcher.start_action()
-        LOG.info(_LI("Node check action is queued: %s."), action_id)
+        LOG.info("Node check action is queued: %s.", action_id)
 
         return {'action': action_id}
 
@@ -1757,7 +1757,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the ID of the action triggered by the
                  recover request.
         """
-        LOG.info(_LI("Recovering node '%s'."), req.identity)
+        LOG.info("Recovering node '%s'.", req.identity)
 
         db_node = node_obj.Node.find(ctx, req.identity)
 
@@ -1780,7 +1780,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(ctx, db_node.id,
                                              consts.NODE_RECOVER, **kwargs)
         dispatcher.start_action()
-        LOG.info(_LI("Node recover action is queued: %s."), action_id)
+        LOG.info("Node recover action is queued: %s.", action_id)
 
         return {'action': action_id}
 
@@ -1793,7 +1793,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the ID of the action triggered by the
                  operation request.
         """
-        LOG.info(_LI("Performing operation '%(o)s' on node '%(n)s'."),
+        LOG.info("Performing operation '%(o)s' on node '%(n)s'.",
                  {'o': req.operation, 'n': req.identity})
 
         db_node = node_obj.Node.find(ctx, req.identity)
@@ -1825,7 +1825,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(ctx, db_node.id,
                                              consts.NODE_OPERATION, **kwargs)
         dispatcher.start_action()
-        LOG.info(_LI("Node operation action is queued: %s."), action_id)
+        LOG.info("Node operation action is queued: %s.", action_id)
         return {'action': action_id}
 
     @request_context
@@ -1884,8 +1884,8 @@ class EngineService(service.Service):
         :param req: An instance of the ClusterAttachPolicyRequest object.
         :return: A dictionary contains the ID of the action fired.
         """
-        LOG.info(_LI("Attaching policy (%(policy)s) to cluster "
-                     "(%(cluster)s)."),
+        LOG.info("Attaching policy (%(policy)s) to cluster "
+                 "(%(cluster)s).",
                  {'policy': req.policy_id, 'cluster': req.identity})
 
         db_cluster = co.Cluster.find(ctx, req.identity)
@@ -1910,7 +1910,7 @@ class EngineService(service.Service):
                                              consts.CLUSTER_ATTACH_POLICY,
                                              **params)
         dispatcher.start_action()
-        LOG.info(_LI("Policy attach action queued: %s."), action_id)
+        LOG.info("Policy attach action queued: %s.", action_id)
 
         return {'action': action_id}
 
@@ -1924,8 +1924,8 @@ class EngineService(service.Service):
         :param req: An instance of the ClusterDetachPolicyRequest object.
         :return: A dictionary contains the ID of the action fired.
         """
-        LOG.info(_LI("Detaching policy '%(policy)s' from cluster "
-                     "'%(cluster)s'."),
+        LOG.info("Detaching policy '%(policy)s' from cluster "
+                 "'%(cluster)s'.",
                  {'policy': req.policy_id, 'cluster': req.identity})
 
         db_cluster = co.Cluster.find(ctx, req.identity)
@@ -1952,7 +1952,7 @@ class EngineService(service.Service):
                                              consts.CLUSTER_DETACH_POLICY,
                                              **params)
         dispatcher.start_action()
-        LOG.info(_LI("Policy detach action queued: %s."), action_id)
+        LOG.info("Policy detach action queued: %s.", action_id)
 
         return {'action': action_id}
 
@@ -1966,7 +1966,7 @@ class EngineService(service.Service):
         :param req: An instance of the ClusterUpdatePolicyRequest object.
         :return: A dictionary contains the ID of the action fired.
         """
-        LOG.info(_LI("Updating policy '%(policy)s' on cluster '%(cluster)s.'"),
+        LOG.info("Updating policy '%(policy)s' on cluster '%(cluster)s.'",
                  {'policy': req.policy_id, 'cluster': req.identity})
 
         db_cluster = co.Cluster.find(ctx, req.identity)
@@ -1997,7 +1997,7 @@ class EngineService(service.Service):
                                              consts.CLUSTER_UPDATE_POLICY,
                                              **params)
         dispatcher.start_action()
-        LOG.info(_LI("Policy update action queued: %s."), action_id)
+        LOG.info("Policy update action queued: %s.", action_id)
 
         return {'action': action_id}
 
@@ -2046,7 +2046,7 @@ class EngineService(service.Service):
         :return: A dictionary containing the details about the action and the
                  ID of the action triggered by this operation.
         """
-        LOG.info(_LI("Creating action '%s'."), req.name)
+        LOG.info("Creating action '%s'.", req.name)
 
         req.obj_set_defaults()
         try:
@@ -2068,7 +2068,7 @@ class EngineService(service.Service):
         # TODO(Anyone): Uncomment this to notify the dispatcher
         # dispatcher.start_action(action_id=action.id)
 
-        LOG.info(_LI("Action '%(name)s' is created: %(id)s."),
+        LOG.info("Action '%(name)s' is created: %(id)s.",
                  {'name': req.name, 'id': action_id})
         return {'action': action_id}
 
@@ -2095,7 +2095,7 @@ class EngineService(service.Service):
                  `ResourceInUse`.
         """
         db_action = action_obj.Action.find(ctx, req.identity)
-        LOG.info(_LI("Deleting action '%s'."), req.identity)
+        LOG.info("Deleting action '%s'.", req.identity)
         try:
             action_mod.Action.delete(ctx, db_action.id)
         except exception.EResourceBusy:
@@ -2103,7 +2103,7 @@ class EngineService(service.Service):
             raise exception.ResourceInUse(type='action', id=req.identity,
                                           reason=reason)
 
-        LOG.info(_LI("Action '%s' is deleted."), req.identity)
+        LOG.info("Action '%s' is deleted.", req.identity)
 
     @request_context
     def receiver_list(self, ctx, req):
@@ -2156,7 +2156,7 @@ class EngineService(service.Service):
                 msg = _("A receiver named '%s' already exists.") % req.name
                 raise exception.BadRequest(msg=msg)
 
-        LOG.info(_LI("Creating %(t)s receiver %(n)s."),
+        LOG.info("Creating %(t)s receiver %(n)s.",
                  {'n': req.name, 't': req.type})
 
         req.obj_set_defaults()
@@ -2201,7 +2201,7 @@ class EngineService(service.Service):
 
         receiver = receiver_mod.Receiver.create(ctx, req.type, cluster,
                                                 action, **kwargs)
-        LOG.info(_LI("Receiver (%(n)s) is created: %(i)s."),
+        LOG.info("Receiver (%(n)s) is created: %(i)s.",
                  {'n': req.name, 'i': receiver.id})
 
         return receiver.to_dict()
@@ -2234,9 +2234,9 @@ class EngineService(service.Service):
                  `ResourceNotFound` if the object could not be found.
         """
         db_receiver = receiver_obj.Receiver.find(ctx, req.identity)
-        LOG.info(_LI("Deleting receiver %s."), req.identity)
+        LOG.info("Deleting receiver %s.", req.identity)
         receiver_mod.Receiver.delete(ctx, db_receiver.id)
-        LOG.info(_LI("Receiver %s is deleted."), req.identity)
+        LOG.info("Receiver %s is deleted.", req.identity)
 
     @request_context
     def receiver_notify(self, ctx, req):
@@ -2255,7 +2255,7 @@ class EngineService(service.Service):
             msg = _("Notifying non-message receiver is not allowed.")
             raise exception.BadRequest(msg=msg)
 
-        LOG.info(_LI("Received notification to receiver %s."), req.identity)
+        LOG.info("Received notification to receiver %s.", req.identity)
         receiver = receiver_mod.Receiver.load(ctx,
                                               receiver_obj=db_receiver,
                                               project_safe=True)
@@ -2272,7 +2272,7 @@ class EngineService(service.Service):
         identity = req.identity
         params = req.body.params
 
-        LOG.info(_LI("Triggering webhook (%s)"), identity)
+        LOG.info("Triggering webhook (%s)", identity)
         receiver = receiver_obj.Receiver.find(ctx, identity)
 
         try:
@@ -2295,7 +2295,7 @@ class EngineService(service.Service):
         action_id = action_mod.Action.create(ctx, cluster.id,
                                              receiver.action, **kwargs)
         dispatcher.start_action()
-        LOG.info(_LI("Webhook %(w)s triggered with action queued: %(a)s."),
+        LOG.info("Webhook %(w)s triggered with action queued: %(a)s.",
                  {'w': identity, 'a': action_id})
 
         return {'action': action_id}

@@ -18,7 +18,6 @@ import osprofiler.profiler
 import osprofiler.web
 
 from senlin.common import context
-from senlin.common.i18n import _LW
 from senlin.common import messaging
 
 cfg.CONF.import_opt('enabled', 'senlin.common.config', group='profiler')
@@ -33,14 +32,14 @@ def setup(binary, host):
             messaging.TRANSPORT, "senlin", binary, host)
         osprofiler.notifier.set(_notifier)
         osprofiler.web.enable(cfg.CONF.profiler.hmac_keys)
-        LOG.warning(_LW("OSProfiler is enabled.\nIt means that any person who "
-                        "knows any of hmac_keys that are specified in "
-                        "/etc/senlin/senlin.conf can trace his requests. \n"
-                        "In real life only an operator can read this file so "
-                        "there is no security issue. Note that even if any "
-                        "person can trigger the profiler, only an admin user "
-                        "can retrieve trace.\n"
-                        "To disable OSProfiler set in senlin.conf:\n"
-                        "[profiler]\nenabled=false"))
+        LOG.warning("OSProfiler is enabled.\nIt means that any person who "
+                    "knows any of hmac_keys that are specified in "
+                    "/etc/senlin/senlin.conf can trace his requests. \n"
+                    "In real life only an operator can read this file so "
+                    "there is no security issue. Note that even if any "
+                    "person can trigger the profiler, only an admin user "
+                    "can retrieve trace.\n"
+                    "To disable OSProfiler set in senlin.conf:\n"
+                    "[profiler]\nenabled=false")
     else:
         osprofiler.web.disable()

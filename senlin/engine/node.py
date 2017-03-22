@@ -16,7 +16,7 @@ import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
-from senlin.common.i18n import _, _LE
+from senlin.common.i18n import _
 from senlin.common import utils
 from senlin.objects import node as no
 from senlin.profiles import base as pb
@@ -210,7 +210,7 @@ class Node(object):
 
     def do_create(self, context):
         if self.status != consts.NS_INIT:
-            LOG.error(_LE('Node is in status "%s"'), self.status)
+            LOG.error('Node is in status "%s"', self.status)
             return False
 
         self.set_status(context, consts.NS_CREATING, _('Creation in progress'))

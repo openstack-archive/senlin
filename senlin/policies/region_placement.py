@@ -22,7 +22,7 @@ from oslo_log import log as logging
 
 from senlin.common import consts
 from senlin.common import exception as exc
-from senlin.common.i18n import _, _LE
+from senlin.common.i18n import _
 from senlin.common import scaleutils
 from senlin.common import schema
 from senlin.engine import cluster as cm
@@ -256,7 +256,7 @@ class RegionPlacementPolicy(base.Policy):
         if len(regions_good) == 0:
             action.data['status'] = base.CHECK_ERROR
             action.data['reason'] = _('No region is found usable.')
-            LOG.error(_LE('No region is found usable.'))
+            LOG.error('No region is found usable.')
             return
 
         regions = {}
@@ -270,7 +270,7 @@ class RegionPlacementPolicy(base.Policy):
             action.data['status'] = base.CHECK_ERROR
             action.data['reason'] = _('There is no feasible plan to '
                                       'handle all nodes.')
-            LOG.error(_LE('There is no feasible plan to handle all nodes.'))
+            LOG.error('There is no feasible plan to handle all nodes.')
             return
 
         if expand:

@@ -13,7 +13,6 @@
 from oslo_config import cfg
 from oslo_log import log
 
-from senlin.common.i18n import _LW
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
 
@@ -138,7 +137,7 @@ class KeystoneClient(base.DriverBase):
             if r in known:
                 validated.append(r)
             else:
-                LOG.warning(_LW('Region %s is not found.'), r)
+                LOG.warning('Region %s is not found.', r)
 
         return validated
 

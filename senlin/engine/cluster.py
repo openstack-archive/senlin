@@ -16,7 +16,7 @@ from oslo_utils import timeutils
 
 from senlin.common import consts
 from senlin.common import exception
-from senlin.common.i18n import _, _LE
+from senlin.common.i18n import _
 from senlin.engine import cluster_policy as cpm
 from senlin.engine import health_manager
 from senlin.engine import node as node_mod
@@ -243,7 +243,7 @@ class Cluster(object):
         Set cluster status to CREATING.
         '''
         if self.status != consts.CS_INIT:
-            LOG.error(_LE('Cluster is in status "%s"'), self.status)
+            LOG.error('Cluster is in status "%s"', self.status)
             return False
 
         self.set_status(context, consts.CS_CREATING, _('Creation in progress'))

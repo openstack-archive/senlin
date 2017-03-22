@@ -22,7 +22,7 @@ import six
 from senlin.common import consts
 from senlin.common import context
 from senlin.common import exception as exc
-from senlin.common.i18n import _, _LE, _LW
+from senlin.common.i18n import _
 from senlin.common import schema
 from senlin.common import utils
 from senlin.drivers import base as driver_base
@@ -378,27 +378,27 @@ class Profile(object):
 
     def do_update(self, obj, new_profile, **params):
         """For subclass to override."""
-        LOG.warning(_LW("Update operation not supported."))
+        LOG.warning("Update operation not supported.")
         return True
 
     def do_check(self, obj):
         """For subclass to override."""
-        LOG.warning(_LW("Check operation not supported."))
+        LOG.warning("Check operation not supported.")
         return True
 
     def do_get_details(self, obj):
         """For subclass to override."""
-        LOG.warning(_LW("Get_details operation not supported."))
+        LOG.warning("Get_details operation not supported.")
         return {}
 
     def do_join(self, obj, cluster_id):
         """For subclass to override to perform extra operations."""
-        LOG.warning(_LW("Join operation not specialized."))
+        LOG.warning("Join operation not specialized.")
         return True
 
     def do_leave(self, obj):
         """For subclass to override to perform extra operations."""
-        LOG.warning(_LW("Leave operation not specialized."))
+        LOG.warning("Leave operation not specialized.")
         return True
 
     def do_recover(self, obj, **options):
@@ -417,7 +417,7 @@ class Profile(object):
             operation = operation[0]
 
         if operation and operation['name'] != consts.RECOVER_RECREATE:
-            LOG.error(_LE("Recover operation not supported: %s"), operation)
+            LOG.error("Recover operation not supported: %s", operation)
             return False
 
         extra_params = options.get('params', {})
@@ -437,7 +437,7 @@ class Profile(object):
 
     def do_validate(self, obj):
         """For subclass to override."""
-        LOG.warning(_LW("Validate operation not supported."))
+        LOG.warning("Validate operation not supported.")
         return True
 
     def to_dict(self):
@@ -466,5 +466,5 @@ class Profile(object):
             return True
 
         msg = ", ".join(non_updatables)
-        LOG.error(_LE("The following properties are not updatable: %s."), msg)
+        LOG.error("The following properties are not updatable: %s.", msg)
         return False

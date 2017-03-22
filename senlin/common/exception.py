@@ -23,7 +23,7 @@ import sys
 from oslo_log import log as logging
 import six
 
-from senlin.common.i18n import _, _LE
+from senlin.common.i18n import _
 
 _FATAL_EXCEPTION_FORMAT_ERRORS = False
 LOG = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class SenlinException(Exception):
             # exc_info = sys.exc_info()
             # if kwargs doesn't match a variable in the message
             # log the issue and the kwargs
-            LOG.exception(_LE('Exception in string format operation'))
+            LOG.exception('Exception in string format operation')
             for name, value in kwargs.items():
                 LOG.error("%s: %s" % (name, value))  # noqa
 

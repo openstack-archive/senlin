@@ -24,7 +24,7 @@ from oslo_log import log as logging
 from senlin.common import constraints
 from senlin.common import consts
 from senlin.common import exception as exc
-from senlin.common.i18n import _, _LW
+from senlin.common.i18n import _
 from senlin.common import scaleutils
 from senlin.common import schema
 from senlin.engine import cluster_policy
@@ -454,7 +454,7 @@ class LoadBalancingPolicy(base.Policy):
             node_data = node.data or {}
             member_id = node_data.get('lb_member', None)
             if member_id is None:
-                LOG.warning(_LW('Node %(n)s not found in lb pool %(p)s.'),
+                LOG.warning('Node %(n)s not found in lb pool %(p)s.',
                             {'n': node_id, 'p': pool_id})
                 continue
 
@@ -486,7 +486,7 @@ class LoadBalancingPolicy(base.Policy):
             node_data = node.data or {}
             member_id = node_data.get('lb_member', None)
             if member_id:
-                LOG.warning(_LW('Node %(n)s already in lb pool %(p)s.'),
+                LOG.warning('Node %(n)s already in lb pool %(p)s.',
                             {'n': node_id, 'p': pool_id})
                 continue
 

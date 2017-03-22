@@ -18,7 +18,7 @@ from oslo_utils import timeutils
 from osprofiler import profiler
 
 from senlin.common import consts
-from senlin.common.i18n import _, _LI, _LW
+from senlin.common.i18n import _
 from senlin.common import scaleutils
 from senlin.common import utils
 from senlin.engine.actions import base
@@ -184,7 +184,7 @@ class ClusterAction(base.Action):
 
     def _update_nodes(self, profile_id, nodes_obj):
         # Get batching policy data if any
-        fmt = _LI("Updating cluster '%(cluster)s': profile='%(profile)s'.")
+        fmt = _("Updating cluster '%(cluster)s': profile='%(profile)s'.")
         LOG.info(fmt, {'cluster': self.entity.id, 'profile': profile_id})
         pause_time = 0
         plan = []
@@ -378,7 +378,7 @@ class ClusterAction(base.Action):
                 status=[consts.ACTION_SUCCEEDED,
                         consts.ACTION_FAILED])
         except Exception as ex:
-            LOG.warning(_LW('Failed to clean cluster action records: %s'),
+            LOG.warning('Failed to clean cluster action records: %s',
                         ex)
         return self.RES_OK, reason
 

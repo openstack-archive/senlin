@@ -41,7 +41,7 @@ from senlin.api.common import serializers
 from senlin.api.common import version_request
 from senlin.api.common import versioned_method
 from senlin.common import exception
-from senlin.common.i18n import _, _LE, _LI, _LW
+from senlin.common.i18n import _
 from senlin.rpc import client as rpc_client
 
 
@@ -174,7 +174,7 @@ class Server(object):
     def kill_children(self, *args):
         """Kills the entire process group."""
 
-        LOG.error(_LE('SIGTERM received'))
+        LOG.error('SIGTERM received')
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
         signal.signal(signal.SIGINT, signal.SIG_IGN)
         self.running = False
@@ -183,7 +183,7 @@ class Server(object):
     def hup(self, *args):
         """Reloads configuration files with zero down time."""
 
-        LOG.error(_LE('SIGHUP received'))
+        LOG.error('SIGHUP received')
         signal.signal(signal.SIGHUP, signal.SIG_IGN)
         raise exception.SIGHUPInterrupt
 
@@ -208,7 +208,7 @@ class Server(object):
             self.pool.spawn_n(self._single_run, self.application, self.sock)
             return
 
-        LOG.info(_LI("Starting %d workers"), self.conf.workers)
+        LOG.info("Starting %d workers", self.conf.workers)
         signal.signal(signal.SIGTERM, self.kill_children)
         signal.signal(signal.SIGINT, self.kill_children)
         signal.signal(signal.SIGHUP, self.hup)
@@ -228,7 +228,7 @@ class Server(object):
                 if err.errno not in (errno.EINTR, errno.ECHILD):
                     raise
             except KeyboardInterrupt:
-                LOG.info(_LI('Caught keyboard interrupt. Exiting.'))
+                LOG.info('Caught keyboard interrupt. Exiting.')
                 os.killpg(0, signal.SIGTERM)
                 break
             except exception.SIGHUPInterrupt:
@@ -313,22 +313,22 @@ class Server(object):
 
         if pid in self.children:
             self.children.remove(pid)
-            LOG.info(_LI('Removed dead child %s'), pid)
+            LOG.info('Removed dead child %s', pid)
         elif pid in self.stale_children:
             self.stale_children.remove(pid)
-            LOG.info(_LI('Removed stale child %s'), pid)
+            LOG.info('Removed stale child %s', pid)
         else:
-            LOG.warning(_LW('Unrecognized child %s'), pid)
+            LOG.warning('Unrecognized child %s', pid)
 
     def _verify_and_respawn_children(self, pid, status):
         if len(self.stale_children) == 0:
             LOG.debug('No stale children')
 
         if os.WIFEXITED(status) and os.WEXITSTATUS(status) != 0:
-            LOG.error(_LE('Not respawning child %d, cannot '
-                          'recover from termination'), pid)
+            LOG.error('Not respawning child %d, cannot '
+                      'recover from termination', pid)
             if not self.children and not self.stale_children:
-                LOG.info(_LI('All workers have terminated. Exiting'))
+                LOG.info('All workers have terminated. Exiting')
                 self.running = False
         else:
             if len(self.children) < self.conf.workers:
@@ -404,12 +404,12 @@ class Server(object):
             # exit on sighup
             self._sock = None
             self.run_server()
-            LOG.info(_LI('Child %d exiting normally'), os.getpid())
+            LOG.info('Child %d exiting normally', os.getpid())
             # self.pool.waitall() is now called in wsgi's server so
             # it's safe to exit here
             sys.exit(0)
         else:
-            LOG.info(_LI('Started child %s'), pid)
+            LOG.info('Started child %s', pid)
             self.children.add(pid)
 
     def run_server(self):
@@ -439,7 +439,7 @@ class Server(object):
     def _single_run(self, application, sock):
         """Start a WSGI server in a new green thread."""
 
-        LOG.info(_LI("Starting single process server"))
+        LOG.info("Starting single process server")
         eventlet.wsgi.server(sock, application, custom_pool=self.pool,
                              url_length_limit=URL_LENGTH_LIMIT,
                              log=self._logger, debug=cfg.CONF.debug)
@@ -627,7 +627,7 @@ class Resource(object):
             action_result = self.dispatch(self.controller, action,
                                           request, **action_args)
         except TypeError as err:
-            LOG.error(_LE('Exception handling resource: %s'), err)
+            LOG.error('Exception handling resource: %s', err)
             msg = _('The server could not comply with the request since '
                     'it is either malformed or otherwise incorrect.')
             err = exc.HTTPBadRequest(msg)
@@ -647,7 +647,7 @@ class Resource(object):
                 raise http_exc
             if isinstance(err, exc.HTTPServerError):
                 LOG.error(
-                    _LE("Returning %(code)s to user: %(explanation)s"),
+                    "Returning %(code)s to user: %(explanation)s",
                     {'code': err.code, 'explanation': err.explanation})
             http_exc = translate_exception(err, request.best_match_language())
             raise exception.HTTPExceptionDisguise(http_exc)
@@ -834,7 +834,7 @@ class Controller(object):
 
 def log_exception(err, exc_info):
     args = {'exc_info': exc_info}
-    LOG.error(_LE("Unexpected error occurred serving API: %s"), err, **args)
+    LOG.error("Unexpected error occurred serving API: %s", err, **args)
 
 
 def translate_exception(ex, locale):

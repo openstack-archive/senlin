@@ -17,7 +17,6 @@ import six
 from stevedore import named
 
 from senlin.common import consts
-from senlin.common.i18n import _LE, _LI, _LW
 
 LOG = logging.getLogger(__name__)
 FMT = '%(name)s [%(id)s] %(action)s - %(phase)s: %(reason)s'
@@ -35,9 +34,9 @@ def load_dispatcher():
         invoke_on_load=True,
         propagate_map_exceptions=True)
     if not list(dispatchers):
-        LOG.warning(_LW("No dispatchers configured for 'senlin.dispatchers'"))
+        LOG.warning("No dispatchers configured for 'senlin.dispatchers'")
     else:
-        LOG.info(_LI("Loaded dispatchers: %s"), dispatchers.names())
+        LOG.info("Loaded dispatchers: %s", dispatchers.names())
 
 
 def _event_data(action, phase=None, reason=None):
@@ -72,7 +71,7 @@ def _dump(level, action, phase, reason, timestamp):
         dispatchers.map_method("dump", level, action,
                                phase=phase, reason=reason, timestamp=timestamp)
     except Exception as ex:
-        LOG.exception(_LE("Dispatcher failed to handle the event: %s"),
+        LOG.exception("Dispatcher failed to handle the event: %s",
                       six.text_type(ex))
 
 
