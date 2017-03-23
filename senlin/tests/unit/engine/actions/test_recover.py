@@ -38,7 +38,7 @@ class ClusterRecoverTest(base.SenlinTestCase):
     def test_do_recover(self, mock_wait, mock_start, mock_dep, mock_action,
                         mock_update, mock_load):
         node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID', status='ACTIVE')
-        node2 = mock.Mock(id='NODE_2', cluster_id='FAKE_ID', statu='ERROR')
+        node2 = mock.Mock(id='NODE_2', cluster_id='FAKE_ID', status='ERROR')
 
         cluster = mock.Mock(id='FAKE_ID', RECOVERING='RECOVERING')
         cluster.do_recover.return_value = True
