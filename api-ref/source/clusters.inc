@@ -104,7 +104,7 @@ Request Parameters
 
   - OpenStack-API-Version: microversion
   - cluster: cluster
-  - name: name
+  - name: cluster_name
   - desired_capacity: desired_capacity
   - profile_id: profile_identity_req
   - min_size: min_size_req

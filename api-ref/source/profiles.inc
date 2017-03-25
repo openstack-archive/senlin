@@ -90,7 +90,7 @@ Request Parameters
 
   - OpenStack-API-Version: microversion
   - profile: profile
-  - name: name
+  - name: profile_name
   - metadata: metadata_req
   - spec: profile_spec
 

@@ -377,7 +377,10 @@ class TestName(TestField):
                                sot.coerce,
                                obj, 'attr', 'value/bad')
         self.assertEqual("The value for the 'attr' (value/bad) contains "
-                         "illegal characters.", six.text_type(ex))
+                         "illegal characters. It must contain only "
+                         "alphanumeric or \"_-.~\" characters and must start "
+                         "with letter.",
+                         six.text_type(ex))
 
     def test_get_schema(self):
         sot = senlin_fields.Name(2, 200)
