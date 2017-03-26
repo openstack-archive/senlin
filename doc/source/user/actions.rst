@@ -41,12 +41,19 @@ cluster object supports the following actions:
 * ``SCALE_IN``: shrink the size of a cluster;
 * ``SCALE_OUT``: inflate the size of a cluster;
 * ``RESIZE``: resize a cluster;
+* ``CHECK``: check a cluster;
+* ``RECOVER``: recover a cluster;
+* ``REPLACE_NODES``: replace the nodes in cluster with specified nodes;
+* ``OPERATION``: perform an operation on the specified cluster;
 
 A node object supports the following actions:
 
 * ``CREATE``: creates a node;
 * ``DELETE``: deletes a node;
 * ``UPDATE``: updates the properties and/or the profile used by a node;
+* ``CHECK``: check a node;
+* ``RECOVER``: recover a node;
+* ``OPERATION``: perform an operation on the specified node;
 
 In future, Senlin may support user defined actions (UDAs).
 
