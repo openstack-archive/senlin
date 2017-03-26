@@ -1,14 +1,14 @@
 #!/bin/bash
 
 if [[ -z $OS_AUTH_URL ]]; then
-  echo "This script must have proper environment variables exported."
+  echo "This script must have proper environment variables exported. "
   echo "Please check if you have sourced senlinrc file or openrc file if "
   echo "you are using devstack."
   exit -1
 fi
 
 if [ $OS_USERNAME != 'admin' ]; then
-  echo "This script has to be executed as an 'admin' user."
+  echo "This script has to be executed as an 'admin' user. "
   echo "Please set environment variable OS_USERNAME to 'admin'."
   exit -1
 fi
@@ -23,6 +23,8 @@ HOST=$1 # Put your host IP here
 SVC_PASSWD=$2
 OS_REGION_NAME=${OS_REGION_NAME:-RegionOne}
 OS_IDENTITY_API_VERSION=${OS_IDENTITY_API_VERSION:-3}
+SERVICE_PROJECT=${OS_SERVICE_PROJECT:-service}
+SERVICE_ROLE=${OS_SERVICE_ROLE:-service}
 
 SERVICE_ID=$(openstack service show senlin -f value -cid 2>/dev/null)
 if [[ -z $SERVICE_ID ]]; then
@@ -53,19 +55,28 @@ else
       senlin
 fi
 
+# Check service project name.
+# Devstack uses 'service' while some distributions use 'services'
+PROJECT_ID=$(openstack project show service -f value -cid 2>/dev/null)
+if [[ -z $PROJECT_ID ]]; then
+    SERVICE_PROJECT=services
+    SERVICE_ROLE=services
+    openstack role create $SERVICE_ROLE
+fi
+
 openstack user create \
-  --password "$SVC_PASSWD" \
-  --project service \
-  --email senlin@localhost \
-  senlin
+    --password "$SVC_PASSWD" \
+    --project $SERVICE_PROJECT \
+    --email senlin@localhost \
+    senlin
 
 openstack role add \
-  admin \
-  --user senlin \
-  --project service
+    admin \
+    --user senlin \
+    --project $SERVICE_PROJECT
 
-# make sure 'senlin' has 'service' role in 'demo' project
+  # make sure 'senlin' has service role on 'demo' project
 openstack role add \
-  service \
-  --user senlin \
-  --project demo
+    $SERVICE_ROLE \
+    --user senlin \
+    --project demo
