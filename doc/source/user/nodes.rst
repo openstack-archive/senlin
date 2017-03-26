@@ -45,8 +45,8 @@ To list nodes that are managed by the Senlin service, you will use the command
   +----------+--------+-------+--------+------------+-------------+...
   | e1b39a08 | node1  | -1    | ACTIVE |            | 89ce0d2b    |
   | 57962220 | node-3 | -1    | ACTIVE |            | 3386e306    |
-  | b28692a5 | stack1 | -1    | ACTIVE | 2b7e9294   | fdf028a6    |
-  | 4be10a88 | stack2 | -1    | ACTIVE | 2b7e9294   | 7c87f545    |
+  | b28692a5 | stack1 |  1    | ACTIVE | 2b7e9294   | fdf028a6    |
+  | 4be10a88 | stack2 |  2    | ACTIVE | 2b7e9294   | 7c87f545    |
   +----------+--------+-------+--------+------------+-------------+...
 
 Note that some columns in the output table are *short ID* of objects. Senlin
@@ -83,8 +83,8 @@ are members of a specific cluster. For example::
   +----------+---------+-------+--------+------------+-------------+...
   | id       | name    | index | status | cluster_id | physical_id |
   +----------+---------+-------+--------+------------+-------------+...
-  | b28692a5 | stack1  | -1    | ACTIVE | 2b7e9294   | fdf028a6    |
-  | 4be10a88 | stack2  | -1    | ACTIVE | 2b7e9294   | 7c87f545    |
+  | b28692a5 | stack1  |  1    | ACTIVE | 2b7e9294   | fdf028a6    |
+  | 4be10a88 | stack2  |  2    | ACTIVE | 2b7e9294   | 7c87f545    |
   +----------+---------+-------+--------+------------+-------------+...
 
 Besides these two options, you can add the option :option:`--filters
@@ -211,7 +211,7 @@ An example is shown below::
   | dependents    | {}                                   |
   | details       | {}                                   |
   | id            | 1984b5a0-9dd7-4dda-b1e6-e8c1f640598f |
-  | index         | -1                                   |
+  | index         |  1                                   |
   | init_at       | 2015-07-09T11:41:18                  |
   | metadata      | {}                                   |
   | name          | test_node                            |

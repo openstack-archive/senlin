@@ -56,8 +56,8 @@ specify the :option:`--full-id` option to indicate that::
   +------------...-+--------+-------+--------+-------------+-----------..-+
   | id             | name   | index | status | physical_id | created_at   |
   +------------...-+--------+-------+--------+-------------+-----------..-+
-  | b28692a5-25... | stack1 | -1    | ACTIVE | fdf0...     | 2015-07-07.. |
-  | 4be10a88-e3... | stack2 | -1    | ACTIVE | 7c87...     | 2015-07-07.. |
+  | b28692a5-25... | stack1 |  1    | ACTIVE | fdf0...     | 2015-07-07.. |
+  | 4be10a88-e3... | stack2 |  2    | ACTIVE | 7c87...     | 2015-07-07.. |
   +------------...-+--------+-------+--------+-------------+-----------..-+
 
 If the cluster size is very large, you may want to list the nodes in pages.
