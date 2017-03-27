@@ -144,7 +144,7 @@ with the following format to the named Zaqar queue to request Senlin service:
         {
           "ttl": 300,
           "body": {
-            "cluster_id": "test-cluster",
+            "cluster": "test-cluster",
             "action": "CLUSTER_SCALE_OUT",
             "params": {"count": 2}
           }
