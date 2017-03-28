@@ -25,6 +25,7 @@ from senlin.engine import parser
 from senlin.objects import credential as co
 from senlin.objects import profile as po
 from senlin.profiles import base as pb
+from senlin.profiles.os.nova import server as nova_server
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -479,6 +480,17 @@ class TestProfileBase(base.SenlinTestCase):
 
         actual = DummyProfile.get_ops()
         self.assertEqual(expected, actual)
+
+    @mock.patch.object(nova_server.ServerProfile, 'do_adopt')
+    def test_adopt_node(self, mock_adopt):
+        obj = mock.Mock()
+
+        res = pb.Profile.adopt_node(self.ctx, obj, "os.nova.server-1.0",
+                                    overrides=None, snapshot=False)
+
+        mock_adopt.assert_called_once_with(obj, overrides=None, snapshot=False)
+        res_obj = mock_adopt.return_value
+        self.assertEqual(res_obj, res)
 
     @mock.patch.object(pb.Profile, 'load')
     def test_join_cluster(self, mock_load):

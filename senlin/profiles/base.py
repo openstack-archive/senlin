@@ -244,6 +244,25 @@ class Profile(object):
         return profile.do_get_details(obj)
 
     @classmethod
+    @profiler.trace('Profile.adopt_node', hide_args=False)
+    def adopt_node(cls, ctx, obj, type_name, overrides=None, snapshot=False):
+        """Adopt a node.
+
+        :param ctx: Request context.
+        :param obj: A temporary node object.
+        :param overrides: An optional parameter that specifies the set of
+            properties to be overridden.
+        :param snapshot: A boolean flag indicating whether a snapshot should
+            be created before adopting the node.
+        :returns: A dictionary containing the profile spec created from the
+            specific node, or a dictionary containing error message.
+        """
+        parts = type_name.split("-")
+        tmpspec = {"type": parts[0], "version": parts[1]}
+        profile = cls("name", tmpspec)
+        return profile.do_adopt(obj, overrides=overrides, snapshot=snapshot)
+
+    @classmethod
     @profiler.trace('Profile.join_cluster', hide_args=False)
     def join_cluster(cls, ctx, obj, cluster_id):
         profile = cls.load(ctx, profile_id=obj.profile_id)
@@ -389,6 +408,11 @@ class Profile(object):
     def do_get_details(self, obj):
         """For subclass to override."""
         LOG.warning("Get_details operation not supported.")
+        return {}
+
+    def do_adopt(self, obj, overrides=None, snapshot=False):
+        """For subclass to overrid."""
+        LOG.warning("Adopt operation not supported.")
         return {}
 
     def do_join(self, obj, cluster_id):
