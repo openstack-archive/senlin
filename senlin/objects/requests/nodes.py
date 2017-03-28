@@ -107,3 +107,15 @@ class NodeOperationRequest(base.SenlinObject):
         'operation': fields.StringField(),
         'params': fields.JsonField(nullable=True)
     }
+
+
+@base.SenlinObjectRegistry.register
+class NodeAdoptRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'type': fields.StringField(),
+        'overrides': fields.JsonField(nullable=True),
+        'preview': fields.BooleanField(default=True),
+        'snapshot': fields.BooleanField(default=False)
+    }

@@ -206,3 +206,22 @@ class TestNodeOperation(test_base.SenlinTestCase):
         self.assertEqual('test-node', sot.identity)
         self.assertEqual('dance', sot.operation)
         self.assertEqual({'foo': 'bar'}, sot.params)
+
+
+class TestNodeAdopt(test_base.SenlinTestCase):
+
+    body = {
+        'identity': 'test-node',
+        'type': 'test-type',
+        'overrides': {'foo': 'bar'},
+        'preview': False,
+        'snapshot': True
+    }
+
+    def test_node_adopt_request(self):
+        sot = nodes.NodeAdoptRequest(**self.body)
+        self.assertEqual('test-node', sot.identity)
+        self.assertEqual('test-type', sot.type)
+        self.assertEqual({'foo': 'bar'}, sot.overrides)
+        self.assertFalse(sot.preview)
+        self.assertTrue(sot.snapshot)
