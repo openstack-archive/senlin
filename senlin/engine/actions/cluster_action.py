@@ -186,7 +186,6 @@ class ClusterAction(base.Action):
         # Get batching policy data if any
         fmt = _("Updating cluster '%(cluster)s': profile='%(profile)s'.")
         LOG.info(fmt, {'cluster': self.entity.id, 'profile': profile_id})
-        pause_time = 0
         plan = []
 
         pd = self.data.get('update', None)
