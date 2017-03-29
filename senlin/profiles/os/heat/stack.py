@@ -298,6 +298,49 @@ class StackProfile(base.Profile):
                 }
             }
 
+    def do_adopt(self, obj, overrides=None, snapshot=False):
+        """Adopt an existing stack node for management.
+
+        :param obj: A node object for this operation. It could be a puppet
+            node that provides only 'user', 'project' and 'physical_id'
+            properties when doing a preview. It can be a real Node object for
+            node adoption.
+        :param overrides: A dict containing the properties that will be
+            overridden when generating a profile for the stack.
+        :param snapshot: A boolean flag indicating whether the profile should
+            attempt a snapshot operation before adopting the stack. If set to
+            True, the ID of the snapshot will be used as the image ID.
+
+        :returns: A dict containing the spec created from the stack object or
+            a dict containing error information if failure occurred.
+        """
+        driver = self.orchestration(obj)
+
+        # TODO(Qiming): Add snapshot support
+        # snapshot = driver.snapshot_create(...)
+
+        try:
+            stack = driver.stack_get(obj.physical_id)
+            tmpl = driver.stack_get_template(obj.physical_id)
+            env = driver.stack_get_environment(obj.physical_id)
+            files = driver.stack_get_files(obj.physical_id)
+        except exc.InternalError as ex:
+            return {'Error': {'code': ex.code, 'message': six.text_type(ex)}}
+
+        spec = {
+            self.ENVIRONMENT: env,
+            self.FILES: files,
+            self.TEMPLATE: tmpl,
+            self.PARAMETERS: dict((k, v) for k, v in stack.parameters.items()
+                                  if k.find('OS::', 0) < 0),
+            self.TIMEOUT: stack.timeout_mins,
+            self.DISABLE_ROLLBACK: stack.disable_rollback
+        }
+        if overrides:
+            spec.update(overrides)
+
+        return spec
+
     def _refresh_tags(self, current, node, add=False):
         """Refresh tag list.
 

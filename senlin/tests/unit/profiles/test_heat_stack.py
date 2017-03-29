@@ -638,6 +638,139 @@ class TestHeatStackProfile(base.SenlinTestCase):
         self.assertEqual({'Error': {'code': 500, 'message': 'BOOM'}}, res)
         oc.stack_get.assert_called_once_with('STACK_ID')
 
+    def test_do_adopt(self):
+        profile = stack.StackProfile('t', self.spec)
+        x_stack = mock.Mock(
+            parameters={'p1': 'v1', 'OS::stack_id': 'FAKE_ID'},
+            timeout_mins=123,
+            disable_rollback=False
+        )
+        oc = mock.Mock()
+        oc.stack_get = mock.Mock(return_value=x_stack)
+        oc.stack_get_template = mock.Mock(return_value={'foo': 'bar'})
+        oc.stack_get_environment = mock.Mock(return_value={'ke': 've'})
+        oc.stack_get_files = mock.Mock(return_value={'fn': 'content'})
+        profile._orchestrationclient = oc
+
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_adopt(node_obj)
+
+        expected = {
+            'environment': {'ke': 've'},
+            'files': {'fn': 'content'},
+            'template': {'foo': 'bar'},
+            'parameters': {'p1': 'v1'},
+            'timeout': 123,
+            'disable_rollback': False
+        }
+        self.assertEqual(expected, res)
+        oc.stack_get.assert_called_once_with('FAKE_ID')
+        oc.stack_get_template.assert_called_once_with('FAKE_ID')
+        oc.stack_get_environment.assert_called_once_with('FAKE_ID')
+        oc.stack_get_files.assert_called_once_with('FAKE_ID')
+
+    def test_do_adopt_failed_get(self):
+        profile = stack.StackProfile('t', self.spec)
+        oc = mock.Mock()
+        oc.stack_get.side_effect = exc.InternalError(message='BOOM')
+        profile._orchestrationclient = oc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_adopt(node_obj)
+
+        expected = {'Error': {'code': 500, 'message': 'BOOM'}}
+        self.assertEqual(expected, res)
+        oc.stack_get.assert_called_once_with('FAKE_ID')
+
+    def test_do_adopt_failed_get_template(self):
+        profile = stack.StackProfile('t', self.spec)
+        x_stack = mock.Mock()
+        oc = mock.Mock()
+        oc.stack_get = mock.Mock(return_value=x_stack)
+        oc.stack_get_template.side_effect = exc.InternalError(message='BOOM')
+        profile._orchestrationclient = oc
+
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_adopt(node_obj)
+
+        expected = {'Error': {'code': 500, 'message': 'BOOM'}}
+        self.assertEqual(expected, res)
+        oc.stack_get.assert_called_once_with('FAKE_ID')
+        oc.stack_get_template.assert_called_once_with('FAKE_ID')
+
+    def test_do_adopt_failed_get_environment(self):
+        profile = stack.StackProfile('t', self.spec)
+        x_stack = mock.Mock()
+        oc = mock.Mock()
+        oc.stack_get = mock.Mock(return_value=x_stack)
+        oc.stack_get_template = mock.Mock(return_value={'foo': 'bar'})
+        err = exc.InternalError(message='BOOM')
+        oc.stack_get_environment.side_effect = err
+        profile._orchestrationclient = oc
+
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_adopt(node_obj)
+
+        expected = {'Error': {'code': 500, 'message': 'BOOM'}}
+        self.assertEqual(expected, res)
+        oc.stack_get.assert_called_once_with('FAKE_ID')
+        oc.stack_get_template.assert_called_once_with('FAKE_ID')
+        oc.stack_get_environment.assert_called_once_with('FAKE_ID')
+
+    def test_do_adopt_failed_get_files(self):
+        profile = stack.StackProfile('t', self.spec)
+        x_stack = mock.Mock()
+        oc = mock.Mock()
+        oc.stack_get = mock.Mock(return_value=x_stack)
+        oc.stack_get_template = mock.Mock(return_value={'foo': 'bar'})
+        oc.stack_get_environment = mock.Mock(return_value={'ke': 've'})
+        oc.stack_get_files.side_effect = exc.InternalError(message='BOOM')
+        profile._orchestrationclient = oc
+
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_adopt(node_obj)
+
+        expected = {'Error': {'code': 500, 'message': 'BOOM'}}
+        self.assertEqual(expected, res)
+        oc.stack_get.assert_called_once_with('FAKE_ID')
+        oc.stack_get_template.assert_called_once_with('FAKE_ID')
+        oc.stack_get_environment.assert_called_once_with('FAKE_ID')
+        oc.stack_get_files.assert_called_once_with('FAKE_ID')
+
+    def test_do_adopt_with_overrides(self):
+        profile = stack.StackProfile('t', self.spec)
+        x_stack = mock.Mock(
+            parameters={'p1': 'v1', 'OS::stack_id': 'FAKE_ID'},
+            timeout_mins=123,
+            disable_rollback=False
+        )
+        oc = mock.Mock()
+        oc.stack_get = mock.Mock(return_value=x_stack)
+        oc.stack_get_template = mock.Mock(return_value={'foo': 'bar'})
+        oc.stack_get_environment = mock.Mock(return_value={'ke': 've'})
+        oc.stack_get_files = mock.Mock(return_value={'fn': 'content'})
+        profile._orchestrationclient = oc
+
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+        overrides = {'environment': {'ENV': 'SETTING'}}
+        res = profile.do_adopt(node_obj, overrides=overrides)
+
+        expected = {
+            'environment': {'ENV': 'SETTING'},
+            'files': {'fn': 'content'},
+            'template': {'foo': 'bar'},
+            'parameters': {'p1': 'v1'},
+            'timeout': 123,
+            'disable_rollback': False
+        }
+        self.assertEqual(expected, res)
+        oc.stack_get.assert_called_once_with('FAKE_ID')
+        oc.stack_get_template.assert_called_once_with('FAKE_ID')
+
     def test__refresh_tags_empty_no_add(self):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock()
