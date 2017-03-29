@@ -104,7 +104,7 @@ Request Parameters
   - role: role_req
   - profile_id: profile_identity_req
   - cluster_id: node_cluster_identity
-  - name: name
+  - name: node_name
   - metadata: metadata_req
 
 Request Example

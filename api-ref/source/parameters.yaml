@@ -531,7 +531,9 @@ cluster_name:
   in: body
   required: True
   description: |
-    The name of the cluster object.
+    The name of a cluster object. The name must start with an ASCII letter
+    and can contain ASCII letters, digits, underscores, periods, and hyphens
+    and its length must be less than 255.
 
 cluster_nodes:
   type: array
@@ -847,6 +849,15 @@ node_id:
   description: |
     A UUID string that uniquely identifies a node object.
 
+node_name:
+  type: string
+  in: body
+  required: True
+  description: |
+    The name of a node object. The name must start with an ASCII letter
+    and can contain ASCII letters, digits, underscores, periods, and hyphens
+    and its length must be less than 255.
+
 node_status:
   type: string
   in: body
@@ -964,7 +975,9 @@ policy_name:
   in: body
   required: True
   description: |
-    The name of a policy object.
+    The name of a policy object. The name must start with an ASCII letter
+    and can contain ASCII letters, digits, underscores, periods, and hyphens
+    and its length must be less than 255.
 
 policy_spec:
   type: object
@@ -1039,7 +1052,9 @@ profile_name:
   in: body
   required: True
   description: |
-    The name of the profile.
+    The name of a profile object. The name must start with an ASCII letter
+    and can contain ASCII letters, digits, underscores, periods, and hyphens
+    and its length must be less than 255.
 
 profile_only:
   type: boolean
@@ -1151,6 +1166,15 @@ receiver_id:
   required: True
   description: |
     The UUID of the receiver object.
+
+receiver_name:
+  type: string
+  in: body
+  required: True
+  description: |
+    The name of a receiver object. The name must start with an ASCII letter
+    and can contain ASCII letters, digits, underscores, periods, and hyphens
+    and its length must be less than 255.
 
 receiver_params:
   type: object

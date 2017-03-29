@@ -94,7 +94,7 @@ Request Parameters
 
   - OpenStack-API-Version: microversion
   - policy: policy
-  - name: name
+  - name: policy_name
   - spec: policy_spec
 
 Request Example
