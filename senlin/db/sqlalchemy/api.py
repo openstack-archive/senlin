@@ -1097,6 +1097,8 @@ def dependency_add(context, depended, dependent):
                  synchronize_session='fetch')
 
 
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
 def action_mark_succeeded(context, action_id, timestamp):
     with session_for_write() as session:
 
@@ -1135,6 +1137,8 @@ def _mark_failed(session, action_id, timestamp, reason=None):
         _mark_failed(session, d, timestamp)
 
 
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
 def action_mark_failed(context, action_id, timestamp, reason=None):
     with session_for_write() as session:
         _mark_failed(session, action_id, timestamp, reason)
@@ -1160,6 +1164,8 @@ def _mark_cancelled(session, action_id, timestamp, reason=None):
         _mark_cancelled(session, d, timestamp)
 
 
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
 def action_mark_cancelled(context, action_id, timestamp, reason=None):
     with session_for_write() as session:
         _mark_cancelled(session, action_id, timestamp, reason)
