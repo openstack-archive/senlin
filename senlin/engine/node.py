@@ -334,7 +334,7 @@ class Node(object):
 
         return True
 
-    def do_recover(self, context, action, **options):
+    def do_recover(self, context, action):
         """recover a node.
 
         This function is supposed to be invoked from a NODE_RECOVER action.
@@ -345,6 +345,7 @@ class Node(object):
         if not self.physical_id:
             return False
 
+        options = action.inputs
         if options.get('check', False):
             res = False
             try:
