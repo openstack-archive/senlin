@@ -304,10 +304,10 @@ class HealthManager(service.Service):
         cid = entry['cluster_id']
         ctype = entry['check_type']
         if ctype == consts.NODE_STATUS_POLLING:
-            interval = min(entry['interval'], cfg.CONF.periodic_interval_max)
+            interval = min(entry['interval'], cfg.CONF.check_interval_max)
             timer = self.TG.add_dynamic_timer(self._poll_cluster,
                                               None,  # initial_delay
-                                              None,  # periodic_interval_max
+                                              None,  # check_interval_max
                                               cid, interval)
             entry['timer'] = timer
         elif ctype == consts.LIFECYCLE_EVENTS:
