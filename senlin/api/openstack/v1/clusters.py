@@ -133,22 +133,25 @@ class ClusterController(wsgi.Controller):
 
     def _do_resize(self, req, cluster_id, data):
         params = {}
-        if data.get(consts.ADJUSTMENT_TYPE, None):
-            params['adjustment_type'] = data.get(consts.ADJUSTMENT_TYPE)
-        if data.get(consts.ADJUSTMENT_NUMBER, None) is not None:
-            params['number'] = data.get(consts.ADJUSTMENT_NUMBER)
-        if data.get(consts.ADJUSTMENT_MIN_SIZE, None) is not None:
-            params['min_size'] = data.get(consts.ADJUSTMENT_MIN_SIZE)
-        if data.get(consts.ADJUSTMENT_MAX_SIZE, None) is not None:
-            params['max_size'] = data.get(consts.ADJUSTMENT_MAX_SIZE)
-        if data.get(consts.ADJUSTMENT_MIN_STEP, None) is not None:
-            params['min_step'] = data.get(consts.ADJUSTMENT_MIN_STEP)
-        if data.get(consts.ADJUSTMENT_STRICT, None) is not None:
-            params['strict'] = data.get(consts.ADJUSTMENT_STRICT)
+
+        for key in [consts.ADJUSTMENT_TYPE, consts.ADJUSTMENT_NUMBER,
+                    consts.ADJUSTMENT_MIN_SIZE, consts.ADJUSTMENT_MAX_SIZE]:
+            if data.get(key, None) is not None:
+                params[key] = data.get(key)
+
+        adj_type = data.get(consts.ADJUSTMENT_TYPE, None)
+        min_step = data.get(consts.ADJUSTMENT_MIN_STEP, None)
+        if ((adj_type == consts.CHANGE_IN_PERCENTAGE) and
+                min_step is not None):
+            params[consts.ADJUSTMENT_MIN_STEP] = min_step
 
         if not params:
             msg = _("Not enough parameters to do resize action.")
             raise exc.HTTPBadRequest(msg)
+
+        strict = data.get(consts.ADJUSTMENT_STRICT, None)
+        if strict is not None:
+            params[consts.ADJUSTMENT_STRICT] = strict
 
         params['identity'] = cluster_id
         obj = util.parse_request('ClusterResizeRequest', req, params)
