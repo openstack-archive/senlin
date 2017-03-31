@@ -10,7 +10,7 @@ properties:
 
     options:
       # Number of seconds between two adjacent checking
-      interval: 60
+      interval: 600
 
   recovery:
     # List of actions that can be retried on a failed node
