@@ -36,6 +36,14 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.find_image(name_or_id, ignore_missing)
 
     @sdk.translate_exception
+    def keypair_create(self, **attrs):
+        return self.conn.compute.create_keypair(**attrs)
+
+    @sdk.translate_exception
+    def keypair_delete(self, name_or_id, ignore_missing=False):
+        return self.conn.compute.delete_keypair(name_or_id, ignore_missing)
+
+    @sdk.translate_exception
     def keypair_find(self, name_or_id, ignore_missing=False):
         return self.conn.compute.find_keypair(name_or_id, ignore_missing)
 
