@@ -634,6 +634,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual({'action': 'action-id'}, resp)
         params = copy.deepcopy(data)
+        if params['adjustment_type'] != 'CHANGE_IN_PERCENTAGE':
+            params.pop('min_step')
         params['identity'] = cid
         mock_parse.assert_called_once_with(
             'ClusterResizeRequest', req, params)
