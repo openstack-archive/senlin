@@ -63,6 +63,24 @@ class TestNovaV2(base.SenlinTestCase):
         d.image_find('foo', False)
         self.compute.find_image.assert_called_once_with('foo', False)
 
+    def test_keypair_create(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        d.keypair_create(name='foo')
+        self.compute.create_keypair.assert_called_once_with(name='foo')
+
+    def test_keypair_delete(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        d.keypair_delete('foo')
+        self.compute.delete_keypair.assert_called_once_with('foo', False)
+        self.compute.delete_keypair.reset_mock()
+
+        d.keypair_delete('foo', True)
+        self.compute.delete_keypair.assert_called_once_with('foo', True)
+        self.compute.delete_keypair.reset_mock()
+
+        d.keypair_delete('foo', False)
+        self.compute.delete_keypair.assert_called_once_with('foo', False)
+
     def test_keypair_find(self):
         d = nova_v2.NovaClient(self.conn_params)
         d.keypair_find('foo')
