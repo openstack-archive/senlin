@@ -16,6 +16,7 @@ from tempest import config
 
 from senlin.tests.tempest import base
 from senlin.tests.tempest.common import clustering_client
+from senlin.tests.tempest.common import compute_client
 
 CONF = config.CONF
 
@@ -35,6 +36,13 @@ class BaseSenlinFunctionalTest(base.BaseSenlinTest):
         cls.client = clustering_client.ClusteringFunctionalClient(
             cls.os.auth_provider,
             CONF.clustering.catalog_type,
+            CONF.identity.region,
+            **cls.default_params_with_timeout_values
+        )
+
+        cls.compute_client = compute_client.V21ComputeClient(
+            cls.os.auth_provider,
+            CONF.compute.catalog_type,
             CONF.identity.region,
             **cls.default_params_with_timeout_values
         )
