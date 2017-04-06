@@ -410,17 +410,38 @@ def delete_a_receiver(base, receiver_id, ignore_missing=False):
         raise exceptions.NotFound()
 
 
-def create_a_keypair(base, name=None):
+def create_a_keypair(base, name=None, is_admin_manager=True):
     """Utility function that creates a Nova keypair."""
+
     if name is None:
         name = data_utils.rand_name("tempest-created-keypair")
-    body = base.admin_manager.keypairs_client.create_keypair(name=name)
-    return body['keypair']['name']
+
+    if is_admin_manager is True:
+        body = base.admin_manager.keypairs_client.create_keypair(name=name)
+        body = body['keypair']
+    else:
+        params = {
+            "keypair": {
+                "name": name,
+            }
+        }
+        body = base.compute_client.create_obj('os-keypairs', params)['body']
+
+    return body['name']
 
 
-def delete_a_keypair(base, name):
+def delete_a_keypair(base, name, is_admin_manager=True, ignore_missing=False):
     """Utility function that deletes a Nova keypair."""
-    base.admin_manager.keypairs_client.delete_keypair(name)
+
+    if is_admin_manager is True:
+        base.admin_manager.keypairs_client.delete_keypair(name)
+        return
+
+    res = base.compute_client.delete_obj('os-keypairs', name)
+    if res['status'] == 404:
+        if ignore_missing is True:
+            return
+        raise exceptions.NotFound()
 
 
 def post_messages(base, queue_name, messages):
