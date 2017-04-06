@@ -425,12 +425,16 @@ class TestNovaV2(base.SenlinTestCase):
     def test_validate_azs(self):
         nc = nova_v2.NovaClient(self.conn_params)
 
-        fake_azs = [
-            {'zoneState': {'available': 1}, 'zoneName': 'AZ1'},
-            {'zoneState': {'available': 1}, 'zoneName': 'AZ2'},
-            {'zoneState': {'available': 1}, 'zoneName': 'AZ3'},
-            {'zoneState': {'available': 1}, 'zoneName': 'AZ4'}
-        ]
+        az1 = mock.Mock()
+        az1.name = 'AZ1'
+        az1.state = {'available': True}
+        az2 = mock.Mock()
+        az2.name = 'AZ2'
+        az2.state = {'available': True}
+        az3 = mock.Mock()
+        az3.name = 'AZ3'
+        az3.state = {'available': True}
+        fake_azs = [az1, az2, az3]
 
         self.patchobject(nc, 'availability_zone_list', return_value=fake_azs)
 
