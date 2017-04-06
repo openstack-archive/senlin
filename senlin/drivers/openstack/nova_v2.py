@@ -218,8 +218,7 @@ class NovaClient(base.DriverBase):
         :returns: A list of zones that are found available on Nova.
         """
         known = self.availability_zone_list()
-        names = [az['zoneName'] for az in known
-                 if az['zoneState']['available']]
+        names = [az.name for az in known if az.state['available']]
 
         found = []
         for az in azs:
