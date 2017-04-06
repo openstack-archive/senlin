@@ -43,7 +43,6 @@ class TestClusterCreate(test_base.SenlinTestCase):
         self.assertTrue(sot.obj_attr_is_set('min_size'))
         self.assertEqual(consts.CLUSTER_DEFAULT_MIN_SIZE, sot.min_size)
         self.assertEqual(consts.CLUSTER_DEFAULT_MAX_SIZE, sot.max_size)
-        self.assertEqual(consts.CLUSTER_DEFAULT_MIN_SIZE, sot.desired_capacity)
         self.assertEqual({}, sot.metadata)
         self.assertEqual(CONF.default_action_timeout, sot.timeout)
 

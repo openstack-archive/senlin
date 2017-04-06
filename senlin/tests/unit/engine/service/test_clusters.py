@@ -157,6 +157,48 @@ class ClusterTest(base.SenlinTestCase):
         notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, 'check_cluster_quota')
+    @mock.patch.object(su, 'check_size_params')
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(co.Cluster, "create")
+    @mock.patch.object(po.Profile, 'find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_create_desired_null(self, notify, mock_profile,
+                                         mock_cluster, mock_action,
+                                         mock_check, mock_quota):
+        x_profile = mock.Mock(id='PROFILE_ID')
+        mock_profile.return_value = x_profile
+        x_cluster = mock.Mock(id='12345678ABC')
+        x_cluster.to_dict.return_value = {'foo': 'bar'}
+        mock_cluster.return_value = x_cluster
+        mock_action.return_value = 'ACTION_ID'
+        mock_check.return_value = None
+        mock_quota.return_value = None
+        req = orco.ClusterCreateRequestBody(name='C1', profile_id='PROFILE',
+                                            min_size=1, max_size=5)
+
+        # do it
+        result = self.eng.cluster_create(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID', 'foo': 'bar'}, result)
+        mock_profile.assert_called_once_with(self.ctx, 'PROFILE')
+        mock_check.assert_called_once_with(None, None, 1, 5, True)
+        mock_cluster.assert_called_once_with(
+            self.ctx,
+            dict(name='C1', desired_capacity=1, profile_id='PROFILE_ID',
+                 min_size=1, max_size=5, timeout=3600, metadata={},
+                 dependents={}, data={}, next_index=1, status='INIT',
+                 status_reason='Initializing', user=self.ctx.user,
+                 project=self.ctx.project, domain=self.ctx.domain))
+        mock_action.assert_called_once_with(
+            self.ctx,
+            '12345678ABC', 'CLUSTER_CREATE',
+            name='cluster_create_12345678',
+            cause=consts.CAUSE_RPC,
+            status=am.Action.READY,
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(service.EngineService, 'check_cluster_quota')
     def test_cluster_create_exceeding_quota(self, mock_quota):
         mock_quota.side_effect = exc.Forbidden()
         req = {'profile_id': 'PROFILE', 'name': 'CLUSTER'}
