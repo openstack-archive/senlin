@@ -332,6 +332,7 @@ class TestClusterResize(test_base.SenlinTestCase):
         self.assertFalse(sot.obj_attr_is_set('max_size'))
         self.assertFalse(sot.obj_attr_is_set('min_step'))
         self.assertFalse(sot.obj_attr_is_set('strict'))
+        self.assertFalse(sot.obj_attr_is_set('health_check'))
 
     def test_init_with_params(self):
         sot = clusters.ClusterResizeRequest(identity='foo',
@@ -349,6 +350,9 @@ class TestClusterResize(test_base.SenlinTestCase):
         self.assertEqual(100, sot.max_size)
         self.assertEqual(1, sot.min_step)
         self.assertFalse(sot.strict)
+
+        sot.obj_set_defaults()
+        self.assertFalse(sot.health_check)
 
     def test_init_failed_type(self):
         ex = self.assertRaises(ValueError,
@@ -393,6 +397,15 @@ class TestClusterResize(test_base.SenlinTestCase):
                                identity='foo', strict='fake')
         self.assertIn("Unrecognized value 'fake'", six.text_type(ex))
 
+    def test_init_invalid_boolean(self):
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterResizeRequest,
+                               identity='foo', health_check="foo")
+        self.assertEqual(
+            "Unrecognized value 'foo', acceptable values are: '0', '1', "
+            "'f', 'false', 'n', 'no', 'off', 'on', 't', 'true', 'y', 'yes'",
+            six.text_type(ex))
+
 
 class TestClusterScaleIn(test_base.SenlinTestCase):
 
@@ -402,12 +415,24 @@ class TestClusterScaleIn(test_base.SenlinTestCase):
         self.assertEqual('foo', sot.identity)
         self.assertEqual(5, sot.count)
 
+        sot.obj_set_defaults()
+        self.assertFalse(sot.health_check)
+
     def test_init_failed(self):
         ex = self.assertRaises(ValueError,
                                clusters.ClusterScaleInRequest,
                                identity='foo', count=-1)
         self.assertEqual("Value must be >= 0 for field 'count'.",
                          six.text_type(ex))
+
+    def test_init_invalid_boolean(self):
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterScaleInRequest,
+                               identity='foo', count=1, health_check="foo")
+        self.assertEqual(
+            "Unrecognized value 'foo', acceptable values are: '0', '1', "
+            "'f', 'false', 'n', 'no', 'off', 'on', 't', 'true', 'y', 'yes'",
+            six.text_type(ex))
 
 
 class TestClusterScaleOut(test_base.SenlinTestCase):
@@ -418,12 +443,24 @@ class TestClusterScaleOut(test_base.SenlinTestCase):
         self.assertEqual('foo', sot.identity)
         self.assertEqual(5, sot.count)
 
+        sot.obj_set_defaults()
+        self.assertFalse(sot.health_check)
+
     def test_init_failed(self):
         ex = self.assertRaises(ValueError,
                                clusters.ClusterScaleOutRequest,
                                identity='foo', count=-1)
         self.assertEqual("Value must be >= 0 for field 'count'.",
                          six.text_type(ex))
+
+    def test_init_invalid_boolean(self):
+        ex = self.assertRaises(ValueError,
+                               clusters.ClusterScaleOutRequest,
+                               identity='foo', count=1, health_check="foo")
+        self.assertEqual(
+            "Unrecognized value 'foo', acceptable values are: '0', '1', "
+            "'f', 'false', 'n', 'no', 'off', 'on', 't', 'true', 'y', 'yes'",
+            six.text_type(ex))
 
 
 class TestClusterAttachPolicy(test_base.SenlinTestCase):
