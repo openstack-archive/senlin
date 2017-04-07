@@ -181,7 +181,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual({'action': 'ACTION_ID', 'foo': 'bar'}, result)
         mock_profile.assert_called_once_with(self.ctx, 'PROFILE')
-        mock_check.assert_called_once_with(None, None, 1, 5, True)
+        mock_check.assert_called_once_with(None, 1, 1, 5, True)
         mock_cluster.assert_called_once_with(
             self.ctx,
             dict(name='C1', desired_capacity=1, profile_id='PROFILE_ID',

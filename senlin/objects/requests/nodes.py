@@ -115,7 +115,11 @@ class NodeAdoptRequest(base.SenlinObject):
     fields = {
         'identity': fields.StringField(),
         'type': fields.StringField(),
+        'name': fields.NameField(nullable=True),
+        'cluster': fields.StringField(nullable=True),
+        'role': fields.StringField(nullable=True),
+        'metadata': fields.JsonField(nullable=True, default={}),
         'overrides': fields.JsonField(nullable=True),
-        'preview': fields.BooleanField(default=True),
-        'snapshot': fields.BooleanField(default=False)
+        'preview': fields.BooleanField(nullable=True, default=True),
+        'snapshot': fields.BooleanField(nullable=True, default=False)
     }

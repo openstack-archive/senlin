@@ -739,8 +739,10 @@ class EngineService(service.Service):
 
         if req.obj_attr_is_set('desired_capacity'):
             desired = req.desired_capacity
+        elif req.obj_attr_is_set('min_size'):
+            desired = req.min_size
         else:
-            desired = None
+            desired = 0
         min_size = req.min_size if req.obj_attr_is_set('min_size') else None
         max_size = req.max_size if req.obj_attr_is_set('max_size') else None
         res = su.check_size_params(None, desired, min_size, max_size, True)
@@ -755,11 +757,11 @@ class EngineService(service.Service):
         values = {
             'name': req.name,
             'profile_id': db_profile.id,
-            'desired_capacity': desired or req.min_size,
-            'min_size': req.min_size,
-            'max_size': req.max_size,
+            'desired_capacity': desired,
+            'min_size': req.min_size or consts.CLUSTER_DEFAULT_MIN_SIZE,
+            'max_size': req.max_size or consts.CLUSTER_DEFAULT_MAX_SIZE,
             'next_index': 1,
-            'timeout': req.timeout,
+            'timeout': req.timeout or cfg.CONF.default_action_timeout,
             'status': consts.CS_INIT,
             'status_reason': 'Initializing',
             'data': {},
@@ -1720,6 +1722,56 @@ class EngineService(service.Service):
         LOG.info("Node delete action is queued: %s.", action_id)
 
         return {'action': action_id}
+
+    def _node_adopt_preview(self, ctx, req):
+        """Preview version of node adoption (internal version).
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the NodeAdoptRequest object.
+        :returns: A tuple containing the profile class and the spec for the
+                 node that can be adopted.
+        :raises: BadRequest(404) if profile type not found; or
+                 InternalServerError(500) if profile operation failed.
+        """
+
+        # Apply default settings on the request
+        req.obj_set_defaults()
+
+        try:
+            profile_cls = environment.global_env().get_profile(req.type)
+        except exception.ResourceNotFound as ex:
+            raise exception.BadRequest(msg=six.text_type(ex))
+
+        # NOTE: passing in context to avoid loading runtime data
+        temp_node = node_mod.Node('adopt', 'TBD', physical_id=req.identity,
+                                  context=ctx)
+        # TODO(Qiming): return node status and created timestamp
+        spec = profile_base.Profile.adopt_node(ctx, temp_node, req.type,
+                                               overrides=req.overrides,
+                                               snapshot=req.snapshot)
+        if 'Error' in spec:
+            err = '%s: %s' % (spec['Error']['code'], spec['Error']['message'])
+            raise exception.ProfileOperationFailed(message=err)
+
+        parts = req.type.split('-')
+        res = {
+            'type': parts[0],
+            'version': parts[1],
+            'properties': spec
+        }
+        return profile_cls, res
+
+    @request_context
+    def node_adopt_preview(self, ctx, req):
+        """Preview a node adoption operation.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the NodeAdoptRequest object.
+        :returns: A dict containing the properties of a spec.
+        """
+        LOG.info("Adopting node '%s' (preview).", req.identity)
+        _, spec = self._node_adopt_preview(ctx, req)
+        return {'node_preview': spec}
 
     @request_context
     def node_check(self, ctx, req):

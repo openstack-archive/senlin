@@ -20,12 +20,14 @@ from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
+from senlin.engine import environment
 from senlin.engine import node as node_mod
 from senlin.engine import service
 from senlin.objects import cluster as co
 from senlin.objects import node as no
 from senlin.objects import profile as po
 from senlin.objects.requests import nodes as orno
+from senlin.profiles import base as pb
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -647,6 +649,115 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual("The node 'node1' cannot be deleted: still depended "
                          "by other clusters and/or nodes.",
                          six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(environment.Environment, 'get_profile')
+    @mock.patch.object(pb.Profile, 'adopt_node')
+    def test__node_adopt_preview(self, mock_adopt, mock_profile):
+        class FakeProfile(object):
+            pass
+
+        req = mock.Mock(
+            identity="FAKE_NODE",
+            type="TestProfile-1.0",
+            overrides="foo",
+            snapshot=True
+        )
+        mock_adopt.return_value = {'prop': 'value'}
+        mock_profile.return_value = FakeProfile
+
+        c, s = self.eng._node_adopt_preview(self.ctx, req)
+
+        req.obj_set_defaults.assert_called_once_with()
+        mock_profile.assert_called_once_with("TestProfile-1.0")
+        self.assertEqual(FakeProfile, c)
+        mock_adopt.assert_called_once_with(
+            self.ctx, mock.ANY, 'TestProfile-1.0',
+            overrides="foo", snapshot=True)
+        fake_node = mock_adopt.call_args[0][1]
+        self.assertIsInstance(fake_node, node_mod.Node)
+        self.assertEqual('adopt', fake_node.name)
+        self.assertEqual('TBD', fake_node.profile_id)
+        self.assertEqual('FAKE_NODE', fake_node.physical_id)
+        expected = {
+            'type': 'TestProfile',
+            'version': '1.0',
+            'properties': {'prop': 'value'}
+        }
+        self.assertEqual(expected, s)
+
+    @mock.patch.object(pb.Profile, 'adopt_node')
+    def test__node_adopt_preview_bad_type(self, mock_adopt):
+        req = mock.Mock(
+            identity="FAKE_NODE",
+            type="TestProfile-1.0",
+            overrides="foo",
+            snapshot=True
+        )
+
+        ex = self.assertRaises(exc.BadRequest,
+                               self.eng._node_adopt_preview,
+                               self.ctx, req)
+
+        req.obj_set_defaults.assert_called_once_with()
+        self.assertEqual("The profile_type 'TestProfile-1.0' could not be "
+                         "found.", six.text_type(ex))
+
+    @mock.patch.object(environment.Environment, 'get_profile')
+    @mock.patch.object(pb.Profile, 'adopt_node')
+    def test__node_adopt_preview_failed_adopt(self, mock_adopt, mock_profile):
+        class FakeProfile(object):
+            pass
+
+        req = mock.Mock(
+            identity="FAKE_NODE",
+            type="TestProfile-1.0",
+            overrides="foo",
+            snapshot=True
+        )
+        mock_profile.return_value = FakeProfile
+        mock_adopt.return_value = {
+            'Error': {'code': 502, 'message': 'something is bad'}
+        }
+
+        ex = self.assertRaises(exc.ProfileOperationFailed,
+                               self.eng._node_adopt_preview,
+                               self.ctx, req)
+
+        req.obj_set_defaults.assert_called_once_with()
+        mock_profile.assert_called_once_with("TestProfile-1.0")
+        mock_adopt.assert_called_once_with(
+            self.ctx, mock.ANY, 'TestProfile-1.0',
+            overrides="foo", snapshot=True)
+
+        self.assertEqual('502: something is bad', six.text_type(ex))
+
+    @mock.patch.object(service.EngineService, '_node_adopt_preview')
+    def test_node_adopt_preview(self, mock_preview):
+        spec = {'foo': 'bar'}
+        mock_preview.return_value = mock.Mock(), spec
+        req = orno.NodeAdoptRequest(identity='FAKE_ID', type='FAKE_TYPE')
+
+        res = self.eng.node_adopt_preview(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'node_preview': {'foo': 'bar'}}, res)
+        mock_preview.assert_called_once_with(self.ctx, mock.ANY)
+        self.assertIsInstance(mock_preview.call_args[0][1],
+                              orno.NodeAdoptRequest)
+
+    @mock.patch.object(service.EngineService, '_node_adopt_preview')
+    def test_node_adopt_preview_with_exception(self, mock_preview):
+        mock_preview.side_effect = exc.BadRequest(msg="boom")
+        req = orno.NodeAdoptRequest(identity='FAKE_ID', type='FAKE_TYPE')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_adopt_preview,
+                               self.ctx, req.obj_to_primitive())
+
+        mock_preview.assert_called_once_with(self.ctx, mock.ANY)
+        self.assertIsInstance(mock_preview.call_args[0][1],
+                              orno.NodeAdoptRequest)
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual('boom.', six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')
