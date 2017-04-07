@@ -415,7 +415,7 @@ class Action(object):
                     self.data['status'] = policy_mod.CHECK_ERROR
                     self.data['reason'] = _('Policy %s cooldown is still '
                                             'in progress.') % policy.id
-                return
+                    return
 
             if method is not None:
                 method(cluster_id, self)
