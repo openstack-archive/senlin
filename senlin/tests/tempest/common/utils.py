@@ -444,6 +444,59 @@ def delete_a_keypair(base, name, is_admin_manager=True, ignore_missing=False):
         raise exceptions.NotFound()
 
 
+def create_a_network(base, name=None):
+    """Utility function that creates a Neutron network"""
+
+    if name is None:
+        name = data_utils.rand_name("tempest-created-network")
+
+    params = {
+        "network": {
+            "name": name,
+        }
+    }
+    body = base.network_client.create_obj('networks', params)
+
+    return body['body']['id']
+
+
+def delete_a_network(base, network_id, ignore_missing=False):
+    """Utility function that deletes a Neutron network."""
+
+    res = base.network_client.delete_obj('networks', network_id)
+    if res['status'] == 404:
+        if ignore_missing is True:
+            return
+        raise exceptions.NotFound()
+
+
+def create_a_subnet(base, network_id, name=None):
+    """Utility function that creates a Neutron subnet"""
+
+    if name is None:
+        name = data_utils.rand_name("tempest-created-subnet")
+
+    params = {
+        "subnet": {
+            "name": name,
+            "network_id": network_id,
+        }
+    }
+    body = base.network_client.create_obj('subnets', params)
+
+    return body['body']['id']
+
+
+def delete_a_subnet(base, subnet_id, ignore_missing=False):
+    """Utility function that deletes a Neutron subnet."""
+
+    res = base.network_client.delete_obj('subnets', subnet_id)
+    if res['status'] == 404:
+        if ignore_missing is True:
+            return
+        raise exceptions.NotFound()
+
+
 def post_messages(base, queue_name, messages):
     """Utility function that posts message(s) to Zaqar queue."""
     res = base.messaging_client.post_messages(queue_name,
