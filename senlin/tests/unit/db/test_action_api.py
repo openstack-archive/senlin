@@ -87,6 +87,57 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertEqual(10, retobj.inputs['max_size'])
         self.assertIsNone(retobj.outputs)
 
+    def test_action_get_with_invalid_id(self):
+        retobj = db_api.action_get(self.ctx, 'fake-uuid')
+        self.assertIsNone(retobj)
+
+    def test_action_get_by_name(self):
+        data = parser.simple_parse(shared.sample_action)
+        _create_action(self.ctx)
+        retobj = db_api.action_get_by_name(self.ctx, data['name'])
+
+        self.assertIsNotNone(retobj)
+        self.assertEqual(data['name'], retobj.name)
+        self.assertEqual(data['target'], retobj.target)
+        self.assertEqual(data['action'], retobj.action)
+        self.assertEqual(data['cause'], retobj.cause)
+        self.assertEqual(data['timeout'], retobj.timeout)
+        self.assertEqual(data['status'], retobj.status)
+        self.assertEqual(data['status_reason'], retobj.status_reason)
+        self.assertEqual(10, retobj.inputs['max_size'])
+        self.assertIsNone(retobj.outputs)
+
+    def test_action_get_by_name_duplicated(self):
+        data = parser.simple_parse(shared.sample_action)
+        action = _create_action(self.ctx)
+        another_action = _create_action(self.ctx)
+
+        self.assertIsNotNone(action)
+        self.assertIsNotNone(another_action)
+        self.assertNotEqual(action.id, another_action.id)
+        self.assertRaises(exception.MultipleChoices,
+                          db_api.action_get_by_name,
+                          self.ctx, data['name'])
+
+    def test_action_get_by_name_invalid(self):
+        retobj = db_api.action_get_by_name(self.ctx, 'fake-name')
+        self.assertIsNone(retobj)
+
+    def test_action_get_by_short_id(self):
+        spec1 = {'id': 'same-part-unique-part'}
+        spec2 = {'id': 'same-part-part-unique'}
+        action1 = _create_action(self.ctx, **spec1)
+        action2 = _create_action(self.ctx, **spec2)
+
+        ret_action1 = db_api.action_get_by_short_id(self.ctx, spec1['id'][:11])
+        self.assertEqual(ret_action1.id, action1.id)
+        ret_action2 = db_api.action_get_by_short_id(self.ctx, spec2['id'][:11])
+        self.assertEqual(ret_action2.id, action2.id)
+
+        self.assertRaises(exception.MultipleChoices,
+                          db_api.action_get_by_short_id,
+                          self.ctx, 'same-part-')
+
     def test_action_get_project_safe(self):
         parser.simple_parse(shared.sample_action)
         action = _create_action(self.ctx)
@@ -492,3 +543,23 @@ class DBAPIActionTest(base.SenlinTestCase):
 
         actions = db_api.action_get_all(self.ctx)
         self.assertEqual(3, len(actions))
+
+    def test_action_abandon(self):
+        spec = {
+            "owner": "test_owner",
+            "start_time": 14506893904.0
+        }
+        action = _create_action(self.ctx, **spec)
+
+        before_abandon = db_api.action_get(self.ctx, action.id)
+        self.assertEqual(spec['owner'], before_abandon.owner)
+        self.assertEqual(spec['start_time'], before_abandon.start_time)
+
+        db_api.action_abandon(self.ctx, action.id)
+        after_abandon = db_api.action_get(self.ctx, action.id)
+
+        self.assertIsNone(after_abandon.owner)
+        self.assertIsNone(after_abandon.start_time)
+        self.assertEqual('The action was abandoned.',
+                         after_abandon.status_reason)
+        self.assertEqual(consts.ACTION_READY, after_abandon.status)
