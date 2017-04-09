@@ -140,6 +140,17 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual(1, len(bindings))
         self.assertEqual(timestamp, bindings[0].last_op)
 
+    def test_cluster_policy_get(self):
+        policy = self.create_policy()
+
+        db_api.cluster_policy_attach(self.ctx, self.cluster.id, policy.id, {})
+
+        binding = db_api.cluster_policy_get(self.ctx, self.cluster.id,
+                                            policy.id)
+        self.assertIsNotNone(binding)
+        self.assertEqual(self.cluster.id, binding.cluster_id)
+        self.assertEqual(policy.id, binding.policy_id)
+
     def test_policy_get_all_with_empty_filters(self):
         for pid in ['policy1', 'policy2']:
             self.create_policy(id=pid)
