@@ -84,6 +84,12 @@ class DBAPIProfileTest(base.SenlinTestCase):
         retobj = db_api.profile_get_by_name(self.ctx, 'non-exist')
         self.assertIsNone(retobj)
 
+        # duplicated name
+        shared.create_profile(self.ctx, name=profile_name)
+        self.assertRaises(exception.MultipleChoices,
+                          db_api.profile_get_by_name,
+                          self.ctx, profile_name)
+
     def test_profile_get_by_name_diff_project(self):
         profile_name = 'my_best_profile'
         shared.create_profile(self.ctx, name=profile_name)
