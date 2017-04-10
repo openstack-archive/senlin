@@ -470,7 +470,7 @@ def delete_a_network(base, network_id, ignore_missing=False):
         raise exceptions.NotFound()
 
 
-def create_a_subnet(base, network_id, name=None):
+def create_a_subnet(base, network_id, cidr, ip_version=4, name=None):
     """Utility function that creates a Neutron subnet"""
 
     if name is None:
@@ -480,6 +480,8 @@ def create_a_subnet(base, network_id, name=None):
         "subnet": {
             "name": name,
             "network_id": network_id,
+            "cidr": cidr,
+            "ip_version": ip_version,
         }
     }
     body = base.network_client.create_obj('subnets', params)
