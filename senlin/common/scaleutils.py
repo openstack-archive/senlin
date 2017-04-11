@@ -250,7 +250,7 @@ def filter_error_nodes(nodes):
     bad = []
     not_created = []
     for n in nodes:
-        if n.status == 'ERROR':
+        if n.status == consts.NS_ERROR or n.status == consts.NS_WARNING:
             bad.append(n.id)
         elif n.created_at is None:
             not_created.append(n.id)

@@ -325,7 +325,12 @@ class Node(object):
             self.set_status(context, consts.NS_ERROR, six.text_type(ex))
             return False
 
+        # node is running but for some reason the status is WARNING
+        # we do not change the status reason of the node
         if res:
+            # do not change node status if it WAS in WARNING
+            if self.status == consts.NS_WARNING:
+                return True
             self.set_status(context, consts.NS_ACTIVE,
                             _("Check: Node is ACTIVE."))
         else:
