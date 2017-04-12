@@ -22,6 +22,7 @@ from senlin.common import context as req_context
 from senlin.common import exception
 from senlin.common.i18n import _, _LE
 from senlin.common import utils
+from senlin.engine import dispatcher
 from senlin.engine import event as EVENT
 from senlin.objects import action as ao
 from senlin.objects import cluster_policy as cpo
@@ -318,6 +319,7 @@ class Action(object):
             # Action failed at the moment, but can be retried
             # We abandon it and then notify other dispatchers to execute it
             ao.Action.abandon(self.context, self.id)
+            dispatcher.start_action()
 
         if status == self.SUCCEEDED:
             EVENT.info(self, consts.PHASE_END, reason or 'SUCCEEDED')
