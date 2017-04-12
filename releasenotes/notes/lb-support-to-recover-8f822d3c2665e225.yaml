@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    The load-balancing policy now properly supports the CLUSTER_RECOVER action
+    and NODE_RECOVER action.

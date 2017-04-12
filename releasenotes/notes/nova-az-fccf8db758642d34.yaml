@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed an error introduced by openstacksdk when checking/setting the
+    availability zone of a nova server.

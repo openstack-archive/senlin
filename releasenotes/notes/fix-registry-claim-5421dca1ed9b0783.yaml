@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed a problem when claiming a cluster from health registry if service
+    engine is stopped (killed) and restarted quickly.

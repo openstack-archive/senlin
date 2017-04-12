@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed error that raises when no operation is provided during node health
+    recovery.

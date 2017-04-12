@@ -1,0 +1,5 @@
+---
+other:
+  - |
+    Sample health policy file was using 60 seconds as the interval which could
+    be misleading. This has been tuned to 600 seconds.

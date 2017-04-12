@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed a bug related to desired_capacity when creating a cluster. The old
+    behavior was having it default to 1, however, the correct behavior should
+    be having it default to min_size if provided.

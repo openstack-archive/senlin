@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    API microversion 1.6 comes with an optional parameter 'check' that tells
+    the engine to perform a health check before doing actual recovery.
+    This applies to both clusters and nodes.
