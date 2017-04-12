@@ -133,8 +133,8 @@ class ClusterDelNodesRequest(base.SenlinObject):
         target_version = versionutils.convert_version_to_tuple(
             target_version)
         if target_version < (1, 1):
-            if 'destroy_after_deletion' in primitive:
-                del primitive['destroy_after_deletion']
+            if 'destroy_after_deletion' in primitive['senlin_object.data']:
+                del primitive['senlin_object.data']['destroy_after_deletion']
 
 
 @base.SenlinObjectRegistry.register
