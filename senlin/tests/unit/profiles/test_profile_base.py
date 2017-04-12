@@ -367,6 +367,18 @@ class TestProfileBase(base.SenlinTestCase):
         self.assertEqual(res_obj, res)
 
     @mock.patch.object(pb.Profile, 'load')
+    def test_check_object_exception_return_value(self, mock_load):
+        profile = pb.Profile
+        profile.load(self.ctx).do_check = mock.Mock(
+            side_effect=exception.InternalError(code=400, message='BAD'))
+        obj = mock_load
+
+        res = profile.check_object(self.ctx, obj)
+
+        profile.load(self.ctx).do_check.assert_called_once_with(obj)
+        self.assertEqual(False, res)
+
+    @mock.patch.object(pb.Profile, 'load')
     def test_update_object_with_profile(self, mock_load):
         old_profile = mock.Mock()
         new_profile = mock.Mock()

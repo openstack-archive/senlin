@@ -278,8 +278,9 @@ class StackProfile(base.Profile):
             hc.stack_check(stack_id)
             hc.wait_for_stack(stack_id, 'CHECK_COMPLETE', timeout=timeout)
         except exc.InternalError as ex:
-            LOG.error('Failed in checking stack: %s.', ex)
-            return False
+            raise exc.EResourceOperation(op='checking', type='stack',
+                                         id=stack_id,
+                                         message=six.text_type(ex))
 
         return True
 

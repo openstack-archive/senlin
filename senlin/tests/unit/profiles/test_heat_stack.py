@@ -583,9 +583,8 @@ class TestHeatStackProfile(base.SenlinTestCase):
         oc.stack_check = mock.Mock(
             side_effect=exc.InternalError(code=400, message='BOOM'))
 
-        res = profile.do_check(node_obj)
+        self.assertRaises(exc.EResourceOperation, profile.do_check, node_obj)
 
-        self.assertFalse(res)
         oc.stack_check.assert_called_once_with('FAKE_ID')
         self.assertEqual(0, oc.wait_for_stack.call_count)
 
@@ -597,9 +596,8 @@ class TestHeatStackProfile(base.SenlinTestCase):
         oc.wait_for_stack = mock.Mock(
             side_effect=exc.InternalError(code=400, message='BOOM'))
 
-        res = profile.do_check(node_obj)
+        self.assertRaises(exc.EResourceOperation, profile.do_check, node_obj)
 
-        self.assertFalse(res)
         oc.stack_check.assert_called_once_with('FAKE_ID')
         oc.wait_for_stack.assert_called_once_with(
             'FAKE_ID', 'CHECK_COMPLETE', timeout=3600)
