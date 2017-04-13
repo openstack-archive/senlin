@@ -201,11 +201,14 @@ class ScaleUtilsTest(base.SenlinTestCase):
             mock.Mock(id='N4', status='ACTIVE'),
             mock.Mock(id='N5', status='WARNING'),
             mock.Mock(id='N6', status='ERROR'),
+            mock.Mock(id='N7', created_at=None)
         ]
         res = su.filter_error_nodes(nodes)
         self.assertIn('N3', res[0])
+        self.assertIn('N5', res[0])
         self.assertIn('N6', res[0])
-        self.assertEqual(4, len(res[1]))
+        self.assertIn('N7', res[0])
+        self.assertEqual(3, len(res[1]))
 
     @mock.patch.object(su, 'filter_error_nodes')
     def test_nodes_by_random(self, mock_filter):

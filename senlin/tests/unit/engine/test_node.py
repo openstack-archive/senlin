@@ -507,6 +507,7 @@ class TestNode(base.SenlinTestCase):
     @mock.patch.object(pb.Profile, 'check_object')
     def test_node_check(self, mock_check, mock_status):
         node = nodem.Node('node1', PROFILE_ID, '')
+        node.status = consts.NS_ACTIVE
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         mock_check.return_value = True
 
@@ -519,8 +520,24 @@ class TestNode(base.SenlinTestCase):
 
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'check_object')
+    def test_node_check_warning(self, mock_check, mock_status):
+        node = nodem.Node('node1', PROFILE_ID, '')
+        node.status = consts.NS_WARNING
+        node.status_reason = 'bad news'
+        node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
+        mock_check.return_value = True
+
+        res = node.do_check(self.context)
+
+        self.assertTrue(res)
+        mock_check.assert_called_once_with(self.context, node)
+        self.assertFalse(mock_status.called)
+
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(pb.Profile, 'check_object')
     def test_node_check_not_active(self, mock_check, mock_status):
         node = nodem.Node('node1', PROFILE_ID, '')
+        node.status = consts.NS_WARNING
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         mock_check.return_value = False
 
