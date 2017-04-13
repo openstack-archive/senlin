@@ -194,6 +194,8 @@ for the following properties:
 - ``min_size``: new lower bound for the cluster size;
 - ``max_size``: new upper bound for the cluster size.
 - ``timeout``: new timeout value for the specified cluster.
+- ``profile_only``: a boolean value indicating whether cluster will be only
+  updated with profile.
 
 
 Update Cluster's Profile
@@ -219,6 +221,10 @@ Other worker threads will pick up the node level update action for execution
 and mark the action as completed/failed. When all these node level updates are
 completed, the ``CLUSTER_UPDATE`` operation continues and marks the cluster as
 ``ACTIVE`` again.
+
+Senlin also provides a parameter ``profile_only`` for this action, so that any
+newly created nodes will use the new profile, but existing nodes should not be
+changed.
 
 The cluster update operation may take a long time to complete, depending on
 the response time from the underlying profile operations. Note also, when
