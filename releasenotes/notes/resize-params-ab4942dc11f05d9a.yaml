@@ -1,0 +1,5 @@
+---
+other:
+  - |
+    The parameter checking for cluster-resize operation is revised so that
+    min_step will be ignored if the ajustment type is not CHANGE_IN_PERCENTAGE.

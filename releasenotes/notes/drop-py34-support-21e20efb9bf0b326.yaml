@@ -1,0 +1,4 @@
+---
+deprecations:
+  - |
+    The support to py3.4 is dropped. Please use py3.5 instead.

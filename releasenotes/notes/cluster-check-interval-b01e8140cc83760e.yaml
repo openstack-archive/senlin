@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    A new configuration option check_interval_max is added (default=3600) for
+    cluster health check intervals.

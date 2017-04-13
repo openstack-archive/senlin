@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed an error in updating stack tags when the stack joins or leaves a
+    cluster.

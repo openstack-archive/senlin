@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    A new feature is introduced in API microversion 1.6 which permits a cluster
+    update operation to change the profile used by the cluster only without
+    actually updating the existing nodes (if any). The new profile will be used
+    when new nodes are created as members of the cluster.

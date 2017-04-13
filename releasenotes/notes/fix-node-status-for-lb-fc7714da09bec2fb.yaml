@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    When a node cannot be added to a load-balancer although desired, or it can
+    not be removed from a load-balancer when requested, the node will be
+    marked as in WARNING status.

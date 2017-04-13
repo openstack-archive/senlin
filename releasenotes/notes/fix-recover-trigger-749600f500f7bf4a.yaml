@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed error in the return value of node-check which prevents node-recover
+    from being triggered.

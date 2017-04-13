@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    When an action was marked as RETRY, its status is reset to READY for a
+    reschedule. A bug related to this behavior is now fixed.
