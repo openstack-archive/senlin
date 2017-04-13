@@ -489,6 +489,24 @@ class TestCluster(base.SenlinTestCase):
         self.assertIsNone(res)
         self.assertEqual([], cluster.nodes)
 
+    def test_update_node(self):
+        cluster = cm.Cluster('test-cluster', 0, PROFILE_ID)
+        self.assertEqual([], cluster.nodes)
+
+        node1 = mock.Mock(id='fake', status='ACTIVE')
+        # add one
+        cluster.add_node(node1)
+
+        node1.status = 'ERROR'
+        cluster.update_node([node1])
+        self.assertEqual([node1], cluster.nodes)
+
+        # update new ones
+        node2 = mock.Mock(id='fake1', status='ACTIVE')
+        node3 = mock.Mock(id='fake2', status='ERROR')
+        cluster.update_node([node2, node3])
+        self.assertEqual([node2, node3], cluster.nodes)
+
     @mock.patch.object(pcb.Policy, 'load')
     @mock.patch.object(cpm, 'ClusterPolicy')
     def test_attach_policy(self, mock_cp, mock_load):

@@ -423,6 +423,13 @@ class Cluster(object):
             if node.id == node_id:
                 self.rt['nodes'].remove(node)
 
+    def update_node(self, nodes):
+        """Update cluster runtime data
+
+        :param nodes: List of node objects
+        """
+        self.rt['nodes'] = nodes
+
     @property
     def policies(self):
         return self.rt['policies']
