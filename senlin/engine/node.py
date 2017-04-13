@@ -324,11 +324,13 @@ class Node(object):
             self.set_status(context, consts.NS_ERROR, six.text_type(ex))
             return False
 
-        # node is running but for some reason the status is WARNING
-        # we do not change the status reason of the node
+        # Physical object is ACTIVE but for some reason the node status in
+        # senlin was WARNING. We only update the status_reason
         if res:
-            # do not change node status if it WAS in WARNING
             if self.status == consts.NS_WARNING:
+                msg = _("Check: Physical object is ACTIVE but the node status "
+                        "was WARNING. %s") % self.status_reason
+                self.set_status(context, consts.NS_WARNING, msg)
                 return True
             self.set_status(context, consts.NS_ACTIVE,
                             _("Check: Node is ACTIVE."))

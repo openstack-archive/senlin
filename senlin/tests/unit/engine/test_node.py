@@ -510,7 +510,6 @@ class TestNode(base.SenlinTestCase):
         node.status = consts.NS_ACTIVE
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         mock_check.return_value = True
-
         res = node.do_check(self.context)
 
         self.assertTrue(res)
@@ -531,7 +530,10 @@ class TestNode(base.SenlinTestCase):
 
         self.assertTrue(res)
         mock_check.assert_called_once_with(self.context, node)
-        self.assertFalse(mock_status.called)
+        msg = ("Check: Physical object is ACTIVE but the node status was "
+               "WARNING. %s") % node.status_reason
+        mock_status.assert_called_once_with(self.context, consts.NS_WARNING,
+                                            msg)
 
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'check_object')
