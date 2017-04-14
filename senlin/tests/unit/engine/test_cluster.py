@@ -855,6 +855,33 @@ class TestCluster(base.SenlinTestCase):
         result = cluster.nodes_by_region('AZ3')
         self.assertEqual(0, len(result))
 
+    @mock.patch.object(node_mod.Node, 'load_all')
+    @mock.patch.object(node_mod.Node, 'do_check')
+    @mock.patch.object(cm.Cluster, 'update_node')
+    def test_health_check(self, mock_update, mock_check, mock_load):
+        cluster = cm.Cluster('test-cluster', 5, PROFILE_ID,
+                             min_size=2, id=CLUSTER_ID)
+        node1 = node_mod.Node('fake1', PROFILE_ID, status='ACTIVE')
+        node2 = node_mod.Node('fake2', PROFILE_ID, status='ACTIVE')
+        nodes = [node1, node2]
+        for node in nodes:
+            cluster.add_node(node)
+
+        node1.status = 'ERROR'
+        mock_load.return_value = [node1, node2]
+
+        cluster.health_check(self.context)
+
+        self.assertEqual(2, len(cluster.nodes))
+        self.assertEqual([node1, node2], cluster.nodes)
+
+        mock_update.assert_called_once_with([node1, node2])
+        mock_check.assert_has_calls([
+            mock.call(self.context),
+            mock.call(self.context)
+        ])
+        mock_load.assert_called_once_with(self.context, cluster_id=CLUSTER_ID)
+
     @mock.patch.object(co.Cluster, 'update')
     @mock.patch.object(node_mod.Node, 'load_all')
     def test_eval_status_below_min_size(self, mock_load, mock_update):

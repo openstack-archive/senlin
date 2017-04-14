@@ -503,6 +503,21 @@ class Cluster(object):
                     result.append(node)
         return result
 
+    def health_check(self, ctx):
+        """Check physical resources status
+
+        :param ctx: The context to operate node object
+        """
+        # Note this procedure is a pure sequential operation,
+        # its not suitable for large scale clusters.
+
+        old_nodes = self.nodes
+        for node in old_nodes:
+            node.do_check(ctx)
+
+        nodes = node_mod.Node.load_all(ctx, cluster_id=self.id)
+        self.update_node([n for n in nodes])
+
     def eval_status(self, ctx, operation, **params):
         """Re-evaluate cluster's health status.
 
