@@ -278,7 +278,11 @@ class Profile(object):
     @profiler.trace('Profile.check_object', hide_args=False)
     def check_object(cls, ctx, obj):
         profile = cls.load(ctx, profile_id=obj.profile_id)
-        return profile.do_check(obj)
+        try:
+            return profile.do_check(obj)
+        except exc.InternalError as ex:
+            LOG.error(ex)
+            return False
 
     @classmethod
     @profiler.trace('Profile.recover_object', hide_args=False)
