@@ -193,12 +193,12 @@ This will ensure you have environment variables such as ``OS_AUTH_URL``,
 :file:`tempest` directory and run the tests there::
 
   $ cd /opt/stack/tempest
-  $ ./run_tempest.sh -N -- senlin
+  $ nosetests -v -- senlin
 
 To run a single test case, you can specify the test case name. For example::
 
   $ cd /opt/stack/tempest
-  $ ./run_tempest.sh -N -- \
+  $ nosetests -v -- \
     senlin.tests.tempest.api.clusters.test_cluster_create
 
 If you prefer running API tests in a virtual environment, you can simply use
