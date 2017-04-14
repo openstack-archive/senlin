@@ -69,8 +69,8 @@ class ReceiverListRequest(base.SenlinObject):
         target_version = versionutils.convert_version_to_tuple(
             target_version)
         if target_version < (1, 1):
-            if 'user' in primitive:
-                del primitive['user']
+            if 'user' in primitive['senlin_object.data']:
+                del primitive['senlin_object.data']['user']
 
 
 @base.SenlinObjectRegistry.register
