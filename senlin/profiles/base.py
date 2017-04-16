@@ -125,6 +125,7 @@ class Profile(object):
         self._computeclient = None
         self._networkclient = None
         self._orchestrationclient = None
+        self._workflowclient = None
 
     @classmethod
     def _from_object(cls, profile):
@@ -390,6 +391,13 @@ class Profile(object):
         oc = driver_base.SenlinDriver().orchestration(params)
         self._orchestrationclient = oc
         return oc
+
+    def workflow(self, obj):
+        if self._workflowclient is not None:
+            return self._workflowclient
+        params = self._build_conn_params(obj.user, obj.project)
+        self._workflowclient = driver_base.SenlinDriver().workflow(params)
+        return self._workflowclient
 
     def do_create(self, obj):
         """For subclass to override."""
