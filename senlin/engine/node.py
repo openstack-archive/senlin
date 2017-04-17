@@ -11,6 +11,7 @@
 # under the License.
 
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 from oslo_utils import timeutils
 import six
 
@@ -421,4 +422,33 @@ class Node(object):
 
         self.set_status(context, consts.NS_ACTIVE,
                         reason=_("Operation '%s' succeeded") % op)
+        return True
+
+    def run_workflow(self, **options):
+        if not self.physical_id:
+            return False
+
+        workflow_name = options.pop('workflow_name')
+        inputs = options.pop('inputs')
+        definition = inputs.pop('definition', None)
+        params = {
+            'cluster_id': self.cluster_id,
+            'node_id': self.physical_id,
+        }
+        params.update(inputs)
+
+        try:
+            profile = self.rt['profile']
+            wfc = profile.workflow(self)
+            workflow = wfc.workflow_find(workflow_name)
+            if workflow is None:
+                wfc.workflow_create(definition, scope="private")
+            else:
+                definition = workflow.definition
+            inputs_str = jsonutils.dumps(params)
+            wfc.execution_create(workflow_name, str(inputs_str))
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(op='executing', type='workflow',
+                                         id=workflow_name,
+                                         message=six.text_type(ex))
         return True
