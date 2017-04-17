@@ -2330,10 +2330,18 @@ class EngineService(service.Service):
             filters['otype'] = req.otype
         if req.obj_attr_is_set('action'):
             filters['action'] = req.action
-        if req.obj_attr_is_set('cluster_id'):
-            filters['cluster_id'] = req.cluster_id
         if req.obj_attr_is_set('level'):
             filters['level'] = req.level
+        if req.obj_attr_is_set('cluster_id'):
+            cluster_ids = []
+            for cid in req.cluster_id:
+                try:
+                    cluster = co.Cluster.find(ctx, cid)
+                    cluster_ids.append(cluster.id)
+                except exception.ResourceNotFound:
+                    return []
+            if len(cluster_ids) > 0:
+                filters['cluster_id'] = cluster_ids
         if filters:
             query['filters'] = filters
 
