@@ -98,7 +98,7 @@ class UUID(fields.FieldType):
 
 
 # TODO(Qiming): remove this when oslo patch is released
-# i.e. global requirements bump to 1.17.0
+# i.e. global requirements bump to 1.18.0
 class Object(fields.Object):
 
     def get_schema(self):
