@@ -11,6 +11,7 @@
 # under the License.
 
 import mock
+from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 import six
 
@@ -871,3 +872,161 @@ class TestNode(base.SenlinTestCase):
                       reason="Failed in dance container 'test_id': Boom.")
         ])
         x_profile.handle_dance.assert_called_once_with(node, style='tango')
+
+    def test_run_workflow(self):
+        node = nodem.Node('node1', PROFILE_ID, 'FAKE_CLUSTER')
+        node.physical_id = 'FAKE_NODE'
+
+        wfc = mock.Mock()
+        wfc.workflow_find.return_value = None
+        wfc.workflow_create = mock.Mock()
+        wfc.execution_create = mock.Mock()
+        x_profile = mock.Mock()
+        x_profile.workflow = mock.Mock(return_value=wfc)
+        node.rt['profile'] = x_profile
+
+        options = {
+            'workflow_name': 'foo',
+            'inputs': {
+                'definition': {
+                    'bar': 'baz'
+                },
+                'FAKE_KEY1': 'FAKE_VALUE1',
+                'FAKE_KEY2': 'FAKE_VALUE2',
+            }
+        }
+
+        res = node.run_workflow(**options)
+
+        self.assertTrue(res)
+        x_profile.workflow.assert_called_once_with(node)
+        wfc.workflow_find.assert_called_once_with('foo')
+        wfc.workflow_create.assert_called_once_with(
+            {'bar': 'baz'}, scope='private')
+
+        final_dict = {
+            'FAKE_KEY1': 'FAKE_VALUE1',
+            'FAKE_KEY2': 'FAKE_VALUE2',
+            'cluster_id': 'FAKE_CLUSTER',
+            'node_id': 'FAKE_NODE',
+        }
+        final_inputs = jsonutils.dumps(final_dict)
+        wfc.execution_create.assert_called_once_with('foo', final_inputs)
+
+    def test_run_workflow_no_physical_id(self):
+        node = nodem.Node('node1', PROFILE_ID, 'FAKE_CLUSTER')
+        node.physical_id = None
+
+        res = node.run_workflow()
+
+        self.assertFalse(res)
+
+    def test_run_workflow_workflow_is_found(self):
+        node = nodem.Node('node1', PROFILE_ID, 'FAKE_CLUSTER')
+        node.physical_id = 'FAKE_NODE'
+
+        wfc = mock.Mock()
+        wfc.workflow_find.return_value = mock.Mock(definition={'bar': 'baz'})
+        wfc.workflow_create = mock.Mock()
+        wfc.execution_create = mock.Mock()
+        x_profile = mock.Mock()
+        x_profile.workflow = mock.Mock(return_value=wfc)
+        node.rt['profile'] = x_profile
+
+        options = {
+            'workflow_name': 'foo',
+            'inputs': {
+                'FAKE_KEY1': 'FAKE_VALUE1',
+                'FAKE_KEY2': 'FAKE_VALUE2',
+            }
+        }
+
+        res = node.run_workflow(**options)
+
+        self.assertTrue(res)
+        x_profile.workflow.assert_called_once_with(node)
+        wfc.workflow_find.assert_called_once_with('foo')
+        self.assertEqual(0, wfc.workflow_create.call_count)
+        final_dict = {
+            'FAKE_KEY1': 'FAKE_VALUE1',
+            'FAKE_KEY2': 'FAKE_VALUE2',
+            'cluster_id': 'FAKE_CLUSTER',
+            'node_id': 'FAKE_NODE',
+        }
+        final_inputs = jsonutils.dumps(final_dict)
+        wfc.execution_create.assert_called_once_with('foo', final_inputs)
+
+    def test_run_workflow_failed_creation(self):
+        node = nodem.Node('node1', PROFILE_ID, 'FAKE_CLUSTER')
+        node.physical_id = 'FAKE_NODE'
+
+        wfc = mock.Mock()
+        wfc.workflow_find.return_value = None
+        err = exception.InternalError(message='boom')
+        wfc.workflow_create.side_effect = err
+        wfc.execution_create = mock.Mock()
+        x_profile = mock.Mock()
+        x_profile.workflow = mock.Mock(return_value=wfc)
+        node.rt['profile'] = x_profile
+
+        options = {
+            'workflow_name': 'foo',
+            'inputs': {
+                'definition': {'bar': 'baz'},
+                'FAKE_KEY1': 'FAKE_VALUE1',
+                'FAKE_KEY2': 'FAKE_VALUE2',
+            }
+        }
+
+        ex = self.assertRaises(exception.EResourceOperation,
+                               node.run_workflow,
+                               **options)
+
+        self.assertEqual("Failed in executing workflow 'foo': boom.",
+                         six.text_type(ex))
+        x_profile.workflow.assert_called_once_with(node)
+        wfc.workflow_find.assert_called_once_with('foo')
+        wfc.workflow_create.assert_called_once_with(
+            {'bar': 'baz'}, scope='private')
+        self.assertEqual(0, wfc.execution_create.call_count)
+
+    def test_run_workflow_failed_execution(self):
+        node = nodem.Node('node1', PROFILE_ID, 'FAKE_CLUSTER')
+        node.physical_id = 'FAKE_NODE'
+
+        wfc = mock.Mock()
+        wfc.workflow_find.return_value = None
+        wfc.workflow_create = mock.Mock()
+        err = exception.InternalError(message='boom')
+        wfc.execution_create.side_effect = err
+        x_profile = mock.Mock()
+        x_profile.workflow = mock.Mock(return_value=wfc)
+        node.rt['profile'] = x_profile
+
+        options = {
+            'workflow_name': 'foo',
+            'inputs': {
+                'definition': {'bar': 'baz'},
+                'FAKE_KEY1': 'FAKE_VALUE1',
+                'FAKE_KEY2': 'FAKE_VALUE2',
+            }
+        }
+
+        ex = self.assertRaises(exception.EResourceOperation,
+                               node.run_workflow,
+                               **options)
+
+        self.assertEqual("Failed in executing workflow 'foo': boom.",
+                         six.text_type(ex))
+        x_profile.workflow.assert_called_once_with(node)
+        wfc.workflow_find.assert_called_once_with('foo')
+        wfc.workflow_create.assert_called_once_with(
+            {'bar': 'baz'}, scope='private')
+        final_dict = {
+            'FAKE_KEY1': 'FAKE_VALUE1',
+            'FAKE_KEY2': 'FAKE_VALUE2',
+            'cluster_id': 'FAKE_CLUSTER',
+            'node_id': 'FAKE_NODE',
+        }
+        final_inputs = jsonutils.dumps(final_dict)
+        wfc.execution_create.assert_called_once_with('foo', final_inputs)
