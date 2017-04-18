@@ -194,7 +194,6 @@ class DockerProfile(base.Profile):
         :param ctx: An instance of the request context.
         :param host_cluster: The uuid of the hosting cluster.
         """
-
         self.cluster = None
         try:
             self.cluster = cluster.Cluster.load(ctx, cluster_id=host_cluster)
@@ -202,22 +201,16 @@ class DockerProfile(base.Profile):
             msg = ex.enhance_msg('host', ex)
             raise exc.InternalError(message=msg)
 
-        nodes = self.cluster.rt['nodes']
+        filters = {consts.NODE_STATUS: consts.NS_ACTIVE}
+        nodes = no.Node.get_all_by_cluster(ctx, cluster_id=host_cluster,
+                                           filters=filters)
         if len(nodes) == 0:
-            msg = _("The cluster (%s) contains no nodes") % host_cluster
+            msg = _("The cluster (%s) contains no active nodes") % host_cluster
             raise exc.InternalError(message=msg)
-        else:
-            good_nodes = []
-            for i in range(len(nodes)):
-                if nodes[i].status == "ACTIVE":
-                    good_nodes.append(nodes[i])
-            if len(good_nodes) > 0:
-                node = good_nodes[random.randrange(len(good_nodes))]
-            else:
-                msg = _("There is no active nodes running in the cluster (%s)"
-                        ) % host_cluster
-                raise exc.InternalError(message=msg)
-        return node
+
+        # TODO(anyone): Should pick a node by its load
+        db_node = nodes[random.randrange(len(nodes))]
+        return node_mod.Node.load(ctx, db_node=db_node)
 
     def _get_host_ip(self, obj, host_node, host_type):
         """Fetch the ip address of physical node.

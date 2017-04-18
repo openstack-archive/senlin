@@ -215,19 +215,29 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         msg = _("The host node 'fake_node' could not be found.")
         self.assertEqual(msg, ex.message)
 
+    @mock.patch.object(node.Node, 'load')
+    @mock.patch.object(no.Node, 'get_all_by_cluster')
     @mock.patch.object(cluster.Cluster, 'load')
-    def test__get_random_node(self, mock_cluster):
-        node1 = mock.Mock(status='ERROR')
-        node2 = mock.Mock(status='ACTIVE')
-        node3 = mock.Mock(status='ACTIVE')
-        cluster = mock.Mock(rt={'nodes': [node1, node2, node3]})
+    def test__get_random_node(self, mock_cluster, mock_nodes, mock_load):
+        cluster = mock.Mock()
         mock_cluster.return_value = cluster
-        active_nodes = [node2, node3]
+        node1 = mock.Mock()
+        node2 = mock.Mock()
+        mock_nodes.return_value = [node1, node2]
         profile = dp.DockerProfile('container', self.spec)
         ctx = mock.Mock()
-        node = profile._get_random_node(ctx, 'host_cluster')
-        self.assertIn(node, active_nodes)
+        x_node = mock.Mock()
+        mock_load.return_value = x_node
+
+        res = profile._get_random_node(ctx, 'host_cluster')
+
+        self.assertEqual(x_node, res)
         mock_cluster.assert_called_once_with(ctx, cluster_id='host_cluster')
+        mock_nodes.assert_called_once_with(ctx, cluster_id='host_cluster',
+                                           filters={'status': 'ACTIVE'})
+        mock_load.assert_called_once_with(ctx, db_node=mock.ANY)
+        n = mock_load.call_args[1]['db_node']
+        self.assertIn(n, [node1, node2])
 
     @mock.patch.object(cluster.Cluster, 'load')
     def test__get_random_node_cluster_not_found(self, mock_load):
@@ -243,34 +253,23 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         msg = _("The host cluster 'host_cluster' could not be found.")
         self.assertEqual(msg, ex.message)
 
+    @mock.patch.object(no.Node, 'get_all_by_cluster')
     @mock.patch.object(cluster.Cluster, 'load')
-    def test__get_random_node_empty_cluster(self, mock_cluster):
-        cluster = mock.Mock(rt={'nodes': []})
+    def test__get_random_node_empty_cluster(self, mock_cluster, mock_nodes):
+        cluster = mock.Mock()
         mock_cluster.return_value = cluster
+        mock_nodes.return_value = []
         profile = dp.DockerProfile('container', self.spec)
         ctx = mock.Mock()
+
         ex = self.assertRaises(exc.InternalError,
                                profile._get_random_node,
                                ctx, 'host_cluster')
-        msg = _('The cluster (host_cluster) contains no nodes')
 
+        msg = _('The cluster (host_cluster) contains no active nodes')
         self.assertEqual(msg, ex.message)
-
-    @mock.patch.object(cluster.Cluster, 'load')
-    def test__get_random_node_no_active_nodes(self, mock_cluster):
-        node1 = mock.Mock(status='ERROR')
-        node2 = mock.Mock(status='ERROR')
-        node3 = mock.Mock(status='ERROR')
-        cluster = mock.Mock(rt={'nodes': [node1, node2, node3]})
-        mock_cluster.return_value = cluster
-        profile = dp.DockerProfile('container', self.spec)
-        ctx = mock.Mock()
-        ex = self.assertRaises(exc.InternalError,
-                               profile._get_random_node,
-                               ctx, 'host_cluster')
-        msg = _('There is no active nodes running in the cluster '
-                '(host_cluster)')
-        self.assertEqual(msg, ex.message)
+        mock_nodes.assert_called_once_with(ctx, cluster_id='host_cluster',
+                                           filters={'status': 'ACTIVE'})
 
     def test_get_host_ip_nova_server(self):
         addresses = {
