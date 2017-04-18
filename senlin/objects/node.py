@@ -46,6 +46,7 @@ class Node(base.SenlinObject, base.VersionedObjectDictCompat):
         'domain': fields.StringField(nullable=True),
         'dependents': fields.JsonField(nullable=True),
         'profile_name': fields.StringField(nullable=True),
+        'profile_created_at': fields.StringField(nullable=True),
     }
 
     @staticmethod
@@ -58,6 +59,9 @@ class Node(base.SenlinObject, base.VersionedObjectDictCompat):
             elif field == 'profile_name':
                 p = db_obj['profile']
                 obj['profile_name'] = p.name if p else 'Unknown'
+            elif field == 'profile_created_at':
+                p = db_obj['profile']
+                obj['profile_created_at'] = p.created_at if p else None
             else:
                 obj[field] = db_obj[field]
 
