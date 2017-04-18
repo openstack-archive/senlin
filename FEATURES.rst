@@ -144,6 +144,24 @@ message which carried its handling capacity and said it want to assume
 some health registries.
 
 
+Host Fencing Support
+--------------------
+To ensure a seemingly dead node is actually dead, all HA solutions need a way
+to kill a node for sure. Senlin is no exception here. We have support to force
+delete a VM instance already. The need is a mechanism to kill a failed host.
+
+
+LB HealthMonitor based failure detection
+----------------------------------------
+Ideally, Senlin could rely on the LBaaS service for node failure detection
+rather than reinventing the wheel. However, LBaaS (Octavia) is not fixing the
+obvious bug.
+Another option is to have LBaaS emit events when node failures are detected.
+This proposal has failed find its way into the upstream.
+When the upstream project (Octavia) has such features, we can enable them from
+Senlin side.
+
+
 Low Priority
 ~~~~~~~~~~~~
 
