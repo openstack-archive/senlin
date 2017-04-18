@@ -32,6 +32,21 @@ def api_microversion(api_microversion):
     return decorator
 
 
+def prepare_and_cleanup_for_nova_server(base):
+    keypair_name = create_a_keypair(base, is_admin_manager=False)
+    base.spec = constants.spec_nova_server
+    base.spec['properties']['key_name'] = keypair_name
+    base.addCleanup(delete_a_keypair, base, keypair_name,
+                    is_admin_manager=False)
+
+    n_name = base.spec['properties']['networks'][0]['network']
+    network_id = create_a_network(base, name=n_name)
+    base.addCleanup(delete_a_network, base, network_id)
+
+    subnet_id = create_a_subnet(base, network_id, "192.168.199.0/24")
+    base.addCleanup(delete_a_subnet, base, subnet_id)
+
+
 def create_a_profile(base, spec=None, name=None, metadata=None):
     """Utility function that generates a Senlin profile."""
 
