@@ -22,6 +22,7 @@ from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
+from senlin.objects import node as no
 from senlin.policies import base as pcb
 from senlin.profiles import base as pfb
 
@@ -91,17 +92,14 @@ class Cluster(object):
         bindings = cpo.ClusterPolicy.get_all(context, self.id)
         for b in bindings:
             # Detect policy type conflicts
-            policy = pcb.Policy.load(context,
-                                     b.policy_id,
-                                     project_safe=False)
+            policy = pcb.Policy.load(context, b.policy_id, project_safe=False)
             policies.append(policy)
 
-        nodes = node_mod.Node.load_all(context, cluster_id=self.id)
         self.rt = {
             'profile': pfb.Profile.load(context,
                                         profile_id=self.profile_id,
                                         project_safe=False),
-            'nodes': [n for n in nodes],
+            'nodes': no.Node.get_all_by_cluster(context, self.id),
             'policies': policies
         }
 

@@ -22,6 +22,7 @@ from senlin.engine import health_manager
 from senlin.engine import node as node_mod
 from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
+from senlin.objects import node as no
 from senlin.policies import base as pcb
 from senlin.profiles import base as pfb
 from senlin.tests.unit.common import base
@@ -83,7 +84,7 @@ class TestCluster(base.SenlinTestCase):
     @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     @mock.patch.object(pcb.Policy, 'load')
     @mock.patch.object(pfb.Profile, 'load')
-    @mock.patch.object(node_mod.Node, 'load_all')
+    @mock.patch.object(no.Node, 'get_all_by_cluster')
     def test__load_runtime_data(self, mock_nodes, mock_profile, mock_policy,
                                 mock_pb):
         x_binding = mock.Mock()
@@ -116,8 +117,7 @@ class TestCluster(base.SenlinTestCase):
         mock_profile.assert_called_once_with(self.context,
                                              profile_id=PROFILE_ID,
                                              project_safe=False)
-        mock_nodes.assert_called_once_with(self.context,
-                                           cluster_id=CLUSTER_ID)
+        mock_nodes.assert_called_once_with(self.context, CLUSTER_ID)
 
     def test__load_runtime_data_id_is_none(self):
         cluster = cm.Cluster('test-cluster', 0, PROFILE_ID)

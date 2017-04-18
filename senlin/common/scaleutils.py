@@ -316,21 +316,13 @@ def nodes_by_profile_age(nodes, count):
     :param count: maximum number of nodes for selection.
     :return: a list of IDs for victim nodes.
     """
-    selected, nodes = filter_error_nodes(nodes)
+    selected, candidates = filter_error_nodes(nodes)
     if count <= len(selected):
         return selected[:count]
 
     count -= len(selected)
-    node_map = []
-    for node in nodes:
-        entry = {
-            'id': node.id,
-            'created_at': node.rt['profile'].created_at
-        }
-        node_map.append(entry)
-
-    sorted_map = sorted(node_map, key=lambda m: m['created_at'])
+    sorted_list = sorted(candidates, key=lambda n: n.profile_created_at)
     for i in range(count):
-        selected.append(sorted_map[i]['id'])
+        selected.append(sorted_list[i].id)
 
     return selected
