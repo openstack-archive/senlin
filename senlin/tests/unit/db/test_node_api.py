@@ -93,6 +93,12 @@ class DBAPINodeTest(base.SenlinTestCase):
         res = db_api.node_get_by_name(self.ctx, 'BogusName')
         self.assertIsNone(res)
 
+        # duplicated name
+        shared.create_node(self.ctx, self.cluster, self.profile)
+        self.assertRaises(exception.MultipleChoices,
+                          db_api.node_get_by_name,
+                          self.ctx, 'test_node_name')
+
     def test_node_get_by_name_diff_project(self):
         shared.create_node(self.ctx, self.cluster, self.profile)
         res = db_api.node_get_by_name(self.ctx, 'test_node_name')

@@ -117,6 +117,12 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         retobj = db_api.policy_get_by_name(self.ctx, 'non-exist')
         self.assertIsNone(retobj)
 
+        # duplicated name
+        db_api.policy_create(self.ctx, data)
+        self.assertRaises(exception.MultipleChoices,
+                          db_api.policy_get_by_name,
+                          self.ctx, policy_name)
+
     def test_policy_get_by_name_diff_project(self):
         policy_name = 'my_best_policy'
         data = self.new_policy_data(name=policy_name)

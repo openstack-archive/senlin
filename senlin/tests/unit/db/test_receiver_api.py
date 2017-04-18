@@ -127,8 +127,15 @@ class DBAPIReceiverTest(base.SenlinTestCase):
         self.assertIsNotNone(receiver)
         self.assertEqual(rname, receiver.name)
 
+        # bad name
         res = db_api.receiver_get_by_name(self.ctx, 'BogusName')
         self.assertIsNone(res)
+
+        # duplicated name
+        self._create_receiver(self.ctx, name=rname)
+        self.assertRaises(exception.MultipleChoices,
+                          db_api.receiver_get_by_name,
+                          self.ctx, rname)
 
     def test_receiver_get_by_name_diff_project(self):
         rname = 'fake_receiver_name'
