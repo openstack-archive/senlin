@@ -21,11 +21,9 @@ from oslo_log import log as logging
 from senlin.common import constraints
 from senlin.common import consts
 from senlin.common.i18n import _
-from senlin.common import scaleutils
+from senlin.common import scaleutils as su
 from senlin.common import schema
 from senlin.engine import cluster as cm
-from senlin.objects import cluster as co
-from senlin.objects import node as no
 from senlin.policies import base
 
 LOG = logging.getLogger(__name__)
@@ -112,13 +110,13 @@ class DeletionPolicy(base.Policy):
             count = regions[region]
             nodes = cluster.nodes_by_region(region)
             if self.criteria == self.RANDOM:
-                candidates = scaleutils.nodes_by_random(nodes, count)
+                candidates = su.nodes_by_random(nodes, count)
             elif self.criteria == self.OLDEST_PROFILE_FIRST:
-                candidates = scaleutils.nodes_by_profile_age(nodes, count)
+                candidates = su.nodes_by_profile_age(nodes, count)
             elif self.criteria == self.OLDEST_FIRST:
-                candidates = scaleutils.nodes_by_age(nodes, count, True)
+                candidates = su.nodes_by_age(nodes, count, True)
             else:
-                candidates = scaleutils.nodes_by_age(nodes, count, False)
+                candidates = su.nodes_by_age(nodes, count, False)
 
             victims.extend(candidates)
 
@@ -130,13 +128,13 @@ class DeletionPolicy(base.Policy):
             count = zones[zone]
             nodes = cluster.nodes_by_zone(zone)
             if self.criteria == self.RANDOM:
-                candidates = scaleutils.nodes_by_random(nodes, count)
+                candidates = su.nodes_by_random(nodes, count)
             elif self.criteria == self.OLDEST_PROFILE_FIRST:
-                candidates = scaleutils.nodes_by_profile_age(nodes, count)
+                candidates = su.nodes_by_profile_age(nodes, count)
             elif self.criteria == self.OLDEST_FIRST:
-                candidates = scaleutils.nodes_by_age(nodes, count, True)
+                candidates = su.nodes_by_age(nodes, count, True)
             else:
-                candidates = scaleutils.nodes_by_age(nodes, count, False)
+                candidates = su.nodes_by_age(nodes, count, False)
 
             victims.extend(candidates)
 
@@ -172,10 +170,9 @@ class DeletionPolicy(base.Policy):
             self._update_action(action, [action.node.id])
             return
 
-        db_cluster = None
+        cluster = cm.Cluster.load(action.context, cluster_id=cluster_id)
         regions = None
         zones = None
-
         deletion = action.data.get('deletion', {})
         if deletion:
             # there are policy decisions
@@ -188,10 +185,8 @@ class DeletionPolicy(base.Policy):
 
         # No policy decision, check action itself: RESIZE
         else:
-            db_cluster = co.Cluster.get(action.context, cluster_id)
-            current = no.Node.count_by_cluster(action.context, cluster_id)
-            res, reason = scaleutils.parse_resize_params(action, db_cluster,
-                                                         current)
+            current = len(cluster.nodes)
+            res, reason = su.parse_resize_params(action, cluster, current)
             if res == base.CHECK_ERROR:
                 action.data['status'] = base.CHECK_ERROR
                 action.data['reason'] = reason
@@ -202,8 +197,6 @@ class DeletionPolicy(base.Policy):
                 return
             count = action.data['deletion']['count']
 
-        cluster = cm.Cluster.load(action.context, dbcluster=db_cluster,
-                                  cluster_id=cluster_id)
         # Cross-region
         if regions:
             victims = self._victims_by_regions(cluster, regions)
@@ -220,13 +213,13 @@ class DeletionPolicy(base.Policy):
             count = len(cluster.nodes)
 
         if self.criteria == self.RANDOM:
-            victims = scaleutils.nodes_by_random(cluster.nodes, count)
+            victims = su.nodes_by_random(cluster.nodes, count)
         elif self.criteria == self.OLDEST_PROFILE_FIRST:
-            victims = scaleutils.nodes_by_profile_age(cluster.nodes, count)
+            victims = su.nodes_by_profile_age(cluster.nodes, count)
         elif self.criteria == self.OLDEST_FIRST:
-            victims = scaleutils.nodes_by_age(cluster.nodes, count, True)
+            victims = su.nodes_by_age(cluster.nodes, count, True)
         else:
-            victims = scaleutils.nodes_by_age(cluster.nodes, count, False)
+            victims = su.nodes_by_age(cluster.nodes, count, False)
 
         self._update_action(action, victims)
         return
