@@ -1325,6 +1325,9 @@ class EngineService(service.Service):
             LOG.info('Scaling in cluster %s', db_cluster.name)
             inputs = {}
 
+        req.obj_set_defaults()
+        inputs['health_check'] = req.health_check
+
         params = {
             'name': 'cluster_scale_in_%s' % db_cluster.id[:8],
             'cause': consts.CAUSE_RPC,
