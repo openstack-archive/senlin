@@ -95,7 +95,13 @@ class BatchPolicy(base.Policy):
         self.max_batch_size = self.properties[self.MAX_BATCH_SIZE]
         self.pause_time = self.properties[self.PAUSE_TIME]
 
-    def _cal_batch_size(self, total, action_name):
+    def _get_batch_size(self, total, action):
+        """Get batch size for update/delete operation.
+
+        :param total: Total number of nodes.
+        :param action: Name of action being executed.
+        :returns: Size of each batch and number of batches.
+        """
         batch_num = 0
         batch_size = 0
         diff = 0
@@ -103,8 +109,7 @@ class BatchPolicy(base.Policy):
         # if the action is CLUSTER_DELETE or number of nodes less than
         # min_in_service, we divided it to 2 batches
         diff = int(math.ceil(float(total) / 2))
-        if (action_name == consts.CLUSTER_UPDATE and
-                total > self.min_in_service):
+        if (action == consts.CLUSTER_UPDATE and total > self.min_in_service):
             diff = total - self.min_in_service
 
         # max_batch_size is -1 if not specified
@@ -117,55 +122,47 @@ class BatchPolicy(base.Policy):
 
         return batch_size, batch_num
 
-    def _pick_nodes(self, batch_size, batch_num, candidates, good):
+    def _pick_nodes(self, nodes, batch_size, batch_num):
         """Select nodes based on size and number of batches.
 
+        :param nodes: list of node objects.
         :param batch_size: the number of nodes of each batch.
         :param batch_num: the number of batches.
-        :param candidates: a list of IDs for 'ERROR' nodes.
-        :param good: a list of active node objects.
         :returns: a list of sets containing the nodes' IDs we
                   selected based on the input params.
         """
-
-        nodes_list = []
-        # NOTE: we leave the nodes known to be good (ACTIVE)
-        # at the end of the list so that we have a better
-        # chance to ensure 'min_in_service' constraint
-        for node in good:
-            candidates.append(node.id)
+        candidates, good = su.filter_error_nodes(nodes)
+        result = []
+        # NOTE: we leave the nodes known to be good (ACTIVE) at the end of the
+        # list so that we have a better chance to ensure 'min_in_service'
+        # constraint
+        for n in good:
+            candidates.append(n.id)
 
         for start in range(0, len(candidates), batch_size):
             end = start + batch_size
-            nodes_list.append(set(candidates[start:end]))
+            result.append(set(candidates[start:end]))
 
-        return nodes_list
+        return result
 
     def _create_plan(self, cluster, action):
-        current = no.Node.count_by_cluster(action.context, cluster.id)
+        nodes = no.Node.get_all_by_cluster(action.context, cluster.id)
         action_name = action.action
-        plan_list = [{}]
-        plan = {
-            'pause_time': self.pause_time,
-        }
-        if current == 0:
+        plan = {'pause_time': self.pause_time}
+        if len(nodes) == 0:
             if action_name == consts.CLUSTER_UPDATE:
-                plan['plan'] = plan_list
+                plan['plan'] = []
                 return True, plan
             else:
                 plan['batch_size'] = 0
                 return True, plan
 
-        batch_size, batch_num = self._cal_batch_size(current, action_name)
+        batch_size, batch_num = self._get_batch_size(len(nodes), action_name)
         if action_name == consts.CLUSTER_DELETE:
             plan['batch_size'] = batch_size
             return True, plan
 
-        nodes_list = cluster.nodes
-        bad_list, good_list = su.filter_error_nodes(nodes_list)
-        plan_list = self._pick_nodes(batch_size, batch_num, bad_list,
-                                     good_list)
-        plan['plan'] = plan_list
+        plan['plan'] = self._pick_nodes(nodes, batch_size, batch_num)
 
         return True, plan
 
