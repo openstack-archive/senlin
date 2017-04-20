@@ -181,7 +181,7 @@ triggering. For convenience, we export that value to an environment variable:
 
 .. code-block:: console
 
-  $ export ALRM_URL01=http://node1:8778/v1/webhooks/ba...5a/trigger?V=1&count=2
+  $ export ALRM_URL01="http://node1:8778/v1/webhooks/ba...5a/trigger?V=1&count=2"
 
 Similar to the example above, you can create other receivers for different
 kinds of cluster operations or the same cluster operation with different
