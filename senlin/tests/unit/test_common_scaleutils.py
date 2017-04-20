@@ -281,11 +281,11 @@ class ScaleUtilsTest(base.SenlinTestCase):
     @mock.patch.object(su, 'filter_error_nodes')
     def test__victims_by_profile_age_oldest(self, mock_filter):
         good_nodes = [
-            mock.Mock(id='N11', rt={'profile': mock.Mock(created_at=110)}),
-            mock.Mock(id='N15', rt={'profile': mock.Mock(created_at=150)}),
-            mock.Mock(id='N12', rt={'profile': mock.Mock(created_at=120)}),
-            mock.Mock(id='N13', rt={'profile': mock.Mock(created_at=130)}),
-            mock.Mock(id='N14', rt={'profile': mock.Mock(created_at=140)}),
+            mock.Mock(id='N11', profile_created_at=110),
+            mock.Mock(id='N15', profile_created_at=150),
+            mock.Mock(id='N12', profile_created_at=120),
+            mock.Mock(id='N13', profile_created_at=130),
+            mock.Mock(id='N14', profile_created_at=140),
         ]
         mock_filter.return_value = (['N1', 'N2'], good_nodes)
 
