@@ -213,6 +213,10 @@ class TestNodeAdopt(test_base.SenlinTestCase):
     body = {
         'identity': 'test-node',
         'type': 'test-type',
+        'name': 'test-name',
+        'cluster': 'test-cluster',
+        'role': 'test-role',
+        'metadata': {'key': 'value'},
         'overrides': {'foo': 'bar'},
         'preview': False,
         'snapshot': True
@@ -222,6 +226,10 @@ class TestNodeAdopt(test_base.SenlinTestCase):
         sot = nodes.NodeAdoptRequest(**self.body)
         self.assertEqual('test-node', sot.identity)
         self.assertEqual('test-type', sot.type)
+        self.assertEqual('test-name', sot.name)
+        self.assertEqual('test-cluster', sot.cluster)
+        self.assertEqual('test-role', sot.role)
+        self.assertEqual({'key': 'value'}, sot.metadata)
         self.assertEqual({'foo': 'bar'}, sot.overrides)
         self.assertFalse(sot.preview)
         self.assertTrue(sot.snapshot)
