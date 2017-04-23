@@ -29,14 +29,15 @@ class ClusterScaleInTest(base.SenlinTestCase):
         self.ctx = utils.dummy_context()
 
     @mock.patch.object(scaleutils, 'nodes_by_random')
+    @mock.patch.object(ca.ClusterAction, '_check_nodes')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
     @mock.patch.object(no.Node, 'count_by_cluster')
-    def test_do_scale_in_no_pd_no_inputs(self, mock_count, mock_delete,
-                                         mock_select, mock_load):
+    def test_do_scale_in_no_pd_no_count(self, mock_count, mock_delete,
+                                        mock_check, mock_select, mock_load):
         cluster = mock.Mock(id='CID', min_size=1, max_size=-1)
         mock_load.return_value = cluster
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx,
-                                  data={}, inputs={})
+                                  data={}, inputs={'health_check': False})
         mock_count.return_value = 10
         mock_delete.return_value = (action.RES_OK, 'Life is beautiful.')
 
@@ -48,6 +49,7 @@ class ClusterScaleInTest(base.SenlinTestCase):
         self.assertEqual('Cluster scaling succeeded.', res_msg)
 
         # deleting 1 nodes
+        self.assertFalse(mock_check.called)
         mock_count.assert_called_once_with(action.context, 'CID')
         mock_delete.assert_called_once_with(mock.ANY)
         mock_select.assert_called_once_with(cluster.nodes, 1)
@@ -57,11 +59,12 @@ class ClusterScaleInTest(base.SenlinTestCase):
         cluster.eval_status.assert_called_once_with(
             action.context, consts.CLUSTER_SCALE_IN)
 
+    @mock.patch.object(ca.ClusterAction, '_check_nodes')
     @mock.patch.object(ca.ClusterAction, '_sleep')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
     @mock.patch.object(no.Node, 'count_by_cluster')
     def test_do_scale_in_with_pd_no_input(self, mock_count, mock_delete,
-                                          mock_sleep, mock_load):
+                                          mock_sleep, mock_check, mock_load):
         cluster = mock.Mock(id='CID', min_size=1, max_size=-1)
         mock_load.return_value = cluster
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
@@ -69,7 +72,8 @@ class ClusterScaleInTest(base.SenlinTestCase):
             'deletion': {
                 'count': 2,
                 'grace_period': 2,
-                'candidates': ['NODE_ID_3', 'NODE_ID_4']
+                'candidates': ['NODE_ID_3', 'NODE_ID_4'],
+                'health_check': False
             }
         }
         action.inputs = {}
@@ -89,6 +93,8 @@ class ClusterScaleInTest(base.SenlinTestCase):
         self.assertEqual(2, len(mock_delete.call_args[0][0]))
         self.assertIn('NODE_ID_3', mock_delete.call_args[0][0])
         self.assertIn('NODE_ID_4', mock_delete.call_args[0][0])
+        self.assertFalse(mock_check.called)
+        self.assertFalse(cluster.update_node.called)
         cluster.set_status.assert_called_once_with(
             action.context, consts.CS_RESIZING, 'Cluster scale in started.',
             desired_capacity=3)
@@ -97,14 +103,16 @@ class ClusterScaleInTest(base.SenlinTestCase):
         mock_sleep.assert_called_once_with(2)
 
     @mock.patch.object(scaleutils, 'nodes_by_random')
+    @mock.patch.object(ca.ClusterAction, '_check_nodes')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
     @mock.patch.object(no.Node, 'count_by_cluster')
     def test_do_scale_in_no_pd_with_input(self, mock_count, mock_delete,
-                                          mock_select, mock_load):
+                                          mock_check, mock_select, mock_load):
         cluster = mock.Mock(id='CID', min_size=1, max_size=-1)
         mock_load.return_value = cluster
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx,
-                                  data={}, inputs={'count': 3})
+                                  data={}, inputs={'count': 3,
+                                                   'health_check': False})
         mock_count.return_value = 11
         mock_delete.return_value = (action.RES_OK, 'Life is beautiful.')
 
@@ -116,9 +124,93 @@ class ClusterScaleInTest(base.SenlinTestCase):
         self.assertEqual('Cluster scaling succeeded.', res_msg)
 
         # deleting 3 nodes
+        self.assertFalse(mock_check.called)
+        self.assertFalse(cluster.update_node.called)
         mock_count.assert_called_once_with(action.context, 'CID')
         mock_delete.assert_called_once_with(mock.ANY)
         mock_select.assert_called_once_with(cluster.nodes, 3)
+        cluster.set_status.assert_called_once_with(
+            action.context, consts.CS_RESIZING, 'Cluster scale in started.',
+            desired_capacity=8)
+        cluster.eval_status.assert_called_once_with(
+            action.context, consts.CLUSTER_SCALE_IN)
+
+    @mock.patch.object(scaleutils, 'nodes_by_random')
+    @mock.patch.object(ca.ClusterAction, '_check_nodes')
+    @mock.patch.object(ca.ClusterAction, '_delete_nodes')
+    @mock.patch.object(no.Node, 'count_by_cluster')
+    @mock.patch.object(no.Node, 'get_all_by_cluster')
+    def test_do_scale_in_health_check(self, mock_get, mock_count, mock_delete,
+                                      mock_check, mock_select, mock_load):
+        cluster = mock.Mock(id='CID', min_size=1, max_size=-1)
+        mock_load.return_value = cluster
+        node1 = mock.Mock(id='fake1')
+        node2 = mock.Mock(id='fake2')
+        node3 = mock.Mock(id='fake3')
+        cluster.nodes = [node1, node2, node3]
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx,
+                                  data={}, inputs={'count': 3,
+                                                   'health_check': True})
+        mock_count.return_value = 11
+        mock_delete.return_value = (action.RES_OK, 'Life is beautiful.')
+        mock_check.return_value = (action.RES_OK, 'checking completed.')
+        mock_get.return_value = [node1, node2, node3]
+
+        # do it
+        res_code, res_msg = action.do_scale_in()
+
+        # assertions
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Cluster scaling succeeded.', res_msg)
+
+        # deleting 3 nodes
+        mock_get.assert_called_once_with(action.context, 'CID')
+        mock_count.assert_called_once_with(action.context, 'CID')
+        mock_delete.assert_called_once_with(mock.ANY)
+        mock_select.assert_called_once_with(cluster.nodes, 3)
+        mock_check.assert_called_once_with()
+        cluster.update_node.assert_called_once_with([node1, node2, node3])
+        cluster.set_status.assert_called_once_with(
+            action.context, consts.CS_RESIZING, 'Cluster scale in started.',
+            desired_capacity=8)
+        cluster.eval_status.assert_called_once_with(
+            action.context, consts.CLUSTER_SCALE_IN)
+
+    @mock.patch.object(scaleutils, 'nodes_by_random')
+    @mock.patch.object(ca.ClusterAction, '_check_nodes')
+    @mock.patch.object(ca.ClusterAction, '_delete_nodes')
+    @mock.patch.object(no.Node, 'count_by_cluster')
+    @mock.patch.object(no.Node, 'get_all_by_cluster')
+    def test_do_scale_in_health_check_failed(self, mock_get, mock_count,
+                                             mock_delete, mock_check,
+                                             mock_select, mock_load):
+        cluster = mock.Mock(id='CID', min_size=1, max_size=-1)
+        mock_load.return_value = cluster
+        node1 = mock.Mock(id='fake1')
+        node2 = mock.Mock(id='fake2')
+        node3 = mock.Mock(id='fake3')
+        cluster.nodes = [node1, node2, node3]
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx,
+                                  data={}, inputs={'count': 3,
+                                                   'health_check': True})
+        mock_count.return_value = 11
+        mock_delete.return_value = (action.RES_OK, 'Life is beautiful.')
+        mock_check.return_value = (action.RES_ERROR, 'boom!')
+
+        # do it
+        res_code, res_msg = action.do_scale_in()
+
+        # assertions
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Cluster scaling succeeded.', res_msg)
+
+        # deleting 3 nodes
+        self.assertFalse(mock_get.called)
+        self.assertFalse(cluster.update_node.called)
+        mock_count.assert_called_once_with(action.context, 'CID')
+        mock_delete.assert_called_once_with(mock.ANY)
+        mock_select.assert_called_once_with(cluster.nodes, 3)
+        mock_check.assert_called_once_with()
         cluster.set_status.assert_called_once_with(
             action.context, consts.CS_RESIZING, 'Cluster scale in started.',
             desired_capacity=8)
