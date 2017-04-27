@@ -154,7 +154,7 @@ with the following format to the named Zaqar queue to request Senlin service:
 
 More examples on sending message to a Zaqar queue can be found here:
 
-http://git.openstack.org/cgit/openstack/python-zaqarclient/tree/examples
+https://git.openstack.org/cgit/openstack/python-zaqarclient/tree/examples
 
 .. note::
 

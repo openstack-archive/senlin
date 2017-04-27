@@ -18,4 +18,4 @@ To run a single test case, go to tempest directory, then run with test case name
 
 If you can't find run_tempest.sh script in tempest directory, that means the script has been removed in a certain version.
 Then you can use "nosetests -v" to replace "./run_tempest.sh -N" in above command.
-More information about running tempest test can be found here: http://docs.openstack.org/developer/tempest/overview.html
+More information about running tempest test can be found here: https://docs.openstack.org/developer/tempest/overview.html

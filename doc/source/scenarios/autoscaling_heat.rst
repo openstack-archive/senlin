@@ -248,4 +248,4 @@ The steps and samples introduced in this tutorial can also work
 well together with composition of ceilometer, Aodh, and Gnocchi
 without any change.
 
-.. _heat template: http://git.openstack.org/cgit/openstack/senlin/plain/doc/source/user/scenarios/ex_lbas.yaml
+.. _heat template: https://git.openstack.org/cgit/openstack/senlin/plain/doc/source/user/scenarios/ex_lbas.yaml

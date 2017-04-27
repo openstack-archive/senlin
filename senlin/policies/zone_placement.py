@@ -14,7 +14,7 @@
 Policy for scheduling nodes across availability zones.
 
 NOTE: For full documentation about how the policy works, check:
-http://docs.openstack.org/developer/senlin/developer/policies/zone_v1.html
+https://docs.openstack.org/developer/senlin/developer/policies/zone_v1.html
 """
 
 import math
