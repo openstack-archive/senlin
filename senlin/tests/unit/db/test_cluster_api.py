@@ -51,6 +51,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertIsNotNone(cluster.init_at)
         self.assertEqual({}, cluster.meta_data)
         self.assertIsNone(cluster.data)
+        self.assertEqual({}, cluster.config)
 
     def test_cluster_get_returns_a_cluster(self):
         cluster = shared.create_cluster(self.ctx, self.profile)

@@ -76,6 +76,7 @@ def create_cluster(ctx, profile, **kwargs):
         'status_reason': 'Just Initialized',
         'meta_data': {},
         'dependents': {},
+        'config': {},
     }
     values.update(kwargs)
     if 'project' in kwargs:
