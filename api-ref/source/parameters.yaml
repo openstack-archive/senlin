@@ -726,6 +726,15 @@ events:
   description: |
     A list of event objects.
 
+health_check:
+  type: string
+  in: body
+  required: False
+  description: |
+    A boolean parameter indicates whether check physical resource when
+    scaling.
+  min_version: 1.7
+
 index:
   type: integer
   in: body
