@@ -458,82 +458,110 @@ class ServerProfile(base.Profile):
                     del bd[key]
         return bdm
 
-    def _validate_network(self, obj, network, reason=None):
-        result = {}
-        error = None
-        # check network
-        net_ident = network.get(self.NETWORK)
-        if net_ident:
-            try:
-                net = self.network(obj).network_get(net_ident)
-                result[self.NETWORK] = net.id
-            except exc.InternalError as ex:
-                error = six.text_type(ex)
+    def _check_security_groups(self, nc, net_spec, result):
+        """Check security groups.
 
-        # check port
-        port_ident = network.get(self.PORT)
-        if not error and port_ident:
-            try:
-                port = self.network(obj).port_find(port_ident)
-                if port.status != 'DOWN':
-                    error = _("The status of the port %(port)s must be DOWN"
-                              ) % {'port': port_ident}
-                result[self.PORT] = port.id
-            except exc.InternalError as ex:
-                error = six.text_type(ex)
-        elif port_ident is None and net_ident is None:
-            error = _("'%(port)s' is required if '%(net)s' is omitted"
-                      ) % {'port': self.PORT, 'net': self.NETWORK}
+        :param nc: network driver connection.
+        :param net_spec: the specification to check.
+        :param result: the result that is used as return value.
+        :returns: None if succeeded or an error message if things go wrong.
+        """
+        sgs = net_spec.get(self.PORT_SECURITY_GROUPS)
+        if not sgs:
+            return
 
-        fixed_ip = network.get(self.FIXED_IP)
-        if not error and fixed_ip:
-            if port_ident is not None:
-                error = _("The '%(port)s' property and the '%(fixed_ip)s' "
-                          "property cannot be specified at the same time"
-                          ) % {'port': self.PORT, 'fixed_ip': self.FIXED_IP}
-            else:
-                result[self.FIXED_IP] = fixed_ip
+        res = []
+        try:
+            for sg in sgs:
+                sg_obj = nc.security_group_find(sg)
+                res.append(sg_obj.id)
+        except exc.InternalError as ex:
+            return six.text_type(ex)
 
-        # Check security_groups
-        security_groups = network.get(self.PORT_SECURITY_GROUPS)
-        if security_groups:
-            result[self.PORT_SECURITY_GROUPS] = []
-            try:
-                for sg in security_groups:
-                    sg_obj = self.network(obj).security_group_find(
-                        sg, ignore_missing=False)
-                    result[self.PORT_SECURITY_GROUPS].append(sg_obj.id)
-            except exc.InternalError as ex:
-                error = six.text_type(ex)
+        result[self.PORT_SECURITY_GROUPS] = res
+        return
 
-        # Check floating IP
-        floating_network = network.get(self.FLOATING_NETWORK)
-        if floating_network:
+    def _check_network(self, nc, net, result):
+        """Check the specified network.
+
+        :param nc: network driver connection.
+        :param net: the name or ID of network to check.
+        :param result: the result that is used as return value.
+        :returns: None if succeeded or an error message if things go wrong.
+        """
+        if net is None:
+            return
+        try:
+            net_obj = nc.network_get(net)
+            result[self.NETWORK] = net_obj.id
+        except exc.InternalError as ex:
+            return six.text_type(ex)
+
+    def _check_port(self, nc, port, result):
+        """Check the specified port.
+
+        :param nc: network driver connection.
+        :param port: the name or ID of port to check.
+        :param result: the result that is used as return value.
+        :returns: None if succeeded or an error message if things go wrong.
+        """
+        if port is None:
+            return
+
+        try:
+            port_obj = nc.port_find(port)
+            if port_obj.status != 'DOWN':
+                return _("The status of the port %(p)s must be DOWN"
+                         ) % {'p': port}
+            result[self.PORT] = port_obj.id
+            return
+        except exc.InternalError as ex:
+            return six.text_type(ex)
+
+    def _check_floating_ip(self, nc, net_spec, result):
+        """Check floating IP and network, if specified.
+
+        :param nc: network driver connection.
+        :param net_spec: the specification to check.
+        :param result: the result that is used as return value.
+        :returns: None if succeeded or an error message if things go wrong.
+        """
+        net = net_spec.get(self.FLOATING_NETWORK)
+        if net:
             try:
-                net = self.network(obj).network_get(floating_network)
-                result[self.FLOATING_NETWORK] = net.id
+                net_obj = nc.network_get(net)
+                result[self.FLOATING_NETWORK] = net_obj.id
             except exc.InternalError as ex:
-                error = six.text_type(ex)
-        floating_ip = network.get(self.FLOATING_IP)
-        if floating_ip:
+                return six.text_type(ex)
+
+        flt_ip = net_spec.get(self.FLOATING_IP)
+        if not flt_ip:
+            return
+
+        try:
             # Find floating ip with this address
-            try:
-                fip = self.network(obj).floatingip_find(floating_ip)
-                if fip:
-                    if fip.status == 'ACTIVE':
-                        error = _('Floating IP %s has been '
-                                  'used.') % floating_ip
-                    result['floating_ip_id'] = fip.id
-                # Create a floating IP with address
-                else:
-                    if not floating_network:
-                        error = _('Must specify a network to create '
-                                  'a floating IP')
-                    result[self.FLOATING_IP] = floating_ip
-            except exc.InternalError as ex:
-                error = six.text_type(ex)
+            fip = nc.floatingip_find(flt_ip)
+            if fip:
+                if fip.status == 'ACTIVE':
+                    return _('the floating IP %s has been used.') % flt_ip
+                result['floating_ip_id'] = fip.id
+                return
 
-        if error:
+            # Create a floating IP with address if floating ip unspecified
+            if not net:
+                return _('Must specify a network to create a floating IP')
+
+            result[self.FLOATING_IP] = flt_ip
+            return
+        except exc.InternalError as ex:
+            return six.text_type(ex)
+
+    def _validate_network(self, obj, net_spec, reason=None):
+
+        def _verify(error):
+            if error is None:
+                return
+
             if reason == 'create':
                 raise exc.EResourceCreation(type='server', message=error)
             elif reason == 'update':
@@ -541,6 +569,39 @@ class ServerProfile(base.Profile):
                                           message=error)
             else:
                 raise exc.InvalidSpec(message=error)
+
+        nc = self.network(obj)
+        result = {}
+
+        # check network
+        net = net_spec.get(self.NETWORK)
+        error = self._check_network(nc, net, result)
+        _verify(error)
+
+        # check port
+        port = net_spec.get(self.PORT)
+        error = self._check_port(nc, port, result)
+        _verify(error)
+
+        if port is None and net is None:
+            _verify(_("One of '%(p)s' and '%(n)s' must be provided"
+                      ) % {'p': self.PORT, 'n': self.NETWORK})
+
+        fixed_ip = net_spec.get(self.FIXED_IP)
+        if fixed_ip:
+            if port is not None:
+                _verify(_("The '%(p)s' property and the '%(fip)s' property "
+                          "cannot be specified at the same time"
+                          ) % {'p': self.PORT, 'fip': self.FIXED_IP})
+            result[self.FIXED_IP] = fixed_ip
+
+        # Check security_groups
+        error = self._check_security_groups(nc, net_spec, result)
+        _verify(error)
+
+        # Check floating IP
+        error = self._check_floating_ip(nc, net_spec, result)
+        _verify(error)
 
         return result
 
@@ -641,7 +702,7 @@ class ServerProfile(base.Profile):
         internal_ports = obj.data.get('internal_ports', [])
         if not networks:
             return []
-        created_ports = []
+
         for net_spec in networks:
             net = self._validate_network(obj, net_spec, action_type)
             # Create port
@@ -714,10 +775,10 @@ class ServerProfile(base.Profile):
             ctx = context.get_admin_context()
             node_obj.Node.update(ctx, obj.id, {'data': obj.data})
 
-    def _preprocess_user_data(self, obj, extra={}):
-        """ Get jinja2 parameters from metadata['config']
+    def _preprocess_user_data(self, obj, extra=None):
+        """Get jinja2 parameters from metadata config.
 
-        :param obj: The node object
+        :param obj: The node object.
         :param extra: The existing parameters to be merged.
         :returns: jinja2 parameters to be used.
         """
@@ -728,6 +789,7 @@ class ServerProfile(base.Profile):
             except (ValueError, TypeError):
                 return astr
 
+        extra = extra or {}
         n_config = _to_json(obj.metadata.get('config', {}))
         # Check node's metadata
         if isinstance(n_config, dict):
@@ -810,8 +872,7 @@ class ServerProfile(base.Profile):
                 jj_t = jinja2.Template(user_data)
                 user_data = jj_t.render(**jj_vars)
             except (jinja2.exceptions.UndefinedError, ValueError) as ex:
-                # (TODO) Handle jinja2 error, for now I just let it pass
-                # and use the original user_data
+                # TODO(anyone) Handle jinja2 error
                 pass
             ud = encodeutils.safe_encode(user_data)
             kwargs['user_data'] = encodeutils.safe_decode(
@@ -1074,14 +1135,14 @@ class ServerProfile(base.Profile):
                                           message=six.text_type(ex))
 
     def _find_port_by_net_spec(self, obj, net_spec, ports):
-        """ Find existing ports match with specific network properties.
+        """Find existing ports match with specific network properties.
 
         :param obj: The node object.
         :param net_spec: Network property of this profile.
         :param ports: A list of ports which attached to this server.
         :returns: A list of candidate ports matching this network spec.
         """
-        # (TODO): handle security_groups
+        # TODO(anyone): handle security_groups
         net = self._validate_network(obj, net_spec, 'update')
         selected_ports = []
         for p in ports:
@@ -1097,8 +1158,7 @@ class ServerProfile(base.Profile):
             # If network properties didn't contain floating ip,
             # then we should better not make a port with floating ip
             # as candidate.
-            if (floating and not floating_network
-                    and not floating_ip_address):
+            if (floating and not floating_network and not floating_ip_address):
                 continue
             port_id = net.get(self.PORT, None)
             if port_id and p['id'] != port_id:
