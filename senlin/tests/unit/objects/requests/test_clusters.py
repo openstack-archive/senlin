@@ -36,7 +36,11 @@ class TestClusterCreate(test_base.SenlinTestCase):
         self.assertEqual('test-profile', sot.profile_id)
 
         self.assertFalse(sot.obj_attr_is_set('min_size'))
+        self.assertFalse(sot.obj_attr_is_set('max_size'))
+        self.assertFalse(sot.obj_attr_is_set('desired_capacity'))
+        self.assertFalse(sot.obj_attr_is_set('metadata'))
         self.assertFalse(sot.obj_attr_is_set('timeout'))
+        self.assertFalse(sot.obj_attr_is_set('config'))
 
         sot.obj_set_defaults()
 
@@ -45,6 +49,7 @@ class TestClusterCreate(test_base.SenlinTestCase):
         self.assertEqual(consts.CLUSTER_DEFAULT_MAX_SIZE, sot.max_size)
         self.assertEqual({}, sot.metadata)
         self.assertEqual(CONF.default_action_timeout, sot.timeout)
+        self.assertEqual({}, sot.config)
 
     def test_cluster_create_request_body_full(self):
         body = copy.deepcopy(self.body)
@@ -53,7 +58,10 @@ class TestClusterCreate(test_base.SenlinTestCase):
         body['desired_capacity'] = 4
         body['metadata'] = {'foo': 'bar'}
         body['timeout'] = 121
+        body['config'] = {'k1': 'v1'}
+
         sot = clusters.ClusterCreateRequestBody(**body)
+
         self.assertEqual('test-cluster', sot.name)
         self.assertEqual('test-profile', sot.profile_id)
         self.assertEqual(1, sot.min_size)
@@ -61,6 +69,7 @@ class TestClusterCreate(test_base.SenlinTestCase):
         self.assertEqual(4, sot.desired_capacity)
         self.assertEqual({'foo': 'bar'}, sot.metadata)
         self.assertEqual(121, sot.timeout)
+        self.assertEqual({'k1': 'v1'}, sot.config)
 
     def test_request_body_to_primitive(self):
         sot = clusters.ClusterCreateRequestBody(**self.body)
@@ -75,7 +84,7 @@ class TestClusterCreate(test_base.SenlinTestCase):
         self.assertEqual('ClusterCreateRequestBody',
                          res['senlin_object.name'])
         self.assertEqual('senlin', res['senlin_object.namespace'])
-        self.assertEqual('1.0', res['senlin_object.version'])
+        self.assertEqual('1.1', res['senlin_object.version'])
         self.assertIn('profile_id', res['senlin_object.changes'])
         self.assertIn('name', res['senlin_object.changes'])
 
@@ -99,7 +108,7 @@ class TestClusterCreate(test_base.SenlinTestCase):
         self.assertEqual('ClusterCreateRequestBody',
                          data['senlin_object.name'])
         self.assertEqual('senlin', data['senlin_object.namespace'])
-        self.assertEqual('1.0', data['senlin_object.version'])
+        self.assertEqual('1.1', data['senlin_object.version'])
         self.assertEqual(
             {'name': u'test-cluster', 'profile_id': u'test-profile'},
             data['senlin_object.data']
@@ -251,24 +260,15 @@ class TestClusterUpdate(test_base.SenlinTestCase):
         self.assertFalse(sot.obj_attr_is_set('profile_id'))
         self.assertFalse(sot.obj_attr_is_set('metadata'))
         self.assertFalse(sot.obj_attr_is_set('timeout'))
+        self.assertFalse(sot.obj_attr_is_set('profile_only'))
+        self.assertFalse(sot.obj_attr_is_set('config'))
 
     def test_init_with_params(self):
         sot = clusters.ClusterUpdateRequest(identity='foo', name='new-name',
                                             profile_id='new-profile',
                                             metadata={'newkey': 'newvalue'},
-                                            timeout=4567)
-
-        self.assertEqual('foo', sot.identity)
-        self.assertEqual('new-name', sot.name)
-        self.assertEqual('new-profile', sot.profile_id)
-        self.assertEqual({'newkey': 'newvalue'}, sot.metadata)
-        self.assertEqual(4567, sot.timeout)
-
-    def test_init_with_profile_only(self):
-        sot = clusters.ClusterUpdateRequest(identity='foo', name='new-name',
-                                            profile_id='new-profile',
-                                            metadata={'newkey': 'newvalue'},
-                                            timeout=4567, profile_only=True)
+                                            timeout=4567, profile_only=True,
+                                            config={'foo': 'bar'})
 
         self.assertEqual('foo', sot.identity)
         self.assertEqual('new-name', sot.name)
@@ -276,6 +276,7 @@ class TestClusterUpdate(test_base.SenlinTestCase):
         self.assertEqual({'newkey': 'newvalue'}, sot.metadata)
         self.assertEqual(4567, sot.timeout)
         self.assertTrue(sot.profile_only)
+        self.assertEqual({'foo': 'bar'}, sot.config)
 
 
 class TestClusterAddNodes(test_base.SenlinTestCase):
