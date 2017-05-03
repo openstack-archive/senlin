@@ -2,7 +2,7 @@ Senlin Style Commandments
 =========================
 
 - Step 1: Read the OpenStack Style Commandments
-  http://docs.openstack.org/developer/hacking/
+  https://docs.openstack.org/developer/hacking/
 - Step 2: Read on
 
 Senlin Specific Commandments
@@ -23,7 +23,7 @@ Working on APIs
 If you are proposing new APIs or fixes to existing APIs, please spend some
 time reading the guidelines published by the API WorkGroup:
 
-http://git.openstack.org/cgit/openstack/api-wg/tree/guidelines
+https://git.openstack.org/cgit/openstack/api-wg/tree/guidelines
 
 Any work on improving Senlin's APIs to conform to the guidelines are welcomed.
 

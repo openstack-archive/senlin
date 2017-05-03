@@ -108,5 +108,5 @@ OTHERS
     creating profiles.
 
 
-.. _`Filtering Guidelines`: http://specs.openstack.org/openstack/api-wg/guidelines/pagination_filter_sort.html#filtering
+.. _`Filtering Guidelines`: https://specs.openstack.org/openstack/api-wg/guidelines/pagination_filter_sort.html#filtering
 .. _`Autoscaling Notifications`: https://ask.openstack.org/en/question/46495/heat-autoscaling-adaptation-actions-on-existing-servers/

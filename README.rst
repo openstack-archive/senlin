@@ -2,8 +2,8 @@
 Team and repository tags
 ========================
 
-.. image:: http://governance.openstack.org/badges/senlin.svg
-    :target: http://governance.openstack.org/reference/tags/index.html
+.. image:: https://governance.openstack.org/badges/senlin.svg
+    :target: https://governance.openstack.org/reference/tags/index.html
 
 .. Change things from this point on
 
@@ -68,7 +68,7 @@ Bug Tracking
 Weekly Meetings
 ---------------
 - Schedule: every Tuesday at 1300 UTC, on #openstack-meeting channel
-- Agenda: http://wiki.openstack.org/wiki/Meetings/SenlinAgenda
+- Agenda: https://wiki.openstack.org/wiki/Meetings/SenlinAgenda
 - Archive: http://eavesdrop.openstack.org/meetings/senlin/2015/
 
 IRC

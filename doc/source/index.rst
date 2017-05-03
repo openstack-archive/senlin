@@ -211,5 +211,5 @@ Indices and tables
 * :ref:`search`
 
 .. _`Code review guidelines (wiki)`: https://wiki.openstack.org/wiki/CodeReviewGuidelines
-.. _`OpenStack developer's guide`: http://docs.openstack.org/infra/manual/developers.html
-.. _`OpenStack API Complete Reference - Clustering`: http://developer.openstack.org/api-ref/clustering/
+.. _`OpenStack developer's guide`: https://docs.openstack.org/infra/manual/developers.html
+.. _`OpenStack API Complete Reference - Clustering`: https://developer.openstack.org/api-ref/clustering/
