@@ -1777,6 +1777,72 @@ class EngineService(service.Service):
         return {'node_preview': spec}
 
     @request_context
+    def node_adopt(self, ctx, req):
+        """Adopt a node into senlin's management.
+
+        :param ctx: An instance of the request context.
+        :param req: An NodeAdoptRequest object.
+        :returns: A dict containing information about the node created by
+                  adopting an existing physical resource.
+        """
+        LOG.info("Adopting node '%s'.", req.identity)
+
+        # check name uniqueness if needed
+        if req.obj_attr_is_set('name'):
+            name = req.name
+            if not req.preview and CONF.name_unique:
+                if node_obj.Node.get_by_name(ctx, name):
+                    msg = _("The node named (%s) already exists.") % name
+                    raise exception.BadRequest(msg=msg)
+        else:
+            name = 'node-' + utils.random_name()
+
+        # create spec using preview
+        profile_cls, spec = self._node_adopt_preview(ctx, req)
+        # create profile
+        profile = profile_cls.create(ctx, "prof-%s" % name, spec)
+
+        # check cluster
+        if req.obj_attr_is_set('cluster'):
+            try:
+                db_cluster = co.Cluster.find(ctx, req.cluster)
+            except exception.ResourceNotFound as ex:
+                msg = ex.enhance_msg('specified', ex)
+                raise exception.BadRequest(msg=msg)
+            cluster_id = db_cluster.id
+            index = co.Cluster.get_next_index(ctx, cluster_id)
+        else:
+            cluster_id = ''
+            index = -1
+
+        # Create a node instance
+        values = {
+            'name': name,
+            'profile_id': profile.id,
+            'cluster_id': cluster_id,
+            'physical_id': req.identity,
+            'index': index,
+            'role': req.role if req.obj_attr_is_set('role') else '',
+            'metadata': (req.metadata
+                         if req.obj_attr_is_set('metadata') else {}),
+            # TODO(Qiming): Set node status properly
+            'status': consts.NS_ACTIVE,
+            'status_reason': 'Node adopted successfully',
+            'init_at': timeutils.utcnow(True),
+            'created_at': timeutils.utcnow(True),
+            'user': ctx.user,
+            'project': ctx.project,
+            'domain': ctx.domain,
+        }
+        node = node_obj.Node.create(ctx, values)
+
+        # TODO(Qiming): set cluster_node_id, cluster_id, cluster_node_index
+        #               metadata
+        LOG.info("Adopted node '%(rid)s' as '%(id)s'.",
+                 {'rid': req.identity, 'id': node.id})
+        return node.to_dict()
+
+    @request_context
     def node_check(self, ctx, req):
         """Check the health status of specified node.
 

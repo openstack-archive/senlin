@@ -759,6 +759,163 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual('boom.', six.text_type(ex.exc_info[1]))
 
+    @mock.patch.object(no.Node, 'create')
+    @mock.patch.object(service.EngineService, '_node_adopt_preview')
+    def test_node_adopt(self, mock_preview, mock_create):
+        class FakeProfile(object):
+            @classmethod
+            def create(cls, ctx, name, spec):
+                obj = mock.Mock(spec=spec, id='PROFILE_ID')
+                obj.name = name
+                return obj
+
+        req = orno.NodeAdoptRequest(identity='FAKE_ID', type='FAKE_TYPE')
+        mock_preview.return_value = FakeProfile, {'foo': 'bar'}
+        fake_node = mock.Mock()
+        fake_node.to_dict = mock.Mock(return_value={'attr': 'value'})
+        mock_create.return_value = fake_node
+
+        res = self.eng.node_adopt(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'attr': 'value'}, res)
+        mock_preview.assert_called_once_with(self.ctx, mock.ANY)
+        self.assertIsInstance(mock_preview.call_args[0][1],
+                              orno.NodeAdoptRequest)
+        attrs = {
+            'name': mock.ANY,
+            'profile_id': 'PROFILE_ID',
+            'physical_id': 'FAKE_ID',
+            'cluster_id': '',
+            'index': -1,
+            'role': '',
+            'metadata': {},
+            'status': consts.NS_ACTIVE,
+            'status_reason': 'Node adopted successfully',
+            'init_at': mock.ANY,
+            'created_at': mock.ANY,
+            'user': self.ctx.user,
+            'project': self.ctx.project,
+            'domain': self.ctx.domain
+        }
+        mock_create.assert_called_once_with(self.ctx, attrs)
+
+    @mock.patch.object(co.Cluster, 'get_next_index')
+    @mock.patch.object(co.Cluster, 'find')
+    @mock.patch.object(no.Node, 'create')
+    @mock.patch.object(service.EngineService, '_node_adopt_preview')
+    def test_node_adopt_with_cluster(self, mock_preview, mock_create,
+                                     mock_find, mock_index):
+        class FakeProfile(object):
+            @classmethod
+            def create(cls, ctx, name, spec):
+                obj = mock.Mock(spec=spec, id='PROFILE_ID')
+                obj.name = name
+                return obj
+
+        req = orno.NodeAdoptRequest(identity='FAKE_ID', type='FAKE_TYPE',
+                                    cluster='CLUSTER_NAME',
+                                    role='master', metadata={'ah': 'oh'})
+        mock_preview.return_value = FakeProfile, {'foo': 'bar'}
+        fake_node = mock.Mock()
+        fake_node.to_dict = mock.Mock(return_value={'attr': 'value'})
+        mock_create.return_value = fake_node
+        fake_cluster = mock.Mock(id='CLUSTER_ID')
+        mock_find.return_value = fake_cluster
+        mock_index.return_value = 124
+
+        res = self.eng.node_adopt(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'attr': 'value'}, res)
+        mock_preview.assert_called_once_with(self.ctx, mock.ANY)
+        self.assertIsInstance(mock_preview.call_args[0][1],
+                              orno.NodeAdoptRequest)
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER_NAME')
+        mock_index.assert_called_once_with(self.ctx, 'CLUSTER_ID')
+        attrs = {
+            'name': mock.ANY,
+            'profile_id': 'PROFILE_ID',
+            'physical_id': 'FAKE_ID',
+            'cluster_id': 'CLUSTER_ID',
+            'index': 124,
+            'role': 'master',
+            'metadata': {'ah': 'oh'},
+            'status': consts.NS_ACTIVE,
+            'status_reason': 'Node adopted successfully',
+            'init_at': mock.ANY,
+            'created_at': mock.ANY,
+            'user': self.ctx.user,
+            'project': self.ctx.project,
+            'domain': self.ctx.domain
+        }
+        mock_create.assert_called_once_with(self.ctx, attrs)
+
+    @mock.patch.object(co.Cluster, 'get_next_index')
+    @mock.patch.object(co.Cluster, 'find')
+    @mock.patch.object(no.Node, 'create')
+    @mock.patch.object(service.EngineService, '_node_adopt_preview')
+    def test_node_adopt_with_cluster_not_found(self, mock_preview, mock_create,
+                                               mock_find, mock_index):
+        class FakeProfile(object):
+            @classmethod
+            def create(cls, ctx, name, spec):
+                obj = mock.Mock(spec=spec, id='PROFILE_ID')
+                obj.name = name
+                return obj
+
+        req = orno.NodeAdoptRequest(identity='FAKE_ID', type='FAKE_TYPE',
+                                    cluster='CLUSTER_NAME')
+        mock_preview.return_value = FakeProfile, {'foo': 'bar'}
+        fake_node = mock.Mock()
+        fake_node.to_dict = mock.Mock(return_value={'attr': 'value'})
+        mock_create.return_value = fake_node
+        mock_find.side_effect = exc.ResourceNotFound(type='cluster',
+                                                     id='CLUSTER_NAME')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_adopt,
+                               self.ctx, req.obj_to_primitive())
+
+        mock_preview.assert_called_once_with(self.ctx, mock.ANY)
+        self.assertIsInstance(mock_preview.call_args[0][1],
+                              orno.NodeAdoptRequest)
+        mock_find.assert_called_once_with(self.ctx, 'CLUSTER_NAME')
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The specified cluster 'CLUSTER_NAME' could not be "
+                         "found.", six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(no.Node, 'get_by_name')
+    def test_node_adopt_name_not_unique(self, mock_get):
+        cfg.CONF.set_override('name_unique', True, enforce_type=True)
+        req = orno.NodeAdoptRequest(
+            name='FAKE_NAME', preview=False,
+            identity='FAKE_ID', type='FAKE_TYPE')
+        mock_get.return_value = mock.Mock()
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_adopt,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("The node named (FAKE_NAME) already exists.",
+                         six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(no.Node, 'create')
+    @mock.patch.object(service.EngineService, '_node_adopt_preview')
+    def test_node_adopt_failed_preview(self, mock_preview, mock_create):
+        req = orno.NodeAdoptRequest(identity='FAKE_ID', type='FAKE_TYPE')
+        mock_preview.side_effect = exc.BadRequest(msg='boom')
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_adopt,
+                               self.ctx, req.obj_to_primitive())
+
+        mock_preview.assert_called_once_with(self.ctx, mock.ANY)
+        self.assertIsInstance(mock_preview.call_args[0][1],
+                              orno.NodeAdoptRequest)
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("boom.", six.text_type(ex.exc_info[1]))
+
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(no.Node, 'find')
