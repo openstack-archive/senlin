@@ -1,0 +1,14 @@
+{
+    "services": [
+        {
+            "binary": "senlin-engine",
+            "disabled_reason": null,
+            "host": "host1",
+            "id": "f93f83f6-762b-41b6-b757-80507834d394",
+            "state": "up",
+            "status": "enabled",
+            "topic": "senlin-engine",
+            "updated_at": "2017-04-24T07:43:12"
+        }
+    ]
+}

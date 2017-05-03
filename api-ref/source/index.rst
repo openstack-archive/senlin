@@ -19,3 +19,4 @@ Clustering API
 .. include:: events.inc
 .. include:: webhooks.inc
 .. include:: actions.inc
+.. include:: services.inc
