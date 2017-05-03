@@ -73,6 +73,7 @@ class Cluster(object):
         self.data = kwargs.get('data', {})
         self.metadata = kwargs.get('metadata') or {}
         self.dependents = kwargs.get('dependents') or {}
+        self.config = kwargs.get('config') or {}
 
         # rt is a dict for runtime data
         self.rt = {
@@ -128,6 +129,7 @@ class Cluster(object):
             'meta_data': self.metadata,
             'data': self.data,
             'dependents': self.dependents,
+            'config': self.config,
         }
 
         timestamp = timeutils.utcnow(True)
@@ -167,6 +169,7 @@ class Cluster(object):
             'data': obj.data,
             'metadata': obj.metadata,
             'dependents': obj.dependents,
+            'config': obj.config,
         }
 
         return cls(obj.name, obj.desired_capacity, obj.profile_id,

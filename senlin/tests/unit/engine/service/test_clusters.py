@@ -145,6 +145,7 @@ class ClusterTest(base.SenlinTestCase):
             dict(name='C1', desired_capacity=3, profile_id='PROFILE_ID',
                  min_size=0, max_size=-1, timeout=3600, metadata={},
                  dependents={}, data={}, next_index=1, status='INIT',
+                 config={},
                  status_reason='Initializing', user=self.ctx.user,
                  project=self.ctx.project, domain=self.ctx.domain))
         mock_action.assert_called_once_with(
@@ -174,7 +175,8 @@ class ClusterTest(base.SenlinTestCase):
         mock_check.return_value = None
         mock_quota.return_value = None
         req = orco.ClusterCreateRequestBody(name='C1', profile_id='PROFILE',
-                                            min_size=1, max_size=5)
+                                            min_size=1, max_size=5,
+                                            config={'k1': 'v1'})
 
         # do it
         result = self.eng.cluster_create(self.ctx, req.obj_to_primitive())
@@ -187,6 +189,7 @@ class ClusterTest(base.SenlinTestCase):
             dict(name='C1', desired_capacity=1, profile_id='PROFILE_ID',
                  min_size=1, max_size=5, timeout=3600, metadata={},
                  dependents={}, data={}, next_index=1, status='INIT',
+                 config={'k1': 'v1'},
                  status_reason='Initializing', user=self.ctx.user,
                  project=self.ctx.project, domain=self.ctx.domain))
         mock_action.assert_called_once_with(
@@ -309,7 +312,8 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.return_value = 'ACTION_ID'
         req = orco.ClusterUpdateRequest(identity='FAKE_ID', name='new_name',
                                         profile_id='NEW_PROFILE',
-                                        metadata={'B': 'A'}, timeout=120)
+                                        metadata={'B': 'A'}, timeout=120,
+                                        config={'k1': 'v1'})
 
         # do it
         result = self.eng.cluster_update(self.ctx, req.obj_to_primitive())
@@ -332,6 +336,9 @@ class ClusterTest(base.SenlinTestCase):
                 },
                 'timeout': 120,
                 'name': 'new_name',
+                'config': {
+                    'k1': 'v1',
+                },
             }
         )
 
