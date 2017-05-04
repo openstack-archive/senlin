@@ -24,6 +24,8 @@
     "profiles:validate": "",
     "nodes:index": "",
     "nodes:create": "",
+    "nodes:adopt": "",
+    "nodes:adopt_preview": "",
     "nodes:get": "",
     "nodes:action": "",
     "nodes:update": "",

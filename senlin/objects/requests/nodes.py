@@ -116,7 +116,7 @@ class NodeAdoptRequest(base.SenlinObject):
         'identity': fields.StringField(),
         'type': fields.StringField(),
         'name': fields.NameField(nullable=True),
-        'cluster': fields.StringField(nullable=True),
+        'cluster': fields.StringField(nullable=True, default=''),
         'role': fields.StringField(nullable=True),
         'metadata': fields.JsonField(nullable=True, default={}),
         'overrides': fields.JsonField(nullable=True),

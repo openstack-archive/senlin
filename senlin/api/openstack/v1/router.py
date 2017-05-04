@@ -190,6 +190,14 @@ class API(wsgi.Router):
                                action="create",
                                conditions={'method': 'POST'},
                                success=202)
+            sub_mapper.connect("node_adopt",
+                               "/nodes/adopt",
+                               action="adopt",
+                               conditions={'method': 'POST'})
+            sub_mapper.connect("node_adopt_preview",
+                               "/nodes/adopt/preview",
+                               action="adopt_preview",
+                               conditions={'method': 'POST'})
             sub_mapper.connect("node_get",
                                "/nodes/{node_id}",
                                action="get",

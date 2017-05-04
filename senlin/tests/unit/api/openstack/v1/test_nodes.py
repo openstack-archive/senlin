@@ -411,6 +411,77 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_node_adopt(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'adopt', True)
+        body = {
+            'identity': 'PHYSICAL',
+            'type': 'RES-TYPE',
+            'name': 'test_node',
+            'cluster': 'CLUSTER',
+            'role': 'ROLE',
+            'metadata': {'MK': 'MV'},
+            'overrides': {'NKEY': 'NVAL'},
+            'snapshot': True,
+        }
+
+        engine_response = {
+            'id': 'test_node_id',
+            'name': 'test_node',
+            'profile_id': 'xxxx-yyyy',
+            'cluster_id': 'test_cluster_id',
+            'role': 'ROLE',
+            'metadata': {'MK': 'MV'},
+        }
+        req = self._post('/nodes/adopt', jsonutils.dumps(body),
+                         version='1.7')
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.return_value = engine_response
+
+        resp = self.controller.adopt(req, body=body)
+
+        self.assertEqual({'node': engine_response}, resp)
+        mock_parse.assert_called_once_with('NodeAdoptRequest', req, body)
+        mock_call.assert_called_once_with(req.context, 'node_adopt', mock.ANY)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_node_adopt_preview(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'adopt_preview', True)
+        body = {
+            'identity': 'PHYSICAL',
+            'type': 'RES-TYPE',
+            'name': 'test_node',
+            'cluster': 'CLUSTER',
+            'role': 'ROLE',
+            'metadata': {'MK': 'MV'},
+            'overrides': {'NKEY': 'NVAL'},
+            'snapshot': True,
+        }
+
+        engine_response = {
+            'id': 'test_node_id',
+            'name': 'test_node',
+            'profile_id': 'xxxx-yyyy',
+            'cluster_id': 'test_cluster_id',
+            'role': 'ROLE',
+            'metadata': {'MK': 'MV'},
+        }
+        req = self._post('/nodes/adopt/preview', jsonutils.dumps(body),
+                         version='1.7')
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.return_value = engine_response
+
+        resp = self.controller.adopt_preview(req, body=body)
+
+        self.assertEqual({'node_profile': engine_response}, resp)
+        mock_parse.assert_called_once_with('NodeAdoptRequest', req, body)
+        mock_call.assert_called_once_with(req.context, 'node_adopt_preview',
+                                          mock.ANY)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_node_get_success(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'get', True)
         node_id = 'aaaa-bbbb-cccc'
