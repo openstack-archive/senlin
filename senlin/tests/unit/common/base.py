@@ -18,7 +18,6 @@ import fixtures
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
-from oslotest import mockpatch
 import six
 import testscenarios
 import testtools
@@ -93,8 +92,8 @@ class SenlinTestCase(testscenarios.WithScenarios,
         scheduler.wallclock = fake_wallclock
 
     def patchobject(self, obj, attr, **kwargs):
-        mockfixture = self.useFixture(mockpatch.PatchObject(obj, attr,
-                                                            **kwargs))
+        mockfixture = self.useFixture(fixtures.MockPatchObject(obj, attr,
+                                                               **kwargs))
         return mockfixture.mock
 
     # NOTE(pshchelo): this overrides the testtools.TestCase.patch method
