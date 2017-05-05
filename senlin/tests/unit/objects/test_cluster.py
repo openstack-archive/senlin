@@ -138,6 +138,7 @@ class TestCluster(base.SenlinTestCase):
             'metadata': {},
             'data': {},
             'dependents': {},
+            'config': {},
             'nodes': ['N1', 'N2'],
             'policies': ['P1', 'P2'],
             'profile_name': 'PROFILEABC',

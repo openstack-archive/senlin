@@ -48,6 +48,7 @@ class Cluster(base.SenlinObject, base.VersionedObjectDictCompat):
         'project': fields.StringField(),
         'domain': fields.StringField(nullable=True),
         'dependents': fields.JsonField(nullable=True),
+        'config': fields.JsonField(nullable=True),
     }
 
     @classmethod
@@ -139,6 +140,7 @@ class Cluster(base.SenlinObject, base.VersionedObjectDictCompat):
             'metadata': self.metadata or {},
             'data': self.data or {},
             'dependents': self.dependents or {},
+            'config': self.config or {},
             'profile_name': profile.name,
             'nodes': db_api.node_ids_by_cluster(context, self.id),
             'policies': db_api.cluster_policy_ids_by_cluster(context, self.id)
