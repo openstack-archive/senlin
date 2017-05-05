@@ -93,14 +93,14 @@ CLUSTER_ATTRS = (
     CLUSTER_DOMAIN, CLUSTER_PROJECT, CLUSTER_USER,
     CLUSTER_INIT_AT, CLUSTER_CREATED_AT, CLUSTER_UPDATED_AT,
     CLUSTER_STATUS, CLUSTER_STATUS_REASON, CLUSTER_TIMEOUT,
-    CLUSTER_METADATA,
+    CLUSTER_METADATA, CLUSTER_CONFIG,
 ) = (
     'name', 'profile_id', 'desired_capacity',
     'min_size', 'max_size', 'id',
     'domain', 'project', 'user',
     'init_at', 'created_at', 'updated_at',
     'status', 'status_reason', 'timeout',
-    'metadata',
+    'metadata', 'config',
 )
 
 CLUSTER_PARAMS = (

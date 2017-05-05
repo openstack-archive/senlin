@@ -62,6 +62,8 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual('Initializing', cluster.status_reason)
         self.assertEqual({}, cluster.data)
         self.assertEqual({}, cluster.metadata)
+        self.assertEqual({}, cluster.dependents)
+        self.assertEqual({}, cluster.config)
         self.assertEqual({'profile': None, 'nodes': [], 'policies': []},
                          cluster.rt)
 

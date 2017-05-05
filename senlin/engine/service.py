@@ -767,6 +767,7 @@ class EngineService(service.Service):
             'data': {},
             'metadata': req.metadata or {},
             'dependents': {},
+            'config': req.config or {},
             'user': ctx.user,
             'project': ctx.project,
             'domain': ctx.domain,
@@ -833,6 +834,12 @@ class EngineService(service.Service):
         if (req.obj_attr_is_set(consts.CLUSTER_NAME) and
                 req.name != cluster.name):
             inputs['name'] = req.name
+
+        if (req.obj_attr_is_set(consts.CLUSTER_CONFIG) and
+                req.config != cluster.config):
+            # TODO(anyone): updating cluster config is a multiplexed operation
+            # which have to be handled carefully.
+            inputs['config'] = req.config
 
         if req.obj_attr_is_set(consts.CLUSTER_PROFILE_ONLY):
             inputs['profile_only'] = req.profile_only
