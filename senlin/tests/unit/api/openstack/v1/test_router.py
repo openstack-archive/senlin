@@ -270,6 +270,20 @@ class RoutesTest(base.SenlinTestCase):
 
         self.assertRoute(
             self.m,
+            '/nodes/adopt',
+            'POST',
+            'adopt',
+            'NodeController')
+
+        self.assertRoute(
+            self.m,
+            '/nodes/adopt/preview',
+            'POST',
+            'adopt_preview',
+            'NodeController')
+
+        self.assertRoute(
+            self.m,
             '/nodes/bbbb',
             'GET',
             'get',
