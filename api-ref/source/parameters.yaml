@@ -452,6 +452,13 @@ attr_value:
     The attribute value on a specific node. The value could be of any data
     type that is valid for the attribute.
 
+binary:
+  type: string
+  in: body
+  required: True
+  description: |
+    The binary name of the service.
+
 build_info:
   type: object
   in: body
@@ -668,6 +675,13 @@ destroy_after_deletion:
     Whether deleted nodes to be destroyed right away.
   min_version: 1.4
 
+disabled_reason:
+  type: string
+  in: body
+  required: False
+  description: |
+    The reason for disabling a service.
+
 domain:
   type: UUID
   in: body
@@ -734,6 +748,13 @@ health_check:
     A boolean parameter indicates whether check physical resource when
     scaling.
   min_version: 1.7
+
+host:
+  type: string
+  in: body
+  required: True
+  description: |
+    The name of the host.
 
 index:
   type: integer
@@ -1251,6 +1272,34 @@ scale_count:
     The interpretation is depending on the action requested. Default value is
     1.
 
+service_id:
+  type: UUID
+  in: body
+  required: True
+  description: |
+    A UUID that uniquely identifies an service object.
+
+service_state:
+  type: string
+  in: body
+  required: True
+  description: |
+    The state of the service. One of ``up`` or ``down``.
+
+service_status:
+  type: string
+  in: body
+  required: True
+  description: |
+    The status of the service. One of ``enabled`` or ``disabled``.
+
+services:
+  type: array
+  in: body
+  required: True
+  description: |
+    A list of service.
+
 start_time:
   type: float
   in: body
@@ -1280,6 +1329,13 @@ timeout_req:
   required: False
   description: |
     The new timeout value (in seconds) of cluster operations.
+
+topic:
+  type: string
+  in: body
+  required: True
+  description: |
+    The topic name of the service.
 
 updated_at:
   type: string
