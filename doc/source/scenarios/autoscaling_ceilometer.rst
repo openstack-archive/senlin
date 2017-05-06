@@ -92,7 +92,7 @@ from the following command, you will find the IP address for the specific node:
 
 .. code-block:: console
 
-  $ openstack cluster node show 14936837-1459-416b-a1f3-dea026f6cffc
+  $ openstack cluster node show 14936837-1459-416b-a1f3-dea026f6cffc --details
   ...
   | details | +-----------+--------------------------------------+ |
   |         | | property  | value                                | |
