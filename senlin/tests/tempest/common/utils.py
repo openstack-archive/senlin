@@ -432,7 +432,7 @@ def create_a_keypair(base, name=None, is_admin_manager=True):
         name = data_utils.rand_name("tempest-created-keypair")
 
     if is_admin_manager is True:
-        body = base.admin_manager.keypairs_client.create_keypair(name=name)
+        body = base.os_admin.keypairs_client.create_keypair(name=name)
         body = body['keypair']
     else:
         params = {
@@ -449,7 +449,7 @@ def delete_a_keypair(base, name, is_admin_manager=True, ignore_missing=False):
     """Utility function that deletes a Nova keypair."""
 
     if is_admin_manager is True:
-        base.admin_manager.keypairs_client.delete_keypair(name)
+        base.os_admin.keypairs_client.delete_keypair(name)
         return
 
     res = base.compute_client.delete_obj('os-keypairs', name)
