@@ -674,7 +674,10 @@ class ClusterAction(base.Action):
                 inputs['params'] = {'fence_compute': True}
 
         children = []
+        check = self.data.get('check', False)
         for node in self.entity.nodes:
+            if check:
+                node.do_check(self.context)
             if node.status == 'ACTIVE':
                 continue
             node_id = node.id

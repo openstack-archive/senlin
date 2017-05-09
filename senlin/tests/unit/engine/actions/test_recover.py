@@ -17,6 +17,7 @@ from senlin.engine.actions import base as ab
 from senlin.engine.actions import cluster_action as ca
 from senlin.engine import cluster as cm
 from senlin.engine import dispatcher
+from senlin.engine import node as nm
 from senlin.objects import action as ao
 from senlin.objects import dependency as dobj
 from senlin.tests.unit.common import base
@@ -181,6 +182,90 @@ class ClusterRecoverTest(base.SenlinTestCase):
         mock_dep.assert_called_once_with(action.context, ['NODE_ACTION_ID'],
                                          'CLUSTER_ACTION_ID')
         mock_update.assert_called_once_with(action.context, 'NODE_ACTION_ID',
+                                            {'status': 'READY'})
+        mock_start.assert_called_once_with()
+        mock_wait.assert_called_once_with()
+        cluster.eval_status.assert_called_once_with(
+            action.context, consts.CLUSTER_RECOVER)
+
+    def test_do_recover_with_check_active(self, mock_load):
+        cluster = mock.Mock(id='FAKE_ID')
+        cluster.do_recover.return_value = True
+        mock_load.return_value = cluster
+
+        node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID', status='ACTIVE')
+        node2 = mock.Mock(id='NODE_2', cluster_id='FAKE_ID', status='ERROR')
+        cluster.nodes = [node1, node2]
+
+        def set_status(*args, **kwargs):
+            node2.status = 'ACTIVE'
+
+        mock_check = self.patchobject(nm.Node, 'do_check')
+        mock_check.side_effect = set_status
+        node2.do_check = mock_check
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_RECOVER', self.ctx)
+        action.data = {'check': True}
+
+        # do it
+        res_code, res_msg = action.do_recover()
+
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Cluster recovery succeeded.', res_msg)
+        node1.do_check.assert_called_once_with(self.ctx)
+        node2.do_check.assert_called_once_with(self.ctx)
+        cluster.do_recover.assert_called_once_with(self.ctx)
+        cluster.eval_status.assert_called_once_with(
+            action.context, consts.CLUSTER_RECOVER)
+
+    @mock.patch.object(ao.Action, 'update')
+    @mock.patch.object(ab.Action, 'create')
+    @mock.patch.object(dobj.Dependency, 'create')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
+    def test_do_recover_with_check_error(self, mock_wait, mock_start, mock_dep,
+                                         mock_action, mock_update, mock_load):
+        node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID', status='ACTIVE')
+        node2 = mock.Mock(id='NODE_2', cluster_id='FAKE_ID', status='ACTIVE')
+
+        cluster = mock.Mock(id='FAKE_ID', RECOVERING='RECOVERING')
+        cluster.do_recover.return_value = True
+        mock_load.return_value = cluster
+        cluster.nodes = [node1, node2]
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_RECOVER', self.ctx)
+        action.id = 'CLUSTER_ACTION_ID'
+        action.data = {'check': True}
+
+        mock_action.return_value = 'NODE_RECOVER_ID'
+        mock_wait.return_value = (action.RES_OK, 'Everything is Okay')
+
+        def set_status(*args, **kwargs):
+            node2.status = 'ERROR'
+
+        mock_check = self.patchobject(nm.Node, 'do_check')
+        mock_check.side_effect = set_status
+        node2.do_check = mock_check
+
+        # do it
+        res_code, res_msg = action.do_recover()
+
+        # assertions
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Cluster recovery succeeded.', res_msg)
+
+        cluster.do_recover.assert_called_once_with(action.context)
+        mock_action.assert_called_once_with(
+            action.context, 'NODE_2', 'NODE_RECOVER',
+            name='node_recover_NODE_2',
+            cause=consts.CAUSE_DERIVED,
+            inputs={}
+        )
+        node1.do_check.assert_called_once_with(self.ctx)
+        node2.do_check.assert_called_once_with(self.ctx)
+        mock_dep.assert_called_once_with(action.context, ['NODE_RECOVER_ID'],
+                                         'CLUSTER_ACTION_ID')
+        mock_update.assert_called_once_with(action.context, 'NODE_RECOVER_ID',
                                             {'status': 'READY'})
         mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
