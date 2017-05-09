@@ -523,3 +523,17 @@ class TestNovaV2(base.SenlinTestCase):
         d.service_force_down(service)
         self.compute.force_service_down.assert_called_once_with(
             service, service.host, service.binary)
+
+    def test_create_volume_attachment(self):
+        server = mock.Mock()
+        d = nova_v2.NovaClient(self.conn_params)
+        kwargs = {
+            'serverId': server,
+            'volumeId': 'fake_volume',
+        }
+        d.create_volume_attachment(server, **kwargs)
+
+    def test_delete_volume_attachment(self):
+        server = mock.Mock()
+        d = nova_v2.NovaClient(self.conn_params)
+        d.delete_volume_attachment('fake_volume', server, ignore_missing=True)
