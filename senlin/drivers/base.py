@@ -44,3 +44,4 @@ class SenlinDriver(object):
         self.identity = backend.identity
         self.message = backend.message
         self.workflow = backend.workflow
+        self.block_storage = backend.block_storage
