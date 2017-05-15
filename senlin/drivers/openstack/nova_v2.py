@@ -259,3 +259,13 @@ class NovaClient(base.DriverBase):
     def service_force_down(self, service):
         return self.conn.compute.force_service_down(service, service.host,
                                                     service.binary)
+
+    @sdk.translate_exception
+    def create_volume_attachment(self, server, **attr):
+        return self.conn.compute.create_volume_attachment(server, **attr)
+
+    @sdk.translate_exception
+    def delete_volume_attachment(self, volume_id, server, ignore_missing=True):
+        return self.conn.compute.delete_volume_attachment(
+            volume_id, server, ignore_missing=ignore_missing
+        )
