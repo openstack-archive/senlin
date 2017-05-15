@@ -20,6 +20,7 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.drivers import base
 from senlin.drivers.openstack import neutron_v2 as neutronclient
+from senlin.engine import node as nodem
 
 LOG = logging.getLogger(__name__)
 
@@ -260,7 +261,9 @@ class LoadBalancerDriver(base.DriverBase):
             return None
         net_name = net.name
 
-        node_detail = node.get_details(oslo_context.get_current())
+        ctx = oslo_context.get_current()
+        node_obj = nodem.Node.load(ctx, db_node=node)
+        node_detail = node_obj.get_details(ctx)
         addresses = node_detail.get('addresses')
         if net_name not in addresses:
             msg = 'Node is not in subnet %(subnet)s'
