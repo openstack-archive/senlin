@@ -167,7 +167,7 @@ class DeletionPolicy(base.Policy):
             return
 
         if action.action == consts.NODE_DELETE:
-            self._update_action(action, [action.node.id])
+            self._update_action(action, [action.entity.id])
             return
 
         cluster = cm.Cluster.load(action.context, cluster_id=cluster_id)

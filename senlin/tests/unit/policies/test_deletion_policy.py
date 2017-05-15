@@ -314,7 +314,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
     @mock.patch.object(dp.DeletionPolicy, '_update_action')
     def test_pre_op_node_delete(self, mock_update):
         action = mock.Mock(action=consts.NODE_DELETE, context=self.context,
-                           inputs={}, data={}, node=mock.Mock(id='NODE_ID'))
+                           inputs={}, data={}, entity=mock.Mock(id='NODE_ID'))
         policy = dp.DeletionPolicy('test-policy', self.spec)
 
         policy.pre_op('FAKE_ID', action)
