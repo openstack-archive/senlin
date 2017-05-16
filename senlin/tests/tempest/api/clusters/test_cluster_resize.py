@@ -192,7 +192,7 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('92e7d3c8-2d38-4766-86c3-41dc14bf89a1')
     def test_cluster_resize_break_upper_limit(self):
-        # New desired_capacity will be larger than max_size
+        # New desired_capacity will be greater than max_size
         params = {
             "resize": {
                 "adjustment_type": "CHANGE_IN_CAPACITY",
@@ -234,7 +234,7 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('d7a96d95-2944-4749-be34-cfe39a5dbcb4')
     def test_cluster_resize_max_size_under_current_desired_capacity(self):
-        # New max_size is lower than current desired_capacity of cluster
+        # New max_size is less than current desired_capacity of cluster
         params = {
             "resize": {
                 "max_size": 2,
@@ -254,7 +254,7 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('3b35938f-a73a-4096-bf13-af3709aed47f')
     def test_cluster_resize_max_size_under_current_min_size(self):
-        # New max_size is lower than current min_size of cluster
+        # New max_size is less than current min_size of cluster
         # with strict set to False
         params = {
             "resize": {
@@ -272,7 +272,7 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
         self.assertEqual(
             "The specified max_size (1) is less than the current "
             "min_size (2) of the cluster.", str(message))
-        # New max_size is lower than current min_size of cluster
+        # New max_size is less than current min_size of cluster
         # with strict set to True
         params = {
             "resize": {
@@ -293,7 +293,7 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('1d7595a4-a7a8-42a4-9f90-7501a4bbb7e5')
     def test_cluster_resize_min_size_over_current_desired_capacity(self):
-        # New min_size is larger than current desired_capacity of cluster
+        # New min_size is greater than current desired_capacity of cluster
         params = {
             "resize": {
                 "min_size": 4,
@@ -313,7 +313,7 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('606e5d3f-0857-4bfe-b52d-2ea1ad0cec16')
     def test_cluster_resize_min_size_over_current_max_size(self):
-        # New min_size is larger than current max_size of cluster
+        # New min_size is greater than current max_size of cluster
         # with strict set to False
         params = {
             "resize": {
@@ -332,7 +332,7 @@ class TestClusterResizeNegativeSizeCheckFailed(base.BaseSenlinAPITest):
             "The specified min_size (6) is greater than the current "
             "max_size (5) of the cluster.", str(message))
 
-        # New min_size is larger than current max_size of cluster
+        # New min_size is greater than current max_size of cluster
         # with strict set to True
         params = {
             "resize": {

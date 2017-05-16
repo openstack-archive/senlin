@@ -92,8 +92,7 @@ api_opts = [
                       "waiting forever.")),
     cfg.IntOpt('max_json_body_size', default=1048576,
                deprecated_group='DEFAULT',
-               help=_('Maximum raw byte size of JSON request body.'
-                      ' Should be larger than max_template_size.'))
+               help=_('Maximum raw byte size of JSON request body.'))
 
 ]
 api_group = cfg.OptGroup('senlin_api')
