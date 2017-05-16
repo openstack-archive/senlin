@@ -120,6 +120,16 @@ class NodeAdoptRequest(base.SenlinObject):
         'role': fields.StringField(nullable=True),
         'metadata': fields.JsonField(nullable=True, default={}),
         'overrides': fields.JsonField(nullable=True),
-        'preview': fields.BooleanField(nullable=True, default=True),
+        'snapshot': fields.BooleanField(nullable=True, default=False)
+    }
+
+
+@base.SenlinObjectRegistry.register
+class NodeAdoptPreviewRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'type': fields.StringField(),
+        'overrides': fields.JsonField(nullable=True),
         'snapshot': fields.BooleanField(nullable=True, default=False)
     }

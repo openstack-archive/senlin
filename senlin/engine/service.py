@@ -1737,7 +1737,8 @@ class EngineService(service.Service):
         """Preview version of node adoption (internal version).
 
         :param ctx: An instance of the request context.
-        :param req: An instance of the NodeAdoptRequest object.
+        :param req: An instance of the NodeAdoptPreviewRequest or the
+                    NodeAdoptRequest object.
         :returns: A tuple containing the profile class and the spec for the
                  node that can be adopted.
         :raises: BadRequest(404) if profile type not found; or
@@ -1756,6 +1757,8 @@ class EngineService(service.Service):
         temp_node = node_mod.Node('adopt', 'TBD', physical_id=req.identity,
                                   context=ctx)
         # TODO(Qiming): return node status and created timestamp
+        # TODO(Qiming): pass 'preview' into 'adopt_node' so that we don't
+        #               blindly create snapshots.
         spec = profile_base.Profile.adopt_node(ctx, temp_node, req.type,
                                                overrides=req.overrides,
                                                snapshot=req.snapshot)
@@ -1776,7 +1779,7 @@ class EngineService(service.Service):
         """Preview a node adoption operation.
 
         :param ctx: An instance of the request context.
-        :param req: An instance of the NodeAdoptRequest object.
+        :param req: An instance of the NodeAdoptPreviewRequest object.
         :returns: A dict containing the properties of a spec.
         """
         LOG.info("Adopting node '%s' (preview).", req.identity)
@@ -1797,10 +1800,9 @@ class EngineService(service.Service):
         # check name uniqueness if needed
         if req.obj_attr_is_set('name'):
             name = req.name
-            if not req.preview and CONF.name_unique:
-                if node_obj.Node.get_by_name(ctx, name):
-                    msg = _("The node named (%s) already exists.") % name
-                    raise exception.BadRequest(msg=msg)
+            if CONF.name_unique and node_obj.Node.get_by_name(ctx, name):
+                msg = _("The node named (%s) already exists.") % name
+                raise exception.BadRequest(msg=msg)
         else:
             name = 'node-' + utils.random_name()
 
