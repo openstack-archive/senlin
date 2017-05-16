@@ -45,7 +45,7 @@ def do_db_sync():
 def do_event_purge():
     '''Purge the specified event records in senlin's database.'''
     if CONF.command.age < 0:
-        print("age should be a positive integer!")
+        print(_("age must be a positive integer."))
         return
     api.event_purge(api.get_engine(),
                     CONF.command.project_id,
@@ -134,33 +134,33 @@ def add_command_parsers(subparsers):
                         '--project-id',
                         nargs='?',
                         metavar='<project1;project2...>',
-                        help='Purge event records with specified project id. '
-                             'This can be specified multiple times, or once '
-                             'with parameters separated by a semicolon.',
+                        help=_("Purge event records with specified project. "
+                               "This can be specified multiple times, or once "
+                               "with parameters separated by semicolon."),
                         action='append')
     parser.add_argument('-g',
                         '--granularity',
                         default='days',
                         choices=['days', 'hours', 'minutes', 'seconds'],
-                        help='Purge event records which are created '
-                             'in the specified time. The time is '
-                             'specified by age and granularity. '
-                             'The value of granularity should be one of '
-                             'days\hours\minutes\seconds, defaults to days.')
+                        help=_("Purge event records which were created in the "
+                               "specified time period. The time is specified "
+                               "by age and granularity, whose value must be "
+                               "one of 'days', 'hours', 'minutes' or "
+                               "'seconds' (default)."))
     parser.add_argument('age',
                         type=int,
                         default=30,
-                        help='Purge event records which are created '
-                             'in the specified time. The time is specified '
-                             'by age and granularity. For example, '
-                             'granularity=hours and age=2 means to purge '
-                             'the events which are created two hours ago. '
-                             'Defaults to 30.')
+                        help=_("Purge event records which were created in the "
+                               "specified time period. The time is specified "
+                               "by age and granularity. For example, "
+                               "granularity=hours and age=2 means purging "
+                               "events created two hours ago. Defaults to "
+                               "30."))
 
 
 command_opt = cfg.SubCommandOpt('command',
                                 title='Commands',
-                                help='Show available commands.',
+                                help=_('Show available commands.'),
                                 handler=add_command_parsers)
 
 

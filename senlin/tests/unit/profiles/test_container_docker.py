@@ -326,7 +326,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         ex = self.assertRaises(exc.InvalidSpec,
                                profile.do_validate, obj)
 
-        self.assertEqual("Either 'host_cluster' or 'host_node' should be "
+        self.assertEqual("Either 'host_cluster' or 'host_node' must be "
                          "specified, but not both.", six.text_type(ex))
 
     def test_do_validate_with_neither_cluster_or_node(self):
@@ -338,7 +338,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         ex = self.assertRaises(exc.InvalidSpec,
                                profile.do_validate, obj)
 
-        self.assertEqual("Either 'host_cluster' or 'host_node' should be "
+        self.assertEqual("Either 'host_cluster' or 'host_node' must be "
                          "specified.", six.text_type(ex))
 
     @mock.patch.object(no.Node, 'find')

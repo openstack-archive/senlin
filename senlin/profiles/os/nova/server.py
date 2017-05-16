@@ -106,13 +106,13 @@ class ServerProfile(base.Profile):
                         _('ID of the source image, snapshot or volume'),
                     ),
                     BDM2_SOURCE_TYPE: schema.String(
-                        _('Volume source type, should be image, snapshot, '
-                          'volume or blank'),
+                        _("Volume source type, must be one of 'image', "
+                          "'snapshot', 'volume' or 'blank'"),
                         required=True,
                     ),
                     BDM2_DESTINATION_TYPE: schema.String(
-                        _('Volume destination type, should be volume or '
-                          'local'),
+                        _("Volume destination type, must be 'volume' or "
+                          "'local'"),
                         required=True,
                     ),
                     BDM2_DISK_BUS: schema.String(
@@ -162,7 +162,7 @@ class ServerProfile(base.Profile):
         ),
         METADATA: schema.Map(
             _('A collection of key/value pairs to be associated with the '
-              'server created. Both key and value should be <=255 chars.'),
+              'server created. Both key and value must be <=255 chars.'),
             updatable=True,
         ),
         NAME: schema.String(
@@ -206,7 +206,7 @@ class ServerProfile(base.Profile):
         ),
         SCHEDULER_HINTS: schema.Map(
             _('A collection of key/value pairs to be associated with the '
-              'Scheduler hints. Both key and value should be <=255 chars.'),
+              'Scheduler hints. Both key and value must be <=255 chars.'),
         ),
 
         SECURITY_GROUPS: schema.List(
