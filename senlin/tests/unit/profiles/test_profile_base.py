@@ -128,6 +128,7 @@ class TestProfileBase(base.SenlinTestCase):
         self.assertIsNone(profile._computeclient)
         self.assertIsNone(profile._networkclient)
         self.assertIsNone(profile._orchestrationclient)
+        self.assertIsNone(profile._block_storageclient)
 
     @mock.patch.object(senlin_ctx, 'get_service_credentials')
     def test_init_with_context(self, mock_creds):
@@ -713,6 +714,25 @@ class TestProfileBase(base.SenlinTestCase):
         self.assertEqual(nc, profile._networkclient)
         mock_params.assert_called_once_with(obj.user, obj.project)
         sd.network.assert_called_once_with(fake_params)
+
+    @mock.patch.object(pb.Profile, '_build_conn_params')
+    @mock.patch("senlin.drivers.base.SenlinDriver")
+    def test_cinder_client(self, mock_senlindriver, mock_params):
+        obj = mock.Mock()
+        sd = mock.Mock()
+        nc = mock.Mock()
+        sd.block_storage.return_value = nc
+        mock_senlindriver.return_value = sd
+        fake_params = mock.Mock()
+        mock_params.return_value = fake_params
+        profile = self._create_profile('test-profile')
+
+        res = profile.block_storage(obj)
+
+        self.assertEqual(nc, res)
+        self.assertEqual(nc, profile._block_storageclient)
+        mock_params.assert_called_once_with(obj.user, obj.project)
+        sd.block_storage.assert_called_once_with(fake_params)
 
     def test_interface_methods(self):
         profile = self._create_profile('test-profile')

@@ -11,6 +11,7 @@
 # under the License.
 
 from senlin.drivers.openstack import ceilometer_v2
+from senlin.drivers.openstack import cinder_v2
 from senlin.drivers.openstack import keystone_v3
 from senlin.drivers.openstack import zaqar_v2
 from senlin.tests.drivers.openstack import heat_v1
@@ -28,3 +29,4 @@ network = neutron_v2.NeutronClient
 orchestration = heat_v1.HeatClient
 telemetry = ceilometer_v2.CeilometerClient
 workflow = mistral_v2.MistralClient
+block_storage = cinder_v2.CinderClient

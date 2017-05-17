@@ -126,6 +126,7 @@ class Profile(object):
         self._networkclient = None
         self._orchestrationclient = None
         self._workflowclient = None
+        self._block_storageclient = None
 
     @classmethod
     def _from_object(cls, profile):
@@ -398,6 +399,20 @@ class Profile(object):
         params = self._build_conn_params(obj.user, obj.project)
         self._workflowclient = driver_base.SenlinDriver().workflow(params)
         return self._workflowclient
+
+    def block_storage(self, obj):
+        """Construct cinder client based on object.
+
+        :param obj: Object for which the client is created. It is expected to
+                    be None when retrieving an existing client. When creating
+                    a client, it contains the user and project to be used.
+        """
+        if self._block_storageclient is not None:
+            return self._block_storageclient
+        params = self._build_conn_params(obj.user, obj.project)
+        self._block_storageclient = driver_base.SenlinDriver().block_storage(
+            params)
+        return self._block_storageclient
 
     def do_create(self, obj):
         """For subclass to override."""
