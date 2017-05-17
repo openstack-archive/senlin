@@ -19,6 +19,7 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.drivers.openstack import lbaas
 from senlin.drivers.openstack import neutron_v2
+from senlin.engine import node as nodem
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -424,22 +425,21 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.lb_driver._wait_for_lb_ready.assert_called_once_with(
             'LB_ID', ignore_not_found=True)
 
+    @mock.patch.object(nodem.Node, 'load')
     @mock.patch.object(oslo_context, 'get_current')
-    def test_member_add_succeeded(self, mock_get_current):
+    def test_member_add_succeeded(self, mock_get_current, mock_load):
+        fake_context = mock.Mock()
+        mock_get_current.return_value = fake_context
         node = mock.Mock()
         lb_id = 'LB_ID'
         pool_id = 'POOL_ID'
         port = '80'
         subnet = 'subnet'
-        subnet_obj = mock.Mock()
+        subnet_obj = mock.Mock(id='SUBNET_ID', network_id='NETWORK_ID')
         subnet_obj.name = 'subnet'
-        subnet_obj.id = 'SUBNET_ID'
-        subnet_obj.network_id = 'NETWORK_ID'
-        network_obj = mock.Mock()
+        network_obj = mock.Mock(id='NETWORK_ID')
         network_obj.name = 'network1'
-        network_obj.id = 'NETWORK_ID'
-        member = mock.Mock()
-        member.id = 'MEMBER_ID'
+        member = mock.Mock(id='MEMBER_ID')
         node_detail = {
             'name': 'node-01',
             'addresses': {
@@ -447,6 +447,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
                 'network2': [{'addr': 'ipaddr_net2'}]
             }
         }
+        mock_load.return_value = node
         node.get_details.return_value = node_detail
 
         self.nc.subnet_get.return_value = subnet_obj
@@ -463,6 +464,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
             pool_id, 'ipaddr_net1', port, 'SUBNET_ID')
         self.lb_driver._wait_for_lb_ready.assert_has_calls(
             [mock.call('LB_ID'), mock.call('LB_ID')])
+        mock_load.assert_called_once_with(fake_context, db_node=node)
 
     @mock.patch.object(oslo_context, 'get_current')
     def test_member_add_subnet_get_failed(self, mock_get_current):
@@ -487,16 +489,15 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
                                         'subnet')
         self.assertIsNone(res)
 
+    @mock.patch.object(nodem.Node, 'load')
     @mock.patch.object(oslo_context, 'get_current')
-    def test_member_add_lb_unready_for_member_create(self, mock_get_current):
+    def test_member_add_lb_unready_for_member_create(self, mock_get_current,
+                                                     mock_load):
         node = mock.Mock()
-        subnet_obj = mock.Mock()
+        subnet_obj = mock.Mock(id='SUBNET_ID', network_id='NETWORK_ID')
         subnet_obj.name = 'subnet'
-        subnet_obj.id = 'SUBNET_ID'
-        subnet_obj.network_id = 'NETWORK_ID'
-        network_obj = mock.Mock()
+        network_obj = mock.Mock(id='NETWORK_ID')
         network_obj.name = 'network1'
-        network_obj.id = 'NETWORK_ID'
         node_detail = {
             'name': 'node-01',
             'addresses': {
@@ -504,6 +505,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
                 'network2': [{'addr': 'ipaddr_net2'}]
             }
         }
+        mock_load.return_value = node
         node.get_details.return_value = node_detail
 
         # Exception happens in pool_member_create
@@ -518,16 +520,15 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.assertIsNone(res)
         self.lb_driver._wait_for_lb_ready.assert_called_once_with('LB_ID')
 
+    @mock.patch.object(nodem.Node, 'load')
     @mock.patch.object(oslo_context, 'get_current')
-    def test_member_add_member_create_failed(self, mock_get_current):
+    def test_member_add_member_create_failed(self, mock_get_current,
+                                             mock_load):
         node = mock.Mock()
-        subnet_obj = mock.Mock()
+        subnet_obj = mock.Mock(id='SUBNET_ID', network_id='NETWORK_ID')
         subnet_obj.name = 'subnet'
-        subnet_obj.id = 'SUBNET_ID'
-        subnet_obj.network_id = 'NETWORK_ID'
-        network_obj = mock.Mock()
+        network_obj = mock.Mock(id='NETWORK_ID')
         network_obj.name = 'network1'
-        network_obj.id = 'NETWORK_ID'
         node_detail = {
             'name': 'node-01',
             'addresses': {
@@ -535,6 +536,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
                 'network2': [{'addr': 'ipaddr_net2'}]
             }
         }
+        mock_load.return_value = node
         node.get_details.return_value = node_detail
 
         # Exception happens in pool_member_create
@@ -548,16 +550,14 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
                                         'subnet')
         self.assertIsNone(res)
 
+    @mock.patch.object(nodem.Node, 'load')
     @mock.patch.object(oslo_context, 'get_current')
-    def test_member_add_wait_for_lb_timeout(self, mock_get_current):
+    def test_member_add_wait_for_lb_timeout(self, mock_get_current, mock_load):
         node = mock.Mock()
-        subnet_obj = mock.Mock()
+        subnet_obj = mock.Mock(id='SUBNET_ID', nework_id='NETWORK_ID')
         subnet_obj.name = 'subnet'
-        subnet_obj.id = 'SUBNET_ID'
-        subnet_obj.network_id = 'NETWORK_ID'
-        network_obj = mock.Mock()
+        network_obj = mock.Mock(id='NETWORK_ID')
         network_obj.name = 'network1'
-        network_obj.id = 'NETWORK_ID'
         node_detail = {
             'name': 'node-01',
             'addresses': {
@@ -565,6 +565,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
                 'network2': [{'addr': 'ipaddr_net2'}]
             }
         }
+        mock_load.return_value = node
         node.get_details.return_value = node_detail
 
         # Wait for lb ready timeout after creating member
@@ -576,16 +577,16 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
                                         'subnet')
         self.assertIsNone(res)
 
+    @mock.patch.object(nodem.Node, 'load')
     @mock.patch.object(oslo_context, 'get_current')
-    def test_member_add_node_not_in_subnet(self, mock_get_current):
+    def test_member_add_node_not_in_subnet(self, mock_get_current, mock_load):
         node = mock.Mock()
         lb_id = 'LB_ID'
         pool_id = 'POOL_ID'
         port = '80'
         subnet = 'subnet'
-        network_obj = mock.Mock()
+        network_obj = mock.Mock(id='NETWORK_ID')
         network_obj.name = 'network3'
-        network_obj.id = 'NETWORK_ID'
         node_detail = {
             'name': 'node-01',
             'addresses': {
@@ -593,6 +594,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
                 'network2': [{'addr': 'ipaddr_net2'}]
             }
         }
+        mock_load.return_value = node
         node.get_details.return_value = node_detail
 
         self.nc.network_get.return_value = network_obj
