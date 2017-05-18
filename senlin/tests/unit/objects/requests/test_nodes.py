@@ -218,7 +218,6 @@ class TestNodeAdopt(test_base.SenlinTestCase):
         'role': 'test-role',
         'metadata': {'key': 'value'},
         'overrides': {'foo': 'bar'},
-        'preview': False,
         'snapshot': True
     }
 
@@ -231,5 +230,21 @@ class TestNodeAdopt(test_base.SenlinTestCase):
         self.assertEqual('test-role', sot.role)
         self.assertEqual({'key': 'value'}, sot.metadata)
         self.assertEqual({'foo': 'bar'}, sot.overrides)
-        self.assertFalse(sot.preview)
+        self.assertTrue(sot.snapshot)
+
+
+class TestNodeAdoptPreview(test_base.SenlinTestCase):
+
+    body = {
+        'identity': 'test-node',
+        'type': 'test-type',
+        'overrides': {'foo': 'bar'},
+        'snapshot': True
+    }
+
+    def test_node_adopt_request(self):
+        sot = nodes.NodeAdoptPreviewRequest(**self.body)
+        self.assertEqual('test-node', sot.identity)
+        self.assertEqual('test-type', sot.type)
+        self.assertEqual({'foo': 'bar'}, sot.overrides)
         self.assertTrue(sot.snapshot)

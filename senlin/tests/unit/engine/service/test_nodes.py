@@ -735,19 +735,21 @@ class NodeTest(base.SenlinTestCase):
     def test_node_adopt_preview(self, mock_preview):
         spec = {'foo': 'bar'}
         mock_preview.return_value = mock.Mock(), spec
-        req = orno.NodeAdoptRequest(identity='FAKE_ID', type='FAKE_TYPE')
+        req = orno.NodeAdoptPreviewRequest(identity='FAKE_ID',
+                                           type='FAKE_TYPE')
 
         res = self.eng.node_adopt_preview(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'node_preview': {'foo': 'bar'}}, res)
         mock_preview.assert_called_once_with(self.ctx, mock.ANY)
         self.assertIsInstance(mock_preview.call_args[0][1],
-                              orno.NodeAdoptRequest)
+                              orno.NodeAdoptPreviewRequest)
 
     @mock.patch.object(service.EngineService, '_node_adopt_preview')
     def test_node_adopt_preview_with_exception(self, mock_preview):
         mock_preview.side_effect = exc.BadRequest(msg="boom")
-        req = orno.NodeAdoptRequest(identity='FAKE_ID', type='FAKE_TYPE')
+        req = orno.NodeAdoptPreviewRequest(identity='FAKE_ID',
+                                           type='FAKE_TYPE')
 
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_adopt_preview,
@@ -755,7 +757,7 @@ class NodeTest(base.SenlinTestCase):
 
         mock_preview.assert_called_once_with(self.ctx, mock.ANY)
         self.assertIsInstance(mock_preview.call_args[0][1],
-                              orno.NodeAdoptRequest)
+                              orno.NodeAdoptPreviewRequest)
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual('boom.', six.text_type(ex.exc_info[1]))
 
