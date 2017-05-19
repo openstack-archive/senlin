@@ -1020,7 +1020,7 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("Action parameter is not recognizable.",
+        self.assertEqual("Action parameter ['bogus'] is not recognizable.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
         self.assertEqual(0, mock_action.call_count)
