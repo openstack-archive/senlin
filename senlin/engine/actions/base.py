@@ -274,7 +274,7 @@ class Action(object):
 
         if self.status not in expected:
             LOG.error("Action (%(id)s) is in status (%(actual)s) while "
-                      "expected status should be one of (%(expected)s).",
+                      "expected status must be one of (%(expected)s).",
                       dict(id=self.id[:8], expected=expected,
                            actual=self.status))
             return

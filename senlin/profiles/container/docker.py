@@ -252,12 +252,12 @@ class DockerProfile(base.Profile):
         cluster = self.properties[self.HOST_CLUSTER]
         node = self.properties[self.HOST_NODE]
         if all([cluster, node]):
-            msg = _("Either '%(c)s' or '%(n)s' should be specified, but not "
+            msg = _("Either '%(c)s' or '%(n)s' must be specified, but not "
                     "both.") % {'c': self.HOST_CLUSTER, 'n': self.HOST_NODE}
             raise exc.InvalidSpec(message=msg)
 
         if not any([cluster, node]):
-            msg = _("Either '%(c)s' or '%(n)s' should be specified."
+            msg = _("Either '%(c)s' or '%(n)s' must be specified."
                     ) % {'c': self.HOST_CLUSTER, 'n': self.HOST_NODE}
             raise exc.InvalidSpec(message=msg)
 

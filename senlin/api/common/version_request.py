@@ -45,7 +45,7 @@ class APIVersionRequest(object):
         return self.major == 0 and self.minor == 0
 
     def _type_error(self, other):
-        return TypeError(_("'%(other)s' should be an instance of '%(cls)s'") %
+        return TypeError(_("'%(other)s' must be an instance of '%(cls)s'") %
                          {"other": other, "cls": self.__class__})
 
     def __lt__(self, other):
