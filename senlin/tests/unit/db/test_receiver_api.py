@@ -316,3 +316,27 @@ class DBAPIReceiverTest(base.SenlinTestCase):
 
         res = db_api.receiver_get(self.ctx, receiver_id)
         self.assertIsNone(res)
+
+    def test_receiver_update(self):
+        new_values = {
+            'name': 'test_receiver2',
+            'params': {'key2': 'value2'},
+        }
+
+        old_receiver = self._create_receiver(self.ctx)
+        new_receiver = db_api.receiver_update(self.ctx, old_receiver.id,
+                                              new_values)
+
+        self.assertEqual(old_receiver.id, new_receiver.id)
+        self.assertEqual(new_values['name'], new_receiver.name)
+        self.assertEqual('test_receiver2', new_receiver.name)
+        self.assertEqual('value2', new_receiver.params['key2'])
+
+    def test_receiver_update_not_found(self):
+        new_values = {
+            'name': 'test_receiver2',
+            'params': {'key2': 'value2'},
+        }
+        self.assertRaises(exception.ResourceNotFound,
+                          db_api.receiver_update,
+                          self.ctx, 'BogusID', new_values)
