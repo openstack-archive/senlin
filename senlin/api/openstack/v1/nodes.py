@@ -85,8 +85,7 @@ class NodeController(wsgi.Controller):
     def adopt_preview(self, req, body):
         """Preview a node adoption."""
         # make sure we will fall into the preview path
-        body['preview'] = True
-        obj = util.parse_request('NodeAdoptRequest', req, body)
+        obj = util.parse_request('NodeAdoptPreviewRequest', req, body)
         node = self.rpc_client.call(req.context, 'node_adopt_preview', obj)
         return {'node_profile': node}
 
