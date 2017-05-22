@@ -1304,34 +1304,7 @@ class ClusterTest(base.SenlinTestCase):
             name='cluster_scale_in_12345678',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
-            inputs={'count': 2, 'health_check': False},
-        )
-        notify.assert_called_once_with()
-
-    @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch.object(am.Action, 'create')
-    @mock.patch.object(su, 'check_size_params')
-    @mock.patch.object(co.Cluster, 'find')
-    def test_cluster_scale_in_full(self, mock_find, mock_check,
-                                   mock_action, notify):
-        x_cluster = mock.Mock(id='12345678ABCD', desired_capacity=4)
-        mock_find.return_value = x_cluster
-        mock_check.return_value = None
-        mock_action.return_value = 'ACTION_ID'
-        req = orco.ClusterScaleInRequest(
-            identity='CLUSTER', count=2, health_check=True)
-
-        result = self.eng.cluster_scale_in(self.ctx, req.obj_to_primitive())
-
-        self.assertEqual({'action': 'ACTION_ID'}, result)
-        mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
-        mock_check.assert_called_once_with(x_cluster, 2)
-        mock_action.assert_called_once_with(
-            self.ctx, '12345678ABCD', consts.CLUSTER_SCALE_IN,
-            name='cluster_scale_in_12345678',
-            cause=consts.CAUSE_RPC,
-            status=am.Action.READY,
-            inputs={'count': 2, 'health_check': True},
+            inputs={'count': 2},
         )
         notify.assert_called_once_with()
 
@@ -1368,7 +1341,7 @@ class ClusterTest(base.SenlinTestCase):
             name='cluster_scale_in_FOO',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
-            inputs={'health_check': False},
+            inputs={},
         )
         notify.assert_called_once_with()
 

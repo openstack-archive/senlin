@@ -801,31 +801,6 @@ class ClusterAction(base.Action):
 
         return result, reason
 
-    def _check_nodes(self):
-
-        child = []
-        res = self.RES_OK
-        reason = _('Nodes status checking completed.')
-        for node in self.entity.nodes:
-            node_id = node.id
-            action_id = base.Action.create(
-                self.context, node_id, consts.NODE_CHECK,
-                name='node_check_%s' % node_id[:8],
-                cause=consts.CAUSE_DERIVED
-            )
-            child.append(action_id)
-
-        if child:
-            dobj.Dependency.create(self.context, [c for c in child], self.id)
-            for cid in child:
-                ao.Action.update(self.context, cid,
-                                 {'status': base.Action.READY})
-            dispatcher.start_action()
-
-            res, reason = self._wait_for_dependents()
-
-        return res, reason
-
     @profiler.trace('ClusterAction.do_scale_in', hide_args=False)
     def do_scale_in(self):
         """Handler for the CLUSTER_SCALE_IN action.
@@ -841,11 +816,9 @@ class ClusterAction(base.Action):
             candidates = pd.get('candidates', [])
             # if scaling policy is attached, get 'count' from action data
             count = len(candidates) or pd['count']
-            health_check = pd.get('health_check', False)
         else:
             # If no scaling policy is attached, use the input count directly
             candidates = []
-            health_check = self.inputs.get('health_check', False)
             value = self.inputs.get('count', 1)
             success, count = utils.get_positive_int(value)
             if not success:
@@ -870,14 +843,6 @@ class ClusterAction(base.Action):
         self.entity.set_status(self.context, consts.CS_RESIZING,
                                _('Cluster scale in started.'),
                                desired_capacity=new_size)
-
-        # check nodes' current status if health_check set to True
-        if health_check is True:
-            # do we need to care about the result
-            result, reason = self._check_nodes()
-            if result == self.RES_OK:
-                nodes = no.Node.get_all_by_cluster(self.context, self.target)
-                self.entity.update_node(nodes)
 
         # Choose victims randomly
         if len(candidates) == 0:

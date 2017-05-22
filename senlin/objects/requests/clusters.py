@@ -169,13 +169,6 @@ class ClusterReplaceNodesRequest(base.SenlinObject):
 @base.SenlinObjectRegistry.register
 class ClusterResizeRequest(base.SenlinObject):
 
-    # VERSION 1.0: initial version
-    # VERSION 1.1: added field 'health_check'
-    VERSION = '1.1'
-    VERSION_MAP = {
-        '1.7': '1.1',
-    }
-
     fields = {
         'identity': fields.StringField(),
         'adjustment_type': fields.AdjustmentTypeField(nullable=True),
@@ -184,66 +177,26 @@ class ClusterResizeRequest(base.SenlinObject):
         'max_size': fields.CapacityField(nullable=True, minimum=-1),
         'min_step': fields.NonNegativeIntegerField(nullable=True),
         'strict': fields.BooleanField(nullable=True, default=True),
-        'health_check': fields.BooleanField(nullable=True, default=False)
     }
-
-    def obj_make_compatible(self, primitive, target_version):
-        super(ClusterResizeRequest, self).obj_make_compatible(
-            primitive, target_version)
-        target_version = versionutils.convert_version_to_tuple(target_version)
-        if target_version < (1, 1):
-            if 'health_check' in primitive['senlin_object.data']:
-                del primitive['senlin_object.data']['health_check']
 
 
 @base.SenlinObjectRegistry.register
 class ClusterScaleInRequest(base.SenlinObject):
 
-    # VERSION 1.0: initial version
-    # VERSION 1.1: added field 'health_check'
-    VERSION = '1.1'
-    VERSION_MAP = {
-        '1.7': '1.1',
-    }
-
     fields = {
         'identity': fields.StringField(),
         'count': fields.NonNegativeIntegerField(nullable=True),
         'health_check': fields.BooleanField(nullable=True, default=False)
     }
-
-    def obj_make_compatible(self, primitive, target_version):
-        super(ClusterScaleInRequest, self).obj_make_compatible(
-            primitive, target_version)
-        target_version = versionutils.convert_version_to_tuple(target_version)
-        if target_version < (1, 1):
-            if 'health_check' in primitive['senlin_object.data']:
-                del primitive['senlin_object.data']['health_check']
 
 
 @base.SenlinObjectRegistry.register
 class ClusterScaleOutRequest(base.SenlinObject):
 
-    # VERSION 1.0: initial version
-    # VERSION 1.1: added field 'health_check'
-    VERSION = '1.1'
-    VERSION_MAP = {
-        '1.7': '1.1',
-    }
-
     fields = {
         'identity': fields.StringField(),
         'count': fields.NonNegativeIntegerField(nullable=True),
-        'health_check': fields.BooleanField(nullable=True, default=False)
     }
-
-    def obj_make_compatible(self, primitive, target_version):
-        super(ClusterScaleOutRequest, self).obj_make_compatible(
-            primitive, target_version)
-        target_version = versionutils.convert_version_to_tuple(target_version)
-        if target_version < (1, 1):
-            if 'health_check' in primitive['senlin_object.data']:
-                del primitive['senlin_object.data']['health_check']
 
 
 @base.SenlinObjectRegistry.register

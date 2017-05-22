@@ -186,13 +186,10 @@ class ClusterController(wsgi.Controller):
 
     def _do_scale_in(self, req, cid, data):
         count = data.get('count', None)
-        health = data.get('health_check', None)
         params = {'identity': cid}
 
         if count is not None:
             params['count'] = count
-        if health is not None:
-            params['health_check'] = health
 
         obj = util.parse_request('ClusterScaleInRequest', req, params)
         return self.rpc_client.call(req.context, 'cluster_scale_in', obj)
