@@ -450,22 +450,16 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'adopt_preview', True)
         body = {
             'identity': 'PHYSICAL',
-            'type': 'RES-TYPE',
-            'name': 'test_node',
-            'cluster': 'CLUSTER',
-            'role': 'ROLE',
-            'metadata': {'MK': 'MV'},
+            'type': 'PROF-TYPE',
             'overrides': {'NKEY': 'NVAL'},
             'snapshot': True,
         }
 
         engine_response = {
-            'id': 'test_node_id',
-            'name': 'test_node',
-            'profile_id': 'xxxx-yyyy',
-            'cluster_id': 'test_cluster_id',
-            'role': 'ROLE',
-            'metadata': {'MK': 'MV'},
+            'type': 'PROF-TYPE',
+            'properties': {
+                'foo': 'bar'
+            }
         }
         req = self._post('/nodes/adopt/preview', jsonutils.dumps(body),
                          version='1.7')
@@ -476,7 +470,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         resp = self.controller.adopt_preview(req, body=body)
 
         self.assertEqual({'node_profile': engine_response}, resp)
-        mock_parse.assert_called_once_with('NodeAdoptRequest', req, body)
+        mock_parse.assert_called_once_with('NodeAdoptPreviewRequest',
+                                           req, body)
         mock_call.assert_called_once_with(req.context, 'node_adopt_preview',
                                           mock.ANY)
 
