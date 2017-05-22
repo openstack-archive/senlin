@@ -1,0 +1,10 @@
+{
+    "cluster": null,
+    "identity": "65e27958-d6dc-4b0e-87bf-78e8f5536cbc",
+    "metadata": {},
+    "name": "node009",
+    "overrides": null,
+    "role": "master",
+    "snapshot": true,
+    "type": "os.nova.server-1.0"
+}

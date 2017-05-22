@@ -1,0 +1,20 @@
+{
+    "node_preview": {
+        "properties": {
+            "flavor": "m1.small",
+            "image": "F20",
+            "key_name": "oskey",
+            "name": "F20_server",
+            "networks": [
+                {
+                    "network": "private"
+                }
+            ],
+            "security_groups": [
+                "default"
+            ]
+        },
+        "type": "os.nova.server",
+        "version": 1.0
+    }
+}
