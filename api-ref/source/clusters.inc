@@ -428,7 +428,6 @@ Request Parameters
   - cluster_id: cluster_id_url
   - action: action_request
   - count: scale_count
-  - health_check: health_check
 
 
 The ``action_name`` in the request body has to be ``scale_in``.

@@ -31,8 +31,7 @@ class TestClusterActionScaleIn(base.BaseSenlinAPITest):
     def test_cluster_action_scale_in(self):
         params = {
             "scale_in": {
-                "count": "1",
-                "health_check": False
+                "count": "1"
             }
         }
         # Trigger cluster action
@@ -66,25 +65,6 @@ class TestClusterScaleInInvalidRequest(base.BaseSenlinAPITest):
         self.assertEqual(
             "The value for count must be an integer: 'bad-count'.",
             str(message))
-
-    @decorators.idempotent_id('ee7be9d4-7c9b-4054-9ca1-45e5284972ad')
-    def test_cluster_scale_in_invalid_health_check(self):
-        params = {
-            "scale_in": {
-                "health_check": "bad-health"
-            }
-        }
-
-        # Verify badrequest exception(400) is raised.
-        ex = self.assertRaises(exceptions.BadRequest,
-                               self.client.trigger_action,
-                               'clusters', 'fake', params)
-
-        message = ex.resp_body['error']['message']
-        self.assertEqual(
-            "Unrecognized value 'bad-health', acceptable values are: '0',"
-            " '1', 'f', 'false', 'n', 'no', 'off', 'on', 't', 'true',"
-            " 'y', 'yes'", str(message))
 
 
 class TestClusterScaleInNegativeBadRequest(base.BaseSenlinAPITest):
