@@ -27,9 +27,6 @@ ENGINE
     * The new command should check if the provided properties are sufficient.
     * There exists a need to snapshot a server before adoption.
 
-  - Scaling Improvements [https://etherpad.openstack.org/p/newton-senlin-ha]
-    * Always do health check before any scaling actions.
-
   - Verify the works to be done after oslo.messaging version bump.
     [https://review.openstack.org/#/c/408114]
 
