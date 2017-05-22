@@ -435,6 +435,10 @@ def receiver_delete(context, receiver_id):
     return IMPL.receiver_delete(context, receiver_id)
 
 
+def receiver_update(context, receiver_id, values):
+    return IMPL.receiver_update(context, receiver_id, values)
+
+
 def service_create(service_id, host=None, binary=None, topic=None):
     return IMPL.service_create(service_id, host=host, binary=binary,
                                topic=topic)

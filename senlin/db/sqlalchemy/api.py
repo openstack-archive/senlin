@@ -1355,6 +1355,17 @@ def receiver_delete(context, receiver_id):
         session.delete(receiver)
 
 
+def receiver_update(context, receiver_id, values):
+    with session_for_write() as session:
+        receiver = session.query(models.Receiver).get(receiver_id)
+        if not receiver:
+            raise exception.ResourceNotFound(type='receiver', id=receiver_id)
+
+        receiver.update(values)
+        receiver.save(session)
+        return receiver
+
+
 def service_create(service_id, host=None, binary=None, topic=None):
     with session_for_write() as session:
         time_now = timeutils.utcnow(True)
