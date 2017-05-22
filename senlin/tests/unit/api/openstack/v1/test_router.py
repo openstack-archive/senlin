@@ -277,7 +277,7 @@ class RoutesTest(base.SenlinTestCase):
 
         self.assertRoute(
             self.m,
-            '/nodes/adopt/preview',
+            '/nodes/adopt-preview',
             'POST',
             'adopt_preview',
             'NodeController')
