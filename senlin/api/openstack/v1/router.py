@@ -196,7 +196,7 @@ class API(wsgi.Router):
                                action="adopt",
                                conditions={'method': 'POST'})
             sub_mapper.connect("node_adopt_preview",
-                               "/nodes/adopt/preview",
+                               "/nodes/adopt-preview",
                                action="adopt_preview",
                                conditions={'method': 'POST'})
             sub_mapper.connect("node_get",
