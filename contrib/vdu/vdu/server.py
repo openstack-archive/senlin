@@ -1170,7 +1170,7 @@ class ServerProfile(base.Profile):
                     continue
             network = net.get(self.NETWORK, None)
             if network:
-                net_id = self.network(obj).network_get(network)
+                net_id = self.network(obj).network_get(network).id
                 if p['network_id'] != net_id:
                     continue
             selected_ports.append(p)

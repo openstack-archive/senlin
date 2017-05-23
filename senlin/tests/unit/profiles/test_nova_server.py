@@ -17,6 +17,7 @@ from oslo_utils import encodeutils
 import six
 
 from senlin.common import exception as exc
+from senlin.objects import node as node_ob
 from senlin.profiles import base as profiles_base
 from senlin.profiles.os.nova import server
 from senlin.tests.unit.common import base
@@ -44,9 +45,9 @@ class TestNovaServerBasic(base.SenlinTestCase):
                 "metadata": {"meta var": "meta val"},
                 'name': 'FAKE_SERVER_NAME',
                 'networks': [{
-                    'port': 'FAKE_PORT',
                     'fixed_ip': 'FAKE_IP',
                     'network': 'FAKE_NET',
+                    'floating_network': 'FAKE_PUBLIC_NET',
                 }],
                 'personality': [{
                     'path': '/etc/motd',
@@ -116,9 +117,15 @@ class TestNovaServerBasic(base.SenlinTestCase):
                 'fixed_ip': 'FAKE_IP',
                 'port': 'FAKE_PORT',
                 'uuid': 'FAKE_NETWORK_ID',
+                'floating_network': 'FAKE_PUBLIC_NET_ID',
             }
             self.patchobject(profile, '_validate_network',
                              return_value=fake_net)
+            fake_ports = [{
+                'id': 'FAKE_PORT'
+            }]
+            self.patchobject(profile, '_create_ports_from_properties',
+                             return_value=fake_ports)
 
     def test_do_create(self):
         cc = mock.Mock()
@@ -161,9 +168,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
             },
             name='FAKE_SERVER_NAME',
             networks=[{
-                'fixed_ip': 'FAKE_IP',
                 'port': 'FAKE_PORT',
-                'uuid': 'FAKE_NETWORK_ID',
             }],
             personality=[{
                 'path': '/etc/motd',
@@ -252,9 +257,16 @@ class TestNovaServerBasic(base.SenlinTestCase):
         self.assertRaises(exc.EResourceCreation,
                           profile.do_create,
                           node_obj)
+        expect_params = {
+            'floating_network': None,
+            'network': 'FAKE_NET',
+            'fixed_ip': None,
+            'floating_ip': None,
+            'port': None,
+            'security_groups': None
+        }
         mock_net.assert_called_once_with(
-            node_obj, {'network': 'FAKE_NET', 'port': None, 'fixed_ip': None},
-            'create')
+            node_obj, expect_params, 'create')
 
     def test_do_create_server_attrs_not_defined(self):
         cc = mock.Mock()
@@ -456,8 +468,10 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
     def test_do_create_wait_server_timeout(self):
         cc = mock.Mock()
+        nc = mock.Mock()
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = cc
+        profile._networkclient = nc
         self._stubout_profile(profile, mock_image=True, mock_flavor=True,
                               mock_keypair=True, mock_net=True)
 
@@ -519,10 +533,44 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._computeclient = cc
 
         test_server = mock.Mock(physical_id='FAKE_ID')
+        test_server.data = {}
 
         res = profile.do_delete(test_server)
 
         self.assertTrue(res)
+        cc.server_delete.assert_called_once_with('FAKE_ID', True)
+        cc.wait_for_server_delete.assert_called_once_with('FAKE_ID')
+
+    @mock.patch.object(node_ob.Node, 'update')
+    def test_do_delete_ports_ok(self, mock_node_obj):
+        profile = server.ServerProfile('t', self.spec)
+
+        cc = mock.Mock()
+        cc.server_delete.return_value = None
+        nc = mock.Mock()
+        nc.port_delete.return_value = None
+        nc.floatingip_delete.return_value = None
+        profile._computeclient = cc
+        profile._networkclient = nc
+
+        test_server = mock.Mock(physical_id='FAKE_ID')
+        test_server.Node = mock.Mock()
+        test_server.data = {'internal_ports': [{
+            'floating': {
+                'remove': True,
+                'id': 'FAKE_FLOATING_ID',
+            },
+            'id': 'FAKE_PORT_ID',
+            'remove': True
+        }]}
+
+        res = profile.do_delete(test_server)
+
+        self.assertTrue(res)
+        mock_node_obj.assert_called_once_with(
+            mock.ANY, test_server.id, {'data': {'internal_ports': []}})
+        nc.floatingip_delete.assert_called_once_with('FAKE_FLOATING_ID')
+        nc.port_delete.assert_called_once_with('FAKE_PORT_ID')
         cc.server_delete.assert_called_once_with('FAKE_ID', True)
         cc.wait_for_server_delete.assert_called_once_with('FAKE_ID')
 
@@ -533,6 +581,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._computeclient = cc
 
         test_server = mock.Mock(physical_id='FAKE_ID')
+        test_server.data = {}
 
         res = profile.do_delete(test_server, ignore_missing=False, force=True)
 

@@ -35,6 +35,9 @@ spec = {
         "metadata": {"meta var": "meta val"},
         'name': 'FAKE_SERVER_NAME',
         'networks': [{
+            'floating_ip': 'FAKE_FLOATING_IP',
+            'floating_network': 'FAKE_FLOATING_NET',
+            'security_groups': ['FAKE_SECURITY_GROUP'],
             'port': 'FAKE_PORT',
             'fixed_ip': 'FAKE_IP',
             'network': 'FAKE_NET',
@@ -424,30 +427,72 @@ class TestKeypairValidation(base.SenlinTestCase):
 class TestNetworkValidation(base.SenlinTestCase):
 
     scenarios = [
-        ('validate:net-y:port-y:fixed_ip-n', dict(
+        ('validate:net-n:port-n:fixed_ip-n:sgroups-n', dict(
             reason=None,
             success=True,
-            inputs={'network': 'NET', 'port': 'PORT'},
-            net_result=[mock.Mock(id='NET_ID')],
+            inputs={'port': 'PORT'},
+            net_result=[],
             port_result=[mock.Mock(id='PORT_ID', status='DOWN')],
-            result={'uuid': 'NET_ID', 'port': 'PORT_ID'},
+            sg_result=[],
+            floating_result=[],
+            result={'port': 'PORT_ID'},
             exception=None,
             message='')),
-        ('validate:net-y:port-n:fixed_ip-y', dict(
+        ('validate:net-y:port-n:fixed_ip-n:sgroups-y', dict(
+            reason=None,
+            success=True,
+            inputs={'network': 'NET', 'security_groups': ['default']},
+            net_result=[mock.Mock(id='NET_ID')],
+            port_result=[],
+            sg_result=[mock.Mock(id='SG_ID')],
+            floating_result=[],
+            result={'network': 'NET_ID', 'security_groups': ['SG_ID']},
+            exception=None,
+            message='')),
+        ('validate:net-y:port-n:fixed_ip-n:sgroups-n:floating_net-y', dict(
+            reason=None,
+            success=True,
+            inputs={'network': 'NET', 'floating_network': 'NET'},
+            net_result=[mock.Mock(id='NET_ID'), mock.Mock(id='NET_ID')],
+            port_result=[],
+            sg_result=[],
+            floating_result=[],
+            result={'network': 'NET_ID', 'floating_network': 'NET_ID'},
+            exception=None,
+            message='')),
+        ('validate:net-y:port-n:fixed_ip-n:floating_net-y:floating_ip-y', dict(
+            reason=None,
+            success=True,
+            inputs={'network': 'NET', 'floating_network': 'NET',
+                    'floating_ip': 'FLOATINGIP'},
+            net_result=[mock.Mock(id='NET_ID'), mock.Mock(id='NET_ID')],
+            port_result=[],
+            sg_result=[],
+            floating_result=[mock.Mock(id='FLOATINGIP_ID', status='INACTIVE')],
+            result={'network': 'NET_ID', 'floating_network': 'NET_ID',
+                    'floating_ip_id': 'FLOATINGIP_ID',
+                    'floating_ip': 'FLOATINGIP'},
+            exception=None,
+            message='')),
+        ('validate:net-y:port-n:fixed_ip-y:sgroups-n', dict(
             reason=None,
             success=True,
             inputs={'network': 'NET', 'fixed_ip': 'FIXED_IP'},
             net_result=[mock.Mock(id='NET_ID')],
             port_result=[],
-            result={'uuid': 'NET_ID', 'fixed_ip': 'FIXED_IP'},
+            sg_result=[],
+            floating_result=[],
+            result={'network': 'NET_ID', 'fixed_ip': 'FIXED_IP'},
             exception=None,
             message='')),
-        ('validate:net-f:port-y:fixed_ip-n', dict(
+        ('validate:net-f:port-y:fixed_ip-n:sgroups-n', dict(
             reason=None,
             success=False,
             inputs={'network': 'NET', 'port': 'PORT'},
             net_result=[exc.InternalError(message='NET Failure')],
             port_result=[],
+            sg_result=[],
+            floating_result=[],
             result={},
             exception=exc.InvalidSpec,
             message='NET Failure')),
@@ -457,6 +502,8 @@ class TestNetworkValidation(base.SenlinTestCase):
             inputs={'port': 'PORT'},
             net_result=[],
             port_result=[exc.InternalError(message='PORT Failure')],
+            sg_result=[],
+            floating_result=[],
             result={},
             exception=exc.InvalidSpec,
             message='PORT Failure')),
@@ -466,24 +513,53 @@ class TestNetworkValidation(base.SenlinTestCase):
             inputs={'port': 'PORT'},
             net_result=[],
             port_result=[mock.Mock(id='PORT_ID', status='ACTIVE')],
+            sg_result=[],
+            floating_result=[],
             result={},
             exception=exc.InvalidSpec,
             message='The status of the port PORT must be DOWN')),
+        ('validate:net-n:port-y:fixed_ip-n:floating_net-n:floating_ip-y', dict(
+            reason=None,
+            success=False,
+            inputs={'port': 'PORT', 'floating_ip': 'FLOATINGIP'},
+            net_result=[],
+            port_result=[mock.Mock(id='PORT_ID', status='DOWN')],
+            sg_result=[],
+            floating_result=[mock.Mock(id='FLOATINGIP_ID', status='INACTIVE')],
+            result={},
+            exception=exc.InvalidSpec,
+            message='Must specify a network to create floating IP')),
+        ('validate:net-n:port-y:fixed_ip-n:floating_ip-active', dict(
+            reason=None,
+            success=False,
+            inputs={'port': 'PORT', 'floating_network': 'NET',
+                    'floating_ip': 'FLOATINGIP'},
+            net_result=[mock.Mock(id='NET_ID')],
+            port_result=[mock.Mock(id='PORT_ID', status='DOWN')],
+            sg_result=[],
+            floating_result=[mock.Mock(id='FLOATINGIP_ID', status='ACTIVE')],
+            result={},
+            exception=exc.InvalidSpec,
+            message='the floating IP FLOATINGIP has been used.')),
         ('validate:net-n:port-n:fixed_ip-n', dict(
             reason=None,
             success=False,
             inputs={'fixed_ip': 'FIXED_IP'},
             net_result=[],
             port_result=[],
+            sg_result=[],
+            floating_result=[],
             result={},
             exception=exc.InvalidSpec,
-            message="'port' is required if 'network' is omitted")),
+            message="One of 'port' and 'network' must be provided")),
         ('validate:net-n:port-y:fixed_ip-y', dict(
             reason=None,
             success=False,
             inputs={'port': 'PORT', 'fixed_ip': 'FIXED_IP'},
             net_result=[],
             port_result=[mock.Mock(id='PORT_ID', status='DOWN')],
+            sg_result=[],
+            floating_result=[],
             result={},
             exception=exc.InvalidSpec,
             message=("The 'port' property and the 'fixed_ip' property cannot "
@@ -494,7 +570,9 @@ class TestNetworkValidation(base.SenlinTestCase):
             inputs={'network': 'NET', 'port': 'PORT'},
             net_result=[mock.Mock(id='NET_ID')],
             port_result=[mock.Mock(id='PORT_ID', status='DOWN')],
-            result={'uuid': 'NET_ID', 'port': 'PORT_ID'},
+            sg_result=[],
+            floating_result=[],
+            result={'network': 'NET_ID', 'port': 'PORT_ID'},
             exception=None,
             message='')),
         ('create:net-y:port-n:fixed_ip-y', dict(
@@ -503,7 +581,31 @@ class TestNetworkValidation(base.SenlinTestCase):
             inputs={'network': 'NET', 'fixed_ip': 'FIXED_IP'},
             net_result=[mock.Mock(id='NET_ID')],
             port_result=[],
-            result={'uuid': 'NET_ID', 'fixed_ip': 'FIXED_IP'},
+            sg_result=[],
+            floating_result=[],
+            result={'network': 'NET_ID', 'fixed_ip': 'FIXED_IP'},
+            exception=None,
+            message='')),
+        ('create:net-y:port-n:fixed_ip-n:sgroups-y', dict(
+            reason='create',
+            success=True,
+            inputs={'network': 'NET', 'security_groups': ['default']},
+            net_result=[mock.Mock(id='NET_ID')],
+            port_result=[],
+            sg_result=[mock.Mock(id='SG_ID')],
+            floating_result=[],
+            result={'network': 'NET_ID', 'security_groups': ['SG_ID']},
+            exception=None,
+            message='')),
+        ('create:net-y:port-n:fixed_ip-n:sgroups-n:floating_net-y', dict(
+            reason=None,
+            success=True,
+            inputs={'network': 'NET', 'floating_network': 'NET'},
+            net_result=[mock.Mock(id='NET_ID'), mock.Mock(id='NET_ID')],
+            port_result=[],
+            sg_result=[],
+            floating_result=[],
+            result={'network': 'NET_ID', 'floating_network': 'NET_ID'},
             exception=None,
             message='')),
         ('create:net-f:port-y:fixed_ip-n', dict(
@@ -512,6 +614,8 @@ class TestNetworkValidation(base.SenlinTestCase):
             inputs={'network': 'NET', 'port': 'PORT'},
             net_result=[exc.InternalError(message='NET Failure')],
             port_result=[],
+            sg_result=[],
+            floating_result=[],
             result={},
             exception=exc.EResourceCreation,
             message='Failed in creating server: NET Failure.')),
@@ -521,6 +625,8 @@ class TestNetworkValidation(base.SenlinTestCase):
             inputs={'port': 'PORT'},
             net_result=[],
             port_result=[exc.InternalError(message='PORT Failure')],
+            sg_result=[],
+            floating_result=[],
             result={},
             exception=exc.EResourceCreation,
             message='Failed in creating server: PORT Failure.')),
@@ -530,6 +636,8 @@ class TestNetworkValidation(base.SenlinTestCase):
             inputs={'port': 'PORT'},
             net_result=[],
             port_result=[mock.Mock(id='PORT_ID', status='ACTIVE')],
+            sg_result=[],
+            floating_result=[],
             result={},
             exception=exc.EResourceCreation,
             message=('Failed in creating server: The status of the port PORT '
@@ -540,16 +648,20 @@ class TestNetworkValidation(base.SenlinTestCase):
             inputs={'fixed_ip': 'FIXED_IP'},
             net_result=[],
             port_result=[],
+            sg_result=[],
+            floating_result=[],
             result={},
             exception=exc.EResourceCreation,
-            message=("Failed in creating server: 'port' is required if "
-                     "'network' is omitted."))),
+            message=("Failed in creating server: One of 'port' "
+                     "and 'network' must be provided."))),
         ('create:net-n:port-y:fixed_ip-y', dict(
             reason='create',
             success=False,
             inputs={'port': 'PORT', 'fixed_ip': 'FIXED_IP'},
             net_result=[],
             port_result=[mock.Mock(id='PORT_ID', status='DOWN')],
+            sg_result=[],
+            floating_result=[],
             result={},
             exception=exc.EResourceCreation,
             message=("Failed in creating server: The 'port' property and the "
@@ -561,7 +673,9 @@ class TestNetworkValidation(base.SenlinTestCase):
             inputs={'network': 'NET', 'port': 'PORT'},
             net_result=[mock.Mock(id='NET_ID')],
             port_result=[mock.Mock(id='PORT_ID', status='DOWN')],
-            result={'net_id': 'NET_ID', 'port_id': 'PORT_ID'},
+            sg_result=[],
+            floating_result=[],
+            result={'network': 'NET_ID', 'port': 'PORT_ID'},
             exception=None,
             message='')),
         ('update:net-y:port-n:fixed_ip-y', dict(
@@ -570,8 +684,32 @@ class TestNetworkValidation(base.SenlinTestCase):
             inputs={'network': 'NET', 'fixed_ip': 'FIXED_IP'},
             net_result=[mock.Mock(id='NET_ID')],
             port_result=[],
-            result={'net_id': 'NET_ID',
-                    'fixed_ips': [{'ip_address': 'FIXED_IP'}]},
+            sg_result=[],
+            floating_result=[],
+            result={'network': 'NET_ID',
+                    'fixed_ip': 'FIXED_IP'},
+            exception=None,
+            message='')),
+        ('update:net-y:port-n:fixed_ip-n:sgroups-y', dict(
+            reason='create',
+            success=True,
+            inputs={'network': 'NET', 'security_groups': ['default']},
+            net_result=[mock.Mock(id='NET_ID')],
+            port_result=[],
+            sg_result=[mock.Mock(id='SG_ID')],
+            floating_result=[],
+            result={'network': 'NET_ID', 'security_groups': ['SG_ID']},
+            exception=None,
+            message='')),
+        ('update:net-y:port-n:fixed_ip-n:sgroups-n:floating_net-y', dict(
+            reason=None,
+            success=True,
+            inputs={'network': 'NET', 'floating_network': 'NET'},
+            net_result=[mock.Mock(id='NET_ID'), mock.Mock(id='NET_ID')],
+            port_result=[],
+            sg_result=[],
+            floating_result=[],
+            result={'network': 'NET_ID', 'floating_network': 'NET_ID'},
             exception=None,
             message='')),
         ('update:net-f:port-y:fixed_ip-n', dict(
@@ -580,6 +718,8 @@ class TestNetworkValidation(base.SenlinTestCase):
             inputs={'network': 'NET', 'port': 'PORT'},
             net_result=[exc.InternalError(message='NET Failure')],
             port_result=[],
+            sg_result=[],
+            floating_result=[],
             result={},
             exception=exc.EResourceUpdate,
             message="Failed in updating server 'NOVA_ID': NET Failure.")),
@@ -589,6 +729,8 @@ class TestNetworkValidation(base.SenlinTestCase):
             inputs={'port': 'PORT'},
             net_result=[],
             port_result=[exc.InternalError(message='PORT Failure')],
+            sg_result=[],
+            floating_result=[],
             result={},
             exception=exc.EResourceUpdate,
             message="Failed in updating server 'NOVA_ID': PORT Failure.")),
@@ -598,6 +740,8 @@ class TestNetworkValidation(base.SenlinTestCase):
             inputs={'port': 'PORT'},
             net_result=[],
             port_result=[mock.Mock(id='PORT_ID', status='ACTIVE')],
+            sg_result=[],
+            floating_result=[],
             result={},
             exception=exc.EResourceUpdate,
             message=("Failed in updating server 'NOVA_ID': The status of the "
@@ -608,16 +752,20 @@ class TestNetworkValidation(base.SenlinTestCase):
             inputs={'fixed_ip': 'FIXED_IP'},
             net_result=[],
             port_result=[],
+            sg_result=[],
+            floating_result=[],
             result={},
             exception=exc.EResourceUpdate,
-            message=("Failed in updating server 'NOVA_ID': 'port' is required "
-                     "if 'network' is omitted."))),
+            message=("Failed in updating server 'NOVA_ID': One of 'port' "
+                     "and 'network' must be provided."))),
         ('update:net-n:port-y:fixed_ip-y', dict(
             reason='update',
             success=False,
             inputs={'port': 'PORT', 'fixed_ip': 'FIXED_IP'},
             net_result=[],
             port_result=[mock.Mock(id='PORT_ID', status='DOWN')],
+            sg_result=[],
+            floating_result=[],
             result={},
             exception=exc.EResourceUpdate,
             message=("Failed in updating server 'NOVA_ID': The 'port' "
@@ -635,6 +783,8 @@ class TestNetworkValidation(base.SenlinTestCase):
     def test_validation(self):
         self.nc.network_get.side_effect = self.net_result
         self.nc.port_find.side_effect = self.port_result
+        self.nc.security_group_find.side_effect = self.sg_result
+        self.nc.floatingip_find.side_effect = self.floating_result
         obj = mock.Mock(physical_id='NOVA_ID')
 
         if self.success:
@@ -647,9 +797,13 @@ class TestNetworkValidation(base.SenlinTestCase):
             self.assertEqual(self.message, six.text_type(ex))
 
         if self.net_result:
-            self.nc.network_get.assert_called_once_with('NET')
+            self.nc.network_get.assert_called_with('NET')
         if self.port_result:
             self.nc.port_find.assert_called_once_with('PORT')
+        if self.sg_result:
+            self.nc.security_group_find.assert_called_once_with('default')
+        if self.floating_result:
+            self.nc.floatingip_find.assert_called_once_with('FLOATINGIP')
 
 
 class TestNovaServerValidate(base.SenlinTestCase):
