@@ -147,6 +147,142 @@ Response Example
    :language: javascript
 
 
+Adopt node
+==========
+
+.. rest_method::  POST /v1/nodes/adopt
+
+   min_version: 1.7
+
+Adopts a node.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 503
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - cluster: cluster_identity
+  - identity: identity
+  - metadata: metadata_req
+  - name: node_name_adopt
+  - overrides: overrides
+  - role: role_req
+  - snapshot: snapshot
+  - type: profile_type_name
+
+Request Example
+---------------
+
+.. literalinclude:: samples/node-adopt-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - X-OpenStack-Request-ID: request_id
+  - node: node
+  - cluster_id: cluster_id
+  - created_at: created_at
+  - data: node_data
+  - domain: domain
+  - id: node_id
+  - index: index
+  - init_at: init_at
+  - metadata: metadata
+  - name: name
+  - physical_id: physical_id
+  - profile_id: profile_id
+  - profile_name: profile_name
+  - project: project
+  - role: role
+  - status: node_status
+  - status_reason: status_reason
+  - updated_at: updated_at
+  - user: user
+
+Response Example
+----------------
+
+.. literalinclude:: samples/node-adopt-response.json
+   :language: javascript
+
+
+Adopt node (preview)
+====================
+
+.. rest_method::  POST /v1/nodes/adopt-preview
+
+   min_version: 1.7
+
+Preview a node adoption.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 503
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - identity: identity
+  - overrides: overrides
+  - snapshot: snapshot
+  - type: profile_type_name
+
+Request Example
+---------------
+
+.. literalinclude:: samples/node-adopt-preview-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - X-OpenStack-Request-ID: request_id
+  - node_preview: node_preview
+  - cluster_id: cluster_id
+  - type: profile_type_name
+  - version: profile_type_version
+  - properties: profile_spec
+
+Response Example
+----------------
+
+.. literalinclude:: samples/node-adopt-preview-response.json
+   :language: javascript
+
+
 Show node details
 =================
 

@@ -523,6 +523,14 @@ cluster_id:
   description: |
     The UUID of the cluster object.
 
+cluster_identity:
+  type: UUID
+  in: body
+  required: False
+  description: |
+    The ID, short ID or name of a cluster which the adopted node is supposed
+    to join.
+
 cluster_member_nodes:
   type: array
   in: body
@@ -747,6 +755,13 @@ host:
   description: |
     The name of the host.
 
+identity:
+  type: string
+  in: body
+  required: True
+  description: |
+    The ID or name of the physical resource to be adopted.
+
 index:
   type: integer
   in: body
@@ -879,6 +894,23 @@ node_name:
     and can contain ASCII letters, digits, underscores, periods, and hyphens
     and its length must be less than 255.
 
+node_name_adopt:
+  type: string
+  in: body
+  required: False
+  description: |
+    The name of a node object. If specified, the name must start with an ASCII
+    letter and can contain ASCII letters, digits, underscores, periods, and
+    hyphens and its length must be less than 255.
+
+node_preview:
+  type: object
+  in: body
+  required: True
+  description: |
+    A structured representation of the node to be adopted. Note this is a
+    preview version which only contains the spec of the profile to be created.
+
 node_status:
   type: string
   in: body
@@ -948,6 +980,15 @@ outputs:
   description: |
     A collection of key-value pairs that were produced during the execution of
     an action as its outputs.
+
+overrides:
+  type: object
+  in: body
+  required: False
+  description: |
+    If specified, provides a collection of key-value pairs that will override
+    the property name and values extracted from the spec extracted from the
+    existing physical node.
 
 physical_id:
   type: UUID
@@ -1123,6 +1164,13 @@ profile_type_schema:
     so that a node can be created in the specified region. All other
     properties are defined by a particular profile type implementation.
 
+profile_type_version:
+  type: string
+  in: body
+  required: True
+  description: |
+    The version of the profile type.
+
 profile_types:
   type: array
   in: body
@@ -1290,6 +1338,14 @@ services:
   required: True
   description: |
     A list of service.
+
+snapshot:
+  type: bool
+  in: body
+  required: False
+  description: |
+    A flat indicating whether a shapshot of the existing physical object should
+    be created before the object is adopted as a node.
 
 start_time:
   type: float
