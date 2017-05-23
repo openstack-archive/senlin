@@ -1896,12 +1896,16 @@ class EngineService(service.Service):
         }
         if req.obj_attr_is_set('params') and req.params:
             if 'check' in req.params:
-                kwargs['inputs']['check'] = req.params['check']
+                kwargs['inputs']['check'] = req.params.pop('check')
+
             if 'operation' in req.params:
-                op_name = req.params['operation']
+                op_name = req.params.pop('operation')
                 kwargs['inputs']['operation'] = [{'name': op_name}]
-            else:
-                msg = _("Action parameter is not recognizable.")
+
+            if len(req.params):
+                keys = [str(k) for k in req.params]
+                msg = _("Action parameter %s is not recognizable."
+                        ) % keys
                 raise exception.BadRequest(msg=msg)
 
         action_id = action_mod.Action.create(ctx, db_node.id,
