@@ -405,6 +405,22 @@ class TestNovaV2(base.SenlinTestCase):
         self.compute.delete_server_interface.assert_called_once_with(
             'foo', server, True)
 
+    def test_server_floatingip_associate(self):
+        server = mock.Mock()
+        d = nova_v2.NovaClient(self.conn_params)
+        d.server_floatingip_associate(server, 'fake_floatingip')
+        self.compute.add_floating_ip_to_server.assert_called_once_with(
+            server, 'fake_floatingip'
+        )
+
+    def test_server_floatingip_disassociate(self):
+        server = mock.Mock()
+        d = nova_v2.NovaClient(self.conn_params)
+        d.server_floatingip_disassociate(server, 'fake_floatingip')
+        self.compute.remove_floating_ip_from_server.assert_called_once_with(
+            server, 'fake_floatingip'
+        )
+
     def test_server_metadata_get(self):
         server = mock.Mock()
         res_server = mock.Mock()
