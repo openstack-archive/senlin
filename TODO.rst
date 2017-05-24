@@ -30,9 +30,6 @@ ENGINE
   - Verify the works to be done after oslo.messaging version bump.
     [https://review.openstack.org/#/c/408114]
 
-  - Ensure engine will refresh physical resource status before doing
-    node_recover.
-
 POLICY
 ------
 
