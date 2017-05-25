@@ -173,7 +173,6 @@ class Profile(object):
         if metadata is None:
             metadata = {}
 
-        profile = None
         try:
             profile = cls(name, spec, metadata=metadata, user=ctx.user,
                           project=ctx.project)
