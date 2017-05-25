@@ -750,8 +750,8 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_profile_validate_invalide_spec(self, mock_call,
-                                            mock_parse, mock_enforce):
+    def test_profile_validate_invalid_spec(self, mock_call,
+                                           mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', True)
         body = {
             'profile': {

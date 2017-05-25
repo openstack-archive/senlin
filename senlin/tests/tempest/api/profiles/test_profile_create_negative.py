@@ -25,7 +25,7 @@ class TestProfileCreateNegativeBadRequest(base.BaseSenlinAPITest):
     @decorators.idempotent_id('0f0183b8-0f5e-4367-993d-863ff1f30d49')
     def test_profile_create_profile_data_not_specified(self):
         params = {
-            'profiel': {
+            'profile': {
                 'name': 'test-profile'
             }
         }

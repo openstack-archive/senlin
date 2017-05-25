@@ -49,7 +49,7 @@ class TestReceiverShowNegativeBadRequest(base.BaseSenlinAPITest):
 
     @test.attr(type=['negative'])
     @decorators.idempotent_id('5bbfde20-c083-4212-81fb-4eea63271bbb')
-    def test_recevier_show_multiple_choice(self):
+    def test_receiver_show_multiple_choice(self):
         self.assertRaises(exceptions.BadRequest,
                           self.client.get_obj,
                           'receivers', 'r-01')

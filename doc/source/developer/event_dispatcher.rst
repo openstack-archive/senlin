@@ -18,7 +18,7 @@ Event Dispatchers
 
 An event :term:`dispatcher` is a processor that converts a given action in
 Senlin engine into certain format and then persists it into some storage or
-sends it to downsteam processing software.
+sends it to downstream processing software.
 
 Since version 3.0.0, Senlin comes with some built-in dispatchers that can
 dump event records into database and/or send event notifications via the
@@ -56,7 +56,7 @@ Developing A New Event Dispatcher
 
 The first step for adding a new dispatcher is to create a new file containing
 a subclass of ``EventBackend``. In this new class, say ``JsonDispatcher``,
-you will need to implement the ``dump()`` class method as examplified below:
+you will need to implement the ``dump()`` class method as exemplified below:
 
 .. code-block:: python
 

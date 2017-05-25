@@ -55,7 +55,7 @@ class TestKeystoneV3(base.SenlinTestCase):
         mock_create.return_value = self.conn
         kc = kv3.KeystoneClient({'k': 'v'})
 
-        # no trustee/projec filter, matching 1st
+        # no trustee/project filter, matching 1st
         res = kc.trust_get_by_trustor('USER_A')
         self.assertEqual(trust1, res)
 

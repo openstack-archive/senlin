@@ -100,7 +100,7 @@ also an ongoing work which may take some time to land.
 Proactive Node Status Polling
 -----------------------------
 
-The most straight-foward way of node failure detection is by checking the
+The most straight-forward way of node failure detection is by checking the
 backend service about the status of the physical resource represented by a
 node. If the ``type`` of ``detection`` is set to "``NODE_STATUS_POLLING``"
 (optionally, with an ``interval`` value specified), the *health manager* will
@@ -305,7 +305,7 @@ full failure recovery. These are the triggers for the Senlin team to bring in
 support to Mistral workflows as special actions.
 
 The current design is to allow for a mixture of built-in recovery actions and
-user provided workflows. In the forseeable future, Senlin does not manage the
+user provided workflows. In the foreseeable future, Senlin does not manage the
 workflows to be executed and the team has no plan to support the debugging of
 workflow executions. Users have to make sure their workflows are doing things
 they want.

@@ -100,7 +100,7 @@ class ReceiverTest(base.SenlinTestCase):
         fake_cluster.user = self.ctx.user
         mock_find.return_value = fake_cluster
 
-        fake_receiver = mock.Mock(id='FAKE_RECIEVER')
+        fake_receiver = mock.Mock(id='FAKE_RECEIVER')
         fake_receiver.to_dict.return_value = {
             'id': 'FAKE_RECEIVER',
             'foo': 'bar'
@@ -195,7 +195,7 @@ class ReceiverTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.Forbidden, ex.exc_info[0])
 
-        fake_receiver = mock.Mock(id='FAKE_RECIEVER')
+        fake_receiver = mock.Mock(id='FAKE_RECEIVER')
         fake_receiver.to_dict.return_value = {
             'id': 'FAKE_RECEIVER',
             'foo': 'bar'
@@ -247,7 +247,7 @@ class ReceiverTest(base.SenlinTestCase):
 
     @mock.patch.object(rb.Receiver, 'create')
     def test_receiver_create_message_succeed(self, mock_create):
-        fake_receiver = mock.Mock(id='FAKE_RECIEVER')
+        fake_receiver = mock.Mock(id='FAKE_RECEIVER')
         fake_receiver.to_dict.return_value = {
             'id': 'FAKE_RECEIVER',
             'foo': 'bar'

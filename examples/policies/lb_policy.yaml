@@ -28,7 +28,7 @@ properties:
     # Name or ID of Subnet on which VIP address will be allocated
     subnet: public-subnet
 
-    # IP adddress of the VIP
+    # IP address of the VIP
     # address: <ADDRESS>
 
     # Max #connections per second allowed for this VIP

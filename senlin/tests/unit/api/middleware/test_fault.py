@@ -202,7 +202,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
         }
         self.assertEqual(expected, msg)
 
-    def test_internal_server_error_when_exeption_and_parents_not_mapped(self):
+    def test_internal_server_error_when_exception_and_parents_not_mapped(self):
         wrapper = fault.FaultWrapper(None)
 
         class NotMappedException(Exception):

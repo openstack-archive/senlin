@@ -1,7 +1,7 @@
 heat_template_version: 2016-04-08
 
 description: >
-  This template demostrate how to create a cluster and attach a
+  This template demonstrate how to create a cluster and attach a
   loadbalance policy, a scale-out policy and scale-in policy to it.
 
 parameters:

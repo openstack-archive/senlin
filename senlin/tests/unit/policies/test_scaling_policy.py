@@ -235,7 +235,7 @@ class TestScalingPolicy(base.SenlinTestCase):
     @mock.patch.object(no.Node, 'count_by_cluster')
     def test_pre_op_pass_check_effort(self, mock_currentcount,
                                       mock_adjustmentcount):
-        # Cluster with maxsize and best_effert is False
+        # Cluster with maxsize and best_effort is False
         action = mock.Mock()
         action.context = self.context
         action.action = consts.CLUSTER_SCALE_OUT

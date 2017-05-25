@@ -379,7 +379,7 @@ associated resources.
 Note also that by default Senlin won't destroy the nodes that are deleted
 from the cluster. It simply removes the nodes from the cluster so that they
 become orphan nodes.
-Senlin also provides a paramater ``destroy_after_deletion`` for this action
+Senlin also provides a parameter ``destroy_after_deletion`` for this action
 so that a user can request the deleted node(s) to be destroyed right away,
 instead of becoming orphan nodes.
 

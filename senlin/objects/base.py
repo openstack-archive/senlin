@@ -37,7 +37,7 @@ class SenlinObject(base.VersionedObject):
     BASE_VERSION = '1.0'
     VERSION = '1.0'
 
-    # list of version maps from api requst version to object version
+    # list of version maps from api request version to object version
     # higher api versions after lower api versions. e.g.
     # {'1.2': '1.0', '1.4': '1.1'}
     VERSION_MAP = {}

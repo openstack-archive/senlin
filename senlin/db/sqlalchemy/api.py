@@ -336,7 +336,7 @@ def node_add_dependents(context, depended, dependent, dep_type=None):
     :param dependent: ID of the dependent node or profile which has
                      dependencies on depended node.
     :param dep_type: The type of dependency. It can be 'node' indicating a
-                     dependency beween two nodes; or 'profile' indicating a
+                     dependency between two nodes; or 'profile' indicating a
                      dependency from profile to node.
     :raises ResourceNotFound: The specified node does not exist in database.
     """
@@ -362,7 +362,7 @@ def node_remove_dependents(context, depended, dependent, dep_type=None):
     :param dependent: ID of the node or profile which has dependencies on
                      the depended node.
     :param dep_type: The type of dependency. It can be 'node' indicating a
-                     dependency beween two nodes; or 'profile' indicating a
+                     dependency between two nodes; or 'profile' indicating a
                      dependency from profile to node.
 
     :raises ResourceNotFound: The specified node does not exist in database.
@@ -1423,7 +1423,7 @@ def gc_by_engine(engine_id):
                 if not res:
                     _release_cluster_lock(session, cl, a.id, 1)
 
-            # mark action failed and relase lock
+            # mark action failed and release lock
             _mark_failed(session, a.id, timestamp, reason="Engine failure")
 
 

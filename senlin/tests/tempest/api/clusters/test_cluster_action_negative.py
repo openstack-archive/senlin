@@ -49,7 +49,7 @@ class TestClusterActionNegativeCommon(base.BaseSenlinAPITest):
 
     @decorators.idempotent_id('43e142ac-9579-40d9-845a-b8190691b91a')
     def test_cluster_action_unrecognized_action(self):
-        # Unrecoginized action is specified
+        # Unrecognized action is specified
         params = {
             'bogus': {}
         }

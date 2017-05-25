@@ -21,7 +21,7 @@ properties:
       # PING, TCP, HTTP, HTTPS
       type: HTTP 
 
-      # Number of permissible connection failures before chaning the
+      # Number of permissible connection failures before changing the
       # node status to INACTIVE
       max_retries: 3
 

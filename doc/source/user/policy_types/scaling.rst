@@ -19,7 +19,7 @@ Scaling Policy
 
 The scaling policy is designed to supplement a cluster scaling request with
 more detailed arguments based on user-provided rules. This policy type is
-expected to be appliable on clusters of all profile types.
+expected to be applicable on clusters of all profile types.
 
 
 Properties
@@ -49,7 +49,7 @@ scaling behavior in both directions using the same policy.
 
 Senlin has carefully designed the builtin policy types so that for scaling
 policies, you can attach more than one instance of the same policy type but
-you may get an error when you are attempting to attach two polcies of anther
+you may get an error when you are attempting to attach two policies of anther
 type (say ``senlin.policy.deletion``) to the same cluster.
 
 The value of the ``event`` property indicates when the policy will be checked.
@@ -81,7 +81,7 @@ from the cluster.
 Dealing With Percentage
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-As stated above, when ``adjustement.type`` is set to ``CHANGE_IN_PERCENTAGE``,
+As stated above, when ``adjustment.type`` is set to ``CHANGE_IN_PERCENTAGE``,
 the value of ``adjustment.number`` can be a floating-point value, interpreted
 as a percentage of the current node count of the cluster.
 

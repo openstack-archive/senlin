@@ -37,7 +37,7 @@ class ProfileTest(base.SenlinTestCase):
         self.eng = service.EngineService('host-a', 'topic-a')
 
     def _setup_fakes(self):
-        """Set up fake proflie for the purpose of testing.
+        """Set up fake profile for the purpose of testing.
 
         This method is provided in a standalone function because not all
         test cases need such a set up.

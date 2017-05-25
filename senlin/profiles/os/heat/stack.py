@@ -167,7 +167,7 @@ class StackProfile(base.Profile):
             stack = self.orchestration(obj).stack_create(**kwargs)
 
             # Timeout = None means we will use the 'default_action_timeout'
-            # It can be overridden by the TIMEOUT profile propertie
+            # It can be overridden by the TIMEOUT profile properties
             timeout = None
             if self.properties[self.TIMEOUT]:
                 timeout = self.properties[self.TIMEOUT] * 60
@@ -245,7 +245,7 @@ class StackProfile(base.Profile):
         try:
             hc = self.orchestration(obj)
             # Timeout = None means we will use the 'default_action_timeout'
-            # It can be overridden by the TIMEOUT profile propertie
+            # It can be overridden by the TIMEOUT profile properties
             timeout = None
             if self.properties[self.TIMEOUT]:
                 timeout = self.properties[self.TIMEOUT] * 60
@@ -271,7 +271,7 @@ class StackProfile(base.Profile):
         hc = self.orchestration(obj)
         try:
             # Timeout = None means we will use the 'default_action_timeout'
-            # It can be overridden by the TIMEOUT profile propertie
+            # It can be overridden by the TIMEOUT profile properties
             timeout = None
             if self.properties[self.TIMEOUT]:
                 timeout = self.properties[self.TIMEOUT] * 60

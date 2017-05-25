@@ -251,7 +251,7 @@ the following properties in the ``health_monitor`` group.
 - ``max_retries``: The number of allowed connection failures before the monitor
   concludes that node inactive. The default is 3.
 
-- ``delay``: The time in milliseconds between sending two consequtive requests
+- ``delay``: The time in milliseconds between sending two consecutive requests
   (probes) to pool members. The default is 10.
 
 A careful experimentation is usually warranted to come up with reasonable

@@ -30,7 +30,7 @@ class TestNodeDelete(base.BaseSenlinAPITest):
         # Delete test node
         res = self.client.delete_obj('nodes', self.node_id)
 
-        # Verfiy resp code, body and location in headers
+        # Verify resp code, body and location in headers
         self.assertEqual(202, res['status'])
         self.assertIsNone(res['body'])
         self.assertIn('actions', res['location'])

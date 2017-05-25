@@ -688,7 +688,7 @@ class TestCluster(base.SenlinTestCase):
 
         existing = mock.Mock()
         existing.id = POLICY_ID
-        existing.type = "senlin.poicy.foo"
+        existing.type = "senlin.policy.foo"
         cluster.rt['policies'] = [existing]
         values = {
             'enabled': False

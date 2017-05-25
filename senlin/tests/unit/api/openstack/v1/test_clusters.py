@@ -32,7 +32,7 @@ from senlin.tests.unit.common import utils
 
 @mock.patch.object(policy, 'enforce')
 class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
-    '''Test case for the cluster controoler.'''
+    """Test case for the cluster controller."""
 
     def setUp(self):
         super(ClusterControllerTest, self).setUp()

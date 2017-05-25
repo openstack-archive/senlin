@@ -31,7 +31,7 @@ class LoadBalancerDriver(base.DriverBase):
     def lb_delete(self, **kwargs):
         return True, 'LB deletion succeeded'
 
-    def member_add(self, node, lb_id, pool_id, port, subneat):
+    def member_add(self, node, lb_id, pool_id, port, subnet):
         return self.member_id
 
     def member_remove(self, lb_id, pool_id, member_id):

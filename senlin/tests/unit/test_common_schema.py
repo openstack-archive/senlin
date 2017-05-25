@@ -202,7 +202,7 @@ class TestSchemaBase(base.SenlinTestCase):
                          'spec version 0.5.',
                          six.text_type(ex))
 
-    def test__validate_version_no_version_resitriction(self):
+    def test__validate_version_no_version_restriction(self):
         sot = FakeSchema()
 
         res = sot._validate_version('field', '1.0')

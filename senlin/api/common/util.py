@@ -48,7 +48,7 @@ def parse_request(name, req, body, key=None):
     """Formalizes an API request and validates it.
 
     :param name: The name for a versioned request object.
-    :param req: Reference to a WSGI reqeust object.
+    :param req: Reference to a WSGI request object.
     :param body: The JSON body (if any) that accompanies a request. Could be
                  augmented by controller before getting passed here.
     :param key: An optional key indicating the inner object for a request.

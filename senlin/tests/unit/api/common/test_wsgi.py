@@ -433,7 +433,7 @@ class MicroversionTest(base.SenlinTestCase):
         self.assertEqual("API version '3.5' is not supported on "
                          "this method.", six.text_type(ex))
 
-    def test_vserioned_request_inner_functions(self):
+    def test_versioned_request_inner_functions(self):
         data = mock.Mock()
         request = wsgi.Request.blank('/tests/123')
         request.version_request = vr.APIVersionRequest('3.0')

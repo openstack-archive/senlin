@@ -25,7 +25,7 @@ changes to the packages senlin imports.
 
 A more appropriate workflow should be checking the version changes proposed
 in such patches and examine the git log from each particular package. If there
-are siginifcant changes that may simplify senlin code base, we should propose
+are significant changes that may simplify senlin code base, we should propose
 at least a TODO item to write down the needed changes to senlin so we adapt
 senlin code to the new package.
 

@@ -438,7 +438,7 @@ class Profile(object):
         return {}
 
     def do_adopt(self, obj, overrides=None, snapshot=False):
-        """For subclass to overrid."""
+        """For subclass to override."""
         LOG.warning("Adopt operation not supported.")
         return {}
 
