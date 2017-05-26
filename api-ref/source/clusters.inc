@@ -933,6 +933,11 @@ include:
   statuses of cluster nodes before performing the recovery action. This
   parameter is added since microversion 1.6 and it defaults to False.
 
+- ``check_capacity``: A boolean specifying whether check the current number of
+  nodes and the ``desired_capacity`` field. Will delete nodes if the number of
+  nodes is larger than ``desired_capacity``, otherwise, create nodes. This
+  parameter is added since microversion 1.7 and it defaults to False.
+
 Request Example
 ---------------
 

@@ -186,7 +186,6 @@ class ClusterScaleInRequest(base.SenlinObject):
     fields = {
         'identity': fields.StringField(),
         'count': fields.NonNegativeIntegerField(nullable=True),
-        'health_check': fields.BooleanField(nullable=True, default=False)
     }
 
 
