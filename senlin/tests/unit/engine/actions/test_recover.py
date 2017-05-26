@@ -127,6 +127,54 @@ class ClusterRecoverTest(base.SenlinTestCase):
         cluster.eval_status.assert_called_once_with(
             action.context, consts.CLUSTER_RECOVER)
 
+    @mock.patch.object(ao.Action, 'update')
+    @mock.patch.object(ab.Action, 'create')
+    @mock.patch.object(dobj.Dependency, 'create')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
+    def test_do_recover_with_input(self, mock_wait, mock_start, mock_dep,
+                                   mock_action, mock_update, mock_load):
+        node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID', status='ERROR')
+        cluster = mock.Mock(id='FAKE_ID', RECOVERING='RECOVERING')
+        cluster.nodes = [node1]
+        cluster.do_recover.return_value = True
+        mock_load.return_value = cluster
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_RECOVER', self.ctx)
+        action.id = 'CLUSTER_ACTION_ID'
+        action.inputs = {
+            'operation': consts.RECOVER_REBOOT,
+            'check': False,
+        }
+
+        mock_action.return_value = 'NODE_RECOVER_ID'
+        mock_wait.return_value = (action.RES_OK, 'Everything is Okay')
+
+        # do it
+        res_code, res_msg = action.do_recover()
+
+        # assertions
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Cluster recovery succeeded.', res_msg)
+
+        cluster.do_recover.assert_called_once_with(action.context)
+        mock_action.assert_called_once_with(
+            action.context, 'NODE_1', 'NODE_RECOVER',
+            name='node_recover_NODE_1',
+            cause=consts.CAUSE_DERIVED,
+            inputs={
+                'operation': consts.RECOVER_REBOOT
+            }
+        )
+        mock_dep.assert_called_once_with(action.context, ['NODE_RECOVER_ID'],
+                                         'CLUSTER_ACTION_ID')
+        mock_update.assert_called_once_with(action.context, 'NODE_RECOVER_ID',
+                                            {'status': 'READY'})
+        mock_start.assert_called_once_with()
+        mock_wait.assert_called_once_with()
+        cluster.eval_status.assert_called_once_with(
+            action.context, consts.CLUSTER_RECOVER)
+
     def test_do_recover_all_nodes_active(self, mock_load):
         cluster = mock.Mock(id='FAKE_ID')
         cluster.do_recover.return_value = True
@@ -205,7 +253,7 @@ class ClusterRecoverTest(base.SenlinTestCase):
         node2.do_check = mock_check
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_RECOVER', self.ctx)
-        action.data = {'check': True}
+        action.inputs = {'check': True}
 
         # do it
         res_code, res_msg = action.do_recover()
@@ -235,7 +283,7 @@ class ClusterRecoverTest(base.SenlinTestCase):
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_RECOVER', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
-        action.data = {'check': True}
+        action.inputs = {'check': True}
 
         mock_action.return_value = 'NODE_RECOVER_ID'
         mock_wait.return_value = (action.RES_OK, 'Everything is Okay')
