@@ -13,7 +13,6 @@
 import copy
 from tempest.lib import decorators
 from tempest.lib import exceptions
-from tempest import test
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import constants
@@ -22,7 +21,7 @@ from senlin.tests.tempest.common import utils
 
 class TestClusterUpdateNegativeInvalidParam(base.BaseSenlinAPITest):
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('7bddd411-b890-4a36-a523-3e49b87cb645')
     def test_cluster_update_cluster_invalid_param(self):
         params = {
@@ -40,7 +39,7 @@ class TestClusterUpdateNegativeInvalidParam(base.BaseSenlinAPITest):
             "Additional properties are not allowed (u'bad' was "
             "unexpected)", str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('80cd0acd-772f-482f-8c6d-90843d986eb1')
     def test_cluster_update_cluster_empty_param(self):
         params = {}
@@ -57,7 +56,7 @@ class TestClusterUpdateNegativeInvalidParam(base.BaseSenlinAPITest):
 
 class TestClusterUpdateNegativeNotFound(base.BaseSenlinAPITest):
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('f7a97fce-f495-44a8-b41a-7408139adacf')
     def test_cluster_update_cluster_not_found(self):
         ex = self.assertRaises(exceptions.NotFound,
@@ -83,7 +82,7 @@ class TestClusterUpdateNegativeProfileNotFound(base.BaseSenlinAPITest):
         self.cluster_id = utils.create_a_cluster(self, profile_id)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('fb68921d-1fe8-4c14-be9a-51fa43d4f705')
     def test_cluster_update_profile_not_found(self):
         # Provided profile can not be found
@@ -121,7 +120,7 @@ class TestClusterUpdateNegativeProfileMultichoices(base.BaseSenlinAPITest):
         self.addCleanup(utils.delete_a_profile, self, new_profile_id1)
         self.addCleanup(utils.delete_a_profile, self, new_profile_id2)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('6a3eb86c-4b5c-4cfc-891c-7b0be17715f2')
     def test_cluster_update_profile_multichoices(self):
         # Multiple profiles are found for given name
@@ -157,7 +156,7 @@ class TestClusterUpdateNegativeProfileTypeUnmatch(base.BaseSenlinAPITest):
             self, spec=constants.spec_heat_stack)
         self.addCleanup(utils.delete_a_profile, self, self.new_profile_id)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('c28e1bc0-fadb-4394-b2d0-67ad8b87ac04')
     def test_cluster_update_profile_type_unmatch(self):
         # New profile type is different from original cone
@@ -190,7 +189,7 @@ class TestClusterUpdateNegativeNoPropertyUpdated(base.BaseSenlinAPITest):
         self.cluster_id = utils.create_a_cluster(self, profile_id)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('0fbd8fd9-7789-47da-b806-d91631a28556')
     def test_cluster_update_no_property_updated(self):
         # No any property is updated

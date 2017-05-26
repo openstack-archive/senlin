@@ -13,7 +13,6 @@
 import time
 
 from tempest.lib import decorators
-from tempest import test
 
 from senlin.tests.tempest.common import constants
 from senlin.tests.tempest.common import utils
@@ -31,7 +30,7 @@ class TestReceiver(base.BaseSenlinIntegrationTest):
                                                  desired_capacity=1)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
-    @test.attr(type=['integration'])
+    @decorators.attr(type=['integration'])
     @decorators.idempotent_id('16902c7a-1057-49bb-aa9e-227297864a92')
     def test_message_receiver(self):
         # Create a message type of receiver

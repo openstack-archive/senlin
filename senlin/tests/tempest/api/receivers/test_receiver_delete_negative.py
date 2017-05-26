@@ -12,7 +12,6 @@
 
 from tempest.lib import decorators
 from tempest.lib import exceptions
-from tempest import test
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import utils
@@ -20,7 +19,7 @@ from senlin.tests.tempest.common import utils
 
 class TestReceiverDeleteNegativeNotFound(base.BaseSenlinAPITest):
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('799395ff-8bb5-49d6-9e3b-0d2d4428e8c1')
     def test_receiver_delete_not_found(self):
         # Verify notfound exception(404) is raised.
@@ -47,7 +46,7 @@ class TestReceiverDeleteNegativeBadRequest(base.BaseSenlinAPITest):
                                                     name='r-01')
         self.addCleanup(utils.delete_a_receiver, self, self.receiver_id2)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('f6f2377c-f125-4c35-be5f-42f94ba81a0e')
     def test_receiver_delete_multiple_choice(self):
         # Verify badrequest exception(400) is raised.

@@ -12,7 +12,6 @@
 
 from tempest.lib import decorators
 from tempest.lib import exceptions
-from tempest import test
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import constants
@@ -31,7 +30,7 @@ class TestNodeCreateNegativeBadRequest(base.BaseSenlinAPITest):
         self.cluster_id = utils.create_a_cluster(self, self.profile_id)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('cbe7827a-60ca-42c0-99d2-38167cb4f46d')
     def test_node_create_profile_invalid(self):
         # Invalid profile_id is provided
@@ -54,7 +53,7 @@ class TestNodeCreateNegativeBadRequest(base.BaseSenlinAPITest):
             "The specified profile 'cbe7827a-60ca-42c0-99d2-38167cb4f46d' "
             "could not be found.", str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('960cd427-2487-4c83-b679-1b5e1f9dd985')
     def test_node_create_cluster_invalid(self):
         # Invalid cluster_id is provided
@@ -77,7 +76,7 @@ class TestNodeCreateNegativeBadRequest(base.BaseSenlinAPITest):
             "The specified cluster '960cd427-2487-4c83-b679-1b5e1f9dd985' "
             "could not be found.", str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('8ddf45a5-f45f-4cc8-813d-2bff75498576')
     def test_node_create_profile_type_unmatch(self):
         # Node profile type is different from cluster profile type

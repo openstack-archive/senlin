@@ -13,7 +13,6 @@
 import copy
 from tempest.lib import decorators
 from tempest.lib import exceptions
-from tempest import test
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import constants
@@ -22,7 +21,7 @@ from senlin.tests.tempest.common import utils
 
 class TestNodeUpdateNegativeNotFound(base.BaseSenlinAPITest):
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('608addc9-cbbe-45cd-a00a-495cae7db400')
     def test_node_update_node_not_found(self):
         ex = self.assertRaises(exceptions.NotFound,
@@ -48,7 +47,7 @@ class TestNodeUpdateNegativeProfileNotFound(base.BaseSenlinAPITest):
         self.node_id = utils.create_a_node(self, profile_id)
         self.addCleanup(utils.delete_a_node, self, self.node_id)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('3243dd63-1008-4181-849a-0058af975800')
     def test_node_update_profile_not_found(self):
         # Provided profile can not be found
@@ -86,7 +85,7 @@ class TestNodeUpdateNegativeProfileMultichoices(base.BaseSenlinAPITest):
         self.addCleanup(utils.delete_a_profile, self, new_profile_id1)
         self.addCleanup(utils.delete_a_profile, self, new_profile_id2)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('0d73eff6-1916-43e1-9518-31820fcfe01f')
     def test_node_update_profile_multichoices(self):
         # Multiple profiles are found for given name
@@ -122,7 +121,7 @@ class TestNodeUpdateNegativeProfileTypeUnmatch(base.BaseSenlinAPITest):
             self, spec=constants.spec_heat_stack)
         self.addCleanup(utils.delete_a_profile, self, self.new_profile_id)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('ec5821d8-142e-4fff-a998-81428ecc239c')
     def test_node_update_profile_type_unmatch(self):
         # New profile type is different from original cone
@@ -155,7 +154,7 @@ class TestNodeUpdateNegativeNoPropertyUpdated(base.BaseSenlinAPITest):
         self.node_id = utils.create_a_node(self, profile_id)
         self.addCleanup(utils.delete_a_node, self, self.node_id)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('ed6f385d-780b-4562-928d-3e00f27550d2')
     def test_node_update_no_property_updated(self):
         # Provided profile can not be found

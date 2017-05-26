@@ -13,7 +13,6 @@
 import six
 
 from tempest.lib import decorators
-from tempest import test
 
 from senlin.tests.tempest.common import constants
 from senlin.tests.tempest.common import utils
@@ -31,7 +30,7 @@ class TestNovaServerCluster(base.BaseSenlinIntegrationTest):
         self.addCleanup(utils.delete_a_profile, self, self.profile_id)
         self.addCleanup(utils.delete_a_keypair, self, keypair_name)
 
-    @test.attr(type=['integration'])
+    @decorators.attr(type=['integration'])
     @decorators.idempotent_id('c26eae1c-5c46-4a5f-be63-954d7229c8cc')
     def test_cluster_create_delete(self):
         # Create a cluster
@@ -78,7 +77,7 @@ class TestNovaServerClusterNonAdmin(base.BaseSenlinIntegrationNonAdminTest):
         self.profile_id = utils.create_a_profile(self, self.spec)
         self.addCleanup(utils.delete_a_profile, self, self.profile_id)
 
-    @test.attr(type=['integration'])
+    @decorators.attr(type=['integration'])
     @decorators.idempotent_id('c26eae1c-5c46-4a5f-be63-954d7229c8cc')
     def test_cluster_create_delete(self):
         # Create a cluster

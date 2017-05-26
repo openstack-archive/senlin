@@ -11,7 +11,6 @@
 # under the License.
 
 from tempest.lib import decorators
-from tempest import test
 
 from senlin.common.i18n import _
 from senlin.tests.tempest.common import constants
@@ -30,7 +29,7 @@ class TestScalingPolicy(base.BaseSenlinFunctionalTest):
                                                  desired_capacity=1)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
-    @test.attr(type=['functional'])
+    @decorators.attr(type=['functional'])
     @decorators.idempotent_id('6b513a5d-75b6-447a-b95d-e17b84ac9ee8')
     def test_scaling_policy(self):
         # Create a scaling policy targets on CLUSTER_SCALE_OUT action

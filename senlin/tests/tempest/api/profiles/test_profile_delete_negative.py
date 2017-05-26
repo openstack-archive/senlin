@@ -12,7 +12,6 @@
 
 from tempest.lib import decorators
 from tempest.lib import exceptions
-from tempest import test
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import utils
@@ -27,7 +26,7 @@ class TestProfileDeleteNegativeConflict(base.BaseSenlinAPITest):
         cluster_id = utils.create_a_cluster(self, self.profile_id)
         self.addCleanup(utils.delete_a_cluster, self, cluster_id)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('8e5e8414-b757-41f4-b633-e0fa83d72ea2')
     def test_profile_delete_conflict(self):
         # Verify conflict exception(409) is raised.
@@ -43,7 +42,7 @@ class TestProfileDeleteNegativeConflict(base.BaseSenlinAPITest):
 
 class TestProfileDeleteNegativeNotFound(base.BaseSenlinAPITest):
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('b6e7911d-5f65-4ec6-a08b-b88809fe2b9e')
     def test_profile_delete_not_found(self):
         # Verify notfound exception(404) is raised.
@@ -66,7 +65,7 @@ class TestProfileDeleteNegativeBadRequest(base.BaseSenlinAPITest):
         self.profile_id2 = utils.create_a_profile(self, name='p-01')
         self.addCleanup(utils.delete_a_profile, self, self.profile_id2)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('b6e7911d-5f65-4ec6-a08b-b88809fe2b9e')
     def test_profile_delete_multiple_choice(self):
         # Verify badrequest exception(400) is raised.

@@ -11,7 +11,6 @@
 # under the License.
 
 from tempest.lib import decorators
-from tempest import test
 
 from senlin.tests.tempest.common import constants
 from senlin.tests.tempest.common import utils
@@ -29,7 +28,7 @@ class TestLBPolicy(base.BaseSenlinFunctionalTest):
                                                  desired_capacity=2)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
-    @test.attr(type=['functional'])
+    @decorators.attr(type=['functional'])
     @decorators.idempotent_id('6b513a5d-75b6-447a-b95d-e17b84ac9ee8')
     def test_lb_policy(self):
         # Verify there is no lb information in node data

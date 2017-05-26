@@ -12,7 +12,6 @@
 
 from tempest.lib import decorators
 from tempest.lib import exceptions
-from tempest import test
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import utils
@@ -20,7 +19,7 @@ from senlin.tests.tempest.common import utils
 
 class TestClusterPolicyShowNegativeClusterNotFound(base.BaseSenlinAPITest):
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('965d7324-e3f7-4d77-8e7f-44c862b851f7')
     def test_cluster_policy_show_cluster_not_found(self):
         ex = self.assertRaises(exceptions.NotFound,
@@ -44,7 +43,7 @@ class TestClusterPolicyShowNegativePolicyNotFound(base.BaseSenlinAPITest):
         self.cluster_id = utils.create_a_cluster(self, profile_id)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('e3e24058-ed07-42b6-b47c-a972c6047509')
     def test_cluster_policy_show_policy_not_found(self):
         ex = self.assertRaises(exceptions.NotFound,
@@ -70,7 +69,7 @@ class TestClusterPolicyShowNegativeNoPolicyBinding(base.BaseSenlinAPITest):
         self.policy_id = utils.create_a_policy(self)
         self.addCleanup(utils.delete_a_policy, self, self.policy_id)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('9c9e01fc-dfb9-4a27-9a06-f4d6de2b2d1c')
     def test_cluster_policy_show_no_policy_binding(self):
         ex = self.assertRaises(exceptions.NotFound,
@@ -105,7 +104,7 @@ class TestClusterPolicyShowNegativeBadRequest(base.BaseSenlinAPITest):
         self.addCleanup(utils.cluster_detach_policy, self, self.cluster_id,
                         self.policy_id2)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('3faaaf65-0606-4853-a660-2bb04f10485b')
     def test_cluster_policy_show_multiple_choice(self):
         ex = self.assertRaises(exceptions.BadRequest,

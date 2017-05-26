@@ -13,7 +13,6 @@
 import copy
 from tempest.lib import decorators
 from tempest.lib import exceptions
-from tempest import test
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import constants
@@ -21,7 +20,7 @@ from senlin.tests.tempest.common import constants
 
 class TestProfileCreateNegativeBadRequest(base.BaseSenlinAPITest):
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('0f0183b8-0f5e-4367-993d-863ff1f30d49')
     def test_profile_create_profile_data_not_specified(self):
         params = {
@@ -38,7 +37,7 @@ class TestProfileCreateNegativeBadRequest(base.BaseSenlinAPITest):
         self.assertEqual("Request body missing 'profile' key.",
                          str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('c341f22d-833b-4676-8b66-e6cdb0b77abd')
     def test_profile_create_name_not_specified(self):
         params = {
@@ -54,7 +53,7 @@ class TestProfileCreateNegativeBadRequest(base.BaseSenlinAPITest):
         message = ex.resp_body['error']['message']
         self.assertEqual("'name' is a required property", str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('5e644149-a7e6-4e93-8220-4a32f98d6e25')
     def test_profile_create_spec_not_specified(self):
         params = {
@@ -70,7 +69,7 @@ class TestProfileCreateNegativeBadRequest(base.BaseSenlinAPITest):
         message = ex.resp_body['error']['message']
         self.assertEqual("'spec' is a required property", str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('e2da6964-2cd2-402e-9004-ca6b7e3e63f1')
     def test_profile_create_invalid_param(self):
         params = {
@@ -88,7 +87,7 @@ class TestProfileCreateNegativeBadRequest(base.BaseSenlinAPITest):
             "Additional properties are not allowed (u'boo' was "
             "unexpected)", str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('591f3670-3fec-4645-bae2-4f6dec28d70c')
     def test_profile_create_profile_type_incorrect(self):
         spec = copy.deepcopy(constants.spec_nova_server)
@@ -109,7 +108,7 @@ class TestProfileCreateNegativeBadRequest(base.BaseSenlinAPITest):
             "The profile_type 'senlin.profile.bogus-1.0' could "
             "not be found.", str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('66977f7a-5d30-481c-a5ec-a445e80a7c0f')
     def test_profile_create_spec_validation_failed(self):
         spec = copy.deepcopy(constants.spec_nova_server)

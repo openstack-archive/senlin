@@ -11,7 +11,6 @@
 # under the License.
 
 from tempest.lib import decorators
-from tempest import test
 
 from senlin.common.i18n import _
 from senlin.tests.tempest.common import utils
@@ -29,7 +28,7 @@ class TestClusterScaleInOut(base.BaseSenlinFunctionalTest):
                                                  desired_capacity=1)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
-    @test.attr(type=['functional'])
+    @decorators.attr(type=['functional'])
     @decorators.idempotent_id('e326554b-9b42-45f8-a9ea-4ab0914fb364')
     def test_cluster_scale_in_out(self):
         # Scale out cluster without count specified
@@ -106,7 +105,7 @@ class TestClusterResize(base.BaseSenlinFunctionalTest):
                                                  desired_capacity=3)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
-    @test.attr(type=['functional'])
+    @decorators.attr(type=['functional'])
     @decorators.idempotent_id('02b570ef-9101-489b-9ee7-8c1f35d2b105')
     def test_cluster_resize_basic(self):
         # Increase cluster size by specifying adjustment count
@@ -148,7 +147,7 @@ class TestClusterResize(base.BaseSenlinFunctionalTest):
         self.assertEqual(2, cluster['desired_capacity'])
         self.assertEqual(2, len(cluster['nodes']))
 
-    @test.attr(type=['functional'])
+    @decorators.attr(type=['functional'])
     @decorators.idempotent_id('72aac2f7-8cb3-4d95-a0b8-4aeeadf4b319')
     def test_cluster_resize_constraint_breaking(self):
         # Do best-effort resizing when size upper limit is broken
@@ -179,7 +178,7 @@ class TestClusterResize(base.BaseSenlinFunctionalTest):
         self.assertEqual(2, cluster['desired_capacity'])
         self.assertEqual(2, len(cluster['nodes']))
 
-    @test.attr(type=['functional'])
+    @decorators.attr(type=['functional'])
     @decorators.idempotent_id('9bde1918-7821-4024-a382-44e6b4950a7e')
     def test_cluster_resize_constraint_adjusting(self):
         # Increase cluster size with upper limit increased

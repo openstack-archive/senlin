@@ -11,7 +11,6 @@
 # under the License.
 
 from tempest.lib import decorators
-from tempest import test
 
 from senlin.tests.tempest.common import utils
 from senlin.tests.tempest.functional import base
@@ -24,7 +23,7 @@ class TestClusterCreateListDelete(base.BaseSenlinFunctionalTest):
         self.profile_id = utils.create_a_profile(self)
         self.addCleanup(utils.delete_a_profile, self, self.profile_id)
 
-    @test.attr(type=['functional'])
+    @decorators.attr(type=['functional'])
     @decorators.idempotent_id('d2001e89-e7e7-4ceb-8497-2255becc5d7f')
     def test_cluster_create_list_delete(self):
         # Create a cluster
@@ -74,7 +73,7 @@ class TestClusterUpdate(base.BaseSenlinFunctionalTest):
                                                  desired_capacity=3)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
-    @test.attr(type=['functional'])
+    @decorators.attr(type=['functional'])
     @decorators.idempotent_id('308ee213-b379-4f2d-b193-0ea44b0de622')
     def test_cluster_update_basic_properties(self):
         name = 'new-name'
@@ -91,7 +90,7 @@ class TestClusterUpdate(base.BaseSenlinFunctionalTest):
         self.assertEqual(metadata, cluster['metadata'])
         self.assertEqual(timeout, cluster['timeout'])
 
-    @test.attr(type=['functional'])
+    @decorators.attr(type=['functional'])
     @decorators.idempotent_id('bf655d2b-11d4-47b7-b10c-8dfb8a4538a5')
     def test_cluster_update_profile(self):
 

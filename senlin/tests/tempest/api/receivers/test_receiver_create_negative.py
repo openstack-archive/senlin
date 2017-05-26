@@ -12,7 +12,6 @@
 
 from tempest.lib import decorators
 from tempest.lib import exceptions
-from tempest import test
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import utils
@@ -20,7 +19,7 @@ from senlin.tests.tempest.common import utils
 
 class TestReceiverCreateNegativeBadRequest(base.BaseSenlinAPITest):
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('b55d204c-8ba2-43fd-bde4-d7d9d0e54c29')
     def test_receiver_create_receiver_data_not_specified(self):
         # receiver key is missing in request data
@@ -38,7 +37,7 @@ class TestReceiverCreateNegativeBadRequest(base.BaseSenlinAPITest):
                           self.client.create_obj,
                           'receivers', params)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('0e5cadcf-d9b7-4617-a83f-49557765f9bf')
     def test_receiver_create_unsupported_receiver_type(self):
         # Unsupported receiver type is specified
@@ -56,7 +55,7 @@ class TestReceiverCreateNegativeBadRequest(base.BaseSenlinAPITest):
                           self.client.create_obj,
                           'receivers', params)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('e281873f-0dff-4be6-8795-f781efe7cc14')
     def test_receiver_create_target_cluster_not_found(self):
         # Target cluster cannot be found
@@ -84,7 +83,7 @@ class TestReceiverCreateNegativeInvalidAction(base.BaseSenlinAPITest):
         self.cluster_id = utils.create_a_cluster(self, self.profile_id)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('80e16a56-7d56-4038-b5f4-6d1ccd76c3f2')
     def test_receiver_create_invalid_action(self):
         # Target action type is illegal
