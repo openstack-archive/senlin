@@ -1443,7 +1443,8 @@ class ClusterTest(base.SenlinTestCase):
         x_cluster = mock.Mock(id='CID')
         mock_find.return_value = x_cluster
         mock_action.return_value = 'ACTION_ID'
-        req = orco.ClusterRecoverRequest(identity='C1', params={'foo': 'bar'})
+        req = orco.ClusterRecoverRequest(identity='C1',
+                                         params={'operation': 'RECREATE'})
 
         result = self.eng.cluster_recover(self.ctx, req.obj_to_primitive())
 
@@ -1454,7 +1455,7 @@ class ClusterTest(base.SenlinTestCase):
             name='cluster_recover_CID',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
-            inputs={'foo': 'bar'},
+            inputs={'operation': 'RECREATE'},
         )
         notify.assert_called_once_with()
 
@@ -1470,6 +1471,23 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster 'Bogus' could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(co.Cluster, 'find')
+    def test_cluster_recover_invalid(self, mock_find):
+        x_cluster = mock.Mock(id='CID')
+        mock_find.return_value = x_cluster
+
+        req = orco.ClusterRecoverRequest(identity='Bogus',
+                                         params={'bad': 'fake'})
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_recover,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("Action parameter ['bad'] is not recognizable.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 

@@ -1417,6 +1417,22 @@ class EngineService(service.Service):
             ctx.user = db_cluster.user
             ctx.project = db_cluster.project
 
+        inputs = {}
+        if req.obj_attr_is_set('params') and req.params:
+            if 'operation' in req.params:
+                inputs['operation'] = req.params.pop('operation')
+
+            if 'check' in req.params:
+                inputs['check'] = req.params.pop('check')
+
+            if 'check_capacity' in req.params:
+                inputs['check_capacity'] = req.params.pop('check_capacity')
+
+            if len(req.params):
+                keys = [str(k) for k in req.params]
+                msg = _("Action parameter %s is not recognizable.") % keys
+                raise exception.BadRequest(msg=msg)
+
         # TODO(anyone): should check if the 'params' attribute, if set,
         # contains valid fields. This can be done by modeling the 'params'
         # attribute into a separate object.
@@ -1424,7 +1440,7 @@ class EngineService(service.Service):
             'name': 'cluster_recover_%s' % db_cluster.id[:8],
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
-            'inputs': req.params if req.obj_attr_is_set('params') else {}
+            'inputs': inputs
         }
         action_id = action_mod.Action.create(ctx, db_cluster.id,
                                              consts.CLUSTER_RECOVER, **params)
