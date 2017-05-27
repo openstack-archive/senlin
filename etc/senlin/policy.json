@@ -45,6 +45,7 @@
     "receivers:index": "",
     "receivers:create": "",
     "receivers:get": "",
+    "receivers:update": "",
     "receivers:delete": "",
     "receivers:notify": "",
     "actions:index": "",
