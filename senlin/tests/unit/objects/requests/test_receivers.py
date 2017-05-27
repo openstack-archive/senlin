@@ -128,6 +128,22 @@ class TestReceiverGet(test_base.SenlinTestCase):
         self.assertEqual('receiver-001', sot.identity)
 
 
+class TestReceiverUpdate(test_base.SenlinTestCase):
+    data = {
+        'name': 'receiver01',
+        'type': 'webhook',
+        'action': 'CLUSTER_SCALE_OUT',
+        'params': {'count': '2'},
+    }
+
+    def test_receiver_update_request(self):
+        sot = receivers.ReceiverUpdateRequest(**self.data)
+        self.assertEqual('receiver01', sot.name)
+        self.assertEqual('webhook', sot.type)
+        self.assertEqual('CLUSTER_SCALE_OUT', sot.action),
+        self.assertEqual({'count': '2'}, sot.params)
+
+
 class TestReceiverDelete(test_base.SenlinTestCase):
 
     body = {

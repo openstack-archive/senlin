@@ -93,6 +93,12 @@ class Receiver(base.SenlinObject, base.VersionedObjectDictCompat):
         return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
     @classmethod
+    def update(cls, context, receiver_id, values):
+        values = cls._transpose_metadata(values)
+        obj = db_api.receiver_update(context, receiver_id, values)
+        return cls._from_db_object(context, cls(), obj)
+
+    @classmethod
     def delete(cls, context, receiver_id):
         db_api.receiver_delete(context, receiver_id)
 

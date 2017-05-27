@@ -73,6 +73,7 @@ class Receiver(object):
 
         :param context: Context for DB operations.
         """
+        timestamp = timeutils.utcnow(True)
         self.created_at = timeutils.utcnow(True)
         values = {
             'id': self.id,
@@ -90,9 +91,16 @@ class Receiver(object):
             'channel': self.channel,
         }
 
-        # TODO(Qiming): Add support to update
-        receiver = ro.Receiver.create(context, values)
-        self.id = receiver.id
+        if self.id:
+            self.updated_at = timestamp
+            values['updated_at'] = timestamp
+            ro.Receiver.update(context, self.id, values)
+        else:
+            self.id = uuidutils.generate_uuid()
+            self.created_at = timestamp
+            values['created_at'] = timestamp
+            receiver = ro.Receiver.create(context, values)
+            self.id = receiver.id
 
         return self.id
 
@@ -108,7 +116,6 @@ class Receiver(object):
             # otherwise, use context user
             cdata['trust_id'] = context.trusts
 
-        kwargs['id'] = uuidutils.generate_uuid()
         kwargs['actor'] = cdata
         kwargs['user'] = context.user
         kwargs['project'] = context.project

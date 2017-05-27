@@ -285,6 +285,71 @@ class ReceiverTest(base.SenlinTestCase):
                                req.obj_to_primitive())
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
 
+    @mock.patch.object(rb.Receiver, 'load')
+    @mock.patch.object(ro.Receiver, 'find')
+    def test_receiver_update_request(self, mock_find, mock_load):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        x_receiver = mock.Mock()
+        x_receiver.name = 'OLD_NAME'
+        x_receiver.params = {'count': '3'}
+        x_receiver.to_dict.return_value = {'foo': 'bar'}
+        mock_load.return_value = x_receiver
+
+        params = {'name': 'NEW_NAME', 'params': {'count': '3'},
+                  'identity': 'PID'}
+
+        req = orro.ReceiverUpdateRequest(**params)
+
+        result = self.eng.receiver_update(self.ctx, req.obj_to_primitive())
+        self.assertEqual({'foo': 'bar'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'PID')
+        mock_load.assert_called_once_with(self.ctx, receiver_obj=x_obj)
+        self.assertEqual('NEW_NAME', x_receiver.name)
+        self.assertEqual({'count': '3'}, x_receiver.params)
+        x_receiver.store.assert_called_once_with(self.ctx)
+
+    @mock.patch.object(ro.Receiver, 'find')
+    def test_receiver_update_not_found(self, mock_find):
+
+        mock_find.side_effect = exc.ResourceNotFound(type='receiver',
+                                                     id='Bogus')
+
+        kwargs = {'identity': 'Bogus', 'name': 'NEW_NAME'}
+        req = orro.ReceiverUpdateRequest(**kwargs)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.receiver_update,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual("The receiver 'Bogus' could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(rb.Receiver, 'load')
+    @mock.patch.object(ro.Receiver, 'find')
+    def test_receiver_update_no_change(self, mock_find, mock_load):
+        x_obj = mock.Mock()
+        mock_find.return_value = x_obj
+        x_receiver = mock.Mock()
+        x_receiver.name = 'OLD_NAME'
+        x_receiver.to_dict.return_value = {'foo': 'bar'}
+        mock_load.return_value = x_receiver
+
+        kwargs = {'name': 'OLD_NAME', 'identity': 'PID'}
+        req = orro.ReceiverUpdateRequest(**kwargs)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.receiver_update,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual('No property needs an update.',
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'PID')
+        mock_load.assert_called_once_with(self.ctx, receiver_obj=x_obj)
+        self.assertEqual(0, x_receiver.store.call_count)
+        self.assertEqual('OLD_NAME', x_receiver.name)
+
     @mock.patch.object(ro.Receiver, 'find')
     @mock.patch.object(rb.Receiver, 'delete')
     def test_receiver_delete(self, mock_delete, mock_find):
