@@ -654,6 +654,22 @@ class ClusterAction(base.Action):
         self.entity.eval_status(self.context, consts.CLUSTER_CHECK)
         return res, reason
 
+    def _check_capacity(self):
+        cluster = self.entity
+
+        current = len(cluster.nodes)
+        desired = cluster.desired_capacity
+
+        if current < desired:
+            count = desired - current
+            self._create_nodes(count)
+
+        if current > desired:
+            count = current - desired
+            nodes = no.Node.get_all_by_cluster(self.context, cluster.id)
+            candidates = scaleutils.nodes_by_random(nodes, count)
+            self._delete_nodes(candidates)
+
     @profiler.trace('ClusterAction.do_recover', hide_args=False)
     def do_recover(self):
         """Handler for the CLUSTER_RECOVER action.
@@ -706,6 +722,10 @@ class ClusterAction(base.Action):
             res, new_reason = self._wait_for_dependents()
             if res != self.RES_OK:
                 reason = new_reason
+
+        check_capacity = self.inputs.get('check_capacity', False)
+        if check_capacity is True:
+            self._check_capacity()
 
         self.entity.eval_status(self.context, consts.CLUSTER_RECOVER)
         return res, reason
