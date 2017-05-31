@@ -134,7 +134,7 @@ class ReceiverTest(base.SenlinTestCase):
 
     @mock.patch.object(ro.Receiver, 'get_by_name')
     def test_receiver_create_name_duplicated(self, mock_get):
-        cfg.CONF.set_override('name_unique', True, enforce_type=True)
+        cfg.CONF.set_override('name_unique', True)
         # Return an existing instance
         mock_get.return_value = mock.Mock()
         req = orro.ReceiverCreateRequestBody(

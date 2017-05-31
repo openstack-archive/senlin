@@ -90,7 +90,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
 
     def test_exception_with_non_ascii_chars(self):
         # We set debug to true to test the code path for serializing traces too
-        cfg.CONF.set_override('debug', True, enforce_type=True)
+        cfg.CONF.set_override('debug', True)
         msg = u'Error with non-ascii chars \x80'
 
         class TestException(senlin_exc.SenlinException):
@@ -110,7 +110,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
         self.assertEqual('Internal Server Error', msg['title'])
 
     def test_remote_exception(self):
-        cfg.CONF.set_override('debug', True, enforce_type=True)
+        cfg.CONF.set_override('debug', True)
         error = senlin_exc.ResourceNotFound(type='cluster', id='a')
         exc_info = (type(error), error, None)
         serialized = rpc_common.serialize_remote_exception(exc_info)
@@ -223,7 +223,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
         self.assertEqual(expected, msg)
 
     def test_should_not_ignore_parent_classes_even_for_remote_ones(self):
-        cfg.CONF.set_override('debug', True, enforce_type=True)
+        cfg.CONF.set_override('debug', True)
 
         error = ClusterNotFoundChild(type='cluster', id='a')
         exc_info = (type(error), error, None)

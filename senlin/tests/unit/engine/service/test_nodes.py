@@ -298,7 +298,7 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'get_by_name')
     def test_node_create_name_conflict(self, mock_get):
-        cfg.CONF.set_override('name_unique', True, enforce_type=True)
+        cfg.CONF.set_override('name_unique', True)
         mock_get.return_value = mock.Mock()
         req = orno.NodeCreateRequestBody(name='NODE1',
                                          profile_id='PROFILE_NAME')
@@ -887,7 +887,7 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'get_by_name')
     def test_node_adopt_name_not_unique(self, mock_get):
-        cfg.CONF.set_override('name_unique', True, enforce_type=True)
+        cfg.CONF.set_override('name_unique', True)
         req = orno.NodeAdoptRequest(
             name='FAKE_NAME', preview=False,
             identity='FAKE_ID', type='FAKE_TYPE')

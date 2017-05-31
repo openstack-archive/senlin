@@ -137,18 +137,17 @@ class TestKeystoneV3(base.SenlinTestCase):
         self.assertEqual('abc', user_id)
 
     def test_get_service_credentials(self, mock_create):
-        cfg.CONF.set_override('auth_url', 'FAKE_URL', group='authentication',
-                              enforce_type=True)
+        cfg.CONF.set_override('auth_url', 'FAKE_URL', group='authentication')
         cfg.CONF.set_override('service_username', 'FAKE_USERNAME',
-                              group='authentication', enforce_type=True)
+                              group='authentication')
         cfg.CONF.set_override('service_password', 'FAKE_PASSWORD',
-                              group='authentication', enforce_type=True)
+                              group='authentication')
         cfg.CONF.set_override('service_project_name', 'FAKE_PROJECT',
-                              group='authentication', enforce_type=True)
+                              group='authentication')
         cfg.CONF.set_override('service_user_domain', 'FAKE_DOMAIN_1',
-                              group='authentication', enforce_type=True)
+                              group='authentication')
         cfg.CONF.set_override('service_project_domain', 'FAKE_DOMAIN_2',
-                              group='authentication', enforce_type=True)
+                              group='authentication')
         expected = {
             'auth_url': 'FAKE_URL',
             'username': 'FAKE_USERNAME',
@@ -190,8 +189,7 @@ class TestKeystoneV3(base.SenlinTestCase):
         self.assertEqual([], res)
 
     def test_get_senlin_endpoint(self, mock_create):
-        cfg.CONF.set_override('default_region_name', 'RegionN',
-                              enforce_type=True)
+        cfg.CONF.set_override('default_region_name', 'RegionN')
         self.conn.session.get_endpoint.return_value = 'http://web.com:1234/v1'
         mock_create.return_value = self.conn
         kc = kv3.KeystoneClient({'k': 'v'})

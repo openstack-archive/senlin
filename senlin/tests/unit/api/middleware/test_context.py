@@ -87,7 +87,7 @@ class RequestContextMiddlewareTest(base.SenlinTestCase):
         self.fixture.conf(args=['--config-dir', policy_path])
         policy_opts.set_defaults(cfg.CONF)
         cfg.CONF.set_override('policy_file', 'check_admin.json',
-                              group='oslo_policy', enforce_type=True)
+                              group='oslo_policy')
 
     def test_context_middleware(self):
         avr = vr.APIVersionRequest('1.0')
