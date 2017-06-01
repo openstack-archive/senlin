@@ -414,7 +414,7 @@ class TestListenerProc(base.SenlinTestCase):
                                 mock_target, mock_novaendpoint,
                                 mock_heatendpoint):
         cfg.CONF.set_override('nova_control_exchange', 'FAKE_EXCHANGE',
-                              group='health_manager', enforce_type=True)
+                              group='health_manager')
 
         x_listener = mock.Mock()
         mock_listener.return_value = x_listener
@@ -639,7 +639,7 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(obj_cluster.Cluster, 'get')
     def test__add_listener_nova(self, mock_cluster, mock_profile):
         cfg.CONF.set_override('nova_control_exchange', 'FAKE_NOVA_EXCHANGE',
-                              group='health_manager', enforce_type=True)
+                              group='health_manager')
         x_listener = mock.Mock()
         mock_add_thread = self.patchobject(self.hm.TG, 'add_thread',
                                            return_value=x_listener)
@@ -664,7 +664,7 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(obj_cluster.Cluster, 'get')
     def test__add_listener_heat(self, mock_cluster, mock_profile):
         cfg.CONF.set_override('heat_control_exchange', 'FAKE_HEAT_EXCHANGE',
-                              group='health_manager', enforce_type=True)
+                              group='health_manager')
         x_listener = mock.Mock()
         mock_add_thread = self.patchobject(self.hm.TG, 'add_thread',
                                            return_value=x_listener)

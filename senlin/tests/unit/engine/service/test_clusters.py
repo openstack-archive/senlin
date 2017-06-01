@@ -47,8 +47,7 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(co.Cluster, 'count_all')
     def test_check_cluster_quota(self, mock_count):
         mock_count.return_value = 10
-        cfg.CONF.set_override('max_clusters_per_project', 11,
-                              enforce_type=True)
+        cfg.CONF.set_override('max_clusters_per_project', 11)
 
         res = self.eng.check_cluster_quota(self.ctx)
 
@@ -58,8 +57,7 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(co.Cluster, 'count_all')
     def test_check_cluster_quota_failed(self, mock_count):
         mock_count.return_value = 11
-        cfg.CONF.set_override('max_clusters_per_project', 11,
-                              enforce_type=True)
+        cfg.CONF.set_override('max_clusters_per_project', 11)
 
         ex = self.assertRaises(exc.Forbidden,
                                self.eng.check_cluster_quota, self.ctx)
@@ -220,7 +218,7 @@ class ClusterTest(base.SenlinTestCase):
     @mock.patch.object(service.EngineService, 'check_cluster_quota')
     @mock.patch.object(co.Cluster, 'get_by_name')
     def test_cluster_create_duplicate_name(self, mock_get, mock_quota):
-        cfg.CONF.set_override('name_unique', True, enforce_type=True)
+        cfg.CONF.set_override('name_unique', True)
         mock_quota.return_value = None
         mock_get.return_value = mock.Mock()
         req = {'profile_id': 'PROFILE', 'name': 'CLUSTER'}

@@ -150,8 +150,8 @@ class SchedulerTest(base.SenlinTestCase):
                                            mock_action3, None]
         mock_group = mock.Mock()
         self.mock_tg.return_value = mock_group
-        cfg.CONF.set_override('max_actions_per_batch', 1, enforce_type=True)
-        cfg.CONF.set_override('batch_interval', 3, enforce_type=True)
+        cfg.CONF.set_override('max_actions_per_batch', 1)
+        cfg.CONF.set_override('batch_interval', 3)
 
         tgm = scheduler.ThreadGroupManager()
         tgm.start_action('4567')

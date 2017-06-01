@@ -397,7 +397,7 @@ class CheckSizeParamsTest(base.SenlinTestCase):
 
     def setUp(self):
         super(CheckSizeParamsTest, self).setUp()
-        cfg.CONF.set_override('max_nodes_per_cluster', 100, enforce_type=True)
+        cfg.CONF.set_override('max_nodes_per_cluster', 100)
 
     def test_check_size_params(self):
         cluster = mock.Mock()

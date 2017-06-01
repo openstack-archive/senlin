@@ -108,7 +108,7 @@ class ProfileTest(base.SenlinTestCase):
 
     @mock.patch.object(po.Profile, 'get_by_name')
     def test_profile_create_name_conflict(self, mock_get):
-        cfg.CONF.set_override('name_unique', True, enforce_type=True)
+        cfg.CONF.set_override('name_unique', True)
         mock_get.return_value = mock.Mock()
 
         spec = {

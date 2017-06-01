@@ -26,8 +26,7 @@ class TestSenlinDriver(base.SenlinTestCase):
         plugin1.orchestration = 'Orchestration1'
         env = environment.global_env()
         env.register_driver('openstack_test', plugin1)
-        cfg.CONF.set_override('cloud_backend', 'openstack_test',
-                              enforce_type=True)
+        cfg.CONF.set_override('cloud_backend', 'openstack_test')
 
         sd = driver_base.SenlinDriver()
 

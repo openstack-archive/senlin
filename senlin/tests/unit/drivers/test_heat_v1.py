@@ -99,7 +99,7 @@ class TestHeatV1(base.SenlinTestCase):
             stk, 'STATUS', [], 100, 200)
 
     def test_wait_for_stack_default_timeout(self):
-        cfg.CONF.set_override('default_action_timeout', 361, enforce_type=True)
+        cfg.CONF.set_override('default_action_timeout', 361)
 
         self.hc.wait_for_stack('FAKE_ID', 'STATUS', None, 100, None)
         self.orch.find_stack.assert_called_once_with('FAKE_ID', False)
@@ -126,7 +126,7 @@ class TestHeatV1(base.SenlinTestCase):
         self.orch.find_stack.assert_called_once_with('stack_id', True)
 
     def test_wait_for_server_delete_with_timeout(self):
-        cfg.CONF.set_override('default_action_timeout', 360, enforce_type=True)
+        cfg.CONF.set_override('default_action_timeout', 360)
         fake_stack = mock.Mock(id='stack_id')
         self.orch.find_stack.return_value = fake_stack
 

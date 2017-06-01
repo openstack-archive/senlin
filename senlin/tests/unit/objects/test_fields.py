@@ -428,21 +428,21 @@ class TestCapacity(TestField):
         self.assertEqual('100', self.field.stringify('100'))
 
     def test_init(self):
-        CONF.set_override('max_nodes_per_cluster', 300, enforce_type=True)
+        CONF.set_override('max_nodes_per_cluster', 300)
         sot = senlin_fields.Capacity()
 
         self.assertEqual(0, sot.minimum)
         self.assertEqual(300, sot.maximum)
 
     def test_init_with_values(self):
-        CONF.set_override('max_nodes_per_cluster', 300, enforce_type=True)
+        CONF.set_override('max_nodes_per_cluster', 300)
         sot = senlin_fields.Capacity(2, 200)
 
         self.assertEqual(2, sot.minimum)
         self.assertEqual(200, sot.maximum)
 
     def test_init_invalid(self):
-        CONF.set_override('max_nodes_per_cluster', 100, enforce_type=True)
+        CONF.set_override('max_nodes_per_cluster', 100)
 
         ex = self.assertRaises(ValueError,
                                senlin_fields.Capacity,
@@ -517,7 +517,7 @@ class TestCapacity(TestField):
         )
 
     def test_get_schema_default(self):
-        cfg.CONF.set_override('max_nodes_per_cluster', 100, enforce_type=True)
+        cfg.CONF.set_override('max_nodes_per_cluster', 100)
         sot = senlin_fields.Capacity()
         self.assertEqual(
             {

@@ -107,7 +107,7 @@ class TestDispatcher(base.SenlinTestCase):
     @mock.patch.object(context, 'get_current')
     @mock.patch.object(messaging, 'get_rpc_client')
     def test_notify_broadcast(self, mock_rpc, mock_get_current):
-        cfg.CONF.set_override('host', 'HOSTNAME', enforce_type=True)
+        cfg.CONF.set_override('host', 'HOSTNAME')
         fake_ctx = mock.Mock()
         mock_get_current.return_value = fake_ctx
         mock_rpc.return_value = mock.Mock()
@@ -124,7 +124,7 @@ class TestDispatcher(base.SenlinTestCase):
     @mock.patch.object(context, 'get_current')
     @mock.patch.object(messaging, 'get_rpc_client')
     def test_notify_single_server(self, mock_rpc, mock_get_current):
-        cfg.CONF.set_override('host', 'HOSTNAME', enforce_type=True)
+        cfg.CONF.set_override('host', 'HOSTNAME')
         fake_ctx = mock.Mock()
         mock_get_current.return_value = fake_ctx
         mock_rpc.return_value = mock.Mock()
@@ -141,7 +141,7 @@ class TestDispatcher(base.SenlinTestCase):
 
     @mock.patch.object(messaging, 'get_rpc_client')
     def test_notify_timeout(self, mock_rpc):
-        cfg.CONF.set_override('host', 'HOSTNAME', enforce_type=True)
+        cfg.CONF.set_override('host', 'HOSTNAME')
         mock_rpc.return_value = mock.Mock()
         mock_client = mock_rpc.return_value
         mock_context = mock_client.prepare.return_value

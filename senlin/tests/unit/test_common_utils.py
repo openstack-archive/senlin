@@ -109,14 +109,14 @@ class UrlFetchTest(base.SenlinTestCase):
     def test_max_fetch_size_okay(self):
         url = 'http://example.com/somedata'
         data = '{ "foo": "bar" }'
-        cfg.CONF.set_override('max_response_size', 500, enforce_type=True)
+        cfg.CONF.set_override('max_response_size', 500)
         self.patchobject(requests, 'get', return_value=Response(data))
         utils.url_fetch(url)
 
     def test_max_fetch_size_error(self):
         url = 'http://example.com/somedata'
         data = '{ "foo": "bar" }'
-        cfg.CONF.set_override('max_response_size', 5, enforce_type=True)
+        cfg.CONF.set_override('max_response_size', 5)
         self.patchobject(requests, 'get', return_value=Response(data))
         exception = self.assertRaises(utils.URLFetchError,
                                       utils.url_fetch, url)
