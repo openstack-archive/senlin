@@ -42,8 +42,6 @@ from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import scaleutils as su
 from senlin.common import schema
-from senlin.engine import cluster as cm
-from senlin.objects import node as no
 from senlin.policies import base
 
 
@@ -145,8 +143,8 @@ class BatchPolicy(base.Policy):
 
         return result
 
-    def _create_plan(self, cluster, action):
-        nodes = no.Node.get_all_by_cluster(action.context, cluster.id)
+    def _create_plan(self, action):
+        nodes = action.entity.nodes
         action_name = action.action
         plan = {'pause_time': self.pause_time}
         if len(nodes) == 0:
@@ -167,13 +165,13 @@ class BatchPolicy(base.Policy):
         return True, plan
 
     def pre_op(self, cluster_id, action):
-        cluster = cm.Cluster.load(action.context, cluster_id)
+
         pd = {
             'status': base.CHECK_OK,
             'reason': _('Batching request validated.'),
         }
         # for updating and deleting
-        result, value = self._create_plan(cluster, action)
+        result, value = self._create_plan(action)
 
         if result is False:
             pd = {

@@ -12,8 +12,6 @@
 import copy
 import mock
 
-from senlin.engine import cluster as cm
-from senlin.objects import node as no
 from senlin.policies import batch_policy as bp
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -120,17 +118,18 @@ class TestBatchPolicy(base.SenlinTestCase):
 
     @mock.patch.object(bp.BatchPolicy, '_pick_nodes')
     @mock.patch.object(bp.BatchPolicy, '_get_batch_size')
-    @mock.patch.object(no.Node, 'get_all_by_cluster')
-    def test__create_plan_for_update(self, mock_all, mock_cal, mock_pick):
+    def test__create_plan_for_update(self, mock_cal, mock_pick):
         action = mock.Mock(context=self.context, action='CLUSTER_UPDATE')
         cluster = mock.Mock(id='cid')
         node1, node2, node3 = mock.Mock(), mock.Mock(), mock.Mock()
-        mock_all.return_value = [node1, node2, node3]
+        cluster.nodes = [node1, node2, node3]
+        action.entity = cluster
+
         mock_cal.return_value = (2, 2)
         mock_pick.return_value = [{'1', '2'}, {'3'}]
         policy = bp.BatchPolicy('test-batch', self.spec)
 
-        res, plan = policy._create_plan(cluster, action)
+        res, plan = policy._create_plan(action)
 
         self.assertTrue(res)
         excepted_plan = {
@@ -138,21 +137,21 @@ class TestBatchPolicy(base.SenlinTestCase):
             'plan': [{'1', '2'}, {'3'}]
         }
         self.assertEqual(excepted_plan, plan)
-        mock_all.assert_called_once_with(action.context, cluster.id)
         mock_cal.assert_called_once_with(3, 'CLUSTER_UPDATE')
         mock_pick.assert_called_once_with([node1, node2, node3], 2, 2)
 
     @mock.patch.object(bp.BatchPolicy, '_get_batch_size')
-    @mock.patch.object(no.Node, 'get_all_by_cluster')
-    def test__create_plan_for_delete(self, mock_all, mock_cal):
+    def test__create_plan_for_delete(self, mock_cal):
         action = mock.Mock(context=self.context, action='CLUSTER_DELETE')
         cluster = mock.Mock(id='cid')
         node1, node2, node3 = mock.Mock(), mock.Mock(), mock.Mock()
-        mock_all.return_value = [node1, node2, node3]
+        cluster.nodes = [node1, node2, node3]
+        action.entity = cluster
+
         mock_cal.return_value = (2, 2)
         policy = bp.BatchPolicy('test-batch', self.spec)
 
-        res, plan = policy._create_plan(cluster, action)
+        res, plan = policy._create_plan(action)
 
         self.assertTrue(res)
         excepted_plan = {
@@ -160,17 +159,16 @@ class TestBatchPolicy(base.SenlinTestCase):
             'batch_size': 2
         }
         self.assertEqual(excepted_plan, plan)
-        mock_all.assert_called_once_with(action.context, cluster.id)
         mock_cal.assert_called_once_with(3, 'CLUSTER_DELETE')
 
-    @mock.patch.object(no.Node, 'get_all_by_cluster')
-    def test__create_plan_for_update_no_node(self, mock_all):
+    def test__create_plan_for_update_no_node(self):
         action = mock.Mock(context=self.context, action='CLUSTER_UPDATE')
         cluster = mock.Mock(id='cid')
-        mock_all.return_value = []
+        cluster.nodes = []
+        action.entity = cluster
         policy = bp.BatchPolicy('test-batch', self.spec)
 
-        res, value = policy._create_plan(cluster, action)
+        res, value = policy._create_plan(action)
 
         self.assertTrue(res)
         excepted_plan = {
@@ -178,16 +176,16 @@ class TestBatchPolicy(base.SenlinTestCase):
             'plan': []
         }
         self.assertEqual(excepted_plan, value)
-        mock_all.assert_called_once_with(action.context, cluster.id)
 
-    @mock.patch.object(no.Node, 'get_all_by_cluster')
-    def test__create_plan_for_delete_no_node(self, mock_all):
+    def test__create_plan_for_delete_no_node(self):
         action = mock.Mock(context=self.context, action='CLUSTER_DELETE')
         cluster = mock.Mock(id='cid')
-        mock_all.return_value = []
+        cluster.nodes = []
+        action.entity = cluster
+
         policy = bp.BatchPolicy('test-batch', self.spec)
 
-        res, value = policy._create_plan(cluster, action)
+        res, value = policy._create_plan(action)
 
         self.assertTrue(res)
         excepted_plan = {
@@ -195,17 +193,14 @@ class TestBatchPolicy(base.SenlinTestCase):
             'batch_size': 0,
         }
         self.assertEqual(excepted_plan, value)
-        mock_all.assert_called_once_with(action.context, cluster.id)
 
     @mock.patch.object(bp.BatchPolicy, '_create_plan')
-    @mock.patch.object(cm.Cluster, 'load')
-    def test_pre_op_for_update(self, mock_load, mock_plan):
+    def test_pre_op_for_update(self, mock_plan):
         action = mock.Mock()
         action.context = self.context
         action.action = 'CLUSTER_UPDATE'
         cluster = mock.Mock(id='cid')
-
-        mock_load.return_value = cluster
+        action.entity = cluster
 
         excepted_plan = {
             'pause_time': self.spec['properties']['pause_time'],
@@ -216,18 +211,15 @@ class TestBatchPolicy(base.SenlinTestCase):
         policy = bp.BatchPolicy('test-batch', self.spec)
         policy.pre_op(cluster.id, action)
 
-        mock_load.assert_called_once_with(action.context, cluster.id)
-        mock_plan.assert_called_once_with(cluster, action)
+        mock_plan.assert_called_once_with(action)
 
     @mock.patch.object(bp.BatchPolicy, '_create_plan')
-    @mock.patch.object(cm.Cluster, 'load')
-    def test_pre_op_for_delete(self, mock_load, mock_plan):
+    def test_pre_op_for_delete(self, mock_plan):
         action = mock.Mock()
         action.context = self.context
         action.action = 'CLUSTER_DELETE'
         cluster = mock.Mock(id='cid')
-
-        mock_load.return_value = cluster
+        action.entity = cluster
 
         excepted_plan = {
             'pause_time': self.spec['properties']['pause_time'],
@@ -238,5 +230,4 @@ class TestBatchPolicy(base.SenlinTestCase):
         policy = bp.BatchPolicy('test-batch', self.spec)
         policy.pre_op(cluster.id, action)
 
-        mock_load.assert_called_once_with(action.context, cluster.id)
-        mock_plan.assert_called_once_with(cluster, action)
+        mock_plan.assert_called_once_with(action)
