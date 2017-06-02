@@ -1208,6 +1208,14 @@ receiver_action:
     The action to initiate when the receiver is triggered. A valid value
     should be the name of an action that can be applied on a cluster.
 
+receiver_action_req:
+  type: string
+  in: body
+  required: False
+  description: |
+    The action to initiate when the receiver is triggered. A valid value
+    should be the name of an action that can be applied on a cluster.
+
 receiver_actor:
   type: object
   in: body
