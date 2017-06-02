@@ -666,15 +666,20 @@ class ClusterAction(base.Action):
         pd = self.data.get('health', None)
         inputs = {}
         if pd:
+            check = self.data.get('check', False)
             recover_action = pd.get('recover_action', None)
             fencing = pd.get('fencing', None)
             if recover_action is not None:
                 inputs['operation'] = recover_action
             if fencing is not None and 'COMPUTE' in fencing:
                 inputs['params'] = {'fence_compute': True}
+        else:
+            check = self.inputs.get('check', False)
+            recover_action = self.inputs.get('operation', None)
+            if recover_action is not None:
+                inputs['operation'] = recover_action
 
         children = []
-        check = self.data.get('check', False)
         for node in self.entity.nodes:
             if check:
                 node.do_check(self.context)
