@@ -199,10 +199,10 @@ Response Example
    :language: javascript
 
 
-Updates a receiver
+Update receiver
 ==================
 
-.. rest_method:  PATCH /v1/receivers/{receiver_id}
+.. rest_method::  PATCH /v1/receivers/{receiver_id}
 
    min_version: 1.7
 
