@@ -273,6 +273,10 @@ class API(wsgi.Router):
                                "/receivers/{receiver_id}",
                                action="get",
                                conditions={'method': 'GET'})
+            sub_mapper.connect("receiver_update",
+                               "/receivers/{receiver_id}",
+                               action="update",
+                               conditions={'method': 'PATCH'})
             sub_mapper.connect("receiver_delete",
                                "/receivers/{receiver_id}",
                                action="delete",

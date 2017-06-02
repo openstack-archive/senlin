@@ -74,6 +74,21 @@ class ReceiverController(wsgi.Controller):
         return {'receiver': receiver}
 
     @util.policy_enforce
+    def update(self, req, receiver_id, body):
+        receiver_data = body.get('receiver', None)
+        if receiver_data is None:
+            raise exc.HTTPBadRequest(_("Malformed request data, missing "
+                                       "'receiver' key in request body."))
+
+        kwargs = receiver_data
+        kwargs['identity'] = receiver_id
+        obj = util.parse_request('ReceiverUpdateRequest', req,
+                                 kwargs)
+        receiver = self.rpc_client.call(req.context, 'receiver_update', obj)
+
+        return {'receiver': receiver}
+
+    @util.policy_enforce
     def delete(self, req, receiver_id):
 
         obj = util.parse_request(
