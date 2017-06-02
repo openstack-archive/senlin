@@ -13,6 +13,7 @@
 import mock
 
 from senlin.common import consts
+from senlin.common import scaleutils as su
 from senlin.engine.actions import base as ab
 from senlin.engine.actions import cluster_action as ca
 from senlin.engine import cluster as cm
@@ -20,6 +21,7 @@ from senlin.engine import dispatcher
 from senlin.engine import node as nm
 from senlin.objects import action as ao
 from senlin.objects import dependency as dobj
+from senlin.objects import node as no
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -36,12 +38,13 @@ class ClusterRecoverTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test_do_recover(self, mock_wait, mock_start, mock_dep, mock_action,
-                        mock_update, mock_load):
+    def test_do_recover(self, mock_wait, mock_start, mock_dep,
+                        mock_action, mock_update, mock_load):
         node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID', status='ACTIVE')
         node2 = mock.Mock(id='NODE_2', cluster_id='FAKE_ID', status='ERROR')
 
-        cluster = mock.Mock(id='FAKE_ID', RECOVERING='RECOVERING')
+        cluster = mock.Mock(id='FAKE_ID', RECOVERING='RECOVERING',
+                            desired_capacity=2)
         cluster.do_recover.return_value = True
         mock_load.return_value = cluster
         cluster.nodes = [node1, node2]
@@ -81,10 +84,12 @@ class ClusterRecoverTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test_do_recover_with_data(self, mock_wait, mock_start, mock_dep,
-                                  mock_action, mock_update, mock_load):
+    def test_do_recover_with_data(self, mock_wait, mock_start,
+                                  mock_dep, mock_action, mock_update,
+                                  mock_load):
         node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID', status='ERROR')
-        cluster = mock.Mock(id='FAKE_ID', RECOVERING='RECOVERING')
+        cluster = mock.Mock(id='FAKE_ID', RECOVERING='RECOVERING',
+                            desired_capacity=2)
         cluster.nodes = [node1]
         cluster.do_recover.return_value = True
         mock_load.return_value = cluster
@@ -132,10 +137,13 @@ class ClusterRecoverTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test_do_recover_with_input(self, mock_wait, mock_start, mock_dep,
-                                   mock_action, mock_update, mock_load):
+    @mock.patch.object(ca.ClusterAction, '_check_capacity')
+    def test_do_recover_with_input(self, mock_check, mock_wait, mock_start,
+                                   mock_dep, mock_action, mock_update,
+                                   mock_load):
         node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID', status='ERROR')
-        cluster = mock.Mock(id='FAKE_ID', RECOVERING='RECOVERING')
+        cluster = mock.Mock(id='FAKE_ID', RECOVERING='RECOVERING',
+                            desired_capacity=2)
         cluster.nodes = [node1]
         cluster.do_recover.return_value = True
         mock_load.return_value = cluster
@@ -145,6 +153,7 @@ class ClusterRecoverTest(base.SenlinTestCase):
         action.inputs = {
             'operation': consts.RECOVER_REBOOT,
             'check': False,
+            'check_capacity': True
         }
 
         mock_action.return_value = 'NODE_RECOVER_ID'
@@ -174,9 +183,10 @@ class ClusterRecoverTest(base.SenlinTestCase):
         mock_wait.assert_called_once_with()
         cluster.eval_status.assert_called_once_with(
             action.context, consts.CLUSTER_RECOVER)
+        mock_check.assert_called_once_with()
 
     def test_do_recover_all_nodes_active(self, mock_load):
-        cluster = mock.Mock(id='FAKE_ID')
+        cluster = mock.Mock(id='FAKE_ID', desired_capacity=2)
         cluster.do_recover.return_value = True
         mock_load.return_value = cluster
 
@@ -200,10 +210,12 @@ class ClusterRecoverTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test_do_recover_failed_waiting(self, mock_wait, mock_start, mock_dep,
-                                       mock_action, mock_update, mock_load):
+    @mock.patch.object(ca.ClusterAction, '_check_capacity')
+    def test_do_recover_failed_waiting(self, mock_check, mock_wait,
+                                       mock_start, mock_dep, mock_action,
+                                       mock_update, mock_load):
         node = mock.Mock(id='NODE_1', cluster_id='CID', status='ERROR')
-        cluster = mock.Mock(id='CID')
+        cluster = mock.Mock(id='CID', desired_capacity=2)
         cluster.do_recover.return_value = True
         cluster.nodes = [node]
         mock_load.return_value = cluster
@@ -235,9 +247,11 @@ class ClusterRecoverTest(base.SenlinTestCase):
         mock_wait.assert_called_once_with()
         cluster.eval_status.assert_called_once_with(
             action.context, consts.CLUSTER_RECOVER)
+        self.assertFalse(mock_check.called)
 
-    def test_do_recover_with_check_active(self, mock_load):
-        cluster = mock.Mock(id='FAKE_ID')
+    @mock.patch.object(ca.ClusterAction, '_check_capacity')
+    def test_do_recover_with_check_active(self, mock_desired, mock_load):
+        cluster = mock.Mock(id='FAKE_ID', desired_capacity=2)
         cluster.do_recover.return_value = True
         mock_load.return_value = cluster
 
@@ -265,25 +279,30 @@ class ClusterRecoverTest(base.SenlinTestCase):
         cluster.do_recover.assert_called_once_with(self.ctx)
         cluster.eval_status.assert_called_once_with(
             action.context, consts.CLUSTER_RECOVER)
+        self.assertFalse(mock_desired.called)
 
     @mock.patch.object(ao.Action, 'update')
     @mock.patch.object(ab.Action, 'create')
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test_do_recover_with_check_error(self, mock_wait, mock_start, mock_dep,
-                                         mock_action, mock_update, mock_load):
+    @mock.patch.object(ca.ClusterAction, '_check_capacity')
+    def test_do_recover_with_check_error(self, mock_desired, mock_wait,
+                                         mock_start, mock_dep, mock_action,
+                                         mock_update, mock_load):
         node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID', status='ACTIVE')
         node2 = mock.Mock(id='NODE_2', cluster_id='FAKE_ID', status='ACTIVE')
 
-        cluster = mock.Mock(id='FAKE_ID', RECOVERING='RECOVERING')
+        cluster = mock.Mock(id='FAKE_ID', RECOVERING='RECOVERING',
+                            desired_capacity=2)
         cluster.do_recover.return_value = True
         mock_load.return_value = cluster
         cluster.nodes = [node1, node2]
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_RECOVER', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
-        action.inputs = {'check': True}
+        action.inputs = {'check': True,
+                         'check_capacity': True}
 
         mock_action.return_value = 'NODE_RECOVER_ID'
         mock_wait.return_value = (action.RES_OK, 'Everything is Okay')
@@ -319,3 +338,42 @@ class ClusterRecoverTest(base.SenlinTestCase):
         mock_wait.assert_called_once_with()
         cluster.eval_status.assert_called_once_with(
             action.context, consts.CLUSTER_RECOVER)
+        mock_desired.assert_called_once_with()
+
+    @mock.patch.object(ca.ClusterAction, '_create_nodes')
+    def test__check_capacity_create(self, mock_create, mock_load):
+        node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID', status='ACTIVE')
+
+        cluster = mock.Mock(id='FAKE_ID', RECOVERING='RECOVERING',
+                            desired_capacity=2)
+        mock_load.return_value = cluster
+        cluster.nodes = [node1]
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_RECOVER', self.ctx)
+
+        action._check_capacity()
+
+        mock_create.assert_called_once_with(1)
+
+    @mock.patch.object(su, 'nodes_by_random')
+    @mock.patch.object(no.Node, 'get_all_by_cluster')
+    @mock.patch.object(ca.ClusterAction, '_delete_nodes')
+    def test__check_capacity_delete(self, mock_delete, mock_get,
+                                    mock_su, mock_load):
+        node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID', status='ACTIVE')
+        node2 = mock.Mock(id='NODE_2', cluster_id='FAKE_ID', status='ERROR')
+
+        cluster = mock.Mock(id='FAKE_ID', RECOVERING='RECOVERING',
+                            desired_capacity=1)
+        mock_load.return_value = cluster
+        cluster.nodes = [node1, node2]
+        mock_get.return_value = [node1, node2]
+        mock_su.return_value = [node2.id]
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_RECOVER', self.ctx)
+
+        action._check_capacity()
+
+        mock_get.assert_called_once_with(action.context, cluster.id)
+        mock_su.assert_called_once_with([node1, node2], 1)
+        mock_delete.assert_called_once_with(['NODE_2'])
