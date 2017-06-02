@@ -199,6 +199,78 @@ Response Example
    :language: javascript
 
 
+Updates a receiver
+==================
+
+.. rest_method:  PATCH /v1/receivers/{receiver_id}
+
+   min_version: 1.7
+
+Updates a receiver.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - receiver_id: receiver_id_url
+  - receiver: receiver
+  - name: name_req
+  - action: receiver_action_req
+  - params: receiver_params_req
+
+
+Request Example
+---------------
+
+.. literalinclude:: samples/receiver-update-request.json
+   :language: javascript
+
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - X-OpenStack-Request-Id: request_id
+  - receiver: receiver
+  - action: receiver_action
+  - actor: receiver_actor
+  - channel: receiver_channel
+  - cluster_id: cluster_id
+  - created_at: created_at
+  - domain: domain
+  - id: receiver_id
+  - name: name
+  - params: receiver_params
+  - project: project
+  - type: receiver_type
+  - updated_at: updated_at
+  - user: user
+
+Response Example
+----------------
+
+.. literalinclude:: samples/receiver-update-response.json
+   :language: javascript
+
+
 Delete receiver
 ===============
 
