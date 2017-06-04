@@ -23,9 +23,8 @@ managed and there won't be flood of service requests sending to any other
 services that will form a DOS (denial-of-service) attack.
 
 Currently, this policy is applicable to clusters of all profile types and it
-is enforced when cluster is updated or deleted. The development team is still
-looking for an elegant solution that can regulate the resource creation
-requests.
+is enforced when cluster is updated. The development team is still looking
+for an elegant solution that can regulate the resource creation requests.
 
 
 Properties
@@ -46,8 +45,8 @@ Below is a typical spec for a batch policy:
 The ``min_in_service`` property specifies the minimum number of nodes to be
 kept in ACTIVE status. This is mainly for cluster update use cases. The
 other property ``max_batch_size`` specifies the number of nodes to be updated
-or deleted in each batch. This property is mainly used to ensure that batch
-requests are still within the processing capability of a backend service.
+in each batch. This property is mainly used to ensure that batch requests
+are still within the processing capability of a backend service.
 
 Between each batch of service requests, you can specify an interval in the
 unit of seconds using the ``pause_time`` property. This can be used to ensure
