@@ -58,7 +58,6 @@ class BatchPolicy(base.Policy):
 
     TARGET = [
         ('BEFORE', consts.CLUSTER_UPDATE),
-        ('BEFORE', consts.CLUSTER_DELETE),
     ]
 
     PROFILE_TYPE = [
@@ -93,21 +92,20 @@ class BatchPolicy(base.Policy):
         self.max_batch_size = self.properties[self.MAX_BATCH_SIZE]
         self.pause_time = self.properties[self.PAUSE_TIME]
 
-    def _get_batch_size(self, total, action):
-        """Get batch size for update/delete operation.
+    def _get_batch_size(self, total):
+        """Get batch size for update operation.
 
         :param total: Total number of nodes.
-        :param action: Name of action being executed.
         :returns: Size of each batch and number of batches.
         """
         batch_num = 0
         batch_size = 0
         diff = 0
 
-        # if the action is CLUSTER_DELETE or number of nodes less than
-        # min_in_service, we divided it to 2 batches
+        # if the number of nodes less than min_in_service,
+        # we divided it to 2 batches
         diff = int(math.ceil(float(total) / 2))
-        if (action == consts.CLUSTER_UPDATE and total > self.min_in_service):
+        if total > self.min_in_service:
             diff = total - self.min_in_service
 
         # max_batch_size is -1 if not specified
@@ -145,21 +143,13 @@ class BatchPolicy(base.Policy):
 
     def _create_plan(self, action):
         nodes = action.entity.nodes
-        action_name = action.action
+
         plan = {'pause_time': self.pause_time}
         if len(nodes) == 0:
-            if action_name == consts.CLUSTER_UPDATE:
-                plan['plan'] = []
-                return True, plan
-            else:
-                plan['batch_size'] = 0
-                return True, plan
-
-        batch_size, batch_num = self._get_batch_size(len(nodes), action_name)
-        if action_name == consts.CLUSTER_DELETE:
-            plan['batch_size'] = batch_size
+            plan['plan'] = []
             return True, plan
 
+        batch_size, batch_num = self._get_batch_size(len(nodes))
         plan['plan'] = self._pick_nodes(nodes, batch_size, batch_num)
 
         return True, plan
@@ -170,7 +160,7 @@ class BatchPolicy(base.Policy):
             'status': base.CHECK_OK,
             'reason': _('Batching request validated.'),
         }
-        # for updating and deleting
+        # for updating
         result, value = self._create_plan(action)
 
         if result is False:
@@ -179,10 +169,7 @@ class BatchPolicy(base.Policy):
                 'reason': value,
             }
         else:
-            if action.action == consts.CLUSTER_UPDATE:
-                pd['update'] = value
-            else:
-                pd['delete'] = value
+            pd['update'] = value
 
         action.data.update(pd)
         action.store(action.context)
