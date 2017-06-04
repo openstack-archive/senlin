@@ -206,48 +206,6 @@ class ClusterDeleteTest(base.SenlinTestCase):
             action_excluded=['CLUSTER_DELETE'],
             status=['SUCCEEDED', 'FAILED'])
 
-    def test_do_delete_with_batch_policy(self, mock_load):
-        node1 = mock.Mock(id='NODE_1')
-        node2 = mock.Mock(id='NODE_2')
-        cluster = mock.Mock(id='FAKE_CLUSTER', nodes=[node1, node2],
-                            DELETING='DELETING')
-        cluster.do_delete.return_value = True
-        mock_load.return_value = cluster
-
-        action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
-        action.data = {
-            'delete': {
-                'pause_time': 2,
-                'batch_size': 1
-            }
-        }
-
-        mock_delete = self.patchobject(action, '_delete_nodes',
-                                       return_value=(action.RES_OK, 'Good'))
-
-        # do it
-        res_code, res_msg = action.do_delete()
-
-        expected_data = {
-            'delete': {
-                'pause_time': 2,
-                'batch_size': 1
-            },
-            'deletion': {
-                'destroy_after_deletion': True
-            }
-        }
-        self.assertEqual(action.RES_OK, res_code)
-        self.assertEqual('Good', res_msg)
-        self.assertEqual(expected_data, action.data)
-        cluster.set_status.assert_called_once_with(action.context, 'DELETING',
-                                                   'Deletion in progress.')
-        mock_delete.assert_has_calls([
-            mock.call(['NODE_1']),
-            mock.call(['NODE_2'])
-        ])
-        cluster.do_delete.assert_called_once_with(action.context)
-
     def test_do_delete_failed_delete_nodes_timeout(self, mock_load):
         node = mock.Mock(id='NODE_1')
         cluster = mock.Mock(id='CID', nodes=[node], ACTIVE='ACTIVE',
