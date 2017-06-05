@@ -29,9 +29,7 @@ from senlin.common.i18n import _
 from senlin.common import scaleutils as su
 from senlin.common import schema
 from senlin.common import utils
-from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
-from senlin.objects import node as no
 from senlin.policies import base
 
 
@@ -260,9 +258,9 @@ class AffinityPolicy(base.Policy):
         elif action.action == consts.NODE_CREATE:
             count = 1
         else:  # CLUSTER_RESIZE
-            db_cluster = co.Cluster.get(action.context, cluster_id)
-            current = no.Node.count_by_cluster(action.context, cluster_id)
-            su.parse_resize_params(action, db_cluster, current)
+            cluster = action.entity
+            current = len(cluster.nodes)
+            su.parse_resize_params(action, cluster, current)
             if 'creation' not in action.data:
                 return
             count = action.data['creation']['count']
@@ -274,8 +272,8 @@ class AffinityPolicy(base.Policy):
         # special handling for vSphere DRS case where we need to find out
         # the name of the vSphere host which has DRS enabled.
         if self.enable_drs:
-            cluster_obj = co.Cluster.get(action.context, cluster_id)
-            nc = self.nova(cluster_obj.user, cluster_obj.project)
+            obj = action.entity
+            nc = self.nova(obj.user, obj.project)
 
             hypervisors = nc.hypervisor_list()
             hv_id = ''

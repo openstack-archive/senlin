@@ -19,9 +19,7 @@ from senlin.common import consts
 from senlin.common import context
 from senlin.common import exception as exc
 from senlin.common import scaleutils
-from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
-from senlin.objects import node as no
 from senlin.policies import affinity_policy as ap
 from senlin.policies import base as pb
 from senlin.tests.unit.common import base
@@ -610,10 +608,8 @@ class TestAffinityPolicy(base.SenlinTestCase):
             x_action.data)
         x_action.store.assert_called_once_with(x_action.context)
 
-    @mock.patch.object(no.Node, 'count_by_cluster')
-    @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(cpo.ClusterPolicy, 'get')
-    def test_pre_op_use_resize_params(self, mock_cp, mock_cluster, mock_count):
+    def test_pre_op_use_resize_params(self, mock_cp):
         def fake_parse_func(action, cluster, current):
             action.data = {
                 'creation': {
@@ -626,11 +622,11 @@ class TestAffinityPolicy(base.SenlinTestCase):
         x_action.action = consts.CLUSTER_RESIZE
         x_action.inputs = {
             'adjustment_type': consts.EXACT_CAPACITY,
-            'number': 10
+            'number': 4
         }
         x_cluster = mock.Mock()
-        mock_cluster.return_value = x_cluster
-        mock_count.return_value = 10
+        x_cluster.nodes = [mock.Mock(), mock.Mock()]
+        x_action.entity = x_cluster
         mock_parse = self.patchobject(scaleutils, 'parse_resize_params',
                                       side_effect=fake_parse_func)
 
@@ -649,9 +645,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         # do it
         policy.pre_op('CLUSTER_ID', x_action)
 
-        mock_count.assert_called_once_with(x_action.context, 'CLUSTER_ID')
-        mock_parse.assert_called_once_with(x_action, x_cluster, 10)
-        mock_cluster.assert_called_once_with(x_action.context, 'CLUSTER_ID')
+        mock_parse.assert_called_once_with(x_action, x_cluster, 2)
         mock_cp.assert_called_once_with(x_action.context, 'CLUSTER_ID',
                                         'POLICY_ID')
         mock_extract.assert_called_once_with(x_binding.data)
@@ -675,10 +669,8 @@ class TestAffinityPolicy(base.SenlinTestCase):
             x_action.data)
         x_action.store.assert_called_once_with(x_action.context)
 
-    @mock.patch.object(no.Node, 'count_by_cluster')
-    @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(cpo.ClusterPolicy, 'get')
-    def test_pre_op_resize_shrinking(self, mock_cp, mock_cluster, mock_count):
+    def test_pre_op_resize_shrinking(self, mock_cp):
         def fake_parse_func(action, cluster, current):
             action.data = {
                 'deletion': {
@@ -694,8 +686,8 @@ class TestAffinityPolicy(base.SenlinTestCase):
             'number': 10
         }
         x_cluster = mock.Mock()
-        mock_cluster.return_value = x_cluster
-        mock_count.return_value = 5
+        x_cluster.nodes = [mock.Mock(), mock.Mock()]
+        x_action.entity = x_cluster
         mock_parse = self.patchobject(scaleutils, 'parse_resize_params',
                                       side_effect=fake_parse_func)
         policy = ap.AffinityPolicy('test-policy', self.spec)
@@ -705,9 +697,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         # do it
         policy.pre_op('CLUSTER_ID', x_action)
 
-        mock_count.assert_called_once_with(x_action.context, 'CLUSTER_ID')
-        mock_parse.assert_called_once_with(x_action, x_cluster, 5)
-        mock_cluster.assert_called_once_with(x_action.context, 'CLUSTER_ID')
+        mock_parse.assert_called_once_with(x_action, x_cluster, 2)
         self.assertEqual(0, mock_cp.call_count)
         self.assertEqual(0, mock_extract.call_count)
 
@@ -756,9 +746,8 @@ class TestAffinityPolicy(base.SenlinTestCase):
             x_action.data)
         x_action.store.assert_called_once_with(x_action.context)
 
-    @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(cpo.ClusterPolicy, 'get')
-    def test_pre_op_with_drs_enabled(self, mock_cp, mock_cluster):
+    def test_pre_op_with_drs_enabled(self, mock_cp):
         self.spec['properties']['enable_drs_extension'] = True
         x_action = mock.Mock()
         x_action.data = {'creation': {'count': 2}}
@@ -774,7 +763,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         mock_extract = self.patchobject(policy, '_extract_policy_data',
                                         return_value=policy_data)
         x_cluster = mock.Mock(user='USER', project='PROJ')
-        mock_cluster.return_value = x_cluster
+        x_action.entity = x_cluster
         x_nova = mock.Mock()
         mock_nova = self.patchobject(policy, 'nova', return_value=x_nova)
         x_hypervisors = [
@@ -795,7 +784,6 @@ class TestAffinityPolicy(base.SenlinTestCase):
         mock_cp.assert_called_once_with(x_action.context, 'CLUSTER_ID',
                                         'POLICY_ID')
         mock_extract.assert_called_once_with(x_binding.data)
-        mock_cluster.assert_called_once_with(x_action.context, 'CLUSTER_ID')
         mock_nova.assert_called_once_with('USER', 'PROJ')
         x_nova.hypervisor_list.assert_called_once_with()
         x_nova.hypervisor_get.assert_called_once_with('HV_2')
@@ -821,9 +809,8 @@ class TestAffinityPolicy(base.SenlinTestCase):
             x_action.data)
         x_action.store.assert_called_once_with(x_action.context)
 
-    @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(cpo.ClusterPolicy, 'get')
-    def test_pre_op_with_drs_enabled_no_match(self, mock_cp, mock_cluster):
+    def test_pre_op_with_drs_enabled_no_match(self, mock_cp):
         self.spec['properties']['enable_drs_extension'] = True
         x_action = mock.Mock()
         x_action.data = {'creation': {'count': 2}}
@@ -839,7 +826,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         mock_extract = self.patchobject(policy, '_extract_policy_data',
                                         return_value=policy_data)
         x_cluster = mock.Mock(user='USER', project='PROJ')
-        mock_cluster.return_value = x_cluster
+        x_action.entity = x_cluster
         x_nova = mock.Mock()
         mock_nova = self.patchobject(policy, 'nova', return_value=x_nova)
         x_hypervisors = [
@@ -854,7 +841,6 @@ class TestAffinityPolicy(base.SenlinTestCase):
         mock_cp.assert_called_once_with(x_action.context, 'CLUSTER_ID',
                                         'POLICY_ID')
         mock_extract.assert_called_once_with(x_binding.data)
-        mock_cluster.assert_called_once_with(x_action.context, 'CLUSTER_ID')
         mock_nova.assert_called_once_with('USER', 'PROJ')
         self.assertEqual(
             {
