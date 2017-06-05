@@ -35,8 +35,6 @@ POLICY
 MISC
 ----
   - Remove all usage of enforce_type when calling oslo.config set_override().
-  - Change messaging.get_transport to get_rpc_transport
-  - 
 
 MIDDLE PRIORITY
 ===============

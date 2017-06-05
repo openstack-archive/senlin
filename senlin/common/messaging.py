@@ -74,7 +74,7 @@ def setup(url=None, optional=False):
     if not TRANSPORT:
         exmods = ['senlin.common.exception']
         try:
-            TRANSPORT = messaging.get_transport(
+            TRANSPORT = messaging.get_rpc_transport(
                 cfg.CONF, url, allowed_remote_exmods=exmods)
         except messaging.InvalidTransportURL as e:
             TRANSPORT = None
