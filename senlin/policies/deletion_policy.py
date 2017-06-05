@@ -23,7 +23,6 @@ from senlin.common import consts
 from senlin.common.i18n import _
 from senlin.common import scaleutils as su
 from senlin.common import schema
-from senlin.engine import cluster as cm
 from senlin.policies import base
 
 LOG = logging.getLogger(__name__)
@@ -170,7 +169,7 @@ class DeletionPolicy(base.Policy):
             self._update_action(action, [action.entity.id])
             return
 
-        cluster = cm.Cluster.load(action.context, cluster_id=cluster_id)
+        cluster = action.entity
         regions = None
         zones = None
         deletion = action.data.get('deletion', {})
