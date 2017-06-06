@@ -330,8 +330,6 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        pause = 0
-        batch = 0
         reason = _('Deletion in progress.')
         self.entity.set_status(self.context, consts.CS_DELETING, reason)
         node_ids = [node.id for node in self.entity.nodes]
@@ -343,25 +341,11 @@ class ClusterAction(base.Action):
             }
         }
         self.data.update(data)
-        bp = self.data.get('delete', None)
-        # use policy data if any, or we specify batch as the length of
-        # nodes' list which means we treat is as one batch.
-        if bp is not None:
-            pause = bp.get('pause_time', 0)
-            batch = bp.get('batch_size', 0)
-        else:
-            batch = len(node_ids)
 
-        if batch != 0:
-            # sleep if needed
-            self._sleep(pause)
-            for start in range(0, len(node_ids), batch):
-                end = start + batch
-                result, reason = self._delete_nodes(node_ids[start:end])
-                if result != self.RES_OK:
-                    self.entity.eval_status(self.context,
-                                            consts.CLUSTER_DELETE)
-                    return result, reason
+        result, reason = self._delete_nodes(node_ids)
+        if result != self.RES_OK:
+            self.entity.eval_status(self.context, consts.CLUSTER_DELETE)
+            return result, reason
 
         res = self.entity.do_delete(self.context)
         if not res:
