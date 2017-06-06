@@ -19,7 +19,6 @@ from senlin.common import exception as exc
 from senlin.common import scaleutils
 from senlin.drivers import base as driver_base
 from senlin.engine import cluster_policy
-from senlin.engine import node as node_mod
 from senlin.objects import cluster as co
 from senlin.objects import node as no
 from senlin.policies import base as policy_base
@@ -176,14 +175,14 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
                          "be found.", six.text_type(ex))
 
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_build_policy_data')
-    @mock.patch.object(node_mod.Node, 'load_all')
     @mock.patch.object(policy_base.Policy, 'attach')
-    def test_attach_succeeded(self, m_attach, m_load, m_build):
+    @mock.patch.object(no.Node, 'update')
+    def test_attach_succeeded(self, m_update, m_attach, m_build):
         cluster = mock.Mock(id='CLUSTER_ID', data={})
-        node1 = mock.Mock()
-        node2 = mock.Mock()
+        node1 = mock.Mock(id='fake1', data={})
+        node2 = mock.Mock(id='fake2', data={})
+        cluster.nodes = [node1, node2]
         m_attach.return_value = (True, None)
-        m_load.return_value = [node1, node2]
         m_build.return_value = 'policy_data'
         data = {
             'loadbalancer': 'LB_ID',
@@ -204,16 +203,18 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.lb_driver.lb_create.assert_called_once_with(policy.vip_spec,
                                                          policy.pool_spec,
                                                          policy.hm_spec)
-        m_load.assert_called_once_with(mock.ANY, cluster_id=cluster.id)
         member_add_calls = [
             mock.call(node1, 'LB_ID', 'POOL_ID', 80, 'internal-subnet'),
             mock.call(node2, 'LB_ID', 'POOL_ID', 80, 'internal-subnet')
         ]
         self.lb_driver.member_add.assert_has_calls(member_add_calls)
-        node1.data.update.assert_called_once_with({'lb_member': 'MEMBER1_ID'})
-        node2.data.update.assert_called_once_with({'lb_member': 'MEMBER2_ID'})
-        node1.store.assert_called_once_with(mock.ANY)
-        node2.store.assert_called_once_with(mock.ANY)
+        node_update_calls = [
+            mock.call(mock.ANY, node1.id,
+                      {'data': {'lb_member': 'MEMBER1_ID'}}),
+            mock.call(mock.ANY, node2.id,
+                      {'data': {'lb_member': 'MEMBER2_ID'}})
+        ]
+        m_update.assert_has_calls(node_update_calls)
         expected = {
             policy.id: {'vip_address': '192.168.1.100'}
         }
@@ -230,9 +231,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.assertFalse(res)
         self.assertEqual('data', data)
 
-    @mock.patch.object(node_mod.Node, 'load_all')
     @mock.patch.object(policy_base.Policy, 'attach')
-    def test_attach_failed_lb_creation_error(self, m_attach, m_load):
+    def test_attach_failed_lb_creation_error(self, m_attach):
         cluster = mock.Mock()
         m_attach.return_value = (True, None)
 
@@ -244,12 +244,11 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         res = policy.attach(cluster)
         self.assertEqual((False, 'error'), res)
 
-    @mock.patch.object(node_mod.Node, 'load_all')
     @mock.patch.object(policy_base.Policy, 'attach')
-    def test_attach_failed_member_add(self, mock_attach, mock_load):
+    def test_attach_failed_member_add(self, mock_attach):
         cluster = mock.Mock()
+        cluster.nodes = [mock.Mock(id='fake1'), mock.Mock(id='fake2')]
         mock_attach.return_value = (True, None)
-        mock_load.return_value = ['node1', 'node2']
         lb_data = {
             'loadbalancer': 'LB_ID',
             'vip_address': '192.168.1.100',
@@ -530,6 +529,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
                 }
             })
+        node = mock.Mock(id='fake', data={})
+        cluster.nodes = [node]
 
         res, data = policy.detach(cluster)
 

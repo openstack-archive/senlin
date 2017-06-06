@@ -28,7 +28,6 @@ from senlin.common.i18n import _
 from senlin.common import scaleutils
 from senlin.common import schema
 from senlin.engine import cluster_policy
-from senlin.engine import node as nm
 from senlin.objects import cluster as co
 from senlin.objects import node as no
 from senlin.policies import base
@@ -316,9 +315,6 @@ class LoadBalancingPolicy(base.Policy):
         if res is False:
             return False, data
 
-        nodes = nm.Node.load_all(oslo_context.get_current(),
-                                 cluster_id=cluster.id)
-
         lb_driver = self.lbaas(cluster.user, cluster.project)
         lb_driver.lb_status_timeout = self.lb_status_timeout
 
@@ -333,7 +329,7 @@ class LoadBalancingPolicy(base.Policy):
         port = self.pool_spec.get(self.POOL_PROTOCOL_PORT)
         subnet = self.pool_spec.get(self.POOL_SUBNET)
 
-        for node in nodes:
+        for node in cluster.nodes:
             member_id = lb_driver.member_add(node, data['loadbalancer'],
                                              data['pool'], port, subnet)
             if member_id is None:
@@ -345,7 +341,8 @@ class LoadBalancingPolicy(base.Policy):
                 return False, 'Failed in adding node into lb pool'
 
             node.data.update({'lb_member': member_id})
-            node.store(oslo_context.get_current())
+            values = {'data': node.data}
+            no.Node.update(oslo_context.get_current(), node.id, values)
 
         cluster_data_lb = cluster.data.get('loadbalancers', {})
         cluster_data_lb[self.id] = {'vip_address': data.pop('vip_address')}
@@ -379,12 +376,11 @@ class LoadBalancingPolicy(base.Policy):
         if res is False:
             return False, reason
 
-        nodes = nm.Node.load_all(oslo_context.get_current(),
-                                 cluster_id=cluster.id, project_safe=False)
-        for node in nodes:
+        for node in cluster.nodes:
             if 'lb_member' in node.data:
                 node.data.pop('lb_member')
-                node.store(oslo_context.get_current())
+                values = {'data': node.data}
+                no.Node.update(oslo_context.get_current(), node.id, values)
 
         lb_data = cluster.data.get('loadbalancers', {})
         if lb_data and isinstance(lb_data, dict):
