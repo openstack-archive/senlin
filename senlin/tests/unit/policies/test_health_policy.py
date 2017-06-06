@@ -19,8 +19,6 @@ from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.common import scaleutils as su
 from senlin.engine import health_manager
-from senlin.objects import cluster as co
-from senlin.objects import node as no
 from senlin.policies import base as pb
 from senlin.policies import health_policy
 from senlin.tests.unit.common import base
@@ -201,41 +199,33 @@ class TestHealthPolicy(base.SenlinTestCase):
         mock_disable.assert_called_once_with(self.cluster.id)
 
     @mock.patch.object(su, 'parse_resize_params')
-    @mock.patch.object(no.Node, 'count_by_cluster')
-    @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(health_manager, 'disable')
-    def test_pre_op_resize_without_data(self, mock_disable, mock_get,
-                                        mock_count, mock_parse):
+    def test_pre_op_resize_without_data(self, mock_disable, mock_parse):
         def fake_check(action, cluster, current):
             action.data['deletion'] = {'foo': 'bar'}
             return pb.CHECK_OK, 'good'
 
         x_cluster = mock.Mock()
-        mock_get.return_value = x_cluster
-        mock_count.return_value = 10
+        x_cluster.nodes = [mock.Mock(), mock.Mock(), mock.Mock()]
         action = mock.Mock(context='action_context', data={},
                            action=consts.CLUSTER_RESIZE)
+        action.entity = x_cluster
         mock_parse.side_effect = fake_check
 
         res = self.hp.pre_op(self.cluster.id, action)
 
         self.assertTrue(res)
         mock_disable.assert_called_once_with(self.cluster.id)
-        mock_get.assert_called_once_with(action.context, self.cluster.id)
-        mock_count.assert_called_once_with(action.context, self.cluster.id)
-        mock_parse.assert_called_once_with(action, x_cluster, 10)
+        mock_parse.assert_called_once_with(action, x_cluster, 3)
 
     @mock.patch.object(su, 'parse_resize_params')
-    @mock.patch.object(no.Node, 'count_by_cluster')
-    @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(health_manager, 'disable')
-    def test_pre_op_resize_parse_error(self, mock_disable, mock_get,
-                                       mock_count, mock_parse):
+    def test_pre_op_resize_parse_error(self, mock_disable, mock_parse):
         x_cluster = mock.Mock()
-        mock_get.return_value = x_cluster
-        mock_count.return_value = 10
+        x_cluster.nodes = [mock.Mock(), mock.Mock()]
         action = mock.Mock(context='action_context', data={},
                            action=consts.CLUSTER_RESIZE)
+        action.entity = x_cluster
         mock_parse.return_value = pb.CHECK_ERROR, 'no good'
 
         res = self.hp.pre_op(self.cluster.id, action)
@@ -243,9 +233,7 @@ class TestHealthPolicy(base.SenlinTestCase):
         self.assertFalse(res)
         self.assertEqual(pb.CHECK_ERROR, action.data['status'])
         self.assertEqual('no good', action.data['reason'])
-        mock_get.assert_called_once_with(action.context, self.cluster.id)
-        mock_count.assert_called_once_with(action.context, self.cluster.id)
-        mock_parse.assert_called_once_with(action, x_cluster, 10)
+        mock_parse.assert_called_once_with(action, x_cluster, 2)
         self.assertEqual(0, mock_disable.call_count)
 
     def test_post_op_default(self):
@@ -283,41 +271,33 @@ class TestHealthPolicy(base.SenlinTestCase):
         mock_enable.assert_called_once_with(self.cluster.id)
 
     @mock.patch.object(su, 'parse_resize_params')
-    @mock.patch.object(no.Node, 'count_by_cluster')
-    @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(health_manager, 'enable')
-    def test_post_op_resize_without_data(self, mock_enable, mock_get,
-                                         mock_count, mock_parse):
+    def test_post_op_resize_without_data(self, mock_enable, mock_parse):
         def fake_check(action, cluster, current):
             action.data['deletion'] = {'foo': 'bar'}
             return pb.CHECK_OK, 'good'
 
         x_cluster = mock.Mock()
-        mock_get.return_value = x_cluster
-        mock_count.return_value = 10
+        x_cluster.nodes = [mock.Mock(), mock.Mock()]
         action = mock.Mock(context='action_context', data={},
                            action=consts.CLUSTER_RESIZE)
+        action.entity = x_cluster
         mock_parse.side_effect = fake_check
 
         res = self.hp.post_op(self.cluster.id, action)
 
         self.assertTrue(res)
         mock_enable.assert_called_once_with(self.cluster.id)
-        mock_get.assert_called_once_with(action.context, self.cluster.id)
-        mock_count.assert_called_once_with(action.context, self.cluster.id)
-        mock_parse.assert_called_once_with(action, x_cluster, 10)
+        mock_parse.assert_called_once_with(action, x_cluster, 2)
 
     @mock.patch.object(su, 'parse_resize_params')
-    @mock.patch.object(no.Node, 'count_by_cluster')
-    @mock.patch.object(co.Cluster, 'get')
     @mock.patch.object(health_manager, 'enable')
-    def test_post_op_resize_parse_error(self, mock_enable, mock_get,
-                                        mock_count, mock_parse):
+    def test_post_op_resize_parse_error(self, mock_enable, mock_parse):
         x_cluster = mock.Mock()
-        mock_get.return_value = x_cluster
-        mock_count.return_value = 10
+        x_cluster.nodes = [mock.Mock()]
         action = mock.Mock(context='action_context', data={},
                            action=consts.CLUSTER_RESIZE)
+        action.entity = x_cluster
         mock_parse.return_value = pb.CHECK_ERROR, 'no good'
 
         res = self.hp.post_op(self.cluster.id, action)
@@ -326,7 +306,5 @@ class TestHealthPolicy(base.SenlinTestCase):
         self.assertEqual(pb.CHECK_ERROR, action.data['status'])
         self.assertEqual('no good', action.data['reason'])
 
-        mock_get.assert_called_once_with(action.context, self.cluster.id)
-        mock_count.assert_called_once_with(action.context, self.cluster.id)
-        mock_parse.assert_called_once_with(action, x_cluster, 10)
+        mock_parse.assert_called_once_with(action, x_cluster, 1)
         self.assertEqual(0, mock_enable.call_count)

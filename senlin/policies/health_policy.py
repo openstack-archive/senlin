@@ -17,8 +17,6 @@ from senlin.common.i18n import _
 from senlin.common import scaleutils
 from senlin.common import schema
 from senlin.engine import health_manager
-from senlin.objects import cluster as co
-from senlin.objects import node as no
 from senlin.policies import base
 
 
@@ -239,9 +237,9 @@ class HealthPolicy(base.Policy):
                 health_manager.disable(cluster_id)
                 return True
 
-            db_cluster = co.Cluster.get(action.context, cluster_id)
-            current = no.Node.count_by_cluster(action.context, cluster_id)
-            res, reason = scaleutils.parse_resize_params(action, db_cluster,
+            cluster = action.entity
+            current = len(cluster.nodes)
+            res, reason = scaleutils.parse_resize_params(action, cluster,
                                                          current)
             if res == base.CHECK_ERROR:
                 action.data['status'] = base.CHECK_ERROR
@@ -285,9 +283,9 @@ class HealthPolicy(base.Policy):
                 health_manager.enable(cluster_id)
                 return True
 
-            db_cluster = co.Cluster.get(action.context, cluster_id)
-            current = no.Node.count_by_cluster(action.context, cluster_id)
-            res, reason = scaleutils.parse_resize_params(action, db_cluster,
+            cluster = action.entity
+            current = len(cluster.nodes)
+            res, reason = scaleutils.parse_resize_params(action, cluster,
                                                          current)
             if res == base.CHECK_ERROR:
                 action.data['status'] = base.CHECK_ERROR
