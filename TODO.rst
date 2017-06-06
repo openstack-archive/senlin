@@ -32,9 +32,6 @@ POLICY
 
   - Support CLUSTER_RECOVER action in LB policy
 
-MISC
-----
-  - Remove all usage of enforce_type when calling oslo.config set_override().
 
 MIDDLE PRIORITY
 ===============
