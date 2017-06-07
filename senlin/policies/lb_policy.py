@@ -28,7 +28,6 @@ from senlin.common.i18n import _
 from senlin.common import scaleutils
 from senlin.common import schema
 from senlin.engine import cluster_policy
-from senlin.objects import cluster as co
 from senlin.objects import node as no
 from senlin.policies import base
 
@@ -407,9 +406,9 @@ class LoadBalancingPolicy(base.Policy):
                 count = len(candidates)
             elif action.action == consts.CLUSTER_RESIZE:
                 # Calculate deletion count based on action input
-                db_cluster = co.Cluster.get(action.context, cluster_id)
-                current = no.Node.count_by_cluster(action.context, cluster_id)
-                scaleutils.parse_resize_params(action, db_cluster, current)
+                cluster = action.entity
+                current = len(cluster.nodes)
+                scaleutils.parse_resize_params(action, cluster, current)
                 if 'deletion' not in action.data:
                     return []
                 else:
@@ -421,10 +420,11 @@ class LoadBalancingPolicy(base.Policy):
             candidates = deletion.get('candidates', None)
 
         # Still no candidates available, pick count of nodes randomly
+        # apply to CLUSTER_RESIZE/CLUSTER_SCALE_IN
         if candidates is None:
             if count == 0:
                 return []
-            nodes = no.Node.get_all_by_cluster(action.context, cluster_id)
+            nodes = action.entity.nodes
             if count > len(nodes):
                 count = len(nodes)
             candidates = scaleutils.nodes_by_random(nodes, count)
@@ -533,8 +533,8 @@ class LoadBalancingPolicy(base.Policy):
         if len(candidates) == 0:
             return
 
-        db_cluster = co.Cluster.get(action.context, cluster_id)
-        lb_driver = self.lbaas(db_cluster.user, db_cluster.project)
+        obj = action.entity
+        lb_driver = self.lbaas(obj.user, obj.project)
         lb_driver.lb_status_timeout = self.lb_status_timeout
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
                                                self.id)
@@ -567,8 +567,8 @@ class LoadBalancingPolicy(base.Policy):
         if len(candidates) == 0:
             return
 
-        db_cluster = co.Cluster.get(action.context, cluster_id)
-        lb_driver = self.lbaas(db_cluster.user, db_cluster.project)
+        obj = action.entity
+        lb_driver = self.lbaas(obj.user, obj.project)
         lb_driver.lb_status_timeout = self.lb_status_timeout
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
                                                self.id)
