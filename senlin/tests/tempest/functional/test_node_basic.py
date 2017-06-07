@@ -12,7 +12,6 @@
 
 from tempest.lib.common.utils import data_utils
 from tempest.lib import decorators
-from tempest import test
 
 from senlin.tests.tempest.common import utils
 from senlin.tests.tempest.functional import base
@@ -27,7 +26,7 @@ class TestNodeCreateShowListDelete(base.BaseSenlinFunctionalTest):
         self.cluster_id = utils.create_a_cluster(self, self.profile_id)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
-    @test.attr(type=['functional'])
+    @decorators.attr(type=['functional'])
     @decorators.idempotent_id('eff142d3-e7fd-4f2a-aaff-46c210d9fa0d')
     def test_node_create_show_list_delete(self):
         # Create an orphan node
@@ -88,7 +87,7 @@ class TestNodeUpdate(base.BaseSenlinFunctionalTest):
         self.node_id = utils.create_a_node(self, self.profile_id)
         self.addCleanup(utils.delete_a_node, self, self.node_id)
 
-    @test.attr(type=['functional'])
+    @decorators.attr(type=['functional'])
     @decorators.idempotent_id('d373fb1d-33a1-434f-a850-fb78eff15d18')
     def test_node_update_basic_properties(self):
         name = 'new-name'
@@ -105,7 +104,7 @@ class TestNodeUpdate(base.BaseSenlinFunctionalTest):
         self.assertEqual(metadata, node['metadata'])
         self.assertEqual(role, node['role'])
 
-    @test.attr(type=['functional'])
+    @decorators.attr(type=['functional'])
     @decorators.idempotent_id('361e051d-b55b-4943-8a01-462f6fc5be43')
     def test_node_update_profile(self):
 

@@ -12,21 +12,20 @@
 
 from tempest.lib import decorators
 from tempest.lib import exceptions
-from tempest import test
 
 from senlin.tests.tempest.api import base
 
 
 class TestProfileListNegativeBadRequest(base.BaseSenlinAPITest):
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('b936b936-f891-4389-bbeb-f81b7dc3c688')
     def test_profile_list_invalid_params(self):
         self.assertRaises(exceptions.BadRequest,
                           self.client.list_objs,
                           'profiles', {'bogus': 'foo'})
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('04ce3766-acf9-4549-91c8-e6ffdf7bafbd')
     def test_profile_list_limit_not_int(self):
         ex = self.assertRaises(exceptions.BadRequest,
@@ -37,7 +36,7 @@ class TestProfileListNegativeBadRequest(base.BaseSenlinAPITest):
         self.assertEqual("The value for limit must be an integer: 'not-int'.",
                          str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('cfd50d13-5ed8-48d9-b03f-95480ba06fad')
     def test_profile_list_global_project_false(self):
         ex = self.assertRaises(exceptions.Forbidden,
@@ -48,7 +47,7 @@ class TestProfileListNegativeBadRequest(base.BaseSenlinAPITest):
         self.assertEqual("You are not authorized to complete this operation.",
                          str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('ab477cf8-6c37-4762-bd85-d55b46444d8f')
     def test_profile_list_global_project_not_bool(self):
         ex = self.assertRaises(exceptions.BadRequest,
@@ -59,7 +58,7 @@ class TestProfileListNegativeBadRequest(base.BaseSenlinAPITest):
         self.assertEqual("Invalid value 'not-bool' specified for "
                          "'global_project'", str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('f5bd7807-2b3e-43b2-8ed6-7bdb5e9af46b')
     def test_profile_list_invalid_sort(self):
         ex = self.assertRaises(exceptions.BadRequest,
@@ -70,7 +69,7 @@ class TestProfileListNegativeBadRequest(base.BaseSenlinAPITest):
         self.assertEqual("Unsupported sort key 'bad-sort' for 'sort'.",
                          str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('077f39f0-bb2a-4de8-9568-2ed49e99b720')
     def test_profile_list_invalid_marker(self):
         ex = self.assertRaises(exceptions.BadRequest,

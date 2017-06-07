@@ -11,7 +11,6 @@
 # under the License.
 
 from tempest.lib import decorators
-from tempest import test
 
 from senlin.tests.tempest.common import constants
 from senlin.tests.tempest.common import utils
@@ -33,7 +32,7 @@ class TestBatchPolicy(base.BaseSenlinFunctionalTest):
                                                  desired_capacity=2)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
-    @test.attr(type=['functional'])
+    @decorators.attr(type=['functional'])
     @decorators.idempotent_id('b35e63ed-f1d5-4ec6-afb0-2378d260afcb')
     def test_batch_policy(self):
         # Create a batch policy targets on CLUSTER_UPDATE action

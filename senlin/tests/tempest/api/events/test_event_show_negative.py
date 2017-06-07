@@ -12,14 +12,13 @@
 
 from tempest.lib import decorators
 from tempest.lib import exceptions
-from tempest import test
 
 from senlin.tests.tempest.api import base
 
 
 class TestEventShowNegativeNotFound(base.BaseSenlinAPITest):
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('318ae275-ed68-48f5-9151-523085107112')
     def test_event_show_not_found(self):
         ex = self.assertRaises(exceptions.NotFound,

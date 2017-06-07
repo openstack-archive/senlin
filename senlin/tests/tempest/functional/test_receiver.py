@@ -11,7 +11,6 @@
 # under the License.
 
 from tempest.lib import decorators
-from tempest import test
 
 from senlin.tests.tempest.common import utils
 from senlin.tests.tempest.functional import base
@@ -26,7 +25,7 @@ class TestReceiver(base.BaseSenlinFunctionalTest):
         self.cluster_id = utils.create_a_cluster(self, self.profile_id)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id)
 
-    @test.attr(type=['functional'])
+    @decorators.attr(type=['functional'])
     @decorators.idempotent_id('60b04757-1ee1-4955-a098-b1c42af6bb19')
     def test_webhook(self):
         # Create a webhook type of receiver

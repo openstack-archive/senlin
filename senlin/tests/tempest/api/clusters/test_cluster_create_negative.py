@@ -12,7 +12,6 @@
 
 from tempest.lib import decorators
 from tempest.lib import exceptions
-from tempest import test
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import utils
@@ -27,7 +26,7 @@ class TestClusterCreateNegativeBadRequest(base.BaseSenlinAPITest):
 
         self.profile_id = profile_id
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('498a06eb-8c5f-4d9e-852f-87ac295f1a96')
     def test_cluster_create_cluster_data_not_specified(self):
         # cluster key is missing in request data
@@ -47,7 +46,7 @@ class TestClusterCreateNegativeBadRequest(base.BaseSenlinAPITest):
         self.assertEqual("Request body missing 'cluster' key.",
                          str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('3aced30b-ccb2-4e40-90c2-7b6aa205e3d6')
     def test_cluster_create_profile_invalid(self):
         # Invalid profile_id is provided
@@ -67,7 +66,7 @@ class TestClusterCreateNegativeBadRequest(base.BaseSenlinAPITest):
             "The specified profile '3aced30b-ccb2-4e40-90c2-7b6aa205e3d6' "
             "could not be found.", str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('61b190bb-ef5a-47b3-acbe-6467fbb44439')
     def test_cluster_create_miss_profile(self):
         # Invalid profile_id is provided
@@ -85,7 +84,7 @@ class TestClusterCreateNegativeBadRequest(base.BaseSenlinAPITest):
         self.assertEqual("'profile_id' is a required property",
                          str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('7eaf60c3-f33d-403b-a4ee-0276ae90928c')
     def test_cluster_create_size_constraint_illegal(self):
         # Invalid size limitation is defined: min_size > max_size

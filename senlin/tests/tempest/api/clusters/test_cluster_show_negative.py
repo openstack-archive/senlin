@@ -12,7 +12,6 @@
 
 from tempest.lib import decorators
 from tempest.lib import exceptions
-from tempest import test
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import utils
@@ -31,7 +30,7 @@ class TestClusterShowNegativeBadRequest(base.BaseSenlinAPITest):
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id1)
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id2)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('3365dca5-8895-4dc3-befe-fd15b17c824c')
     def test_cluster_show_multiple_choice(self):
         ex = self.assertRaises(exceptions.BadRequest,

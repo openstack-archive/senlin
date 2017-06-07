@@ -11,7 +11,6 @@
 # under the License.
 
 from tempest.lib import decorators
-from tempest import test
 
 from senlin.tests.tempest.common import utils
 from senlin.tests.tempest.functional import base
@@ -37,7 +36,7 @@ class TestClusterMembership(base.BaseSenlinFunctionalTest):
         self.addCleanup(utils.delete_a_node, self, self.node_id2)
         self.addCleanup(utils.delete_a_node, self, self.node_id3)
 
-    @test.attr(type=['functional'])
+    @decorators.attr(type=['functional'])
     @decorators.idempotent_id('137a36d9-b4ee-485d-8bff-51ebb6113e9b')
     def test_cluster_node_add_del(self):
         # Add one node to cluster
@@ -118,7 +117,7 @@ class TestClusterReplaceNodes(base.BaseSenlinFunctionalTest):
         self.new_id3 = utils.create_a_node(self, self.profile_id)
 
     @utils.api_microversion('1.3')
-    @test.attr(type=['functional'])
+    @decorators.attr(type=['functional'])
     @decorators.idempotent_id('c2948087-b0ff-47f7-a4bf-1cb16e71cc9d')
     def test_cluster_replace_node(self):
         # Verify the cluster

@@ -12,7 +12,6 @@
 
 from tempest.lib import decorators
 from tempest.lib import exceptions
-from tempest import test
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import utils
@@ -35,7 +34,7 @@ class TestPolicyDeleteNegativeConflict(base.BaseSenlinAPITest):
         self.addCleanup(utils.cluster_detach_policy, self, cluster_id,
                         self.policy_id)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('b8b8fca8-962f-4cad-bfca-76683df7b617')
     def test_policy_delete_conflict(self):
         # Verify conflict exception(409) is raised.
@@ -51,7 +50,7 @@ class TestPolicyDeleteNegativeConflict(base.BaseSenlinAPITest):
 
 class TestPolicyDeleteNegativeNotFound(base.BaseSenlinAPITest):
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('5591416f-4646-46c2-83b4-231e72aa4bfe')
     def test_policy_delete_not_found(self):
         # Verify notfound exception(404) is raised.
@@ -74,7 +73,7 @@ class TestPolicyDeleteNegativeBadRequest(base.BaseSenlinAPITest):
         self.policy_id2 = utils.create_a_policy(self, name='p-01')
         self.addCleanup(utils.delete_a_policy, self, self.policy_id2)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('d6f35043-2db5-49ff-8bc4-ba14a652f748')
     def test_policy_delete_multiple_choice(self):
         # Verify badrequest exception(400) is raised.

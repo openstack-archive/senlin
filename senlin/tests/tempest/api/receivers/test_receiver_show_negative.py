@@ -12,7 +12,6 @@
 
 from tempest.lib import decorators
 from tempest.lib import exceptions
-from tempest import test
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import utils
@@ -20,7 +19,7 @@ from senlin.tests.tempest.common import utils
 
 class TestReceiverShowNegativeNotFound(base.BaseSenlinAPITest):
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('0cca923f-3e6c-4e23-8d42-2e1c70243c9d')
     def test_receiver_show_not_found(self):
         self.assertRaises(exceptions.NotFound,
@@ -47,7 +46,7 @@ class TestReceiverShowNegativeBadRequest(base.BaseSenlinAPITest):
         self.addCleanup(self.client.delete_obj, 'receivers', self.receiver_id1)
         self.addCleanup(self.client.delete_obj, 'receivers', self.receiver_id2)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('5bbfde20-c083-4212-81fb-4eea63271bbb')
     def test_receiver_show_multiple_choice(self):
         self.assertRaises(exceptions.BadRequest,

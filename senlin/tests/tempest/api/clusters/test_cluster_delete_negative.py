@@ -12,7 +12,6 @@
 
 from tempest.lib import decorators
 from tempest.lib import exceptions
-from tempest import test
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import utils
@@ -35,7 +34,7 @@ class TestClusterDeleteNegativePolicyConflict(base.BaseSenlinAPITest):
         self.addCleanup(utils.cluster_detach_policy, self, self.cluster_id,
                         policy_id)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('0de81427-2b2f-4821-9462-c893d35fb212')
     def test_cluster_delete_policy_conflict(self):
         # Verify conflict exception(409) is raised.
@@ -65,7 +64,7 @@ class TestClusterDeleteNegativeReceiverConflict(base.BaseSenlinAPITest):
             'fake', params={'count': '1'})
         self.addCleanup(utils.delete_a_receiver, self, self.receiver_id)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('0de81427-2b2f-4821-9462-c893d35fb212')
     def test_cluster_delete_receiver_conflict(self):
         # Verify conflict exception(409) is raised.
@@ -82,7 +81,7 @@ class TestClusterDeleteNegativeReceiverConflict(base.BaseSenlinAPITest):
 
 class TestClusterDeleteNegativeNotFound(base.BaseSenlinAPITest):
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('8a583b8e-eeaa-4920-a6f5-2880b070624f')
     def test_cluster_delete_not_found(self):
         # Verify notfound exception(404) is raised.
@@ -111,7 +110,7 @@ class TestClusterDeleteNegativeBadRequest(base.BaseSenlinAPITest):
                                                   name='c-01')
         self.addCleanup(utils.delete_a_cluster, self, self.cluster_id2)
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('3d8b73db-e2d2-42c2-952c-936048d36f21')
     def test_cluster_delete_multiple_choice(self):
         # Verify badrequest exception(400) is raised.

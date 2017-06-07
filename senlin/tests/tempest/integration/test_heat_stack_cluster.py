@@ -11,7 +11,6 @@
 # under the License.
 
 from tempest.lib import decorators
-from tempest import test
 
 from senlin.tests.tempest.common import constants
 from senlin.tests.tempest.common import utils
@@ -26,7 +25,7 @@ class TestHeatStackCluster(base.BaseSenlinIntegrationTest):
             self, spec=constants.spec_heat_stack)
         self.addCleanup(utils.delete_a_profile, self, self.profile_id)
 
-    @test.attr(type=['integration'])
+    @decorators.attr(type=['integration'])
     @decorators.idempotent_id('c9ba5700-f384-4376-b61b-e2b108ab3a16')
     def test_cluster_create_delete(self):
         # Create a cluster

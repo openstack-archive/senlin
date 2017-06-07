@@ -12,7 +12,6 @@
 
 from tempest.lib import decorators
 from tempest.lib import exceptions
-from tempest import test
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import utils
@@ -20,7 +19,7 @@ from senlin.tests.tempest.common import utils
 
 class TestProfileUpdateNegativeNotFound(base.BaseSenlinAPITest):
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('5fe90195-aaed-4c1f-a73a-806b3f044bf8')
     def test_profile_update_profile_not_found(self):
         ex = self.assertRaises(exceptions.NotFound,
@@ -33,7 +32,7 @@ class TestProfileUpdateNegativeNotFound(base.BaseSenlinAPITest):
             "The profile '5fe90195-aaed-4c1f-a73a-806b3f044bf8' "
             "could not be found.", str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('5fe90195-aaed-4c1f-a73a-806b3f044bf8')
     def test_profile_update_profile_no_param(self):
         ex = self.assertRaises(exceptions.BadRequest,
@@ -56,7 +55,7 @@ class TestProfileUpdateNegativeBadRequest(base.BaseSenlinAPITest):
         self.addCleanup(utils.delete_a_profile, self, profile_id)
         self.profile_id = profile_id
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('31242de5-55ac-4589-87a1-a9940e4beca2')
     def test_profile_update_no_property_updated(self):
         # No property is updated
@@ -72,7 +71,7 @@ class TestProfileUpdateNegativeBadRequest(base.BaseSenlinAPITest):
         self.assertEqual("No property needs an update.",
                          str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('d2ca7de6-0069-48c9-b3de-ee975a2428dc')
     def test_profile_update_spec_not_updatable(self):
         # Try to update spec of profile which is not allowed.

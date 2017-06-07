@@ -13,7 +13,6 @@
 import copy
 from tempest.lib import decorators
 from tempest.lib import exceptions
-from tempest import test
 
 from senlin.tests.tempest.api import base
 from senlin.tests.tempest.common import constants
@@ -21,7 +20,7 @@ from senlin.tests.tempest.common import constants
 
 class TestPolicyValidateNegativeBadRequest(base.BaseSenlinAPITest):
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('4b55bb3e-12d6-4728-9b53-9db5094ac8b5')
     def test_policy_validate_with_empty_body(self):
         params = {}
@@ -34,7 +33,7 @@ class TestPolicyValidateNegativeBadRequest(base.BaseSenlinAPITest):
         self.assertEqual(
             "Request body missing 'policy' key.", str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('4c9f26cc-f4f3-4303-9f29-f30fae400843')
     def test_policy_validate_invalid_param(self):
         params = {
@@ -52,7 +51,7 @@ class TestPolicyValidateNegativeBadRequest(base.BaseSenlinAPITest):
             "Additional properties are not allowed (u'name' "
             "was unexpected)", str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('a1c35d93-2d19-4a72-919f-cfd70f5cbf06')
     def test_policy_validate_no_spec(self):
         params = {
@@ -67,7 +66,7 @@ class TestPolicyValidateNegativeBadRequest(base.BaseSenlinAPITest):
         self.assertEqual(
             "'spec' is a required property", str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('6073da36-ee3e-4925-bce1-6c9a158e710d')
     def test_policy_validate_policy_type_incorrect(self):
         spec = copy.deepcopy(constants.spec_scaling_policy)
@@ -87,7 +86,7 @@ class TestPolicyValidateNegativeBadRequest(base.BaseSenlinAPITest):
             "The policy_type 'senlin.policy.bogus-1.0' could "
             "not be found.", str(message))
 
-    @test.attr(type=['negative'])
+    @decorators.attr(type=['negative'])
     @decorators.idempotent_id('1e1833ea-4a67-4ac1-b6e2-f9afff51c945')
     def test_policy_validate_spec_validation_failed(self):
         spec = copy.deepcopy(constants.spec_scaling_policy)
