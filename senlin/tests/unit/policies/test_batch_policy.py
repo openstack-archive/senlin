@@ -42,28 +42,20 @@ class TestBatchPolicy(base.SenlinTestCase):
         self.assertEqual(2, policy.max_batch_size)
         self.assertEqual(60, policy.pause_time)
 
-    def test__get_batch_size_for_update(self):
+    def test__get_batch_size(self):
         policy = bp.BatchPolicy('test-batch', self.spec)
 
-        size, number = policy._get_batch_size(5, 'CLUSTER_UPDATE')
+        size, number = policy._get_batch_size(5)
 
         self.assertEqual(2, size)
         self.assertEqual(3, number)
 
-    def test__get_batch_size_for_delete_greater_than_max(self):
-        policy = bp.BatchPolicy('test-batch', self.spec)
-
-        size, number = policy._get_batch_size(5, 'CLUSTER_DELETE')
-
-        self.assertEqual(2, size)
-        self.assertEqual(3, number)
-
-    def test__get_batch_size_for_delete_less_than_max(self):
+    def test__get_batch_size_less_than_max(self):
         spec = copy.deepcopy(self.spec)
         spec['properties']['max_batch_size'] = 3
         policy = bp.BatchPolicy('test-batch', spec)
 
-        size, number = policy._get_batch_size(4, 'CLUSTER_DELETE')
+        size, number = policy._get_batch_size(3)
 
         self.assertEqual(2, size)
         self.assertEqual(2, number)
@@ -73,7 +65,7 @@ class TestBatchPolicy(base.SenlinTestCase):
         spec['properties']['min_in_service'] = 2
         policy = bp.BatchPolicy('test-batch', spec)
 
-        size, number = policy._get_batch_size(1, 'CLUSTER_UPDATE')
+        size, number = policy._get_batch_size(1)
 
         self.assertEqual(1, size)
         self.assertEqual(1, number)
@@ -83,7 +75,7 @@ class TestBatchPolicy(base.SenlinTestCase):
         spec['properties']['max_batch_size'] = -1
         policy = bp.BatchPolicy('test-batch', spec)
 
-        size, number = policy._get_batch_size(5, 'CLUSTER_UPDATE')
+        size, number = policy._get_batch_size(5)
         self.assertEqual(4, size)
         self.assertEqual(2, number)
 
@@ -137,29 +129,8 @@ class TestBatchPolicy(base.SenlinTestCase):
             'plan': [{'1', '2'}, {'3'}]
         }
         self.assertEqual(excepted_plan, plan)
-        mock_cal.assert_called_once_with(3, 'CLUSTER_UPDATE')
+        mock_cal.assert_called_once_with(3)
         mock_pick.assert_called_once_with([node1, node2, node3], 2, 2)
-
-    @mock.patch.object(bp.BatchPolicy, '_get_batch_size')
-    def test__create_plan_for_delete(self, mock_cal):
-        action = mock.Mock(context=self.context, action='CLUSTER_DELETE')
-        cluster = mock.Mock(id='cid')
-        node1, node2, node3 = mock.Mock(), mock.Mock(), mock.Mock()
-        cluster.nodes = [node1, node2, node3]
-        action.entity = cluster
-
-        mock_cal.return_value = (2, 2)
-        policy = bp.BatchPolicy('test-batch', self.spec)
-
-        res, plan = policy._create_plan(action)
-
-        self.assertTrue(res)
-        excepted_plan = {
-            'pause_time': self.spec['properties']['pause_time'],
-            'batch_size': 2
-        }
-        self.assertEqual(excepted_plan, plan)
-        mock_cal.assert_called_once_with(3, 'CLUSTER_DELETE')
 
     def test__create_plan_for_update_no_node(self):
         action = mock.Mock(context=self.context, action='CLUSTER_UPDATE')
@@ -174,23 +145,6 @@ class TestBatchPolicy(base.SenlinTestCase):
         excepted_plan = {
             'pause_time': self.spec['properties']['pause_time'],
             'plan': []
-        }
-        self.assertEqual(excepted_plan, value)
-
-    def test__create_plan_for_delete_no_node(self):
-        action = mock.Mock(context=self.context, action='CLUSTER_DELETE')
-        cluster = mock.Mock(id='cid')
-        cluster.nodes = []
-        action.entity = cluster
-
-        policy = bp.BatchPolicy('test-batch', self.spec)
-
-        res, value = policy._create_plan(action)
-
-        self.assertTrue(res)
-        excepted_plan = {
-            'pause_time': self.spec['properties']['pause_time'],
-            'batch_size': 0,
         }
         self.assertEqual(excepted_plan, value)
 
