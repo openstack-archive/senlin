@@ -17,8 +17,6 @@ from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.common import scaleutils as su
 from senlin.engine import cluster as cm
-from senlin.objects import cluster as co
-from senlin.objects import node as no
 from senlin.policies import base as pb
 from senlin.policies import region_placement as rp
 from senlin.tests.unit.common import base
@@ -174,71 +172,59 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
 
         self.assertEqual(3, res)
 
-    @mock.patch.object(no.Node, 'count_by_cluster')
     @mock.patch.object(su, 'parse_resize_params')
-    @mock.patch.object(co.Cluster, 'get')
-    def test__get_count_resize_parse_error(self, mock_cluster, mock_parse,
-                                           mock_count):
+    def test__get_count_resize_parse_error(self, mock_parse):
         x_cluster = mock.Mock()
-        mock_cluster.return_value = x_cluster
-        mock_count.return_value = 10
-        mock_parse.return_value = (pb.CHECK_ERROR, 'Something wrong.')
+        x_cluster.nodes = [mock.Mock(), mock.Mock()]
         action = mock.Mock(action=consts.CLUSTER_RESIZE, data={})
+        action.entity = x_cluster
+        mock_parse.return_value = (pb.CHECK_ERROR, 'Something wrong.')
         policy = rp.RegionPlacementPolicy('p1', self.spec)
 
         res = policy._get_count('FOO', action)
 
         self.assertEqual(0, res)
         self.assertEqual(pb.CHECK_ERROR, action.data['status'])
-        mock_count.assert_called_once_with(action.context, 'FOO')
-        mock_parse.assert_called_once_with(action, x_cluster, 10)
+        mock_parse.assert_called_once_with(action, x_cluster, 2)
         self.assertEqual('Something wrong.', action.data['reason'])
 
-    @mock.patch.object(no.Node, 'count_by_cluster')
     @mock.patch.object(su, 'parse_resize_params')
-    @mock.patch.object(co.Cluster, 'get')
-    def test__get_count_resize_parse_creation(self, mock_cluster, mock_parse,
-                                              mock_count):
+    def test__get_count_resize_parse_creation(self, mock_parse):
         def fake_parse(action, cluster, current):
             action.data = {'creation': {'count': 3}}
             return pb.CHECK_OK, ''
 
         x_cluster = mock.Mock()
-        mock_cluster.return_value = x_cluster
-        mock_count.return_value = 0
-        mock_parse.side_effect = fake_parse
+        x_cluster.nodes = []
         action = mock.Mock(action=consts.CLUSTER_RESIZE, data={})
+        action.entity = x_cluster
+
+        mock_parse.side_effect = fake_parse
         policy = rp.RegionPlacementPolicy('p1', self.spec)
 
         res = policy._get_count('FOO', action)
 
         self.assertEqual(3, res)
-        mock_count.assert_called_once_with(action.context, 'FOO')
         mock_parse.assert_called_once_with(action, x_cluster, 0)
-        mock_cluster.assert_called_once_with(action.context, 'FOO')
 
-    @mock.patch.object(no.Node, 'count_by_cluster')
     @mock.patch.object(su, 'parse_resize_params')
-    @mock.patch.object(co.Cluster, 'get')
-    def test__get_count_resize_parse_deletion(self, mock_cluster, mock_parse,
-                                              mock_count):
+    def test__get_count_resize_parse_deletion(self, mock_parse):
         def fake_parse(action, cluster, current):
             action.data = {'deletion': {'count': 3}}
             return pb.CHECK_OK, ''
 
         x_cluster = mock.Mock()
-        mock_cluster.return_value = x_cluster
-        mock_count.return_value = 6
-        mock_parse.side_effect = fake_parse
+        x_cluster.nodes = [mock.Mock(), mock.Mock(), mock.Mock()]
         action = mock.Mock(action=consts.CLUSTER_RESIZE, data={})
+        action.entity = x_cluster
+
+        mock_parse.side_effect = fake_parse
         policy = rp.RegionPlacementPolicy('p1', self.spec)
 
         res = policy._get_count('FOO', action)
 
         self.assertEqual(-3, res)
-        mock_count.assert_called_once_with(action.context, 'FOO')
-        mock_parse.assert_called_once_with(action, x_cluster, 6)
-        mock_cluster.assert_called_once_with(action.context, 'FOO')
+        mock_parse.assert_called_once_with(action, x_cluster, 3)
 
     def test__get_count_scale_in_with_data(self):
         action = mock.Mock(action=consts.CLUSTER_SCALE_IN,
