@@ -19,8 +19,6 @@ from senlin.common.i18n import _
 from senlin.common import scaleutils as su
 from senlin.common import schema
 from senlin.common import utils
-from senlin.objects import cluster as co
-from senlin.objects import node as no
 from senlin.policies import base
 
 
@@ -185,7 +183,9 @@ class ScalingPolicy(base.Policy):
 
         # Use action input if count is provided
         count_value = action.inputs.get('count', None)
-        current = no.Node.count_by_cluster(action.context, cluster_id)
+        cluster = action.entity
+        current = len(cluster.nodes)
+
         if count_value is None:
             # count not specified, calculate it
             count_value = self._calculate_adjustment_count(current)
@@ -202,7 +202,6 @@ class ScalingPolicy(base.Policy):
             return
 
         # Check size constraints
-        cluster = co.Cluster.get(action.context, cluster_id)
         max_size = cluster.max_size
         if max_size == -1:
             max_size = cfg.CONF.max_nodes_per_cluster
