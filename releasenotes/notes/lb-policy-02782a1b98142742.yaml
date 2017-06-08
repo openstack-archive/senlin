@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed an error in the built-in load-balancing policy that caused by
+    regression in getting node details for IP addresses.

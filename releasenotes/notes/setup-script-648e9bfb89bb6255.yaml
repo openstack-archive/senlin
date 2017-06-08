@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    The setup-service script now supports the customization of service project
+    name and service role name.

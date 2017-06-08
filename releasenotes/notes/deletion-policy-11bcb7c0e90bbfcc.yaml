@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed an error in the built-in deletion policy which failed to process
+    NODE_DELETE action.

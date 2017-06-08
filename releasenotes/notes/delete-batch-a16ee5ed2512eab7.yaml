@@ -1,0 +1,6 @@
+---
+deprecations:
+  - |
+    The support to CLUSTER_DELETE action from the experimental batch policy
+    is dropped due to issues on cluster locking. This could be resurected
+    in future when a proper workaround is identified.

@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed an error in parameter checking logic for node-recover operation
+    which prevented valid parameters from being accepted.

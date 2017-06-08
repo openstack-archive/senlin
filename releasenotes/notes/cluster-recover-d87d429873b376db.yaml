@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed cluster-recover operation in engine so that it accepts parameters
+    from API requests in addition to policy decision (if any).
