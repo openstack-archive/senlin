@@ -66,9 +66,9 @@ class TestScalingPolicy(base.SenlinTestCase):
 
         nodes = []
         for i in range(count):
-            utils.create_node(self.context, NODE_IDS[i], PROFILE_ID,
-                              CLUSTER_ID, PHYSICAL_IDS[i])
-            nodes.append(NODE_IDS[i])
+            node = utils.create_node(self.context, NODE_IDS[i], PROFILE_ID,
+                                     CLUSTER_ID, PHYSICAL_IDS[i])
+            nodes.append(node)
         return nodes
 
     def test_policy_init(self):
@@ -176,11 +176,15 @@ class TestScalingPolicy(base.SenlinTestCase):
         self.assertEqual(2, count)
 
     def test_pre_op_pass_without_input(self):
-        self._create_nodes(3)
+        nodes = self._create_nodes(3)
+        self.cluster.nodes = nodes
+
         action = mock.Mock()
         action.context = self.context
         action.action = consts.CLUSTER_SCALE_IN
         action.inputs = {}
+        action.entity = self.cluster
+
         adjustment = self.spec['properties']['adjustment']
         adjustment['type'] = consts.EXACT_CAPACITY
         adjustment['number'] = 1
@@ -198,11 +202,15 @@ class TestScalingPolicy(base.SenlinTestCase):
         action.store.assert_called_with(self.context)
 
     def test_pre_op_pass_with_input(self):
-        self._create_nodes(3)
+        nodes = self._create_nodes(3)
+        self.cluster.nodes = nodes
+
         action = mock.Mock()
         action.context = self.context
         action.action = consts.CLUSTER_SCALE_IN
         action.inputs = {'count': 1}
+        action.entity = self.cluster
+
         adjustment = self.spec['properties']['adjustment']
         adjustment['type'] = consts.CHANGE_IN_CAPACITY
         adjustment['number'] = 2
@@ -232,16 +240,16 @@ class TestScalingPolicy(base.SenlinTestCase):
         action.data.update.assert_called_with(pd)
 
     @mock.patch.object(sp.ScalingPolicy, '_calculate_adjustment_count')
-    @mock.patch.object(no.Node, 'count_by_cluster')
-    def test_pre_op_pass_check_effort(self, mock_currentcount,
-                                      mock_adjustmentcount):
+    def test_pre_op_pass_check_effort(self, mock_adjustmentcount):
         # Cluster with maxsize and best_effort is False
+        self.cluster.nodes = [mock.Mock(), mock.Mock()]
         action = mock.Mock()
         action.context = self.context
         action.action = consts.CLUSTER_SCALE_OUT
         action.inputs = {}
+        action.entity = self.cluster
+
         mock_adjustmentcount.return_value = 1
-        mock_currentcount.return_value = 2
         policy = sp.ScalingPolicy('test-policy', self.spec)
         policy.event = consts.CLUSTER_SCALE_OUT
         policy.best_effort = True
@@ -257,11 +265,15 @@ class TestScalingPolicy(base.SenlinTestCase):
         action.store.assert_called_with(self.context)
 
     def test_pre_op_fail_negative_count(self):
-        self._create_nodes(3)
+        nodes = self._create_nodes(3)
+        self.cluster.nodes = nodes
+
         action = mock.Mock()
         action.context = self.context
         action.action = consts.CLUSTER_SCALE_IN
         action.inputs = {}
+        action.entity = self.cluster
+
         adjustment = self.spec['properties']['adjustment']
         adjustment['type'] = consts.EXACT_CAPACITY
         adjustment['number'] = 5
@@ -277,11 +289,15 @@ class TestScalingPolicy(base.SenlinTestCase):
         action.store.assert_called_with(self.context)
 
     def test_pre_op_fail_below_min_size(self):
-        self._create_nodes(3)
+        nodes = self._create_nodes(3)
+        self.cluster.nodes = nodes
+
         action = mock.Mock()
         action.action = consts.CLUSTER_SCALE_IN
         action.context = self.context
         action.inputs = {}
+        action.entity = self.cluster
+
         adjustment = self.spec['properties']['adjustment']
         adjustment['type'] = consts.CHANGE_IN_CAPACITY
         adjustment['number'] = 3
@@ -298,11 +314,15 @@ class TestScalingPolicy(base.SenlinTestCase):
         action.store.assert_called_with(self.context)
 
     def test_pre_op_pass_best_effort(self):
-        self._create_nodes(3)
+        nodes = self._create_nodes(3)
+        self.cluster.nodes = nodes
+
         action = mock.Mock()
         action.context = self.context
         action.action = consts.CLUSTER_SCALE_IN
         action.inputs = {}
+        action.entity = self.cluster
+
         adjustment = self.spec['properties']['adjustment']
         adjustment['best_effort'] = True
         adjustment['type'] = consts.CHANGE_IN_CAPACITY
@@ -322,13 +342,16 @@ class TestScalingPolicy(base.SenlinTestCase):
         action.store.assert_called_with(self.context)
 
     def test_pre_op_with_bad_nodes(self):
-        self.nodes = self._create_nodes(3)
-        no.Node.update(self.context, self.nodes[0], {'status': 'ERROR'})
+        nodes = self._create_nodes(3)
+        no.Node.update(self.context, nodes[0].id, {'status': 'ERROR'})
+        self.cluster.nodes = nodes
 
         action = mock.Mock()
         action.context = self.context
         action.action = consts.CLUSTER_SCALE_IN
         action.inputs = {}
+        action.entity = self.cluster
+
         adjustment = self.spec['properties']['adjustment']
         adjustment['type'] = consts.EXACT_CAPACITY
         adjustment['number'] = 1
