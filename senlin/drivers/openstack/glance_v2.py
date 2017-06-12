@@ -29,3 +29,7 @@ class GlanceClient(base.DriverBase):
     @sdk.translate_exception
     def image_get(self, image):
         return self.conn.image.get_image(image)
+
+    @sdk.translate_exception
+    def image_delete(self, name_or_id, ignore_missing=False):
+        return self.conn.image.delete_image(name_or_id, ignore_missing)

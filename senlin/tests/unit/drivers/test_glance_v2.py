@@ -66,3 +66,17 @@ class TestGlanceV2(base.SenlinTestCase):
         expected = self.image.get_image.return_value
         self.assertEqual(expected, res)
         self.image.get_image.assert_called_once_with('foo')
+
+    def test_image_delete(self, mock_create):
+        mock_create.return_value = self.fake_conn
+        gc = glance_v2.GlanceClient(self.conn_params)
+        gc.image_delete('foo')
+        self.image.delete_image.assert_called_once_with('foo', False)
+        self.image.delete_image.reset_mock()
+
+        gc.image_delete('foo', True)
+        self.image.delete_image.assert_called_once_with('foo', True)
+        self.image.delete_image.reset_mock()
+
+        gc.image_delete('foo', False)
+        self.image.delete_image.assert_called_once_with('foo', False)
