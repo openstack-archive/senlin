@@ -1039,6 +1039,10 @@ class ServerProfile(base.Profile):
         if 'security_groups' in server_data:
             for sg in server_data['security_groups']:
                 sgroups.append(sg['name'])
+        # when we have multiple nics the info will include the
+        # security groups N times where N == number of nics. Be nice
+        # and only display it once.
+        sgroups = list(set(sgroups))
         if len(sgroups) == 0:
             details['security_groups'] = ''
         elif len(sgroups) == 1:
