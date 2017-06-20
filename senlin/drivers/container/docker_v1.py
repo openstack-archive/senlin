@@ -19,7 +19,7 @@ class DockerClient(object):
     """Docker driver."""
 
     def __init__(self, url):
-        self._dockerclient = docker.Client(base_url=url)
+        self._dockerclient = docker.APIClient(base_url=url)
 
     @sdk.translate_exception
     def container_create(self, image, name=None, command=None):

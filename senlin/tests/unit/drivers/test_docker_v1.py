@@ -18,14 +18,14 @@ from senlin.tests.unit.common import base
 
 class TestDocker(base.SenlinTestCase):
 
-    @mock.patch("docker.Client")
+    @mock.patch("docker.APIClient")
     def setUp(self, mock_docker):
         super(TestDocker, self).setUp()
         self.x_docker = mock.Mock()
         mock_docker.return_value = self.x_docker
         self.sot = docker_v1.DockerClient("abc")
 
-    @mock.patch("docker.Client")
+    @mock.patch("docker.APIClient")
     def test_init(self, mock_docker):
         x_docker = mock_docker.return_value
         url = mock.Mock()
