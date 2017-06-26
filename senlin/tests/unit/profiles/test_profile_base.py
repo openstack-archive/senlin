@@ -377,7 +377,7 @@ class TestProfileBase(base.SenlinTestCase):
         res = profile.check_object(self.ctx, obj)
 
         profile.load(self.ctx).do_check.assert_called_once_with(obj)
-        self.assertEqual(False, res)
+        self.assertFalse(res)
 
     @mock.patch.object(pb.Profile, 'load')
     def test_update_object_with_profile(self, mock_load):
