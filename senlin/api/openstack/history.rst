@@ -82,3 +82,14 @@ it can be used by both users and developers.
  - Added ``check`` parameter to cluster recover request. When this parameter
    is specified, the engine will check if the nodes are active before
    performing a recover operation.
+
+1.7
+---
+
+ - Added ``node_adopt`` operation to node.
+
+ - Added ``node_adopt_preview`` operation to node.
+
+ - Added ``receiver_update`` operation to receiver.
+
+ - Added ``service_list`` API.
