@@ -176,12 +176,10 @@ Request Parameters
 .. rest_parameters:: parameters.yaml
 
   - OpenStack-API-Version: microversion
-  - cluster: cluster_identity
   - identity: identity
   - metadata: metadata_req
   - name: node_name_adopt
   - overrides: overrides
-  - role: role_req
   - snapshot: snapshot
   - type: profile_type_name
 

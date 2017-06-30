@@ -1823,30 +1823,19 @@ class EngineService(service.Service):
         profile_cls, spec = self._node_adopt_preview(ctx, req)
         # create profile
         profile = profile_cls.create(ctx, "prof-%s" % name, spec)
-
-        # check cluster
-        if req.obj_attr_is_set('cluster'):
-            try:
-                db_cluster = co.Cluster.find(ctx, req.cluster)
-            except exception.ResourceNotFound as ex:
-                msg = ex.enhance_msg('specified', ex)
-                raise exception.BadRequest(msg=msg)
-            cluster_id = db_cluster.id
-            index = co.Cluster.get_next_index(ctx, cluster_id)
+        if req.obj_attr_is_set('metadata'):
+            metadata = req.metadata
         else:
-            cluster_id = ''
-            index = -1
-
+            metadata = {}
         # Create a node instance
         values = {
             'name': name,
             'profile_id': profile.id,
-            'cluster_id': cluster_id,
+            'cluster_id': '',
             'physical_id': req.identity,
-            'index': index,
-            'role': req.role if req.obj_attr_is_set('role') else '',
-            'metadata': (req.metadata
-                         if req.obj_attr_is_set('metadata') else {}),
+            'index': -1,
+            'role': '',
+            'metadata': metadata,
             # TODO(Qiming): Set node status properly
             'status': consts.NS_ACTIVE,
             'status_reason': 'Node adopted successfully',
@@ -1858,8 +1847,7 @@ class EngineService(service.Service):
         }
         node = node_obj.Node.create(ctx, values)
 
-        # TODO(Qiming): set cluster_node_id, cluster_id, cluster_node_index
-        #               metadata
+        # TODO(Qiming): set cluster_node_id metadata
         LOG.info("Adopted node '%(rid)s' as '%(id)s'.",
                  {'rid': req.identity, 'id': node.id})
         return node.to_dict()
