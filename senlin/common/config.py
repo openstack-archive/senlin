@@ -42,15 +42,15 @@ engine_opts = [
                help=_('Seconds between running periodic tasks.')),
     cfg.IntOpt('periodic_interval_max',
                default=120,
-               help='Maximum seconds between periodic tasks to be called'),
+               help=_('Maximum seconds between periodic tasks to be called.')),
     cfg.IntOpt('check_interval_max',
                default=3600,
-               help='Maximum seconds between cluster check to be called'),
+               help=_('Maximum seconds between cluster check to be called.')),
     cfg.IntOpt('periodic_fuzzy_delay',
                default=10,
-               help='Range of seconds to randomly delay when starting the'
-                    ' periodic task scheduler to reduce stampeding.'
-                    ' (Disable by setting to 0)'),
+               help=_('Range of seconds to randomly delay when starting the '
+                      'periodic task scheduler to reduce stampeding. '
+                      '(Disable by setting to 0)')),
     cfg.IntOpt('num_engine_workers',
                default=1,
                help=_('Number of senlin-engine processes to fork and run.')),
@@ -92,8 +92,8 @@ engine_opts = [
                        'Senlin objects belonging to the same project.')),
     cfg.IntOpt('service_down_time',
                default=60,
-               help='Maximum time since last check-in for a service to be '
-                    'considered up'),
+               help=_('Maximum time since last check-in for a service to be '
+                      'considered up.')),
 ]
 cfg.CONF.register_opts(engine_opts)
 
@@ -117,7 +117,7 @@ cfg.CONF.register_opts(cloud_backend_opts)
 # DEFAULT, event dispatchers
 event_opts = [
     cfg.MultiStrOpt("event_dispatchers", default=['database'],
-                    help=_("Event dispatchers to enable"))]
+                    help=_("Event dispatchers to enable."))]
 cfg.CONF.register_opts(event_opts)
 
 # Dispatcher section
@@ -138,7 +138,7 @@ authentication_opts = [
     cfg.StrOpt('auth_url', default='',
                help=_('Complete public identity V3 API endpoint.')),
     cfg.StrOpt('service_username', default='senlin',
-               help=_('Senlin service user name')),
+               help=_('Senlin service user name.')),
     cfg.StrOpt('service_password', default='', secret=True,
                help=_('Password specified for the Senlin service user.')),
     cfg.StrOpt('service_project_name', default='service',
@@ -155,9 +155,9 @@ cfg.CONF.register_opts(authentication_opts, group=authentication_group)
 healthmgr_group = cfg.OptGroup('health_manager')
 healthmgr_opts = [
     cfg.StrOpt('nova_control_exchange', default='nova',
-               help=_("Exchange name for nova notifications")),
+               help=_("Exchange name for nova notifications.")),
     cfg.StrOpt('heat_control_exchange', default='heat',
-               help=_("Exchange name for heat notifications")),
+               help=_("Exchange name for heat notifications.")),
 ]
 cfg.CONF.register_group(healthmgr_group)
 cfg.CONF.register_opts(healthmgr_opts, group=healthmgr_group)
