@@ -2,8 +2,6 @@
 Building the developer docs
 ===========================
 
-For user and admin docs, go to the directory `doc/docbkx`.
-
 Dependencies
 ============
 
