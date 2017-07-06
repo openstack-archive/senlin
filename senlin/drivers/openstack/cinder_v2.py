@@ -26,3 +26,25 @@ class CinderClient(base.DriverBase):
     def volume_get(self, volume):
         res = self.conn.block_store.get_volume(volume)
         return res
+
+    @sdk.translate_exception
+    def volume_create(self, **attr):
+        return self.conn.block_store.create_volume(**attr)
+
+    @sdk.translate_exception
+    def volume_delete(self, volume, ignore_missing=True):
+        self.conn.block_store.delete_volume(volume,
+                                            ignore_missing=ignore_missing)
+
+    @sdk.translate_exception
+    def snapshot_create(self, **attr):
+        return self.conn.block_store.create_snapshot(**attr)
+
+    @sdk.translate_exception
+    def snapshot_delete(self, snapshot, ignore_missing=True):
+        self.conn.block_store.delete_snapshot(snapshot,
+                                              ignore_missing=ignore_missing)
+
+    @sdk.translate_exception
+    def snapshot_get(self, snapshot):
+        return self.conn.block_store.get_snapshot(snapshot)

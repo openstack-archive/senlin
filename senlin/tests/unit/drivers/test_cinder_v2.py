@@ -38,3 +38,45 @@ class TestCinderV2(base.SenlinTestCase):
     def test_volume_get(self):
         self.vo.volume_get('foo')
         self.volume.get_volume.assert_called_once_with('foo')
+
+    def test_volume_create(self):
+        self.vo.volume_create(name='foo')
+        self.volume.create_volume.assert_called_once_with(name='foo')
+
+    def test_volume_delete(self):
+        self.vo.volume_delete('foo', True)
+        self.volume.delete_volume.assert_called_once_with(
+            'foo', ignore_missing=True)
+        self.volume.delete_volume.reset_mock()
+
+        self.vo.volume_delete('foo', False)
+        self.volume.delete_volume.assert_called_once_with(
+            'foo', ignore_missing=False)
+        self.volume.delete_volume.reset_mock()
+
+        self.vo.volume_delete('foo')
+        self.volume.delete_volume.assert_called_once_with(
+            'foo', ignore_missing=True)
+
+    def test_snapshot_create(self):
+        self.vo.snapshot_create(name='foo')
+        self.volume.create_snapshot.assert_called_once_with(name='foo')
+
+    def test_snapshot_delete(self):
+        self.vo.snapshot_delete('foo', True)
+        self.volume.delete_snapshot.assert_called_once_with(
+            'foo', ignore_missing=True)
+        self.volume.delete_snapshot.reset_mock()
+
+        self.vo.snapshot_delete('foo', False)
+        self.volume.delete_snapshot.assert_called_once_with(
+            'foo', ignore_missing=False)
+
+        self.volume.delete_snapshot.reset_mock()
+        self.vo.snapshot_delete('foo')
+        self.volume.delete_snapshot.assert_called_once_with(
+            'foo', ignore_missing=True)
+
+    def test_snapshot_get(self):
+        self.vo.snapshot_get('foo')
+        self.volume.get_snapshot.assert_called_once_with('foo')
