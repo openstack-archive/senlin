@@ -18,7 +18,6 @@ from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
 
-@mock.patch.object(sdk, 'create_connection')
 class TestCinderV2(base.SenlinTestCase):
 
     def setUp(self):
@@ -26,23 +25,16 @@ class TestCinderV2(base.SenlinTestCase):
 
         self.ctx = utils.dummy_context()
         self.conn_params = self.ctx.to_dict()
-        self.fake_conn = mock.Mock()
-        self.volume = self.fake_conn.block_store
+        self.mock_conn = mock.Mock()
+        self.mock_create = self.patchobject(sdk, 'create_connection',
+                                            return_value=self.mock_conn)
+        self.volume = self.mock_conn.block_store
+        self.vo = cinder_v2.CinderClient(self.conn_params)
 
-    def test_init(self, mock_create):
-        mock_create.return_value = self.fake_conn
+    def test_init(self):
+        self.mock_create.assert_called_once_with(self.conn_params)
+        self.assertEqual(self.mock_conn, self.vo.conn)
 
-        vo = cinder_v2.CinderClient(self.conn_params)
-
-        self.assertEqual(self.fake_conn, vo.conn)
-        mock_create.assert_called_once_with(self.conn_params)
-
-    def test_volume_get(self, mock_create):
-        mock_create.return_value = self.fake_conn
-        vo = cinder_v2.CinderClient(self.conn_params)
-
-        res = vo.volume_get('foo')
-
-        expected = self.volume.get_volume.return_value
-        self.assertEqual(expected, res)
+    def test_volume_get(self):
+        self.vo.volume_get('foo')
         self.volume.get_volume.assert_called_once_with('foo')
