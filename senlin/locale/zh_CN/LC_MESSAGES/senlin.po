@@ -189,3 +189,48 @@ msgstr "服务%(service_id)s更新失败，失败错误：%(error)s"
 #, python-format
 msgid "The following properties are not updatable: %s."
 msgstr "以下属性无法更新：%s。"
+
+#, python-format
+msgid "Availability zone '%s' is not available."
+msgstr "可用域'%s'不可用。"
+
+#, python-format
+msgid "Changing %(name)s from %(old)s to %(new)s"
+msgstr "将%(name)s从%(old)s变成%(new)s"
+
+msgid "Check operation not supported."
+msgstr "不支持检查操作。"
+
+#, python-format
+msgid "Cluster (%(id)s) check type (%(type)s) is invalid."
+msgstr "集群(%(id)s)的检查类型(%(type)s)不合法。"
+
+#, python-format
+msgid "Cluster (%s) is not found."
+msgstr "找不到集群（%s）。"
+
+msgid "Get_details operation not supported."
+msgstr "不支持Get_details操作。"
+
+#, python-format
+msgid "Node %(n)s already in lb pool %(p)s."
+msgstr "节点%(n)s已在负载均衡池%(p)s中。"
+
+#, python-format
+msgid "Node %(n)s not found in lb pool %(p)s."
+msgstr "负载均衡池%(p)s中没有找到节点%(n)s。"
+
+#, python-format
+msgid "Region %s is not found."
+msgstr "区域%s无法被找到"
+
+#, fuzzy, python-format
+msgid "Removing %(item)s from registry"
+msgstr "从registry中移除%(item)s"
+
+#, python-format
+msgid "Unrecognized child %s"
+msgstr "无法识别的子代 %s"
+
+msgid "Update operation not supported."
+msgstr "不支持更新操作。"
