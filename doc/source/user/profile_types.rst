@@ -78,12 +78,13 @@ Senlin server comes with some built-in profile types. You can check the list
 of profile types using the following command::
 
   $ openstack cluster profile type list
-  +--------------------+
-  | name               |
-  +--------------------+
-  | os.heat.stack-1.0  |
-  | os.nova.server-1.0 |
-  +--------------------+
+  +--------------------------------+
+  | name                           |
+  +--------------------------------+
+  | container.dockerinc.docker-1.0 |
+  | os.heat.stack-1.0              |
+  | os.nova.server-1.0             |
+  +--------------------------------+
 
 The output is a list of profile types supported by the Senlin server.
 
@@ -103,33 +104,32 @@ can use the following command::
       default: {}
       description: A dictionary for specifying the customized context for
         stack operations
-      readonly: false
       required: false
       type: Map
+      updatable: false
     disable_rollback:
       default: true
       description: A boolean specifying whether a stack operation can be
         rolled back.
-      readonly: false
       required: false
       type: Boolean
+      updatable: true
     <... omitted ...>
     timeout:
       description: A integer that specifies the number of minutes that a
         stack operation times out.
-      readonly: false
       required: false
       type: Integer
+      updatable: true
 
 Here, each property has the following attributes:
 
 - ``default``: the default value for a property when not explicitly specified;
 - ``description``: a textual description of the use of a property;
-- ``readonly``: a boolean indicating whether a property is read only for
-  reasons like being part of the outputs of an object;
 - ``required``: whether the property must be specified. Such kind of a
-  property usually doesn't have a ``default`` value.
-- ``type``: one of ``String``, ``Integer``, ``Boolean``, ``Map`` or ``List``.
+  property usually doesn't have a ``default`` value;
+- ``type``: one of ``String``, ``Integer``, ``Boolean``, ``Map`` or ``List``;
+- ``updatable``: a boolean indicating whether a property is updatable.
 
 The default output from the :command:`openstack cluster profile type show`
 command is in YAML format. You can choose to show the spec schema in JSON
@@ -141,18 +141,18 @@ format by specifying the :option:`-f json` option as exemplified below::
     "schema": {
       "files": {
         "default": {},
-        "readonly": false,
         "required": false,
         "type": "Map",
-        "description": "Contents of files referenced by the template, if any."
+        "description": "Contents of files referenced by the template, if any.",
+        "updatable": true
       },
       <... omitted ...>
       "context": {
         "default": {},
-        "readonly": false,
         "required": false,
         "type": "Map",
-        "description": "A dictionary for specifying the customized context for stack operations"
+        "description": "A dictionary for specifying the customized context for stack operations",
+        "updatable": false
       }
     },
   }
