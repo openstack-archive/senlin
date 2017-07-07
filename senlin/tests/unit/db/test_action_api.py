@@ -193,6 +193,10 @@ class DBAPIActionTest(base.SenlinTestCase):
         for spec in ['A01', 'A03']:
             self.assertIn(spec, names)
 
+        action_fake_owner = db_api.action_get_all_by_owner(self.ctx,
+                                                           'fake-owner')
+        self.assertEqual(0, len(action_fake_owner))
+
     def test_action_get_all(self):
         specs = [
             {'name': 'A01', 'target': 'cluster_001'},
