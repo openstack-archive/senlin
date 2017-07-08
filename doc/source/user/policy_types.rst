@@ -64,9 +64,10 @@ of policy types using the following command::
   | name                               |
   +------------------------------------+
   | senlin.policy.affinity-1.0         |
+  | senlin.policy.batch-1.0            |
   | senlin.policy.deletion-1.0         |
   | senlin.policy.health-1.0           |
-  | senlin.policy.loadbalance-1.0      |
+  | senlin.policy.loadbalance-1.1      |
   | senlin.policy.region_placement-1.0 |
   | senlin.policy.scaling-1.0          |
   | senlin.policy.zone_placement-1.0   |
@@ -97,38 +98,38 @@ use the following command::
         type: AllowedValues
       default: RANDOM
       description: Criteria used in selecting candidates for deletion
-      readonly: false
       required: false
       type: String
+      updatable: false
     destroy_after_deletion:
       default: true
       description: Whether a node should be completely destroyed after
         deletion. Default to True
-      readonly: false
       required: false
       type: Boolean
+      updatable: false
     grace_period:
       default: 0
       description: Number of seconds before real deletion happens.
-      readonly: false
       required: false
       type: Integer
+      updatable: false
     reduce_desired_capacity:
       default: false
       description: Whether the desired capacity of the cluster should be
         reduced along with the deletion. Default to False.
-      readonly: false
       required: false
       type: Boolean
+      updatable: false
 
 Here, each property has the following attributes:
 
 - ``default``: the default value for a property when not explicitly specified;
 - ``description``: a textual description of the use of a property;
-- ``readonly``: a boolean indicating whether a property is read only;
 - ``required``: whether the property must be specified. Such kind of a
-  property usually doesn't have a ``default`` value.
-- ``type``: one of ``String``, ``Integer``, ``Boolean``, ``Map`` or ``List``.
+  property usually doesn't have a ``default`` value;
+- ``type``: one of ``String``, ``Integer``, ``Boolean``, ``Map`` or ``List``;
+- ``updatable``: a boolean indicating whether a property is updatable.
 
 The default output from the :command:`policy-type-show` command is in YAML
 format. You can choose to show the spec schema in JSON format by specifying
