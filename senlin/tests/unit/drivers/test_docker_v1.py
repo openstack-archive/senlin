@@ -33,7 +33,7 @@ class TestDocker(base.SenlinTestCase):
         sot = docker_v1.DockerClient(url)
 
         self.assertEqual(x_docker, sot._dockerclient)
-        mock_docker.assert_called_once_with(base_url=url)
+        mock_docker.assert_called_once_with(base_url=url, version='auto')
 
     def test_container_create(self):
         image = mock.Mock()
