@@ -203,7 +203,7 @@ An example is shown below::
 
   $ openstack cluster node show test_node
   +---------------+--------------------------------------+
-  | Property      | Value                                |
+  | Field         | Value                                |
   +---------------+--------------------------------------+
   | cluster_id    | None                                 |
   | created_at    | 2015-07-09T11:41:20                  |

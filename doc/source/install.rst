@@ -180,15 +180,15 @@ following.
 ::
 
   $ openstack cluster build info
-  +----------+---------------------+
-  | Property | Value               |
-  +----------+---------------------+
-  | api      | {                   |
-  |          |   "revision": "1.0" |
-  |          | }                   |
-  | engine   | {                   |
-  |          |   "revision": "1.0" |
-  |          | }                   |
-  +----------+---------------------+
+  +--------+---------------------+
+  | Field  | Value               |
+  +--------+---------------------+
+  | api    | {                   |
+  |        |   "revision": "1.0" |
+  |        | }                   |
+  | engine | {                   |
+  |        |   "revision": "1.0" |
+  |        | }                   |
+  +--------+---------------------+
 
 You are ready to begin your journey (aka. adventure) with Senlin, now.

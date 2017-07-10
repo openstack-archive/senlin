@@ -122,7 +122,7 @@ example::
 
   $ openstack cluster policy binding show --policy dp01 c3
   +--------------+--------------------------------------+
-  | Property     | Value                                |
+  | Field        | Value                                |
   +--------------+--------------------------------------+
   | cluster_name | c3                                   |
   | data         | None                                 |

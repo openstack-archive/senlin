@@ -229,7 +229,7 @@ An example is shown below::
 
   $ openstack cluster show c3
   +------------------+--------------------------------------+
-  | Property         | Value                                |
+  | Field            | Value                                |
   +------------------+--------------------------------------+
   | created_at       | 2015-07-07T03:30:53Z                 |
   | data             | {}                                   |

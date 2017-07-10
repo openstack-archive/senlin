@@ -150,7 +150,7 @@ An example is shown below::
 
   $ openstack cluster action show 8fac487f
   +---------------+--------------------------------------+
-  | Property      | Value                                |
+  | Field         | Value                                |
   +---------------+--------------------------------------+
   | action        | CLUSTER_DELETE                       |
   | cause         | RPC Request                          |

@@ -56,7 +56,7 @@ Then you can create a cluster using the profile named "``pserver``":
 
   $ senlin cluster-create -p pserver -c 2 mycluster
   +------------------+--------------------------------------+
-  | Property         | Value                                |
+  | Field            | Value                                |
   +------------------+--------------------------------------+
   | created_at       | 2016-06-07T02:26:33Z                 |
   | data             | {}                                   |
@@ -128,7 +128,7 @@ by two nodes every time it is triggered:
 
   $ openstack cluster receiver create --action CLUSTER_SCALE_OUT --params count=2 --cluster mycluster r_01
   +------------+----------------------------------------------------------------------------+
-  | Property   | Value                                                                      |
+  | Field      | Value                                                                      |
   +------------+----------------------------------------------------------------------------+
   | action     | CLUSTER_SCALE_OUT                                                          |
   | actor      | {                                                                          |
