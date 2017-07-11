@@ -166,7 +166,7 @@ An example is shown below::
 
   $ openstack cluster event show 19ba155a
   +---------------+--------------------------------------+
-  | Property      | Value                                |
+  | Field         | Value                                |
   +---------------+--------------------------------------+
   | action        | delete                               |
   | cluster_id    | ce85d842-aa2a-4d83-965c-2cab5133aedc |

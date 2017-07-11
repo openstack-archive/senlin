@@ -140,7 +140,7 @@ Now you can create a profile using the following command::
       --spec heat_stack_random_string.yaml \
       my_stack
   +--------------+-----------------------------------------------------------+
-  | Property     | Value                                                     |
+  | Field        | Value                                                     |
   +--------------+-----------------------------------------------------------+
   | created_at | 2015-07-01T03:13:23                                         |
   | id         | c0389712-9c1a-4c58-8ba7-caa61b34b8b0                        |
@@ -225,7 +225,7 @@ command to show the properties of a profile::
 
   $ openstack cluster profile show myserver
   +------------+---------------------------------------------------------+
-  | Property   | Value                                                   |
+  | Field      | Value                                                   |
   +------------+---------------------------------------------------------+
   | created_at | 2015-07-01T03:18:58                                     |
   | id         | 70a36cc7-9fc7-460e-98f6-d44e3302e604                    |

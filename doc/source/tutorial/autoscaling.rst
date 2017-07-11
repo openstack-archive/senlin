@@ -28,7 +28,7 @@ you can create a receiver for this task:
   $ openstack cluster receiver create --type webhook --cluster mycluster \
       --action CLUSTER_SCALE_OUT so_receiver_1
   +------------+---------------------------------------------------+
-  | Property   | Value                                             |
+  | Field      | Value                                             |
   +------------+---------------------------------------------------+
   | action     | CLUSTER_SCALE_OUT                                 |
   | actor      | {                                                 |

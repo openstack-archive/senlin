@@ -133,7 +133,7 @@ following command::
   $ cd /opt/stack/senlin/examples/policies
   $ openstack cluster policy create --spec deletion_policy.yaml dp01
   +------------+-----------------------------------------------------------+
-  | Property   | Value                                                     |
+  | Field      | Value                                                     |
   +------------+-----------------------------------------------------------+
   | created_at | None                                                      |
   | id         | c2e3cd74-bb69-4286-bf06-05d802c8ec12                      |
@@ -164,7 +164,7 @@ the ID, the name or the "short ID" of a policy object. For example::
 
   $ openstack cluster policy show dp01
   +------------+------------------------------------------------------------+
-  | Property   | Value                                                      |
+  | Field      | Value                                                      |
   +------------+------------------------------------------------------------+
   | created_at | 2015-07-11T04:24:34                                        |
   | id         | c2e3cd74-bb69-4286-bf06-05d802c8ec12                       |
