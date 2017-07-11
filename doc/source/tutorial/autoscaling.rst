@@ -39,14 +39,14 @@ you can create a receiver for this task:
   |            | }                                                 |
   | cluster_id | 30d7ef94-114f-4163-9120-412b78ba38bb              |
   | created_at | 2017-02-08T02:08:13Z                              |
-  | domain_id  | -                                                 |
+  | domain_id  | None                                              |
   | id         | 5722a2b0-1f5f-4a82-9c08-27da9982d46f              |
-  | location   | -                                                 |
+  | location   | None                                              |
   | name       | so_receiver_1                                     |
   | params     | {}                                                |
   | project_id | 36d551c0594b4cc99d1bbff8bf202ec3                  |
   | type       | webhook                                           |
-  | updated_at | -                                                 |
+  | updated_at | None                                              |
   | user_id    | 9563fa29642a4efdb1033bf8aab07daa                  |
   +------------+---------------------------------------------------+
 
@@ -123,8 +123,9 @@ To create a policy object, you can use the following command:
   +------------+--------------------------------------+
   | created_at | 2016-12-08T02:41:30.000000           |
   | data       | {}                                   |
-  | domain     |                                      |
+  | domain_id  | None                                 |
   | id         | 3ca962c5-68ce-4293-9087-c73964546223 |
+  | location   | None                                 |
   | name       | policy1                              |
   | project_id | 36d551c0594b4cc99d1bbff8bf202ec3     |
   | spec       | {                                    |

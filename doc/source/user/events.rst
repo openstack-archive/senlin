@@ -80,20 +80,20 @@ Listing Events
 The following command lists the events by the Senlin engine::
 
   $ openstack cluster event list
-  +----------+---------------------+---------------+----------+----------------------------+-----------------------+-----------+--------------------------------+-------+
-  | id       | timestamp           | obj_type      | obj_id   | obj_name                   | action                | status    | status_reason                  | level |
-  +----------+---------------------+---------------+----------+----------------------------+-----------------------+-----------+--------------------------------+-------+
-  | 1f72eb5e | 2015-12-17T15:41:48 | NODE          | 427e64f3 | node-7171861e-002          | update                | ACTIVE    | Creation succeeded             | 20    |
-  | 20b8eb9a | 2015-12-17T15:41:49 | NODE          | 6da22a49 | node-7171861e-001          | update                | ACTIVE    | Creation succeeded             | 20    |
-  | 23721815 | 2015-12-17T15:42:51 | NODEACTION    | 5e9a9d3d | node_delete_3e91023e       | NODE_DELETE           | START     | The action is being processed. | 20    |
-  | 54f9eae4 | 2015-12-17T15:41:36 | CLUSTERACTION | 1bffa11d | cluster_create_7171861e    | CLUSTER_CREATE        | SUCCEEDED | Cluster creation succeeded.    | 20    |
-  | 7e30df62 | 2015-12-17T15:42:51 | CLUSTERACTION | d3cef701 | cluster_delete_64048b01    | CLUSTER_DELETE        | START     | The action is being processed. | 20    |
-  | bf51f23c | 2015-12-17T15:41:54 | CLUSTERACTION | d4dbbcea | cluster_scale_out_7171861e | CLUSTER_SCALE_OUT     | START     | The action is being processed. | 20    |
-  | c58063e9 | 2015-12-17T15:42:51 | NODEACTION    | b2292bb1 | node_delete_59da99f0       | NODE_DELETE           | START     | The action is being processed. | 20    |
-  | ca7d30c6 | 2015-12-17T15:41:38 | CLUSTERACTION | 0be70b0f | attach_policy_7171861e     | CLUSTER_ATTACH_POLICY | START     | The action is being processed. | 20    |
-  | cfe5d0d7 | 2015-12-17T15:42:51 | CLUSTERACTION | 42cf5baa | cluster_delete_352e1b6b    | CLUSTER_DELETE        | START     | The action is being processed. | 20    |
-  | fe2fc810 | 2015-12-17T15:41:49 | CLUSTERACTION | 0be70b0f | attach_policy_7171861e     | CLUSTER_ATTACH_POLICY | SUCCEEDED | Policy attached.               | 20    |
-  +----------+---------------------+---------------+----------+----------------------------+-----------------------+-----------+--------------------------------+-------+
+  +----------+---------------------+---------------+----------+----------------------------+-----------------------+-----------+-------+
+  | id       | generated_at        | obj_type      | obj_id   | obj_name                   | action                | status    | level |
+  +----------+---------------------+---------------+----------+----------------------------+-----------------------+-----------+-------+
+  | 1f72eb5e | 2015-12-17T15:41:48 | NODE          | 427e64f3 | node-7171861e-002          | update                | ACTIVE    | 20    |
+  | 20b8eb9a | 2015-12-17T15:41:49 | NODE          | 6da22a49 | node-7171861e-001          | update                | ACTIVE    | 20    |
+  | 23721815 | 2015-12-17T15:42:51 | NODEACTION    | 5e9a9d3d | node_delete_3e91023e       | NODE_DELETE           | START     | 20    |
+  | 54f9eae4 | 2015-12-17T15:41:36 | CLUSTERACTION | 1bffa11d | cluster_create_7171861e    | CLUSTER_CREATE        | SUCCEEDED | 20    |
+  | 7e30df62 | 2015-12-17T15:42:51 | CLUSTERACTION | d3cef701 | cluster_delete_64048b01    | CLUSTER_DELETE        | START     | 20    |
+  | bf51f23c | 2015-12-17T15:41:54 | CLUSTERACTION | d4dbbcea | cluster_scale_out_7171861e | CLUSTER_SCALE_OUT     | START     | 20    |
+  | c58063e9 | 2015-12-17T15:42:51 | NODEACTION    | b2292bb1 | node_delete_59da99f0       | NODE_DELETE           | START     | 20    |
+  | ca7d30c6 | 2015-12-17T15:41:38 | CLUSTERACTION | 0be70b0f | attach_policy_7171861e     | CLUSTER_ATTACH_POLICY | START     | 20    |
+  | cfe5d0d7 | 2015-12-17T15:42:51 | CLUSTERACTION | 42cf5baa | cluster_delete_352e1b6b    | CLUSTER_DELETE        | START     | 20    |
+  | fe2fc810 | 2015-12-17T15:41:49 | CLUSTERACTION | 0be70b0f | attach_policy_7171861e     | CLUSTER_ATTACH_POLICY | SUCCEEDED | 20    |
+  +----------+---------------------+---------------+----------+----------------------------+-----------------------+-----------+-------+
 
 The :program:`openstack cluster event list` command line supports various
 options when listing the events.
@@ -170,16 +170,19 @@ An example is shown below::
   +---------------+--------------------------------------+
   | action        | delete                               |
   | cluster_id    | ce85d842-aa2a-4d83-965c-2cab5133aedc |
+  | generated_at  | 2015-12-17T15:43:26+00:00            |
   | id            | 19ba155a-d327-490f-aa0f-589f67194b2c |
   | level         | 20                                   |
-  | oid           | cd9f519a-5589-4cbf-8a74-03b12fd9436c |
-  | oname         | node-ce85d842-003                    |
-  | otype         | NODE                                 |
-  | project       | 42d9e9663331431f97b75e25136307ff     |
+  | location      | None                                 |
+  | name          | None                                 |
+  | obj_id        | cd9f519a-5589-4cbf-8a74-03b12fd9436c |
+  | obj_name      | node-ce85d842-003                    |
+  | obj_type      | NODE                                 |
+  | project_id    | 42d9e9663331431f97b75e25136307ff     |
   | status        | DELETING                             |
   | status_reason | Deletion in progress                 |
   | timestamp     | 2015-12-17T15:43:26                  |
-  | user          | 5e5bf8027826429c96af157f68dc9072     |
+  | user_id       | 5e5bf8027826429c96af157f68dc9072     |
   +---------------+--------------------------------------+
 
 

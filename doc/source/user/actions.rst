@@ -157,19 +157,21 @@ An example is shown below::
   | created_at    | 2016-09-23T09:00:25Z                 |
   | depended_by   | []                                   |
   | depends_on    | []                                   |
-  | end_time      | 1450683904.0                         |
+  | end_at        | 1450683904.0                         |
   | id            | 8fac487f-861a-449e-9678-478133bea8de |
   | inputs        | {}                                   |
   | interval      | -1                                   |
   | location      | None                                 |
   | name          | cluster_delete_7deb546f              |
   | outputs       | {}                                   |
-  | start_time    | 1450683904.0                         |
+  | owner_id      | None                                 |
+  | start_at      | 1450683904.0                         |
   | status        | SUCCEEDED                            |
   | status_reason | Action completed successfully.       |
   | target_id     | 7deb546f-fd1f-499a-b120-94f8f07fadfb |
   | timeout       | 3600                                 |
   | updated_at    | None                                 |
+  | user_id       | f3cdb8010bb349d5bdff2815d8f007a1     |
   +---------------+--------------------------------------+
 
 

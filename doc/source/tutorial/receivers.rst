@@ -52,14 +52,15 @@ The output from the command will be something like this:
   |            | }                                                                       |
   | cluster_id | 7fb3d988-3bc1-4539-bd5d-3f72e8d6e0c7                                    |
   | created_at | 2016-05-23T01:36:39                                                     |
-  | domain     | None                                                                    |
+  | domain_id  | None                                                                    |
   | id         | 5dacde18-661e-4db4-b7a8-f2a6e3466f98                                    |
+  | location   | None                                                                    |
   | name       | w_scale_in                                                              |
   | params     | None                                                                    |
-  | project    | eee0b7c083e84501bdd50fb269d2a10e                                        |
+  | project_id | eee0b7c083e84501bdd50fb269d2a10e                                        |
   | type       | webhook                                                                 |
   | updated_at | None                                                                    |
-  | user       | ab79b9647d074e46ac223a8fa297b846                                        |
+  | user_id    | ab79b9647d074e46ac223a8fa297b846                                        |
   +------------+-------------------------------------------------------------------------+
 
 From the output of the ``openstack cluster receiver create`` command,

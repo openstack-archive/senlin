@@ -127,24 +127,26 @@ using a profile named ``pstack``::
   +---------------+--------------------------------------+
   | Property      | Value                                |
   +---------------+--------------------------------------+
-  | cluster_id    | None                                 |
-  | created_at    | None                                 |
+  | cluster_id    |                                      |
+  | created_at    | -                                    |
   | data          | {}                                   |
   | dependents    | {}                                   |
-  | details       | None                                 |
+  | details       | -                                    |
   | id            | 1984b5a0-9dd7-4dda-b1e6-e8c1f640598f |
   | index         | -1                                   |
   | init_at       | 2015-07-09T11:41:18                  |
+  | location      | -                                    |
   | metadata      | {}                                   |
   | name          | test_node                            |
-  | physical_id   |                                      |
+  | physical_id   | -                                    |
   | profile_id    | 9b127538-a675-4271-ab9b-f24f54cfe173 |
   | profile_name  | pstack                               |
-  | project       | 333acb15a43242f4a609a27cb097a8f2     |
-  | role          | None                                 |
+  | project_id    | 333acb15a43242f4a609a27cb097a8f2     |
+  | role          |                                  |
   | status        | CREATING                             |
   | status_reason | Creation in progress                 |
-  | updated_at    | None                                 |
+  | updated_at    | -                                 |
+  | user_id       | 5e5bf8027826429c96af157f68dc9072     |
   +---------------+--------------------------------------+
 
 When processing this request, Senlin engine will verify if the profile value
@@ -210,19 +212,22 @@ An example is shown below::
   | data          | {}                                   |
   | dependents    | {}                                   |
   | details       | {}                                   |
+  | domain_id     | None                                 |
   | id            | 1984b5a0-9dd7-4dda-b1e6-e8c1f640598f |
-  | index         |  1                                   |
+  | index         | 1                                    |
   | init_at       | 2015-07-09T11:41:18                  |
+  | location      | None                                 |
   | metadata      | {}                                   |
   | name          | test_node                            |
   | physical_id   | 0e444642-b280-4c88-8be4-76ad0d158dac |
   | profile_id    | 9b127538-a675-4271-ab9b-f24f54cfe173 |
   | profile_name  | pstack                               |
-  | project       | 333acb15a43242f4a609a27cb097a8f2     |
+  | project_id    | 333acb15a43242f4a609a27cb097a8f2     |
   | role          | None                                 |
   | status        | ACTIVE                               |
   | status_reason | Creation succeeded                   |
   | updated_at    | None                                 |
+  | user_id       | 5e5bf8027826429c96af157f68dc9072     |
   +---------------+--------------------------------------+
 
 From the output, you can see the ``physical_id`` of a node (if it has been

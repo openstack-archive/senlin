@@ -139,13 +139,16 @@ Now you can create a profile using the following command::
   $ openstack cluster profile create \
       --spec heat_stack_random_string.yaml \
       my_stack
-  +--------------+-----------------------------------------------------------+
-  | Field        | Value                                                     |
-  +--------------+-----------------------------------------------------------+
+  +------------+-------------------------------------------------------------+
+  | Field      | Value                                                       |
+  +------------+-------------------------------------------------------------+
   | created_at | 2015-07-01T03:13:23                                         |
+  | domain_id  | None                                                        |
   | id         | c0389712-9c1a-4c58-8ba7-caa61b34b8b0                        |
+  | location   | None                                                        |
   | metadata   | {}                                                          |
   | name       | my_stack                                                    |
+  | project_id | 333acb15a43242f4a609a27cb097a8f2                            |
   | spec       | +------------+--------------------------------------------+ |
   |            | | property   | value                                      | |
   |            | +------------+--------------------------------------------+ |
@@ -197,8 +200,10 @@ Now you can create a profile using the following command::
   |            | |            |   }                                        | |
   |            | |            | }                                          | |
   |            | +------------+--------------------------------------------+ |
-  | type         | os.heat.stack-1.0                                         |
-  +--------------+-----------------------------------------------------------+
+  | type       | os.heat.stack-1.0                                           |
+  | updated_at | None                                                        |
+  | user_id    | 5e5bf8027826429c96af157f68dc9072                            |
+  +------------+-------------------------------------------------------------+
 
 From the outputs, you can see that the profile is created with a new ``id``
 generated. The ``spec`` property is dumped for the purpose of verification.
@@ -228,9 +233,12 @@ command to show the properties of a profile::
   | Field      | Value                                                   |
   +------------+---------------------------------------------------------+
   | created_at | 2015-07-01T03:18:58                                     |
+  | domain_id  | None                                                    |
   | id         | 70a36cc7-9fc7-460e-98f6-d44e3302e604                    |
+  | location   | None                                                    |
   | metadata   | {}                                                      |
   | name       | my_server                                               |
+  | project_id | 333acb15a43242f4a609a27cb097a8f2                        |
   | spec       | +------------+----------------------------------------+ |
   |            | | property   | value                                  | |
   |            | +------------+----------------------------------------+ |
@@ -249,6 +257,8 @@ command to show the properties of a profile::
   |            | |            | }                                      | |
   |            | +------------+----------------------------------------+ |
   | type       | os.nova.server-1.0                                      |
+  | update_at  | None                                                    |
+  | user_id    | 5e5bf8027826429c96af157f68dc9072                        |
   +------------+---------------------------------------------------------+
 
 Note that :program:`openstack cluster` command line accepts one of the

@@ -136,7 +136,11 @@ following command::
   | Field      | Value                                                     |
   +------------+-----------------------------------------------------------+
   | created_at | None                                                      |
+  | data       | {}                                                        |
+  | domain_id  | None                                                      |
   | id         | c2e3cd74-bb69-4286-bf06-05d802c8ec12                      |
+  | location   | None                                                      |
+  | project_id | 42d9e9663331431f97b75e25136307ff                          |
   | name       | dp01                                                      |
   | spec       | {                                                         |
   |            |   "version": 1.0,                                         |
@@ -151,6 +155,7 @@ following command::
   |            | }                                                         |
   | type       | None                                                      |
   | updated_at | None                                                      |
+  | user_id    | 5e5bf8027826429c96af157f68dc9072                          |
   +------------+-----------------------------------------------------------+
 
 
@@ -167,8 +172,12 @@ the ID, the name or the "short ID" of a policy object. For example::
   | Field      | Value                                                      |
   +------------+------------------------------------------------------------+
   | created_at | 2015-07-11T04:24:34                                        |
+  | data       | {}                                                         |
+  | domain_id  | None                                                       |
   | id         | c2e3cd74-bb69-4286-bf06-05d802c8ec12                       |
+  | location   | None                                                       |
   | name       | dp01                                                       |
+  | project_id | 42d9e9663331431f97b75e25136307ff                           |
   | spec       | {                                                          |
   |            |   "version": 1.0,                                          |
   |            |   "type": "senlin.policy.deletion",                        |
@@ -182,6 +191,7 @@ the ID, the name or the "short ID" of a policy object. For example::
   |            | }                                                          |
   | type       | None                                                       |
   | updated_at | None                                                       |
+  | user_id    | 5e5bf8027826429c96af157f68dc9072                           |
   +------------+------------------------------------------------------------+
 
 When there is no policy object matching the identifier, you will get an error
