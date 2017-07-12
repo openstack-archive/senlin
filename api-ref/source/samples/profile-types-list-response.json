@@ -1,6 +1,9 @@
 {
     "profile_types": [
         {
+            "name": "container.dockerinc.docker-1.0"
+        },
+        {
             "name": "os.heat.stack-1.0"
         },
         {

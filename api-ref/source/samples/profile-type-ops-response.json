@@ -1,11 +1,20 @@
 {
     "operations": {
         "reboot": {
-            "description": "reboot the specified VM instance",
+            "description": "Reboot the nova server.",
             "parameters": {
                 "type": {
+                    "constraints": [
+                        {
+                            "constraint": [
+                                "SOFT",
+                                "HARD"
+                            ],
+                            "type": "AllowedValues"
+                        }
+                    ],
                     "default": "SOFT",
-                    "description": "Type of reboot requested",
+                    "description": "Type of reboot which can be 'SOFT' or 'HARD'.",
                     "required": false,
                     "type": "String"
                 }
