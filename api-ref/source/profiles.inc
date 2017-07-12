@@ -31,12 +31,15 @@ Request Parameters
 .. rest_parameters:: parameters.yaml
 
   - OpenStack-API-Version: microversion
+  - global_project: global_project
   - limit: limit
   - marker: marker
-  - sort: sort
-  - global_project: global_project
   - name: name_query
+  - sort: sort
   - type: type_query
+
+The sorting keys include ``name``, ``type``, ``created_at`` and
+``updated_at``.
 
 Response Parameters
 -------------------
@@ -46,6 +49,7 @@ Response Parameters
   - X-OpenStack-Request-Id: request_id
   - profiles: profiles
   - created_at: created_at
+  - domain: domain
   - id: profile_id
   - metadata: metadata
   - name: name
@@ -333,6 +337,7 @@ The response contains properties as if the profile is created.
 .. rest_parameters:: parameters.yaml
 
   - X-OpenStack-Request-Id: request_id
+  - profile: profile
   - created_at: created_at
   - domain: domain
   - id: profile_id
