@@ -4,7 +4,7 @@ Build information (build-info)
 
 Shows build information for a Senlin deployment.
 
-Shows build information
+Show build information
 =======================
 
 .. rest_method::  GET /v1/build-info
