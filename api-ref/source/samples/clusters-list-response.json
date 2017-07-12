@@ -1,8 +1,10 @@
 {
     "clusters": [
         {
-            "created_at": "2015-02-10T14:26:14",
+            "config": {},
+            "created_at": "2015-02-10T14:26:14Z",
             "data": {},
+            "dependents": {},
             "desired_capacity": 4,
             "domain": null,
             "id": "7d85f602-a948-4a30-afd4-e84f47471c15",

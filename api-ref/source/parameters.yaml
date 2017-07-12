@@ -512,6 +512,20 @@ cluster_attributes:
     A list of dictionaries each containing the node ID and the corresponding
     attribute value.
 
+cluster_config:
+  type: object
+  in: body
+  required: True
+  description: |
+    The structured config associated with the cluster.
+
+cluster_config_req:
+  type: object
+  in: body
+  required: False
+  description: |
+    The structured config associated with the cluster.
+
 cluster_data:
   type: object
   in: body
@@ -662,6 +676,14 @@ depended_by:
   required: True
   description: |
     A list of UUIDs of the actions that depend on the current action.
+
+dependents:
+  type: object
+  in: body
+  required: True
+  description: |
+    A dict contains dependency information between nova server, heat stack
+    cluster and container cluster.
 
 depends_on:
   type: array

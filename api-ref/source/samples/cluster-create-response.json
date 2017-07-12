@@ -1,7 +1,9 @@
 {
     "cluster": {
+        "config": {},
         "created_at": null,
         "data": {},
+        "dependents": {},
         "desired_capacity": 4,
         "domain": null,
         "id": "45edadcb-c73b-4920-87e1-518b2f29f54b",
