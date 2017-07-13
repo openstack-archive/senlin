@@ -253,12 +253,15 @@ class ClusterAction(base.Action):
             self.entity.set_status(self.context, consts.CS_ERROR, reason)
             return self.RES_ERROR, reason
 
+        config = self.inputs.get('config')
         name = self.inputs.get('name')
         metadata = self.inputs.get('metadata')
         timeout = self.inputs.get('timeout')
         profile_id = self.inputs.get('new_profile_id')
         profile_only = self.inputs.get('profile_only')
 
+        if config is not None:
+            self.entity.config = config
         if name is not None:
             self.entity.name = name
         if metadata is not None:
