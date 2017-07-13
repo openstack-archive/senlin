@@ -773,7 +773,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock()
 
-        res = profile._refresh_tags("", node, False)
+        res = profile._refresh_tags([], node, False)
 
         self.assertEqual(("", False), res)
 
@@ -781,7 +781,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock()
 
-        res = profile._refresh_tags('foo', node, False)
+        res = profile._refresh_tags(['foo'], node, False)
 
         self.assertEqual(('foo', False), res)
 
@@ -789,7 +789,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock()
 
-        res = profile._refresh_tags('cluster_id=FOO,bar', node, False)
+        res = profile._refresh_tags(['cluster_id=FOO', 'bar'], node, False)
 
         self.assertEqual(('bar', True), res)
 
@@ -797,7 +797,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock(id='NODE_ID', cluster_id='CLUSTER_ID', index=123)
 
-        res = profile._refresh_tags("", node, True)
+        res = profile._refresh_tags([], node, True)
 
         expected = ",".join(['cluster_id=CLUSTER_ID',
                              'cluster_node_id=NODE_ID',
@@ -808,7 +808,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock(id='NODE_ID', cluster_id='CLUSTER_ID', index=123)
 
-        res = profile._refresh_tags('foo', node, True)
+        res = profile._refresh_tags(['foo'], node, True)
 
         expected = ",".join(['foo',
                              'cluster_id=CLUSTER_ID',
@@ -820,7 +820,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock(id='NODE_ID', cluster_id='CLUSTER_ID', index=123)
 
-        res = profile._refresh_tags('cluster_id=FOO,bar', node, True)
+        res = profile._refresh_tags(['cluster_id=FOO', 'bar'], node, True)
 
         expected = ",".join(['bar',
                              'cluster_id=CLUSTER_ID',
@@ -843,7 +843,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         self.assertTrue(res)
         oc.stack_get.assert_called_once_with('STACK_ID')
         mock_tags.assert_called_once_with('foo', node, True)
-        oc.stack_update.assert_called_once_with('STACK_ID', {'tags': 'bar'})
+        oc.stack_update.assert_called_once_with('STACK_ID', **{'tags': 'bar'})
 
     def test_do_join_no_physical_id(self):
         profile = stack.StackProfile('t', self.spec)
@@ -900,7 +900,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         self.assertFalse(res)
         oc.stack_get.assert_called_once_with('STACK_ID')
         mock_tags.assert_called_once_with('foo', node, True)
-        oc.stack_update.assert_called_once_with('STACK_ID', {'tags': 'bar'})
+        oc.stack_update.assert_called_once_with('STACK_ID', **{'tags': 'bar'})
 
     def test_do_leave(self):
         profile = stack.StackProfile('t', self.spec)
@@ -917,7 +917,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         self.assertTrue(res)
         oc.stack_get.assert_called_once_with('STACK_ID')
         mock_tags.assert_called_once_with('foo', node, False)
-        oc.stack_update.assert_called_once_with('STACK_ID', {'tags': 'bar'})
+        oc.stack_update.assert_called_once_with('STACK_ID', **{'tags': 'bar'})
 
     def test_do_leave_no_physical_id(self):
         profile = stack.StackProfile('t', self.spec)
@@ -974,4 +974,4 @@ class TestHeatStackProfile(base.SenlinTestCase):
         self.assertFalse(res)
         oc.stack_get.assert_called_once_with('STACK_ID')
         mock_tags.assert_called_once_with('foo', node, False)
-        oc.stack_update.assert_called_once_with('STACK_ID', {'tags': 'bar'})
+        oc.stack_update.assert_called_once_with('STACK_ID', **{'tags': 'bar'})
