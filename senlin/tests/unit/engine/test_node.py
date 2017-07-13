@@ -581,6 +581,7 @@ class TestNode(base.SenlinTestCase):
         def set_status(*args, **kwargs):
             if args[1] == 'ACTIVE':
                 node.physical_id = new_id
+                node.data = {'recovery': 'RECREATE'}
 
         node = nodem.Node('node1', PROFILE_ID, '')
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
@@ -601,12 +602,14 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual('node1', node.name)
         self.assertEqual(new_id, node.physical_id)
         self.assertEqual(PROFILE_ID, node.profile_id)
+        self.assertEqual({'recovery': 'RECREATE'}, node.data)
         mock_status.assert_has_calls([
             mock.call(self.context, 'RECOVERING',
                       reason='Recover in progress'),
             mock.call(self.context, consts.NS_ACTIVE,
                       reason='Recover succeeded',
-                      physical_id=new_id)])
+                      physical_id=new_id,
+                      data={'recovery': 'RECREATE'})])
 
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'recover_object')
@@ -632,6 +635,7 @@ class TestNode(base.SenlinTestCase):
     def test_node_recover_check_active(self, mock_status):
         node = nodem.Node('node1', PROFILE_ID, None)
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
+        node.status = 'ACTIVE'
         mock_check = self.patchobject(pb.Profile, 'check_object')
         mock_check.return_value = True
         action = mock.Mock(inputs={'check': True})
@@ -649,6 +653,7 @@ class TestNode(base.SenlinTestCase):
         def set_status(*args, **kwargs):
             if args[1] == 'ACTIVE':
                 node.physical_id = new_id
+                node.data = {'recovery': 'RECREATE'}
 
         node = nodem.Node('node1', PROFILE_ID, '')
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
@@ -673,7 +678,8 @@ class TestNode(base.SenlinTestCase):
                       reason='Recover in progress'),
             mock.call(self.context, consts.NS_ACTIVE,
                       reason='Recover succeeded',
-                      physical_id=new_id)])
+                      physical_id=new_id,
+                      data={'recovery': 'RECREATE'})])
 
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'recover_object')
@@ -681,6 +687,7 @@ class TestNode(base.SenlinTestCase):
         def set_status(*args, **kwargs):
             if args[1] == 'ACTIVE':
                 node.physical_id = new_id
+                node.data = {'recovery': 'RECREATE'}
 
         node = nodem.Node('node1', PROFILE_ID, '', id='fake')
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
@@ -707,10 +714,8 @@ class TestNode(base.SenlinTestCase):
                       reason='Recover in progress'),
             mock.call(self.context, consts.NS_ACTIVE,
                       reason='Recover succeeded',
-                      physical_id=new_id)])
-        self.assertEqual(
-            {'recovery': {'action': 'RECREATE', 'node': ['fake']}},
-            action.outputs)
+                      physical_id=new_id,
+                      data={'recovery': 'RECREATE'})])
 
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'recover_object')
@@ -718,6 +723,7 @@ class TestNode(base.SenlinTestCase):
         def set_status(*args, **kwargs):
             if args[1] == 'ACTIVE':
                 node.physical_id = new_id
+                node.data = {'recovery': 'RECREATE'}
 
         node = nodem.Node('node1', PROFILE_ID, '', id='fake')
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
@@ -745,9 +751,8 @@ class TestNode(base.SenlinTestCase):
                       reason='Recover in progress'),
             mock.call(self.context, consts.NS_ACTIVE,
                       reason='Recover succeeded',
-                      physical_id=new_id)])
-        self.assertEqual({'recovery': {'action': 'REBOOT', 'node': ['fake']}},
-                         action.outputs)
+                      physical_id=new_id,
+                      data={'recovery': 'RECREATE'})])
 
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'recover_object')
@@ -755,6 +760,7 @@ class TestNode(base.SenlinTestCase):
         def set_status(*args, **kwargs):
             if args[1] == 'ACTIVE':
                 node.physical_id = new_id
+                node.data = {'recovery': 'RECREATE'}
 
         node = nodem.Node('node1', PROFILE_ID, '')
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
@@ -785,7 +791,8 @@ class TestNode(base.SenlinTestCase):
                       reason='Recover in progress'),
             mock.call(self.context, consts.NS_ACTIVE,
                       reason='Recover succeeded',
-                      physical_id=new_id)])
+                      physical_id=new_id,
+                      data={'recovery': 'RECREATE'})])
 
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'recover_object')
