@@ -1462,7 +1462,7 @@ class EngineService(service.Service):
                  {'o': req.operation, 'n': req.identity})
 
         db_cluster = co.Cluster.find(ctx, req.identity)
-        cluster = cluster_mod.Cluster.load(ctx, db_cluster=db_cluster)
+        cluster = cluster_mod.Cluster.load(ctx, dbcluster=db_cluster)
         profile = cluster.rt['profile']
         if req.operation not in profile.OPERATIONS:
             msg = _("The requested operation '%(o)s' is not supported by the "

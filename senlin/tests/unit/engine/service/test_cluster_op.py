@@ -62,7 +62,7 @@ class ClusterOpTest(base.SenlinTestCase):
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
-        mock_cluster.assert_called_once_with(self.ctx, db_cluster=x_db_cluster)
+        mock_cluster.assert_called_once_with(self.ctx, dbcluster=x_db_cluster)
         x_schema.validate.assert_called_once_with({'style': 'tango'})
         mock_nodes.assert_called_once_with(self.ctx, '12345678AB',
                                            filters={'role': 'slave'})
@@ -114,7 +114,7 @@ class ClusterOpTest(base.SenlinTestCase):
                          "by the profile type 'cow'.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'node1')
-        mock_cluster.assert_called_once_with(self.ctx, db_cluster=x_db_cluster)
+        mock_cluster.assert_called_once_with(self.ctx, dbcluster=x_db_cluster)
 
     @mock.patch.object(cm.Cluster, 'load')
     @mock.patch.object(co.Cluster, 'find')
@@ -137,7 +137,7 @@ class ClusterOpTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Boom.", six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'node1')
-        mock_cluster.assert_called_once_with(self.ctx, db_cluster=x_db_cluster)
+        mock_cluster.assert_called_once_with(self.ctx, dbcluster=x_db_cluster)
         x_schema.validate.assert_called_once_with({'style': 'tango'})
 
     @mock.patch.object(dispatcher, 'start_action')
@@ -165,7 +165,7 @@ class ClusterOpTest(base.SenlinTestCase):
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
-        mock_cluster.assert_called_once_with(self.ctx, db_cluster=x_db_cluster)
+        mock_cluster.assert_called_once_with(self.ctx, dbcluster=x_db_cluster)
         self.assertEqual(0, x_schema.validate.call_count)
         mock_nodes.assert_called_once_with(self.ctx, '12345678AB',
                                            filters={'role': 'slave'})
@@ -205,7 +205,7 @@ class ClusterOpTest(base.SenlinTestCase):
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
-        mock_cluster.assert_called_once_with(self.ctx, db_cluster=x_db_cluster)
+        mock_cluster.assert_called_once_with(self.ctx, dbcluster=x_db_cluster)
         self.assertEqual(0, x_schema.validate.call_count)
         mock_nodes.assert_called_once_with(self.ctx, '12345678AB')
         mock_action.assert_called_once_with(
@@ -249,7 +249,7 @@ class ClusterOpTest(base.SenlinTestCase):
         self.assertEqual("Filter key 'shape' is unsupported.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
-        mock_cluster.assert_called_once_with(self.ctx, db_cluster=x_db_cluster)
+        mock_cluster.assert_called_once_with(self.ctx, dbcluster=x_db_cluster)
         self.assertEqual(0, x_schema.validate.call_count)
         self.assertEqual(0, mock_nodes.call_count)
         self.assertEqual(0, mock_action.call_count)
@@ -281,7 +281,7 @@ class ClusterOpTest(base.SenlinTestCase):
         self.assertEqual("No node (matching the filter) could be found.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
-        mock_cluster.assert_called_once_with(self.ctx, db_cluster=x_db_cluster)
+        mock_cluster.assert_called_once_with(self.ctx, dbcluster=x_db_cluster)
         mock_nodes.assert_called_once_with(self.ctx, '12345678AB',
                                            filters={'role': 'slave'})
         self.assertEqual(0, mock_action.call_count)
