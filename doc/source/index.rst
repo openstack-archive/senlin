@@ -26,7 +26,7 @@ AutoScaling-compatible Query API is in plan.
    :maxdepth: 1
 
    overview
-   install
+   install/index
    configuration
 
 2 Tutorial
