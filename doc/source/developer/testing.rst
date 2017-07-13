@@ -215,8 +215,8 @@ Similar to the API tests, senlin functional tests are also developed based on
 the *tempest* framework. Test cases are written using the Tempest Plugin
 Interface (see: `tempest_plugin`_).
 
-.. _`tempest_overview`: https://docs.openstack.org/developer/tempest
-.. _`tempest_plugin`: https://docs.openstack.org/developer/tempest/plugin.html
+.. _`tempest_overview`: https://docs.openstack.org/tempest/latest/
+.. _`tempest_plugin`: https://docs.openstack.org/tempest/latest/plugin
 
 
 Writing Functional Tests

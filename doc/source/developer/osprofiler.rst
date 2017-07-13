@@ -23,7 +23,7 @@ OSProfiler
   reasons (for example in isolating cross-project performance issues).
 
 More about OSProfiler:
-https://docs.openstack.org/developer/osprofiler
+https://docs.openstack.org/osprofiler/latest/
 
 Senlin supports using OSProfiler to trace the performance of each
 key internal processing, including RESTful API, RPC, cluster actions,
