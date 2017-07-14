@@ -382,19 +382,11 @@ class Node(object):
 
         params = {}
         if self.physical_id != physical_id:
+            self.data['recovery'] = consts.RECOVER_RECREATE
+            params['data'] = self.data
             params['physical_id'] = physical_id
         self.set_status(context, consts.NS_ACTIVE,
                         reason=_('Recover succeeded'), **params)
-
-        # Check action type
-        recovery = {}
-        operation = options.get('operation', None)
-        if operation and not isinstance(operation, six.string_types):
-            operation = operation[0]
-        if operation is not None and 'name' in operation:
-            recovery['action'] = operation['name'].upper()
-            recovery['node'] = [self.id]
-            action.outputs['recovery'] = recovery
 
         return True
 
