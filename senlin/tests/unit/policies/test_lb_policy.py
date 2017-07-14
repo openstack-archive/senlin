@@ -264,51 +264,26 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.assertEqual((False, 'Failed in adding node into lb pool'), res)
         self.lb_driver.lb_delete.assert_called_once_with(**lb_data)
 
-    def test_get_post_candidates_node_create(self):
-        action = mock.Mock(action=consts.NODE_CREATE,
-                           node=mock.Mock(id='NODE'))
-        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
-
-        candidates = policy._get_post_candidates(action)
-
-        self.assertEqual(['NODE'], candidates)
-
-    def test_post_candidates_node_recover(self):
-        action = mock.Mock(action=consts.NODE_RECOVER,
-                           outputs={
-                               'recovery': {
-                                   'action': consts.RECOVER_RECREATE,
-                                   'node': ['NODE1_ID']
-                               }
-                           })
+    def test_post_candidates_node_recover_reboot(self):
+        node = mock.Mock(id='NODE1_ID')
+        action = mock.Mock(action=consts.NODE_RECOVER)
+        action.entity = node
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
 
         candidates = policy._get_post_candidates(action)
 
         self.assertEqual(['NODE1_ID'], candidates)
 
-    def test_post_candidates_node_recover_reboot(self):
-        action = mock.Mock(action=consts.NODE_RECOVER,
-                           outputs={
-                               'recovery': {
-                                   'action': consts.RECOVER_REBOOT,
-                                   'node': ['NODE1_ID']
-                               }
-                           })
-        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
-
-        candidates = policy._get_post_candidates(action)
-
-        self.assertEqual([], candidates)
-
     def test_post_candidates_node_recover_empty(self):
+        node = mock.Mock(id='NODE1_ID')
         action = mock.Mock(action=consts.NODE_RECOVER,
                            outputs={})
+        action.entity = node
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
 
         candidates = policy._get_post_candidates(action)
 
-        self.assertEqual([], candidates)
+        self.assertEqual(['NODE1_ID'], candidates)
 
     def test_post_candidates_cluster_resize(self):
         action = mock.Mock(action=consts.CLUSTER_RESIZE,
@@ -325,7 +300,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
 
     def test_get_delete_candidates_for_node_delete(self):
         action = mock.Mock(action=consts.NODE_DELETE, inputs={}, data={},
-                           node=mock.Mock(id='NODE_ID'))
+                           entity=mock.Mock(id='NODE_ID'))
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
 
         res = policy._get_delete_candidates('CLUSTERID', action)
@@ -732,22 +707,18 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         self.assertFalse(m_remove.called)
 
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_add_member')
-    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_process_recovery')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_get_post_candidates')
-    def test_post_op_node_recover(self, m_get, m_remove, m_add,
+    def test_post_op_node_recover(self, m_get, m_recovery, m_add,
                                   m_candidates, m_load):
         cid = 'CLUSTER_ID'
-        cluster = mock.Mock(user='user1', project='project1')
+        node = mock.Mock(user='user1', project='project1', id='NODE1')
         action = mock.Mock(context='action_context',
                            action=consts.NODE_RECOVER,
                            data={},
-                           outputs={
-                               'recovery': {
-                                   'action': consts.RECOVER_RECREATE,
-                                   'node': ['NODE1']
-                               }
-                           })
-        action.entity = cluster
+                           outputs={})
+        action.entity = node
+        m_recovery.return_value = ['NODE1']
         m_get.return_value = ['NODE1']
         cp = mock.Mock()
         m_load.return_value = cp
@@ -762,8 +733,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         m_get.assert_called_once_with(action)
         m_load.assert_called_once_with('action_context', cid, policy.id)
         m_add.assert_called_once_with(['NODE1'], cp, action, self.lb_driver)
-        m_remove.assert_called_once_with(['NODE1'], cp, action, self.lb_driver,
-                                         handle_err=False)
+        m_recovery.assert_called_once_with(['NODE1'], cp, self.lb_driver,
+                                           action)
 
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_add_member')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
@@ -989,3 +960,58 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
         m_remove.assert_called_once_with(
             ['NODE1_ID'], mock.ANY, action, self.lb_driver)
+
+    @mock.patch.object(no.Node, 'update')
+    def test__process_recovery_not_lb_member(self, m_update, m1, m2):
+        node = mock.Mock(id='NODE', data={})
+        action = mock.Mock(
+            action=consts.NODE_RECOVER,
+            context='action_context')
+        action.entity = node
+
+        cp = mock.Mock()
+
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        res = policy._process_recovery(['NODE'], cp, self.lb_driver, action)
+
+        self.assertEqual(['NODE'], res)
+        m_update.assert_called_once_with(action.context, {'data': {}})
+
+    @mock.patch.object(no.Node, 'update')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
+    def test__process_recovery_reboot(self, m_remove, m_update, m1, m2):
+        node = mock.Mock(id='NODE', data={'lb_member': 'mem_1'})
+        action = mock.Mock(
+            action=consts.NODE_RECOVER,
+            context='action_context')
+        action.entity = node
+
+        cp = mock.Mock()
+
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        res = policy._process_recovery(['NODE'], cp, self.lb_driver, action)
+
+        self.assertIsNone(res)
+
+        self.assertFalse(m_remove.called)
+        self.assertFalse(m_update.called)
+
+    @mock.patch.object(no.Node, 'update')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
+    def test__process_recovery_recreate(self, m_remove, m_update, m1, m2):
+        node = mock.Mock(id='NODE', data={'lb_member': 'mem_1',
+                                          'recovery': 'RECREATE'})
+        action = mock.Mock(
+            action=consts.NODE_RECOVER,
+            context='action_context')
+        action.entity = node
+
+        cp = mock.Mock()
+
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        res = policy._process_recovery(['NODE'], cp, self.lb_driver, action)
+
+        self.assertEqual(['NODE'], res)
+        m_remove.assert_called_once_with(['NODE'], cp, action, self.lb_driver,
+                                         handle_err=False)
+        m_update.assert_called_once_with(action.context, {'data': {}})

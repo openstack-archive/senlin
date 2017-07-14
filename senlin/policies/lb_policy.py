@@ -398,7 +398,7 @@ class LoadBalancingPolicy(base.Policy):
         candidates = None
         if deletion is None:
             if action.action == consts.NODE_DELETE:
-                candidates = [action.node.id]
+                candidates = [action.entity.id]
                 count = 1
             elif action.action == consts.CLUSTER_DEL_NODES:
                 # Get candidates from action.input
@@ -503,19 +503,39 @@ class LoadBalancingPolicy(base.Policy):
     def _get_post_candidates(self, action):
         # This method will parse action data passed from action layer
         candidates = []
-        if action.action == consts.NODE_CREATE:
-            candidates = [action.node.id]
-        elif action.action == consts.NODE_RECOVER:
-            recovery = action.outputs.get('recovery', None)
-            if recovery is not None and 'action' in recovery:
-                action_name = recovery['action']
-                if action_name.upper() == consts.RECOVER_RECREATE:
-                    candidates = recovery.get('node', [])
+        if (action.action == consts.NODE_CREATE or
+                action.action == consts.NODE_RECOVER):
+            candidates = [action.entity.id]
         else:
             creation = action.data.get('creation', None)
             candidates = creation.get('nodes', []) if creation else []
 
         return candidates
+
+    def _process_recovery(self, candidates, policy, driver, action):
+        # Process node recovery action
+        node = action.entity
+        data = node.data
+        lb_member = data.get('lb_member', None)
+        recovery = data.pop('recovery', None)
+        values = {}
+
+        # lb_member is None, need to add to lb pool
+        if not lb_member:
+            values['data'] = data
+            no.Node.update(action.context, values)
+            return candidates
+
+        # was a member of lb pool, check whether has been recreated
+        if recovery is not None and recovery == consts.RECOVER_RECREATE:
+            self._remove_member(candidates, policy, action, driver,
+                                handle_err=False)
+            data.pop('lb_member', None)
+            values['data'] = data
+            no.Node.update(action.context, values)
+            return candidates
+
+        return None
 
     def pre_op(self, cluster_id, action):
         """Routine to be called before an action has been executed.
@@ -573,8 +593,11 @@ class LoadBalancingPolicy(base.Policy):
         cp = cluster_policy.ClusterPolicy.load(action.context, cluster_id,
                                                self.id)
         if action.action == consts.NODE_RECOVER:
-            self._remove_member(candidates, cp, action, lb_driver,
-                                handle_err=False)
+            candidates = self._process_recovery(
+                candidates, cp, lb_driver, action)
+            if not candidates:
+                return
+
         # Add new nodes to lb pool
         failed_nodes = self._add_member(candidates, cp, action, lb_driver)
         if failed_nodes:
