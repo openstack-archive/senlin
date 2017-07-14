@@ -250,7 +250,9 @@ class ClusterRecoverTest(base.SenlinTestCase):
         self.assertFalse(mock_check.called)
 
     @mock.patch.object(ca.ClusterAction, '_check_capacity')
-    def test_do_recover_with_check_active(self, mock_desired, mock_load):
+    @mock.patch.object(nm.Node, 'load')
+    def test_do_recover_with_check_active(self, mock_node, mock_desired,
+                                          mock_load):
         cluster = mock.Mock(id='FAKE_ID', desired_capacity=2)
         cluster.do_recover.return_value = True
         mock_load.return_value = cluster
@@ -259,12 +261,18 @@ class ClusterRecoverTest(base.SenlinTestCase):
         node2 = mock.Mock(id='NODE_2', cluster_id='FAKE_ID', status='ERROR')
         cluster.nodes = [node1, node2]
 
+        eng_node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID',
+                              status='ACTIVE')
+        eng_node2 = mock.Mock(id='NODE_2', cluster_id='FAKE_ID',
+                              status='ERROR')
+        mock_node.side_effect = [eng_node1, eng_node2]
+
         def set_status(*args, **kwargs):
-            node2.status = 'ACTIVE'
+            eng_node2.status = 'ACTIVE'
 
         mock_check = self.patchobject(nm.Node, 'do_check')
         mock_check.side_effect = set_status
-        node2.do_check = mock_check
+        eng_node2.do_check = mock_check
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_RECOVER', self.ctx)
         action.inputs = {'check': True}
@@ -274,8 +282,13 @@ class ClusterRecoverTest(base.SenlinTestCase):
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Cluster recovery succeeded.', res_msg)
-        node1.do_check.assert_called_once_with(self.ctx)
-        node2.do_check.assert_called_once_with(self.ctx)
+        node_calls = [
+            mock.call(self.ctx, node_id='NODE_1'),
+            mock.call(self.ctx, node_id='NODE_2')
+        ]
+        mock_node.assert_has_calls(node_calls)
+        eng_node1.do_check.assert_called_once_with(self.ctx)
+        eng_node2.do_check.assert_called_once_with(self.ctx)
         cluster.do_recover.assert_called_once_with(self.ctx)
         cluster.eval_status.assert_called_once_with(
             action.context, consts.CLUSTER_RECOVER)
@@ -287,9 +300,10 @@ class ClusterRecoverTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
     @mock.patch.object(ca.ClusterAction, '_check_capacity')
-    def test_do_recover_with_check_error(self, mock_desired, mock_wait,
-                                         mock_start, mock_dep, mock_action,
-                                         mock_update, mock_load):
+    @mock.patch.object(nm.Node, 'load')
+    def test_do_recover_with_check_error(self, mock_node, mock_desired,
+                                         mock_wait, mock_start, mock_dep,
+                                         mock_action, mock_update, mock_load):
         node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID', status='ACTIVE')
         node2 = mock.Mock(id='NODE_2', cluster_id='FAKE_ID', status='ACTIVE')
 
@@ -298,6 +312,12 @@ class ClusterRecoverTest(base.SenlinTestCase):
         cluster.do_recover.return_value = True
         mock_load.return_value = cluster
         cluster.nodes = [node1, node2]
+
+        eng_node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID',
+                              status='ACTIVE')
+        eng_node2 = mock.Mock(id='NODE_2', cluster_id='FAKE_ID',
+                              status='ACTIVE')
+        mock_node.side_effect = [eng_node1, eng_node2]
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_RECOVER', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
@@ -308,11 +328,11 @@ class ClusterRecoverTest(base.SenlinTestCase):
         mock_wait.return_value = (action.RES_OK, 'Everything is Okay')
 
         def set_status(*args, **kwargs):
-            node2.status = 'ERROR'
+            eng_node2.status = 'ERROR'
 
         mock_check = self.patchobject(nm.Node, 'do_check')
         mock_check.side_effect = set_status
-        node2.do_check = mock_check
+        eng_node2.do_check = mock_check
 
         # do it
         res_code, res_msg = action.do_recover()
@@ -328,8 +348,13 @@ class ClusterRecoverTest(base.SenlinTestCase):
             cause=consts.CAUSE_DERIVED,
             inputs={}
         )
-        node1.do_check.assert_called_once_with(self.ctx)
-        node2.do_check.assert_called_once_with(self.ctx)
+        node_calls = [
+            mock.call(self.ctx, node_id='NODE_1'),
+            mock.call(self.ctx, node_id='NODE_2')
+        ]
+        mock_node.assert_has_calls(node_calls)
+        eng_node1.do_check.assert_called_once_with(self.ctx)
+        eng_node2.do_check.assert_called_once_with(self.ctx)
         mock_dep.assert_called_once_with(action.context, ['NODE_RECOVER_ID'],
                                          'CLUSTER_ACTION_ID')
         mock_update.assert_called_once_with(action.context, 'NODE_RECOVER_ID',

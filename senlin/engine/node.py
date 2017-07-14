@@ -333,6 +333,7 @@ class Node(object):
                         "was WARNING. %s") % self.status_reason
                 self.set_status(context, consts.NS_WARNING, msg)
                 return True
+
             self.set_status(context, consts.NS_ACTIVE,
                             _("Check: Node is ACTIVE."))
         else:

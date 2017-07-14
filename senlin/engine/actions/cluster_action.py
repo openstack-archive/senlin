@@ -681,11 +681,13 @@ class ClusterAction(base.Action):
 
         children = []
         for node in self.entity.nodes:
-            if check:
-                node.do_check(self.context)
-            if node.status == 'ACTIVE':
-                continue
             node_id = node.id
+            if check:
+                node = node_mod.Node.load(self.context, node_id=node_id)
+                node.do_check(self.context)
+
+            if node.status == consts.NS_ACTIVE:
+                continue
             action_id = base.Action.create(
                 self.context, node_id, consts.NODE_RECOVER,
                 name='node_recover_%s' % node_id[:8],
