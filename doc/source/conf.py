@@ -15,7 +15,6 @@ import os
 import subprocess
 import sys
 
-import openstackdocstheme
 
 from senlin.version import version_info as senlin_version
 
@@ -29,9 +28,14 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.graphviz',
     'sphinx.ext.intersphinx',
-    'oslosphinx',
+    'openstackdocstheme',
     'oslo_config.sphinxext',
 ]
+
+# openstackdocstheme options
+repository_name = 'openstack/senlin'
+bug_project = 'senlin'
+bug_tag = ''
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy
 # text edit cycles.
@@ -62,30 +66,6 @@ release = senlin_version.version_string_with_vcs()
 # The short X.Y version.
 version = senlin_version.canonical_version_string()
 
-# A few variables have to be set for the log-a-bug feature.
-#   giturl: The location of conf.py on Git. Must be set manually.
-#   gitsha: The SHA checksum of the bug description. Extracted from git log.
-#   bug_tag: Tag for categorizing the bug. Must be set manually.
-#   bug_project: Launchpad project to file bugs against.
-# These variables are passed to the logabug code via html_context.
-giturl = u'https://git.openstack.org/cgit/openstack/senlin/tree/doc/source'
-git_cmd = ["git", "log", "--pretty=format:'%ad, commit %h", "--date=local",
-           "-n1"]
-gitsha = subprocess.Popen(git_cmd,
-                          stdout=subprocess.PIPE).communicate()[0]
-bug_tag = "docs"
-
-# source tree
-pwd = os.getcwd()
-
-# html_context allows us to pass arbitrary values into the html template
-html_context = {"pwd": pwd,
-                "gitsha": gitsha,
-                "bug_tag": bug_tag,
-                "giturl": giturl,
-                "bug_project": "senlin"}
-
-
 # If true, '()' will be appended to :func: etc. cross-reference text.
 add_function_parentheses = True
 
@@ -105,10 +85,12 @@ pygments_style = 'sphinx'
 html_theme = 'openstackdocs'
 
 # Add any paths that contain custom themes here, relative to this directory
-html_theme_path = [openstackdocstheme.get_html_theme_path()]
+#html_theme_path = []
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = '%sdoc' % project
+
+html_last_updated_fmt = '%Y-%m-%d %H:%M'
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass
