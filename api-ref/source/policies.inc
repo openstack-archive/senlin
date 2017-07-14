@@ -40,6 +40,9 @@ Request Parameters
   - name: name_query
   - type: type_query
 
+The sorting keys include ``name``, ``type``, ``created_at`` and
+``udpated_at``.
+
 Response Parameters
 -------------------
 
