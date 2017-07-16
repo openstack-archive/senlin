@@ -176,4 +176,4 @@ For other cluster membership management commands and options, please check the
 :ref:`user-references` section.
 
 
-.. _Installation Guide: https://docs.openstack.org/developer/senlin/install.html
+.. _Installation Guide: https://docs.openstack.org/senlin/latest/install

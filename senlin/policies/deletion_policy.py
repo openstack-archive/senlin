@@ -14,7 +14,7 @@
 Policy for deleting node(s) from a cluster.
 
 NOTE: For full documentation about how the deletion policy works, check:
-https://docs.openstack.org/developer/senlin/developer/policies/deletion_v1.html
+https://docs.openstack.org/senlin/latest/developer/policies/deletion_v1.html
 """
 from oslo_log import log as logging
 
