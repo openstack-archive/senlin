@@ -188,6 +188,7 @@ class TestCluster(base.SenlinTestCase):
         cluster.timeout = 120
         cluster.data = {'FOO': 'BAR'}
         cluster.metadata = {'KEY': 'VALUE'}
+        cluster.config = {'KEY': 'VALUE'}
 
         new_id = cluster.store(self.context)
         self.assertEqual(cluster_id, new_id)
@@ -206,6 +207,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual(120, result.timeout)
         self.assertEqual({'FOO': 'BAR'}, result.data)
         self.assertEqual({'KEY': 'VALUE'}, result.metadata)
+        self.assertEqual({'KEY': 'VALUE'}, result.config)
 
     @mock.patch.object(cm.Cluster, '_from_object')
     def test_load_via_db_object(self, mock_init):
