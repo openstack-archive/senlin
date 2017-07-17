@@ -176,7 +176,7 @@ class ZonePlacementPolicy(base.Policy):
         """
         if action.action == consts.NODE_CREATE:
             # skip the policy if availability zone is specified in profile
-            profile = action.node.rt['profile']
+            profile = action.entity.rt['profile']
             if profile.properties[profile.AVAILABILITY_ZONE]:
                 return 0
             return 1
