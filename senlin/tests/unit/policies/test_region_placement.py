@@ -136,7 +136,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
     def test__get_count_node_create_no_region(self):
         x_profile = mock.Mock(CONTEXT='context', properties={'context': {}})
         x_node = mock.Mock(rt={'profile': x_profile})
-        action = mock.Mock(action=consts.NODE_CREATE, node=x_node)
+        action = mock.Mock(action=consts.NODE_CREATE, entity=x_node)
 
         policy = rp.RegionPlacementPolicy('p1', self.spec)
 
@@ -147,7 +147,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         x_profile = mock.Mock(CONTEXT='context',
                               properties={'context': {'region_name': 'foo'}})
         x_node = mock.Mock(rt={'profile': x_profile})
-        action = mock.Mock(action=consts.NODE_CREATE, node=x_node)
+        action = mock.Mock(action=consts.NODE_CREATE, entity=x_node)
 
         policy = rp.RegionPlacementPolicy('p1', self.spec)
 

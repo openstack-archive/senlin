@@ -191,7 +191,7 @@ class RegionPlacementPolicy(base.Policy):
         """
         if action.action == consts.NODE_CREATE:
             # skip node if the context already contains a region_name
-            profile = action.node.rt['profile']
+            profile = action.entity.rt['profile']
             if 'region_name' in profile.properties[profile.CONTEXT]:
                 return 0
             else:
