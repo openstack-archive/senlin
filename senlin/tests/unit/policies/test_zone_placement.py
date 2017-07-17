@@ -133,7 +133,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         x_profile = mock.Mock(AVAILABILITY_ZONE='availability_zone',
                               properties={'availability_zone': 'zone1'})
         x_node = mock.Mock(rt={'profile': x_profile})
-        action = mock.Mock(action=consts.NODE_CREATE, node=x_node)
+        action = mock.Mock(action=consts.NODE_CREATE, entity=x_node)
 
         policy = zp.ZonePlacementPolicy('p1', self.spec)
 
@@ -144,7 +144,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         x_profile = mock.Mock(AVAILABILITY_ZONE='availability_zone',
                               properties={'availability_zone': None})
         x_node = mock.Mock(rt={'profile': x_profile})
-        action = mock.Mock(action=consts.NODE_CREATE, node=x_node)
+        action = mock.Mock(action=consts.NODE_CREATE, entity=x_node)
 
         policy = zp.ZonePlacementPolicy('p1', self.spec)
 
