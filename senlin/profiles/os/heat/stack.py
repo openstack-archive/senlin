@@ -353,7 +353,7 @@ class StackProfile(base.Profile):
                   one.
         """
         tags = []
-        for tag in current.split(","):
+        for tag in current:
             if tag.find('cluster_id=') == 0:
                 continue
             elif tag.find('cluster_node_id=') == 0:
@@ -369,7 +369,7 @@ class StackProfile(base.Profile):
             tags.append('cluster_node_index=%s' % node.index)
 
         tag_str = ",".join(tags)
-        return (tag_str, tag_str != current)
+        return (tag_str, tags != current)
 
     def do_join(self, obj, cluster_id):
         if not obj.physical_id:
@@ -379,8 +379,9 @@ class StackProfile(base.Profile):
         try:
             stack = hc.stack_get(obj.physical_id)
             tags, updated = self._refresh_tags(stack.tags, obj, True)
+            field = {'tags': tags}
             if updated:
-                hc.stack_update(obj.physical_id, {'tags': tags})
+                hc.stack_update(obj.physical_id, **field)
         except exc.InternalError as ex:
             LOG.error('Failed in updating stack tags: %s.', ex)
             return False
@@ -395,8 +396,9 @@ class StackProfile(base.Profile):
         try:
             stack = hc.stack_get(obj.physical_id)
             tags, updated = self._refresh_tags(stack.tags, obj, False)
+            field = {'tags': tags}
             if updated:
-                hc.stack_update(obj.physical_id, {'tags': tags})
+                hc.stack_update(obj.physical_id, **field)
         except exc.InternalError as ex:
             LOG.error('Failed in updating stack tags: %s.', ex)
             return False
