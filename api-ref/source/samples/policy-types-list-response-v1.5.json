@@ -42,8 +42,12 @@
             "support_status": {
                 "1.0": [
                     {
-                        "status": "SUPPORTED",
+                        "status": "EXPERIMENTAL",
                         "since": "2016.04"
+                    },
+                    {
+                        "status": "SUPPORTED",
+                        "since": "2016.10"
                     }
                 ]
             }

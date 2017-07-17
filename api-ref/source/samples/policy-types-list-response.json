@@ -4,6 +4,9 @@
             "name": "senlin.policy.affinity-1.0"
         },
         {
+            "name": "senlin.policy.batch-1.0"
+        },
+        {
             "name": "senlin.policy.health-1.0"
         },
         {
@@ -16,7 +19,7 @@
             "name": "senlin.policy.deletion-1.0"
         },
         {
-            "name": "senlin.policy.loadbalance-1.0"
+            "name": "senlin.policy.loadbalance-1.1"
         },
         {
             "name": "senlin.policy.zone_placement-1.0"

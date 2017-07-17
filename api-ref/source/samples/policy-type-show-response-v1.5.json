@@ -4,7 +4,6 @@
         "schema": {
             "availability_zone": {
                 "description": "Name of the availability zone to place the nodes.",
-                "readonly": false,
                 "required": false,
                 "type": "String",
                 "updatable": false
@@ -12,19 +11,16 @@
             "enable_drs_extension": {
                 "default": false,
                 "description": "Enable vSphere DRS extension.",
-                "readonly": false,
                 "required": false,
                 "type": "Boolean",
                 "updatable": false
             },
             "servergroup": {
                 "description": "Properties of the VM server group",
-                "readonly": false,
                 "required": false,
                 "schema": {
                     "name": {
                         "description": "The name of the server group",
-                        "readonly": false,
                         "required": false,
                         "type": "String",
                         "updatable": false
@@ -41,7 +37,6 @@
                         ],
                         "default": "anti-affinity",
                         "description": "The server group policies.",
-                        "readonly": false,
                         "required": false,
                         "type": "String",
                         "updatable": false
@@ -50,7 +45,7 @@
                 "type": "Map",
                 "updatable": false
             }
-        }
+        },
         "support_status": {
             "1.0": [
                 {
