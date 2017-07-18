@@ -88,7 +88,7 @@ class DeletionPolicy(base.Policy):
         ),
         REDUCE_DESIRED_CAPACITY: schema.Boolean(
             _('Whether the desired capacity of the cluster should be '
-              'reduced along the deletion. Default to False.'),
+              'reduced along the deletion. Default to True.'),
             default=True,
         )
     }
