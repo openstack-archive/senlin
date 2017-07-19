@@ -8,4 +8,4 @@ Structure:
   or `/opt/rally/plugins` to make them work if test is done locally.
 
 Please find more information about rally plugins at the following link:
- - https://rally.readthedocs.org/en/latest/plugins.html
+ - https://rally.readthedocs.io/en/latest/plugins/index.html

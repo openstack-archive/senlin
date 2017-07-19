@@ -2,8 +2,8 @@
 Team and repository tags
 ========================
 
-.. image:: https://governance.openstack.org/badges/senlin.svg
-    :target: https://governance.openstack.org/reference/tags/index.html
+.. image:: https://governance.openstack.org/tc/badges/senlin.svg
+    :target: https://governance.openstack.org/tc/reference/tags/index.html
 
 .. Change things from this point on
 
@@ -82,4 +82,4 @@ as the mailinglist. Please use tag ``[Senlin]`` in the subject for new
 threads.
 
 
-.. _Freenode: http://freenode.net/
+.. _Freenode: https://freenode.net/
