@@ -74,8 +74,6 @@ class NodeController(wsgi.Controller):
     @util.policy_enforce
     def adopt(self, req, body):
         """Adopt a node for management."""
-        # make sure we don't fall into the preview path
-        body['preview'] = False
         obj = util.parse_request('NodeAdoptRequest', req, body)
         node = self.rpc_client.call(req.context, 'node_adopt', obj)
         return {'node': node}
