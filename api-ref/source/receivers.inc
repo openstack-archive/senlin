@@ -42,6 +42,9 @@ Request Parameters
   - action: receiver_action_query
   - user: receiver_user_query
 
+The sorting keys include ``name``, ``type``, ``action``, ``cluster_id``,
+``created_at`` and ``user``.
+
 Response Parameters
 -------------------
 
