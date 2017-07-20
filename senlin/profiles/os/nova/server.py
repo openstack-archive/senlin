@@ -1085,16 +1085,15 @@ class ServerProfile(base.Profile):
         spec = {}
         # Context?
         # TODO(Qiming): Need to fetch admin password from a different API
-        disk_config = server.disk_config
-        spec[self.AUTO_DISK_CONFIG] = disk_config and disk_config == 'AUTO'
+        spec[self.AUTO_DISK_CONFIG] = server.disk_config == 'AUTO'
 
         spec[self.AVAILABILITY_ZONE] = server.availability_zone
 
         # TODO(Anyone): verify if this needs a format conversion
-        bdm = server.block_device_mapping
+        bdm = server.block_device_mapping or []
         spec[self.BLOCK_DEVICE_MAPPING_V2] = bdm
 
-        spec[self.CONFIG_DRIVE] = server.has_config_drive
+        spec[self.CONFIG_DRIVE] = server.has_config_drive or False
         spec[self.FLAVOR] = server.flavor['id']
         spec[self.IMAGE] = server.image['id'] or server.image
         spec[self.KEY_NAME] = server.key_name

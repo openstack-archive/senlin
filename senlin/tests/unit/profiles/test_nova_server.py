@@ -895,7 +895,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         res = profile.do_adopt(node_obj)
 
-        self.assertEqual('', res['auto_disk_config'])
+        self.assertEqual(False, res['auto_disk_config'])
         self.assertEqual('AZ01', res['availability_zone'])
         self.assertEqual({'foo': 'bar'}, res['block_device_mapping_v2'])
         self.assertFalse(res['config_drive'])
@@ -965,7 +965,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         res = profile.do_adopt(node_obj, overrides=overrides)
 
-        self.assertEqual('', res['auto_disk_config'])
+        self.assertEqual(False, res['auto_disk_config'])
         self.assertEqual('AZ01', res['availability_zone'])
         self.assertEqual({'foo': 'bar'}, res['block_device_mapping_v2'])
         self.assertFalse(res['config_drive'])
