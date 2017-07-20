@@ -176,7 +176,8 @@ name_query:
   type: string
   in: query
   description: |
-    Filters the response by the ``name`` property of the object.
+    Filters the response by the specified ``name`` property of the object,
+    such as ``policy_name`` or ``name`` property of cluster.
 
 oid_query:
   type: string
@@ -261,7 +262,9 @@ type_query:
   type: string
   in: query
   description: |
-    Filters the response by the ``type`` property of the object.
+    Filters the response by the specified ``type`` property of the object,
+    such as ``policy_type`` property of cluster-policy binding object or
+    ``type`` property of policy object.
 
 user_query:
   type: UUID

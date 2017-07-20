@@ -40,6 +40,8 @@ Request Parameters
   - name: name_query
   - status: status_query
 
+The sorting key is ``enabled``.
+
 Response Parameters
 -------------------
 

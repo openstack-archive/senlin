@@ -34,6 +34,8 @@ Request Parameters
   - OpenStack-API-Version: microversion
   - cluster_id: cluster_id_url
   - enabled: enabled_query
+  - policy_name: name_query
+  - policy_type: type_query
   - sort: sort
 
 Response Parameters
