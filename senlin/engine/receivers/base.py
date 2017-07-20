@@ -68,7 +68,7 @@ class Receiver(object):
         self.params = kwargs.get('params', {})
         self.channel = kwargs.get('channel', {})
 
-    def store(self, context):
+    def store(self, context, update=False):
         """Store the receiver in database and return its ID.
 
         :param context: Context for DB operations.
@@ -91,12 +91,11 @@ class Receiver(object):
             'channel': self.channel,
         }
 
-        if self.id:
+        if update:
             self.updated_at = timestamp
             values['updated_at'] = timestamp
             ro.Receiver.update(context, self.id, values)
         else:
-            self.id = uuidutils.generate_uuid()
             self.created_at = timestamp
             values['created_at'] = timestamp
             receiver = ro.Receiver.create(context, values)
@@ -120,6 +119,7 @@ class Receiver(object):
         kwargs['user'] = context.user
         kwargs['project'] = context.project
         kwargs['domain'] = context.domain
+        kwargs['id'] = uuidutils.generate_uuid()
         cluster_id = cluster.id if cluster else None
         obj = cls(rtype, cluster_id, action, **kwargs)
         obj.initialize_channel(context)
