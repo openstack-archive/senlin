@@ -23,8 +23,11 @@ Concept
 
 A :term:`Cluster` is a group of logical objects, each of which is called a
 :term:`Node` in Senlin's terminology. A cluster can contain zero or more
-nodes. A cluster has a ``profile_id`` property that specifies which
-:term:`Profile` to use when new nodes are created as members the cluster.
+nodes. A cluster has a ``profile_id`` property that specifies which default
+:term:`Profile` to use when new nodes are created/scaled as members of the
+cluster. It is valid for nodes in a cluster to reference different profile
+objects because Senlin only mandates that all nodes in a cluster having the
+same **profile type**.
 
 Senlin provides APIs and command line supports to manage the cluster
 membership. Please refer to :ref:`ref-membership` for details. Senlin also
