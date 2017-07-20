@@ -131,7 +131,7 @@ class Node(object):
         """Construct a node from node object.
 
         @param context: the context used for DB operations;
-        @param node: a node object that contains all fields;
+        @param obj: a node object that contains all fields;
         """
         kwargs = {
             'id': obj.id,
