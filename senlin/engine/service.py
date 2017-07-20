@@ -85,7 +85,7 @@ class EngineService(service.Service):
       keyword arguments by the RPC client.
     """
 
-    def __init__(self, host, topic, manager=None):
+    def __init__(self, host, topic):
 
         super(EngineService, self).__init__()
         self.host = host
