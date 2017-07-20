@@ -298,13 +298,12 @@ action_action:
   description: |
     A string representation of the action for execution.
 
-action_context:
+action_data:
   type: object
   in: body
   required: True
   description: |
-    A collection of key-value pairs that are used as security context when
-    executing the action.
+    A structured representation of data associated with a action object.
 
 action_id:
   type: UUID
@@ -723,6 +722,13 @@ event_level:
   type: string
   in: body
   required: True
+  description: |
+    The level of an event object.
+
+event_level_req:
+  type: string
+  in: body
+  required: False
   description: |
     The level of an event object.
 

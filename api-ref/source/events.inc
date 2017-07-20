@@ -32,6 +32,7 @@ Request Parameters
 
   - OpenStack-API-Version: microversion
   - limit: limit
+  - level: event_level_req
   - marker: marker
   - sort: sort
   - global_project: global_project
@@ -40,6 +41,9 @@ Request Parameters
   - oname: oname_query
   - cluster_id: cluster_identity_query
   - action: action_name_query
+
+The sorting keys include ``timestamp``, ``level``, ``otype``, ``oname``,
+``action``, ``status``, ``oid`` and ``cluster_id``.
 
 Response Parameters
 -------------------
