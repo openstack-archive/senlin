@@ -81,6 +81,28 @@ When sorting the list of profiles, you can use one of ``type``, ``name``,
 ``created_at`` and ``updated_at``.
 
 
+Filtering the List
+------------------
+
+The :program:`openstack cluster profile list` command also provides options
+for filtering the profile list at the server side. The option
+:option:`--filters` can be used for this purpose. For example, the following
+command filters the profile by the ``type`` field::
+
+  $ openstack cluster profile list --filter "type=os.heat.stack-1.0"
+  +----------+----------+--------------------+---------------------+
+  | id       | name     | type               | created_at          |
+  +----------+----------+--------------------+---------------------+
+  | ceda64bd | mystack  | os.heat.stack-1.0  | 2015-05-05T13:26:25 |
+  | 9b127538 | pstack   | os.heat.stack-1.0  | 2015-06-25T12:59:01 |
+  +----------+----------+--------------------+---------------------+
+
+The option :option:`--filters` accepts a list of key-value pairs separated
+by semicolon (``;``), where each key-value pair is expected to be of format
+``<key>=<value>``. The valid keys for filtering include: ``name`` and
+``type``.
+
+
 Paginating the List
 -------------------
 
