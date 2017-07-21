@@ -307,7 +307,7 @@ class ReceiverTest(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.ctx, receiver_obj=x_obj)
         self.assertEqual('NEW_NAME', x_receiver.name)
         self.assertEqual({'count': '3'}, x_receiver.params)
-        x_receiver.store.assert_called_once_with(self.ctx)
+        x_receiver.store.assert_called_once_with(self.ctx, update=True)
 
     @mock.patch.object(ro.Receiver, 'find')
     def test_receiver_update_not_found(self, mock_find):
