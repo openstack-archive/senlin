@@ -41,6 +41,9 @@ Request Parameters
   - action: action_action_query
   - status: action_status_query
 
+The sorting keys include ``name``, ``target``, ``action``, ``created_at``
+and ``status``.
+
 Response Parameters
 -------------------
 
@@ -50,8 +53,8 @@ Response Parameters
   - actions: actions
   - action: action_action
   - cause: cause
-  - context: action_context
   - created_at: created_at
+  - data: action_data
   - depended_by: depended_by
   - depends_on: depends_on
   - start_time: start_time
@@ -62,11 +65,13 @@ Response Parameters
   - name: name
   - outputs: outputs
   - owner: action_owner
+  - project: project
   - status: action_status
   - status_reason: status_reason
   - target: action_target
   - timeout: action_timeout
   - updated_at: updated_at
+  - user: user
 
 Response Example
 ----------------
@@ -112,8 +117,8 @@ Response Parameters:
   - X-OpenStack-Request-ID: request_id
   - action: action_action
   - cause: cause
-  - context: action_context
   - created_at: created_at
+  - data: action_data
   - depended_by: depended_by
   - depends_on: depends_on
   - start_time: start_time
@@ -124,11 +129,13 @@ Response Parameters:
   - name: name
   - outputs: outputs
   - owner: action_owner
+  - project: project
   - status: action_status
   - status_reason: status_reason
   - target: action_target
   - timeout: action_timeout
   - updated_at: updated_at
+  - user: user
 
 Response Example
 ----------------

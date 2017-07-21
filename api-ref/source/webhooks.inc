@@ -41,3 +41,10 @@ Response Parameters
 
   - X-OpenStack-Request-Id: request_id
   - Location: location
+  - action: action_action
+
+Response Example
+----------------
+
+.. literalinclude:: samples/webhook-action-response.json
+   :language: javascript
