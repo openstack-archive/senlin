@@ -40,7 +40,8 @@ Request Parameters
   - name: name_query
   - status: status_query
 
-The sorting key is ``enabled``.
+The sorting keys include ``name``, ``status``, ``init_at``, ``created_at``,
+and ``updated_at``.
 
 Response Parameters
 -------------------
@@ -50,7 +51,9 @@ Response Parameters
   - X-OpenStack-Request-ID: request_id
   - clusters: clusters
   - created_at: created_at
+  - config: cluster_config
   - data: cluster_data
+  - dependents: dependents
   - desired_capacity: desired_capacity
   - domain: domain
   - id: cluster_id
@@ -105,6 +108,7 @@ Request Parameters
 .. rest_parameters:: parameters.yaml
 
   - OpenStack-API-Version: microversion
+  - config: cluster_config_req
   - cluster: cluster
   - name: cluster_name
   - desired_capacity: desired_capacity
@@ -129,8 +133,10 @@ Response Parameters
   - X-OpenStack-Request-ID: request_id
   - Location: location
   - cluster: cluster
+  - config: cluster_config
   - created_at: created_at
   - data: cluster_data
+  - dependents: dependents
   - desired_capacity: desired_capacity
   - domain: domain
   - id: cluster_id
@@ -194,8 +200,10 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - cluster: cluster
+  - config: cluster_config
   - created_at: created_at
   - data: cluster_data
+  - dependents: dependents
   - desired_capacity: desired_capacity
   - domain: domain
   - id: cluster_id
@@ -252,6 +260,7 @@ Request Parameters
   - OpenStack-API-Version: microversion
   - cluster_id: cluster_id_url
   - cluster: cluster
+  - config: cluster_config_req
   - name: name_req
   - profile_id: profile_identity
   - timeout: timeout_req
@@ -273,8 +282,10 @@ Response Parameters
   - X-OpenStack-Request-ID: request_id
   - Location: location
   - cluster: cluster
+  - config: cluster_config
   - created_at: created_at
   - data: cluster_data
+  - dependents: dependents
   - desired_capacity: desired_capacity
   - domain: domain
   - id: cluster_id
@@ -397,6 +408,13 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - Location: location
+  - action: action_action
+
+Response Example
+----------------
+
+.. literalinclude:: samples/cluster-action-response.json
+   :language: javascript
 
 
 Scale-in a Cluster
@@ -447,6 +465,13 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - Location: location
+  - action: action_action
+
+Response Example
+----------------
+
+.. literalinclude:: samples/cluster-action-response.json
+   :language: javascript
 
 
 Scale-out a Cluster
@@ -497,6 +522,13 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - Location: location
+  - action: action_action
+
+Response Example
+----------------
+
+.. literalinclude:: samples/cluster-action-response.json
+   :language: javascript
 
 
 Add nodes to a Cluster
@@ -547,6 +579,13 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - Location: location
+  - action: action_action
+
+Response Example
+----------------
+
+.. literalinclude:: samples/cluster-action-response.json
+   :language: javascript
 
 
 Remove nodes from a Cluster
@@ -598,6 +637,13 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - Location: location
+  - action: action_action
+
+Response Example
+----------------
+
+.. literalinclude:: samples/cluster-action-response.json
+   :language: javascript
 
 
 Replace nodes in a Cluster
@@ -650,6 +696,13 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - Location: location
+  - action: action_action
+
+Response Example
+----------------
+
+.. literalinclude:: samples/cluster-action-response.json
+   :language: javascript
 
 
 Attach a Policy to a Cluster
@@ -685,7 +738,7 @@ Request Parameters
   - policy_id: policy_identity
   - enabled: cluster_policy_enabled
 
-The ``action_name`` in the request body has to be ``attach_policy``.
+The ``action_name`` in the request body has to be ``policy_attach``.
 
 Request Example
 ---------------
@@ -700,6 +753,13 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - Location: location
+  - action: action_action
+
+Response Example
+----------------
+
+.. literalinclude:: samples/cluster-action-response.json
+   :language: javascript
 
 
 Detach a Policy from a Cluster
@@ -734,7 +794,7 @@ Request Parameters
   - action: action_request
   - policy_id: policy_identity
 
-The ``action_name`` in the request body has to be ``detach_policy``.
+The ``action_name`` in the request body has to be ``policy_detach``.
 
 Request Example
 ---------------
@@ -749,6 +809,13 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - Location: location
+  - action: action_action
+
+Response Example
+----------------
+
+.. literalinclude:: samples/cluster-action-response.json
+   :language: javascript
 
 
 Update a Policy on a Cluster
@@ -799,6 +866,13 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - Location: location
+  - action: action_action
+
+Response Example
+----------------
+
+.. literalinclude:: samples/cluster-action-response.json
+   :language: javascript
 
 
 Collect Attributes Across a Cluster
@@ -891,6 +965,13 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - Location: location
+  - action: action_action
+
+Response Example
+----------------
+
+.. literalinclude:: samples/cluster-action-response.json
+   :language: javascript
 
 
 Recover a Cluster to a Healthy Status
@@ -953,6 +1034,13 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - Location: location
+  - action: action_action
+
+Response Example
+----------------
+
+.. literalinclude:: samples/cluster-action-response.json
+   :language: javascript
 
 
 Perform an Operation on a Cluster
@@ -1002,3 +1090,10 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - Location: location
+  - action: action_action
+
+Response Example
+----------------
+
+.. literalinclude:: samples/cluster-action-response.json
+   :language: javascript

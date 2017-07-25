@@ -1,5 +1,6 @@
 {
     "cluster": {
+        "config": {},
         "desired_capacity": 0,
         "max_size": -1,
         "metadata": {},
