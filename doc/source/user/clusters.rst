@@ -89,12 +89,12 @@ can be used for this purpose. For example, the following command filters the
 clusters by the ``status`` field::
 
   $ openstack cluster list --filters status=ACTIVE
-  +----------+------+--------+---------------------+
-  | id       | name | status | created_at          |
-  +----------+------+--------+---------------------+
-  | 2959122e | c1   | ACTIVE | 2015-05-05T13:27:28 |
-  | 092d0955 | c2   | ACTIVE | 2015-05-05T13:27:48 |
-  +----------+------+--------+---------------------+
+  +----------+------+--------+----------------------+------------+
+  | id       | name | status | created_at           | updated_at |
+  +----------+------+--------+----------------------+------------+
+  | 2959122e | c1   | ACTIVE | 2015-05-05T13:27:28Z | None       |
+  | 092d0955 | c2   | ACTIVE | 2015-05-05T13:27:48Z | None       |
+  +----------+------+--------+----------------------+------------+
 
 The option :option:`--filters` accepts a list of key-value pairs separated by
 semicolon (``;``), where each key-value pair is expected to be of format
@@ -110,11 +110,11 @@ clusters returned from Senlin server each time, using the option
 :option:`--limit <LIMIT>`. For example::
 
   $ openstack cluster list --limit 1
-  +----------+------+--------+---------------------+
-  | id       | name | status | created_at          |
-  +----------+------+--------+---------------------+
-  | 2959122e | c1   | ACTIVE | 2015-05-05T13:27:28 |
-  +----------+------+--------+---------------------+
+  +----------+------+--------+----------------------+------------+
+  | id       | name | status | created_at           | updated_at |
+  +----------+------+--------+----------------------+------------+
+  | 2959122e | c1   | ACTIVE | 2015-05-05T13:27:28Z | None       |
+  +----------+------+--------+----------------------+------------+
 
 Another option you can specify is the ID of a cluster after which you want to
 see the returned list starts. In other words, you don't want to see those
@@ -123,11 +123,11 @@ option :option:`--marker <ID>` for this purpose. For example::
 
   $ openstack cluster list --limit 1 \
       --marker 2959122e-11c7-4e82-b12f-f49dc5dac270
-  +----------+------+--------+---------------------+
-  | id       | name | status | created_at          |
-  +----------+------+--------+---------------------+
-  | 092d0955 | c2   | ACTIVE | 2015-05-05T13:27:48 |
-  +----------+------+--------+---------------------+
+  +----------+------+--------+----------------------+------------+
+  | id       | name | status | created_at           | updated_at |
+  +----------+------+--------+----------------------+------------+
+  | 092d0955 | c2   | ACTIVE | 2015-05-05T13:27:48Z | None       |
+  +----------+------+--------+----------------------+------------+
 
 Only 1 cluster record is returned in this example and its UUID comes after the
 one specified from the command line.
@@ -143,6 +143,7 @@ associated with the cluster. For example::
   +------------------+--------------------------------------+
   | Property         | Value                                |
   +------------------+--------------------------------------+
+  | config           | {}                                   |
   | created_at       | None                                 |
   | data             | {}                                   |
   | dependents       | {}                                   |
@@ -150,7 +151,6 @@ associated with the cluster. For example::
   | domain_id        | None                                 |
   | id               | 60424eb3-6adf-4fc3-b9a1-4a035bf171ac |
   | init_at          | 2015-05-05T13:35:47Z                 |
-  | is_profile_only  | None                                 |
   | location         | None                                 |
   | max_size         | -1                                   |
   | metadata         | {}                                   |
@@ -237,6 +237,7 @@ An example is shown below::
   +------------------+--------------------------------------+
   | Field            | Value                                |
   +------------------+--------------------------------------+
+  | config           | {}                                   |
   | created_at       | 2015-07-07T03:30:53Z                 |
   | data             | {}                                   |
   | dependents       | {}                                   |
@@ -244,7 +245,6 @@ An example is shown below::
   | domain_id        | None                                 |
   | id               | 2b7e9294-b5cd-470f-b191-b18f7e672495 |
   | init_at          | 2015-05-07T03:30:52Z                 |
-  | is_profile_only  | None                                 |
   | location         | None                                 |
   | max_size         | -1                                   |
   | metadata         | {}                                   |

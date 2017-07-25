@@ -78,13 +78,13 @@ Senlin server comes with some built-in profile types. You can check the list
 of profile types using the following command::
 
   $ openstack cluster profile type list
-  +--------------------------------+
-  | name                           |
-  +--------------------------------+
-  | container.dockerinc.docker-1.0 |
-  | os.heat.stack-1.0              |
-  | os.nova.server-1.0             |
-  +--------------------------------+
+  +----------------------------+---------+----------------------------+
+  | name                       | version | support_status             |
+  +----------------------------+---------+----------------------------+
+  | container.dockerinc.docker | 1.0     | EXPERIMENTAL since 2017.02 |
+  | os.heat.stack              | 1.0     | SUPPORTED since 2016.04    |
+  | os.nova.server             | 1.0     | SUPPORTED since 2016.04    |
+  +----------------------------+---------+----------------------------+
 
 The output is a list of profile types supported by the Senlin server.
 
@@ -98,6 +98,12 @@ show the schema of a specific profile type along with other properties, you
 can use the following command::
 
   $ openstack cluster profile type show os.heat.stack-1.0
+  support_status:
+    '1.0':
+      - since: '2016.04'
+        status: SUPPORTED
+  id: os.heat.stack-1.0
+  location: null
   name: os.heat.stack
   schema:
     context:
@@ -137,6 +143,14 @@ format by specifying the :option:`-f json` option as exemplified below::
 
   $ openstack cluster profile type show -f json os.heat.stack-1.0
   {
+    "support_status": {
+      "1.0": [
+        {
+          "status": "SUPPORTED",
+          "since": "2016.04"
+        }
+      ]
+    },
     "name": "os.heat.stack",
     "schema": {
       "files": {
@@ -155,6 +169,8 @@ format by specifying the :option:`-f json` option as exemplified below::
         "updatable": false
       }
     },
+    "id": "os.heat.stack-1.0",
+    "location": null
   }
 
 

@@ -157,6 +157,7 @@ An example is shown below::
   | created_at    | 2016-09-23T09:00:25Z                 |
   | depended_by   | []                                   |
   | depends_on    | []                                   |
+  | domain_id     | None                                 |
   | end_at        | 1450683904.0                         |
   | id            | 8fac487f-861a-449e-9678-478133bea8de |
   | inputs        | {}                                   |

@@ -60,18 +60,19 @@ Senlin server comes with some built-in policy types. You can check the list
 of policy types using the following command::
 
   $ openstack cluster policy type list
-  +------------------------------------+
-  | name                               |
-  +------------------------------------+
-  | senlin.policy.affinity-1.0         |
-  | senlin.policy.batch-1.0            |
-  | senlin.policy.deletion-1.0         |
-  | senlin.policy.health-1.0           |
-  | senlin.policy.loadbalance-1.1      |
-  | senlin.policy.region_placement-1.0 |
-  | senlin.policy.scaling-1.0          |
-  | senlin.policy.zone_placement-1.0   |
-  +------------------------------------+
+  +--------------------------------+---------+----------------------------+
+  | name                           | version | support_status             |
+  +--------------------------------+---------+----------------------------+
+  | senlin.policy.affinity         | 1.0     | SUPPORTED since 2016.10    |
+  | senlin.policy.batch            | 1.0     | EXPERIMENTAL since 2017.02 |
+  | senlin.policy.deletion         | 1.0     | SUPPORTED since 2016.04    |
+  | senlin.policy.health           | 1.0     | EXPERIMENTAL since 2017.02 |
+  | senlin.policy.loadbalance      | 1.0     | SUPPORTED since 2016.04    |
+  | senlin.policy.region_placement | 1.0     | EXPERIMENTAL since 2016.04 |
+  |                                |         | SUPPORTED since 2016.10    |
+  | senlin.policy.zone_placement   | 1.0     | EXPERIMENTAL since 2016.04 |
+  |                                |         | SUPPORTED since 2016.10    |
+  +--------------------------------+---------+----------------------------+
 
 
 The output is a list of policy types supported by the Senlin server.
@@ -86,6 +87,12 @@ show the schema of a specific policy type along with other properties, you can
 use the following command::
 
   $ openstack cluster policy type show senlin.policy.deletion-1.0
+  support_status:
+    '1.0':
+    - since: '2016.04'
+      status: SUPPORTED
+  id: senlin.policy.deletion-1.0
+  location: null
   name: senlin.policy.deletion
   schema:
     criteria:
