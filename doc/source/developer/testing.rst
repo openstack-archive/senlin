@@ -276,20 +276,19 @@ interactions between senlin and backend services as possible.
 Each "story line" should be organized into a separate class module that
 inherits from the ``BaseSenlinIntegrationTest`` class which can be found at
 :file:`senlin/tests/tempest/integration/base.py` file. Each test case should
-be annotated with a ``test.attr`` annotator and an idempotent ID as shown
+be annotated with a ``decorators.attr`` annotator and an idempotent ID as shown
 below:
 
 .. code-block:: python
 
   from tempest.lib import decorators
-  from tempest import test
 
   from senlin.tests.tempest.integration import base
 
 
   class MyIntegrationTest(base.BaseSenlinIntegrationTest):
 
-    @test.attr(type=['integration'])
+    @decorators.attr(type=['integration'])
     @decorators.idempotent_id('<A UUID for the test case>')
     def test_a_sad_story(self):
       # Test logic goes here
