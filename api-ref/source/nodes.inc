@@ -40,6 +40,9 @@ Request Parameters
   - name: name_query
   - status: status_query
 
+The sorting keys include ``name``, ``index``, ``status``, ``init_at``,
+``created_at`` and ``updated_at``.
+
 Response Parameters
 -------------------
 
@@ -50,6 +53,7 @@ Response Parameters
   - cluster_id: cluster_id
   - created_at: created_at
   - data: node_data
+  - dependents: dependents
   - domain: domain
   - id: node_id
   - index: index
@@ -124,6 +128,7 @@ Response Parameters
   - cluster_id: cluster_id
   - created_at: created_at
   - data: node_data
+  - dependents: dependents
   - domain: domain
   - id: node_id
   - index: index
@@ -155,6 +160,8 @@ Adopt node
    min_version: 1.7
 
 Adopts a node.
+
+This API is only available since API microversion 1.7.
 
 Response Codes
 --------------
@@ -230,6 +237,8 @@ Adopt node (preview)
    min_version: 1.7
 
 Preview a node adoption.
+
+This API is only available since API microversion 1.7.
 
 Response Codes
 --------------
@@ -322,6 +331,7 @@ Response Parameters
   - cluster_id: cluster_id
   - created_at: created_at
   - data: node_data
+  - dependents: dependents
   - domain: domain
   - id: node_id
   - index: index
@@ -397,6 +407,7 @@ Response Parameters
   - cluster_id: cluster_id
   - created_at: created_at
   - data: node_data
+  - dependents: dependents
   - domain: domain
   - id: node_id
   - index: index
@@ -504,6 +515,14 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - Location: location
+  - action: action_action
+
+Response Example
+----------------
+
+.. literalinclude:: samples/node-action-response.json
+   :language: javascript
+
 
 
 Recover a Node to Healthy Status
@@ -560,6 +579,13 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - Location: location
+  - action: action_action
+
+Response Example
+----------------
+
+.. literalinclude:: samples/node-action-response.json
+   :language: javascript
 
 
 Perform an Operation on a Node
@@ -609,3 +635,10 @@ Response Parameters
 
   - X-OpenStack-Request-ID: request_id
   - Location: location
+  - action: action_action
+
+Response Example
+----------------
+
+.. literalinclude:: samples/node-action-response.json
+   :language: javascript
