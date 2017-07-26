@@ -54,7 +54,7 @@ Some notes about using this template:
 * Please do not delete any of the *sections* in this template.  If you have
   nothing to say for a whole section, just write: None
 
-* For help with syntax, see http://sphinx-doc.org/rest.html
+* For help with syntax, see http://www.sphinx-doc.org/en/stable/rest.html
 
 * To test out your formatting, build the docs using tox and see the generated
   HTML file in doc/build/html/specs/<path_of_your_file>
