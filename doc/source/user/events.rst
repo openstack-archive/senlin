@@ -68,7 +68,7 @@ processed by some services before enabling the ``message`` dispatcher.
 Since the event dispatchers are designed as plug-ins, you can develop your own
 event dispatchers and have senlin engine load them on startup. For more
 details on developing and plugging in your own event dispatchers, please refer
-to the :doc:`../developer/plugin_guide` document.
+to the :doc:`../contributor/plugin_guide` document.
 
 The following sections are about examining events when using the ``database``
 dispatcher which creates database records when events happen.

@@ -27,7 +27,7 @@ AutoScaling-compatible Query API is in plan.
 
    overview
    install/index
-   configuration
+   configuration/index
 
 2 Tutorial
 ~~~~~~~~~~
@@ -130,17 +130,17 @@ This section targets senlin developers.
 .. toctree::
    :maxdepth: 1
 
-   developer/api_microversion
-   developer/authorization
-   developer/profile
-   developer/cluster
-   developer/node
-   developer/policy
-   developer/action
-   developer/receiver
-   developer/testing
-   developer/plugin_guide
-   developer/osprofiler
+   contributor/api_microversion
+   contributor/authorization
+   contributor/profile
+   contributor/cluster
+   contributor/node
+   contributor/policy
+   contributor/action
+   contributor/receiver
+   contributor/testing
+   contributor/plugin_guide
+   contributor/osprofiler
 
 5.2 Built-in Policy Types
 -------------------------
@@ -153,13 +153,13 @@ in a collaborative way to meet the needs of complicated usage scenarios.
 .. toctree::
    :maxdepth: 1
 
-   developer/policies/affinity_v1
-   developer/policies/deletion_v1
-   developer/policies/health_v1
-   developer/policies/load_balance_v1
-   developer/policies/region_v1
-   developer/policies/scaling_v1
-   developer/policies/zone_v1
+   contributor/policies/affinity_v1
+   contributor/policies/deletion_v1
+   contributor/policies/health_v1
+   contributor/policies/load_balance_v1
+   contributor/policies/region_v1
+   contributor/policies/scaling_v1
+   contributor/policies/zone_v1
 
 5.3 Reviewing Patches
 ---------------------
@@ -176,33 +176,27 @@ review experiences that should be practiced.
 .. toctree::
   :maxdepth: 1
 
-  developer/reviews
+  contributor/reviews
 
-6 References
+6 Administering Senlin
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. toctree::
+  :maxdepth: 1
+
+  admin/index
+
+
+7 References
 ~~~~~~~~~~~~
 
-6.1 API Documentation
----------------------
-
-Follow the link below for the Senlin API V1 specification:
-
--  `OpenStack API Complete Reference - Clustering`_
-
-6.2 Man Pages
--------------
-
 .. toctree::
-   :maxdepth: 1
+  :maxdepth: 1
 
-   man/index
+  reference/man/index
+  reference/glossary
+  reference/api
 
-6.3 Glossary
-------------
-
-.. toctree::
-   :maxdepth: 1
-
-   glossary
 
 Indices and tables
 ------------------
@@ -212,4 +206,3 @@ Indices and tables
 
 .. _`Code review guidelines (wiki)`: https://wiki.openstack.org/wiki/CodeReviewGuidelines
 .. _`OpenStack developer's guide`: https://docs.openstack.org/infra/manual/developers.html
-.. _`OpenStack API Complete Reference - Clustering`: https://developer.openstack.org/api-ref/clustering/
