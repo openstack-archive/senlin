@@ -73,9 +73,10 @@ class AffinityPolicy(base.Policy):
     )
 
     _POLICIES_VALUES = (
-        AFFINITY, ANTI_AFFINITY,
+        # NOTE: soft policies are supported from compute micro version 2.15
+        AFFINITY, SOFT_AFFINITY, ANTI_AFFINITY, SOFT_ANTI_AFFINITY,
     ) = (
-        'affinity', 'anti-affinity',
+        'affinity', 'soft-affinity', 'anti-affinity', 'soft-anti-affinity',
     )
 
     properties_schema = {
