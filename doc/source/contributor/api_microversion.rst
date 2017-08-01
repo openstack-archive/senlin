@@ -293,7 +293,7 @@ Planning and Committing Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once the idea of an API change is discussed with the core team and the
-concensus has been reached to bump the micro-version of Senlin API, you can
+consensus has been reached to bump the micro-version of Senlin API, you can
 start working on the changes in the following order:
 
 1. Prepare the engine and possibly the action layer for the change. One STRICT
