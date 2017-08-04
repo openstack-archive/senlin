@@ -51,3 +51,8 @@ class HealthRegistry(base.SenlinObject, base.VersionedObjectDictCompat):
     @classmethod
     def delete(cls, context, cluster_id):
         db_api.registry_delete(context, cluster_id)
+
+    @classmethod
+    def get(cls, context, cluster_id):
+        obj = db_api.registry_get(context, cluster_id)
+        return cls._from_db_object(context, cls(), obj)

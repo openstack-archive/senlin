@@ -1475,6 +1475,14 @@ def registry_delete(context, cluster_id):
         session.delete(registry)
 
 
+def registry_get(context, cluster_id):
+    with session_for_read() as session:
+        registry = session.query(models.HealthRegistry).filter_by(
+            cluster_id=cluster_id).first()
+
+        return registry
+
+
 # Utils
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""

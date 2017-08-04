@@ -68,3 +68,19 @@ class TestHealthRegistry(testtools.TestCase):
         hro.HealthRegistry.delete(self.ctx, "FAKE_ID")
 
         mock_delete.assert_called_once_with(self.ctx, "FAKE_ID")
+
+    @mock.patch.object(base.SenlinObject, '_from_db_object')
+    @mock.patch.object(db_api, 'registry_get')
+    def test_get(self, mock_get, mock_from):
+        x_registry = mock.Mock()
+        x_registry.cluster_id = 'FAKE'
+        mock_get.return_value = x_registry
+
+        x_obj = mock.Mock()
+        mock_from.return_value = x_obj
+
+        result = hro.HealthRegistry.get(self.ctx, 'FAKE')
+
+        self.assertEqual(x_obj, result)
+        mock_get.assert_called_once_with(self.ctx, 'FAKE')
+        mock_from.assert_called_once_with(self.ctx, mock.ANY, x_registry)
