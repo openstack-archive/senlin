@@ -496,14 +496,34 @@ def register(cluster_id, engine_id=None, **kwargs):
                   enabled=enabled)
 
 
-def unregister(cluster_id, engine_id=None):
-    return notify(engine_id, 'unregister_cluster', cluster_id=cluster_id)
+def unregister(cluster_id):
+    engine_id = get_manager_engine(cluster_id)
+    if engine_id:
+        return notify(engine_id, 'unregister_cluster', cluster_id=cluster_id)
+    return True
 
 
 def enable(cluster_id, **kwargs):
-    return notify(None, 'enable_cluster', cluster_id=cluster_id, params=kwargs)
+    engine_id = get_manager_engine(cluster_id)
+    if engine_id:
+        return notify(engine_id, 'enable_cluster', cluster_id=cluster_id,
+                      params=kwargs)
+    return False
 
 
 def disable(cluster_id, **kwargs):
-    return notify(None, 'disable_cluster', cluster_id=cluster_id,
-                  params=kwargs)
+    engine_id = get_manager_engine(cluster_id)
+    if engine_id:
+        return notify(engine_id, 'disable_cluster', cluster_id=cluster_id,
+                      params=kwargs)
+    return False
+
+
+def get_manager_engine(cluster_id):
+    ctx = context.get_admin_context()
+
+    registry = objects.HealthRegistry.get(ctx, cluster_id)
+    if not registry:
+        return None
+
+    return registry.engine_id

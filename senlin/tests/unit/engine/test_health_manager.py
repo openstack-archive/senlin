@@ -922,3 +922,34 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertIn({'cluster_id': 'FAKE_ID', 'enabled': False},
                       self.hm.rt['registries'])
         mock_update.assert_called_once_with(ctx, 'FAKE_ID', {'enabled': False})
+
+    @mock.patch.object(context, 'get_admin_context')
+    @mock.patch.object(hr.HealthRegistry, 'get')
+    def test_get_manager_engine(self, mock_get, mock_ctx):
+        ctx = mock.Mock()
+        mock_ctx.return_value = ctx
+
+        registry = mock.Mock(engine_id='fake')
+        mock_get.return_value = registry
+
+        result = hm.get_manager_engine('CID')
+
+        self.assertEqual(result, 'fake')
+
+        mock_get.assert_called_once_with(ctx, 'CID')
+        self.assertTrue(mock_ctx.called)
+
+    @mock.patch.object(context, 'get_admin_context')
+    @mock.patch.object(hr.HealthRegistry, 'get')
+    def test_get_manager_engine_none(self, mock_get, mock_ctx):
+        ctx = mock.Mock()
+        mock_ctx.return_value = ctx
+
+        mock_get.return_value = None
+
+        result = hm.get_manager_engine('CID')
+
+        self.assertIsNone(result)
+
+        mock_get.assert_called_once_with(ctx, 'CID')
+        self.assertTrue(mock_ctx.called)
