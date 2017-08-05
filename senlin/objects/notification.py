@@ -166,7 +166,7 @@ class NodePayload(NotificationObject):
         'name': fields.StringField(),
         'profile_id': fields.UUIDField(),
         'cluster_id': fields.StringField(),
-        'physical_id': fields.UUIDField(nullable=True),
+        'physical_id': fields.StringField(nullable=True),
         'index': fields.IntegerField(),
         'role': fields.StringField(nullable=True),
         'init_at': fields.DateTimeField(),
