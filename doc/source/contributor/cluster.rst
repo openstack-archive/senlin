@@ -259,9 +259,9 @@ acceptable.
 
 Once the cross-verification has passed, Senlin engine will calculate the new
 ``desired_capacity`` and adjust the size of the cluster if deemed necessary.
-For example, when the cluster size is below the new ``min_size``, some nodes
-will be removed from the cluster; when the cluster size is above the new
-``max_size``, new nodes will be created and added to the cluster. If the
+For example, when the cluster size is below the new ``min_size``, new nodes
+will be created and added to the cluster; when the cluster size is above the
+new ``max_size``, some nodes will be removed from the cluster. If the
 ``desired_capacity`` is set and the property value falls between the new range
 of cluster size, Senlin tries resize the cluster to the ``desired_capacity``.
 
