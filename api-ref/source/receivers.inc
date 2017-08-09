@@ -315,3 +315,46 @@ Response Parameters
   - X-OpenStack-Request-Id: request_id
 
 This operation does not return a response body.
+
+
+Notify receiver
+===============
+
+.. rest_method::  POST /v1/receivers/{receiver_id}/notify
+
+Notifies message type receiver.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
+
+Request Parameters
+------------------
+
+This operation does not accept a request body.
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - receiver_id: receiver_id_url
+
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - X-OpenStack-Request-Id: request_id
+
+This operation does not return a response body.

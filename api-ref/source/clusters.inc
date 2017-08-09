@@ -40,7 +40,7 @@ Request Parameters
   - name: name_query
   - status: status_query
 
-The sorting keys include ``name``, ``status``, ``init_at``, ``created_at``,
+The sorting keys include ``name``, ``status``, ``init_at``, ``created_at``
 and ``updated_at``.
 
 Response Parameters
