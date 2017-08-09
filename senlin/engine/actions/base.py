@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import eventlet
 import six
 import time
 
@@ -315,11 +316,23 @@ class Action(object):
             ao.Action.mark_cancelled(self.context, self.id, timestamp)
 
         else:  # result == self.RES_RETRY:
-            status = self.READY
+            retries = self.data.get('retries', 0)
             # Action failed at the moment, but can be retried
-            # We abandon it and then notify other dispatchers to execute it
-            ao.Action.abandon(self.context, self.id)
-            dispatcher.start_action()
+            # retries time is configurable
+            if retries < cfg.CONF.lock_retry_times:
+                status = self.READY
+                retries += 1
+
+                self.data.update({'retries': retries})
+                ao.Action.abandon(self.context, self.id, {'data': self.data})
+                # sleep for a while
+                eventlet.sleep(cfg.CONF.lock_retry_interval)
+                dispatcher.start_action(self.id)
+            else:
+                status = self.RES_ERROR
+                reason = reason or _('Exceeded maximum number of retries (%d)'
+                                     ) % cfg.CONF.lock_retry_times
+                ao.Action.mark_failed(self.context, self.id, timestamp, reason)
 
         if status == self.SUCCEEDED:
             EVENT.info(self, consts.PHASE_END, reason or 'SUCCEEDED')
