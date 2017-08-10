@@ -11,6 +11,7 @@
 # under the License.
 
 import copy
+import eventlet
 
 import mock
 from oslo_config import cfg
@@ -23,6 +24,7 @@ from senlin.common import exception
 from senlin.common import utils as common_utils
 from senlin.engine.actions import base as ab
 from senlin.engine import cluster as cluster_mod
+from senlin.engine import dispatcher
 from senlin.engine import environment
 from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
@@ -344,8 +346,11 @@ class ActionBaseTest(base.SenlinTestCase):
     @mock.patch.object(ao.Action, 'mark_failed')
     @mock.patch.object(ao.Action, 'mark_cancelled')
     @mock.patch.object(ao.Action, 'abandon')
-    def test_set_status(self, mock_abandon, mark_cancel, mark_fail,
-                        mark_succeed, mock_event, mock_error, mock_info):
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(eventlet, 'sleep')
+    def test_set_status(self, mock_sleep, mock_start, mock_abandon,
+                        mark_cancel, mark_fail, mark_succeed, mock_event,
+                        mock_error, mock_info):
         action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id='FAKE_ID')
         action.entity = mock.Mock()
 
@@ -380,7 +385,17 @@ class ActionBaseTest(base.SenlinTestCase):
         action.set_status(action.RES_RETRY, 'BUSY')
         self.assertEqual(action.READY, action.status)
         self.assertEqual('BUSY', action.status_reason)
-        mock_abandon.assert_called_once_with(action.context, 'FAKE_ID')
+        mock_start.assert_called_once_with(action.id)
+        mock_sleep.assert_called_once_with(10)
+        mock_abandon.assert_called_once_with(
+            action.context, 'FAKE_ID', {'data': {'retries': 1}})
+
+        mark_fail.reset_mock()
+        action.data = {'retries': 3}
+        action.set_status(action.RES_RETRY, 'BUSY')
+        self.assertEqual(action.RES_ERROR, action.status)
+        mark_fail.assert_called_once_with(action.context, 'FAKE_ID', mock.ANY,
+                                          'BUSY')
 
     @mock.patch.object(EVENT, 'info')
     @mock.patch.object(EVENT, 'error')
