@@ -130,8 +130,8 @@ class Action(base.SenlinObject, base.VersionedObjectDictCompat):
         return db_api.action_acquire_random_ready(context, owner, timestamp)
 
     @classmethod
-    def abandon(cls, context, action_id):
-        return db_api.action_abandon(context, action_id)
+    def abandon(cls, context, action_id, values=None):
+        return db_api.action_abandon(context, action_id, values)
 
     @classmethod
     def signal(cls, context, action_id, value):
