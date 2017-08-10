@@ -187,6 +187,7 @@ Request Parameters
   - metadata: metadata_req
   - name: node_name_adopt
   - overrides: overrides
+  - role: role_req
   - snapshot: snapshot
   - type: profile_type_name
 
