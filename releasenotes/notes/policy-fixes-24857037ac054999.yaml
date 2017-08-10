@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed bugs in deletion zone policy and region policy which were not able
+    to correctly parse node reference.
