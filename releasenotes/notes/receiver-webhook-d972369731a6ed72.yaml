@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed a bug related to webhook ID in the channel info of a receiver.
+    The channel info now always contains valid webhook ID.

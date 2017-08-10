@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Relaxed constraint on node physical_id property. Any string value is now
+    treated as valid value even if it is not an UUID.
