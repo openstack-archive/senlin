@@ -384,8 +384,8 @@ def action_acquire_random_ready(context, owner, timestamp):
     return IMPL.action_acquire_random_ready(context, owner, timestamp)
 
 
-def action_abandon(context, action_id):
-    return IMPL.action_abandon(context, action_id)
+def action_abandon(context, action_id, values=None):
+    return IMPL.action_abandon(context, action_id, values)
 
 
 def action_lock_check(context, action_id, owner=None):

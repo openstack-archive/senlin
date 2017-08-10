@@ -1217,7 +1217,7 @@ def action_acquire_random_ready(context, owner, timestamp):
             return action
 
 
-def action_abandon(context, action_id):
+def action_abandon(context, action_id, values=None):
     '''Abandon an action for other workers to execute again.
 
     This API is always called with the action locked by the current
@@ -1230,6 +1230,8 @@ def action_abandon(context, action_id):
         action.start_time = None
         action.status = consts.ACTION_READY
         action.status_reason = _('The action was abandoned.')
+        if values:
+            action.update(values)
         action.save(session)
         return action
 

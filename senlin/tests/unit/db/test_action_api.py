@@ -558,8 +558,9 @@ class DBAPIActionTest(base.SenlinTestCase):
         before_abandon = db_api.action_get(self.ctx, action.id)
         self.assertEqual(spec['owner'], before_abandon.owner)
         self.assertEqual(spec['start_time'], before_abandon.start_time)
+        self.assertIsNone(before_abandon.data)
 
-        db_api.action_abandon(self.ctx, action.id)
+        db_api.action_abandon(self.ctx, action.id, {})
         after_abandon = db_api.action_get(self.ctx, action.id)
 
         self.assertIsNone(after_abandon.owner)
@@ -567,3 +568,27 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertEqual('The action was abandoned.',
                          after_abandon.status_reason)
         self.assertEqual(consts.ACTION_READY, after_abandon.status)
+        self.assertIsNone(after_abandon.data)
+
+    def test_action_abandon_with_params(self):
+        spec = {
+            "owner": "test_owner",
+            "start_time": 14506893904.0
+        }
+        action = _create_action(self.ctx, **spec)
+
+        before_abandon = db_api.action_get(self.ctx, action.id)
+        self.assertEqual(spec['owner'], before_abandon.owner)
+        self.assertEqual(spec['start_time'], before_abandon.start_time)
+        self.assertIsNone(before_abandon.data)
+
+        db_api.action_abandon(self.ctx, action.id,
+                              {'data': {'retries': 1}})
+        after_abandon = db_api.action_get(self.ctx, action.id)
+
+        self.assertIsNone(after_abandon.owner)
+        self.assertIsNone(after_abandon.start_time)
+        self.assertEqual('The action was abandoned.',
+                         after_abandon.status_reason)
+        self.assertEqual(consts.ACTION_READY, after_abandon.status)
+        self.assertEqual({'retries': 1}, after_abandon.data)
