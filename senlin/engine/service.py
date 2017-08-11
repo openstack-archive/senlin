@@ -1811,7 +1811,7 @@ class EngineService(service.Service):
         LOG.info("Adopting node '%s'.", req.identity)
 
         # check name uniqueness if needed
-        if req.obj_attr_is_set('name'):
+        if req.obj_attr_is_set('name') and req.name:
             name = req.name
             if CONF.name_unique and node_obj.Node.get_by_name(ctx, name):
                 msg = _("The node named (%s) already exists.") % name
