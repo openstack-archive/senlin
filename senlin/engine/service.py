@@ -1830,6 +1830,8 @@ class EngineService(service.Service):
         # Create a node instance
         values = {
             'name': name,
+            'data': {},
+            'dependents': {},
             'profile_id': profile.id,
             'cluster_id': '',
             'physical_id': req.identity,
