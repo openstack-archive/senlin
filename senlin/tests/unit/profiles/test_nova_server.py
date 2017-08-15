@@ -926,12 +926,26 @@ class TestNovaServerBasic(base.SenlinTestCase):
             },
             addresses={
                 "NET1": [{
+                    "OS-EXT-IPS-MAC:mac_addr": "fa:16:3e:09:6f:d8",
                     "OS-EXT-IPS:type": "fixed",
-                    "addr": "ADDR1"
+                    "addr": "ADDR1_IPv4",
+                    "version": 4
+                }, {
+                    "OS-EXT-IPS-MAC:mac_addr": "fa:16:3e:09:6f:d8",
+                    "OS-EXT-IPS:type": "fixed",
+                    "addr": "ADDR1_IPv6",
+                    "version": 6
                 }],
                 "NET2": [{
+                    "OS-EXT-IPS-MAC:mac_addr": "aa:e6:3e:09:6f:db",
                     "OS-EXT-IPS:type": "fixed",
-                    "addr": "ADDR2"
+                    "addr": "ADDR2_IPv4",
+                    "version": 4
+                }, {
+                    "OS-EXT-IPS-MAC:mac_addr": "aa:e6:3e:09:6f:db",
+                    "OS-EXT-IPS:type": "fixed",
+                    "addr": "ADDR2_IPv6",
+                    "version": 6
                 }],
             },
             security_groups=[{'name': 'GROUP1'}, {'name': 'GROUP2'}]
@@ -952,6 +966,8 @@ class TestNovaServerBasic(base.SenlinTestCase):
         self.assertEqual('IMAGE_ID', res['image'])
         self.assertEqual('FAKE_KEY', res['key_name'])
         self.assertEqual({'mkey': 'mvalue'}, res['metadata'])
+
+        self.assertEqual(2, len(res['networks']))
         self.assertIn({'network': 'NET1'}, res['networks'])
         self.assertIn({'network': 'NET2'}, res['networks'])
         self.assertIn('GROUP1', res['security_groups'])
