@@ -433,6 +433,9 @@ class TestString(base.SenlinTestCase):
         res = sot.to_schema_type(False)
         self.assertEqual('False', res)
 
+        res = sot.to_schema_type(None)
+        self.assertIsNone(res)
+
     def test_resolve(self):
         sot = schema.String()
 
@@ -441,6 +444,9 @@ class TestString(base.SenlinTestCase):
 
         res = sot.resolve(True)
         self.assertEqual('True', res)
+
+        res = sot.resolve(None)
+        self.assertIsNone(res)
 
     def test_validate(self):
         sot = schema.String()
