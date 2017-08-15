@@ -1,0 +1,212 @@
+# Wenyan Wang <woshishui419@126.com>, 2016. #zanata
+# zzxwill <zzxwill@gmail.com>, 2016. #zanata
+msgid ""
+msgstr ""
+"Project-Id-Version: Senlin Release Notes 4.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-08-15 01:53+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2016-09-23 12:24+0000\n"
+"Last-Translator: Wenyan Wang <woshishui419@126.com>\n"
+"Language-Team: Chinese (China)\n"
+"Language: zh-CN\n"
+"X-Generator: Zanata 3.9.6\n"
+"Plural-Forms: nplurals=1; plural=0\n"
+
+msgid "1.0.0"
+msgstr "1.0.0"
+
+msgid "2.0.0.0b1"
+msgstr "2.0.0.0b1"
+
+msgid "2.0.0.0b2"
+msgstr "2.0.0.0b2"
+
+msgid "2.0.0.0b3"
+msgstr "2.0.0.0b3"
+
+msgid "2.0.0.0rc1"
+msgstr "2.0.0.0rc1"
+
+msgid "A new ``cluster_collect`` API is added."
+msgstr "添加了一个新的API``cluster_collect``。"
+
+msgid ""
+"A new policy-validate API has been added to validate the spec of a policy "
+"without actually creating an instance of it."
+msgstr ""
+"添加了一种新的验证策略的API用来验证策略的规范而实际上不需要创建它的一个实例。"
+
+msgid "Action list now can be filtered by its 'status' property."
+msgstr "Action列表现在可以通过它的status属性过滤。"
+
+msgid "Add support to update image property of a Nova server."
+msgstr "为更新Nova server的镜像属性添加支持。"
+
+msgid "Added LBaaS health monitor support to load-balancing policy v1.0."
+msgstr "负载均衡策略1.0版添加了LBaaS健康监测支持。"
+
+msgid ""
+"Added command 'senlin-manage service clean' to clean the dead engine records."
+msgstr "添加了命令“senlin-manage service clean”来清理死亡的engine记录。"
+
+msgid ""
+"Added command 'senlin-manage service list' to show the status of engine."
+msgstr "添加了命令“senlin-manage service list”来显示engine的状态。"
+
+msgid "Added configuration option for enforcing name uniqueness."
+msgstr "添加了配置选项来保障名称一致性。"
+
+msgid "Added developer documentation for 'receiver'."
+msgstr "为'receiver'添加了开发者文档。"
+
+msgid ""
+"Added documentation for lb policy, affinity policy, scaling policy, zone "
+"placement policy and region placement policy."
+msgstr ""
+"为lb policy, affinity policy, scaling policy, zone placement policy和region "
+"placement policy添加了文档。"
+
+msgid "Added documentation for senlin.policy.deletion-v1.0."
+msgstr "为senlin.policy.deletion-v1.0添加了文档。"
+
+msgid "Added new APIs for cluster/node check and recover."
+msgstr "为集群和节点的检查和恢复添加了新的API。"
+
+msgid "Added parameter checking for cluster-policy-detach API invocation."
+msgstr "为API cluster-policy-detach的调用添加了参数检查。"
+
+msgid "Added parameter checking for cluster-policy-update API invocation."
+msgstr "为API cluster-policy-update的调用添加了参数检查。"
+
+msgid "Added parameter checking for policy-create API calls."
+msgstr "为API policy-create的调用添加了参数检查。"
+
+msgid "Added parameter sanitization for cluster-policy-attach."
+msgstr "为cluster-policy-attach添加了参数过滤。"
+
+msgid "Added profile property checking regarding whether they are updatable."
+msgstr "添加了样版属性检查，不论样版是否可更新。"
+
+msgid ""
+"Added senlin.policy.affinity-v1.0 which can be used to control how VM "
+"servers are placed based on nova servergroup settings."
+msgstr ""
+"添加了senlin.policy.affinity-v1.0，它可以被用来控制基于nova servergroup设置的"
+"虚拟机服务器如何被place。"
+
+msgid "Added support of multi-tenancy for actions."
+msgstr "为action添加了多租户支持。"
+
+msgid "Added support to limit number of clusters per project."
+msgstr "为限定每个项目的集群个数添加了支持。"
+
+msgid ""
+"Added support to multi-tenancy (aka. project_safe checking) when finding "
+"resources."
+msgstr "当查找资源时，添加了多租户支持，也就是project_safe检查。"
+
+msgid "Added support to multi-tenancy for event resources."
+msgstr "为事件资源添加了多租户支持。"
+
+msgid ""
+"Added support to oslo.versionedobject so that DB interactions are "
+"abstracted. It is possible to do live upgrade for senlin service now."
+msgstr ""
+"为oslo.versionedobject添加了支持，这样抽象了数据库交互，senlin服务的热升级成"
+"为了可能。"
+
+msgid "Added support to updating network properties of a nova server."
+msgstr "为更新nova服务器的网络属性添加了支持。"
+
+msgid "Added user documentation for 'receiver'."
+msgstr "为‘receiver’添加了用户文档。"
+
+msgid ""
+"Both image ID and image name are supported when creating os.nova.server "
+"profile."
+msgstr "当创建os.nova.server样版时，镜像ID和名称都是支持的。"
+
+msgid "Bug Fixes"
+msgstr "Bug修复"
+
+msgid ""
+"Clusters now have a new 'RESIZING' status when its scale is being changed."
+msgstr "当集群的规模正在被改变时，它现在有一个新状态'RESIZING'。"
+
+msgid "Command `senlin-manage purge_deleted` is removed."
+msgstr "命令`senlin-manage purge_deleted`被移除了。"
+
+msgid "Current Series Release Notes"
+msgstr "当前版本发布说明"
+
+msgid ""
+"DB columns obj_id, obj_type and obj_name in the event table are now renamed "
+"to oid, otype and oname correspondingly."
+msgstr ""
+"在事件表中的DB列obj_id, obj_type以及obj_name目前被重新改名为 oid, otype以及 "
+"oname 。"
+
+msgid "Deprecation Notes"
+msgstr "弃用说明"
+
+msgid "Enabled update to the 'flavor' of a nova server profile."
+msgstr "允许nova服务器的样版的‘flavor’属性的更新操作。"
+
+msgid "Enabled update to the 'name' of a nova server profile."
+msgstr "允许nova服务器的样版的‘name’属性的更新操作。"
+
+msgid "Engine scheduler was redesigned to work in \"tickless\" way."
+msgstr "引擎调度器被重新设计为以\"tickless\"方式工作。"
+
+msgid ""
+"Ensure there are no underscores ('_') in resource names exposed through "
+"RESTful API"
+msgstr "请确保通过RESTful API暴漏的资源名称中没有下划线('_') 。"
+
+msgid "Event list can now be filtered by its 'level' property."
+msgstr "事件列表现在可以通过'level'属性过滤。"
+
+msgid "Mitaka Series Release Notes"
+msgstr "Mitaka版本发布说明"
+
+msgid "New Features"
+msgstr "新特性"
+
+msgid "Other Notes"
+msgstr "其他说明"
+
+msgid "Removed documentation for 'webhook'."
+msgstr "移除了'webhook'的文档。"
+
+msgid "Security Issues"
+msgstr "安全问题"
+
+msgid "Senlin API documentation merged into api-site and published."
+msgstr "Senlin API文档合并到api站点并发布。"
+
+msgid ""
+"Senlin API has removed 'tenant_id' from its endpoint. This means users have "
+"to recreate their keystone endpoints if they have an old installation."
+msgstr ""
+"Senlin API从它的端点中删除了'tenant_id'。这意味着用户如果已经有了一个老的安"
+"装，则必须重新创建他们的keystone端点。"
+
+msgid ""
+"Senlin API/Engine configuration options are now documented and published "
+"online."
+msgstr "Senlin API/引擎配置选项现在已经文档话并且在线发布了。"
+
+msgid "Senlin Release Notes"
+msgstr "Senlin发布说明"
+
+msgid "Status `DELETED` is removed from clusters and nodes."
+msgstr "状态`DELETED`从集群和节点中删除了。"
+
+msgid "Supporting engine status check, with senlin-manage command."
+msgstr "使用senlin管理命令，支持引擎状态检查。"
+
+msgid "Upgrade Notes"
+msgstr "升级说明"
