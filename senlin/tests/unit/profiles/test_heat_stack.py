@@ -641,7 +641,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         x_stack = mock.Mock(
             parameters={'p1': 'v1', 'OS::stack_id': 'FAKE_ID'},
             timeout_mins=123,
-            disable_rollback=False
+            is_rollback_disabled=False
         )
         oc = mock.Mock()
         oc.stack_get = mock.Mock(return_value=x_stack)
@@ -744,7 +744,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         x_stack = mock.Mock(
             parameters={'p1': 'v1', 'OS::stack_id': 'FAKE_ID'},
             timeout_mins=123,
-            disable_rollback=False
+            is_rollback_disabled=False
         )
         oc = mock.Mock()
         oc.stack_get = mock.Mock(return_value=x_stack)
