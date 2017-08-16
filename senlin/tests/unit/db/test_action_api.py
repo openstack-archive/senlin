@@ -10,10 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import six
 import time
 
-import six
-
+from oslo_utils import timeutils as tu
 from senlin.common import consts
 from senlin.common import exception
 from senlin.db.sqlalchemy import api as db_api
@@ -156,6 +156,37 @@ class DBAPIActionTest(base.SenlinTestCase):
         retobj = db_api.action_get(new_ctx, action.id, project_safe=False)
         self.assertIsNotNone(retobj)
 
+    def test_acquire_first_ready_none(self):
+        data = {'created_at': tu.utcnow(True)}
+
+        _create_action(self.ctx, **data)
+        result = db_api.action_acquire_first_ready(self.ctx, 'fake_o',
+                                                   tu.utcnow(True))
+        self.assertIsNone(result)
+
+    def test_acquire_first_ready_one(self):
+        data = {'created_at': tu.utcnow(True)}
+        _create_action(self.ctx, **data)
+
+        result = db_api.action_acquire_first_ready(self.ctx, 'fake_o',
+                                                   tu.utcnow(True))
+        self.assertIsNone(result)
+
+    def test_acquire_first_ready_mult(self):
+        data = {
+            'created_at': tu.utcnow(True),
+            'status': 'READY',
+        }
+        action1 = _create_action(self.ctx, **data)
+        time.sleep(1)
+
+        data['created_at'] = tu.utcnow(True)
+        _create_action(self.ctx, **data)
+
+        result = db_api.action_acquire_first_ready(self.ctx, 'fake_o',
+                                                   time.time())
+        self.assertEqual(action1.id, result.id)
+
     def test_action_acquire_random_ready(self):
         specs = [
             {'name': 'A01', 'status': 'INIT'},
@@ -171,6 +202,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         timestamp = time.time()
         action = db_api.action_acquire_random_ready(self.ctx, worker,
                                                     timestamp)
+
         self.assertIn(action.name, ('A02', 'A04'))
         self.assertEqual('worker2', action.owner)
         self.assertEqual(consts.ACTION_RUNNING, action.status)
