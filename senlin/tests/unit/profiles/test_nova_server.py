@@ -491,7 +491,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         cc.wait_for_server.side_effect = err
         ex = self.assertRaises(exc.EResourceCreation, profile.do_create,
                                node_obj)
-
+        self.assertEqual('FAKE_ID', ex.resource_id)
         self.assertEqual('Failed in creating server: TIMEOUT.',
                          six.text_type(ex))
         cc.wait_for_server.assert_called_once_with('FAKE_ID')
@@ -522,6 +522,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         # assertions
         self.assertEqual('Failed in creating server: creation failed.',
                          six.text_type(ex))
+        self.assertIsNone(ex.resource_id)
         self.assertEqual(0, cc.wait_for_server.call_count)
         self.assertEqual(0, mock_zone_info.call_count)
 

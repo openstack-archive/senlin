@@ -849,7 +849,7 @@ class ServerProfile(base.Profile):
                 kwargs['scheduler_hints'] = hints
 
         server = None
-        resource_id = 'UNKNOWN'
+        resource_id = None
         try:
             server = self.compute(obj).server_create(**kwargs)
             self.compute(obj).wait_for_server(server.id)
