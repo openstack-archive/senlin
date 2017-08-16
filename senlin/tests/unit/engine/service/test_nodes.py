@@ -785,6 +785,8 @@ class NodeTest(base.SenlinTestCase):
                               orno.NodeAdoptRequest)
         attrs = {
             'name': mock.ANY,
+            'data': {},
+            'dependents': {},
             'profile_id': 'PROFILE_ID',
             'physical_id': 'FAKE_ID',
             'cluster_id': '',
