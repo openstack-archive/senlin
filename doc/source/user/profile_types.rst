@@ -174,6 +174,45 @@ format by specifying the :option:`-f json` option as exemplified below::
   }
 
 
+Showing Profile Type Operations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each :term:`Profile Type` has built-in operations, you can get the operations
+of a profile type using the following command::
+
+  $ openstack cluster profile type ops os.heat.stack-1.0
+  operations:
+    abandon:
+      description: Abandon a heat stack node.
+      required: false
+      type: Map
+      updatable: false
+
+Here, each property has the following attributes:
+
+- ``description``: a textual description of the use of a property;
+- ``required``: whether the property must be specified. Such kind of a
+  property usually doesn't have a ``default`` value;
+- ``type``: one of ``String``, ``Integer``, ``Boolean``, ``Map`` or ``List``;
+- ``updatable``: a boolean indicating whether a property is updatable.
+
+The default output from the :command:`openstack cluster profile type ops`
+command is in YAML format. You can choose to show the spec schema in JSON
+format by specifying the :option:`-f json` option as exemplified below::
+
+  $ openstack cluster profile type ops -f json os.heat.stack-1.0
+  {
+    "operations": {
+      "abandon": {
+        "required": false,
+        "type": "Map",
+        "description": "Abandon a heat stack node.",
+        "updatable": false
+      }
+    }
+  }
+
+
 See Also
 ~~~~~~~~
 
