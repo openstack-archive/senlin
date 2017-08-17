@@ -335,7 +335,7 @@ class StackProfile(base.Profile):
             self.PARAMETERS: dict((k, v) for k, v in stack.parameters.items()
                                   if k.find('OS::', 0) < 0),
             self.TIMEOUT: stack.timeout_mins,
-            self.DISABLE_ROLLBACK: stack.disable_rollback
+            self.DISABLE_ROLLBACK: stack.is_rollback_disabled
         }
         if overrides:
             spec.update(overrides)
