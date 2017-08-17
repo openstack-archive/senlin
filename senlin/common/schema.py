@@ -252,7 +252,7 @@ class String(PropertySchema):
 
     def to_schema_type(self, value):
         try:
-            return str(value)
+            return str(value) if value is not None else None
         except Exception:
             raise
 
