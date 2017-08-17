@@ -1380,7 +1380,8 @@ class ServerProfile(base.Profile):
         for network, interfaces in networks.items():
             for intf in interfaces:
                 ip_type = intf.get('OS-EXT-IPS:type')
-                if ip_type == 'fixed':
+                net = {self.NETWORK: network}
+                if ip_type == 'fixed' and net not in net_list:
                     net_list.append({self.NETWORK: network})
 
         spec[self.NETWORKS] = net_list
