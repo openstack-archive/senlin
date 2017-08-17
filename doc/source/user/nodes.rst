@@ -279,6 +279,165 @@ with that of the existing one and whether the new profile has a well-formed
 process.
 
 
+Adopting a Node
+~~~~~~~~~~~~~~~
+
+In Senlin service, we can adopt an existing resource as a node and create a
+profile for this node. To adopt a node, you need to specify the resource
+physical ID by setting :option:`--identity <identity>` and resource
+profile_type name by setting :option:`--type <type>`. For example, the
+following example adopts a server with ID
+``1177c8e8-8472-4e9d-8f15-1d4866b85b8b`` as a node named ``test_adopt_node``::
+
+  $ openstack cluster node adopt --identity \
+            1177c8e8-8472-4e9d-8f15-1d4866b85b8b --type os.nova.server-1.0 \
+            --name test_adopt_node
+  +---------------+--------------------------------------+
+  | Field         | Value                                |
+  +---------------+--------------------------------------+
+  | cluster_id    |                                      |
+  | created_at    | 2017-08-16T07:52:50Z                 |
+  | data          | {}                                   |
+  | dependents    | {}                                   |
+  | details       | None                                 |
+  | domain_id     | None                                 |
+  | id            | f88b1d7d-1e25-4362-987c-52f8aea26520 |
+  | index         | -1                                   |
+  | init_at       | 2017-08-16T07:52:50Z                 |
+  | location      | None                                 |
+  | metadata      | {}                                   |
+  | name          | test_adopt_node                      |
+  | physical_id   | 1177c8e8-8472-4e9d-8f15-1d4866b85b8b |
+  | profile_id    | f9e5e3dd-d4f3-44a1-901e-351fa39e5801 |
+  | profile_name  | prof-test_adopt_node                 |
+  | project_id    | 138cf3f92bb3459da02363db8d53ac30     |
+  | role          |                                      |
+  | status        | ACTIVE                               |
+  | status_reason | Node adopted successfully            |
+  | updated_at    | None                                 |
+  | user_id       | 67dc524bfb45492496c8ff7ecdedd394     |
+  +---------------+--------------------------------------+
+
+The :option:`--name <NAME>` is optional, if omitted, Senlin engine will
+generate a random name start with ``node-`` for the node.
+
+The option :option:`--role <ROLE>` could be used by a profile type
+implementation to treat nodes differently. For example, the following command
+adopts a server as a node with a ``master`` role::
+
+  $ openstack cluster node adopt --identity \
+            1177c8e8-8472-4e9d-8f15-1d4866b85b8b --type os.nova.server-1.0 \
+            --name test_adopt_node --role master
+
+The option :option:`--metadata <K1=V1;K2=V2...>` is a list of
+key-value pairs separated by a semicolon ('``;``'). These key-value pairs are
+attached to the node and can be used for whatever purposes. For example::
+
+  $ openstack cluster node adopt --identity \
+            1177c8e8-8472-4e9d-8f15-1d4866b85b8b --type os.nova.server-1.0 \
+            --name test_adopt_node --metadata "key1=value1;key2=value2"
+
+Another option :option:`--overrides <JSON>` support user to override
+the node profile properties. For example, the following command can adopt a
+server as a node and override the network properties in node's profile::
+
+  $ openstack cluster node adopt --identity \
+                1177c8e8-8472-4e9d-8f15-1d4866b85b8b \
+                --type os.nova.server-1.0 \
+                --override '{"networks":[{"network": "public"}]}'
+
+The option :option:`--snapshot <SNAPSHOT>` is boolean type. If set, senlin
+Senlin engine will create a snapshot for the resource before accept the
+resource as a node.
+
+
+Previewing a Node for Adoption
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A resource can be previewed before getting adopted as a Senlin node using the
+:command:`openstack cluster node adopt` command with option
+:option:`--preview <PREVIEW>`. To preview a node, you need to specify the
+resource physical ID by setting :option:`--identity <identity>` and resource
+profile_type name by setting :option:`--type <type>`. For example::
+
+  $ openstack cluster node adopt --preview \
+                    --identity 1177c8e8-8472-4e9d-8f15-1d4866b85b8b \
+                    --type os.nova.server-1.0
+  +--------------+----------------------------------------------------------------------+
+  | Field        | Value                                                                |
+  +--------------+----------------------------------------------------------------------+
+  | node_preview | +------------+-----------------------------------------------------+ |
+  |              | | property   | value                                               | |
+  |              | +------------+-----------------------------------------------------+ |
+  |              | | properties | {                                                   | |
+  |              | |            |   "name": "test0",                                  | |
+  |              | |            |   "availability_zone": "nova",                      | |
+  |              | |            |   "block_device_mapping_v2": [],                    | |
+  |              | |            |   "image": "6232a7b9-8af1-4dce-8eb5-f2988a0e34bc",  | |
+  |              | |            |   "key_name": "oskey",                              | |
+  |              | |            |   "auto_disk_config": false,                        | |
+  |              | |            |   "flavor": "1",                                    | |
+  |              | |            |   "metadata": {},                                   | |
+  |              | |            |   "networks": [                                     | |
+  |              | |            |     {                                               | |
+  |              | |            |       "network": "private"                          | |
+  |              | |            |     }                                               | |
+  |              | |            |   ],                                                | |
+  |              | |            |   "security_groups": [                              | |
+  |              | |            |     "default",                                      | |
+  |              | |            |     "default"                                       | |
+  |              | |            |   ],                                                | |
+  |              | |            |   "config_drive": false                             | |
+  |              | |            | }                                                   | |
+  |              | | type       | os.nova.server                                      | |
+  |              | | version    | 1.0                                                 | |
+  |              | +------------+-----------------------------------------------------+ |
+  +--------------+----------------------------------------------------------------------+
+
+The option :option:`--overrides <JSON>` support user to override the node
+profile properties. For example, the following command can adopt a server
+as a node and override the network properties in node's profile::
+
+  $ openstack cluster node adopt --preview --identity \
+                1177c8e8-8472-4e9d-8f15-1d4866b85b8b \
+                --type os.nova.server-1.0 \
+                --override '{"networks":[{"network": "public"}]}'
+  +--------------+----------------------------------------------------------------------+
+  | Field        | Value                                                                |
+  +--------------+----------------------------------------------------------------------+
+  | node_preview | +------------+-----------------------------------------------------+ |
+  |              | | property   | value                                               | |
+  |              | +------------+-----------------------------------------------------+ |
+  |              | | properties | {                                                   | |
+  |              | |            |   "name": "test0",                                  | |
+  |              | |            |   "availability_zone": "nova",                      | |
+  |              | |            |   "block_device_mapping_v2": [],                    | |
+  |              | |            |   "image": "6232a7b9-8af1-4dce-8eb5-f2988a0e34bc",  | |
+  |              | |            |   "key_name": "oskey",                              | |
+  |              | |            |   "auto_disk_config": false,                        | |
+  |              | |            |   "flavor": "1",                                    | |
+  |              | |            |   "metadata": {},                                   | |
+  |              | |            |   "networks": [                                     | |
+  |              | |            |     {                                               | |
+  |              | |            |       "network": "public"                           | |
+  |              | |            |     }                                               | |
+  |              | |            |   ],                                                | |
+  |              | |            |   "security_groups": [                              | |
+  |              | |            |     "default",                                      | |
+  |              | |            |     "default"                                       | |
+  |              | |            |   ],                                                | |
+  |              | |            |   "config_drive": false                             | |
+  |              | |            | }                                                   | |
+  |              | | type       | os.nova.server                                      | |
+  |              | | version    | 1.0                                                 | |
+  |              | +------------+-----------------------------------------------------+ |
+  +--------------+----------------------------------------------------------------------+
+
+The option :option:`--snapshot <SNAPSHOT>` is boolean type. If set, senlin
+Senlin engine will create a snapshot for the resource before accept the
+resource as a node.
+
+
 Deleting a Node
 ~~~~~~~~~~~~~~~
 
