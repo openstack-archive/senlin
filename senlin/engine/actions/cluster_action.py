@@ -51,6 +51,7 @@ class ClusterAction(base.Action):
 
         try:
             self.entity = cluster_mod.Cluster.load(self.context, self.target)
+            self.timeout = self.entity.timeout
         except Exception:
             self.entity = None
 
