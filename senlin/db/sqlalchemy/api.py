@@ -1217,6 +1217,31 @@ def action_acquire_random_ready(context, owner, timestamp):
             return action
 
 
+def _action_acquire_ready(session, owner, timestamp, order=None):
+    action = session.query(models.Action).\
+        filter_by(status=consts.ACTION_READY).\
+        filter_by(owner=None).\
+        order_by(order or func.random()).\
+        with_for_update().first()
+
+    if action:
+        action.owner = owner
+        action.start_time = timestamp
+        action.status = consts.ACTION_RUNNING
+        action.status_reason = _('The action is being processed.')
+        action.save(session)
+
+    return action
+
+
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
+def action_acquire_first_ready(context, owner, timestamp):
+    with session_for_write() as session:
+        return _action_acquire_ready(session, owner, timestamp,
+                                     consts.ACTION_CREATED_AT)
+
+
 def action_abandon(context, action_id, values=None):
     '''Abandon an action for other workers to execute again.
 

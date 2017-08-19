@@ -384,6 +384,10 @@ def action_acquire_random_ready(context, owner, timestamp):
     return IMPL.action_acquire_random_ready(context, owner, timestamp)
 
 
+def action_acquire_first_ready(context, owner, timestamp):
+    return IMPL.action_acquire_first_ready(context, owner, timestamp)
+
+
 def action_abandon(context, action_id, values=None):
     return IMPL.action_abandon(context, action_id, values)
 
