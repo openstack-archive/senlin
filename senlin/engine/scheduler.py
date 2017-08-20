@@ -117,8 +117,8 @@ class ThreadGroupManager(object):
         batch_interval = cfg.CONF.batch_interval
         while True:
             timestamp = wallclock()
-            action = ao.Action.acquire_random_ready(self.db_session, worker_id,
-                                                    timestamp)
+            action = ao.Action.acquire_first_ready(self.db_session, worker_id,
+                                                   timestamp)
             if action:
                 if batch_size > 0 and 'NODE' in action.action:
                     if actions_launched < batch_size:
