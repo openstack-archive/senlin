@@ -197,7 +197,7 @@ class ServerProfile(base.Profile):
                         ),
                     ),
                     FLOATING_NETWORK: schema.String(
-                        _('The nework on which to create a floating IP'),
+                        _('The network on which to create a floating IP'),
                     ),
                     FLOATING_IP: schema.String(
                         _('The floating IP address to be associated with '
