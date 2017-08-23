@@ -197,7 +197,7 @@ class EngineService(service.Service):
     def service_manage_cleanup(self):
         self._service_manage_cleanup()
         self.cleanup_count += 1
-        LOG.info('Service chean-up attempt count: %s', self.cleanup_count)
+        LOG.info('Service clean-up attempt count: %s', self.cleanup_count)
         if self.cleanup_count >= 2:
             self.cleanup_timer.stop()
             LOG.info("Finished cleaning up dead services.")
