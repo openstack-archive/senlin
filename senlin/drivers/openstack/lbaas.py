@@ -54,7 +54,7 @@ class LoadBalancerDriver(base.DriverBase):
         waited = 0
         while waited < self.lb_status_timeout:
             try:
-                lb = self.nc().loadbalancer_get(lb_id)
+                lb = self.nc().loadbalancer_get(lb_id, ignore_missing=True)
             except exception.InternalError as ex:
                 msg = ('Failed in getting loadbalancer: %s.'
                        % six.text_type(ex))
