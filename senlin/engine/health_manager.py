@@ -214,23 +214,23 @@ class HealthManager(service.Service):
 
     def _wait_for_action(self, ctx, action_id, timeout):
         done = False
-        total_sleep = 0
         req = objects.ActionGetRequest(identity=action_id)
-        while total_sleep < timeout:
-            action = self.rpc_client.call(ctx, 'action_get', req)
-            if action['status'] in ['SUCCEEDED', 'FAILED', 'CANCELLED']:
-                if action['status'] == 'SUCCEEDED':
-                    done = True
-                break
-            time.sleep(2)
-            total_sleep += 2
+        with timeutils.StopWatch(timeout) as timeout_watch:
+            while timeout > 0:
+                action = self.rpc_client.call(ctx, 'action_get', req)
+                if action['status'] in ['SUCCEEDED', 'FAILED', 'CANCELLED']:
+                    if action['status'] == 'SUCCEEDED':
+                        done = True
+                    break
+                time.sleep(2)
+                timeout = timeout_watch.leftover(True)
 
         if done:
             return True, ""
-        elif total_sleep > timeout:
+        elif timeout <= 0:
             return False, "Timeout while polling cluster status"
         else:
-            return False, "Cluster check action failed"
+            return False, "Cluster check action failed or cancelled"
 
     def _poll_cluster(self, cluster_id, timeout):
         """Routine to be executed for polling cluster status.
