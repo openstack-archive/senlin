@@ -329,9 +329,9 @@ class StackProfile(base.Profile):
             return {'Error': {'code': ex.code, 'message': six.text_type(ex)}}
 
         spec = {
-            self.ENVIRONMENT: env,
+            self.ENVIRONMENT: env.to_dict(),
             self.FILES: files,
-            self.TEMPLATE: tmpl,
+            self.TEMPLATE: tmpl.to_dict(),
             self.PARAMETERS: dict((k, v) for k, v in stack.parameters.items()
                                   if k.find('OS::', 0) < 0),
             self.TIMEOUT: stack.timeout_mins,

@@ -645,8 +645,17 @@ class TestHeatStackProfile(base.SenlinTestCase):
         )
         oc = mock.Mock()
         oc.stack_get = mock.Mock(return_value=x_stack)
-        oc.stack_get_template = mock.Mock(return_value={'foo': 'bar'})
-        oc.stack_get_environment = mock.Mock(return_value={'ke': 've'})
+
+        # mock template
+        templ = mock.Mock()
+        templ.to_dict.return_value = {'foo': 'bar'}
+        oc.stack_get_template = mock.Mock(return_value=templ)
+
+        # mock environment
+        env = mock.Mock()
+        env.to_dict.return_value = {'ke': 've'}
+        oc.stack_get_environment = mock.Mock(return_value=env)
+
         oc.stack_get_files = mock.Mock(return_value={'fn': 'content'})
         profile._orchestrationclient = oc
 
@@ -748,8 +757,17 @@ class TestHeatStackProfile(base.SenlinTestCase):
         )
         oc = mock.Mock()
         oc.stack_get = mock.Mock(return_value=x_stack)
-        oc.stack_get_template = mock.Mock(return_value={'foo': 'bar'})
-        oc.stack_get_environment = mock.Mock(return_value={'ke': 've'})
+
+        # mock enviroment
+        env = mock.Mock()
+        env.to_dict.return_value = {'ke': 've'}
+        oc.stack_get_environment = mock.Mock(return_value=env)
+
+        # mock template
+        templ = mock.Mock()
+        templ.to_dict.return_value = {'foo': 'bar'}
+        oc.stack_get_template = mock.Mock(return_value=templ)
+
         oc.stack_get_files = mock.Mock(return_value={'fn': 'content'})
         profile._orchestrationclient = oc
 

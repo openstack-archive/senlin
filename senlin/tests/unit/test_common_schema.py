@@ -365,6 +365,8 @@ class TestInteger(base.SenlinTestCase):
         res = sot.to_schema_type(False)
         self.assertEqual(0, res)
 
+        self.assertIsNone(sot.to_schema_type(None))
+
         ex = self.assertRaises(exc.ESchema, sot.to_schema_type, '456L')
         self.assertEqual("The value '456L' is not a valid Integer",
                          six.text_type(ex))
@@ -380,6 +382,8 @@ class TestInteger(base.SenlinTestCase):
 
         res = sot.resolve(False)
         self.assertEqual(0, res)
+
+        self.assertIsNone(sot.resolve(None))
 
         ex = self.assertRaises(exc.ESchema, sot.resolve, '456L')
         self.assertEqual("The value '456L' is not a valid Integer",
