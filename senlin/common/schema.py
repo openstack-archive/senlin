@@ -223,8 +223,12 @@ class Integer(PropertySchema):
         return super(Integer, self).__getitem__(key)
 
     def to_schema_type(self, value):
+        if value is None:
+            return None
+
         if isinstance(value, six.integer_types):
             return value
+
         try:
             num = int(value)
         except ValueError:
