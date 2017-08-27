@@ -81,7 +81,7 @@ Install Senlin Server
 
 ::
 
-  $ source /opt/devstack/openrc admin admin
+  $ . /opt/devstack/openrc admin admin
   $ cd /opt/stack/senlin/tools
   $ ./setup-service <HOST IP> <SERVICE_PASSWORD>
 

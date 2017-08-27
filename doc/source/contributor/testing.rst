@@ -186,7 +186,7 @@ deployment. That means you will have to export your OpenStack credentials
 before running the tests. For example, you will source the :file:`openrc` file
 when using a devstack environment::
 
-  $ source $HOME/devstack/openrc
+  $ . $HOME/devstack/openrc
 
 This will ensure you have environment variables such as ``OS_AUTH_URL``,
 ``OS_USERNAME`` properly set and exported. The next step is to enter the
