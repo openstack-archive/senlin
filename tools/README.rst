@@ -57,4 +57,4 @@ Contents
   the ``admin`` user for setting up the ``senlin`` service. For example::
 
     cd $HOME
-    source devstack/openrc admin
+    . devstack/openrc admin
