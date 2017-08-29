@@ -12,6 +12,7 @@
 
 import time
 
+from oslo_utils import timeutils
 from tempest.lib import decorators
 
 from senlin.tests.tempest.common import constants
@@ -53,12 +54,15 @@ class TestReceiver(base.BaseSenlinIntegrationTest):
 
         # Wait and verify result
         timeout = 120
-        while timeout > 0:
-            time.sleep(5)
-            cluster = utils.get_a_cluster(self, self.cluster_id)
-            if len(cluster['nodes']) == 2 and cluster['status'] == 'ACTIVE':
-                break
-            timeout -= 5
+        with timeutils.StopWatch(timeout) as timeout_watch:
+            while timeout > 0:
+                time.sleep(5)
+                cluster = utils.get_a_cluster(self, self.cluster_id)
+                if (len(cluster['nodes']) == 2 and
+                        cluster['status'] == 'ACTIVE'):
+                    break
+                timeout = timeout_watch.leftover(True)
+
         if timeout <= 0:
             raise Exception('Failed in triggering cluster action.')
 
