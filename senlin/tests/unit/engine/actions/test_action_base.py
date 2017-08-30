@@ -94,12 +94,17 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertIsNone(obj.updated_at)
         self.assertEqual({}, obj.data)
 
-    @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(cluster_mod.Cluster, 'load')
-    def test_action_new(self, mock_n_load, mock_c_load):
-        for action in ['CLUSTER_CREATE', 'NODE_CREATE', 'WHAT_EVER']:
-            obj = ab.Action(OBJID, action, self.ctx)
-            self._verify_new_action(obj, OBJID, action)
+    def test_action_new_cluster(self, mock_load):
+        fake_cluster = mock.Mock(timeout=cfg.CONF.default_action_timeout)
+        mock_load.return_value = fake_cluster
+        obj = ab.Action(OBJID, 'CLUSTER_CREATE', self.ctx)
+        self._verify_new_action(obj, OBJID, 'CLUSTER_CREATE')
+
+    @mock.patch.object(node_mod.Node, 'load')
+    def test_action_new_node(self, mock_load):
+        obj = ab.Action(OBJID, 'NODE_CREATE', self.ctx)
+        self._verify_new_action(obj, OBJID, 'NODE_CREATE')
 
     def test_action_init_with_values(self):
         values = copy.deepcopy(self.action_values)
