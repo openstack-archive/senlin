@@ -24,12 +24,11 @@ CONF = config.CONF
 
 class BaseSenlinAPITest(base.BaseSenlinTest):
 
-    network_resources = {
-        'network': False,
-        'router': False,
-        'subnet': False,
-        'dhcp': False,
-    }
+    @classmethod
+    def setup_credentials(cls):
+        # Set no network resources for test accounts
+        cls.set_network_resources()
+        super(BaseSenlinAPITest, cls).setup_credentials()
 
     @classmethod
     def setup_clients(cls):
