@@ -441,6 +441,52 @@ class DBAPIActionTest(base.SenlinTestCase):
 
         return id_of
 
+    def test_engine_mark_failed_with_depended(self):
+        timestamp = time.time()
+        id_of = self._prepare_action_mark_failed_cancel()
+        db_api.dummy_gc(self.ctx, [id_of['A01']], timestamp, 'BOOM')
+        for aid in [id_of['A02'], id_of['A03'], id_of['A04']]:
+            action = db_api.action_get(self.ctx, aid)
+            self.assertEqual(consts.ACTION_FAILED, action.status)
+            self.assertEqual('BOOM', action.status_reason)
+            self.assertEqual(timestamp, action.end_time)
+
+        action = db_api.action_get(self.ctx, id_of['A01'])
+        self.assertEqual(consts.ACTION_FAILED, action.status)
+        self.assertEqual('BOOM', action.status_reason)
+        self.assertEqual(timestamp, action.end_time)
+
+        for aid in [id_of['A02'], id_of['A03'], id_of['A04']]:
+            result = db_api.dependency_get_dependents(self.ctx, aid)
+            self.assertEqual(0, len(result))
+
+    def test_engine_mark_failed_without_depended(self):
+        timestamp = time.time()
+        id_of = self._prepare_action_mark_failed_cancel()
+        db_api.dummy_gc(self.ctx, [id_of['A02']], timestamp, 'BOOM')
+
+        for aid in [id_of['A03'], id_of['A04']]:
+            action = db_api.action_get(self.ctx, aid)
+            self.assertEqual(consts.ACTION_INIT, action.status)
+            self.assertNotEqual('BOOM', action.status_reason)
+            self.assertNotEqual(timestamp, action.end_time)
+
+        action = db_api.action_get(self.ctx, id_of['A01'])
+        self.assertEqual(consts.ACTION_WAITING, action.status)
+        self.assertNotEqual('BOOM', action.status_reason)
+        self.assertNotEqual(timestamp, action.end_time)
+
+        action_d = db_api.action_get(self.ctx, id_of['A02'])
+        self.assertEqual(consts.ACTION_FAILED, action_d.status)
+        self.assertEqual('BOOM', action_d.status_reason)
+        self.assertEqual(timestamp, action_d.end_time)
+
+        for aid in [id_of['A03'], id_of['A04']]:
+            result = db_api.dependency_get_dependents(self.ctx, aid)
+            self.assertEqual(1, len(result))
+        result = db_api.dependency_get_dependents(self.ctx, id_of['A02'])
+        self.assertEqual(0, len(result))
+
     def test_action_mark_failed(self):
         timestamp = time.time()
         id_of = self._prepare_action_mark_failed_cancel()

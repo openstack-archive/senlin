@@ -1434,6 +1434,42 @@ def service_get_all():
         return session.query(models.Service).all()
 
 
+def _mark_engine_failed(session, action_id, timestamp, reason=None):
+    query = session.query(models.ActionDependency)
+    # process cluster actions
+    d_query = query.filter_by(dependent=action_id)
+    dependents = [d.depended for d in d_query.all()]
+    if dependents:
+        for d in dependents:
+            _mark_engine_failed(session, d, timestamp, reason)
+    else:
+        # process node actions
+        depended = query.filter_by(depended=action_id)
+        if depended.count() == 0:
+            return
+        depended.delete(synchronize_session=False)
+
+    # mark myself as failed
+    action = session.query(models.Action).filter_by(id=action_id).first()
+    values = {
+        'owner': None,
+        'status': consts.ACTION_FAILED,
+        'status_reason': (six.text_type(reason) if reason else
+                          _('Action execution failed')),
+        'end_time': timestamp,
+    }
+    action.update(values)
+    action.save(session)
+
+
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
+def dummy_gc(context, action_ids, timestamp, reason=None):
+    with session_for_write() as session:
+        for action in action_ids:
+            _mark_engine_failed(session, action, timestamp, reason)
+
+
 def gc_by_engine(engine_id):
     # Get all actions locked by an engine
     with session_for_write() as session:
