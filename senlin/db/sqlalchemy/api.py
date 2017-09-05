@@ -1443,12 +1443,11 @@ def _mark_engine_failed(session, action_id, timestamp, reason=None):
         for d in dependents:
             _mark_engine_failed(session, d, timestamp, reason)
     else:
-        # process node actions
         depended = query.filter_by(depended=action_id)
-        if depended.count() == 0:
-            return
         depended.delete(synchronize_session=False)
 
+    # TODO(anyone): this will mark all depended actions' status to 'FAILED'
+    # even the action belong to other engines and the action is running
     # mark myself as failed
     action = session.query(models.Action).filter_by(id=action_id).first()
     values = {
@@ -1464,10 +1463,23 @@ def _mark_engine_failed(session, action_id, timestamp, reason=None):
 
 @oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
                            retry_interval=0.5, inc_retry_interval=True)
-def dummy_gc(context, action_ids, timestamp, reason=None):
+def dummy_gc(engine_id):
     with session_for_write() as session:
-        for action in action_ids:
-            _mark_engine_failed(session, action, timestamp, reason)
+        q_actions = session.query(models.Action).filter_by(owner=engine_id)
+        timestamp = time.time()
+        for action in q_actions.all():
+            _mark_engine_failed(session, action.id, timestamp,
+                                reason='Engine failure')
+            # Release all node locks
+            query = session.query(models.NodeLock).\
+                filter_by(action_id=action.id)
+            query.delete(synchronize_session=False)
+
+            # Release all cluster locks
+            for clock in session.query(models.ClusterLock).all():
+                res = _release_cluster_lock(session, clock, action.id, -1)
+                if not res:
+                    _release_cluster_lock(session, clock, action.id, 1)
 
 
 def gc_by_engine(engine_id):

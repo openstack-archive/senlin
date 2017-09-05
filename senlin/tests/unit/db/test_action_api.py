@@ -444,7 +444,9 @@ class DBAPIActionTest(base.SenlinTestCase):
     def test_engine_mark_failed_with_depended(self):
         timestamp = time.time()
         id_of = self._prepare_action_mark_failed_cancel()
-        db_api.dummy_gc(self.ctx, [id_of['A01']], timestamp, 'BOOM')
+        with db_api.session_for_write() as session:
+            db_api._mark_engine_failed(session, id_of['A01'],
+                                       timestamp, 'BOOM')
         for aid in [id_of['A02'], id_of['A03'], id_of['A04']]:
             action = db_api.action_get(self.ctx, aid)
             self.assertEqual(consts.ACTION_FAILED, action.status)
@@ -463,7 +465,9 @@ class DBAPIActionTest(base.SenlinTestCase):
     def test_engine_mark_failed_without_depended(self):
         timestamp = time.time()
         id_of = self._prepare_action_mark_failed_cancel()
-        db_api.dummy_gc(self.ctx, [id_of['A02']], timestamp, 'BOOM')
+        with db_api.session_for_write() as session:
+            db_api._mark_engine_failed(session, id_of['A02'],
+                                       timestamp, 'BOOM')
 
         for aid in [id_of['A03'], id_of['A04']]:
             action = db_api.action_get(self.ctx, aid)
