@@ -177,6 +177,9 @@ class LoadBalancerDriver(base.DriverBase):
 
         return True, result
 
+    def lb_find(self, name_or_id, ignore_missing=False):
+        return self.nc().loadbalancer_get(name_or_id, ignore_missing)
+
     def lb_delete(self, **kwargs):
         """Delete a Neutron lbaas instance
 
