@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import os
-import subprocess
 import sys
 
 
@@ -85,7 +84,7 @@ pygments_style = 'sphinx'
 html_theme = 'openstackdocs'
 
 # Add any paths that contain custom themes here, relative to this directory
-#html_theme_path = []
+# html_theme_path = []
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = '%sdoc' % project
