@@ -207,6 +207,22 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.assertEqual("The specified subnet 'external-subnet' could not "
                          "be found.", six.text_type(ex))
 
+    @mock.patch.object(policy_base.Policy, 'validate')
+    def test_validate_loadbalancer_notfund(self, mock_validate):
+        self.spec['properties']['loadbalancer'] = "LB_ID"
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        policy._networkclient = self.net_driver
+        ctx = mock.Mock(user='user1', project='project1')
+        self.net_driver.loadbalancer_get = mock.Mock(
+            side_effect=exc.InternalError(code='404', message='not found'))
+
+        ex = self.assertRaises(exc.InvalidSpec, policy.validate, ctx, True)
+
+        mock_validate.assert_called_with(ctx, True)
+        self.net_driver.loadbalancer_get.assert_called_once_with('LB_ID')
+        self.assertEqual("The specified loadbalancer 'LB_ID' could not "
+                         "be found.", six.text_type(ex))
+
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_build_policy_data')
     @mock.patch.object(policy_base.Policy, 'attach')
     @mock.patch.object(no.Node, 'update')
