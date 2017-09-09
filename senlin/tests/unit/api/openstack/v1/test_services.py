@@ -12,9 +12,8 @@
 #    under the License.
 
 import datetime
+import iso8601
 import mock
-
-from iso8601 import iso8601
 
 from senlin.api.openstack.v1 import services
 from senlin.common import policy
@@ -30,9 +29,9 @@ fake_services_list = [
               disabled=False,
               topic='senlin-engine',
               updated_at=datetime.datetime(2012, 10, 29, 13, 42, 11,
-                                           tzinfo=iso8601.Utc()),
+                                           tzinfo=iso8601.UTC),
               created_at=datetime.datetime(2014, 10, 29, 13, 42, 11,
-                                           tzinfo=iso8601.Utc()),
+                                           tzinfo=iso8601.UTC),
               disabled_reason='')
 ]
 
