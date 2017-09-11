@@ -27,11 +27,6 @@ ENGINE
     * The new command should check if the provided properties are sufficient.
     * There exists a need to snapshot a server before adoption.
 
-POLICY
-------
-
-  - Support CLUSTER_RECOVER action in LB policy
-
 
 MIDDLE PRIORITY
 ===============
