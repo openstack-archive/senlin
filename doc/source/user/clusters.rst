@@ -139,7 +139,7 @@ Creating a Cluster
 To create a cluster, you need to provide the ID or name of the profile to be
 associated with the cluster. For example::
 
-  $ senlin cluster-create -p qstack c3
+  $ openstack cluster create --profile qstack c3
   +------------------+--------------------------------------+
   | Property         | Value                                |
   +------------------+--------------------------------------+
@@ -189,7 +189,7 @@ The following command creates a cluster named "``test_cluster``", with its
 desired capacity set to 2, its minimum size set to 1 and its maximum size set
 to 3::
 
-  $ senlin cluster-create --desired-capacity 2 \
+  $ openstack cluster create --desired-capacity 2 \
       --min-size 1 --max-size 3 \
       --profile myprofile \
       test_cluster
