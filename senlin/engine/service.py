@@ -584,7 +584,8 @@ class EngineService(service.Service):
                         ) % {"name": name}
                 raise exception.BadRequest(msg=msg)
 
-        policy = self._validate_policy(ctx, req.spec, name=name)
+        policy = self._validate_policy(ctx, req.spec, name=name,
+                                       validate_props=True)
 
         LOG.info("Creating policy %(type)s '%(name)s'",
                  {'type': policy.type, 'name': policy.name})
@@ -660,7 +661,7 @@ class EngineService(service.Service):
                  validated.
         """
 
-        policy = self._validate_policy(ctx, req.spec, validate_props=True)
+        policy = self._validate_policy(ctx, req.spec, validate_props=False)
 
         return policy.to_dict()
 
