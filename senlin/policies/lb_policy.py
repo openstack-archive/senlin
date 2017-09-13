@@ -68,17 +68,17 @@ class LoadBalancingPolicy(base.Policy):
     ]
 
     KEYS = (
-        POOL, VIP, HEALTH_MONITOR, LB_STATUS_TIMEOUT
+        POOL, VIP, HEALTH_MONITOR, LB_STATUS_TIMEOUT, LOADBALANCER
     ) = (
-        'pool', 'vip', 'health_monitor', 'lb_status_timeout'
+        'pool', 'vip', 'health_monitor', 'lb_status_timeout', 'loadbalancer'
     )
 
     _POOL_KEYS = (
         POOL_PROTOCOL, POOL_PROTOCOL_PORT, POOL_SUBNET,
-        POOL_LB_METHOD, POOL_ADMIN_STATE_UP, POOL_SESSION_PERSISTENCE,
+        POOL_LB_METHOD, POOL_ADMIN_STATE_UP, POOL_SESSION_PERSISTENCE, POOL_ID,
     ) = (
         'protocol', 'protocol_port', 'subnet',
-        'lb_method', 'admin_state_up', 'session_persistence',
+        'lb_method', 'admin_state_up', 'session_persistence', 'id',
     )
 
     PROTOCOLS = (
@@ -115,10 +115,10 @@ class LoadBalancingPolicy(base.Policy):
 
     HEALTH_MONITOR_KEYS = (
         HM_TYPE, HM_DELAY, HM_TIMEOUT, HM_MAX_RETRIES, HM_ADMIN_STATE_UP,
-        HM_HTTP_METHOD, HM_URL_PATH, HM_EXPECTED_CODES,
+        HM_HTTP_METHOD, HM_URL_PATH, HM_EXPECTED_CODES, HM_ID,
     ) = (
         'type', 'delay', 'timeout', 'max_retries', 'admin_state_up',
-        'http_method', 'url_path', 'expected_codes',
+        'http_method', 'url_path', 'expected_codes', 'id',
     )
 
     _SESSION_PERSISTENCE_KEYS = (
@@ -178,6 +178,11 @@ class LoadBalancingPolicy(base.Policy):
                         ),
                     },
                     default={},
+                ),
+                POOL_ID: schema.String(
+                    _('ID of pool for the cluster on which nodes can '
+                      'be connected.'),
+                    default=None,
                 ),
             },
         ),
@@ -258,12 +263,21 @@ class LoadBalancingPolicy(base.Policy):
                 HM_EXPECTED_CODES: schema.String(
                     _('Expected HTTP codes for a passing HTTP(S) monitor.'),
                 ),
+                HM_ID: schema.String(
+                    _('ID of the health manager for the loadbalancer.'),
+                    default=None,
+                ),
             },
         ),
         LB_STATUS_TIMEOUT: schema.Integer(
             _('Time in second to wait for loadbalancer to become ready '
               'after senlin requests LBaaS V2 service for operations.'),
             default=300,
+        ),
+        LOADBALANCER: schema.String(
+            _('Name or ID of loadbalancer for the cluster on which nodes can '
+              'be connected.'),
+            default=None,
         )
     }
 
@@ -274,7 +288,7 @@ class LoadBalancingPolicy(base.Policy):
         self.vip_spec = self.properties.get(self.VIP, {})
         self.hm_spec = self.properties.get(self.HEALTH_MONITOR, None)
         self.lb_status_timeout = self.properties.get(self.LB_STATUS_TIMEOUT)
-        self.lb = None
+        self.lb = self.properties.get(self.LOADBALANCER, None)
 
     def validate(self, context, validate_props=False):
         super(LoadBalancingPolicy, self).validate(context, validate_props)
@@ -320,10 +334,19 @@ class LoadBalancingPolicy(base.Policy):
         # TODO(Anyone): Check if existing nodes has conflicts regarding the
         # subnets. Each VM addresses detail has a key named to the network
         # which can be used for validation.
-        res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec,
-                                        self.hm_spec)
-        if res is False:
-            return False, data
+        if self.lb:
+            data = {}
+            data['preexisting'] = True
+            data['loadbalancer'] = self.lb
+            data['pool'] = self.pool_spec.get(self.POOL_ID, None)
+            data['vip_address'] = self.vip_spec.get(self.VIP_ADDRESS, None)
+            if self.hm_spec.get(self.HM_ID, None):
+                data['healthmonitor'] = self.hm_spec.get(self.HM_ID, None)
+        else:
+            res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec,
+                                            self.hm_spec)
+            if res is False:
+                return False, data
 
         port = self.pool_spec.get(self.POOL_PROTOCOL_PORT)
         subnet = self.pool_spec.get(self.POOL_SUBNET)
@@ -371,9 +394,11 @@ class LoadBalancingPolicy(base.Policy):
         if policy_data is None:
             return True, reason
 
-        res, reason = lb_driver.lb_delete(**policy_data)
-        if res is False:
-            return False, reason
+        is_existed = policy_data.get('preexisting', False)
+        if not is_existed:
+            res, reason = lb_driver.lb_delete(**policy_data)
+            if res is False:
+                return False, reason
 
         for node in cluster.nodes:
             if 'lb_member' in node.data:

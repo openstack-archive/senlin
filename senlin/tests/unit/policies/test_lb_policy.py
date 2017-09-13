@@ -36,6 +36,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
             'version': '1.0',
             'properties': {
                 'pool': {
+                    'id': '',
                     'protocol': 'HTTP',
                     'protocol_port': 80,
                     'subnet': 'internal-subnet',
@@ -97,6 +98,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
             'version': '1.0',
             'properties': {
                 'pool': {
+                    'id': None,
                     'protocol': 'HTTP',
                     'protocol_port': 80,
                     'subnet': 'internal-subnet',
@@ -126,6 +128,38 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.assertEqual(default_spec['properties']['lb_status_timeout'],
                          policy.lb_status_timeout)
         self.assertIsNone(policy.lb)
+
+    def test_loadbalancer_value(self):
+        spec = {
+            'type': 'senlin.policy.loadbalance',
+            'version': '1.0',
+            'properties': {
+                'loadbalancer': 'LB_ID',
+                'pool': {
+                    'id': 'POOL_ID',
+                    'subnet': 'internal-subnet'
+                },
+                'vip': {
+                    'address': '192.168.1.100',
+                    'subnet': 'external-subnet'
+                },
+                'health_monitor': {
+                    'id': 'HM_ID'
+                }
+            }
+        }
+        self.spec['properties']['pool']['id'] = 'POOL_ID'
+        self.spec['properties']['health_monitor']['id'] = 'HM_ID'
+        self.spec['properties']['loadbalancer'] = 'LB_ID'
+        self.spec['properties']['pool']['session_persistence'] = {}
+        self.spec['properties']['vip']['connection_limit'] = -1
+        policy = lb_policy.LoadBalancingPolicy('test-policy', spec)
+        self.assertIsNone(policy.id)
+        self.assertEqual('test-policy', policy.name)
+        self.assertEqual('senlin.policy.loadbalance-1.0', policy.type)
+        self.assertEqual(self.spec['properties']['pool'], policy.pool_spec)
+        self.assertEqual(self.spec['properties']['vip'], policy.vip_spec)
+        self.assertEqual(self.spec['properties']['loadbalancer'], policy.lb)
 
     @mock.patch.object(policy_base.Policy, 'validate')
     def test_validate_shallow(self, mock_validate):
@@ -523,8 +557,51 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         self.lb_driver.lb_delete.assert_called_once_with(**policy_data)
         self.assertEqual({}, cluster.data)
 
+    def test_detach_existed_lbass_succeeded(self, m_extract, m_load):
+        cp = mock.Mock()
+        policy_data = {
+            'loadbalancer': 'LB_ID',
+            'listener': 'LISTENER_ID',
+            'pool': 'POOL_ID',
+            'healthmonitor': 'HM_ID',
+            'preexisting': True,
+        }
+        cp_data = {
+            'LoadBalancingPolicy': {
+                'version': '1.0',
+                'data': policy_data
+            }
+        }
+        cp.data = cp_data
+        m_load.return_value = cp
+        m_extract.return_value = policy_data
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        policy._lbaasclient = self.lb_driver
+        cluster = mock.Mock(
+            id='CLUSTER_ID',
+            data={
+                'loadbalancers': {
+                    policy.id: {'vip_address': '192.168.1.100'}
+
+                }
+            })
+        node = mock.Mock(id='fake', data={})
+        cluster.nodes = [node]
+
+        res, data = policy.detach(cluster)
+
+        self.assertTrue(res)
+        self.assertEqual('LB resources deletion succeeded.', data)
+        m_load.assert_called_once_with(mock.ANY, cluster.id, policy.id)
+        m_extract.assert_called_once_with(cp_data)
+        self.assertEqual({}, cluster.data)
+
     def test_detach_failed_lb_delete(self, m_extract, m_load):
         cluster = mock.Mock()
+        policy_data = {
+            'preexisting': False,
+        }
+        m_extract.return_value = policy_data
         self.lb_driver.lb_delete.return_value = (False, 'lb_delete failed.')
 
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
