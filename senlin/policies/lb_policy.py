@@ -316,6 +316,16 @@ class LoadBalancingPolicy(base.Policy):
                     ) % {'key': self.VIP_SUBNET, 'value': name_or_id}
             raise exc.InvalidSpec(message=msg)
 
+        # validate loadbalancer
+        if self.lb:
+            name_or_id = self.lb
+            try:
+                nc.loadbalancer_get(name_or_id)
+            except exc.InternalError:
+                msg = _("The specified %(key)s '%(value)s' could not be found."
+                        ) % {'key': self.LOADBALANCER, 'value': name_or_id}
+                raise exc.InvalidSpec(message=msg)
+
     def attach(self, cluster, enabled=True):
         """Routine to be invoked when policy is to be attached to a cluster.
 
