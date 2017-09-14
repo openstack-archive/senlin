@@ -120,7 +120,12 @@ class NodeController(wsgi.Controller):
 
     @util.policy_enforce
     def delete(self, req, node_id):
-        params = {'identity': node_id}
+        force = False
+        if req.params.get('force') is not None:
+            force = util.parse_bool_param(consts.NODE_DELETE_FORCE,
+                                          req.params.get('force'))
+
+        params = {'identity': node_id, 'force': force}
 
         obj = util.parse_request('NodeDeleteRequest', req, params)
         res = self.rpc_client.call(req.context, 'node_delete', obj)

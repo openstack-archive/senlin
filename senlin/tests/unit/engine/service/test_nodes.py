@@ -594,7 +594,7 @@ class NodeTest(base.SenlinTestCase):
                                            dependents={})
         mock_action.return_value = 'ACTION_ID'
 
-        req = orno.NodeDeleteRequest(identity='FAKE_NODE')
+        req = orno.NodeDeleteRequest(identity='FAKE_NODE', force=False)
         result = self.eng.node_delete(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
@@ -610,7 +610,7 @@ class NodeTest(base.SenlinTestCase):
     def test_node_delete_node_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='node', id='Bogus')
 
-        req = orno.NodeDeleteRequest(identity='Bogus')
+        req = orno.NodeDeleteRequest(identity='Bogus', force=False)
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_delete, self.ctx,
                                req.obj_to_primitive())
@@ -626,7 +626,7 @@ class NodeTest(base.SenlinTestCase):
                            consts.NS_DELETING, consts.NS_RECOVERING]:
             fake_node = mock.Mock(id='12345678AB', status=bad_status)
             mock_find.return_value = fake_node
-            req = orno.NodeDeleteRequest(identity='BUSY')
+            req = orno.NodeDeleteRequest(identity='BUSY', force=False)
             ex = self.assertRaises(rpc.ExpectedException,
                                    self.eng.node_delete,
                                    self.ctx, req.obj_to_primitive())
@@ -641,7 +641,7 @@ class NodeTest(base.SenlinTestCase):
         dependents = {'nodes': ['NODE1']}
         node = mock.Mock(id='NODE_ID', status='ACTIVE', dependents=dependents)
         mock_find.return_value = node
-        req = orno.NodeDeleteRequest(identity='node1')
+        req = orno.NodeDeleteRequest(identity='node1', force=False)
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.node_delete,
                                self.ctx, req.obj_to_primitive())
@@ -649,6 +649,30 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual("The node 'node1' cannot be deleted: still depended "
                          "by other clusters and/or nodes.",
                          six.text_type(ex.exc_info[1]))
+
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(action_mod.Action, 'create')
+    @mock.patch.object(no.Node, 'find')
+    def test_node_delete_force(self, mock_find, mock_action, mock_start):
+        for bad_status in [consts.NS_CREATING, consts.NS_UPDATING,
+                           consts.NS_DELETING, consts.NS_RECOVERING]:
+
+            mock_find.return_value = mock.Mock(id='12345678AB',
+                                               status=bad_status,
+                                               dependents={})
+            mock_action.return_value = 'ACTION_ID'
+
+            req = orno.NodeDeleteRequest(identity='FAKE_NODE', force=True)
+            result = self.eng.node_delete(self.ctx, req.obj_to_primitive())
+
+            self.assertEqual({'action': 'ACTION_ID'}, result)
+            mock_find.assert_called_with(self.ctx, 'FAKE_NODE')
+            mock_action.assert_called_with(
+                self.ctx, '12345678AB', consts.NODE_DELETE,
+                name='node_delete_12345678',
+                cause=consts.CAUSE_RPC,
+                status=action_mod.Action.READY)
+            mock_start.assert_called_with()
 
     @mock.patch.object(environment.Environment, 'get_profile')
     @mock.patch.object(pb.Profile, 'adopt_node')

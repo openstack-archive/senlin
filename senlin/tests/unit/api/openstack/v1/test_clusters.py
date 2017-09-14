@@ -1450,6 +1450,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_delete(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         req = mock.Mock(context=self.context)
+        req.params.get.return_value = 'false'
         cid = 'aaaa-bbbb-cccc'
         obj = mock.Mock()
         mock_parse.return_value = obj
@@ -1460,7 +1461,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         result = {'location': '/actions/FAKE_ID'}
         self.assertEqual(result, res)
         mock_parse.assert_called_once_with(
-            'ClusterDeleteRequest', req, {'identity': cid})
+            'ClusterDeleteRequest', req, {'identity': cid, 'force': False})
 
         mock_call.assert_called_with(req.context, 'cluster_delete', obj)
 
@@ -1470,6 +1471,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         cid = 'fake-cluster'
         req = mock.Mock(context=self.context)
+        req.params.get.return_value = 'false'
         mock_parse.side_effect = exc.HTTPBadRequest('Boom')
 
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -1478,16 +1480,15 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual("Boom", six.text_type(ex))
         mock_parse.assert_called_once_with(
-            'ClusterDeleteRequest', req, {'identity': cid})
+            'ClusterDeleteRequest', req, {'identity': cid, 'force': False})
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_delete_failed_engine(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
-        req = mock.Mock(context=self.context)
         cid = 'aaaa-bbbb-cccc'
-        req = self._delete('/clusters/%s' % cid)
+        req = self._delete('/clusters/%s' % cid, params={'force': 'false'})
         error = senlin_exc.ResourceNotFound(type='cluster', id=cid)
         mock_call.side_effect = shared.to_remote_error(error)
         obj = mock.Mock()
@@ -1510,3 +1511,23 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_delete_force(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete', True)
+        req = mock.Mock(context=self.context)
+        req.params.get.return_value = 'true'
+        cid = 'aaaa-bbbb-cccc'
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.return_value = {'action': 'FAKE_ID'}
+
+        res = self.controller.delete(req, cluster_id=cid)
+
+        result = {'location': '/actions/FAKE_ID'}
+        self.assertEqual(result, res)
+        mock_parse.assert_called_once_with(
+            'ClusterDeleteRequest', req, {'identity': cid, 'force': True})
+
+        mock_call.assert_called_with(req.context, 'cluster_delete', obj)
