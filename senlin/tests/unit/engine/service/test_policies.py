@@ -157,6 +157,23 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual("Required spec item 'KEY2' not provided",
                          six.text_type(ex.exc_info[1]))
 
+    def test_policy_create_invalid_value(self):
+        self._setup_fakes()
+        spec = copy.deepcopy(self.spec)
+        spec['properties']['KEY2'] = 'value3'
+
+        mock_validate = self.patchobject(fakes.TestPolicy, 'validate')
+        mock_validate.side_effect = exc.InvalidSpec(
+            message="The specified KEY2 'value3' could not be found.")
+
+        req = orpo.PolicyCreateRequestBody(name='Fake', spec=spec)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.policy_create,
+                               self.ctx, req.obj_to_primitive())
+        self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
+        self.assertEqual("The specified KEY2 'value3' could not be "
+                         "found.", six.text_type(ex.exc_info[1]))
+
     def test_policy_create_failed_validation(self):
         self._setup_fakes()
 
