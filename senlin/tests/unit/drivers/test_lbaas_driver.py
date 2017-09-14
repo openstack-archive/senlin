@@ -343,6 +343,11 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         msg = _('Failed in creating lb health monitor: CREATE FAILED.')
         self.assertEqual(msg, res)
 
+    @mock.patch.object(neutron_v2, 'NeutronClient')
+    def test_lb_find(self, mock_neutron):
+        self.lb_driver.lb_find("FAKELB")
+        self.nc.loadbalancer_get.assert_called_once_with("FAKELB", False)
+
     def test_lb_delete(self):
         kwargs = {
             'loadbalancer': 'LB_ID',
