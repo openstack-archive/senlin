@@ -70,7 +70,7 @@ profile and a cluster name.
 
 .. code-block:: console
 
-  $ senlin cluster-create -p myserver mycluster
+  $ openstack cluster create --profile myserver mycluster
 
 If you don't explicitly specify a number as the desired capacity of the
 cluster, senlin won't create nodes in the cluster. That means the newly
@@ -80,7 +80,7 @@ nodes in the cluster.
 
 .. code-block:: console
 
-  $ senlin cluster-create -p myserver -c 1 mycluster
+  $ openstack cluster create --profile myserver --desired-capacity 1 mycluster
   $ openstack cluster show mycluster
 
 For more details, check the :doc:`Creating a Cluster <../user/clusters>`

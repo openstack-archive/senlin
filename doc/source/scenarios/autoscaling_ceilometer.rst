@@ -54,7 +54,7 @@ Then you can create a cluster using the profile named "``pserver``":
 
 .. code-block:: console
 
-  $ senlin cluster-create -p pserver -c 2 mycluster
+  $ openstack cluster create --profile pserver --desired-capacity 2 mycluster
   +------------------+--------------------------------------+
   | Field            | Value                                |
   +------------------+--------------------------------------+
