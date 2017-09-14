@@ -143,7 +143,6 @@ associated with the cluster. For example::
   +------------------+--------------------------------------+
   | Property         | Value                                |
   +------------------+--------------------------------------+
-  | config           | {}                                   |
   | created_at       | None                                 |
   | data             | {}                                   |
   | dependents       | {}                                   |
@@ -162,7 +161,7 @@ associated with the cluster. For example::
   | project_id       | 333acb15a43242f4a609a27cb097a8f2     |
   | status           | INIT                                 |
   | status_reason    | Initializing                         |
-  | timeout          | None                                 |
+  | timeout          | 3600                                 |
   | updated_at       | None                                 |
   | user_id          | 0b82043b57014cd58add97a2ef79dac3     |
   +------------------+--------------------------------------+
@@ -283,7 +282,7 @@ Using the :command:`openstack cluster update` command, you can change the
 profile used by the cluster and its member nodes. The following example
 launches a global update on the cluster for switching to a different profile::
 
-  $ senlin cluster-update --profile fedora21_server web_cluster
+  $ openstack cluster update --profile fedora21_server web_cluster
 
 Suppose the cluster ``web_cluster`` is now using a profile of type
 ``os.nova.server`` where a Fedora 20 image is used, the command above will

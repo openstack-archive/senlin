@@ -123,29 +123,29 @@ To create a node, you need to specify the ID or name of the profile to be
 used. For example, the following example creates a node named ``test_node``
 using a profile named ``pstack``::
 
-  $ senlin node-create --profile pstack test_node
+  $ openstack cluster node create --profile pstack test_node
   +---------------+--------------------------------------+
   | Property      | Value                                |
   +---------------+--------------------------------------+
   | cluster_id    |                                      |
-  | created_at    | -                                    |
+  | created_at    | None                                 |
   | data          | {}                                   |
   | dependents    | {}                                   |
-  | details       | -                                    |
+  | details       | None                                 |
   | id            | 1984b5a0-9dd7-4dda-b1e6-e8c1f640598f |
   | index         | -1                                   |
   | init_at       | 2015-07-09T11:41:18                  |
-  | location      | -                                    |
+  | location      | None                                 |
   | metadata      | {}                                   |
   | name          | test_node                            |
-  | physical_id   | -                                    |
+  | physical_id   | None                                 |
   | profile_id    | 9b127538-a675-4271-ab9b-f24f54cfe173 |
   | profile_name  | pstack                               |
   | project_id    | 333acb15a43242f4a609a27cb097a8f2     |
-  | role          |                                  |
-  | status        | CREATING                             |
-  | status_reason | Creation in progress                 |
-  | updated_at    | -                                 |
+  | role          |                                      |
+  | status        | INIT                                 |
+  | status_reason | Initializing                         |
+  | updated_at    | None                                 |
   | user_id       | 5e5bf8027826429c96af157f68dc9072     |
   +---------------+--------------------------------------+
 
@@ -160,7 +160,7 @@ cluster, you can either use the :command:`openstack cluster member add`
 command (:ref:`ref-membership`) after the node is created, or specify the
 owning cluster upon node creation, as shown by the following example::
 
-  $ senlin node-create --profile pstack --cluster c1 test_node
+  $ openstack cluster node create --profile pstack --cluster c1 test_node
 
 The command above creates a new node using profile ``pstack`` and makes it a
 member of the cluster ``c1``, specified using the option :option:`--cluster`.
@@ -177,7 +177,7 @@ Another argument that could be useful when creating a new node is the option
 implementation to treat nodes differently. For example, the following command
 creates a node with a ``master`` role::
 
-  $ senlin node-create --profile pstack --cluster c1 \
+  $ openstack cluster node create --profile pstack --cluster c1 \
       --role master master_node
 
 A profile type implementation may check this role value when operating the
@@ -189,7 +189,7 @@ The last argument you can specify when creating a new node is the option
 key-value pairs separated by a semicolon ('``;``'). These key-value pairs are
 attached to the node and can be used for whatever purposes. For example::
 
-  $ senlin node-create --profile pstack \
+  $ openstack cluster node create --profile pstack \
       --metadata owner=JohnWhite test_node
 
 
@@ -267,7 +267,7 @@ Using the :command:`openstack cluster node update` command, you can change the
 profile used by a node. The following example updates a node for switching to
 use a different profile::
 
-  $ senlin node-update --profile fedora21_server fedora20_server
+  $ openstack cluster node update --profile fedora21_server fedora20_server
 
 Suppose the node ``fedora20_server`` is now using a profile of type
 ``os.nova.server`` where a Fedora 20 image is used, the command above will
