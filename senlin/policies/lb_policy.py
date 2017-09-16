@@ -350,8 +350,8 @@ class LoadBalancingPolicy(base.Policy):
             data['loadbalancer'] = self.lb
             data['pool'] = self.pool_spec.get(self.POOL_ID, None)
             data['vip_address'] = self.vip_spec.get(self.VIP_ADDRESS, None)
-            if self.hm_spec.get(self.HM_ID, None):
-                data['healthmonitor'] = self.hm_spec.get(self.HM_ID, None)
+            if self.hm_spec and self.hm_spec.get(self.HM_ID, None):
+                data['healthmonitor'] = self.hm_spec.get(self.HM_ID)
         else:
             res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec,
                                             self.hm_spec)
@@ -369,7 +369,8 @@ class LoadBalancingPolicy(base.Policy):
                 # were created and return the failure reason.
                 # TODO(anyone): May need to "roll-back" changes caused by any
                 # successful member_add() calls.
-                lb_driver.lb_delete(**data)
+                if not self.lb:
+                    lb_driver.lb_delete(**data)
                 return False, 'Failed in adding node into lb pool'
 
             node.data.update({'lb_member': member_id})
