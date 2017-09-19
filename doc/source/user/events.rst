@@ -48,14 +48,20 @@ dispatcher dumps the events into database tables and it is enabled by default.
 The ``message`` dispatcher converts the event objects into versioned event
 notifications and published on the global message queue. This dispatcher is
 by default disabled. To enable it, you can add the following line to the
-``[DEFAULT]`` section of the ``senlin.conf`` file and then restart the service 
+``[DEFAULT]`` section of the ``senlin.conf`` file and then restart the service
 engine::
 
- event_dispatchers = message
+  event_dispatchers = message
 
-Based on your deployment settings, you may need to add the following lines to
-the ``senlin.conf`` file as well. This lines set ``messaging`` as the default
-driver used by the ``oslo.messaging`` package::
+Note that the ``event_dispatchers`` field is ``MultiString``, you can enable
+both the ``database`` and ``message`` dispatchers if needed by the following
+configuration::
+  event_dispatchers = database, message
+
+Based on your deployment settings, you have to add the following lines to
+the ``senlin.conf`` file as well when using ``message`` dispatcher. This lines
+set ``messaging`` as the default driver used by the ``oslo.messaging``
+package::
 
   [oslo_messaging_notifications]
   driver = messaging
@@ -64,6 +70,19 @@ Note that unprocessed event notifications which are not associated with a
 TTL (time to live) value by default will remain queued at the message bus,
 please make sure the Senlin event notifications will be subscribed and
 processed by some services before enabling the ``message`` dispatcher.
+
+By default, we use the ``senlin`` exchange which type is ``TOPIC`` to route
+the notifications to queues with different ``routing_key``. The queues name
+could be ``versioned_notifications.debug``, ``versioned_notifications.info``,
+``versioned_notifications.warn`` and ``versioned_notifications.error`` that
+depends on the log level you are using in ``senlin.conf``. The corresponding
+``routing_key`` are the same as the queues' name.
+
+There are two options to consume the notifications:
+
+- Consume the notifications from the default queues directlly.
+- Declare your own queues, then bind them to ``senlin`` exchange with
+  corresponding ``routing_key`` to customize the flow.
 
 Since the event dispatchers are designed as plug-ins, you can develop your own
 event dispatchers and have senlin engine load them on startup. For more
