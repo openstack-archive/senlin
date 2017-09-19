@@ -876,10 +876,16 @@ class EngineService(service.Service):
 
         # 'cluster' below is a DB object.
         cluster = co.Cluster.find(ctx, req.identity)
-        if cluster.status in [consts.CS_CREATING,
-                              consts.CS_UPDATING,
-                              consts.CS_DELETING,
-                              consts.CS_RECOVERING]:
+
+        force = False
+        if req.obj_attr_is_set(consts.CLUSTER_DELETE_FORCE):
+            force = req.force
+
+        if (not force and
+            cluster.status in [consts.CS_CREATING,
+                               consts.CS_UPDATING,
+                               consts.CS_DELETING,
+                               consts.CS_RECOVERING]):
             raise exception.ActionInProgress(type='cluster', id=req.identity,
                                              status=cluster.status)
 
@@ -1722,10 +1728,15 @@ class EngineService(service.Service):
 
         node = node_obj.Node.find(ctx, req.identity)
 
-        if node.status in [consts.NS_CREATING,
-                           consts.NS_UPDATING,
-                           consts.NS_DELETING,
-                           consts.NS_RECOVERING]:
+        force = False
+        if req.obj_attr_is_set(consts.NODE_DELETE_FORCE):
+            force = req.force
+
+        if (not force and
+            node.status in [consts.NS_CREATING,
+                            consts.NS_UPDATING,
+                            consts.NS_DELETING,
+                            consts.NS_RECOVERING]):
             raise exception.ActionInProgress(type='node', id=req.identity,
                                              status=node.status)
 

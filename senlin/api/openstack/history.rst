@@ -93,3 +93,8 @@ it can be used by both users and developers.
  - Added ``receiver_update`` operation to receiver.
 
  - Added ``service_list`` API.
+
+1.8
+---
+ - Added ``force`` parameter to cluster delete request.
+ - Added ``force`` parameter to node delete request.

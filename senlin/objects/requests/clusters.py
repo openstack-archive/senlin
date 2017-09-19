@@ -267,7 +267,22 @@ class ClusterOperationRequest(base.SenlinObject):
 
 @base.SenlinObjectRegistry.register
 class ClusterDeleteRequest(base.SenlinObject):
+    # VERSION 1.0: Initial version
+    # VERSION 1.1 Added field 'force'
+    VERSION = '1.1'
+    VERSION_MAP = {
+        '1.8': '1.1',
+    }
 
     fields = {
         'identity': fields.StringField(),
+        'force': fields.BooleanField(default=False)
     }
+
+    def obj_make_compatible(self, primitive, target_version):
+        super(ClusterDeleteRequest, self).obj_make_compatible(
+            primitive, target_version)
+        target_version = versionutils.convert_version_to_tuple(target_version)
+        if target_version < (1, 1):
+            if 'force' in primitive['senlin_object.data']:
+                del primitive['senlin_object.data']['force']

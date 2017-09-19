@@ -81,8 +81,8 @@ class ControllerTest(object):
     def _get(self, path, params=None, version=None):
         return self._simple_request(path, params=params, version=version)
 
-    def _delete(self, path, version=None):
-        return self._simple_request(path, method='DELETE')
+    def _delete(self, path, params=None, version=None):
+        return self._simple_request(path, params=params, method='DELETE')
 
     def _data_request(self, path, data, content_type='application/json',
                       method='POST', version=None):

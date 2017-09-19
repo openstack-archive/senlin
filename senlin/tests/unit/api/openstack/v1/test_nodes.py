@@ -751,7 +751,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         result = {'location': '/actions/FAKE_ID'}
         self.assertEqual(res, result)
         mock_parse.assert_called_once_with(
-            'NodeDeleteRequest', req, {'identity': 'aaaa-bbbb-cccc'})
+            'NodeDeleteRequest', req,
+            {'identity': 'aaaa-bbbb-cccc', 'force': False})
         mock_call.assert_called_once_with(req.context, 'node_delete', obj)
 
     @mock.patch.object(util, 'parse_request')
@@ -769,7 +770,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual("bad node", six.text_type(ex))
         self.assertFalse(mock_call.called)
         mock_parse.assert_called_once_with(
-            'NodeDeleteRequest', req, {'identity': nid})
+            'NodeDeleteRequest', req, {'identity': nid, 'force': False})
 
     def test_node_delete_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', False)
@@ -800,6 +801,27 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_node_delete_force(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete', True)
+        nid = 'aaaa-bbbb-cccc'
+        req = self._delete('/nodes/%(node_id)s' % {'node_id': nid},
+                           params={'force': 'true'})
+
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.return_value = {'action': 'FAKE_ID'}
+
+        res = self.controller.delete(req, node_id=nid)
+
+        result = {'location': '/actions/FAKE_ID'}
+        self.assertEqual(res, result)
+        mock_parse.assert_called_once_with(
+            'NodeDeleteRequest', req,
+            {'identity': 'aaaa-bbbb-cccc', 'force': True})
+        mock_call.assert_called_once_with(req.context, 'node_delete', obj)
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
