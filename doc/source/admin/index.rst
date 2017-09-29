@@ -16,7 +16,6 @@ Administering Senlin
 ====================
 
 .. toctree::
-
    :maxdepth: 1
 
    authentication
