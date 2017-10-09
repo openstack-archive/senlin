@@ -35,21 +35,21 @@ class BaseSenlinFunctionalTest(base.BaseSenlinTest):
     def setup_clients(cls):
         super(BaseSenlinFunctionalTest, cls).setup_clients()
         cls.client = clustering_client.ClusteringFunctionalClient(
-            cls.os.auth_provider,
+            cls.os_primary.auth_provider,
             CONF.clustering.catalog_type,
             CONF.identity.region,
             **cls.default_params_with_timeout_values
         )
 
         cls.compute_client = compute_client.V21ComputeClient(
-            cls.os.auth_provider,
+            cls.os_primary.auth_provider,
             CONF.compute.catalog_type,
             CONF.identity.region,
             **cls.default_params_with_timeout_values
         )
 
         cls.network_client = network_client.NetworkClient(
-            cls.os.auth_provider,
+            cls.os_primary.auth_provider,
             CONF.network.catalog_type,
             CONF.identity.region,
             **cls.default_params_with_timeout_values
