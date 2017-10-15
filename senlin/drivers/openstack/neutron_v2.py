@@ -27,6 +27,17 @@ class NeutronClient(base.DriverBase):
         return network
 
     @sdk.translate_exception
+    def network_create(self, **attr):
+        network = self.conn.network.create_network(**attr)
+        return network
+
+    @sdk.translate_exception
+    def network_delete(self, network, ignore_missing=False):
+        ret = self.conn.network.delete_network(
+            network, ignore_missing=ignore_missing)
+        return ret
+
+    @sdk.translate_exception
     def port_find(self, name_or_id, ignore_missing=False):
         port = self.conn.network.find_port(name_or_id, ignore_missing)
         return port
@@ -37,9 +48,72 @@ class NeutronClient(base.DriverBase):
         return sg
 
     @sdk.translate_exception
+    def security_group_create(self, name, description=''):
+        attr = {
+            'name': name,
+            'description': description,
+        }
+        sg = self.conn.network.create_security_group(**attr)
+        return sg
+
+    @sdk.translate_exception
+    def security_group_delete(self, security_group_id, ignore_missing=False):
+        sg = self.conn.network.delete_security_group(
+            security_group_id, ignore_missing)
+        return sg
+
+    @sdk.translate_exception
+    def security_group_rule_create(self, security_group_id, port_range_min,
+                                   port_range_max=None, ethertype='IPv4',
+                                   remote_ip_prefix='0.0.0.0/0',
+                                   direction='ingress', protocol='tcp'):
+        if port_range_max is None:
+            port_range_max = port_range_min
+        attr = {
+            'direction': direction,
+            'remote_ip_prefix': remote_ip_prefix,
+            'protocol': protocol,
+            'port_range_max': port_range_max,
+            'port_range_min': port_range_min,
+            'security_group_id': security_group_id,
+            'ethertype': ethertype,
+        }
+        rule = self.conn.network.create_security_group_rule(**attr)
+        return rule
+
+    @sdk.translate_exception
     def subnet_get(self, name_or_id, ignore_missing=False):
         subnet = self.conn.network.find_subnet(name_or_id, ignore_missing)
         return subnet
+
+    @sdk.translate_exception
+    def subnet_create(self, **attr):
+        subnet = self.conn.network.create_subnet(**attr)
+        return subnet
+
+    @sdk.translate_exception
+    def router_create(self, **attr):
+        router = self.conn.network.create_router(**attr)
+        return router
+
+    @sdk.translate_exception
+    def router_delete(self, router, ignore_missing=False):
+        ret = self.conn.network.delete_router(
+            router, ignore_missing=ignore_missing)
+        return ret
+
+    @sdk.translate_exception
+    def add_interface_to_router(self, router, subnet_id=None, port_id=None):
+        interface = self.conn.network.add_interface_to_router(
+            router, subnet_id=subnet_id, port_id=port_id)
+        return interface
+
+    @sdk.translate_exception
+    def remove_interface_from_router(self, router, subnet_id=None,
+                                     port_id=None):
+        interface = self.conn.network.remove_interface_from_router(
+            router, subnet_id=subnet_id, port_id=port_id)
+        return interface
 
     @sdk.translate_exception
     def port_create(self, **attr):

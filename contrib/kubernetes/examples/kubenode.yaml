@@ -1,0 +1,7 @@
+type: senlin.kubernetes.worker
+version: 1.0
+properties:
+  flavor: k8s.worker
+  image: ubuntu-16.04
+  key_name: elynn
+  master_cluster: cm
