@@ -26,3 +26,4 @@ tags
 .tox
 .venv
 .DS_Store
+.stestr

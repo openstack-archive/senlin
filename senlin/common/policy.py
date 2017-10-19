@@ -19,6 +19,7 @@ from oslo_config import cfg
 from oslo_policy import policy
 
 from senlin.common import exception
+from senlin.common import policies
 
 POLICY_ENFORCER = None
 CONF = cfg.CONF
@@ -34,6 +35,7 @@ def _get_enforcer(policy_file=None, rules=None, default_rule=None):
                                           policy_file=policy_file,
                                           rules=rules,
                                           default_rule=default_rule)
+        POLICY_ENFORCER.register_defaults(policies.list_rules())
     return POLICY_ENFORCER
 
 

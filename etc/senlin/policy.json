@@ -1,7 +1,4 @@
 {
-    "context_is_admin":  "role:admin",
-    "deny_everybody": "!",
-
     "build_info:build_info": "",
     "profile_types:index": "",
     "profile_types:get": "",
