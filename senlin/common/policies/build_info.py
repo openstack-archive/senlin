@@ -15,19 +15,19 @@
 
 from oslo_policy import policy
 
-
-ROLE_ADMIN = 'role:admin'
-DENY_EVERYBODY = '!'
-UNPROTECTED = ''
+from senlin.common.policies import base
 
 rules = [
-    policy.RuleDefault(
-        name="context_is_admin",
-        check_str=ROLE_ADMIN
-    ),
-    policy.RuleDefault(
-        name="deny_everybody",
-        check_str=DENY_EVERYBODY
+    policy.DocumentedRuleDefault(
+        name="build_info:build_info",
+        check_str=base.UNPROTECTED,
+        description="Show build information",
+        operations=[
+            {
+                'path': '/v1/build-info',
+                'method': 'GET'
+            }
+        ]
     )
 ]
 

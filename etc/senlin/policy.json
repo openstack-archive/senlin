@@ -1,10 +1,4 @@
 {
-    "build_info:build_info": "",
-    "profile_types:index": "",
-    "profile_types:get": "",
-    "profile_types:ops": "",
-    "policy_types:index": "",
-    "policy_types:get": "",
     "clusters:index": "",
     "clusters:create": "",
     "clusters:delete": "",

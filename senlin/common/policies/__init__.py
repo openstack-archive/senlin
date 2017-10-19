@@ -18,9 +18,15 @@
 import itertools
 
 from senlin.common.policies import base
+from senlin.common.policies import build_info
+from senlin.common.policies import policy_types
+from senlin.common.policies import profile_types
 
 
 def list_rules():
     return itertools.chain(
-        base.list_rules()
+        base.list_rules(),
+        build_info.list_rules(),
+        profile_types.list_rules(),
+        policy_types.list_rules()
     )

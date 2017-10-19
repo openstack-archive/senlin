@@ -15,19 +15,30 @@
 
 from oslo_policy import policy
 
-
-ROLE_ADMIN = 'role:admin'
-DENY_EVERYBODY = '!'
-UNPROTECTED = ''
+from senlin.common.policies import base
 
 rules = [
-    policy.RuleDefault(
-        name="context_is_admin",
-        check_str=ROLE_ADMIN
+    policy.DocumentedRuleDefault(
+        name="policy_types:index",
+        check_str=base.UNPROTECTED,
+        description="List policy types",
+        operations=[
+            {
+                'path': '/v1/policy-types',
+                'method': 'GET'
+            }
+        ]
     ),
-    policy.RuleDefault(
-        name="deny_everybody",
-        check_str=DENY_EVERYBODY
+    policy.DocumentedRuleDefault(
+        name="policy_types:get",
+        check_str=base.UNPROTECTED,
+        description="Show policy type details",
+        operations=[
+            {
+                'path': '/v1/policy-types/{policy_type}',
+                'method': 'GET'
+            }
+        ]
     )
 ]
 
