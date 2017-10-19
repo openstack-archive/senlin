@@ -42,26 +42,39 @@ level value of the event:
   serious problems encountered by the engine. The engine service may have
   run into some bugs. User intervention is required to do a recovery.
 
+Event Dispatcher Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Senlin provides an open architecture for event dispatching. Two of the
-built-in dispatchers are ``database`` and ``message``. The ``database``
-dispatcher dumps the events into database tables and it is enabled by default.
-The ``message`` dispatcher converts the event objects into versioned event
+built-in dispatchers are ``database`` and ``message``.
+
+1. The ``database`` dispatcher dumps the events into database tables and it
+is enabled by default.
+
+2. The ``message`` dispatcher converts the event objects into versioned event
 notifications and published on the global message queue. This dispatcher is
 by default disabled. To enable it, you can add the following line to the
 ``[DEFAULT]`` section of the ``senlin.conf`` file and then restart the service
 engine::
-
+  [default]
   event_dispatchers = message
-
-Note that the ``event_dispatchers`` field is ``MultiString``, you can enable
-both the ``database`` and ``message`` dispatchers if needed by the following
-configuration::
-  event_dispatchers = database, message
 
 Based on your deployment settings, you have to add the following lines to
 the ``senlin.conf`` file as well when using ``message`` dispatcher. This lines
 set ``messaging`` as the default driver used by the ``oslo.messaging``
 package::
+
+  [oslo_messaging_notifications]
+  driver = messaging
+
+With this configuration, the `database` dispatcher will be disabled, which
+means you can only access to the events by the message queue.
+
+3. The ``event_dispatchers`` field is ``MultiString``, you can enable
+both the ``database`` and ``message`` dispatchers if needed by the following
+configuration::
+  [default]
+  event_dispatchers = database, message
 
   [oslo_messaging_notifications]
   driver = messaging
