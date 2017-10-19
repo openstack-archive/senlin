@@ -17,16 +17,20 @@
 
 import itertools
 
+from senlin.common.policies import actions
 from senlin.common.policies import base
 from senlin.common.policies import build_info
 from senlin.common.policies import cluster_policies
 from senlin.common.policies import clusters
+from senlin.common.policies import events
 from senlin.common.policies import nodes
 from senlin.common.policies import policies
 from senlin.common.policies import policy_types
 from senlin.common.policies import profile_types
 from senlin.common.policies import profiles
 from senlin.common.policies import receivers
+from senlin.common.policies import services
+from senlin.common.policies import webhooks
 
 
 def list_rules():
@@ -40,5 +44,9 @@ def list_rules():
         nodes.list_rules(),
         policies.list_rules(),
         cluster_policies.list_rules(),
-        receivers.list_rules()
+        receivers.list_rules(),
+        actions.list_rules(),
+        events.list_rules(),
+        webhooks.list_rules(),
+        services.list_rules()
     )
