@@ -19,8 +19,10 @@ import itertools
 
 from senlin.common.policies import base
 from senlin.common.policies import build_info
+from senlin.common.policies import clusters
 from senlin.common.policies import policy_types
 from senlin.common.policies import profile_types
+from senlin.common.policies import profiles
 
 
 def list_rules():
@@ -28,5 +30,7 @@ def list_rules():
         base.list_rules(),
         build_info.list_rules(),
         profile_types.list_rules(),
-        policy_types.list_rules()
+        policy_types.list_rules(),
+        clusters.list_rules(),
+        profiles.list_rules()
     )
