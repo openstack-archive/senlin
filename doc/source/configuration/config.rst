@@ -12,13 +12,19 @@
   under the License.
 
 
-====================
-Senlin Configuration
-====================
+=======================
+ Configuration Options
+=======================
 
-.. toctree::
-   :maxdepth: 2
+senlin uses `oslo.config` to define and manage configuration options to
+allow the deployer to control many aspects of the service API and the service
+engine.
 
-   config
-   policy
-   sample-policy-yaml
+.. show-options:: senlin.config
+
+Options
+=======
+
+.. currentmodule:: senlin.common.config
+
+.. autofunction:: list_opts

@@ -12,13 +12,11 @@
   under the License.
 
 
-====================
-Senlin Configuration
-====================
+===========
+policy.yaml
+===========
 
-.. toctree::
-   :maxdepth: 2
+Use the ``policy.yaml`` file to define additional access controls that will be
+applied to Senlin:
 
-   config
-   policy
-   sample-policy-yaml
+.. literalinclude:: ../_static/senlin.policy.yaml.sample

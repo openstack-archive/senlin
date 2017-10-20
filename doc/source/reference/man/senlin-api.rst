@@ -34,7 +34,7 @@ OPTIONS
 
   Path to a config directory to pull .conf files from. This file set is
   sorted, so as to provide a predictable parse order if individual options are
-  over-ridden. The set is parsed after the file(s), if any, specified via 
+  over-ridden. The set is parsed after the file(s), if any, specified via
   --config-file, hence over-ridden options in the directory take precedence.
 
 FILES
@@ -42,7 +42,7 @@ FILES
 
 * /etc/senlin/senlin.conf
 * /etc/senlin/api-paste.ini
-* /etc/senlin/policy.json
+* /etc/senlin/policy.yaml
 
 BUGS
 ~~~~

@@ -26,7 +26,8 @@ from senlin.objects import base as obj_base
 class PolicyController(wsgi.Controller):
     """WSGI controller for policy resource in Senlin v1 API."""
 
-    # Define request scope (must match what is in policy.json)
+    # Define request scope
+    # (must match what is in policy file and policies in code.)
     REQUEST_SCOPE = 'policies'
 
     @util.policy_enforce

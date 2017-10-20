@@ -25,7 +25,8 @@ from senlin.common.i18n import _
 class EventController(wsgi.Controller):
     """WSGI controller for events in Senlin v1 API."""
 
-    # Define request scope (must match what is in policy.json)
+    # Define request scope
+    # (must match what is in policy file and policies in code.)
     REQUEST_SCOPE = 'events'
 
     @util.policy_enforce

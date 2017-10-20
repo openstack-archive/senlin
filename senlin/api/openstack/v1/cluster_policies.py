@@ -25,7 +25,8 @@ from senlin.common.i18n import _
 class ClusterPolicyController(wsgi.Controller):
     """WSGI controller for Cluster-Policy binding in Senlin v1 API."""
 
-    # Define request scope (must match what is in policy.json)
+    # Define request scope
+    # (must match what is in policy file and policies in code.)
     REQUEST_SCOPE = 'cluster_policies'
 
     @util.policy_enforce

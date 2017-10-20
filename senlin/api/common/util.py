@@ -27,7 +27,7 @@ def policy_enforce(handler):
     """Decorator that enforces policies.
 
     Checks the path matches the request context and enforces policy defined in
-    policy.json.
+    policy file and policies in code.
 
     This is a handler method decorator.
     """

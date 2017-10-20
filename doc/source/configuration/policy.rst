@@ -12,13 +12,12 @@
   under the License.
 
 
-====================
-Senlin Configuration
-====================
+======================================
+Senlin Sample Policy Configuration File
+======================================
 
-.. toctree::
-   :maxdepth: 2
+The following is an overview of all available access policies in Senlin.
+For a sample configuration file, refer to :doc:`sample-policy-yaml`.
 
-   config
-   policy
-   sample-policy-yaml
+.. show-policy::
+   :config-file: ../../tools/policy-generator.conf

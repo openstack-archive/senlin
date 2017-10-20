@@ -21,7 +21,8 @@ from senlin.rpc import client as rpc_client
 class BuildInfoController(wsgi.Controller):
     """WSGI controller for BuildInfo in Senlin v1 API."""
 
-    # Define request scope (must match what is in policy.json)
+    # Define request scope
+    # (must match what is in policy file and policies in code.)
     REQUEST_SCOPE = 'build_info'
 
     def __init__(self, options):

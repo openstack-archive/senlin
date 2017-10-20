@@ -4,6 +4,8 @@ build
 cover
 cover-master
 dist
+doc/source/_static/senlin.policy.yaml.sample
+etc/senlin/policy.yaml.sample
 etc/senlin/senlin.conf.sample
 releasenodes/build
 senlin-test.db

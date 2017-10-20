@@ -29,12 +29,19 @@ extensions = [
     'sphinx.ext.intersphinx',
     'openstackdocstheme',
     'oslo_config.sphinxext',
+    'oslo_policy.sphinxext',
+    'oslo_policy.sphinxpolicygen',
 ]
 
 # openstackdocstheme options
 repository_name = 'openstack/senlin'
 bug_project = 'senlin'
 bug_tag = ''
+
+policy_generator_config_file = (
+    '../../tools/policy-generator.conf'
+)
+sample_policy_basename = '_static/senlin'
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy
 # text edit cycles.
