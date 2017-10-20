@@ -17,7 +17,7 @@ import oslo_messaging
 from oslo_service import service
 
 from senlin.common import consts
-from senlin.common import messaging as messaging
+from senlin.common import messaging
 
 LOG = logging.getLogger(__name__)
 
