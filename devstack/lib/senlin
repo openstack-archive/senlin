@@ -89,10 +89,8 @@ function configure_senlin {
     SENLIN_ENGINE_HOST=${SENLIN_ENGINE_HOST:-$SERVICE_HOST}
     SENLIN_ENGINE_PORT=${SENLIN_ENGINE_PORT:-8778}
     SENLIN_API_PASTE_FILE=$SENLIN_CONF_DIR/api-paste.ini
-    SENLIN_POLICY_FILE=$SENLIN_CONF_DIR/policy.json
 
     cp $SENLIN_DIR/etc/senlin/api-paste.ini $SENLIN_API_PASTE_FILE
-    cp $SENLIN_DIR/etc/senlin/policy.json $SENLIN_POLICY_FILE
 
     # common options
     iniset $SENLIN_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
