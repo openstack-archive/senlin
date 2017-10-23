@@ -22,7 +22,8 @@ from senlin.api.common import wsgi
 class ProfileTypeController(wsgi.Controller):
     """WSGI controller for profile types resource in Senlin v1 API."""
 
-    # Define request scope (must match what is in policy.json)
+    # Define request scope
+    # (must match what is in policy file and policies in code.)
     REQUEST_SCOPE = 'profile_types'
 
     @util.policy_enforce

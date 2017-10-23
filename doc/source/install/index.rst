@@ -130,6 +130,14 @@ The most common options to be customized include:
 For more comprehensive helps on configuration options, please refer to
 :doc:`Configuration Options <configuration>` documentation.
 
+In case you want to modify access policies of Senlin, please generate sample
+policy file, copy it to `/etc/senlin/policy.yaml` and then update it.
+
+::
+
+  $ cd /opt/stack/senlin
+  $ tools/gen-policy
+  $ sudo cp etc/senlin/policy.yaml.sample /etc/senlin/policy.yaml
 
 5. Create Senlin Database.
 

@@ -50,7 +50,8 @@ class ActionData(object):
 class ActionController(wsgi.Controller):
     """WSGI controller for Actions in Senlin v1 API."""
 
-    # Define request scope (must match what is in policy.json)
+    # Define request scope
+    # (must match what is in policy file and policies in code.)
     REQUEST_SCOPE = 'actions'
 
     @util.policy_enforce
