@@ -473,7 +473,7 @@ class LoadBalancingPolicy(base.Policy):
 
         return candidates
 
-    def _remove_member(self, candidates, policy, action, driver,
+    def _remove_member(self, context, candidates, policy, driver,
                        handle_err=True):
         # Load policy data
         policy_data = self._extract_policy_data(policy.data)
@@ -482,7 +482,7 @@ class LoadBalancingPolicy(base.Policy):
 
         failed_nodes = []
         for node_id in candidates:
-            node = no.Node.get(action.context, node_id=node_id)
+            node = no.Node.get(context, node_id=node_id)
             node_data = node.data or {}
             member_id = node_data.get('lb_member', None)
             if member_id is None:
@@ -500,11 +500,11 @@ class LoadBalancingPolicy(base.Policy):
             else:
                 node.data.pop('lb_member', None)
                 values['data'] = node.data
-            no.Node.update(action.context, node_id, values)
+            no.Node.update(context, node_id, values)
 
         return failed_nodes
 
-    def _add_member(self, candidates, policy, action, driver):
+    def _add_member(self, context, candidates, policy, driver):
         # Load policy data
         policy_data = self._extract_policy_data(policy.data)
         lb_id = policy_data['loadbalancer']
@@ -514,7 +514,7 @@ class LoadBalancingPolicy(base.Policy):
 
         failed_nodes = []
         for node_id in candidates:
-            node = no.Node.get(action.context, node_id=node_id)
+            node = no.Node.get(context, node_id=node_id)
             node_data = node.data or {}
             member_id = node_data.get('lb_member', None)
             if member_id:
@@ -532,7 +532,7 @@ class LoadBalancingPolicy(base.Policy):
             else:
                 node.data.update({'lb_member': member_id})
                 values['data'] = node.data
-            no.Node.update(action.context, node_id, values)
+            no.Node.update(context, node_id, values)
 
         return failed_nodes
 
@@ -564,7 +564,7 @@ class LoadBalancingPolicy(base.Policy):
 
         # was a member of lb pool, check whether has been recreated
         if recovery is not None and recovery == consts.RECOVER_RECREATE:
-            self._remove_member(candidates, policy, action, driver,
+            self._remove_member(action.context, candidates, policy, driver,
                                 handle_err=False)
             data.pop('lb_member', None)
             values['data'] = data
@@ -596,7 +596,8 @@ class LoadBalancingPolicy(base.Policy):
                                                self.id)
 
         # Remove nodes that will be deleted from lb pool
-        failed_nodes = self._remove_member(candidates, cp, action, lb_driver)
+        failed_nodes = self._remove_member(action.context, candidates,
+                                           cp, lb_driver)
 
         if failed_nodes:
             error = _('Failed in removing deleted node(s) from lb pool: %s'
@@ -635,7 +636,8 @@ class LoadBalancingPolicy(base.Policy):
                 return
 
         # Add new nodes to lb pool
-        failed_nodes = self._add_member(candidates, cp, action, lb_driver)
+        failed_nodes = self._add_member(action.context, candidates,
+                                        cp, lb_driver)
         if failed_nodes:
             error = _('Failed in adding nodes into lb pool: %s') % failed_nodes
             action.data['status'] = base.CHECK_ERROR
