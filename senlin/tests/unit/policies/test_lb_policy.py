@@ -573,7 +573,9 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         self.lb_driver.lb_delete.assert_called_once_with(**policy_data)
         self.assertEqual({}, cluster.data)
 
-    def test_detach_existed_lbass_succeeded(self, m_extract, m_load):
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
+    def test_detach_existed_lbass_succeeded(self, m_remove, m_extract,
+                                            m_load):
         cp = mock.Mock()
         policy_data = {
             'loadbalancer': 'LB_ID',
@@ -591,6 +593,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         cp.data = cp_data
         m_load.return_value = cp
         m_extract.return_value = policy_data
+
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
         policy._lbaasclient = self.lb_driver
         cluster = mock.Mock(
@@ -603,6 +606,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
             })
         node = mock.Mock(id='fake', data={})
         cluster.nodes = [node]
+        m_remove.return_value = []
 
         res, data = policy.detach(cluster)
 
@@ -610,7 +614,57 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         self.assertEqual('LB resources deletion succeeded.', data)
         m_load.assert_called_once_with(mock.ANY, cluster.id, policy.id)
         m_extract.assert_called_once_with(cp_data)
+        m_remove.assert_called_with(mock.ANY, ['fake'], cp, self.lb_driver)
         self.assertEqual({}, cluster.data)
+
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
+    def test_detach_existed_lbass_failed(self, m_remove, m_extract, m_load):
+        cp = mock.Mock()
+        policy_data = {
+            'loadbalancer': 'LB_ID',
+            'listener': 'LISTENER_ID',
+            'pool': 'POOL_ID',
+            'healthmonitor': 'HM_ID',
+            'preexisting': True,
+        }
+        cp_data = {
+            'LoadBalancingPolicy': {
+                'version': '1.0',
+                'data': policy_data
+            }
+        }
+        cp.data = cp_data
+        m_load.return_value = cp
+        m_extract.return_value = policy_data
+
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        policy._lbaasclient = self.lb_driver
+        cluster = mock.Mock(
+            id='CLUSTER_ID',
+            data={
+                'loadbalancers': {
+                    policy.id: {'vip_address': '192.168.1.100'}
+
+                }
+            })
+        node1 = mock.Mock(id='node1', data={})
+        node2 = mock.Mock(id='node2', data={})
+        cluster.nodes = [node1, node2]
+        m_remove.return_value = [node2.id]
+
+        res, data = policy.detach(cluster)
+
+        self.assertFalse(res)
+        self.assertEqual('Failed to remove servers from existed LB.', data)
+        m_load.assert_called_once_with(mock.ANY, cluster.id, policy.id)
+        m_extract.assert_called_once_with(cp_data)
+        m_remove.assert_called_with(mock.ANY, ['node1', 'node2'], cp,
+                                    self.lb_driver)
+        self.assertEqual({
+            'loadbalancers': {
+                None: {'vip_address': '192.168.1.100'}
+            }},
+            cluster.data)
 
     def test_detach_failed_lb_delete(self, m_extract, m_load):
         cluster = mock.Mock()

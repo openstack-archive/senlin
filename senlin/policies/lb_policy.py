@@ -411,11 +411,20 @@ class LoadBalancingPolicy(base.Policy):
             if res is False:
                 return False, reason
 
-        for node in cluster.nodes:
-            if 'lb_member' in node.data:
-                node.data.pop('lb_member')
-                values = {'data': node.data}
-                no.Node.update(oslo_context.get_current(), node.id, values)
+            for node in cluster.nodes:
+                if 'lb_member' in node.data:
+                    node.data.pop('lb_member')
+                    values = {'data': node.data}
+                    no.Node.update(oslo_context.get_current(),
+                                   node.id, values)
+        else:
+            # the lb pool is existed, we need to remove servers from it
+            nodes = cluster.nodes
+            failed = self._remove_member(oslo_context.get_current(),
+                                         [node.id for node in nodes],
+                                         cp, lb_driver)
+            if failed:
+                return False, _('Failed to remove servers from existed LB.')
 
         lb_data = cluster.data.get('loadbalancers', {})
         if lb_data and isinstance(lb_data, dict):
