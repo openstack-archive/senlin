@@ -672,7 +672,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
         # do it
         candidates = ['NODE1_ID', 'NODE2_ID']
-        res = policy._add_member(candidates, cp, action, self.lb_driver)
+        res = policy._add_member(action.context, candidates,
+                                 cp, self.lb_driver)
 
         # assertions
         self.assertEqual([], res)
@@ -727,7 +728,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
         # do it
         candidates = ['NODE1_ID']
-        res = policy._add_member(candidates, cp, action, self.lb_driver)
+        res = policy._add_member(action.context, candidates,
+                                 cp, self.lb_driver)
 
         # assertions
         self.assertEqual(['NODE1_ID'], res)
@@ -764,7 +766,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         self.assertIsNone(res)
         m_get.assert_called_once_with(action)
         m_load.assert_called_once_with(ctx, cid, policy.id)
-        m_add.assert_called_once_with(['NODE_ID'], cp, action, self.lb_driver)
+        m_add.assert_called_once_with(ctx, ['NODE_ID'], cp, self.lb_driver)
         self.assertFalse(m_remove.called)
 
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_add_member')
@@ -796,7 +798,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         self.assertIsNone(res)
         m_get.assert_called_once_with(action)
         m_load.assert_called_once_with('action_context', cid, policy.id)
-        m_add.assert_called_once_with(candidates, cp, action, self.lb_driver)
+        m_add.assert_called_once_with(action.context, candidates,
+                                      cp, self.lb_driver)
         self.assertFalse(m_remove.called)
 
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_add_member')
@@ -825,7 +828,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         self.assertIsNone(res)
         m_get.assert_called_once_with(action)
         m_load.assert_called_once_with('action_context', cid, policy.id)
-        m_add.assert_called_once_with(['NODE1'], cp, action, self.lb_driver)
+        m_add.assert_called_once_with(action.context, ['NODE1'],
+                                      cp, self.lb_driver)
         m_recovery.assert_called_once_with(['NODE1'], cp, self.lb_driver,
                                            action)
 
@@ -853,7 +857,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         self.assertEqual("Failed in adding nodes into lb pool: "
                          "['NODE1_ID']", action.data['reason'])
         m_get.assert_called_once_with(action)
-        m_add.assert_called_once_with(['NODE1_ID'], cp, action, self.lb_driver)
+        m_add.assert_called_once_with(action.context, ['NODE1_ID'],
+                                      cp, self.lb_driver)
         self.assertFalse(m_remove.called)
 
     @mock.patch.object(no.Node, 'get')
@@ -890,8 +895,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         policy._lbaasclient = self.lb_driver
 
         candidates = [node1.id, node2.id]
-        res = policy._remove_member(
-            candidates, cp, action, self.lb_driver)
+        res = policy._remove_member(action.context, candidates,
+                                    cp, self.lb_driver)
 
         m_extract.assert_called_once_with(cp_data)
         calls_node_get = [
@@ -945,7 +950,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         policy._lbaasclient = self.lb_driver
 
         candidates = [node1.id, node2.id]
-        res = policy._remove_member(candidates, cp, action, self.lb_driver)
+        res = policy._remove_member(action.context, candidates,
+                                    cp, self.lb_driver)
 
         m_extract.assert_called_once_with(cp_data)
         calls_node_get = [
@@ -992,7 +998,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         policy._lbaasclient = self.lb_driver
 
         candidates = [node1.id]
-        res = policy._remove_member(candidates, cp, action, self.lb_driver)
+        res = policy._remove_member(action.context, candidates,
+                                    cp, self.lb_driver)
 
         m_extract.assert_called_once_with(cp_data)
         m_node_get.assert_called_once_with(action.context, node_id='NODE1')
@@ -1051,8 +1058,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         self.assertEqual("Failed in removing deleted node(s) from lb pool: "
                          "['NODE1_ID']", action.data['reason'])
 
-        m_remove.assert_called_once_with(
-            ['NODE1_ID'], mock.ANY, action, self.lb_driver)
+        m_remove.assert_called_once_with(action.context, ['NODE1_ID'],
+                                         mock.ANY, self.lb_driver)
 
     @mock.patch.object(no.Node, 'update')
     def test__process_recovery_not_lb_member(self, m_update, m1, m2):
@@ -1105,6 +1112,6 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         res = policy._process_recovery(['NODE'], cp, self.lb_driver, action)
 
         self.assertEqual(['NODE'], res)
-        m_remove.assert_called_once_with(['NODE'], cp, action, self.lb_driver,
-                                         handle_err=False)
+        m_remove.assert_called_once_with(action.context, ['NODE'], cp,
+                                         self.lb_driver, handle_err=False)
         m_update.assert_called_once_with(action.context, {'data': {}})
