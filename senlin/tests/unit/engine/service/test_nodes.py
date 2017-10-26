@@ -569,6 +569,30 @@ class NodeTest(base.SenlinTestCase):
             mock.call(self.ctx, 'OLD_PROFILE_ID'),
         ])
 
+    @mock.patch.object(po.Profile, 'find')
+    @mock.patch.object(no.Node, 'find')
+    def test_node_update_dumplicated_profile(self, mock_find, mock_profile):
+        mock_find.return_value = mock.Mock(profile_id='OLD_PROFILE_ID')
+        mock_profile.side_effect = [
+            mock.Mock(id='OLD_PROFILE_ID', type='PROFILE_TYPE'),
+            mock.Mock(id='OLD_PROFILE_ID', type='PROFILE_TYPE'),
+        ]
+
+        req = orno.NodeUpdateRequest(identity='FAKE_NODE',
+                                     profile_id='OLD_PROFILE_ID')
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_update,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("No property needs an update.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
+        mock_profile.assert_has_calls([
+            mock.call(self.ctx, 'OLD_PROFILE_ID'),
+            mock.call(self.ctx, 'OLD_PROFILE_ID'),
+        ])
+
     @mock.patch.object(no.Node, 'find')
     def test_node_update_no_property_for_update(self, mock_find):
         x_obj = mock.Mock(id='FAKE_NODE_ID', name='NODE1', role='ROLE1',
