@@ -141,6 +141,13 @@ class NodeAction(base.Action):
         :returns: A tuple containing the result and the corresponding reason.
         """
         params = self.inputs
+        new_profile_id = params.get('new_profile_id', None)
+        if new_profile_id and new_profile_id == self.entity.profile_id:
+            params.pop('new_profile_id')
+
+        if not params:
+            return self.RES_OK, _('No property to update.')
+
         res = self.entity.do_update(self.context, params)
         if res:
             return self.RES_OK, _('Node updated successfully.')

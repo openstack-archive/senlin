@@ -407,6 +407,22 @@ class NodeActionTest(base.SenlinTestCase):
         self.assertEqual('Node updated successfully.', res_msg)
         node.do_update.assert_called_once_with(action.context, inputs)
 
+    def test_do_update_no_need_update(self, mock_load):
+        node = mock.Mock()
+        node.id = 'NID'
+        node.profile_id = 'PROFILE_ID'
+        mock_load.return_value = node
+        inputs = {"new_profile_id": "PROFILE_ID"}
+        action = node_action.NodeAction(node.id, 'ACTION', self.ctx,
+                                        inputs=inputs)
+
+        # Test node update success path
+        node.do_update = mock.Mock(return_value=mock.Mock())
+        res_code, res_msg = action.do_update()
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('No property to update.', res_msg)
+        self.assertFalse(node.do_update.called)
+
     def test_do_join_success(self, mock_load):
         node = mock.Mock(id='NID')
         mock_load.return_value = node
