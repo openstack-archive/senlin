@@ -10,8 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import copy
-
 from oslo_config import cfg
 from oslo_serialization import jsonutils
 from oslo_utils import strutils
@@ -381,20 +379,6 @@ class BaseEnum(fields.FieldType):
         if value is None:
             return None
         return '\'%s\'' % value
-
-    def get_schema(self):
-        # TODO(Anyone): remove this override when the following patch is
-        # merged and released.
-        # https://review.openstack.org/389061
-        valid_values = copy.deepcopy(self._valid_values)
-        if self._nullable:
-            valid_values.append(None)
-
-        schema = {
-            'type': ['string'],
-            'enum': valid_values,
-        }
-        return schema
 
 
 class AdjustmentType(BaseEnum):
