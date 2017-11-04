@@ -27,8 +27,8 @@
 - job:
     name: senlin-dsvm-tempest-py27-api
     parent: legacy-dsvm-base
-    run: playbooks/legacy/senlin-dsvm-tempest-py27-api/run
-    post-run: playbooks/legacy/senlin-dsvm-tempest-py27-api/post
+    run: playbooks/legacy/senlin-dsvm-tempest-py27-api/run.yaml
+    post-run: playbooks/legacy/senlin-dsvm-tempest-py27-api/post.yaml
     timeout: 7800
     required-projects:
       - openstack-infra/devstack-gate
@@ -48,8 +48,8 @@
 - job:
     name: senlin-dsvm-tempest-py27-functional
     parent: legacy-dsvm-base
-    run: playbooks/legacy/senlin-dsvm-tempest-py27-functional/run
-    post-run: playbooks/legacy/senlin-dsvm-tempest-py27-functional/post
+    run: playbooks/legacy/senlin-dsvm-tempest-py27-functional/run.yaml
+    post-run: playbooks/legacy/senlin-dsvm-tempest-py27-functional/post.yaml
     timeout: 7800
     required-projects:
       - openstack-infra/devstack-gate
@@ -69,8 +69,8 @@
 - job:
     name: senlin-dsvm-tempest-py27-integration
     parent: legacy-dsvm-base
-    run: playbooks/legacy/senlin-dsvm-tempest-py27-integration/run
-    post-run: playbooks/legacy/senlin-dsvm-tempest-py27-integration/post
+    run: playbooks/legacy/senlin-dsvm-tempest-py27-integration/run.yaml
+    post-run: playbooks/legacy/senlin-dsvm-tempest-py27-integration/post.yaml
     timeout: 7800
     required-projects:
       - openstack-infra/devstack-gate
@@ -90,8 +90,8 @@
 - job:
     name: senlin-dsvm-tempest-py35-api
     parent: legacy-dsvm-base
-    run: playbooks/legacy/senlin-dsvm-tempest-py35-api/run
-    post-run: playbooks/legacy/senlin-dsvm-tempest-py35-api/post
+    run: playbooks/legacy/senlin-dsvm-tempest-py35-api/run.yaml
+    post-run: playbooks/legacy/senlin-dsvm-tempest-py35-api/post.yaml
     timeout: 7800
     required-projects:
       - openstack-infra/devstack-gate
@@ -111,8 +111,8 @@
 - job:
     name: senlin-dsvm-tempest-py35-functional
     parent: legacy-dsvm-base
-    run: playbooks/legacy/senlin-dsvm-tempest-py35-functional/run
-    post-run: playbooks/legacy/senlin-dsvm-tempest-py35-functional/post
+    run: playbooks/legacy/senlin-dsvm-tempest-py35-functional/run.yaml
+    post-run: playbooks/legacy/senlin-dsvm-tempest-py35-functional/post.yaml
     timeout: 7800
     required-projects:
       - openstack-infra/devstack-gate
@@ -132,8 +132,8 @@
 - job:
     name: senlin-dsvm-tempest-py35-integration
     parent: legacy-dsvm-base
-    run: playbooks/legacy/senlin-dsvm-tempest-py35-integration/run
-    post-run: playbooks/legacy/senlin-dsvm-tempest-py35-integration/post
+    run: playbooks/legacy/senlin-dsvm-tempest-py35-integration/run.yaml
+    post-run: playbooks/legacy/senlin-dsvm-tempest-py35-integration/post.yaml
     timeout: 7800
     required-projects:
       - openstack-infra/devstack-gate
@@ -153,8 +153,8 @@
 - job:
     name: rally-dsvm-senlin-senlin
     parent: legacy-dsvm-base
-    run: playbooks/legacy/rally-dsvm-senlin-senlin/run
-    post-run: playbooks/legacy/rally-dsvm-senlin-senlin/post
+    run: playbooks/legacy/rally-dsvm-senlin-senlin/run.yaml
+    post-run: playbooks/legacy/rally-dsvm-senlin-senlin/post.yaml
     timeout: 7800
     required-projects:
       - openstack-infra/devstack-gate
