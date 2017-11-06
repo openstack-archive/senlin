@@ -286,7 +286,7 @@ class HealthManager(service.Service):
             return
         profile = objects.Profile.get(self.ctx, cluster.profile_id,
                                       project_safe=False)
-        profile_type = profile.type_name.split('-')[0]
+        profile_type = profile.type.split('-')[0]
         if profile_type == 'os.nova.server':
             exchange = cfg.CONF.health_manager.nova_control_exchange
         elif profile_type == 'os.heat.stack':

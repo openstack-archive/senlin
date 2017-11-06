@@ -645,7 +645,7 @@ class TestHealthManager(base.SenlinTestCase):
                                            return_value=x_listener)
         x_cluster = mock.Mock(project='PROJECT_ID', profile_id='PROFILE_ID')
         mock_cluster.return_value = x_cluster
-        x_profile = mock.Mock(type_name='os.nova.server-1.0')
+        x_profile = mock.Mock(type='os.nova.server-1.0')
         mock_profile.return_value = x_profile
 
         # do it
@@ -670,7 +670,7 @@ class TestHealthManager(base.SenlinTestCase):
                                            return_value=x_listener)
         x_cluster = mock.Mock(project='PROJECT_ID', profile_id='PROFILE_ID')
         mock_cluster.return_value = x_cluster
-        x_profile = mock.Mock(type_name='os.heat.stack-1.0')
+        x_profile = mock.Mock(type='os.heat.stack-1.0')
         mock_profile.return_value = x_profile
 
         # do it
@@ -691,7 +691,7 @@ class TestHealthManager(base.SenlinTestCase):
         mock_add_thread = self.patchobject(self.hm.TG, 'add_thread')
         x_cluster = mock.Mock(project='PROJECT_ID', profile_id='PROFILE_ID')
         mock_cluster.return_value = x_cluster
-        x_profile = mock.Mock(type_name='other.types-1.0')
+        x_profile = mock.Mock(type='other.types-1.0')
         mock_profile.return_value = x_profile
 
         # do it
