@@ -35,11 +35,11 @@ Senlin DB version
 
 ``senlin-manage db_version``
 
-    Print out the db schema revision.
+Print out the db schema revision.
 
 ``senlin-manage db_sync``
 
-    Sync the database up to the most recent version.
+Sync the database up to the most recent version.
 
 
 FILES

@@ -141,10 +141,10 @@ policy file, copy it to `/etc/senlin/policy.yaml` and then update it.
 
 5. Create Senlin Database.
 
- Create Senlin database using the :command:`senlin-db-recreate` script under
- the :file:`tools` subdirectory. Before calling the script, you need edit it
- to customize the password you will use for the ``senlin`` user. You need to
- update this script with the <DB PASSWORD> entered in step4.
+Create Senlin database using the :command:`senlin-db-recreate` script under
+the :file:`tools` subdirectory. Before calling the script, you need edit it
+to customize the password you will use for the ``senlin`` user. You need to
+update this script with the <DB PASSWORD> entered in step4.
 
 ::
 
@@ -153,7 +153,7 @@ policy file, copy it to `/etc/senlin/policy.yaml` and then update it.
 
 6. Start senlin engine and api service.
 
- You may need two consoles for the services i.e., one for each service.
+You may need two consoles for the services i.e., one for each service.
 
 ::
 
