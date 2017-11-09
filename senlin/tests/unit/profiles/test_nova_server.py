@@ -1215,7 +1215,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         res = profile.handle_rebuild(node_obj)
 
-        self.assertTrue(res)
+        self.assertEqual('FAKE_ID', res)
         cc.server_get.assert_called_with('FAKE_ID')
         cc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
                                                   'FAKE_SERVER_NAME',

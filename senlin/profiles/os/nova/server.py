@@ -1475,8 +1475,15 @@ class ServerProfile(base.Profile):
         return True
 
     def handle_rebuild(self, obj, **options):
+        """Handler for the rebuild operation.
+
+        :param obj: The node object.
+        :param dict options: A list for operations each of which has a name
+            and optionally a map from parameter to values.
+        :returns: The server ID if successful or None if failed.
+        """
         if not obj.physical_id:
-            return False
+            return None
 
         server_id = obj.physical_id
         driver = self.compute(obj)
@@ -1488,7 +1495,7 @@ class ServerProfile(base.Profile):
                                          message=six.text_type(ex))
 
         if server is None or server.image is None:
-            return False
+            return None
 
         image_id = server.image['id']
         admin_pass = self.properties.get(self.ADMIN_PASS)
@@ -1497,11 +1504,12 @@ class ServerProfile(base.Profile):
             driver.server_rebuild(server_id, image_id,
                                   name, admin_pass)
             driver.wait_for_server(server_id, 'ACTIVE')
+            return server_id
         except exc.InternalError as ex:
             raise exc.EResourceOperation(op='rebuilding', type='server',
                                          id=server_id,
                                          message=six.text_type(ex))
-        return True
+            return None
 
     def handle_change_password(self, obj, **options):
         """Handler for the change_password operation."""
