@@ -1492,10 +1492,10 @@ class ServerProfile(base.Profile):
 
         image_id = server.image['id']
         admin_pass = self.properties.get(self.ADMIN_PASS)
+        name = self.properties[self.NAME] or obj.name
         try:
             driver.server_rebuild(server_id, image_id,
-                                  self.properties.get(self.NAME),
-                                  admin_pass)
+                                  name, admin_pass)
             driver.wait_for_server(server_id, 'ACTIVE')
         except exc.InternalError as ex:
             raise exc.EResourceOperation(op='rebuilding', type='server',
