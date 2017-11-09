@@ -9,7 +9,8 @@ properties:
     type: LIFECYCLE_EVENTS
 
   recovery:
-    # List of actions that can be retried on a failed node
+    # Action that can be retried on a failed node, will improve to
+    # support multpile actions in the future. Valid values incluste:
+    # REBOOT, REBUILD, RECREATE
     actions:
-      - name: REBUILD
       - name: RECREATE
