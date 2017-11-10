@@ -119,9 +119,13 @@ class NodeController(wsgi.Controller):
         return result
 
     @util.policy_enforce
-    def delete(self, req, node_id):
-        force = False
-        if req.params.get('force') is not None:
+    def delete(self, req, node_id, body=None):
+        if body:
+            force = body.get('force')
+        else:
+            force = False
+
+        if force is not None:
             force = util.parse_bool_param(consts.NODE_DELETE_FORCE,
                                           req.params.get('force'))
 
