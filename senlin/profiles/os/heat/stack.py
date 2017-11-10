@@ -189,6 +189,8 @@ class StackProfile(base.Profile):
         :raises: `EResourceDeletion` if interaction with heat fails.
         """
         stack_id = obj.physical_id
+        if not stack_id:
+            return True
 
         ignore_missing = params.get('ignore_missing', True)
         try:
