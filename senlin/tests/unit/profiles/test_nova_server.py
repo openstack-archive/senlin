@@ -542,6 +542,22 @@ class TestNovaServerBasic(base.SenlinTestCase):
         cc.server_delete.assert_called_once_with('FAKE_ID', True)
         cc.wait_for_server_delete.assert_called_once_with('FAKE_ID')
 
+    def test_do_delete_no_physical_id(self):
+        profile = server.ServerProfile('t', self.spec)
+
+        cc = mock.Mock()
+        profile._computeclient = cc
+
+        test_server = mock.Mock(physical_id=None)
+
+        # do it
+        res = profile.do_delete(test_server)
+
+        # assertions
+        self.assertTrue(res)
+        self.assertFalse(cc.server_delete.called)
+        self.assertFalse(cc.wait_for_server_delete.called)
+
     @mock.patch.object(node_ob.Node, 'update')
     def test_do_delete_ports_ok(self, mock_node_obj):
         profile = server.ServerProfile('t', self.spec)
@@ -589,14 +605,6 @@ class TestNovaServerBasic(base.SenlinTestCase):
         self.assertTrue(res)
         cc.server_force_delete.assert_called_once_with('FAKE_ID', False)
         cc.wait_for_server_delete.assert_called_once_with('FAKE_ID')
-
-    def test_do_delete_no_physical_id(self):
-        profile = server.ServerProfile('t', self.spec)
-        test_server = mock.Mock(physical_id=None)
-
-        res = profile.do_delete(test_server)
-
-        self.assertTrue(res)
 
     def test_do_delete_with_delete_failure(self):
         cc = mock.Mock()

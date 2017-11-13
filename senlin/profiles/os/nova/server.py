@@ -873,10 +873,10 @@ class ServerProfile(base.Profile):
                   caught.
         :raises: `EResourceDeletion` if interaction with compute service fails.
         """
-        if not obj.physical_id:
+        server_id = obj.physical_id
+        if not server_id:
             return True
 
-        server_id = obj.physical_id
         ignore_missing = params.get('ignore_missing', True)
         internal_ports = obj.data.get('internal_ports', [])
         force = params.get('force', False)

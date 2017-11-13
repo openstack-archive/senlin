@@ -306,7 +306,7 @@ class TestNode(base.SenlinTestCase):
         self.assertTrue(res)
         mock_status.assert_called_once_with(self.context, consts.NS_DELETING,
                                             "Deletion in progress")
-        self.assertFalse(mock_delete.called)
+        self.assertTrue(mock_delete.called)
         mock_db_delete.assert_called_once_with(self.context, node.id)
 
     @mock.patch.object(nodem.Node, 'set_status')

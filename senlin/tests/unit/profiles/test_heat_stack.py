@@ -290,6 +290,20 @@ class TestHeatStackProfile(base.SenlinTestCase):
         oc.stack_delete.assert_called_once_with('FAKE_ID', True)
         oc.wait_for_stack_delete.assert_called_once_with('FAKE_ID')
 
+    def test_do_delete_no_physical_id(self):
+        profile = stack.StackProfile('t', self.spec)
+        oc = mock.Mock()
+        test_stack = mock.Mock(physical_id=None)
+        profile._orchestrationclient = oc
+
+        # do it
+        res = profile.do_delete(test_stack, ignore_missing=False)
+
+        # assertions
+        self.assertTrue(res)
+        self.assertFalse(oc.stack_delete.called)
+        self.assertFalse(oc.wait_for_stack_delete.called)
+
     def test_do_delete_ignore_missing(self):
         profile = stack.StackProfile('t', self.spec)
         oc = mock.Mock()

@@ -229,14 +229,13 @@ class Node(object):
 
     def do_delete(self, context):
         self.set_status(context, consts.NS_DELETING, _('Deletion in progress'))
-        if self.physical_id:
-            try:
-                # The following operation always return True unless exception
-                # is thrown
-                pb.Profile.delete_object(context, self)
-            except exc.EResourceDeletion as ex:
-                self.set_status(context, consts.NS_ERROR, six.text_type(ex))
-                return False
+        try:
+            # The following operation always return True unless exception
+            # is thrown
+            pb.Profile.delete_object(context, self)
+        except exc.EResourceDeletion as ex:
+            self.set_status(context, consts.NS_ERROR, six.text_type(ex))
+            return False
 
         no.Node.delete(context, self.id)
         return True
