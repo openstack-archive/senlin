@@ -1311,6 +1311,34 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         self.assertFalse(res)
 
+    def test_handle_rebuild_failed_with_name(self):
+        self.spec['properties']['name'] = None
+        profile = server.ServerProfile('t', self.spec)
+        x_image = {'id': '123'}
+        x_server = mock.Mock(image=x_image)
+        cc = mock.Mock()
+        cc.server_get.return_value = x_server
+        ex = exc.InternalError(code=400,
+                               message='Server name is not '
+                                       'a string or unicode.')
+        cc.server_rebuild.side_effect = ex
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+        node_obj.name = None
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               profile.handle_rebuild,
+                               node_obj)
+
+        self.assertEqual("Failed in rebuilding server 'FAKE_ID': "
+                         "Server name is not a string or unicode.",
+                         six.text_type(ex))
+        cc.server_get.assert_called_once_with('FAKE_ID')
+        cc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
+                                                  None,
+                                                  'adminpass')
+        self.assertEqual(0, cc.wait_for_server.call_count)
+
     def test_handle_change_password(self):
         obj = mock.Mock(physical_id='FAKE_ID')
         profile = server.ServerProfile('t', self.spec)
