@@ -1675,6 +1675,7 @@ class EngineService(service.Service):
         LOG.info("Updating node '%s'.", req.identity)
 
         node = node_obj.Node.find(ctx, req.identity)
+        inputs = {}
         if req.obj_attr_is_set('profile_id') and req.profile_id is not None:
             try:
                 db_profile = profile_obj.Profile.find(ctx, req.profile_id)
@@ -1690,9 +1691,8 @@ class EngineService(service.Service):
                         'operation aborted.')
                 raise exception.BadRequest(msg=msg)
 
-            inputs = {'new_profile_id': profile_id}
-        else:
-            inputs = {}
+            if profile_id != old_profile.id:
+                inputs['new_profile_id'] = profile_id
 
         if req.obj_attr_is_set('name') and req.name:
             if req.name != node.name:
