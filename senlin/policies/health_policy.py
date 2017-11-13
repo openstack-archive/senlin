@@ -101,7 +101,8 @@ class HealthPolicy(base.Policy):
                               "required when type is 'NODE_STATUS_POLLING'."),
                             default=60,
                         ),
-                    }
+                    },
+                    default={}
                 ),
             },
             required=True,
@@ -148,7 +149,7 @@ class HealthPolicy(base.Policy):
 
         self.check_type = self.properties[self.DETECTION][self.DETECTION_TYPE]
         options = self.properties[self.DETECTION][self.DETECTION_OPTIONS]
-        self.interval = options[self.DETECTION_INTERVAL]
+        self.interval = options.get(self.DETECTION_INTERVAL, 60)
         recover_settings = self.properties[self.RECOVERY]
         self.recover_actions = recover_settings[self.RECOVERY_ACTIONS]
         self.fencing_types = recover_settings[self.RECOVERY_FENCING]
