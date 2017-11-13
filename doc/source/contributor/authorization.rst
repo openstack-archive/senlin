@@ -36,24 +36,24 @@ Major Components
 In the context of an OpenStack cloud, the most important components involved in
 the authentication and the authorization process are:
 
- - The Senlin client (i.e. the `python-senlinclient` package) which accepts
-   user credentials provided through environment variables and/or the command
-   line arguments and forwards them to the OpenStack SDK (i.e. the
-   `python-openstacksdk` package) when making service requests to Senlin API.
- - The OpenStack SDK (`python-openstacksdk`) is used by Senlin engine to
-   interact with any other OpenStack services. The Senlin client also uses the
-   SDK to talk to the Senlin API. The SDK package translates the user-provided
-   credentials into a token by invoking the Keystone service.
- - The Keystone middleware (i.e. `keystonemiddleware`) which backs the
-   `auth_token` WSGI middleware in the Senlin API pipeline provides a basic
-   validation filter. The filter is responsible to validate the token that
-   exists in the HTTP request header and then populates the HTTP request header
-   with detailed information for the downstream filters (including the API
-   itself) to use.
- - The `context` WSGI middleware which is based on the `oslo.context` package
-   provides a constructor of the `RequestContext` data structure that
-   accompanies any requests down the WSGI application pipeline so that those
-   downstream components don't have to access the HTTP request header.
+- The Senlin client (i.e. the `python-senlinclient` package) which accepts
+  user credentials provided through environment variables and/or the command
+  line arguments and forwards them to the OpenStack SDK (i.e. the
+  `python-openstacksdk` package) when making service requests to Senlin API.
+- The OpenStack SDK (`python-openstacksdk`) is used by Senlin engine to
+  interact with any other OpenStack services. The Senlin client also uses the
+  SDK to talk to the Senlin API. The SDK package translates the user-provided
+  credentials into a token by invoking the Keystone service.
+- The Keystone middleware (i.e. `keystonemiddleware`) which backs the
+  `auth_token` WSGI middleware in the Senlin API pipeline provides a basic
+  validation filter. The filter is responsible to validate the token that
+  exists in the HTTP request header and then populates the HTTP request header
+  with detailed information for the downstream filters (including the API
+  itself) to use.
+- The `context` WSGI middleware which is based on the `oslo.context` package
+  provides a constructor of the `RequestContext` data structure that
+  accompanies any requests down the WSGI application pipeline so that those
+  downstream components don't have to access the HTTP request header.
 
 
 Usage Scenarios

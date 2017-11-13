@@ -29,11 +29,11 @@ Keystone project (tenant) which is the default project of the user.
 
 A cluster has the following timestamps when instantiated:
 
- - ``init_at``: the timestamp when a cluster object is initialized in the
-   Senlin database, but the actual cluster creation has not yet started;
- - ``created_at``: the timestamp when the cluster object is created, i.e.
-   the ``CLUSTER_CREATE`` action has completed;
- - ``updated_at``: the timestamp when the cluster was last updated.
+- ``init_at``: the timestamp when a cluster object is initialized in the
+  Senlin database, but the actual cluster creation has not yet started;
+- ``created_at``: the timestamp when the cluster object is created, i.e.
+  the ``CLUSTER_CREATE`` action has completed;
+- ``updated_at``: the timestamp when the cluster was last updated.
 
 
 Cluster Statuses
@@ -41,20 +41,20 @@ Cluster Statuses
 
 A cluster can have one of the following statuses during its lifecycle:
 
-  - ``INIT``: the cluster object has been initialized, but not created yet;
-  - ``ACTIVE``: the cluster is created and providing service;
-  - ``CREATING``: the cluster creation action is still on going;
-  - ``ERROR``: the cluster is still providing services, but there are things
-    going wrong that needs human intervention;
-  - ``CRITICAL``: the cluster is not operational, it may or may not be
-    providing services as expected. Senlin cannot recover it from its current
-    status. The best way to deal with this cluster is to delete it and then
-    re-create it if needed.
-  - ``DELETING``: the cluster deletion is ongoing;
-  - ``WARNING``: the cluster is operational, but there are some warnings
-    detected during past operations. In this case, human involvement is
-    suggested but not required.
-  - ``UPDATING``: the cluster is being updated.
+- ``INIT``: the cluster object has been initialized, but not created yet;
+- ``ACTIVE``: the cluster is created and providing service;
+- ``CREATING``: the cluster creation action is still on going;
+- ``ERROR``: the cluster is still providing services, but there are things
+  going wrong that needs human intervention;
+- ``CRITICAL``: the cluster is not operational, it may or may not be
+  providing services as expected. Senlin cannot recover it from its current
+  status. The best way to deal with this cluster is to delete it and then
+  re-create it if needed.
+- ``DELETING``: the cluster deletion is ongoing;
+- ``WARNING``: the cluster is operational, but there are some warnings
+  detected during past operations. In this case, human involvement is
+  suggested but not required.
+- ``UPDATING``: the cluster is being updated.
 
 Along with the ``status`` property, Senlin provides a ``status_reason``
 property for users to check what is the cause of the cluster's current status.
@@ -74,24 +74,24 @@ carries a body with valid, sufficient information for the engine to complete
 the creation job. The following fields are required in a map named ``cluster``
 in the request JSON body:
 
-  - ``name``: the name of the cluster to be created;
-  - ``profile``: the name or ID or short-ID of a profile to be used;
-  - ``desired_capacity``: the desired number of nodes in the cluster, which is
-    treated also as the initial number of nodes to be created.
+- ``name``: the name of the cluster to be created;
+- ``profile``: the name or ID or short-ID of a profile to be used;
+- ``desired_capacity``: the desired number of nodes in the cluster, which is
+  treated also as the initial number of nodes to be created.
 
 The following optional fields can be provided in the ``cluster`` map in the
 JSON request body:
 
-  - ``min_size``: the minimum number of nodes inside the cluster, default
-    value is 0;
-  - ``max_size``: the maximum number of nodes inside the cluster, default
-    value is -1, which means there is no upper limit on the number of nodes;
-  - ``timeout``: the maximum number of seconds to wait for the cluster to
-    become ready, i.e. ``ACTIVE``.
-  - ``metadata``: a list of key-value pairs to be associated with the cluster.
-  - ``dependents``: A dict contains dependency information between nova server/
-    heat stack cluster and container cluster. The container node's id will be
-    stored in 'dependents' property of its host cluster.
+- ``min_size``: the minimum number of nodes inside the cluster, default
+  value is 0;
+- ``max_size``: the maximum number of nodes inside the cluster, default
+  value is -1, which means there is no upper limit on the number of nodes;
+- ``timeout``: the maximum number of seconds to wait for the cluster to
+  become ready, i.e. ``ACTIVE``.
+- ``metadata``: a list of key-value pairs to be associated with the cluster.
+- ``dependents``: A dict contains dependency information between nova server/
+  heat stack cluster and container cluster. The container node's id will be
+  stored in 'dependents' property of its host cluster.
 
 The ``max_size`` and the ``min_size`` fields, when specified, will be checked
 against each other by the Senlin API. The API also checks if the specified
