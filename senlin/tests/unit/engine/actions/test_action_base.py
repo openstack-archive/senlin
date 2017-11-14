@@ -864,7 +864,7 @@ class ActionProcTest(base.SenlinTestCase):
         self.assertTrue(res)
         mock_load.assert_called_once_with(self.ctx, action_id='ACTION_ID',
                                           project_safe=False)
-        mock_event_info.assert_called_once_with(action, 'start')
+        mock_event_info.assert_called_once_with(action, 'start', 'ACTION_I')
         mock_status.assert_called_once_with(action.RES_OK, 'BIG SUCCESS')
 
     @mock.patch.object(EVENT, 'info')
@@ -883,5 +883,5 @@ class ActionProcTest(base.SenlinTestCase):
         self.assertFalse(res)
         mock_load.assert_called_once_with(self.ctx, action_id='ACTION',
                                           project_safe=False)
-        mock_info.assert_called_once_with(action, 'start')
+        mock_info.assert_called_once_with(action, 'start', 'ACTION')
         mock_status.assert_called_once_with(action.RES_ERROR, 'Boom!')

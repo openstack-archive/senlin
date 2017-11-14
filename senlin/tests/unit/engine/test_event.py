@@ -56,24 +56,25 @@ class TestEvent(testtools.TestCase):
     def test__event_data(self):
         entity = mock.Mock(id='ENTITY_ID')
         entity.name = 'FAKE_ENTITY'
-        action = mock.Mock(action='ACTION', entity=entity)
+        action = mock.Mock(id='ACTION_ID', action='ACTION', entity=entity)
 
         res = event._event_data(action)
 
-        self.assertEqual({'name': 'FAKE_ENTITY', 'id': 'ENTITY_I',
-                          'action': 'ACTION', 'phase': None, 'reason': None},
+        self.assertEqual({'name': 'FAKE_ENTITY', 'obj_id': 'ENTITY_I',
+                          'action': 'ACTION', 'phase': None, 'reason': None,
+                          'id': 'ACTION_I'},
                          res)
 
     def test__event_data_with_phase_reason(self):
         entity = mock.Mock(id='ENTITY_ID')
         entity.name = 'FAKE_ENTITY'
-        action = mock.Mock(action='ACTION', entity=entity)
+        action = mock.Mock(id='ACTION_ID', action='ACTION', entity=entity)
 
         res = event._event_data(action, phase='PHASE1', reason='REASON1')
 
-        self.assertEqual({'name': 'FAKE_ENTITY', 'id': 'ENTITY_I',
+        self.assertEqual({'name': 'FAKE_ENTITY', 'id': 'ACTION_I',
                           'action': 'ACTION', 'phase': 'PHASE1',
-                          'reason': 'REASON1'},
+                          'obj_id': 'ENTITY_I', 'reason': 'REASON1'},
                          res)
 
     def test__dump(self):
@@ -167,7 +168,7 @@ class TestLogMethods(testtools.TestCase):
     def test_critical(self, mock_dump):
         entity = mock.Mock(id='1234567890')
         entity.name = 'fake_obj'
-        action = mock.Mock(entity=entity, action='ACTION_NAME')
+        action = mock.Mock(id='FAKE_ID', entity=entity, action='ACTION_NAME')
 
         res = event.critical(action, 'P1', 'R1', 'TS1')
 
@@ -178,7 +179,7 @@ class TestLogMethods(testtools.TestCase):
     def test_error(self, mock_dump):
         entity = mock.Mock(id='1234567890')
         entity.name = 'fake_obj'
-        action = mock.Mock(entity=entity, action='ACTION_NAME')
+        action = mock.Mock(id='FAKE_ID', entity=entity, action='ACTION_NAME')
 
         res = event.error(action, 'P1', 'R1', 'TS1')
 
@@ -189,7 +190,7 @@ class TestLogMethods(testtools.TestCase):
     def test_warning(self, mock_dump):
         entity = mock.Mock(id='1234567890')
         entity.name = 'fake_obj'
-        action = mock.Mock(entity=entity, action='ACTION_NAME')
+        action = mock.Mock(id='FAKE_ID', entity=entity, action='ACTION_NAME')
 
         res = event.warning(action, 'P1', 'R1', 'TS1')
 
@@ -200,7 +201,7 @@ class TestLogMethods(testtools.TestCase):
     def test_info(self, mock_dump):
         entity = mock.Mock(id='1234567890')
         entity.name = 'fake_obj'
-        action = mock.Mock(entity=entity, action='ACTION_NAME')
+        action = mock.Mock(id='FAKE_ID', entity=entity, action='ACTION_NAME')
 
         res = event.info(action, 'P1', 'R1', 'TS1')
 
@@ -211,7 +212,7 @@ class TestLogMethods(testtools.TestCase):
     def test_debug(self, mock_dump):
         entity = mock.Mock(id='1234567890')
         entity.name = 'fake_obj'
-        action = mock.Mock(entity=entity, action='ACTION_NAME')
+        action = mock.Mock(id='FAKE_ID', entity=entity, action='ACTION_NAME')
 
         res = event.debug(action, 'P1', 'R1', 'TS1')
 

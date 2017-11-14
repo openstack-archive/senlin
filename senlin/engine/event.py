@@ -19,7 +19,7 @@ from stevedore import named
 from senlin.common import consts
 
 LOG = logging.getLogger(__name__)
-FMT = '%(name)s [%(id)s] %(action)s - %(phase)s: %(reason)s'
+FMT = '%(name)s[%(obj_id)s] %(action)s[%(id)s] %(phase)s: %(reason)s'
 dispatchers = None
 
 
@@ -44,8 +44,9 @@ def _event_data(action, phase=None, reason=None):
     if action_name in [consts.NODE_OPERATION, consts.CLUSTER_OPERATION]:
         action_name = action.inputs.get('operation', action_name)
     return dict(name=action.entity.name,
-                id=action.entity.id[:8],
+                obj_id=action.entity.id[:8],
                 action=action_name,
+                id=action.id[:8],
                 phase=phase,
                 reason=reason)
 
