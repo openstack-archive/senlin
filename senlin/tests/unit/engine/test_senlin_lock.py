@@ -56,8 +56,9 @@ class SenlinLockTest(base.SenlinTestCase):
                                          'NEW_ENGINE')
 
         self.assertTrue(res)
-        mock_acquire.assert_called_once_with("CLUSTER_A", "ACTION_XYZ",
-                                             lockm.CLUSTER_SCOPE)
+        mock_acquire.assert_called_with("CLUSTER_A", "ACTION_XYZ",
+                                        lockm.CLUSTER_SCOPE)
+        self.assertEqual(3, mock_acquire.call_count)
         mock_steal.assert_called_once_with('CLUSTER_A', 'ACTION_XYZ')
         mock_gc.assert_called_once_with(mock.ANY)
 
@@ -65,26 +66,28 @@ class SenlinLockTest(base.SenlinTestCase):
     @mock.patch.object(clo.ClusterLock, "acquire")
     def test_cluster_lock_acquire_failed(self, mock_acquire, mock_dead):
         mock_dead.return_value = False
-        mock_acquire.return_value = 'ACTION_ABC'
+        mock_acquire.return_value = ['ACTION_ABC']
 
         res = lockm.cluster_lock_acquire(self.ctx, 'CLUSTER_A', 'ACTION_XYZ')
 
         self.assertFalse(res)
-        mock_acquire.assert_called_once_with('CLUSTER_A', 'ACTION_XYZ',
-                                             lockm.CLUSTER_SCOPE)
+        mock_acquire.assert_called_with('CLUSTER_A', 'ACTION_XYZ',
+                                        lockm.CLUSTER_SCOPE)
+        self.assertEqual(3, mock_acquire.call_count)
 
     @mock.patch.object(clo.ClusterLock, "acquire")
     @mock.patch.object(clo.ClusterLock, "steal")
     def test_cluster_lock_acquire_forced(self, mock_steal, mock_acquire):
-        mock_acquire.side_effect = ['ACTION_ABC']
+        mock_acquire.return_value = ['ACTION_ABC']
         mock_steal.return_value = ['ACTION_XY']
 
         res = lockm.cluster_lock_acquire(self.ctx, 'CLUSTER_A',
                                          'ACTION_XY', forced=True)
 
         self.assertTrue(res)
-        mock_acquire.assert_called_once_with('CLUSTER_A', 'ACTION_XY',
-                                             lockm.CLUSTER_SCOPE)
+        mock_acquire.assert_called_with('CLUSTER_A', 'ACTION_XY',
+                                        lockm.CLUSTER_SCOPE)
+        self.assertEqual(3, mock_acquire.call_count)
         mock_steal.assert_called_once_with('CLUSTER_A', 'ACTION_XY')
 
     @mock.patch.object(common_utils, 'is_engine_dead')
@@ -93,15 +96,16 @@ class SenlinLockTest(base.SenlinTestCase):
     def test_cluster_lock_acquire_steal_failed(self, mock_steal, mock_acquire,
                                                mock_dead):
         mock_dead.return_value = False
-        mock_acquire.side_effect = ['ACTION_ABC']
+        mock_acquire.return_value = ['ACTION_ABC']
         mock_steal.return_value = []
 
         res = lockm.cluster_lock_acquire(self.ctx, 'CLUSTER_A',
                                          'ACTION_XY', forced=True)
 
         self.assertFalse(res)
-        mock_acquire.assert_called_once_with('CLUSTER_A', 'ACTION_XY',
-                                             lockm.CLUSTER_SCOPE)
+        mock_acquire.assert_called_with('CLUSTER_A', 'ACTION_XY',
+                                        lockm.CLUSTER_SCOPE)
+        self.assertEqual(3, mock_acquire.call_count)
         mock_steal.assert_called_once_with('CLUSTER_A', 'ACTION_XY')
 
     @mock.patch.object(clo.ClusterLock, "release")
