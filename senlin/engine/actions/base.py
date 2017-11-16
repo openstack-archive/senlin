@@ -482,7 +482,7 @@ def ActionProc(context, action_id):
         LOG.error('Action "%s" could not be found.', action_id)
         return False
 
-    EVENT.info(action, consts.PHASE_START)
+    EVENT.info(action, consts.PHASE_START, action_id[:8])
 
     reason = 'Action completed'
     success = True
