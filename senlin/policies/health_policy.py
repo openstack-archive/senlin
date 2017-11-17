@@ -191,7 +191,7 @@ class HealthPolicy(base.Policy):
         kwargs = {
             'check_type': self.check_type,
             'interval': self.interval,
-            'params': {},
+            'params': {'recover_action': self.recover_actions},
             'enabled': enabled
         }
 

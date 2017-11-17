@@ -62,7 +62,7 @@ class NovaNotificationEndpoint(object):
         'compute.instance.soft_delete.end': 'SOFT_DELETE',
     }
 
-    def __init__(self, project_id, cluster_id):
+    def __init__(self, project_id, cluster_id, recover_action):
         self.filter_rule = messaging.NotificationFilter(
             publisher_id='^compute.*',
             event_type='^compute\.instance\..*',
@@ -70,6 +70,7 @@ class NovaNotificationEndpoint(object):
         self.project_id = project_id
         self.cluster_id = cluster_id
         self.rpc = rpc_client.EngineClient()
+        self.recover_action = recover_action
 
     def info(self, ctxt, publisher_id, event_type, payload, metadata):
         meta = payload['metadata']
@@ -82,6 +83,7 @@ class NovaNotificationEndpoint(object):
                 'instance_id': payload.get('instance_id', 'Unknown'),
                 'timestamp': metadata['timestamp'],
                 'publisher': publisher_id,
+                'operation': self.recover_action['operation'],
             }
             node_id = meta.get('cluster_node_id')
             if node_id:
@@ -111,7 +113,7 @@ class HeatNotificationEndpoint(object):
         'orchestration.stack.delete.end': 'DELETE',
     }
 
-    def __init__(self, project_id, cluster_id):
+    def __init__(self, project_id, cluster_id, recover_action):
         self.filter_rule = messaging.NotificationFilter(
             publisher_id='^orchestration.*',
             event_type='^orchestration\.stack\..*',
@@ -119,6 +121,7 @@ class HeatNotificationEndpoint(object):
         self.project_id = project_id
         self.cluster_id = cluster_id
         self.rpc = rpc_client.EngineClient()
+        self.recover_action = recover_action
 
     def info(self, ctxt, publisher_id, event_type, payload, metadata):
         if event_type not in self.STACK_FAILURE_EVENTS:
@@ -149,6 +152,7 @@ class HeatNotificationEndpoint(object):
             'stack_id': payload.get('stack_identity', 'Unknown'),
             'timestamp': metadata['timestamp'],
             'publisher': publisher_id,
+            'operation': self.recover_action['operation'],
         }
         LOG.info("Requesting stack recovery: %s", node_id)
         ctx = context.get_service_context(project=self.project_id,
@@ -157,12 +161,13 @@ class HeatNotificationEndpoint(object):
         self.rpc.call(ctx, 'node_recover', req)
 
 
-def ListenerProc(exchange, project_id, cluster_id):
+def ListenerProc(exchange, project_id, cluster_id, recover_action):
     """Thread procedure for running a event listener.
 
     :param exchange: The control exchange for a target service.
     :param project_id: The ID of the project to filter.
     :param cluster_id: The ID of the cluster to filter.
+    :param recover_action: The health policy action name.
     """
     transport = messaging.get_notification_transport(cfg.CONF)
 
@@ -172,14 +177,14 @@ def ListenerProc(exchange, project_id, cluster_id):
                              exchange=exchange),
         ]
         endpoints = [
-            NovaNotificationEndpoint(project_id, cluster_id),
+            NovaNotificationEndpoint(project_id, cluster_id, recover_action),
         ]
     else:  # heat notification
         targets = [
             messaging.Target(topic='notifications', exchange=exchange),
         ]
         endpoints = [
-            HeatNotificationEndpoint(project_id, cluster_id),
+            HeatNotificationEndpoint(project_id, cluster_id, recover_action),
         ]
 
     listener = messaging.get_notification_listener(
@@ -232,11 +237,12 @@ class HealthManager(service.Service):
         else:
             return False, "Cluster check action failed or cancelled"
 
-    def _poll_cluster(self, cluster_id, timeout):
+    def _poll_cluster(self, cluster_id, timeout, recover_action):
         """Routine to be executed for polling cluster status.
 
         :param cluster_id: The UUID of the cluster to be checked.
         :param timeout: The maximum number of seconds to wait.
+        :param recover_action: The health policy action name.
         :returns: Nothing.
         """
         start_time = timeutils.utcnow(True)
@@ -269,15 +275,17 @@ class HealthManager(service.Service):
         for node in nodes:
             if node.status != 'ACTIVE':
                 LOG.info("Requesting node recovery: %s", node.id)
-                req = objects.NodeRecoverRequest(identity=node.id)
+                req = objects.NodeRecoverRequest(identity=node.id,
+                                                 params=recover_action)
                 self.rpc_client.call(ctx, 'node_recover', req)
 
         return _chase_up(start_time, timeout)
 
-    def _add_listener(self, cluster_id):
+    def _add_listener(self, cluster_id, recover_action):
         """Routine to be executed for adding cluster listener.
 
         :param cluster_id: The UUID of the cluster to be filtered.
+        :param recover_action: The health policy action name.
         :returns: Nothing.
         """
         cluster = objects.Cluster.get(self.ctx, cluster_id, project_safe=False)
@@ -295,7 +303,8 @@ class HealthManager(service.Service):
             return None
 
         project = cluster.project
-        return self.TG.add_thread(ListenerProc, exchange, project, cluster_id)
+        return self.TG.add_thread(ListenerProc, exchange, project, cluster_id,
+                                  recover_action)
 
     def _start_check(self, entry):
         """Routine for starting the checking for a cluster.
@@ -305,16 +314,24 @@ class HealthManager(service.Service):
         """
         cid = entry['cluster_id']
         ctype = entry['check_type']
+        # Get the recover action parameter from the entry params
+        params = entry['params']
+        recover_action = {}
+        if 'recover_action' in params:
+            rac = params['recover_action']
+            for operation in rac:
+                recover_action['operation'] = operation.get('name')
+
         if ctype == consts.NODE_STATUS_POLLING:
             interval = min(entry['interval'], cfg.CONF.check_interval_max)
             timer = self.TG.add_dynamic_timer(self._poll_cluster,
                                               None,  # initial_delay
                                               None,  # check_interval_max
-                                              cid, interval)
+                                              cid, interval, recover_action)
             entry['timer'] = timer
         elif ctype == consts.LIFECYCLE_EVENTS:
             LOG.info("Start listening events for cluster (%s).", cid)
-            listener = self._add_listener(cid)
+            listener = self._add_listener(cid, recover_action)
             if listener:
                 entry['listener'] = listener
             else:

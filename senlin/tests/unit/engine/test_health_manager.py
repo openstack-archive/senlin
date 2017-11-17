@@ -63,8 +63,8 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
             'compute.instance.shutdown.end': 'SHUTDOWN',
             'compute.instance.soft_delete.end': 'SOFT_DELETE',
         }
-
-        obj = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER')
+        recover_action = {'operation': 'REBUILD'}
+        obj = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER', recover_action)
 
         mock_filter.assert_called_once_with(
             publisher_id='^compute.*',
@@ -83,7 +83,9 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info(self, mock_rpc, mock_context, mock_filter):
         x_rpc = mock_rpc.return_value
-        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        recover_action = {'operation': 'REBUILD'}
+        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID',
+                                               recover_action)
         ctx = mock.Mock()
         payload = {
             'metadata': {
@@ -113,13 +115,16 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
             'instance_id': 'PHYSICAL_ID',
             'timestamp': 'TIMESTAMP',
             'publisher': 'PUBLISHER',
+            'operation': 'REBUILD'
         }
         self.assertEqual(expected_params, req.params)
 
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info_no_metadata(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
-        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        recover_action = {'operation': 'REBUILD'}
+        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID',
+                                               recover_action)
         ctx = mock.Mock()
         payload = {'metadata': {}}
         metadata = {'timestamp': 'TIMESTAMP'}
@@ -133,7 +138,9 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info_no_cluster_in_metadata(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
-        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        recover_action = {'operation': 'REBUILD'}
+        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID',
+                                               recover_action)
         ctx = mock.Mock()
         payload = {'metadata': {'foo': 'bar'}}
         metadata = {'timestamp': 'TIMESTAMP'}
@@ -147,7 +154,9 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info_cluster_id_not_match(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
-        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        recover_action = {'operation': 'REBUILD'}
+        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID',
+                                               recover_action)
         ctx = mock.Mock()
         payload = {'metadata': {'cluster_id': 'FOOBAR'}}
         metadata = {'timestamp': 'TIMESTAMP'}
@@ -161,7 +170,9 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info_event_type_not_interested(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
-        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        recover_action = {'operation': 'REBUILD'}
+        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID',
+                                               recover_action)
         ctx = mock.Mock()
         payload = {'metadata': {'cluster_id': 'CLUSTER_ID'}}
         metadata = {'timestamp': 'TIMESTAMP'}
@@ -175,7 +186,9 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info_no_node_id(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
-        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        recover_action = {'operation': 'REBUILD'}
+        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID',
+                                               recover_action)
         ctx = mock.Mock()
         payload = {'metadata': {'cluster_id': 'CLUSTER_ID'}}
         metadata = {'timestamp': 'TIMESTAMP'}
@@ -190,7 +203,9 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info_default_values(self, mock_rpc, mock_context, mock_filter):
         x_rpc = mock_rpc.return_value
-        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        recover_action = {'operation': 'REBUILD'}
+        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID',
+                                               recover_action)
         ctx = mock.Mock()
         payload = {
             'metadata': {
@@ -217,6 +232,7 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
             'instance_id': 'Unknown',
             'timestamp': 'TIMESTAMP',
             'publisher': 'PUBLISHER',
+            'operation': 'REBUILD',
         }
         self.assertEqual(expected_params, req.params)
 
@@ -230,8 +246,8 @@ class TestHeatNotificationEndpoint(base.SenlinTestCase):
         event_map = {
             'orchestration.stack.delete.end': 'DELETE',
         }
-
-        obj = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER')
+        recover_action = {'operation': 'REBUILD'}
+        obj = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER', recover_action)
 
         mock_filter.assert_called_once_with(
             publisher_id='^orchestration.*',
@@ -250,7 +266,9 @@ class TestHeatNotificationEndpoint(base.SenlinTestCase):
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info(self, mock_rpc, mock_context, mock_filter):
         x_rpc = mock_rpc.return_value
-        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        recover_action = {'operation': 'REBUILD'}
+        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID',
+                                               recover_action)
         ctx = mock.Mock()
         payload = {
             'tags': {
@@ -280,13 +298,16 @@ class TestHeatNotificationEndpoint(base.SenlinTestCase):
             'stack_id': 'PHYSICAL_ID',
             'timestamp': 'TIMESTAMP',
             'publisher': 'PUBLISHER',
+            'operation': 'REBUILD',
         }
         self.assertEqual(expected_params, req.params)
 
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info_event_type_not_interested(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
-        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        recover_action = {'operation': 'REBUILD'}
+        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID',
+                                               recover_action)
         ctx = mock.Mock()
         payload = {'tags': {'cluster_id': 'CLUSTER_ID'}}
         metadata = {'timestamp': 'TIMESTAMP'}
@@ -301,7 +322,9 @@ class TestHeatNotificationEndpoint(base.SenlinTestCase):
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info_no_tag(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
-        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        recover_action = {'operation': 'REBUILD'}
+        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID',
+                                               recover_action)
         ctx = mock.Mock()
         payload = {'tags': None}
         metadata = {'timestamp': 'TIMESTAMP'}
@@ -315,7 +338,9 @@ class TestHeatNotificationEndpoint(base.SenlinTestCase):
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info_empty_tag(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
-        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        recover_action = {'operation': 'REBUILD'}
+        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID',
+                                               recover_action)
         ctx = mock.Mock()
         payload = {'tags': []}
         metadata = {'timestamp': 'TIMESTAMP'}
@@ -329,7 +354,9 @@ class TestHeatNotificationEndpoint(base.SenlinTestCase):
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info_no_cluster_in_tag(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
-        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        recover_action = {'operation': 'REBUILD'}
+        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID',
+                                               recover_action)
         ctx = mock.Mock()
         payload = {'tags': ['foo', 'bar']}
         metadata = {'timestamp': 'TIMESTAMP'}
@@ -343,7 +370,9 @@ class TestHeatNotificationEndpoint(base.SenlinTestCase):
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info_no_node_in_tag(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
-        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        recover_action = {'operation': 'REBUILD'}
+        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID',
+                                               recover_action)
         ctx = mock.Mock()
         payload = {'tags': ['cluster_id=C1ID']}
         metadata = {'timestamp': 'TIMESTAMP'}
@@ -357,7 +386,9 @@ class TestHeatNotificationEndpoint(base.SenlinTestCase):
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info_cluster_id_not_match(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
-        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        recover_action = {'operation': 'REBUILD'}
+        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID',
+                                               recover_action)
         ctx = mock.Mock()
         payload = {'tags': ['cluster_id=FOOBAR', 'cluster_node_id=N2']}
         metadata = {'timestamp': 'TIMESTAMP'}
@@ -372,7 +403,9 @@ class TestHeatNotificationEndpoint(base.SenlinTestCase):
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info_default_values(self, mock_rpc, mock_context, mock_filter):
         x_rpc = mock_rpc.return_value
-        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID')
+        recover_action = {'operation': 'REBUILD'}
+        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID',
+                                               recover_action)
         ctx = mock.Mock()
         payload = {
             'tags': [
@@ -399,6 +432,7 @@ class TestHeatNotificationEndpoint(base.SenlinTestCase):
             'stack_id': 'Unknown',
             'timestamp': 'TIMESTAMP',
             'publisher': 'PUBLISHER',
+            'operation': 'REBUILD',
         }
         self.assertEqual(expected_params, req.params)
 
@@ -425,13 +459,16 @@ class TestListenerProc(base.SenlinTestCase):
         x_endpoint = mock.Mock()
         mock_novaendpoint.return_value = x_endpoint
 
-        res = hm.ListenerProc('FAKE_EXCHANGE', 'PROJECT_ID', 'CLUSTER_ID')
+        recover_action = {'operation': 'REBUILD'}
+        res = hm.ListenerProc('FAKE_EXCHANGE', 'PROJECT_ID', 'CLUSTER_ID',
+                              recover_action)
 
         self.assertIsNone(res)
         mock_transport.assert_called_once_with(cfg.CONF)
         mock_target.assert_called_once_with(topic="versioned_notifications",
                                             exchange='FAKE_EXCHANGE')
-        mock_novaendpoint.assert_called_once_with('PROJECT_ID', 'CLUSTER_ID')
+        mock_novaendpoint.assert_called_once_with('PROJECT_ID', 'CLUSTER_ID',
+                                                  recover_action)
         mock_listener.assert_called_once_with(
             x_transport, [x_target], [x_endpoint],
             executor='threading', pool="senlin-listeners")
@@ -449,13 +486,16 @@ class TestListenerProc(base.SenlinTestCase):
         x_endpoint = mock.Mock()
         mock_heatendpoint.return_value = x_endpoint
 
-        res = hm.ListenerProc('heat', 'PROJECT_ID', 'CLUSTER_ID')
+        recover_action = {'operation': 'REBUILD'}
+        res = hm.ListenerProc('heat', 'PROJECT_ID', 'CLUSTER_ID',
+                              recover_action)
 
         self.assertIsNone(res)
         mock_transport.assert_called_once_with(cfg.CONF)
         mock_target.assert_called_once_with(topic="notifications",
                                             exchange='heat')
-        mock_heatendpoint.assert_called_once_with('PROJECT_ID', 'CLUSTER_ID')
+        mock_heatendpoint.assert_called_once_with('PROJECT_ID', 'CLUSTER_ID',
+                                                  recover_action)
         mock_listener.assert_called_once_with(
             x_transport, [x_target], [x_endpoint],
             executor='threading', pool="senlin-listeners")
@@ -516,7 +556,7 @@ class TestHealthManager(base.SenlinTestCase):
         # assertions
         mock_claim.assert_called_once_with(self.hm.ctx, self.hm.engine_id)
         mock_calls = [
-            mock.call(self.hm._poll_cluster, None, None, 'CID1', 12)
+            mock.call(self.hm._poll_cluster, None, None, 'CID1', 12, {})
         ]
         mock_add_timer.assert_has_calls(mock_calls)
         self.assertEqual(2, len(self.hm.registries))
@@ -559,8 +599,9 @@ class TestHealthManager(base.SenlinTestCase):
         x_action_recover = {'action': 'RECOVER_ID'}
         mock_rpc.side_effect = [x_action_check, x_action_recover]
 
+        recover_action = {'operation': 'REBUILD'}
         # do it
-        res = self.hm._poll_cluster('CLUSTER_ID', 456)
+        res = self.hm._poll_cluster('CLUSTER_ID', 456, recover_action)
 
         self.assertEqual(mock_chase.return_value, res)
         mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
@@ -580,8 +621,9 @@ class TestHealthManager(base.SenlinTestCase):
     def test__poll_cluster_not_found(self, mock_check, mock_get, mock_chase):
         mock_get.return_value = None
 
+        recover_action = {'operation': 'REBUILD'}
         # do it
-        res = self.hm._poll_cluster('CLUSTER_ID', 123)
+        res = self.hm._poll_cluster('CLUSTER_ID', 123, recover_action)
 
         self.assertEqual(mock_chase.return_value, res)
         self.assertEqual(0, mock_check.call_count)
@@ -599,8 +641,9 @@ class TestHealthManager(base.SenlinTestCase):
         mock_ctx.return_value = ctx
         mock_check.side_effect = Exception("boom")
 
+        recover_action = {'operation': 'REBUILD'}
         # do it
-        res = self.hm._poll_cluster('CLUSTER_ID', 123)
+        res = self.hm._poll_cluster('CLUSTER_ID', 123, recover_action)
 
         self.assertEqual(mock_chase.return_value, res)
         mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
@@ -624,8 +667,9 @@ class TestHealthManager(base.SenlinTestCase):
         x_action_check = {'action': 'CHECK_ID'}
         mock_rpc.return_value = x_action_check
 
+        recover_action = {'operation': 'REBUILD'}
         # do it
-        res = self.hm._poll_cluster('CLUSTER_ID', 456)
+        res = self.hm._poll_cluster('CLUSTER_ID', 456, recover_action)
 
         self.assertEqual(mock_chase.return_value, res)
         mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
@@ -648,8 +692,9 @@ class TestHealthManager(base.SenlinTestCase):
         x_profile = mock.Mock(type='os.nova.server-1.0')
         mock_profile.return_value = x_profile
 
+        recover_action = {'operation': 'REBUILD'}
         # do it
-        res = self.hm._add_listener('CLUSTER_ID')
+        res = self.hm._add_listener('CLUSTER_ID', recover_action)
 
         # assertions
         self.assertEqual(x_listener, res)
@@ -658,7 +703,8 @@ class TestHealthManager(base.SenlinTestCase):
         mock_profile.assert_called_once_with(self.hm.ctx, 'PROFILE_ID',
                                              project_safe=False)
         mock_add_thread.assert_called_once_with(
-            hm.ListenerProc, 'FAKE_NOVA_EXCHANGE', 'PROJECT_ID', 'CLUSTER_ID')
+            hm.ListenerProc, 'FAKE_NOVA_EXCHANGE', 'PROJECT_ID', 'CLUSTER_ID',
+            recover_action)
 
     @mock.patch.object(obj_profile.Profile, 'get')
     @mock.patch.object(obj_cluster.Cluster, 'get')
@@ -673,8 +719,9 @@ class TestHealthManager(base.SenlinTestCase):
         x_profile = mock.Mock(type='os.heat.stack-1.0')
         mock_profile.return_value = x_profile
 
+        recover_action = {'operation': 'REBUILD'}
         # do it
-        res = self.hm._add_listener('CLUSTER_ID')
+        res = self.hm._add_listener('CLUSTER_ID', recover_action)
 
         # assertions
         self.assertEqual(x_listener, res)
@@ -683,7 +730,8 @@ class TestHealthManager(base.SenlinTestCase):
         mock_profile.assert_called_once_with(self.hm.ctx, 'PROFILE_ID',
                                              project_safe=False)
         mock_add_thread.assert_called_once_with(
-            hm.ListenerProc, 'FAKE_HEAT_EXCHANGE', 'PROJECT_ID', 'CLUSTER_ID')
+            hm.ListenerProc, 'FAKE_HEAT_EXCHANGE', 'PROJECT_ID', 'CLUSTER_ID',
+            recover_action)
 
     @mock.patch.object(obj_profile.Profile, 'get')
     @mock.patch.object(obj_cluster.Cluster, 'get')
@@ -694,8 +742,9 @@ class TestHealthManager(base.SenlinTestCase):
         x_profile = mock.Mock(type='other.types-1.0')
         mock_profile.return_value = x_profile
 
+        recover_action = {'operation': 'REBUILD'}
         # do it
-        res = self.hm._add_listener('CLUSTER_ID')
+        res = self.hm._add_listener('CLUSTER_ID', recover_action)
 
         # assertions
         self.assertIsNone(res)
@@ -710,8 +759,9 @@ class TestHealthManager(base.SenlinTestCase):
         mock_get.return_value = None
         mock_add_thread = self.patchobject(self.hm.TG, 'add_thread')
 
+        recover_action = {'operation': 'REBUILD'}
         # do it
-        res = self.hm._add_listener('CLUSTER_ID')
+        res = self.hm._add_listener('CLUSTER_ID', recover_action)
 
         # assertions
         self.assertIsNone(res)
@@ -728,14 +778,16 @@ class TestHealthManager(base.SenlinTestCase):
             'cluster_id': 'CCID',
             'interval': 12,
             'check_type': consts.NODE_STATUS_POLLING,
+            'params': {'recover_action': [{'name': 'REBUILD'}]},
         }
+        recover_action = {'operation': 'REBUILD'}
         res = self.hm._start_check(entry)
 
         expected = copy.deepcopy(entry)
         expected['timer'] = x_timer
         self.assertEqual(expected, res)
         mock_add_timer.assert_called_once_with(
-            self.hm._poll_cluster, None, None, 'CCID', 12)
+            self.hm._poll_cluster, None, None, 'CCID', 12, recover_action)
 
     def test__start_check_for_listening(self):
         x_listener = mock.Mock()
@@ -745,13 +797,15 @@ class TestHealthManager(base.SenlinTestCase):
         entry = {
             'cluster_id': 'CCID',
             'check_type': consts.LIFECYCLE_EVENTS,
+            'params': {'recover_action': [{'name': 'REBUILD'}]},
         }
+        recover_action = {'operation': 'REBUILD'}
         res = self.hm._start_check(entry)
 
         expected = copy.deepcopy(entry)
         expected['listener'] = x_listener
         self.assertEqual(expected, res)
-        mock_add_listener.assert_called_once_with('CCID')
+        mock_add_listener.assert_called_once_with('CCID', recover_action)
 
     def test__start_check_for_listening_failed(self):
         mock_add_listener = self.patchobject(self.hm, '_add_listener',
@@ -760,16 +814,19 @@ class TestHealthManager(base.SenlinTestCase):
         entry = {
             'cluster_id': 'CCID',
             'check_type': consts.LIFECYCLE_EVENTS,
+            'params': {'recover_action': [{'name': 'REBUILD'}]},
         }
+        recover_action = {'operation': 'REBUILD'}
         res = self.hm._start_check(entry)
 
         self.assertIsNone(res)
-        mock_add_listener.assert_called_once_with('CCID')
+        mock_add_listener.assert_called_once_with('CCID', recover_action)
 
     def test__start_check_other_types(self):
         entry = {
             'cluster_id': 'CCID',
             'check_type': 'BOGUS TYPE',
+            'params': {'recover_action': [{'name': 'REBUILD'}]},
         }
         res = self.hm._start_check(entry)
 
@@ -844,7 +901,8 @@ class TestHealthManager(base.SenlinTestCase):
         mock_reg_create.assert_called_once_with(
             ctx, 'CLUSTER_ID', consts.NODE_STATUS_POLLING, 50, {}, 'ENGINE_ID',
             enabled=True)
-        mock_add_tm.assert_called_with(mock_poll, None, None, 'CLUSTER_ID', 50)
+        mock_add_tm.assert_called_with(mock_poll, None, None, 'CLUSTER_ID', 50,
+                                       {})
         self.assertEqual(1, len(self.hm.registries))
 
     @mock.patch.object(hr.HealthRegistry, 'create')
