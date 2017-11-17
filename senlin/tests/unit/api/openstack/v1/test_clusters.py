@@ -1523,7 +1523,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.return_value = obj
         mock_call.return_value = {'action': 'FAKE_ID'}
 
-        res = self.controller.delete(req, cluster_id=cid)
+        params = {'cluster_id': cid, 'body': {'force': True}}
+        res = self.controller.delete(req, **params)
 
         result = {'location': '/actions/FAKE_ID'}
         self.assertEqual(result, res)

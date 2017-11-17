@@ -740,7 +740,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_node_delete_success(self, mock_call, mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         nid = 'aaaa-bbbb-cccc'
-        req = self._delete('/nodes/%(node_id)s' % {'node_id': nid})
+        req = self._delete('/nodes/%(node_id)s' % {'node_id': nid},
+                           params={'force': False})
 
         obj = mock.Mock()
         mock_parse.return_value = obj
@@ -761,7 +762,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                                mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         nid = {'k1': 'v1'}
-        req = self._delete('/nodes/%(node_id)s' % {'node_id': nid})
+        req = self._delete('/nodes/%(node_id)s' % {'node_id': nid},
+                           params={'force': False})
 
         mock_parse.side_effect = exc.HTTPBadRequest("bad node")
         ex = self.assertRaises(exc.HTTPBadRequest,
@@ -775,7 +777,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
     def test_node_delete_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', False)
         nid = 'aaaa-bbbb-cccc'
-        req = self._delete('/nodes/%(node_id)s' % {'node_id': nid})
+        req = self._delete('/nodes/%(node_id)s' % {'node_id': nid},
+                           params={'force': False})
 
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.delete,
@@ -790,7 +793,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                    mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         nid = 'aaaa-bbbb-cccc'
-        req = self._delete('/nodes/%(node_id)s' % {'node_id': nid})
+        req = self._delete('/nodes/%(node_id)s' % {'node_id': nid},
+                           params={'force': False})
 
         error = senlin_exc.ResourceNotFound(type='node', id=nid)
         mock_call.side_effect = shared.to_remote_error(error)
@@ -813,8 +817,8 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         obj = mock.Mock()
         mock_parse.return_value = obj
         mock_call.return_value = {'action': 'FAKE_ID'}
-
-        res = self.controller.delete(req, node_id=nid)
+        params = {'node_id': nid, 'body': {'force': True}}
+        res = self.controller.delete(req, **params)
 
         result = {'location': '/actions/FAKE_ID'}
         self.assertEqual(res, result)
