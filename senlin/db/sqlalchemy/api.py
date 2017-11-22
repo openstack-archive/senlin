@@ -1530,7 +1530,7 @@ def registry_claim(context, engine_id):
     with session_for_write() as session:
         engines = session.query(models.Service).all()
         svc_ids = [e.id for e in engines if not utils.is_service_dead(e)]
-        q_reg = session.query(models.HealthRegistry)
+        q_reg = session.query(models.HealthRegistry).with_lockmode('update')
         if svc_ids:
             q_reg = q_reg.filter(
                 models.HealthRegistry.engine_id.notin_(svc_ids))
