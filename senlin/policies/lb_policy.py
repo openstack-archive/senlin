@@ -297,6 +297,7 @@ class LoadBalancingPolicy(base.Policy):
             return True
 
         nc = self.network(context.user, context.project)
+        oc = self.octavia(context.user, context.project)
 
         # validate pool subnet
         name_or_id = self.pool_spec.get(self.POOL_SUBNET)
@@ -318,12 +319,11 @@ class LoadBalancingPolicy(base.Policy):
 
         # validate loadbalancer
         if self.lb:
-            name_or_id = self.lb
             try:
-                nc.loadbalancer_get(name_or_id)
+                oc.loadbalancer_get(self.lb)
             except exc.InternalError:
                 msg = _("The specified %(key)s '%(value)s' could not be found."
-                        ) % {'key': self.LOADBALANCER, 'value': name_or_id}
+                        ) % {'key': self.LOADBALANCER, 'value': self.lb}
                 raise exc.InvalidSpec(message=msg)
 
     def attach(self, cluster, enabled=True):

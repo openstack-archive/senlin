@@ -72,6 +72,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.patchobject(driver_base, 'SenlinDriver', return_value=self.sd)
         self.lb_driver = mock.Mock()
         self.net_driver = mock.Mock()
+        self.octavia_driver = mock.Mock()
 
     @mock.patch.object(lb_policy.LoadBalancingPolicy, 'validate')
     def test_init(self, mock_validate):
@@ -175,6 +176,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
     def test_validate_pool_subnet_notfound(self, mock_validate):
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
         policy._networkclient = self.net_driver
+        policy._octaviaclient = self.octavia_driver
         ctx = mock.Mock(user='user1', project='project1')
         self.net_driver.subnet_get = mock.Mock(
             side_effect=exc.InternalError(code='404', message='not found'))
@@ -190,6 +192,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
     def test_validate_vip_subnet_notfound(self, mock_validate):
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
         policy._networkclient = self.net_driver
+        policy._octaviaclient = self.octavia_driver
         ctx = mock.Mock(user='user1', project='project1')
         self.net_driver.subnet_get = mock.Mock(
             side_effect=[
@@ -212,14 +215,15 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.spec['properties']['loadbalancer'] = "LB_ID"
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
         policy._networkclient = self.net_driver
+        policy._octaviaclient = self.octavia_driver
         ctx = mock.Mock(user='user1', project='project1')
-        self.net_driver.loadbalancer_get = mock.Mock(
+        self.octavia_driver.loadbalancer_get = mock.Mock(
             side_effect=exc.InternalError(code='404', message='not found'))
 
         ex = self.assertRaises(exc.InvalidSpec, policy.validate, ctx, True)
 
         mock_validate.assert_called_with(ctx, True)
-        self.net_driver.loadbalancer_get.assert_called_once_with('LB_ID')
+        self.octavia_driver.loadbalancer_get.assert_called_once_with('LB_ID')
         self.assertEqual("The specified loadbalancer 'LB_ID' could not "
                          "be found.", six.text_type(ex))
 

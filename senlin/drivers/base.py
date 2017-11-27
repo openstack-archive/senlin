@@ -39,6 +39,7 @@ class SenlinDriver(object):
         self.compute = backend.compute
         self.loadbalancing = backend.loadbalancing
         self.network = backend.network
+        self.octavia = backend.octavia
         self.orchestration = backend.orchestration
         self.telemetry = backend.telemetry
         self.identity = backend.identity
