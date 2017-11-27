@@ -350,7 +350,10 @@ class TestCluster(base.SenlinTestCase):
         mock_update.assert_called_once_with(self.context, CLUSTER_ID,
                                             {'status': consts.CS_WARNING})
 
-    def test_do_create(self):
+    @mock.patch.object(pfb.Profile, "create_cluster_object")
+    def test_do_create(self, mock_create_cluster):
+        mock_create_cluster.return_value = None
+
         cluster = cm.Cluster('test-cluster', 0, PROFILE_ID)
         mock_status = self.patchobject(cluster, 'set_status')
 
@@ -368,17 +371,22 @@ class TestCluster(base.SenlinTestCase):
 
         self.assertFalse(res)
 
+    @mock.patch.object(pfb.Profile, "delete_cluster_object")
     @mock.patch.object(co.Cluster, 'delete')
-    def test_do_delete(self, mock_delete):
+    def test_do_delete(self, mock_delete, mock_delete_cluster):
         mock_delete.return_value = None
+        mock_delete_cluster.return_value = None
 
         cluster = cm.Cluster('test-cluster', 0, PROFILE_ID)
         cluster.id = CLUSTER_ID
+        mock_status = self.patchobject(cluster, 'set_status')
 
         res = cluster.do_delete(self.context)
 
         mock_delete.assert_called_once_with(self.context, CLUSTER_ID)
         self.assertTrue(res)
+        mock_status.assert_called_once_with(
+            self.context, consts.CS_DELETING, 'Deletion in progress')
 
     def test_do_update(self):
         cluster = cm.Cluster('test-cluster', 0, PROFILE_ID)

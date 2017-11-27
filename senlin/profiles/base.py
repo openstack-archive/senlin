@@ -224,10 +224,30 @@ class Profile(object):
         return profile.do_create(obj)
 
     @classmethod
+    @profiler.trace('Profile.create_cluster_object', hide_args=False)
+    def create_cluster_object(cls, ctx, obj):
+        profile = cls.load(ctx, profile_id=obj.profile_id)
+        try:
+            ret = profile.do_cluster_create(obj)
+        except NotImplementedError:
+            return None
+        return ret
+
+    @classmethod
     @profiler.trace('Profile.delete_object', hide_args=False)
     def delete_object(cls, ctx, obj, **params):
         profile = cls.load(ctx, profile_id=obj.profile_id)
         return profile.do_delete(obj, **params)
+
+    @classmethod
+    @profiler.trace('Profile.delete_cluster_object', hide_args=False)
+    def delete_cluster_object(cls, ctx, obj, **params):
+        profile = cls.load(ctx, profile_id=obj.profile_id)
+        try:
+            ret = profile.do_cluster_delete(obj, **params)
+        except NotImplementedError:
+            return None
+        return ret
 
     @classmethod
     @profiler.trace('Profile.update_object', hide_args=False)
@@ -417,7 +437,15 @@ class Profile(object):
         """For subclass to override."""
         raise NotImplementedError
 
+    def do_cluster_create(self, obj):
+        """For subclass to override."""
+        raise NotImplementedError
+
     def do_delete(self, obj, **params):
+        """For subclass to override."""
+        raise NotImplementedError
+
+    def do_cluster_delete(self, obj):
         """For subclass to override."""
         raise NotImplementedError
 
