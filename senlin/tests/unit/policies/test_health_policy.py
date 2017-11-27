@@ -100,7 +100,7 @@ class TestHealthPolicy(base.SenlinTestCase):
         kwargs = {
             'check_type': self.hp.check_type,
             'interval': self.hp.interval,
-            'params': {},
+            'params': {'recover_action': self.hp.recover_actions},
             'enabled': True
         }
         mock_hm_reg.assert_called_once_with('CLUSTER_ID',
