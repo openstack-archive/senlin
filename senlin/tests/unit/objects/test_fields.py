@@ -683,10 +683,10 @@ class TestIdentityList(TestField):
         )
 
 
-class TestAdjustmentType(TestField):
+class TestAdjustmentTypeField(TestField):
 
     def setUp(self):
-        super(TestAdjustmentType, self).setUp()
+        super(TestAdjustmentTypeField, self).setUp()
 
         self.field = senlin_fields.AdjustmentTypeField()
         self.coerce_good_values = [
@@ -702,6 +702,47 @@ class TestAdjustmentType(TestField):
     def test_stringify(self):
         self.assertEqual("'EXACT_CAPACITY'",
                          self.field.stringify('EXACT_CAPACITY'))
+
+    def test_get_schema(self):
+        self.assertEqual(
+            {
+                'type': ['string'],
+                'readonly': False,
+                'enum': ['EXACT_CAPACITY', 'CHANGE_IN_CAPACITY',
+                         'CHANGE_IN_PERCENTAGE']
+            },
+            self.field.get_schema()
+        )
+
+
+class TestAdjustmentType(TestField):
+    def setUp(self):
+        super(TestAdjustmentType, self).setUp()
+
+        self.field = senlin_fields.AdjustmentType()
+        self.coerce_good_values = [
+            ('EXACT_CAPACITY', 'EXACT_CAPACITY'),
+            ('CHANGE_IN_CAPACITY', 'CHANGE_IN_CAPACITY'),
+            ('CHANGE_IN_PERCENTAGE', 'CHANGE_IN_PERCENTAGE')
+        ]
+        self.coerce_bad_values = ['BOGUS']
+
+        self.to_primitive_values = self.coerce_good_values[0:1]
+        self.from_primitive_values = self.coerce_good_values[0:1]
+
+    def test_stringify(self):
+        self.assertEqual("'EXACT_CAPACITY'",
+                         self.field.stringify('EXACT_CAPACITY'))
+
+    def test_get_schema(self):
+        self.assertEqual(
+            {
+                'type': ['string'],
+                'enum': ['EXACT_CAPACITY', 'CHANGE_IN_CAPACITY',
+                         'CHANGE_IN_PERCENTAGE']
+            },
+            self.field.get_schema()
+        )
 
 
 class TestClusterActionName(TestField):

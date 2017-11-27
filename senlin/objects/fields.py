@@ -389,6 +389,10 @@ class AdjustmentType(BaseEnum):
         'EXACT_CAPACITY', 'CHANGE_IN_CAPACITY', 'CHANGE_IN_PERCENTAGE',
     )
 
+    def get_schema(self):
+        return {'type': ['string'],
+                'enum': self._valid_values}
+
 
 class ClusterActionName(BaseEnum):
 
