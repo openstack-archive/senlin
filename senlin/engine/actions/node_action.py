@@ -73,7 +73,7 @@ class NodeAction(base.Action):
         if cluster_id and self.cause == consts.CAUSE_RPC:
             # Update cluster's desired_capacity and re-evaluate its status no
             # matter the creation is a success or not because the node object
-            # is # already treated as member of the cluster and the node
+            # is already treated as member of the cluster and the node
             # creation may have changed the cluster's status
             cluster.eval_status(self.context, consts.NODE_CREATE,
                                 desired_capacity=desired)
