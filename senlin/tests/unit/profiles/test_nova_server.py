@@ -1105,6 +1105,32 @@ class TestNovaServerBasic(base.SenlinTestCase):
         cc.server_get.assert_called_with('FAKE_ID')
         self.assertTrue(res)
 
+    def test_do_check_no_physical_id(self):
+        obj = mock.Mock(physical_id=None)
+        profile = server.ServerProfile('t', self.spec)
+
+        # do it
+        res = profile.do_check(obj)
+
+        self.assertFalse(res)
+
+    def test_do_check_no_server(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        err = exc.InternalError(code=404, message='No Server found')
+        cc.server_get.side_effect = err
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        ex = self.assertRaises(exc.EServerNotFound,
+                               profile.do_check,
+                               node_obj)
+
+        self.assertEqual("Failed in found server 'FAKE_ID': "
+                         "No Server found.",
+                         six.text_type(ex))
+        cc.server_get.assert_called_once_with('FAKE_ID')
+
     @mock.patch.object(server.ServerProfile, 'do_delete')
     @mock.patch.object(server.ServerProfile, 'do_create')
     def test_do_recover_operation_is_none(self, mock_create, mock_delete):

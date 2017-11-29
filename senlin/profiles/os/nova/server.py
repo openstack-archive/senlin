@@ -1425,9 +1425,14 @@ class ServerProfile(base.Profile):
         try:
             server = self.compute(obj).server_get(obj.physical_id)
         except exc.InternalError as ex:
-            raise exc.EResourceOperation(op='checking', type='server',
-                                         id=obj.physical_id,
-                                         message=six.text_type(ex))
+            if "No Server found" in six.text_type(ex):
+                raise exc.EServerNotFound(type='server',
+                                          id=obj.physical_id,
+                                          message=six.text_type(ex))
+            else:
+                raise exc.EResourceOperation(op='checking', type='server',
+                                             id=obj.physical_id,
+                                             message=six.text_type(ex))
 
         if (server is None or server.status != 'ACTIVE'):
             return False

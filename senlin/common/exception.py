@@ -230,6 +230,11 @@ class EResourceDeletion(InternalError):
     msg_fmt = _("Failed in deleting %(type)s '%(id)s': %(message)s.")
 
 
+class EServerNotFound(InternalError):
+    # Used when deleting resources from other services
+    msg_fmt = _("Failed in found %(type)s '%(id)s': %(message)s.")
+
+
 class EResourceOperation(InternalError):
     """Generic exception for resource fail operation.
 
