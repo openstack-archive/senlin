@@ -10,9 +10,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import eventlet
+import random
+import time
+
 from oslo_config import cfg
 from oslo_log import log as logging
-import time
 
 from senlin.common.i18n import _
 from senlin.common import utils
@@ -51,9 +54,11 @@ def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
 
     # Step 1: try lock the cluster - if the returned owner_id is the
     #         action id, it was a success
-    owners = cl_obj.ClusterLock.acquire(cluster_id, action_id, scope)
-    if action_id in owners:
-        return True
+    for retries in range(3):
+        owners = cl_obj.ClusterLock.acquire(cluster_id, action_id, scope)
+        if action_id in owners:
+            return True
+        eventlet.sleep(random.randrange(1, 3))
 
     # Step 2: Last resort is 'forced locking', only needed when retry failed
     if forced:
@@ -74,9 +79,12 @@ def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
         objects.Service.gc_by_engine(dead_engine)
         return action_id in owners
 
-    LOG.error('Cluster is already locked by action %(old)s, '
-              'action %(new)s failed grabbing the lock',
-              {'old': str(owners), 'new': action_id})
+    lock_owners = []
+    for o in owners:
+        lock_owners.append(o[:8])
+    LOG.warning('Cluster is already locked by action %(old)s, '
+                'action %(new)s failed grabbing the lock',
+                {'old': str(lock_owners), 'new': action_id[:8]})
 
     return False
 
@@ -84,8 +92,8 @@ def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
 def cluster_lock_release(cluster_id, action_id, scope):
     """Release the lock on the specified cluster.
 
-    :param cluster_id: ID of the node to be released.
-    :param action_id: ID of the action that attempts to release the node.
+    :param cluster_id: ID of the cluster to be released.
+    :param action_id: ID of the action that attempts to release the cluster.
     :param scope: The scope of the lock to be released.
     """
     return cl_obj.ClusterLock.release(cluster_id, action_id, scope)
