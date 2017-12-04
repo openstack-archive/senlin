@@ -320,6 +320,10 @@ class Node(object):
 
         try:
             res = pb.Profile.check_object(context, self)
+        except exc.EServerNotFound as ex:
+            self.set_status(context, consts.NS_ERROR, six.text_type(ex),
+                            physical_id=None)
+            return True
         except exc.EResourceOperation as ex:
             self.set_status(context, consts.NS_ERROR, six.text_type(ex))
             return False

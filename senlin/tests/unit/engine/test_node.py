@@ -576,6 +576,26 @@ class TestNode(base.SenlinTestCase):
         self.assertFalse(res)
 
     @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(pb.Profile, 'check_object')
+    def test_node_check_no_server(self, mock_check, mock_status):
+        node = nodem.Node('node1', PROFILE_ID, '')
+        node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
+
+        err = exception.EServerNotFound(type='server',
+                                        id=node.physical_id,
+                                        message='No Server found')
+        mock_check.side_effect = err
+
+        res = node.do_check(self.context)
+
+        self.assertTrue(res)
+        mock_status.assert_called_once_with(
+            self.context, consts.NS_ERROR,
+            "Failed in found server '%s': No Server found."
+            % node.physical_id,
+            physical_id=None)
+
+    @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'recover_object')
     def test_node_recover_new_object(self, mock_recover, mock_status):
         def set_status(*args, **kwargs):
