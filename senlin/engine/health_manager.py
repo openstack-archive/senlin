@@ -54,7 +54,6 @@ def _chase_up(start_time, interval):
 class NovaNotificationEndpoint(object):
 
     VM_FAILURE_EVENTS = {
-        'compute.instance.delete.end': 'DELETE',
         'compute.instance.pause.end': 'PAUSE',
         'compute.instance.power_off.end': 'POWER_OFF',
         'compute.instance.rebuild.error': 'REBUILD',
