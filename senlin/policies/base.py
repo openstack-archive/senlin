@@ -117,6 +117,7 @@ class Policy(object):
         self._novaclient = None
         self._keystoneclient = None
         self._networkclient = None
+        self._octaviaclient = None
         self._lbaasclient = None
 
     @classmethod
@@ -282,6 +283,21 @@ class Policy(object):
         params = self._build_conn_params(user, project)
         self._networkclient = driver.SenlinDriver().network(params)
         return self._networkclient
+
+    def octavia(self, user, project):
+        """Construct octavia client based on user and project.
+
+        :param user: The ID of the requesting user.
+        :param project: The ID of the requesting project.
+        :returns: A reference to the octavia client.
+        """
+        if self._octaviaclient is not None:
+            return self._octaviaclient
+
+        params = self._build_conn_params(user, project)
+        self._octaviaclient = driver.SenlinDriver().network(params)
+
+        return self._octaviaclient
 
     def lbaas(self, user, project):
         """Construct LB service client based on user and project.

@@ -19,21 +19,24 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.drivers.openstack import lbaas
 from senlin.drivers.openstack import neutron_v2
+from senlin.drivers.openstack import octavia_v2
 from senlin.engine import node as nodem
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
 
-class TestNeutronLBaaSDriver(base.SenlinTestCase):
+class TestOctaviaLBaaSDriver(base.SenlinTestCase):
 
     def setUp(self):
-        super(TestNeutronLBaaSDriver, self).setUp()
+        super(TestOctaviaLBaaSDriver, self).setUp()
         self.context = utils.dummy_context()
         self.conn_params = self.context.to_dict()
         self.lb_driver = lbaas.LoadBalancerDriver(self.conn_params)
         self.lb_driver.lb_status_timeout = 10
         self.patchobject(neutron_v2, 'NeutronClient')
+        self.patchobject(octavia_v2, 'OctaviaClient')
         self.nc = self.lb_driver.nc()
+        self.oc = self.lb_driver.oc()
 
         self.vip = {
             'subnet': 'subnet-01',
@@ -97,14 +100,14 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         lb_obj.id = lb_id
         lb_obj.provisioning_status = 'ACTIVE'
         lb_obj.operating_status = 'ONLINE'
-        self.nc.loadbalancer_get.return_value = lb_obj
+        self.oc.loadbalancer_get.return_value = lb_obj
 
         res = self.lb_driver._wait_for_lb_ready(lb_id)
         self.assertTrue(res)
 
     def test_wait_for_lb_ready_ignore_not_found(self):
         lb_id = 'LB_ID'
-        self.nc.loadbalancer_get.return_value = None
+        self.oc.loadbalancer_get.return_value = None
 
         res = self.lb_driver._wait_for_lb_ready(lb_id, ignore_not_found=True)
 
@@ -114,7 +117,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
     def test_wait_for_lb_ready_timeout(self, mock_sleep):
         lb_id = 'LB_ID'
         lb_obj = mock.Mock(id=lb_id)
-        self.nc.loadbalancer_get.return_value = lb_obj
+        self.oc.loadbalancer_get.return_value = lb_obj
         lb_obj.provisioning_status = 'PENDING_UPDATE'
         lb_obj.operating_status = 'OFFLINE'
 
@@ -138,10 +141,10 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         subnet_obj.network_id = 'NETWORK_ID'
         hm_obj.id = 'HEALTHMONITOR_ID'
 
-        self.nc.loadbalancer_create.return_value = lb_obj
-        self.nc.listener_create.return_value = listener_obj
-        self.nc.pool_create.return_value = pool_obj
-        self.nc.healthmonitor_create.return_value = hm_obj
+        self.oc.loadbalancer_create.return_value = lb_obj
+        self.oc.listener_create.return_value = listener_obj
+        self.oc.pool_create.return_value = pool_obj
+        self.oc.healthmonitor_create.return_value = hm_obj
         self.nc.subnet_get.return_value = subnet_obj
 
         self.lb_driver._wait_for_lb_ready = mock.Mock()
@@ -149,19 +152,19 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         status, res = self.lb_driver.lb_create(self.vip, self.pool, self.hm)
 
         self.assertTrue(status)
-        self.nc.loadbalancer_create.assert_called_once_with(
+        self.oc.loadbalancer_create.assert_called_once_with(
             'SUBNET_ID', self.vip['address'], self.vip['admin_state_up'])
         self.assertEqual('LB_ID', res['loadbalancer'])
         self.assertEqual('192.168.1.100', res['vip_address'])
-        self.nc.listener_create.assert_called_once_with(
+        self.oc.listener_create.assert_called_once_with(
             'LB_ID', self.vip['protocol'], self.vip['protocol_port'],
             self.vip['connection_limit'], self.vip['admin_state_up'])
         self.assertEqual('LISTENER_ID', res['listener'])
-        self.nc.pool_create.assert_called_once_with(
+        self.oc.pool_create.assert_called_once_with(
             self.pool['lb_method'], 'LISTENER_ID', self.pool['protocol'],
             self.pool['admin_state_up'])
         self.assertEqual('POOL_ID', res['pool'])
-        self.nc.healthmonitor_create.assert_called_once_with(
+        self.oc.healthmonitor_create.assert_called_once_with(
             self.hm['type'], self.hm['delay'], self.hm['timeout'],
             self.hm['max_retries'], 'POOL_ID', self.hm['admin_state_up'],
             self.hm['http_method'], self.hm['url_path'],
@@ -179,7 +182,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         subnet_obj.name = 'subnet'
         subnet_obj.id = 'SUBNET_ID'
         subnet_obj.network_id = 'NETWORK_ID'
-        self.nc.loadbalancer_create.return_value = lb_obj
+        self.oc.loadbalancer_create.return_value = lb_obj
         self.nc.subnet_get.return_value = subnet_obj
 
         self.lb_driver._wait_for_lb_ready = mock.Mock()
@@ -190,7 +193,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.assertFalse(status)
         msg = _('Failed in creating loadbalancer (%s).') % 'LB_ID'
         self.assertEqual(msg, res)
-        self.nc.loadbalancer_create.assert_called_once_with(
+        self.oc.loadbalancer_create.assert_called_once_with(
             'SUBNET_ID', self.vip['address'], self.vip['admin_state_up'])
         self.lb_driver._wait_for_lb_ready.assert_called_once_with('LB_ID')
         self.lb_driver.lb_delete.assert_called_once_with(
@@ -206,7 +209,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
 
         # Exception happens in loadbalancer_create.
         self.nc.subnet_get.side_effect = None
-        self.nc.loadbalancer_create.side_effect = exception.InternalError(
+        self.oc.loadbalancer_create.side_effect = exception.InternalError(
             code=500, message='CREATE FAILED')
         status, res = self.lb_driver.lb_create(self.vip, self.pool, self.hm)
         self.assertFalse(status)
@@ -226,8 +229,8 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
 
         self.lb_driver._wait_for_lb_ready = mock.Mock()
         self.lb_driver._wait_for_lb_ready.side_effect = [True, False]
-        self.nc.loadbalancer_create.return_value = lb_obj
-        self.nc.listener_create.return_value = listener_obj
+        self.oc.loadbalancer_create.return_value = lb_obj
+        self.oc.listener_create.return_value = listener_obj
         self.nc.subnet_get.return_value = subnet_obj
         self.lb_driver.lb_delete = mock.Mock()
 
@@ -235,9 +238,9 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.assertFalse(status)
         msg = _('Failed in creating listener (%s).') % 'LISTENER_ID'
         self.assertEqual(msg, res)
-        self.nc.loadbalancer_create.assert_called_once_with(
+        self.oc.loadbalancer_create.assert_called_once_with(
             'SUBNET_ID', self.vip['address'], self.vip['admin_state_up'])
-        self.nc.listener_create.assert_called_once_with(
+        self.oc.listener_create.assert_called_once_with(
             'LB_ID', self.vip['protocol'], self.vip['protocol_port'],
             self.vip['connection_limit'], self.vip['admin_state_up'])
         self.lb_driver._wait_for_lb_ready.assert_called_with('LB_ID')
@@ -247,7 +250,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         # Exception happens in listen_create
         self.lb_driver._wait_for_lb_ready = mock.Mock()
         self.lb_driver._wait_for_lb_ready.side_effect = [True, False]
-        self.nc.listener_create.side_effect = exception.InternalError(
+        self.oc.listener_create.side_effect = exception.InternalError(
             code=500, message='CREATE FAILED')
         status, res = self.lb_driver.lb_create(self.vip, self.pool, self.hm)
         self.assertFalse(status)
@@ -269,9 +272,9 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
 
         self.lb_driver._wait_for_lb_ready = mock.Mock()
         self.lb_driver._wait_for_lb_ready.side_effect = [True, True, False]
-        self.nc.loadbalancer_create.return_value = lb_obj
-        self.nc.listener_create.return_value = listener_obj
-        self.nc.pool_create.return_value = pool_obj
+        self.oc.loadbalancer_create.return_value = lb_obj
+        self.oc.listener_create.return_value = listener_obj
+        self.oc.pool_create.return_value = pool_obj
         self.nc.subnet_get.return_value = subnet_obj
         self.lb_driver.lb_delete = mock.Mock()
 
@@ -279,12 +282,12 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.assertFalse(status)
         msg = _('Failed in creating pool (%s).') % 'POOL_ID'
         self.assertEqual(msg, res)
-        self.nc.loadbalancer_create.assert_called_once_with(
+        self.oc.loadbalancer_create.assert_called_once_with(
             'SUBNET_ID', self.vip['address'], self.vip['admin_state_up'])
-        self.nc.listener_create.assert_called_once_with(
+        self.oc.listener_create.assert_called_once_with(
             'LB_ID', self.vip['protocol'], self.vip['protocol_port'],
             self.vip['connection_limit'], self.vip['admin_state_up'])
-        self.nc.pool_create.assert_called_once_with(
+        self.oc.pool_create.assert_called_once_with(
             self.pool['lb_method'], 'LISTENER_ID', self.pool['protocol'],
             self.pool['admin_state_up'])
         self.lb_driver._wait_for_lb_ready.assert_called_with('LB_ID')
@@ -294,7 +297,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         # Exception happens in pool_create
         self.lb_driver._wait_for_lb_ready = mock.Mock()
         self.lb_driver._wait_for_lb_ready.side_effect = [True, True, False]
-        self.nc.pool_create.side_effect = exception.InternalError(
+        self.oc.pool_create.side_effect = exception.InternalError(
             code=500, message='CREATE FAILED')
         status, res = self.lb_driver.lb_create(self.vip, self.pool, self.hm)
         self.assertFalse(status)
@@ -318,10 +321,10 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.lb_driver._wait_for_lb_ready = mock.Mock()
         self.lb_driver._wait_for_lb_ready.side_effect = [True, True,
                                                          True, False]
-        self.nc.loadbalancer_create.return_value = lb_obj
-        self.nc.listener_create.return_value = listener_obj
-        self.nc.pool_create.return_value = pool_obj
-        self.nc.healthmonitor_create.return_value = hm_obj
+        self.oc.loadbalancer_create.return_value = lb_obj
+        self.oc.listener_create.return_value = listener_obj
+        self.oc.pool_create.return_value = pool_obj
+        self.oc.healthmonitor_create.return_value = hm_obj
         self.nc.subnet_get.return_value = subnet_obj
         self.lb_driver.lb_delete = mock.Mock()
 
@@ -336,7 +339,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         # Exception happens in healthmonitor_create
         self.lb_driver._wait_for_lb_ready = mock.Mock()
         self.lb_driver._wait_for_lb_ready.side_effect = [True, True, True]
-        self.nc.healthmonitor_create.side_effect = exception.InternalError(
+        self.oc.healthmonitor_create.side_effect = exception.InternalError(
             code=500, message='CREATE FAILED')
         status, res = self.lb_driver.lb_create(self.vip, self.pool, self.hm)
         self.assertFalse(status)
@@ -346,7 +349,8 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
     @mock.patch.object(neutron_v2, 'NeutronClient')
     def test_lb_find(self, mock_neutron):
         self.lb_driver.lb_find("FAKELB")
-        self.nc.loadbalancer_get.assert_called_once_with("FAKELB", False)
+        self.oc.loadbalancer_get.assert_called_once_with(
+            "FAKELB", False, False)
 
     def test_lb_delete(self):
         kwargs = {
@@ -361,10 +365,10 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         status, res = self.lb_driver.lb_delete(**kwargs)
         self.assertTrue(status)
         self.assertEqual('LB deletion succeeded', res)
-        self.nc.loadbalancer_delete.assert_called_once_with('LB_ID')
-        self.nc.listener_delete.assert_called_once_with('LISTENER_ID')
-        self.nc.pool_delete.assert_called_once_with('POOL_ID')
-        self.nc.healthmonitor_delete.assert_called_once_with('HM_ID')
+        self.oc.loadbalancer_delete.assert_called_once_with('LB_ID')
+        self.oc.listener_delete.assert_called_once_with('LISTENER_ID')
+        self.oc.pool_delete.assert_called_once_with('POOL_ID')
+        self.oc.healthmonitor_delete.assert_called_once_with('HM_ID')
         calls = [mock.call('LB_ID') for i in range(1, 4)]
         self.lb_driver._wait_for_lb_ready.assert_has_calls(
             calls, any_order=False)
@@ -376,7 +380,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
             'pool': 'POOL_ID',
             'healthmonitor': 'HM_ID'
         }
-        self.nc.healthmonitor_delete.side_effect = exception.InternalError(
+        self.oc.healthmonitor_delete.side_effect = exception.InternalError(
             code=500, message='DELETE FAILED')
         status, res = self.lb_driver.lb_delete(**kwargs)
         self.assertFalse(status)
@@ -390,7 +394,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
             'pool': 'POOL_ID',
             'healthmonitor': 'HM_ID'
         }
-        self.nc.pool_delete.side_effect = exception.InternalError(
+        self.oc.pool_delete.side_effect = exception.InternalError(
             code=500, message='DELETE FAILED')
         self.lb_driver._wait_for_lb_ready = mock.Mock()
         self.lb_driver._wait_for_lb_ready.return_value = True
@@ -406,7 +410,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
             'pool': 'POOL_ID',
             'healthmonitor': 'HM_ID'
         }
-        self.nc.listener_delete.side_effect = exception.InternalError(
+        self.oc.listener_delete.side_effect = exception.InternalError(
             code=500, message='DELETE FAILED')
         self.lb_driver._wait_for_lb_ready = mock.Mock()
         self.lb_driver._wait_for_lb_ready.return_value = True
@@ -423,10 +427,10 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         status, res = self.lb_driver.lb_delete(**kwargs)
         self.assertTrue(status)
         self.assertEqual('LB deletion succeeded', res)
-        self.nc.loadbalancer_delete.assert_called_once_with('LB_ID')
-        self.assertEqual(0, self.nc.healthmonitor_delete.call_count)
-        self.assertEqual(0, self.nc.pool_delete.call_count)
-        self.assertEqual(0, self.nc.listener_delete.call_count)
+        self.oc.loadbalancer_delete.assert_called_once_with('LB_ID')
+        self.assertEqual(0, self.oc.healthmonitor_delete.call_count)
+        self.assertEqual(0, self.oc.pool_delete.call_count)
+        self.assertEqual(0, self.oc.listener_delete.call_count)
         self.lb_driver._wait_for_lb_ready.assert_called_once_with(
             'LB_ID', ignore_not_found=True)
 
@@ -457,7 +461,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
 
         self.nc.subnet_get.return_value = subnet_obj
         self.nc.network_get.return_value = network_obj
-        self.nc.pool_member_create.return_value = member
+        self.oc.pool_member_create.return_value = member
         self.lb_driver._wait_for_lb_ready = mock.Mock()
         self.lb_driver._wait_for_lb_ready.return_value = True
 
@@ -465,7 +469,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.assertEqual('MEMBER_ID', res)
         self.nc.subnet_get.assert_called_once_with(subnet)
         self.nc.network_get.assert_called_once_with('NETWORK_ID')
-        self.nc.pool_member_create.assert_called_once_with(
+        self.oc.pool_member_create.assert_called_once_with(
             pool_id, 'ipaddr_net1', port, 'SUBNET_ID')
         self.lb_driver._wait_for_lb_ready.assert_has_calls(
             [mock.call('LB_ID'), mock.call('LB_ID')])
@@ -518,7 +522,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.lb_driver._wait_for_lb_ready.return_value = False
         self.nc.subnet_get.return_value = subnet_obj
         self.nc.network_get.return_value = network_obj
-        self.nc.pool_member_create.side_effect = exception.InternalError(
+        self.oc.pool_member_create.side_effect = exception.InternalError(
             code=500, message="CREATE FAILED")
         res = self.lb_driver.member_add(node, 'LB_ID', 'POOL_ID', 80,
                                         'subnet')
@@ -549,7 +553,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
         self.lb_driver._wait_for_lb_ready.return_value = True
         self.nc.subnet_get.return_value = subnet_obj
         self.nc.network_get.return_value = network_obj
-        self.nc.pool_member_create.side_effect = exception.InternalError(
+        self.oc.pool_member_create.side_effect = exception.InternalError(
             code=500, message="CREATE FAILED")
         res = self.lb_driver.member_add(node, 'LB_ID', 'POOL_ID', 80,
                                         'subnet')
@@ -619,7 +623,7 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
 
         res = self.lb_driver.member_remove(lb_id, pool_id, member_id)
         self.assertTrue(res)
-        self.nc.pool_member_delete.assert_called_once_with(pool_id, member_id)
+        self.oc.pool_member_delete.assert_called_once_with(pool_id, member_id)
         self.lb_driver._wait_for_lb_ready.assert_has_calls(
             [mock.call(lb_id), mock.call(lb_id)])
 
@@ -634,18 +638,18 @@ class TestNeutronLBaaSDriver(base.SenlinTestCase):
     def test_member_remove_member_delete_failed(self):
         self.lb_driver._wait_for_lb_ready = mock.Mock()
         self.lb_driver._wait_for_lb_ready.return_value = True
-        self.nc.pool_member_delete.side_effect = exception.InternalError(
+        self.oc.pool_member_delete.side_effect = exception.InternalError(
             code=500, message='')
 
         res = self.lb_driver.member_remove('LB_ID', 'POOL_ID', 'MEMBER_ID')
         self.assertFalse(res)
-        self.nc.pool_member_delete.assert_called_once_with('POOL_ID',
+        self.oc.pool_member_delete.assert_called_once_with('POOL_ID',
                                                            'MEMBER_ID')
 
     def test_member_remove_wait_for_lb_timeout(self):
         self.lb_driver._wait_for_lb_ready = mock.Mock()
         self.lb_driver._wait_for_lb_ready.side_effect = [True, False]
-        self.nc.pool_member_delete.side_effect = None
+        self.oc.pool_member_delete.side_effect = None
 
         res = self.lb_driver.member_remove('LB_ID', 'POOL_ID', 'MEMBER_ID')
         self.assertIsNone(res)

@@ -20,6 +20,7 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.drivers import base
 from senlin.drivers.openstack import neutron_v2 as neutronclient
+from senlin.drivers.openstack import octavia_v2 as octaviaclient
 from senlin.engine import node as nodem
 
 LOG = logging.getLogger(__name__)
@@ -31,9 +32,26 @@ class LoadBalancerDriver(base.DriverBase):
     def __init__(self, params):
         super(LoadBalancerDriver, self).__init__(params)
         self.lb_status_timeout = 600
+        self._oc = None
         self._nc = None
 
+    def oc(self):
+        """Octavia client
+
+        :return: octavia client
+        """
+
+        if self._oc:
+            return self._oc
+
+        self._oc = octaviaclient.OctaviaClient(self.conn_params)
+        return self._oc
+
     def nc(self):
+        """Neutron client
+
+        :return: neutron client
+        """
         if self._nc:
             return self._nc
 
@@ -54,7 +72,7 @@ class LoadBalancerDriver(base.DriverBase):
         waited = 0
         while waited < self.lb_status_timeout:
             try:
-                lb = self.nc().loadbalancer_get(lb_id, ignore_missing=True)
+                lb = self.oc().loadbalancer_get(lb_id, ignore_missing=True)
             except exception.InternalError as ex:
                 msg = ('Failed in getting loadbalancer: %s.'
                        % six.text_type(ex))
@@ -99,7 +117,7 @@ class LoadBalancerDriver(base.DriverBase):
             return False, msg
         subnet_id = subnet.id
         try:
-            lb = self.nc().loadbalancer_create(subnet_id,
+            lb = self.oc().loadbalancer_create(subnet_id,
                                                vip.get('address', None),
                                                vip['admin_state_up'])
         except exception.InternalError as ex:
@@ -119,7 +137,7 @@ class LoadBalancerDriver(base.DriverBase):
 
         # Create listener
         try:
-            listener = self.nc().listener_create(lb.id, vip['protocol'],
+            listener = self.oc().listener_create(lb.id, vip['protocol'],
                                                  vip['protocol_port'],
                                                  vip.get('connection_limit',
                                                          None),
@@ -138,7 +156,7 @@ class LoadBalancerDriver(base.DriverBase):
 
         # Create pool
         try:
-            pool = self.nc().pool_create(pool['lb_method'], listener.id,
+            pool = self.oc().pool_create(pool['lb_method'], listener.id,
                                          pool['protocol'],
                                          pool['admin_state_up'])
         except exception.InternalError as ex:
@@ -158,7 +176,7 @@ class LoadBalancerDriver(base.DriverBase):
 
         # Create health monitor
         try:
-            health_monitor = self.nc().healthmonitor_create(
+            health_monitor = self.oc().healthmonitor_create(
                 hm['type'], hm['delay'], hm['timeout'], hm['max_retries'],
                 pool.id, hm['admin_state_up'], hm['http_method'],
                 hm['url_path'], hm['expected_codes'])
@@ -177,8 +195,10 @@ class LoadBalancerDriver(base.DriverBase):
 
         return True, result
 
-    def lb_find(self, name_or_id, ignore_missing=False):
-        return self.nc().loadbalancer_get(name_or_id, ignore_missing)
+    def lb_find(self, name_or_id, ignore_missing=False,
+                show_deleted=False):
+        return self.oc().loadbalancer_get(name_or_id, ignore_missing,
+                                          show_deleted)
 
     def lb_delete(self, **kwargs):
         """Delete a Neutron lbaas instance
@@ -188,10 +208,15 @@ class LoadBalancerDriver(base.DriverBase):
         """
         lb_id = kwargs.pop('loadbalancer')
 
+        lb = self.lb_find(lb_id, ignore_missing=True)
+        if lb is None:
+            LOG.debug('Loadbalancer (%s) is not existing.', lb_id)
+            return True, _('LB deletion succeeded')
+
         healthmonitor_id = kwargs.pop('healthmonitor', None)
         if healthmonitor_id:
             try:
-                self.nc().healthmonitor_delete(healthmonitor_id)
+                self.oc().healthmonitor_delete(healthmonitor_id)
             except exception.InternalError as ex:
                 msg = ('Failed in deleting healthmonitor: %s.'
                        % six.text_type(ex))
@@ -206,7 +231,7 @@ class LoadBalancerDriver(base.DriverBase):
         pool_id = kwargs.pop('pool', None)
         if pool_id:
             try:
-                self.nc().pool_delete(pool_id)
+                self.oc().pool_delete(pool_id)
             except exception.InternalError as ex:
                 msg = ('Failed in deleting lb pool: %s.'
                        % six.text_type(ex))
@@ -220,7 +245,7 @@ class LoadBalancerDriver(base.DriverBase):
         listener_id = kwargs.pop('listener', None)
         if listener_id:
             try:
-                self.nc().listener_delete(listener_id)
+                self.oc().listener_delete(listener_id)
             except exception.InternalError as ex:
                 msg = ('Failed in deleting listener: %s.'
                        % six.text_type(ex))
@@ -231,7 +256,7 @@ class LoadBalancerDriver(base.DriverBase):
                 msg = 'Failed in deleting listener (%s).' % listener_id
                 return False, msg
 
-        self.nc().loadbalancer_delete(lb_id)
+        self.oc().loadbalancer_delete(lb_id)
         res = self._wait_for_lb_ready(lb_id, ignore_not_found=True)
         if res is False:
             msg = 'Failed in deleting loadbalancer (%s).' % lb_id
@@ -284,7 +309,7 @@ class LoadBalancerDriver(base.DriverBase):
             if not res:
                 msg = 'Loadbalancer %s is not ready.' % lb_id
                 raise exception.Error(msg)
-            member = self.nc().pool_member_create(pool_id, address, port,
+            member = self.oc().pool_member_create(pool_id, address, port,
                                                   subnet_obj.id)
         except (exception.InternalError, exception.Error) as ex:
             msg = ('Failed in creating lb pool member: %s.'
@@ -318,7 +343,7 @@ class LoadBalancerDriver(base.DriverBase):
             if not res:
                 msg = 'Loadbalancer %s is not ready.' % lb_id
                 raise exception.Error(msg)
-            self.nc().pool_member_delete(pool_id, member_id)
+            self.oc().pool_member_delete(pool_id, member_id)
         except (exception.InternalError, exception.Error) as ex:
             msg = ('Failed in removing member %(m)s from pool %(p)s: '
                    '%(ex)s' % {'m': member_id, 'p': pool_id,
