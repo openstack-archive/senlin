@@ -56,7 +56,6 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
     def test_init(self, mock_rpc, mock_filter):
         x_filter = mock_filter.return_value
         event_map = {
-            'compute.instance.delete.end': 'DELETE',
             'compute.instance.pause.end': 'PAUSE',
             'compute.instance.power_off.end': 'POWER_OFF',
             'compute.instance.rebuild.error': 'REBUILD',
@@ -101,7 +100,7 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
         call_ctx = mock.Mock()
         mock_context.return_value = call_ctx
 
-        res = endpoint.info(ctx, 'PUBLISHER', 'compute.instance.delete.end',
+        res = endpoint.info(ctx, 'PUBLISHER', 'compute.instance.shutdown.end',
                             payload, metadata)
 
         self.assertIsNone(res)
@@ -110,7 +109,7 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
         self.assertIsInstance(req, objects.NodeRecoverRequest)
         self.assertEqual('FAKE_NODE', req.identity)
         expected_params = {
-            'event': 'DELETE',
+            'event': 'SHUTDOWN',
             'state': 'shutoff',
             'instance_id': 'PHYSICAL_ID',
             'timestamp': 'TIMESTAMP',
@@ -218,7 +217,7 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
         call_ctx = mock.Mock()
         mock_context.return_value = call_ctx
 
-        res = endpoint.info(ctx, 'PUBLISHER', 'compute.instance.delete.end',
+        res = endpoint.info(ctx, 'PUBLISHER', 'compute.instance.shutdown.end',
                             payload, metadata)
 
         self.assertIsNone(res)
@@ -227,7 +226,7 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
         self.assertIsInstance(req, objects.NodeRecoverRequest)
         self.assertEqual('NODE_ID', req.identity)
         expected_params = {
-            'event': 'DELETE',
+            'event': 'SHUTDOWN',
             'state': 'Unknown',
             'instance_id': 'Unknown',
             'timestamp': 'TIMESTAMP',
