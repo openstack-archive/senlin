@@ -18,6 +18,7 @@ import six
 from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.common.i18n import _
+from senlin.common import utils as common_utils
 from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
 from senlin.engine import environment
@@ -183,6 +184,7 @@ class NodeTest(base.SenlinTestCase):
             status=action_mod.Action.READY)
         notify.assert_called_once_with()
 
+    @mock.patch.object(common_utils, 'format_node_name')
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(no.Node, 'create')
     @mock.patch.object(co.Cluster, 'get_next_index')
@@ -191,16 +193,19 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_create_same_profile(self, notify, mock_profile,
                                       mock_cluster, mock_index,
-                                      mock_node, mock_action):
+                                      mock_node, mock_action,
+                                      mock_node_name):
         mock_profile.return_value = mock.Mock(id='PROFILE_ID',
                                               type='PROFILE_TYPE')
-        x_cluster = mock.Mock(id='CLUSTER_ID', profile_id='PROFILE_ID')
+        x_cluster = mock.Mock(id='CLUSTER_ID', profile_id='PROFILE_ID',
+                              config={})
         mock_cluster.return_value = x_cluster
         mock_index.return_value = 12345
         x_node = mock.Mock(id='NODE_ID')
         x_node.to_dict.return_value = {'foo': 'bar'}
         mock_node.return_value = x_node
         mock_action.return_value = 'ACTION_ID'
+        mock_node_name.return_value = "GENERATED_NAME"
         req = orno.NodeCreateRequestBody(name='NODE1',
                                          profile_id='PROFILE_NAME',
                                          cluster_id='FAKE_CLUSTER')
@@ -214,7 +219,7 @@ class NodeTest(base.SenlinTestCase):
         mock_node.assert_called_once_with(
             self.ctx,
             {
-                'name': 'NODE1',
+                'name': 'GENERATED_NAME',
                 'profile_id': 'PROFILE_ID',
                 'cluster_id': 'CLUSTER_ID',
                 'index': 12345,
@@ -237,6 +242,7 @@ class NodeTest(base.SenlinTestCase):
             status=action_mod.Action.READY)
         notify.assert_called_once_with()
 
+    @mock.patch.object(common_utils, "format_node_name")
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(no.Node, 'create')
     @mock.patch.object(co.Cluster, 'get_next_index')
@@ -245,18 +251,21 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(dispatcher, 'start_action')
     def test_node_create_same_profile_type(self, notify, mock_profile,
                                            mock_cluster, mock_index,
-                                           mock_node, mock_action):
+                                           mock_node, mock_action,
+                                           mock_node_name):
         mock_profile.side_effect = [
             mock.Mock(id='NODE_PROFILE_ID', type='PROFILE_TYPE'),
             mock.Mock(id='CLUSTER_PROFILE_ID', type='PROFILE_TYPE'),
         ]
-        x_cluster = mock.Mock(id='CLUSTER_ID', profile_id='CLUSTER_PROFILE_ID')
+        x_cluster = mock.Mock(id='CLUSTER_ID', profile_id='CLUSTER_PROFILE_ID',
+                              config={})
         mock_cluster.return_value = x_cluster
         mock_index.return_value = 12345
         x_node = mock.Mock(id='NODE_ID')
         x_node.to_dict.return_value = {'foo': 'bar'}
         mock_node.return_value = x_node
         mock_action.return_value = 'ACTION_ID'
+        mock_node_name.return_value = 'GENERATED_NAME'
         req = orno.NodeCreateRequestBody(name='NODE1',
                                          profile_id='PROFILE_NAME',
                                          cluster_id='FAKE_CLUSTER')
@@ -273,7 +282,7 @@ class NodeTest(base.SenlinTestCase):
         mock_node.assert_called_once_with(
             self.ctx,
             {
-                'name': 'NODE1',
+                'name': 'GENERATED_NAME',
                 'profile_id': 'NODE_PROFILE_ID',
                 'cluster_id': 'CLUSTER_ID',
                 'physical_id': None,
@@ -296,8 +305,9 @@ class NodeTest(base.SenlinTestCase):
             status=action_mod.Action.READY)
         notify.assert_called_once_with()
 
+    @mock.patch.object(po.Profile, 'find')
     @mock.patch.object(no.Node, 'get_by_name')
-    def test_node_create_name_conflict(self, mock_get):
+    def test_node_create_name_conflict(self, mock_find, mock_get):
         cfg.CONF.set_override('name_unique', True)
         mock_get.return_value = mock.Mock()
         req = orno.NodeCreateRequestBody(name='NODE1',
@@ -329,7 +339,6 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(po.Profile, 'find')
     def test_node_create_cluster_not_found(self, mock_profile, mock_cluster):
-        mock_profile.return_value = mock.Mock()
         mock_cluster.side_effect = exc.ResourceNotFound(type='cluster',
                                                         id='Bogus')
         req = orno.NodeCreateRequestBody(name='NODE1',
@@ -343,7 +352,6 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The specified cluster 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
-        mock_profile.assert_called_once_with(self.ctx, 'PROFILE_NAME')
         mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(co.Cluster, 'find')
