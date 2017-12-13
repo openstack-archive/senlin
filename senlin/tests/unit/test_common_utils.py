@@ -155,6 +155,39 @@ class TestRandomName(base.SenlinTestCase):
         self.assertEqual('', result)
 
 
+class TestFormatNodeName(base.SenlinTestCase):
+
+    def test_empty(self):
+        res = utils.format_node_name(None, None, 0)
+        self.assertIsNotNone(res)
+        self.assertEqual(13, len(res))
+
+        res = utils.format_node_name("", None, 0)
+        self.assertIsNotNone(res)
+        self.assertEqual(13, len(res))
+
+    def test_has_random(self):
+        res = utils.format_node_name("prefix-$R", None, 0)
+        self.assertEqual(15, len(res))
+
+        res = utils.format_node_name("prefix-$5R", None, 0)
+        self.assertEqual(12, len(res))
+
+    def test_has_index(self):
+        res = utils.format_node_name("prefix-$I", None, 12)
+        self.assertEqual(9, len(res))
+
+        res = utils.format_node_name("prefix-$5I", None, 12)
+        self.assertEqual(12, len(res))
+
+    def test_has_both(self):
+        res = utils.format_node_name("prefix-$3R-$I", None, 12)
+        self.assertEqual(13, len(res))
+
+        res = utils.format_node_name("$3R-prefix-$5I", None, 12)
+        self.assertEqual(16, len(res))
+
+
 class TestParseLevelValues(base.SenlinTestCase):
 
     def test_none(self):

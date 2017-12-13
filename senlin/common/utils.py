@@ -15,6 +15,7 @@ Common utilities module.
 """
 
 import random
+import re
 import string
 
 from jsonpath_rw import parse
@@ -140,6 +141,50 @@ def random_name(length=8):
     tail = ''.join(random.choice(string.ascii_letters + string.digits)
                    for i in range(length - 1))
     return lead + tail
+
+
+def format_node_name(fmt, cluster, index):
+    """Generates a node name using the given format.
+
+    :param fmt: A string containing format directives. Currently we only
+                support the following keys:
+                - "$nR": a random string with at most 'n' characters where
+                         'n' defaults to 8.
+                - "$nI": a string representation of the node index where 'n'
+                         instructs the number of digits generated with 0s
+                         padded to the left.
+    :param cluster: The DB object for the cluster to which the node belongs.
+                    This parameter is provided for future extension.
+    :param index: The index for the node in the target cluster.
+    :returns: A string containing the generated node name.
+    """
+    # for backward compatibility
+    if not fmt:
+        fmt = "node-$8R"
+
+    result = ""
+    last = 0
+    pattern = re.compile("(\$\d{0,8}[RI])")
+    for m in pattern.finditer(fmt):
+        group = m.group()
+        t = group[-1]
+        width = group[1:-1]
+        if t == "R":  # random string
+            if width != "":
+                sub = random_name(int(width))
+            else:
+                sub = random_name(8)
+        elif t == "I":  # node index
+            if width != "":
+                str_index = str(index)
+                sub = str_index.zfill(int(width))
+            else:
+                sub = str(index)
+        result += fmt[last:m.start()] + sub
+        last = m.end()
+    result += fmt[last:]
+
+    return result
 
 
 def isotime(at):
