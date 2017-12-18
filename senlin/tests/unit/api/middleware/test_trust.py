@@ -45,8 +45,8 @@ class TestTrustMiddleware(base.SenlinTestCase):
                                            mock.ANY)
         request = x_rpc.call.call_args[0][2]
         self.assertIsInstance(request, vorc.CredentialGetRequest)
-        self.assertEqual(self.context.user, request.user)
-        self.assertEqual(self.context.project, request.project)
+        self.assertEqual(self.context.user_id, request.user)
+        self.assertEqual(self.context.project_id, request.project)
 
     @mock.patch.object(context, "get_service_credentials")
     @mock.patch("senlin.drivers.base.SenlinDriver")
@@ -75,8 +75,8 @@ class TestTrustMiddleware(base.SenlinTestCase):
         x_rpc.call.assert_has_calls(mock_calls)
         request = x_rpc.call.call_args_list[0][0][2]
         self.assertIsInstance(request, vorc.CredentialGetRequest)
-        self.assertEqual(self.context.user, request.user)
-        self.assertEqual(self.context.project, request.project)
+        self.assertEqual(self.context.user_id, request.user)
+        self.assertEqual(self.context.project_id, request.project)
         request = x_rpc.call.call_args_list[1][0][2]
         self.assertIsInstance(request, vorc.CredentialCreateRequest)
         expected_cred = {
@@ -86,15 +86,15 @@ class TestTrustMiddleware(base.SenlinTestCase):
         mock_driver.assert_called_once_with()
         x_driver.identity.assert_called_once_with({
             'auth_url': self.context.auth_url,
-            'project_id': self.context.project,
-            'user_id': self.context.user,
+            'project_id': self.context.project_id,
+            'user_id': self.context.user_id,
             'token': self.context.auth_token,
         })
         mock_creds.assert_called_once_with()
         mock_keystone.get_user_id.assert_called_once_with(
             uid='FAKE_ID', passwd='FAKE_PASS')
         mock_keystone.trust_get_by_trustor.assert_called_once_with(
-            self.context.user, 'FAKE_ADMIN_ID', self.context.project)
+            self.context.user_id, 'FAKE_ADMIN_ID', self.context.project_id)
 
     @mock.patch.object(context, "get_service_credentials")
     @mock.patch("senlin.drivers.base.SenlinDriver")
@@ -124,15 +124,15 @@ class TestTrustMiddleware(base.SenlinTestCase):
         mock_driver.assert_called_once_with()
         x_driver.identity.assert_called_once_with({
             'auth_url': self.context.auth_url,
-            'project_id': self.context.project,
-            'user_id': self.context.user,
+            'project_id': self.context.project_id,
+            'user_id': self.context.user_id,
             'token': self.context.auth_token,
         })
         mock_creds.assert_called_once_with()
         mock_keystone.get_user_id.assert_called_once_with(
             uid='FAKE_ID', passwd='FAKE_PASS')
         mock_keystone.trust_get_by_trustor.assert_called_once_with(
-            self.context.user, 'FAKE_ADMIN_ID', self.context.project)
+            self.context.user_id, 'FAKE_ADMIN_ID', self.context.project_id)
 
     @mock.patch.object(context, "get_service_credentials")
     @mock.patch("senlin.drivers.base.SenlinDriver")
@@ -163,17 +163,17 @@ class TestTrustMiddleware(base.SenlinTestCase):
         mock_driver.assert_called_once_with()
         x_driver.identity.assert_called_once_with({
             'auth_url': self.context.auth_url,
-            'project_id': self.context.project,
-            'user_id': self.context.user,
+            'project_id': self.context.project_id,
+            'user_id': self.context.user_id,
             'token': self.context.auth_token,
         })
         mock_creds.assert_called_once_with()
         mock_keystone.get_user_id.assert_called_once_with(
             uid='FAKE_ID', passwd='FAKE_PASS')
         mock_keystone.trust_get_by_trustor.assert_called_once_with(
-            self.context.user, 'FAKE_ADMIN_ID', self.context.project)
+            self.context.user_id, 'FAKE_ADMIN_ID', self.context.project_id)
         mock_keystone.trust_create.assert_called_once_with(
-            self.context.user, 'FAKE_ADMIN_ID', self.context.project,
+            self.context.user_id, 'FAKE_ADMIN_ID', self.context.project_id,
             self.context.roles)
 
     @mock.patch.object(context, "get_service_credentials")
@@ -206,12 +206,12 @@ class TestTrustMiddleware(base.SenlinTestCase):
         mock_driver.assert_called_once_with()
         x_driver.identity.assert_called_once_with({
             'auth_url': self.context.auth_url,
-            'project_id': self.context.project,
-            'user_id': self.context.user,
+            'project_id': self.context.project_id,
+            'user_id': self.context.user_id,
             'token': self.context.auth_token,
         })
         mock_creds.assert_called_once_with()
         mock_keystone.get_user_id.assert_called_once_with(
             uid='FAKE_ID', passwd='FAKE_PASS')
         mock_keystone.trust_get_by_trustor.assert_called_once_with(
-            self.context.user, 'FAKE_ADMIN_ID', self.context.project)
+            self.context.user_id, 'FAKE_ADMIN_ID', self.context.project_id)

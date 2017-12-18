@@ -192,9 +192,9 @@ class Message(base.Receiver):
             raise exc.InternalError(message=msg)
 
         # Use receiver owner context to build action
-        context.user = self.user
-        context.project = self.project
-        context.domain = self.domain
+        context.user_id = self.user
+        context.project_id = self.project
+        context.domain_id = self.domain
 
         # Action name check
         if action not in consts.CLUSTER_ACTION_NAMES:

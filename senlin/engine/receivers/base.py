@@ -116,9 +116,9 @@ class Receiver(object):
             cdata['trust_id'] = context.trusts
 
         kwargs['actor'] = cdata
-        kwargs['user'] = context.user
-        kwargs['project'] = context.project
-        kwargs['domain'] = context.domain
+        kwargs['user'] = context.user_id
+        kwargs['project'] = context.project_id
+        kwargs['domain'] = context.domain_id
         kwargs['id'] = uuidutils.generate_uuid()
         cluster_id = cluster.id if cluster else None
         obj = cls(rtype, cluster_id, action, **kwargs)

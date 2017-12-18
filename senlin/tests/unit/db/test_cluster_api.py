@@ -37,8 +37,8 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertIsNotNone(cluster.id)
         self.assertEqual('db_test_cluster_name', cluster.name)
         self.assertEqual(self.profile.id, cluster.profile_id)
-        self.assertEqual(self.ctx.user, cluster.user)
-        self.assertEqual(self.ctx.project, cluster.project)
+        self.assertEqual(self.ctx.user_id, cluster.user)
+        self.assertEqual(self.ctx.project_id, cluster.project)
         self.assertEqual('unknown', cluster.domain)
         self.assertIsNone(cluster.parent)
         self.assertEqual(1, cluster.next_index)
@@ -66,7 +66,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
     def test_cluster_get_from_different_project(self):
         cluster = shared.create_cluster(self.ctx, self.profile)
-        self.ctx.project = 'abc'
+        self.ctx.project_id = 'abc'
         ret_cluster = db_api.cluster_get(self.ctx, cluster.id,
                                          project_safe=False)
         self.assertEqual(cluster.id, ret_cluster.id)
@@ -96,7 +96,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
 
         self.assertIsNone(db_api.cluster_get_by_name(self.ctx, 'abc'))
 
-        self.ctx.project = 'abc'
+        self.ctx.project_id = 'abc'
         self.assertIsNone(db_api.cluster_get_by_name(self.ctx, cluster.name))
 
     def test_cluster_get_by_name_diff_project(self):
@@ -112,11 +112,11 @@ class DBAPIClusterTest(base.SenlinTestCase):
         res = db_api.cluster_get_by_name(self.ctx, 'cluster_A')
         self.assertIsNone(res)
 
-        self.ctx.project = UUID3
+        self.ctx.project_id = UUID3
         self.assertIsNone(db_api.cluster_get_by_name(self.ctx,
                                                      'cluster_A'))
 
-        self.ctx.project = UUID2
+        self.ctx.project_id = UUID2
         res = db_api.cluster_get_by_name(self.ctx, 'cluster_A')
         self.assertEqual(cluster1.id, res.id)
 
@@ -189,15 +189,15 @@ class DBAPIClusterTest(base.SenlinTestCase):
         ]
         [shared.create_cluster(self.ctx, self.profile, **v) for v in values]
 
-        self.ctx.project = UUID1
+        self.ctx.project_id = UUID1
         clusters = db_api.cluster_get_all(self.ctx)
         self.assertEqual(2, len(clusters))
 
-        self.ctx.project = UUID2
+        self.ctx.project_id = UUID2
         clusters = db_api.cluster_get_all(self.ctx)
         self.assertEqual(3, len(clusters))
 
-        self.ctx.project = UUID3
+        self.ctx.project_id = UUID3
         self.assertEqual([], db_api.cluster_get_all(self.ctx))
 
     def test_cluster_get_all_with_project_safe_false(self):
@@ -339,10 +339,10 @@ class DBAPIClusterTest(base.SenlinTestCase):
         ]
         [shared.create_cluster(self.ctx, self.profile, **v) for v in values]
 
-        self.ctx.project = UUID1
+        self.ctx.project_id = UUID1
         self.assertEqual(2, db_api.cluster_count_all(self.ctx))
 
-        self.ctx.project = UUID2
+        self.ctx.project_id = UUID2
         self.assertEqual(3, db_api.cluster_count_all(self.ctx))
 
     def test_cluster_count_all_with_project_safe_false(self):
@@ -441,8 +441,8 @@ class DBAPIClusterTest(base.SenlinTestCase):
         policy_data = {
             'name': 'test_policy',
             'type': 'ScalingPolicy',
-            'user': self.ctx.user,
-            'project': self.ctx.project,
+            'user': self.ctx.user_id,
+            'project': self.ctx.project_id,
             'spec': {'foo': 'bar'},
             'data': None,
         }

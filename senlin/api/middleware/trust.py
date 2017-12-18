@@ -33,7 +33,7 @@ class TrustMiddleware(wsgi.Middleware):
         rpcc = rpc.EngineClient()
 
         ctx = req.context
-        params = {'user': ctx.user, 'project': ctx.project}
+        params = {'user': ctx.user_id, 'project': ctx.project_id}
         obj = util.parse_request('CredentialGetRequest', req, params)
         res = rpcc.call(ctx, 'credential_get', obj)
         if res:
@@ -44,14 +44,15 @@ class TrustMiddleware(wsgi.Middleware):
         params = {
             'auth_url': ctx.auth_url,
             'token': ctx.auth_token,
-            'project_id': ctx.project,
-            'user_id': ctx.user,
+            'project_id': ctx.project_id,
+            'user_id': ctx.user_id,
         }
         kc = driver_base.SenlinDriver().identity(params)
         service_cred = context.get_service_credentials()
         admin_id = kc.get_user_id(**service_cred)
         try:
-            trust = kc.trust_get_by_trustor(ctx.user, admin_id, ctx.project)
+            trust = kc.trust_get_by_trustor(ctx.user_id, admin_id,
+                                            ctx.project_id)
         except exception.InternalError as ex:
             if ex.code == 400:
                 trust = None
@@ -59,7 +60,8 @@ class TrustMiddleware(wsgi.Middleware):
                 raise
         if not trust:
             # Create a trust if no existing one found
-            trust = kc.trust_create(ctx.user, admin_id, ctx.project, ctx.roles)
+            trust = kc.trust_create(ctx.user_id, admin_id, ctx.project_id,
+                                    ctx.roles)
 
         # If credential not exists, create it, otherwise update it.
         cred = {'openstack': {'trust': trust.id}}

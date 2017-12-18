@@ -135,8 +135,8 @@ class TestCluster(base.SenlinTestCase):
 
     def test_store_for_create(self):
         cluster = cm.Cluster('test-cluster', 0, PROFILE_ID,
-                             user=self.context.user,
-                             project=self.context.project)
+                             user=self.context.user_id,
+                             project=self.context.project_id)
         mock_load = self.patchobject(cluster, '_load_runtime_data')
         self.assertIsNone(cluster.id)
 
@@ -149,9 +149,9 @@ class TestCluster(base.SenlinTestCase):
         self.assertIsNotNone(result)
         self.assertEqual('test-cluster', result.name)
         self.assertEqual(PROFILE_ID, result.profile_id)
-        self.assertEqual(self.context.user, result.user)
-        self.assertEqual(self.context.project, result.project)
-        self.assertEqual(self.context.domain, result.domain)
+        self.assertEqual(self.context.user_id, result.user)
+        self.assertEqual(self.context.project_id, result.project)
+        self.assertEqual(self.context.domain_id, result.domain)
 
         self.assertIsNotNone(result.init_at)
         self.assertIsNone(result.created_at)
@@ -169,8 +169,8 @@ class TestCluster(base.SenlinTestCase):
 
     def test_store_for_update(self):
         cluster = cm.Cluster('test-cluster', 0, PROFILE_ID,
-                             user=self.context.user,
-                             project=self.context.project)
+                             user=self.context.user_id,
+                             project=self.context.project_id)
         mock_load = self.patchobject(cluster, '_load_runtime_data')
         self.assertIsNone(cluster.id)
 
@@ -197,8 +197,8 @@ class TestCluster(base.SenlinTestCase):
         self.assertIsNotNone(result)
 
         self.assertEqual('test-cluster-1', result.name)
-        self.assertEqual(self.context.user, result.user)
-        self.assertEqual(self.context.project, result.project)
+        self.assertEqual(self.context.user_id, result.user)
+        self.assertEqual(self.context.project_id, result.project)
 
         self.assertEqual(1, result.min_size)
         self.assertEqual(3, result.max_size)

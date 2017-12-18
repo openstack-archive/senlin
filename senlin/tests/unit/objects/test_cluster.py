@@ -110,8 +110,8 @@ class TestCluster(base.SenlinTestCase):
             'max_size': -1,
             'min_size': 0,
             'timeout': cfg.CONF.default_action_timeout,
-            'user': self.ctx.user,
-            'project': self.ctx.project,
+            'user': self.ctx.user_id,
+            'project': self.ctx.project_id,
         }
         cluster = co.Cluster.create(self.ctx, values)
         fake_profile = mock.Mock()

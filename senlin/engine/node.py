@@ -68,11 +68,11 @@ class Node(object):
 
         if context is not None:
             if self.user == '':
-                self.user = context.user
+                self.user = context.user_id
             if self.project == '':
-                self.project = context.project
+                self.project = context.project_id
             if self.domain == '':
-                self.domain = context.domain
+                self.domain = context.domain_id
             self._load_runtime_data(context)
 
     def _load_runtime_data(self, context):

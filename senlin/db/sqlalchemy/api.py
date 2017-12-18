@@ -85,7 +85,7 @@ def query_by_short_id(context, model, short_id, project_safe=True):
     q = q.filter(model.id.like('%s%%' % short_id))
 
     if project_safe:
-        q = q.filter_by(project=context.project)
+        q = q.filter_by(project=context.project_id)
 
     if q.count() == 1:
         return q.first()
@@ -100,7 +100,7 @@ def query_by_name(context, model, name, project_safe=True):
     q = q.filter_by(name=name)
 
     if project_safe:
-        q = q.filter_by(project=context.project)
+        q = q.filter_by(project=context.project_id)
 
     if q.count() == 1:
         return q.first()
@@ -126,7 +126,7 @@ def cluster_get(context, cluster_id, project_safe=True):
         return None
 
     if project_safe:
-        if context.project != cluster.project:
+        if context.project_id != cluster.project:
             return None
     return cluster
 
@@ -145,7 +145,7 @@ def _query_cluster_get_all(context, project_safe=True):
     query = model_query(context, models.Cluster)
 
     if project_safe:
-        query = query.filter_by(project=context.project)
+        query = query.filter_by(project=context.project_id)
     return query
 
 
@@ -230,7 +230,7 @@ def node_get(context, node_id, project_safe=True):
         return None
 
     if project_safe:
-        if context.project != node.project:
+        if context.project_id != node.project:
             return None
 
     return node
@@ -252,7 +252,7 @@ def _query_node_get_all(context, project_safe=True, cluster_id=None):
         query = query.filter_by(cluster_id=cluster_id)
 
     if project_safe:
-        query = query.filter_by(project=context.project)
+        query = query.filter_by(project=context.project_id)
 
     return query
 
@@ -299,7 +299,7 @@ def node_count_by_cluster(context, cluster_id, **kwargs):
     query = query.filter_by(cluster_id=cluster_id)
     query = query.filter_by(**kwargs)
     if project_safe:
-        query = query.filter_by(project=context.project)
+        query = query.filter_by(project=context.project_id)
 
     return query.count()
 
@@ -539,7 +539,7 @@ def policy_get(context, policy_id, project_safe=True):
         return None
 
     if project_safe:
-        if context.project != policy.project:
+        if context.project_id != policy.project:
             return None
 
     return policy
@@ -560,7 +560,7 @@ def policy_get_all(context, limit=None, marker=None, sort=None, filters=None,
     query = model_query(context, models.Policy)
 
     if project_safe:
-        query = query.filter_by(project=context.project)
+        query = query.filter_by(project=context.project_id)
 
     if filters:
         query = utils.exact_filter(query, models.Policy, filters)
@@ -767,7 +767,7 @@ def profile_get(context, profile_id, project_safe=True):
         return None
 
     if project_safe:
-        if context.project != profile.project:
+        if context.project_id != profile.project:
             return None
 
     return profile
@@ -788,7 +788,7 @@ def profile_get_all(context, limit=None, marker=None, sort=None, filters=None,
     query = model_query(context, models.Profile)
 
     if project_safe:
-        query = query.filter_by(project=context.project)
+        query = query.filter_by(project=context.project_id)
 
     if filters:
         query = utils.exact_filter(query, models.Profile, filters)
@@ -880,7 +880,7 @@ def event_create(context, values):
 def event_get(context, event_id, project_safe=True):
     event = model_query(context, models.Event).get(event_id)
     if project_safe and event is not None:
-        if event.project != context.project:
+        if event.project != context.project_id:
             return None
 
     return event
@@ -907,7 +907,7 @@ def event_get_all(context, limit=None, marker=None, sort=None, filters=None,
                   project_safe=True):
     query = model_query(context, models.Event)
     if project_safe:
-        query = query.filter_by(project=context.project)
+        query = query.filter_by(project=context.project_id)
 
     return _event_filter_paginate_query(context, query, filters=filters,
                                         limit=limit, marker=marker, sort=sort)
@@ -917,7 +917,7 @@ def event_count_by_cluster(context, cluster_id, project_safe=True):
     query = model_query(context, models.Event)
 
     if project_safe:
-        query = query.filter_by(project=context.project)
+        query = query.filter_by(project=context.project_id)
     count = query.filter_by(cluster_id=cluster_id).count()
 
     return count
@@ -929,7 +929,7 @@ def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
     query = query.filter_by(cluster_id=cluster_id)
 
     if project_safe:
-        query = query.filter_by(project=context.project)
+        query = query.filter_by(project=context.project_id)
 
     return _event_filter_paginate_query(context, query, filters=filters,
                                         limit=limit, marker=marker, sort=sort)
@@ -940,7 +940,7 @@ def event_prune(context, cluster_id, project_safe=True):
         query = session.query(models.Event).with_for_update()
         query = query.filter_by(cluster_id=cluster_id)
         if project_safe:
-            query = query.filter_by(project=context.project)
+            query = query.filter_by(project=context.project_id)
 
         return query.delete(synchronize_session='fetch')
 
@@ -989,7 +989,7 @@ def action_get(context, action_id, project_safe=True, refresh=False):
             return None
 
         if project_safe:
-            if action.project != context.project:
+            if action.project != context.project_id:
                 return None
 
         session.refresh(action)
@@ -1017,7 +1017,7 @@ def action_get_all(context, filters=None, limit=None, marker=None, sort=None,
 
     query = model_query(context, models.Action)
     if project_safe:
-        query = query.filter_by(project=context.project)
+        query = query.filter_by(project=context.project_id)
 
     if filters:
         query = utils.exact_filter(query, models.Action, filters)
@@ -1316,7 +1316,7 @@ def action_delete_by_target(context, target, action=None,
             filter_by(target=target)
 
         if project_safe:
-            q = q.filter_by(project=context.project)
+            q = q.filter_by(project=context.project_id)
 
         if action:
             q = q.filter(models.Action.action.in_(action))
@@ -1342,7 +1342,7 @@ def receiver_get(context, receiver_id, project_safe=True):
         return None
 
     if project_safe:
-        if context.project != receiver.project:
+        if context.project_id != receiver.project:
             return None
 
     return receiver
@@ -1352,7 +1352,7 @@ def receiver_get_all(context, limit=None, marker=None, filters=None, sort=None,
                      project_safe=True):
     query = model_query(context, models.Receiver)
     if project_safe:
-        query = query.filter_by(project=context.project)
+        query = query.filter_by(project=context.project_id)
 
     if filters:
         query = utils.exact_filter(query, models.Receiver, filters)

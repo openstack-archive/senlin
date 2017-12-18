@@ -145,8 +145,8 @@ class ClusterTest(base.SenlinTestCase):
                  min_size=0, max_size=-1, timeout=3600, metadata={},
                  dependents={}, data={}, next_index=1, status='INIT',
                  config={},
-                 status_reason='Initializing', user=self.ctx.user,
-                 project=self.ctx.project, domain=self.ctx.domain))
+                 status_reason='Initializing', user=self.ctx.user_id,
+                 project=self.ctx.project_id, domain=self.ctx.domain_id))
         mock_action.assert_called_once_with(
             self.ctx,
             '12345678ABC', 'CLUSTER_CREATE',
@@ -189,8 +189,8 @@ class ClusterTest(base.SenlinTestCase):
                  min_size=1, max_size=5, timeout=3600, metadata={},
                  dependents={}, data={}, next_index=1, status='INIT',
                  config={'k1': 'v1'},
-                 status_reason='Initializing', user=self.ctx.user,
-                 project=self.ctx.project, domain=self.ctx.domain))
+                 status_reason='Initializing', user=self.ctx.user_id,
+                 project=self.ctx.project_id, domain=self.ctx.domain_id))
         mock_action.assert_called_once_with(
             self.ctx,
             '12345678ABC', 'CLUSTER_CREATE',

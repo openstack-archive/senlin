@@ -25,9 +25,9 @@ from senlin.tests.unit.db import shared
 
 def _create_action(context, action_json=shared.sample_action, **kwargs):
     data = parser.simple_parse(action_json)
-    data['user'] = context.user
-    data['project'] = context.project
-    data['domain'] = context.domain
+    data['user'] = context.user_id
+    data['project'] = context.project_id
+    data['domain'] = context.domain_id
     data.update(kwargs)
     return db_api.action_create(context, data)
 
@@ -50,9 +50,9 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertEqual(data['status'], action.status)
         self.assertEqual(data['status_reason'], action.status_reason)
         self.assertEqual(10, action.inputs['max_size'])
-        self.assertEqual(self.ctx.user, action.user)
-        self.assertEqual(self.ctx.project, action.project)
-        self.assertEqual(self.ctx.domain, action.domain)
+        self.assertEqual(self.ctx.user_id, action.user)
+        self.assertEqual(self.ctx.project_id, action.project)
+        self.assertEqual(self.ctx.domain_id, action.domain)
         self.assertIsNone(action.outputs)
 
     def test_action_update(self):

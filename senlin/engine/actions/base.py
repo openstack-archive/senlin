@@ -66,7 +66,7 @@ class Action(object):
         'CANCEL', 'SUSPEND', 'RESUME',
     )
 
-    def __new__(cls, target, action, context, **kwargs):
+    def __new__(cls, target, action, ctx, **kwargs):
         if (cls != Action):
             return super(Action, cls).__new__(cls)
 
@@ -83,17 +83,17 @@ class Action(object):
 
         return super(Action, cls).__new__(ActionClass)
 
-    def __init__(self, target, action, context, **kwargs):
+    def __init__(self, target, action, ctx, **kwargs):
         # context will be persisted into database so that any worker thread
         # can pick the action up and execute it on behalf of the initiator
 
         self.id = kwargs.get('id', None)
         self.name = kwargs.get('name', '')
 
-        self.context = context
-        self.user = context.user
-        self.project = context.project
-        self.domain = context.domain
+        self.context = ctx
+        self.user = ctx.user_id
+        self.project = ctx.project_id
+        self.domain = ctx.domain_id
 
         self.action = action
         self.target = target
@@ -136,10 +136,10 @@ class Action(object):
 
         self.data = kwargs.get('data', {})
 
-    def store(self, context):
+    def store(self, ctx):
         """Store the action record into database table.
 
-        :param context: An instance of the request context.
+        :param ctx: An instance of the request context.
         :return: The ID of the stored object.
         """
 
@@ -171,11 +171,11 @@ class Action(object):
         if self.id:
             self.updated_at = timestamp
             values['updated_at'] = timestamp
-            ao.Action.update(context, self.id, values)
+            ao.Action.update(ctx, self.id, values)
         else:
             self.created_at = timestamp
             values['created_at'] = timestamp
-            action = ao.Action.create(context, values)
+            action = ao.Action.create(ctx, values)
             self.id = action.id
 
         return self.id
@@ -187,7 +187,7 @@ class Action(object):
         :param obj: a DB action object that contains all fields.
         :return: An `Action` object deserialized from the DB action object.
         """
-        context = req_context.RequestContext.from_dict(obj.context)
+        ctx = req_context.RequestContext.from_dict(obj.context)
         kwargs = {
             'id': obj.id,
             'name': obj.name,
@@ -206,19 +206,19 @@ class Action(object):
             'data': obj.data,
         }
 
-        return cls(obj.target, obj.action, context, **kwargs)
+        return cls(obj.target, obj.action, ctx, **kwargs)
 
     @classmethod
-    def load(cls, context, action_id=None, db_action=None, project_safe=True):
+    def load(cls, ctx, action_id=None, db_action=None, project_safe=True):
         """Retrieve an action from database.
 
-        :param context: Instance of request context.
+        :param ctx: Instance of request context.
         :param action_id: An UUID for the action to deserialize.
         :param db_action: An action object for the action to deserialize.
         :return: A `Action` object instance.
         """
         if db_action is None:
-            db_action = ao.Action.get(context, action_id,
+            db_action = ao.Action.get(ctx, action_id,
                                       project_safe=project_safe)
             if db_action is None:
                 raise exception.ResourceNotFound(type='action', id=action_id)
@@ -226,36 +226,36 @@ class Action(object):
         return cls._from_object(db_action)
 
     @classmethod
-    def create(cls, context, target, action, **kwargs):
+    def create(cls, ctx, target, action, **kwargs):
         """Create an action object.
 
-        :param context: The requesting context.
+        :param ctx: The requesting context.
         :param target: The ID of the target cluster/node.
         :param action: Name of the action.
         :param dict kwargs: Other keyword arguments for the action.
         :return: ID of the action created.
         """
         params = {
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
-            'is_admin': context.is_admin,
-            'request_id': context.request_id,
-            'trusts': context.trusts,
+            'user': ctx.user_id,
+            'project': ctx.project_id,
+            'domain': ctx.domain_id,
+            'is_admin': ctx.is_admin,
+            'request_id': ctx.request_id,
+            'trusts': ctx.trusts,
         }
-        ctx = req_context.RequestContext.from_dict(params)
-        obj = cls(target, action, ctx, **kwargs)
-        return obj.store(context)
+        c = req_context.RequestContext.from_dict(params)
+        obj = cls(target, action, c, **kwargs)
+        return obj.store(ctx)
 
     @classmethod
-    def delete(cls, context, action_id):
+    def delete(cls, ctx, action_id):
         """Delete an action from database.
 
-        :param context: An instance of the request context.
+        :param ctx: An instance of the request context.
         :param action_id: The UUID of the target action to be deleted.
         :return: Nothing.
         """
-        ao.Action.delete(context, action_id)
+        ao.Action.delete(ctx, action_id)
 
     def signal(self, cmd):
         """Send a signal to the action.
@@ -473,11 +473,11 @@ class Action(object):
         return action_dict
 
 
-def ActionProc(context, action_id):
+def ActionProc(ctx, action_id):
     '''Action process.'''
 
     # Step 1: materialize the action object
-    action = Action.load(context, action_id=action_id, project_safe=False)
+    action = Action.load(ctx, action_id=action_id, project_safe=False)
     if action is None:
         LOG.error('Action "%s" could not be found.', action_id)
         return False

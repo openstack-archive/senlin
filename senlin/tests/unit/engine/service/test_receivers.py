@@ -97,7 +97,7 @@ class ReceiverTest(base.SenlinTestCase):
     @mock.patch.object(rb.Receiver, 'create')
     def test_receiver_create_webhook_succeed(self, mock_create, mock_find):
         fake_cluster = mock.Mock()
-        fake_cluster.user = self.ctx.user
+        fake_cluster.user = self.ctx.user_id
         mock_find.return_value = fake_cluster
 
         fake_receiver = mock.Mock(id='FAKE_RECEIVER')
@@ -117,8 +117,8 @@ class ReceiverTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'C1')
         mock_create.assert_called_once_with(
             self.ctx, 'webhook', fake_cluster, consts.CLUSTER_RESIZE,
-            name='r1', user=self.ctx.user, project=self.ctx.project,
-            domain=self.ctx.domain, params={})
+            name='r1', user=self.ctx.user_id, project=self.ctx.project_id,
+            domain=self.ctx.domain_id, params={})
 
         # test params passed
         mock_create.reset_mock()
@@ -129,8 +129,8 @@ class ReceiverTest(base.SenlinTestCase):
         self.eng.receiver_create(self.ctx, req.obj_to_primitive())
         mock_create.assert_called_once_with(
             self.ctx, 'webhook', fake_cluster, consts.CLUSTER_RESIZE,
-            name='r1', user=self.ctx.user, project=self.ctx.project,
-            domain=self.ctx.domain, params={'FOO': 'BAR'})
+            name='r1', user=self.ctx.user_id, project=self.ctx.project_id,
+            domain=self.ctx.domain_id, params={'FOO': 'BAR'})
 
     @mock.patch.object(ro.Receiver, 'get_by_name')
     def test_receiver_create_name_duplicated(self, mock_get):
@@ -210,7 +210,7 @@ class ReceiverTest(base.SenlinTestCase):
     @mock.patch.object(co.Cluster, 'find')
     def test_receiver_create_webhook_cluster_not_specified(self, mock_find):
         fake_cluster = mock.Mock()
-        fake_cluster.user = self.ctx.user
+        fake_cluster.user = self.ctx.user_id
         mock_find.return_value = fake_cluster
         req1 = orro.ReceiverCreateRequestBody(name='r1', type='webhook',
                                               action='CLUSTER_RESIZE')
@@ -230,7 +230,7 @@ class ReceiverTest(base.SenlinTestCase):
     @mock.patch.object(co.Cluster, 'find')
     def test_receiver_create_webhook_action_not_specified(self, mock_find):
         fake_cluster = mock.Mock()
-        fake_cluster.user = self.ctx.user
+        fake_cluster.user = self.ctx.user_id
         mock_find.return_value = fake_cluster
         req1 = orro.ReceiverCreateRequestBody(name='r1', type='webhook',
                                               cluster_id='C1')
@@ -260,8 +260,8 @@ class ReceiverTest(base.SenlinTestCase):
         self.assertIsInstance(result, dict)
         self.assertEqual('FAKE_RECEIVER', result['id'])
         mock_create.assert_called_once_with(
-            self.ctx, 'message', None, None, name='r1', user=self.ctx.user,
-            project=self.ctx.project, domain=self.ctx.domain, params={})
+            self.ctx, 'message', None, None, name='r1', user=self.ctx.user_id,
+            project=self.ctx.project_id, domain=self.ctx.domain_id, params={})
 
     @mock.patch.object(ro.Receiver, 'find')
     def test_receiver_get(self, mock_find):
@@ -380,7 +380,7 @@ class ReceiverTest(base.SenlinTestCase):
         fake_obj = mock.Mock()
         fake_obj.id = 'FAKE_ID'
         fake_obj.type = 'message'
-        fake_obj.user = self.ctx.user
+        fake_obj.user = self.ctx.user_id
         fake_receiver = mock.Mock()
         mock_find.return_value = fake_obj
         mock_load.return_value = fake_receiver
@@ -421,7 +421,7 @@ class ReceiverTest(base.SenlinTestCase):
     def test_receiver_notify_incorrect_type(self, mock_find):
         fake_obj = mock.Mock()
         fake_obj.id = 'FAKE_ID'
-        fake_obj.user = self.ctx.user
+        fake_obj.user = self.ctx.user_id
         fake_obj.type = 'not_message'
         mock_find.return_value = fake_obj
 

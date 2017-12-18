@@ -24,8 +24,8 @@ class RequestContext(base_context.RequestContext):
     system, as well as additional request information.
     '''
 
-    def __init__(self, auth_token=None, user=None, project=None,
-                 domain=None, user_domain=None, project_domain=None,
+    def __init__(self, auth_token=None, user_id=None, project_id=None,
+                 domain_id=None, user_domain_id=None, project_domain_id=None,
                  is_admin=None, read_only=False, show_deleted=False,
                  request_id=None, auth_url=None, trusts=None,
                  user_name=None, project_name=None, domain_name=None,
@@ -36,9 +36,9 @@ class RequestContext(base_context.RequestContext):
         '''Initializer of request context.'''
         # We still have 'tenant' param because oslo_context still use it.
         super(RequestContext, self).__init__(
-            auth_token=auth_token, user=user, tenant=project,
-            domain=domain, user_domain=user_domain,
-            project_domain=project_domain,
+            auth_token=auth_token, user_id=user_id, project_id=project_id,
+            domain_id=domain_id, user_domain_id=user_domain_id,
+            project_domain_id=project_domain_id,
             read_only=read_only, show_deleted=show_deleted,
             request_id=request_id,
             roles=roles)
@@ -46,14 +46,14 @@ class RequestContext(base_context.RequestContext):
         # request_id might be a byte array
         self.request_id = encodeutils.safe_decode(self.request_id)
 
-        # we save an additional 'project' internally for use
-        self.project = project
-
         self.auth_url = auth_url
         self.trusts = trusts
 
+        self.user_id = user_id
         self.user_name = user_name
+        self.project_id = project_id
         self.project_name = project_name
+        self.domain_id = domain_id
         self.domain_name = domain_name
         self.user_domain_name = user_domain_name
         self.project_domain_name = project_domain_name
@@ -66,21 +66,27 @@ class RequestContext(base_context.RequestContext):
         # Check user is admin or not
         if is_admin is None:
             self.is_admin = policy.enforce(self, 'context_is_admin',
-                                           target={'project': self.project},
+                                           target={'project': self.project_id},
                                            do_raise=False)
         else:
             self.is_admin = is_admin
 
     def to_dict(self):
+        # This to_dict() method is not producing 'project_id', 'user_id' or
+        # 'domain_id' which can be used in from_dict(). This is the reason
+        # why we are keeping our own copy of user_id, project_id and
+        # domain_id.
         d = super(RequestContext, self).to_dict()
         d.update({
             'auth_url': self.auth_url,
             'auth_token_info': self.auth_token_info,
+            'user_id': self.user_id,
             'user_name': self.user_name,
             'user_domain_name': self.user_domain_name,
-            'project': self.project,
+            'project_id': self.project_id,
             'project_name': self.project_name,
             'project_domain_name': self.project_domain_name,
+            'domain_id': self.domain_id,
             'domain_name': self.domain_name,
             'trusts': self.trusts,
             'region_name': self.region_name,

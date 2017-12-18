@@ -107,7 +107,7 @@ class RegionPlacementPolicy(base.Policy):
         if not validate_props:
             return True
 
-        kc = self.keystone(context.user, context.project)
+        kc = self.keystone(context.user_id, context.project_id)
         input_regions = sorted(self.regions.keys())
         valid_regions = kc.validate_regions(input_regions)
         invalid_regions = sorted(set(input_regions) - set(valid_regions))

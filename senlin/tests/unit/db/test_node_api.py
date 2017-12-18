@@ -351,11 +351,11 @@ class DBAPINodeTest(base.SenlinTestCase):
         shared.create_node(self.ctx, None, self.profile, name='node1')
         shared.create_node(self.ctx, None, self.profile, name='node2')
 
-        self.ctx.project = 'a-different-project'
+        self.ctx.project_id = 'a-different-project'
         results = db_api.node_get_all(self.ctx, project_safe=False)
         self.assertEqual(2, len(results))
 
-        self.ctx.project = 'a-different-project'
+        self.ctx.project_id = 'a-different-project'
         results = db_api.node_get_all(self.ctx)
         self.assertEqual(0, len(results))
 

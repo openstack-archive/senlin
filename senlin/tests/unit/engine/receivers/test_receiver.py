@@ -55,9 +55,9 @@ class TestReceiver(base.SenlinTestCase):
             'type': 'webhook',
             'cluster_id': CLUSTER_ID,
             'action': 'test-action',
-            'user': self.context.user,
-            'project': self.context.project,
-            'domain': self.context.domain,
+            'user': self.context.user_id,
+            'project': self.context.project_id,
+            'domain': self.context.domain_id,
             'created_at': timeutils.utcnow(True),
             'updated_at': None,
             'actor': self.actor,
@@ -121,7 +121,7 @@ class TestReceiver(base.SenlinTestCase):
     def test_receiver_store(self):
         receiver = rb.Receiver('webhook', CLUSTER_ID, 'test-action',
                                name='test_receiver_123456',
-                               project=self.context.project)
+                               project=self.context.project_id)
         self.assertIsNone(receiver.id)
 
         receiver_id = receiver.store(self.context)
@@ -162,9 +162,9 @@ class TestReceiver(base.SenlinTestCase):
                                       'FAKE_ACTION',
                                       name='test_receiver_2234')
 
-        self.assertEqual(ctx.user, receiver.user)
-        self.assertEqual(ctx.project, receiver.project)
-        self.assertEqual(ctx.domain, receiver.domain)
+        self.assertEqual(ctx.user_id, receiver.user)
+        self.assertEqual(ctx.project_id, receiver.project)
+        self.assertEqual(ctx.domain_id, receiver.domain)
         self.assertEqual('123abc', receiver.actor['trust_id'])
         mock_c_get.assert_called_once_with(ctx, 'user1', 'project1')
 
@@ -177,9 +177,9 @@ class TestReceiver(base.SenlinTestCase):
                                       'FAKE_ACTION',
                                       name='test_receiver_2234')
 
-        self.assertEqual(ctx.user, receiver.user)
-        self.assertEqual(ctx.project, receiver.project)
-        self.assertEqual(ctx.domain, receiver.domain)
+        self.assertEqual(ctx.user_id, receiver.user)
+        self.assertEqual(ctx.project_id, receiver.project)
+        self.assertEqual(ctx.domain_id, receiver.domain)
         self.assertIsNone(receiver.actor['trust_id'])
 
     @mock.patch.object(rm.Message, 'initialize_channel')
@@ -187,9 +187,9 @@ class TestReceiver(base.SenlinTestCase):
         receiver = rb.Receiver.create(self.context, 'message', None,
                                       None, name='test_receiver_2234')
 
-        self.assertEqual(self.context.user, receiver.user)
-        self.assertEqual(self.context.project, receiver.project)
-        self.assertEqual(self.context.domain, receiver.domain)
+        self.assertEqual(self.context.user_id, receiver.user)
+        self.assertEqual(self.context.project_id, receiver.project)
+        self.assertEqual(self.context.domain_id, receiver.domain)
 
     def _verify_receiver(self, receiver, result):
         self.assertEqual(receiver.id, result.id)
