@@ -1519,7 +1519,7 @@ def registry_create(context, cluster_id, check_type, interval, params,
 
 def registry_update(context, cluster_id, values):
     with session_for_write() as session:
-        query = session.query(models.HealthRegistry)
+        query = session.query(models.HealthRegistry).with_lockmode('update')
         registry = query.filter_by(cluster_id=cluster_id).first()
         if registry:
             registry.update(values)
@@ -1556,6 +1556,12 @@ def registry_get(context, cluster_id):
             cluster_id=cluster_id).first()
 
         return registry
+
+
+def registry_get_by_param(context, params):
+    query = model_query(context, models.HealthRegistry)
+    obj = utils.exact_filter(query, models.HealthRegistry, params).first()
+    return obj
 
 
 # Utils
