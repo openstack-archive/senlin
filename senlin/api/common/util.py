@@ -26,7 +26,7 @@ from senlin.objects import base as obj_base
 def policy_enforce(handler):
     """Decorator that enforces policies.
 
-    Checks the path matches the request context and enforces policy defined in
+    Check the path matches the request context and enforce policy defined in
     policy file and policies in code.
 
     This is a handler method decorator.
@@ -45,7 +45,7 @@ def policy_enforce(handler):
 
 
 def parse_request(name, req, body, key=None):
-    """Formalizes an API request and validates it.
+    """Formalize an API request and validate it.
 
     :param name: The name for a versioned request object.
     :param req: Reference to a WSGI request object.

@@ -171,7 +171,7 @@ class Server(object):
             self.pgid = 0
 
     def kill_children(self, *args):
-        """Kills the entire process group."""
+        """Kill the entire process group."""
 
         LOG.error('SIGTERM received')
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
@@ -180,7 +180,7 @@ class Server(object):
         os.killpg(0, signal.SIGTERM)
 
     def hup(self, *args):
-        """Reloads configuration files with zero down time."""
+        """Reload configuration files with zero down time."""
 
         LOG.error('SIGHUP received')
         signal.signal(signal.SIGHUP, signal.SIG_IGN)
@@ -336,7 +336,7 @@ class Server(object):
     def stash_conf_values(self):
         """Make a copy of some of the current global CONF's settings.
 
-        Allows determining if any of these values have changed
+        Allow determining if any of these values have changed
         when the config is reloaded.
         """
         conf = {}
@@ -385,7 +385,7 @@ class Server(object):
 
     def run_child(self):
         def child_hup(*args):
-            """Shuts down child processes, existing requests are handled."""
+            """Shut down child processes, existing requests are handled."""
             signal.signal(signal.SIGHUP, signal.SIG_IGN)
             eventlet.wsgi.is_accepting = False
             self.sock.close()
@@ -571,7 +571,7 @@ class Request(webob.Request):
             return content_type
 
     def best_match_language(self):
-        """Determines best available locale from the Accept-Language header.
+        """Determine best available locale from the Accept-Language header.
 
         :returns: the best language match or None if the 'Accept-Language'
                   header was not available in the request.
@@ -585,7 +585,7 @@ class Request(webob.Request):
 class Resource(object):
     """WSGI app that handles (de)serialization and controller dispatch.
 
-    Reads routing information supplied by RoutesMiddleware and calls
+    Read routing information supplied by RoutesMiddleware and call
     the requested action method upon its deserializer, controller,
     and serializer. Those three objects may implement any of the basic
     controller action methods (create, update, show, index, delete)
@@ -837,7 +837,7 @@ def log_exception(err, exc_info):
 
 
 def translate_exception(ex, locale):
-    """Translates all translatable elements of the given exception."""
+    """Translate all translatable elements of the given exception."""
     if isinstance(ex, exception.SenlinException):
         ex.message = oslo_i18n.translate(ex.message, locale)
     else:
@@ -966,7 +966,7 @@ def _get_deployment_config_file():
 
 
 def load_paste_app(app_name=None):
-    """Builds and returns a WSGI app from a paste config file.
+    """Build and return a WSGI app from a paste config file.
 
     We assume the last config file specified in the supplied ConfigOpts
     object is the paste config file.
