@@ -44,7 +44,7 @@ def is_json_content_type(request):
 class JSONRequestDeserializer(object):
 
     def has_body(self, request):
-        """Returns whether a Webob.Request object will possess an entity body.
+        """Return whether a Webob.Request object will possess an entity body.
 
         :param request: A Webob.Request object
         """
