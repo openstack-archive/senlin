@@ -1574,13 +1574,10 @@ class EngineService(service.Service):
         :return: A dictionary containing the details about the node and the
                  ID of the action triggered by this operation.
         """
-        if CONF.name_unique:
-            if node_obj.Node.get_by_name(ctx, req.name):
-                msg = _("The node named (%(name)s) already exists."
-                        ) % {"name": req.name}
-                raise exception.BadRequest(msg=msg)
-
-        LOG.info("Creating node '%s'.", req.name)
+        cluster_id = ""
+        index = -1
+        name_format = ""
+        req.obj_set_defaults()
 
         try:
             node_profile = profile_obj.Profile.find(ctx, req.profile_id)
@@ -1588,7 +1585,6 @@ class EngineService(service.Service):
             msg = ex.enhance_msg('specified', ex)
             raise exception.BadRequest(msg=msg)
 
-        req.obj_set_defaults()
         if req.cluster_id:
             try:
                 db_cluster = co.Cluster.find(ctx, req.cluster_id)
@@ -1597,7 +1593,7 @@ class EngineService(service.Service):
                 msg = ex.enhance_msg('specified', ex)
                 raise exception.BadRequest(msg=msg)
 
-            cluster_id = db_cluster.id
+            # Validate profile type
             if node_profile.id != db_cluster.profile_id:
                 cluster_profile = profile_obj.Profile.find(
                     ctx, db_cluster.profile_id)
@@ -1605,14 +1601,28 @@ class EngineService(service.Service):
                     msg = _('Node and cluster have different profile type, '
                             'operation aborted.')
                     raise exception.BadRequest(msg=msg)
+
+            cluster_id = db_cluster.id
+            name_format = db_cluster.config.get("node.name.format", "")
             index = co.Cluster.get_next_index(ctx, cluster_id)
+
+        # we use requested name only when cluster is not specified
+        if cluster_id == "":
+            node_name = req.name
         else:
-            cluster_id = ''
-            index = -1
+            node_name = utils.format_node_name(name_format, db_cluster, index)
+
+        if CONF.name_unique:
+            if node_obj.Node.get_by_name(ctx, node_name):
+                msg = _("The node named (%(name)s) already exists."
+                        ) % {"name": node_name}
+                raise exception.BadRequest(msg=msg)
+
+        LOG.info("Creating node '%s'.", node_name)
 
         # Create a node instance
         values = {
-            'name': req.name or 'node-' + utils.random_name(8),
+            'name': node_name,
             'profile_id': node_profile.id,
             'cluster_id': cluster_id or '',
             'physical_id': None,
