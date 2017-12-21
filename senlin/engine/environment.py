@@ -56,6 +56,7 @@ class Environment(object):
             self.profile_registry = registry.Registry('profiles')
             self.policy_registry = registry.Registry('policies')
             self.driver_registry = registry.Registry('drivers')
+            self.endpoint_registry = registry.Registry('endpoints')
         else:
             self.profile_registry = registry.Registry(
                 'profiles', global_env().profile_registry)
@@ -63,6 +64,8 @@ class Environment(object):
                 'policies', global_env().policy_registry)
             self.driver_registry = registry.Registry(
                 'drivers', global_env().driver_registry)
+            self.endpoint_registry = registry.Registry(
+                'endpoints', global_env().endpoint_registry)
 
         if env is not None:
             # Merge user specified keys with current environment
@@ -151,6 +154,18 @@ class Environment(object):
     def get_driver_types(self):
         return self.driver_registry.get_types()
 
+    def register_endpoint(self, name, plugin):
+        self._check_plugin_name('Endpoint', name)
+        plugin = self.endpoint_registry.register_plugin(name, plugin)
+
+    def get_endpoint(self, name):
+        self._check_plugin_name('Endpoint', name)
+        plugin = self.endpoint_registry.get_plugin(name)
+        if plugin is None:
+            msg = _('Endpoint plugin %(name)s is not found.') % {'name': name}
+            raise exception.InvalidPlugin(message=msg)
+        return plugin
+
     def read_global_environment(self):
         '''Read and parse global environment files.'''
 
@@ -205,6 +220,10 @@ def initialize():
     entries = _get_mapping('senlin.drivers')
     for name, plugin in entries:
         env.register_driver(name, plugin)
+
+    entries = _get_mapping('senlin.endpoints')
+    for name, plugin in entries:
+        env.register_endpoint(name, plugin)
 
     env.read_global_environment()
     _environment = env

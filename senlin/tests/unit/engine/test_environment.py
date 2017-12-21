@@ -38,9 +38,11 @@ class TestEnvironment(base.SenlinTestCase):
         self.assertEqual('profiles', e.profile_registry.registry_name)
         self.assertEqual('policies', e.policy_registry.registry_name)
         self.assertEqual('drivers', e.driver_registry.registry_name)
+        self.assertEqual('endpoints', e.endpoint_registry.registry_name)
         self.assertTrue(e.profile_registry.is_global)
         self.assertTrue(e.policy_registry.is_global)
         self.assertTrue(e.driver_registry.is_global)
+        self.assertTrue(e.endpoint_registry.is_global)
 
     def test_create_default(self):
         ge = environment.global_env()
@@ -49,20 +51,25 @@ class TestEnvironment(base.SenlinTestCase):
         reg_prof = e.profile_registry
         reg_plcy = e.policy_registry
         reg_driv = e.driver_registry
+        reg_endp = e.endpoint_registry
 
         self.assertEqual({}, e.params)
         self.assertEqual('profiles', reg_prof.registry_name)
         self.assertEqual('policies', reg_plcy.registry_name)
         self.assertEqual('drivers', reg_driv.registry_name)
+        self.assertEqual('endpoints', reg_endp.registry_name)
         self.assertFalse(reg_prof.is_global)
         self.assertFalse(reg_plcy.is_global)
         self.assertFalse(reg_driv.is_global)
+        self.assertFalse(reg_endp.is_global)
         self.assertEqual('profiles', ge.profile_registry.registry_name)
         self.assertEqual('policies', ge.policy_registry.registry_name)
         self.assertEqual('drivers', ge.driver_registry.registry_name)
+        self.assertEqual('endpoints', ge.endpoint_registry.registry_name)
         self.assertEqual(ge.profile_registry, reg_prof.global_registry)
         self.assertEqual(ge.policy_registry, reg_plcy.global_registry)
         self.assertEqual(ge.driver_registry, reg_driv.global_registry)
+        self.assertEqual(ge.endpoint_registry, reg_endp.global_registry)
 
     def test_create_with_env(self):
         env = {
@@ -143,7 +150,7 @@ class TestEnvironment(base.SenlinTestCase):
     def test_check_plugin_name(self):
         env = environment.Environment()
 
-        for pt in ['Profile', 'Policy', 'Driver']:
+        for pt in ['Profile', 'Policy', 'Driver', 'Endpoint']:
             res = env._check_plugin_name(pt, 'abc')
             self.assertIsNone(res)
 
@@ -244,6 +251,18 @@ class TestEnvironment(base.SenlinTestCase):
             {'name': 'bar', 'version': '', 'support_status': {}},
             actual)
 
+    def test_register_and_get_endpoints(self):
+        plugin = mock.Mock()
+        env = environment.Environment()
+
+        ex = self.assertRaises(exception.InvalidPlugin,
+                               env.get_endpoint, 'foo')
+        self.assertEqual('Endpoint plugin foo is not found.',
+                         six.text_type(ex))
+
+        env.register_endpoint('foo', plugin)
+        self.assertEqual(plugin, env.get_endpoint('foo'))
+
     def test_read_global_environment(self):
         mock_dir = self.patchobject(glob, 'glob')
         mock_dir.return_value = ['/etc/senlin/environments/e.yaml']
@@ -316,12 +335,13 @@ class TestEnvironment(base.SenlinTestCase):
 
         expected = [mock.call('senlin.profiles'),
                     mock.call('senlin.policies'),
-                    mock.call('senlin.drivers')]
+                    mock.call('senlin.drivers'),
+                    mock.call('senlin.endpoints')]
 
         self.assertIsNotNone(environment._environment)
         self.assertEqual(expected, mock_mapping.call_args_list)
         self.assertIsNotNone(environment.global_env().get_profile('aaa'))
         self.assertIsNotNone(environment.global_env().get_policy('aaa'))
         self.assertIsNotNone(environment.global_env().get_driver('aaa'))
-
+        self.assertIsNotNone(environment.global_env().get_endpoint('aaa'))
         environment._environment = None
