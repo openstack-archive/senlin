@@ -69,9 +69,9 @@ class TestPolicyBase(base.SenlinTestCase):
 
     def _create_policy(self, policy_name, policy_id=None):
         policy = pb.Policy(policy_name, self.spec,
-                           user=self.ctx.user,
-                           project=self.ctx.project,
-                           domain=self.ctx.domain)
+                           user=self.ctx.user_id,
+                           project=self.ctx.project_id,
+                           domain=self.ctx.domain_id)
         if policy_id:
             policy.id = policy_id
 
@@ -83,9 +83,9 @@ class TestPolicyBase(base.SenlinTestCase):
             'type': 'senlin.policy.dummy-1.0',
             'spec': self.spec,
             'created_at': timeutils.utcnow(True),
-            'user': self.ctx.user,
-            'project': self.ctx.project,
-            'domain': self.ctx.domain,
+            'user': self.ctx.user_id,
+            'project': self.ctx.project_id,
+            'domain': self.ctx.domain_id,
         }
 
         values.update(kwargs)
@@ -98,9 +98,9 @@ class TestPolicyBase(base.SenlinTestCase):
         self.assertEqual('test-policy', policy.name)
         self.assertEqual(self.spec, policy.spec)
         self.assertEqual('senlin.policy.dummy-1.0', policy.type)
-        self.assertEqual(self.ctx.user, policy.user)
-        self.assertEqual(self.ctx.project, policy.project)
-        self.assertEqual(self.ctx.domain, policy.domain)
+        self.assertEqual(self.ctx.user_id, policy.user)
+        self.assertEqual(self.ctx.project_id, policy.project)
+        self.assertEqual(self.ctx.domain_id, policy.domain)
         self.assertEqual({}, policy.data)
         self.assertIsNone(policy.created_at)
         self.assertIsNone(policy.updated_at)

@@ -35,17 +35,17 @@ class ContextMiddleware(wsgi.Middleware):
             auth_token = headers.get('X-Auth-Token')
             auth_token_info = environ.get('keystone.token_info')
 
-            project = headers.get('X-Project-Id')
+            project_id = headers.get('X-Project-Id')
             project_name = headers.get('X-Project-Name')
             project_domain = headers.get('X-Project-Domain-Id')
             project_domain_name = headers.get('X-Project-Domain-Name')
 
-            user = headers.get('X-User-Id')
+            user_id = headers.get('X-User-Id')
             user_name = headers.get('X-User-Name')
             user_domain = headers.get('X-User-Domain-Id')
             user_domain_name = headers.get('X-User-Domain-Name')
 
-            domain = headers.get('X-Domain-Id')
+            domain_id = headers.get('X-Domain-Id')
             domain_name = headers.get('X-Domain-Name')
 
             region_name = headers.get('X-Region-Name')
@@ -66,9 +66,9 @@ class ContextMiddleware(wsgi.Middleware):
         api_version = str(req.version_request)
         req.context = context.RequestContext(
             auth_token=auth_token,
-            user=user,
-            project=project,
-            domain=domain,
+            user_id=user_id,
+            project_id=project_id,
+            domain_id=domain_id,
             user_domain=user_domain,
             project_domain=project_domain,
             request_id=request_id,

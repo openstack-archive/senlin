@@ -88,9 +88,9 @@ class TestProfileBase(base.SenlinTestCase):
 
     def _create_profile(self, name, pid=None, context=None):
         profile = pb.Profile(name, self.spec,
-                             user=self.ctx.user,
-                             project=self.ctx.project,
-                             domain=self.ctx.domain,
+                             user=self.ctx.user_id,
+                             project=self.ctx.project_id,
+                             domain=self.ctx.domain_id,
                              context=context)
         if pid:
             profile.id = pid
@@ -109,9 +109,9 @@ class TestProfileBase(base.SenlinTestCase):
         self.assertEqual('os.dummy', profile.type_name)
         self.assertEqual('1.0', profile.version)
         self.assertEqual('os.dummy-1.0', profile.type)
-        self.assertEqual(self.ctx.user, profile.user)
-        self.assertEqual(self.ctx.project, profile.project)
-        self.assertEqual(self.ctx.domain, profile.domain)
+        self.assertEqual(self.ctx.user_id, profile.user)
+        self.assertEqual(self.ctx.project_id, profile.project)
+        self.assertEqual(self.ctx.domain_id, profile.domain)
         self.assertEqual({}, profile.metadata)
         self.assertIsNone(profile.created_at)
         self.assertIsNone(profile.updated_at)
@@ -563,9 +563,9 @@ class TestProfileBase(base.SenlinTestCase):
                 "key2": 2,
             }
         }
-        profile = DummyProfile("p-bad-ctx", spec, user=self.ctx.user,
-                               project=self.ctx.project,
-                               domain=self.ctx.domain)
+        profile = DummyProfile("p-bad-ctx", spec, user=self.ctx.user_id,
+                               project=self.ctx.project_id,
+                               domain=self.ctx.domain_id)
 
         self.assertRaises(exception.ESchema, profile.validate)
 
@@ -836,9 +836,9 @@ class TestProfileBase(base.SenlinTestCase):
         new_spec['properties']['key1'] = 'new_v1'
         new_spec['properties']['key2'] = 3
         new_profile = pb.Profile('new-profile', new_spec,
-                                 user=self.ctx.user,
-                                 project=self.ctx.project,
-                                 domain=self.ctx.domain,
+                                 user=self.ctx.user_id,
+                                 project=self.ctx.project_id,
+                                 domain=self.ctx.domain_id,
                                  context=None)
         res = profile.validate_for_update(new_profile)
         self.assertTrue(res)
@@ -850,9 +850,9 @@ class TestProfileBase(base.SenlinTestCase):
         new_spec = copy.deepcopy(self.spec)
         new_spec['properties']['key3'] = 'new_v3'
         new_profile = pb.Profile('new-profile', new_spec,
-                                 user=self.ctx.user,
-                                 project=self.ctx.project,
-                                 domain=self.ctx.domain,
+                                 user=self.ctx.user_id,
+                                 project=self.ctx.project_id,
+                                 domain=self.ctx.domain_id,
                                  context=None)
 
         res = profile.validate_for_update(new_profile)

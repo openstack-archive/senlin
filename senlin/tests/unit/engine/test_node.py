@@ -78,9 +78,9 @@ class TestNode(base.SenlinTestCase):
         self.assertIsNone(node_info.physical_id)
         self.assertEqual(CLUSTER_ID, node_info.cluster_id)
         self.assertEqual(PROFILE_ID, node_info.profile_id)
-        self.assertEqual(self.context.user, node_info.user)
-        self.assertEqual(self.context.project, node_info.project)
-        self.assertEqual(self.context.domain, node_info.domain)
+        self.assertEqual(self.context.user_id, node_info.user)
+        self.assertEqual(self.context.project_id, node_info.project)
+        self.assertEqual(self.context.domain_id, node_info.domain)
         self.assertEqual(1, node_info.index)
         self.assertEqual('first_node', node.role)
 
@@ -94,8 +94,8 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual({}, node_info.data)
 
     def test_node_store_update(self):
-        node = nodem.Node('node1', PROFILE_ID, "", user=self.context.user,
-                          project=self.context.project)
+        node = nodem.Node('node1', PROFILE_ID, "", user=self.context.user_id,
+                          project=self.context.project_id)
         node_id = node.store(self.context)
 
         node.name = 'new_name'

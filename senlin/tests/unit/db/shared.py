@@ -53,9 +53,9 @@ UUIDs = (UUID1, UUID2, UUID3) = sorted([uuidutils.generate_uuid()
 
 def create_profile(context, profile=sample_profile, **kwargs):
     data = parser.simple_parse(profile)
-    data['user'] = context.user
-    data['project'] = context.project
-    data['domain'] = context.domain
+    data['user'] = context.user_id
+    data['project'] = context.project_id
+    data['domain'] = context.domain_id
     data.update(kwargs)
     return db_api.profile_create(context, data)
 
@@ -64,8 +64,8 @@ def create_cluster(ctx, profile, **kwargs):
     values = {
         'name': 'db_test_cluster_name',
         'profile_id': profile.id,
-        'user': ctx.user,
-        'project': ctx.project,
+        'user': ctx.user_id,
+        'project': ctx.project_id,
         'domain': 'unknown',
         'parent': None,
         'next_index': 1,
@@ -97,7 +97,7 @@ def create_node(ctx, cluster, profile, **kwargs):
         'physical_id': UUID1,
         'cluster_id': cluster_id,
         'profile_id': profile.id,
-        'project': ctx.project,
+        'project': ctx.project_id,
         'index': index,
         'role': None,
         'created_at': None,
@@ -115,9 +115,9 @@ def create_node(ctx, cluster, profile, **kwargs):
 def create_webhook(ctx, obj_id, obj_type, action, **kwargs):
     values = {
         'name': 'test_webhook_name',
-        'user': ctx.user,
-        'project': ctx.project,
-        'domain': ctx.domain,
+        'user': ctx.user_id,
+        'project': ctx.project_id,
+        'domain': ctx.domain_id,
         'created_at': None,
         'obj_id': obj_id,
         'obj_type': obj_type,
@@ -151,9 +151,9 @@ def create_policy(ctx, **kwargs):
     values = {
         'name': 'test_policy',
         'type': 'senlin.policy.scaling',
-        'user': ctx.user,
-        'project': ctx.project,
-        'domain': ctx.domain,
+        'user': ctx.user_id,
+        'project': ctx.project_id,
+        'domain': ctx.domain_id,
         'spec': {
             'type': 'senlin.policy.scaling',
             'version': '1.0',
@@ -177,8 +177,8 @@ def create_event(ctx, **kwargs):
         'obj_type': 'CLUSTER',
         'cluster_id': 'FAKE_CLUSTER',
         'level': '20',
-        'user': ctx.user,
-        'project': ctx.project,
+        'user': ctx.user_id,
+        'project': ctx.project_id,
         'action': 'DANCE',
         'status': 'READY',
         'status_reason': 'Just created.',

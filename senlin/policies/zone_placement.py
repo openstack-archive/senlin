@@ -101,7 +101,7 @@ class ZonePlacementPolicy(base.Policy):
         if not validate_props:
             return True
 
-        nc = self.nova(context.user, context.project)
+        nc = self.nova(context.user_id, context.project_id)
         input_azs = sorted(self.zones.keys())
         valid_azs = nc.validate_azs(input_azs)
         invalid_azs = sorted(set(input_azs) - set(valid_azs))

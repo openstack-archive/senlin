@@ -34,9 +34,9 @@ class DBAPIReceiverTest(base.SenlinTestCase):
         values = {
             'name': 'test_receiver',
             'type': type or self.type,
-            'user': ctx.user,
-            'project': ctx.project,
-            'domain': ctx.domain,
+            'user': ctx.user_id,
+            'project': ctx.project_id,
+            'domain': ctx.domain_id,
             'created_at': None,
             'updated_at': None,
             'cluster_id': cluster_id or self.cluster_id,
@@ -55,9 +55,9 @@ class DBAPIReceiverTest(base.SenlinTestCase):
         self.assertEqual(self.cluster_id, r.cluster_id)
         self.assertEqual('test_receiver', r.name)
         self.assertEqual(self.type, r.type)
-        self.assertEqual(self.ctx.user, r.user)
-        self.assertEqual(self.ctx.project, r.project)
-        self.assertEqual(self.ctx.domain, r.domain)
+        self.assertEqual(self.ctx.user_id, r.user)
+        self.assertEqual(self.ctx.project_id, r.project)
+        self.assertEqual(self.ctx.domain_id, r.domain)
         self.assertIsNone(r.created_at)
         self.assertIsNone(r.updated_at)
         self.assertEqual(self.action, r.action)
@@ -277,11 +277,11 @@ class DBAPIReceiverTest(base.SenlinTestCase):
         self._create_receiver(self.ctx, name='receiver1')
         self._create_receiver(self.ctx, name='receiver2')
 
-        self.ctx.project = 'a-different-project'
+        self.ctx.project_id = 'a-different-project'
         results = db_api.receiver_get_all(self.ctx, project_safe=False)
         self.assertEqual(2, len(results))
 
-        self.ctx.project = 'a-different-project'
+        self.ctx.project_id = 'a-different-project'
         results = db_api.receiver_get_all(self.ctx)
         self.assertEqual(0, len(results))
 

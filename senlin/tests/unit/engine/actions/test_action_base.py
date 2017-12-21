@@ -71,8 +71,6 @@ class ActionBaseTest(base.SenlinTestCase):
             'created_at': timeutils.utcnow(True),
             'updated_at': None,
             'data': {'data_key': 'data_value'},
-            'user': USER_ID,
-            'project': PROJECT_ID,
         }
 
     def _verify_new_action(self, obj, target, action):
@@ -630,8 +628,8 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
 
     def _create_policy(self):
         values = {
-            'user': self.ctx.user,
-            'project': self.ctx.project,
+            'user': self.ctx.user_id,
+            'project': self.ctx.project_id,
         }
         policy = fakes.TestPolicy('DummyPolicy', 'test-policy', **values)
         policy.store(self.ctx)

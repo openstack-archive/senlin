@@ -296,8 +296,8 @@ class LoadBalancingPolicy(base.Policy):
         if not validate_props:
             return True
 
-        nc = self.network(context.user, context.project)
-        oc = self.octavia(context.user, context.project)
+        nc = self.network(context.user_id, context.project_id)
+        oc = self.octavia(context.user_id, context.project_id)
 
         # validate pool subnet
         name_or_id = self.pool_spec.get(self.POOL_SUBNET)

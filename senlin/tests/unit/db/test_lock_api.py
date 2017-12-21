@@ -242,7 +242,7 @@ class GCByEngineTest(base.SenlinTestCase):
         engine_id = UUID1
         action = shared.create_action(self.ctx, target=self.cluster.id,
                                       status='RUNNING', owner=engine_id,
-                                      project=self.ctx.project)
+                                      project=self.ctx.project_id)
         db_api.cluster_lock_acquire(self.cluster.id, action.id, -1)
 
         # do it
@@ -271,7 +271,7 @@ class GCByEngineTest(base.SenlinTestCase):
         engine_id = UUID1
         action = shared.create_action(self.ctx, target=self.node.id,
                                       status='RUNNING', owner=engine_id,
-                                      project=self.ctx.project)
+                                      project=self.ctx.project_id)
         db_api.cluster_lock_acquire(self.cluster.id, action.id, 1)
         db_api.node_lock_acquire(self.cluster.id, action.id)
 
@@ -306,7 +306,7 @@ class GCByEngineTest(base.SenlinTestCase):
         engine_id = UUID1
         action = shared.create_action(self.ctx, target=self.node.id,
                                       status='RUNNING', owner=engine_id,
-                                      project=self.ctx.project)
+                                      project=self.ctx.project_id)
         db_api.cluster_lock_acquire(self.cluster.id, action.id, 1)
         db_api.cluster_lock_acquire(self.cluster.id, UUID2, 1)
         db_api.node_lock_acquire(self.node.id, action.id)
@@ -350,7 +350,7 @@ class DummyGCByEngineTest(base.SenlinTestCase):
         engine_id = UUID1
         action = shared.create_action(self.ctx, target=self.cluster.id,
                                       status='RUNNING', owner=engine_id,
-                                      project=self.ctx.project)
+                                      project=self.ctx.project_id)
         db_api.cluster_lock_acquire(self.cluster.id, action.id, -1)
 
         # do it
@@ -379,7 +379,7 @@ class DummyGCByEngineTest(base.SenlinTestCase):
         engine_id = UUID1
         action = shared.create_action(self.ctx, target=self.node.id,
                                       status='RUNNING', owner=engine_id,
-                                      project=self.ctx.project)
+                                      project=self.ctx.project_id)
         db_api.cluster_lock_acquire(self.cluster.id, action.id, 1)
         db_api.node_lock_acquire(self.cluster.id, action.id)
 
@@ -414,7 +414,7 @@ class DummyGCByEngineTest(base.SenlinTestCase):
         engine_id = UUID1
         action = shared.create_action(self.ctx, target=self.node.id,
                                       status='RUNNING', owner=engine_id,
-                                      project=self.ctx.project)
+                                      project=self.ctx.project_id)
         db_api.cluster_lock_acquire(self.cluster.id, action.id, 1)
         db_api.cluster_lock_acquire(self.cluster.id, UUID2, 1)
         db_api.node_lock_acquire(self.node.id, action.id)
@@ -445,15 +445,15 @@ class DummyGCByEngineTest(base.SenlinTestCase):
 
         c_action = shared.create_action(self.ctx, target=self.cluster.id,
                                         status='WAITING', owner=engine1,
-                                        project=self.ctx.project)
+                                        project=self.ctx.project_id)
 
         n_action_1 = shared.create_action(self.ctx, target=self.node.id,
                                           status='RUNNING', owner=engine1,
-                                          project=self.ctx.project)
+                                          project=self.ctx.project_id)
 
         n_action_2 = shared.create_action(self.ctx, target=node2.id,
                                           status='RUNNING', owner=engine2,
-                                          project=self.ctx.project)
+                                          project=self.ctx.project_id)
 
         db_api.dependency_add(self.ctx, [n_action_1.id, n_action_2.id],
                               c_action.id)

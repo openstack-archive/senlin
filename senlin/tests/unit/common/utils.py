@@ -53,8 +53,8 @@ def dummy_context(user=None, project=None, password=None, roles=None,
 
     roles = roles or []
     return context.RequestContext.from_dict({
-        'project': project or 'test_project_id',
-        'user': user_id or 'test_user_id',
+        'project_id': project or 'test_project_id',
+        'user_id': user_id or 'test_user_id',
         'user_name': user or 'test_username',
         'password': password or 'password',
         'roles': roles or [],
@@ -63,7 +63,7 @@ def dummy_context(user=None, project=None, password=None, roles=None,
         'auth_token': 'abcd1234',
         'trust_id': trust_id or 'trust_id',
         'region_name': region_name or 'region_one',
-        'domain': domain or '',
+        'domain_id': domain or '',
         'api_version': api_version or '1.2',
     })
 
@@ -79,8 +79,8 @@ def create_profile(context, profile_id):
             'version': '1.0',
         },
         'created_at': timeutils.utcnow(True),
-        'user': context.user,
-        'project': context.project
+        'user': context.user_id,
+        'project': context.project_id,
     }
     return objects.Profile.create(context, values)
 
@@ -96,8 +96,8 @@ def create_cluster(context, cluster_id, profile_id, **kwargs):
         'desired_capacity': 3,
         'status': 'ACTIVE',
         'init_at': timeutils.utcnow(True),
-        'user': context.user,
-        'project': context.project,
+        'user': context.user_id,
+        'project': context.project_id,
     }
     values.update(kwargs)
     return objects.Cluster.create(context, values)
@@ -115,8 +115,8 @@ def create_node(context, node_id, profile_id, cluster_id, physical_id=None):
         'created_at': timeutils.utcnow(True),
         'role': 'test_node',
         'status': 'ACTIVE',
-        'user': context.user,
-        'project': context.project,
+        'user': context.user_id,
+        'project': context.project_id,
     }
     return objects.Node.create(context, values)
 
@@ -135,7 +135,7 @@ def create_policy(context, policy_id, name=None):
             }
         },
         'created_at': timeutils.utcnow(True),
-        'user': context.user,
-        'project': context.project,
+        'user': context.user_id,
+        'project': context.project_id,
     }
     return objects.Policy.create(context, values)

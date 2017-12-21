@@ -39,9 +39,9 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         data = {
             'name': 'test_policy',
             'type': 'ScalingPolicy',
-            'user': self.ctx.user,
-            'project': self.ctx.project,
-            'domain': self.ctx.domain,
+            'user': self.ctx.user_id,
+            'project': self.ctx.project_id,
+            'domain': self.ctx.domain_id,
             'spec': sample_spec,
             'data': None,
         }

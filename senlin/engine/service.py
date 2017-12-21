@@ -214,8 +214,8 @@ class EngineService(service.Service):
         :return: A dictionary containing the persistent credential.
         """
         values = {
-            'user': ctx.user,
-            'project': ctx.project,
+            'user': ctx.user_id,
+            'project': ctx.project_id,
             'cred': req.cred
         }
         cred_obj.Credential.update_or_create(ctx, values)
@@ -249,7 +249,7 @@ class EngineService(service.Service):
         :param req: An instance of the CredentialUpdateRequest.
         :return: A dictionary containing the persistent credential.
         """
-        cred_obj.Credential.update(ctx, ctx.user, ctx.project,
+        cred_obj.Credential.update(ctx, ctx.user_id, ctx.project_id,
                                    {'cred': req.cred})
         return {'cred': req.cred}
 
@@ -330,11 +330,11 @@ class EngineService(service.Service):
         profiles = profile_obj.Profile.get_all(ctx, **query)
         return [p.to_dict() for p in profiles]
 
-    def _validate_profile(self, context, spec, name=None,
+    def _validate_profile(self, ctx, spec, name=None,
                           metadata=None, validate_props=False):
         """Validate a profile.
 
-        :param context: An instance of the request context.
+        :param ctx: An instance of the request context.
         :param name: The name of the profile to be validated.
         :param spec: A dictionary containing the spec for the profile.
         :param metadata: A dictionary containing optional key-value pairs to
@@ -348,9 +348,9 @@ class EngineService(service.Service):
         plugin = environment.global_env().get_profile(type_str)
 
         kwargs = {
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
+            'user': ctx.user_id,
+            'project': ctx.project_id,
+            'domain': ctx.domain_id,
             'metadata': metadata
         }
         if name is None:
@@ -534,10 +534,10 @@ class EngineService(service.Service):
 
         return [p.to_dict() for p in policy_obj.Policy.get_all(ctx, **query)]
 
-    def _validate_policy(self, context, spec, name=None, validate_props=False):
+    def _validate_policy(self, ctx, spec, name=None, validate_props=False):
         """Validate a policy.
 
-        :param context: An instance of the request context.
+        :param ctx: An instance of the request context.
         :param spec: A dictionary containing the spec for the policy.
         :param name: The name of the policy to be validated.
         :param validate_props: Whether to validate the value of property.
@@ -550,16 +550,16 @@ class EngineService(service.Service):
         plugin = environment.global_env().get_policy(type_str)
 
         kwargs = {
-            'user': context.user,
-            'project': context.project,
-            'domain': context.domain,
+            'user': ctx.user_id,
+            'project': ctx.project_id,
+            'domain': ctx.domain_id,
         }
         if name is None:
             name = 'validated_policy'
         policy = plugin(name, spec, **kwargs)
 
         try:
-            policy.validate(context, validate_props=validate_props)
+            policy.validate(ctx, validate_props=validate_props)
         except exception.InvalidSpec as ex:
             msg = six.text_type(ex)
             LOG.error("Failed in validating policy: %s", msg)
@@ -769,9 +769,9 @@ class EngineService(service.Service):
             'metadata': req.metadata or {},
             'dependents': {},
             'config': req.config or {},
-            'user': ctx.user,
-            'project': ctx.project,
-            'domain': ctx.domain,
+            'user': ctx.user_id,
+            'project': ctx.project_id,
+            'domain': ctx.domain_id,
         }
         cluster = co.Cluster.create(ctx, values)
 
@@ -1391,9 +1391,9 @@ class EngineService(service.Service):
         LOG.info("Checking cluster '%s'.", req.identity)
         db_cluster = co.Cluster.find(ctx, req.identity)
         # cope with cluster check request from engine internal
-        if not ctx.user or not ctx.project:
-            ctx.user = db_cluster.user
-            ctx.project = db_cluster.project
+        if not ctx.user_id or not ctx.project_id:
+            ctx.user_id = db_cluster.user
+            ctx.project_id = db_cluster.project
 
         kwargs = {
             'name': 'cluster_check_%s' % db_cluster.id[:8],
@@ -1428,9 +1428,9 @@ class EngineService(service.Service):
         db_cluster = co.Cluster.find(ctx, req.identity)
 
         # cope with cluster check request from engine internal
-        if not ctx.user or not ctx.project:
-            ctx.user = db_cluster.user
-            ctx.project = db_cluster.project
+        if not ctx.user_id or not ctx.project_id:
+            ctx.user_id = db_cluster.user
+            ctx.project_id = db_cluster.project
 
         inputs = {}
         if req.obj_attr_is_set('params') and req.params:
@@ -1634,9 +1634,9 @@ class EngineService(service.Service):
             'data': {},
             'dependents': {},
             'init_at': timeutils.utcnow(True),
-            'user': ctx.user,
-            'project': ctx.project,
-            'domain': ctx.domain,
+            'user': ctx.user_id,
+            'project': ctx.project_id,
+            'domain': ctx.domain_id,
         }
         node = node_obj.Node.create(ctx, values)
 
@@ -1873,9 +1873,9 @@ class EngineService(service.Service):
             'status_reason': 'Node adopted successfully',
             'init_at': timeutils.utcnow(True),
             'created_at': timeutils.utcnow(True),
-            'user': ctx.user,
-            'project': ctx.project,
-            'domain': ctx.domain,
+            'user': ctx.user_id,
+            'project': ctx.project_id,
+            'domain': ctx.domain_id,
         }
         node = node_obj.Node.create(ctx, values)
 
@@ -2355,14 +2355,14 @@ class EngineService(service.Service):
                 raise exception.BadRequest(msg=msg)
 
             # permission checking
-            if not ctx.is_admin and ctx.user != cluster.user:
+            if not ctx.is_admin and ctx.user_id != cluster.user:
                 raise exception.Forbidden()
 
         kwargs = {
             'name': req.name,
-            'user': ctx.user,
-            'project': ctx.project,
-            'domain': ctx.domain,
+            'user': ctx.user_id,
+            'project': ctx.project_id,
+            'domain': ctx.domain_id,
             'params': req.params
         }
 
@@ -2448,7 +2448,7 @@ class EngineService(service.Service):
         """
         db_receiver = receiver_obj.Receiver.find(ctx, req.identity)
         # permission checking
-        if not ctx.is_admin and ctx.user != db_receiver.user:
+        if not ctx.is_admin and ctx.user_id != db_receiver.user:
             raise exception.Forbidden()
 
         # Receiver type check

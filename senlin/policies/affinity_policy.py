@@ -117,7 +117,7 @@ class AffinityPolicy(base.Policy):
 
         az_name = self.properties.get(self.AVAILABILITY_ZONE)
         if az_name:
-            nc = self.nova(context.user, context.project)
+            nc = self.nova(context.user_id, context.project_id)
             valid_azs = nc.validate_azs([az_name])
             if not valid_azs:
                 msg = _("The specified %(key)s '%(value)s' could not be "

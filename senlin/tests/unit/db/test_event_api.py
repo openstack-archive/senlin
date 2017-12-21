@@ -62,8 +62,8 @@ class DBAPIEventTest(base.SenlinTestCase):
             'action': action or '',
             'status': status or '',
             'status_reason': status_reason or '',
-            'user': ctx.user,
-            'project': ctx.project,
+            'user': ctx.user_id,
+            'project': ctx.project_id,
         }
 
         # Make sure all fields can be customized
@@ -85,8 +85,8 @@ class DBAPIEventTest(base.SenlinTestCase):
         self.assertEqual('', ret_event.action)
         self.assertEqual('', ret_event.status)
         self.assertEqual('', ret_event.status_reason)
-        self.assertEqual(self.ctx.user, ret_event.user)
-        self.assertEqual(self.ctx.project, ret_event.project)
+        self.assertEqual(self.ctx.user_id, ret_event.user)
+        self.assertEqual(self.ctx.project_id, ret_event.project)
 
     def test_event_get_diff_project(self):
         event = self.create_event(self.ctx)
@@ -228,11 +228,11 @@ class DBAPIEventTest(base.SenlinTestCase):
         self.assertEqual(event3.id, events[2].id)
 
     def test_event_get_all_project_safe(self):
-        self.ctx.project = 'project_1'
+        self.ctx.project_id = 'project_1'
         cluster1 = shared.create_cluster(self.ctx, self.profile,
                                          name='cluster1')
         self.create_event(self.ctx, entity=cluster1)
-        self.ctx.project = 'project_2'
+        self.ctx.project_id = 'project_2'
         cluster2 = shared.create_cluster(self.ctx, self.profile,
                                          name='cluster2')
         self.create_event(self.ctx, entity=cluster2, action='CLUSTER_CREATE')
@@ -261,11 +261,11 @@ class DBAPIEventTest(base.SenlinTestCase):
         self.assertIn(cluster2.name, onames)
 
     def test_event_get_all_admin_context(self):
-        self.ctx.project = 'project_1'
+        self.ctx.project_id = 'project_1'
         cluster1 = shared.create_cluster(self.ctx, self.profile,
                                          name='cluster1')
         self.create_event(self.ctx, entity=cluster1)
-        self.ctx.project = 'project_2'
+        self.ctx.project_id = 'project_2'
         cluster2 = shared.create_cluster(self.ctx, self.profile,
                                          name='cluster2')
         self.create_event(self.ctx, entity=cluster2, action='CLUSTER_CREATE')

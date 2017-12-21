@@ -174,8 +174,8 @@ class Profile(object):
             metadata = {}
 
         try:
-            profile = cls(name, spec, metadata=metadata, user=ctx.user,
-                          project=ctx.project)
+            profile = cls(name, spec, metadata=metadata, user=ctx.user_id,
+                          project=ctx.project_id)
             profile.validate(True)
         except (exc.ResourceNotFound, exc.ESchema) as ex:
             error = _("Failed in creating profile %(name)s: %(error)s"
