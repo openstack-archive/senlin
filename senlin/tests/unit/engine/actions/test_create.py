@@ -45,7 +45,8 @@ class ClusterCreateTest(base.SenlinTestCase):
         # prepare mocks
         cluster = mock.Mock(id='CLUSTER_ID', profile_id='FAKE_PROFILE',
                             user='FAKE_USER', project='FAKE_PROJECT',
-                            domain='FAKE_DOMAIN')
+                            domain='FAKE_DOMAIN',
+                            config={"node.name.format": "node-$3I"})
         mock_index.return_value = 123
         node = mock.Mock(id='NODE_ID')
         mock_node.return_value = node
@@ -66,7 +67,7 @@ class ClusterCreateTest(base.SenlinTestCase):
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('All dependents completed', res_msg)
         mock_index.assert_called_once_with(action.context, 'CLUSTER_ID')
-        mock_node.assert_called_once_with('node-CLUSTER_-123',
+        mock_node.assert_called_once_with('node-123',
                                           'FAKE_PROFILE',
                                           'CLUSTER_ID',
                                           context=action.context,
@@ -111,7 +112,8 @@ class ClusterCreateTest(base.SenlinTestCase):
     def test__create_nodes_multiple(self, mock_wait, mock_start, mock_dep,
                                     mock_node, mock_index, mock_action,
                                     mock_update, mock_load):
-        cluster = mock.Mock(id='01234567-123434')
+        cluster = mock.Mock(id='01234567-123434',
+                            config={"node.name.format": "node-$3I"})
         node1 = mock.Mock(id='01234567-abcdef',
                           data={'placement': {'region': 'regionOne'}})
         node2 = mock.Mock(id='abcdefab-123456',
@@ -161,11 +163,11 @@ class ClusterCreateTest(base.SenlinTestCase):
         self.assertEqual({'region': 'regionOne'}, node1.data['placement'])
         self.assertEqual({'region': 'regionTwo'}, node2.data['placement'])
         mock_node_calls = [
-            mock.call('node-01234567-123', mock.ANY, '01234567-123434',
+            mock.call('node-123', mock.ANY, '01234567-123434',
                       user=mock.ANY, project=mock.ANY, domain=mock.ANY,
                       index=123, context=mock.ANY, metadata={},
                       data={'placement': {'region': 'regionOne'}}),
-            mock.call('node-01234567-124', mock.ANY, '01234567-123434',
+            mock.call('node-124', mock.ANY, '01234567-123434',
                       user=mock.ANY, project=mock.ANY, domain=mock.ANY,
                       index=124, context=mock.ANY, metadata={},
                       data={'placement': {'region': 'regionTwo'}})
@@ -184,7 +186,7 @@ class ClusterCreateTest(base.SenlinTestCase):
     def test__create_nodes_multiple_failed_wait(self, mock_wait, mock_start,
                                                 mock_dep, mock_node, mock_get,
                                                 mock_update, mock_load):
-        cluster = mock.Mock(id='01234567-123434')
+        cluster = mock.Mock(id='01234567-123434', config={})
         db_cluster = mock.Mock(next_index=1)
         mock_get.return_value = db_cluster
         node1 = mock.Mock(id='01234567-abcdef', data={})
