@@ -1,0 +1,7 @@
+type: senlin.kubernetes.master
+version: 1.0
+properties:
+  flavor: k8s.master
+  image: ubuntu-16.04
+  key_name: elynn
+  public_network: public
