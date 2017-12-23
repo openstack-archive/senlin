@@ -116,3 +116,20 @@ class DBAPIRegistryTest(base.SenlinTestCase):
         self.assertEqual(registry.interval, obj.interval)
         self.assertEqual(registry.params, obj.params)
         self.assertEqual(registry.engine_id, obj.engine_id)
+
+    def test_registry_get_by_engine(self):
+        obj = self._create_registry(cluster_id='FAKE_ID',
+                                    check_type='NODE_STATUS_POLLING',
+                                    interval=60,
+                                    params={},
+                                    engine_id='ENGINE')
+
+        registry = db_api.registry_get_by_param(
+            self.ctx, {"cluster_id": "FAKE_ID", "engine_id": "ENGINE"})
+
+        self.assertEqual(registry.id, obj.id)
+        self.assertEqual(registry.cluster_id, obj.cluster_id)
+        self.assertEqual(registry.check_type, obj.check_type)
+        self.assertEqual(registry.interval, obj.interval)
+        self.assertEqual(registry.params, obj.params)
+        self.assertEqual(registry.engine_id, obj.engine_id)

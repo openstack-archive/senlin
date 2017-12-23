@@ -490,6 +490,10 @@ def registry_get(context, cluster_id):
     return IMPL.registry_get(context, cluster_id)
 
 
+def registry_get_by_param(context, params):
+    return IMPL.registry_get_by_param(context, params)
+
+
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
     return IMPL.db_sync(engine, version=version)

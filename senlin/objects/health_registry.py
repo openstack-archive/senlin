@@ -56,3 +56,20 @@ class HealthRegistry(base.SenlinObject, base.VersionedObjectDictCompat):
     def get(cls, context, cluster_id):
         obj = db_api.registry_get(context, cluster_id)
         return cls._from_db_object(context, cls(), obj)
+
+    @classmethod
+    def get_by_engine(cls, context, engine_id, cluster_id):
+        params = {
+            "cluster_id": cluster_id,
+            "engine_id": engine_id,
+        }
+        obj = db_api.registry_get_by_param(context, params)
+        return cls._from_db_object(context, cls(), obj)
+
+    @classmethod
+    def disable_registry(cls, context, cluster_id):
+        cls.update(context, cluster_id, {'enabled': False})
+
+    @classmethod
+    def enable_registry(cls, context, cluster_id):
+        cls.update(context, cluster_id, {"enabled": True})
