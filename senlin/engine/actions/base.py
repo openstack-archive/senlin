@@ -236,9 +236,9 @@ class Action(object):
         :return: ID of the action created.
         """
         params = {
-            'user': ctx.user_id,
-            'project': ctx.project_id,
-            'domain': ctx.domain_id,
+            'user_id': ctx.user_id,
+            'project_id': ctx.project_id,
+            'domain_id': ctx.domain_id,
             'is_admin': ctx.is_admin,
             'request_id': ctx.request_id,
             'trusts': ctx.trusts,
