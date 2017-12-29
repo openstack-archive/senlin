@@ -440,6 +440,9 @@ class TestString(base.SenlinTestCase):
         res = sot.to_schema_type(None)
         self.assertIsNone(res)
 
+        res = sot.to_schema_type(u'\u4e2d\u6587')
+        self.assertEqual(u'\u4e2d\u6587', res)
+
     def test_resolve(self):
         sot = schema.String()
 
