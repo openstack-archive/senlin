@@ -82,7 +82,9 @@ The following is a list of builtin policy types:
    :maxdepth: 1
 
    user/policy_types/affinity
+   user/policy_types/batch
    user/policy_types/deletion
+   user/policy_types/health
    user/policy_types/load_balancing
    user/policy_types/scaling
    user/policy_types/region_placement
