@@ -299,18 +299,70 @@ As another option, when retrieving a profile (or in fact any other objects,
 e.g. a cluster, a node, a policy etc.), you can specify the leading sub-string
 of an UUID as the "short ID" for query. For example::
 
-  $ openstack cluster profile show 560a8f9d
-  +----------+----------+--------------------+---------------------+
-  | id       | name     | type               | created_at          |
-  +----------+----------+--------------------+---------------------+
-  | 560a8f9d | myserver | os.nova.server-1.0 | 2015-05-05T13:26:00 |
-  +----------+----------+--------------------+---------------------+
-  $ openstack cluster profile show 560a
-  +----------+----------+--------------------+---------------------+
-  | id       | name     | type               | created_at          |
-  +----------+----------+--------------------+---------------------+
-  | 560a8f9d | myserver | os.nova.server-1.0 | 2015-05-05T13:26:00 |
-  +----------+----------+--------------------+---------------------+
+  $ openstack cluster profile show 70a36cc7
+  +------------+---------------------------------------------------------+
+  | Field      | Value                                                   |
+  +------------+---------------------------------------------------------+
+  | created_at | 2015-07-01T03:18:58                                     |
+  | domain_id  | None                                                    |
+  | id         | 70a36cc7-9fc7-460e-98f6-d44e3302e604                    |
+  | location   | None                                                    |
+  | metadata   | {}                                                      |
+  | name       | my_server                                               |
+  | project_id | 333acb15a43242f4a609a27cb097a8f2                        |
+  | spec       | +------------+----------------------------------------+ |
+  |            | | property   | value                                  | |
+  |            | +------------+----------------------------------------+ |
+  |            | | version    | 1.0                                    | |
+  |            | | type       | "os.nova.server"                       | |
+  |            | | properties | {                                      | |
+  |            | |            |   "key_name": "oskey",                 | |
+  |            | |            |   "flavor": 1,                         | |
+  |            | |            |   "networks": [                        | |
+  |            | |            |     {                                  | |
+  |            | |            |       "network": "private"             | |
+  |            | |            |     }                                  | |
+  |            | |            |   ],                                   | |
+  |            | |            |   "image": "cirros-0.3.2-x86_64-uec",  | |
+  |            | |            |   "name": "cirros_server"              | |
+  |            | |            | }                                      | |
+  |            | +------------+----------------------------------------+ |
+  | type       | os.nova.server-1.0                                      |
+  | update_at  | None                                                    |
+  | user_id    | 5e5bf8027826429c96af157f68dc9072                        |
+  +------------+---------------------------------------------------------+
+    $ openstack cluster profile show 70a3
+  +------------+---------------------------------------------------------+
+  | Field      | Value                                                   |
+  +------------+---------------------------------------------------------+
+  | created_at | 2015-07-01T03:18:58                                     |
+  | domain_id  | None                                                    |
+  | id         | 70a36cc7-9fc7-460e-98f6-d44e3302e604                    |
+  | location   | None                                                    |
+  | metadata   | {}                                                      |
+  | name       | my_server                                               |
+  | project_id | 333acb15a43242f4a609a27cb097a8f2                        |
+  | spec       | +------------+----------------------------------------+ |
+  |            | | property   | value                                  | |
+  |            | +------------+----------------------------------------+ |
+  |            | | version    | 1.0                                    | |
+  |            | | type       | "os.nova.server"                       | |
+  |            | | properties | {                                      | |
+  |            | |            |   "key_name": "oskey",                 | |
+  |            | |            |   "flavor": 1,                         | |
+  |            | |            |   "networks": [                        | |
+  |            | |            |     {                                  | |
+  |            | |            |       "network": "private"             | |
+  |            | |            |     }                                  | |
+  |            | |            |   ],                                   | |
+  |            | |            |   "image": "cirros-0.3.2-x86_64-uec",  | |
+  |            | |            |   "name": "cirros_server"              | |
+  |            | |            | }                                      | |
+  |            | +------------+----------------------------------------+ |
+  | type       | os.nova.server-1.0                                      |
+  | update_at  | None                                                    |
+  | user_id    | 5e5bf8027826429c96af157f68dc9072                        |
+  +------------+---------------------------------------------------------+
 
 As with query by name, a "short ID" won't guarantee that a profile object is
 returned even if it does exist. When there are more than one object matching
