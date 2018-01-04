@@ -122,7 +122,8 @@ class ClusterAction(base.Action):
                 # We assume placement is a list
                 kwargs['data'] = {'placement': placement['placements'][m]}
 
-            name = 'node-%s-%003d' % (self.entity.id[:8], index)
+            name_format = self.entity.config.get("node.name.format", "")
+            name = utils.format_node_name(name_format, self.entity, index)
             node = node_mod.Node(name, self.entity.profile_id,
                                  self.entity.id, context=self.context,
                                  **kwargs)
