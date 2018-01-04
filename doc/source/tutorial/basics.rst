@@ -166,10 +166,10 @@ command:
 
 .. code-block:: console
 
-  $ openstack cluster members del --nodes oldnode mycluster
+  $ openstack cluster members del --nodes newnode mycluster
   $ openstack cluster members list mycluster
   $ openstack cluster show mycluster
-  $ openstack cluster node show oldnode
+  $ openstack cluster node show newnode
 
 For other cluster membership management commands and options, please check the
 :doc:`Cluster Membership <../user/membership>` section in the
