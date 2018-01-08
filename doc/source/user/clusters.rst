@@ -240,7 +240,7 @@ An example is shown below::
   | created_at       | 2015-07-07T03:30:53Z                 |
   | data             | {}                                   |
   | dependents       | {}                                   |
-  | desired_capacity | 0                                    |
+  | desired_capacity | 2                                    |
   | domain_id        | None                                 |
   | id               | 2b7e9294-b5cd-470f-b191-b18f7e672495 |
   | init_at          | 2015-05-07T03:30:52Z                 |
@@ -256,7 +256,7 @@ An example is shown below::
   | project_id       | 333acb15a43242f4a609a27cb097a8f2     |
   | status           | ACTIVE                               |
   | status_reason    | Node stack2: Creation succeeded      |
-  | timeout          | None                                 |
+  | timeout          | 3600                                 |
   | updated_at       | None                                 |
   | user_id          | 0b82043b57014cd58add97a2ef79dac3     |
   +------------------+--------------------------------------+
