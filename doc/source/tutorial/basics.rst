@@ -134,7 +134,7 @@ then add it to a cluster. To create a node using a given profile:
 
 .. code-block:: console
 
-  $ senlin node-create -p myserver newnode
+  $ openstack cluster node create --profile myserver newnode
   $ openstack cluster node show newnode
 
 For other options supported by the ``node-create`` command, please check the
