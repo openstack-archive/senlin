@@ -214,7 +214,8 @@ class Name(fields.String):
         else:
             # NOTE: This is pretty restrictive. We can relax it later when
             # there are requests to do so
-            regex = re.compile('^[a-zA-Z\d\.\_\~-]*$', re.IGNORECASE)
+            regex = re.compile(u'^[a-zA-Z\u4e00-\u9fa5\d\.\_\~-]*$',
+                               re.IGNORECASE)
             if not regex.search(value):
                 err = _("The value for the '%(attr)s' (%(value)s) contains "
                         "illegal characters. It must contain only "
