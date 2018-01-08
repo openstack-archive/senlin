@@ -168,7 +168,6 @@ A listener thread is created to listen to events that indicate certain node
 has failed.  For nova server nodes, the current implementation treats all of
 the following event types as indication of node failures:
 
-* ``compute.instance.delete.end``: A server has been accidentally deleted.
 * ``compute.instance.pause.end``: A server has been accidentally paused.
 * ``compute.instance.power_off.end``: A server has been stopped accidentally.
 * ``compute.instance.rebuild.error``: A server rebuild has failed.
