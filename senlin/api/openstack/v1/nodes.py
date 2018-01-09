@@ -127,7 +127,7 @@ class NodeController(wsgi.Controller):
 
         if force is not None:
             force = util.parse_bool_param(consts.NODE_DELETE_FORCE,
-                                          req.params.get('force'))
+                                          force)
 
         params = {'identity': node_id, 'force': force}
 
