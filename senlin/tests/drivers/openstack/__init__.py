@@ -11,9 +11,9 @@
 # under the License.
 
 from senlin.drivers.openstack import ceilometer_v2
-from senlin.drivers.openstack import cinder_v2
 from senlin.drivers.openstack import keystone_v3
 from senlin.drivers.openstack import zaqar_v2
+from senlin.tests.drivers.openstack import cinder_v2
 from senlin.tests.drivers.openstack import heat_v1
 from senlin.tests.drivers.openstack import lbaas
 from senlin.tests.drivers.openstack import mistral_v2
