@@ -43,7 +43,8 @@
             export DEVSTACK_GATE_USE_PYTHON3=False
           fi
 
-          export DEVSTACK_GATE_TEMPEST_REGEX="senlin.tests.tempest.functional"
+          export SENLIN_TEST_TYPE="functional"
+          export DEVSTACK_GATE_TEMPEST_REGEX="senlin_tempest_plugin.tests.${SENLIN_TEST_TYPE}"
 
           services=rabbit,mysql,dstat,key,tempest
           services+=,g-api,g-reg
@@ -58,7 +59,7 @@
           export PROJECTS="openstack/senlin $PROJECTS"
           export DEVSTACK_LOCAL_CONFIG="enable_plugin senlin https://git.openstack.org/openstack/senlin"
 
-          if [ "functional" == "api" ]||[ "functional" == "functional" ]; then
+          if [ "${SENLIN_TEST_TYPE}" == "api" ]||[ "${SENLIN_TEST_TYPE}" == "functional" ]; then
             export SENLIN_BACKEND="openstack_test"
           else
             export SENLIN_BACKEND="openstack"
@@ -77,6 +78,10 @@
             export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin zaqar git://git.openstack.org/openstack/zaqar"
           fi
 
+          # use senlin-tempest-plugin
+          export PROJECTS="openstack/senlin-tempest-plugin $PROJECTS"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"TEMPEST_PLUGINS+=' /opt/stack/new/senlin-tempest-plugin'"
+
           export OVERRIDE_ENABLED_SERVICES=$services
 
           if [ "$BRANCH_OVERRIDE" != "default" ] ; then
@@ -91,7 +96,7 @@
 
           function post_test_hook {
               cd /opt/stack/new/senlin/senlin/tests/tempest/
-              ./post_test_hook.sh
+              ./post_test_hook.sh senlin_tempest_plugin.tests.${SENLIN_TEST_TYPE}
           }
           export -f post_test_hook
 

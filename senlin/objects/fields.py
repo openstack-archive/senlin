@@ -34,7 +34,6 @@ DateTimeField = fields.DateTimeField
 DictOfStringsField = fields.DictOfStringsField
 ListOfStringsField = fields.ListOfStringsField
 ListOfEnumField = fields.ListOfEnumField
-ObjectField = fields.ObjectField
 
 
 class Boolean(fields.FieldType):
@@ -76,6 +75,18 @@ class NonNegativeInteger(fields.FieldType):
             'type': ['integer', 'string'],
             'minimum': 0
         }
+
+
+# Senlin has a stricter field checking for object fields.
+class Object(fields.Object):
+
+    def get_schema(self):
+        schema = super(Object, self).get_schema()
+        # we are not checking whether self._obj_name is registered, an
+        # exception will be raised anyway if it is not registered.
+        data_key = 'senlin_object.data'
+        schema['properties'][data_key]['additionalProperties'] = False
+        return schema
 
 
 class UUID(fields.FieldType):
@@ -391,6 +402,16 @@ class NonNegativeIntegerField(fields.AutoTypedField):
 class BooleanField(fields.AutoTypedField):
 
     AUTO_TYPE = Boolean()
+
+
+# An override to the oslo.versionedobjects version so that we are using
+# our own Object definition.
+class ObjectField(fields.AutoTypedField):
+
+    def __init__(self, objtype, subclasses=False, **kwargs):
+        self.AUTO_TYPE = Object(objtype, subclasses)
+        self.objname = objtype
+        super(ObjectField, self).__init__(**kwargs)
 
 
 class JsonField(fields.AutoTypedField):

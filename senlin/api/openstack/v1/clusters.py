@@ -302,14 +302,15 @@ class ClusterController(wsgi.Controller):
 
     @util.policy_enforce
     def delete(self, req, cluster_id, body=None):
-        if body:
+        if req.params.get('force') is not None:
+            force = util.parse_bool_param(consts.CLUSTER_DELETE_FORCE,
+                                          req.params.get('force'))
+        elif body:
             force = body.get('force')
+            if force is None:
+                force = False
         else:
             force = False
-
-        if force is not None:
-            force = util.parse_bool_param(consts.CLUSTER_DELETE_FORCE,
-                                          force)
 
         params = {'identity': cluster_id, 'force': force}
         obj = util.parse_request('ClusterDeleteRequest', req, params)

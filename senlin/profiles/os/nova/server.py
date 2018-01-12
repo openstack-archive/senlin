@@ -1279,7 +1279,8 @@ class ServerProfile(base.Profile):
         else:
             image_id = server_data['image']
         attached_volumes = []
-        if len(server_data['attached_volumes']) > 0:
+        if ('attached_volumes' in server_data and
+                len(server_data['attached_volumes']) > 0):
             for volume in server_data['attached_volumes']:
                 attached_volumes.append(volume['id'])
         details = {

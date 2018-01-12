@@ -32,6 +32,33 @@ class NeutronClient(base.DriverBase):
             "port_security_enabled": True,
             "id": "d32019d3-bc6e-4319-9c1d-6722fc136a22"
         }
+        self.fake_port = {
+            "ip_address": "10.0.1.10",
+            "fixed_ips": [
+                "172.17.1.129"
+            ],
+            "network_id": "d32019d3-bc6e-4319-9c1d-6722fc136a22",
+            "status": "ACTIVE",
+            "subnet_id": "54d6f61d-db07-451c-9ab3-b9609b6b6f0b",
+            "id": "60f65938-3ebb-451d-a3a3-a0918d345469",
+            "security_group_ids": [
+                "45aa2abc-47f0-4008-8d67-606b41cabb7a"
+            ]
+        }
+        self.fake_subnet = {
+            "network_id": "d32019d3-bc6e-4319-9c1d-6722fc136a22",
+            "subnet_pool_id": "54d6f61d-db07-451c-9ab3-b9609b6b6f0b",
+            "id": "60f65938-3ebb-451d-a3a3-a0918d345469"
+        }
 
     def network_get(self, value, ignore_missing=False):
         return sdk.FakeResourceObject(self.fake_network)
+
+    def port_create(self, **attr):
+        return sdk.FakeResourceObject(self.fake_port)
+
+    def port_delete(self, port, ignore_missing=True):
+        return None
+
+    def subnet_get(self, name_or_id, ignore_missing=False):
+        return sdk.FakeResourceObject(self.fake_subnet)
