@@ -384,11 +384,7 @@ class BaseEnum(fields.FieldType):
 
 class AdjustmentType(BaseEnum):
 
-    ALL = (
-        EXACT_CAPACITY, CHANGE_IN_CAPACITY, CHANGE_IN_PERCENTAGE,
-    ) = (
-        'EXACT_CAPACITY', 'CHANGE_IN_CAPACITY', 'CHANGE_IN_PERCENTAGE',
-    )
+    ALL = consts.ADJUSTMENT_TYPES
 
     def get_schema(self):
         return {'type': ['string'],
