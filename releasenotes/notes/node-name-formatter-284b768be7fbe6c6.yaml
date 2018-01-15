@@ -1,0 +1,6 @@
+---
+features:
+  - Added cluster config property "node.name.format" where users can specify
+    how cluster nodes are automatically named. Users can use placeholders like
+    "$nI" for node index padded with 0s to the left, or "$nR" for random string
+    of length n.

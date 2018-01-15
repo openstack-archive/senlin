@@ -1,0 +1,3 @@
+---
+other:
+  - Improved Nova VM server health check for cases where physical id is invalid.

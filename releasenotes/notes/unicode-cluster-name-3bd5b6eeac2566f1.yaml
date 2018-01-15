@@ -1,0 +1,3 @@
+---
+features:
+  - Added support to use Unicode string for cluster names.

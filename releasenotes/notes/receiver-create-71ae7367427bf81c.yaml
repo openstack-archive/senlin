@@ -1,0 +1,4 @@
+---
+fixes:
+  - Fixed an error introduced by oslo.versionedobjects change that lead to
+    failures when creating a receiver.

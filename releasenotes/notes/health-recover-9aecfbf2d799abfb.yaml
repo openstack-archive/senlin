@@ -1,0 +1,4 @@
+---
+fixes:
+  - Fixed bug related to reacting to nova vm lifecycle event notifications.
+    The recover flow is no longer called twice when a VM is deleted.

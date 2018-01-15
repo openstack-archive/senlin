@@ -1,0 +1,5 @@
+---
+feature:
+  - Added support to reuse existing loadbalancer when attaching LB policy.
+fixes:
+  - Fixed various defects in managing node pools for loadbalancer policy.

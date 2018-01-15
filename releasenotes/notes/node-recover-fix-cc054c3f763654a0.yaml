@@ -1,0 +1,3 @@
+---
+fixes:
+  - Fixed an error where action name not passed to backend service.
