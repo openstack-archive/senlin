@@ -15,10 +15,10 @@ import re
 
 from oslo_utils import versionutils
 from oslo_versionedobjects import base
+from oslo_versionedobjects import fields as base_fields
 
 from senlin.common.i18n import _
 from senlin import objects
-from senlin.objects import fields
 
 VersionedObjectDictCompat = base.VersionedObjectDictCompat
 VersionedObjectSerializer = base.VersionedObjectSerializer
@@ -73,7 +73,9 @@ class SenlinObject(base.VersionedObject):
             'title': obj_name,
         }
 
-        schema.update(fields.Object(obj_name).get_schema())
+        schema.update(base_fields.Object(obj_name).get_schema())
+        dataf = cls.OBJ_SERIAL_NAMESPACE + ".data"
+        schema["properties"][dataf]["additionalProperties"] = False
         return schema
 
     @classmethod
@@ -107,7 +109,6 @@ class SenlinObject(base.VersionedObject):
             cls.OBJ_SERIAL_NAMESPACE + '.namespace': cls.OBJ_PROJECT_NAMESPACE,
             cls.OBJ_SERIAL_NAMESPACE + '.name': name,
         }
-
         if key is not None:
             if key not in req:
                 raise ValueError(_("Request body missing '%s' key.") % key)
