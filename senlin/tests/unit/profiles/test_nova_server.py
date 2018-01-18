@@ -704,6 +704,9 @@ class TestNovaServerBasic(base.SenlinTestCase):
                     'rel': 'bookmark'
                 }],
             },
+            'attached_volumes': [{
+                'id': 'FAKE_VOLUME',
+            }],
             'key_name': 'FAKE_KEY',
             'links': [{
                 'href': 'http://url1',
@@ -714,7 +717,6 @@ class TestNovaServerBasic(base.SenlinTestCase):
             }],
             'metadata': {},
             'name': 'FAKE_NAME',
-            'os-extended-volumes:volumes_attached': [],
             'progress': 0,
             'security_groups': [{'name': 'default'}],
             'status': 'FAKE_STATUS',
@@ -740,10 +742,10 @@ class TestNovaServerBasic(base.SenlinTestCase):
             'hostId': 'FAKE_HOST_ID',
             'id': 'FAKE_ID',
             'image': 'FAKE_IMAGE',
+            'attached_volumes': ['FAKE_VOLUME'],
             'key_name': 'FAKE_KEY',
             'metadata': {},
             'name': 'FAKE_NAME',
-            'os-extended-volumes:volumes_attached': [],
             'addresses': {
                 'private': [{
                     'OS-EXT-IPS-MAC:mac_addr': 'fa:16:3e:5e:00:81',
@@ -777,6 +779,9 @@ class TestNovaServerBasic(base.SenlinTestCase):
             'image': {
                 'id': 'FAKE_IMAGE',
             },
+            'attached_volumes': [{
+                'id': 'FAKE_VOLUME',
+            }],
             'security_groups': [],
         }
         cc.server_get.return_value = nova_server
@@ -785,6 +790,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
             'flavor': 'FAKE_FLAVOR',
             'id': 'FAKE_ID',
             'image': 'FAKE_IMAGE',
+            'attached_volumes': ['FAKE_VOLUME'],
             'addresses': {},
             'security_groups': '',
         }
@@ -811,6 +817,9 @@ class TestNovaServerBasic(base.SenlinTestCase):
             },
             'id': 'FAKE_ID',
             'image': {},
+            'attached_volumes': [{
+                'id': 'FAKE_VOLUME',
+            }],
             'security_groups': [{'name': 'default'}],
         }
         cc.server_get.return_value = nova_server
@@ -819,6 +828,48 @@ class TestNovaServerBasic(base.SenlinTestCase):
             'flavor': 'FAKE_FLAVOR',
             'id': 'FAKE_ID',
             'image': {},
+            'attached_volumes': ['FAKE_VOLUME'],
+            'addresses': {
+                'private': [{
+                    'version': 4,
+                    'addr': '10.0.0.3',
+                }]
+            },
+            'security_groups': 'default',
+        }
+        self.assertEqual(expected, res)
+        cc.server_get.assert_called_once_with('FAKE_ID')
+
+    def test_do_get_details_bdm_no_id_key(self):
+        cc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        # Test normal path
+        nova_server = mock.Mock()
+        nova_server.to_dict.return_value = {
+            'addresses': {
+                'private': [{
+                    'version': 4,
+                    'addr': '10.0.0.3',
+                }]
+            },
+            'flavor': {
+                'id': 'FAKE_FLAVOR',
+            },
+            'id': 'FAKE_ID',
+            'image': {},
+            'attached_volumes': [],
+            'security_groups': [{'name': 'default'}],
+        }
+        cc.server_get.return_value = nova_server
+        res = profile.do_get_details(node_obj)
+        expected = {
+            'flavor': 'FAKE_FLAVOR',
+            'id': 'FAKE_ID',
+            'image': {},
+            'attached_volumes': [],
             'addresses': {
                 'private': [{
                     'version': 4,
@@ -859,6 +910,9 @@ class TestNovaServerBasic(base.SenlinTestCase):
             'image': {
                 'id': 'FAKE_IMAGE',
             },
+            'attached_volumes': [{
+                'id': 'FAKE_VOLUME',
+            }],
             'security_groups': [{
                 'name': 'default',
             }, {
@@ -871,6 +925,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
             'flavor': 'FAKE_FLAVOR',
             'id': 'FAKE_ID',
             'image': 'FAKE_IMAGE',
+            'attached_volumes': ['FAKE_VOLUME'],
             'addresses': {
                 'private': [{
                     'version': 4,
