@@ -33,11 +33,11 @@ class ClusterController(wsgi.Controller):
     SUPPORTED_ACTIONS = (
         ADD_NODES, DEL_NODES, SCALE_OUT, SCALE_IN, RESIZE,
         POLICY_ATTACH, POLICY_DETACH, POLICY_UPDATE,
-        CHECK, RECOVER, REPLACE_NODES
+        CHECK, RECOVER, REPLACE_NODES, COMPLETE_LIFECYCLE
     ) = (
         'add_nodes', 'del_nodes', 'scale_out', 'scale_in', 'resize',
         'policy_attach', 'policy_detach', 'policy_update',
-        'check', 'recover', 'replace_nodes'
+        'check', 'recover', 'replace_nodes', 'complete_lifecycle'
     )
 
     @util.policy_enforce
@@ -227,6 +227,17 @@ class ClusterController(wsgi.Controller):
         params = {'identity': cid, 'params': data}
         obj = util.parse_request('ClusterRecoverRequest', req, params)
         return self.rpc_client.call(req.context, 'cluster_recover', obj)
+
+    @wsgi.Controller.api_version('1.9')
+    def _do_complete_lifecycle(self, req, cid, data):
+        lifecycle_action_token = data.get('lifecycle_action_token', None)
+
+        params = {'identity': cid,
+                  'lifecycle_action_token': lifecycle_action_token}
+        obj = util.parse_request('ClusterCompleteLifecycleRequest', req,
+                                 params)
+        return self.rpc_client.call(req.context, 'cluster_complete_lifecycle',
+                                    obj)
 
     @util.policy_enforce
     def action(self, req, cluster_id, body=None):

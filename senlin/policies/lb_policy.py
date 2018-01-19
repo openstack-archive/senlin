@@ -598,6 +598,12 @@ class LoadBalancingPolicy(base.Policy):
         if len(candidates) == 0:
             return
 
+        hooks = action.data.get('hooks', {})
+        # if hooks properties are defined, defer removal of nodes from LB
+        # pool to the pre_op call during DEL_NODE action execution
+        if hooks:
+            return
+
         obj = action.entity
         lb_driver = self.lbaas(obj.user, obj.project)
         lb_driver.lb_status_timeout = self.lb_status_timeout
@@ -627,6 +633,7 @@ class LoadBalancingPolicy(base.Policy):
         :param action: The action object that triggered this operation.
         :returns: Nothing.
         """
+
         # TODO(Yanyanhu): Need special handling for cross-az scenario
         # which is supported by Neutron lbaas.
         candidates = self._get_post_candidates(action)

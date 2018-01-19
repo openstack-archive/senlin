@@ -22,6 +22,7 @@ from senlin.common.i18n import _
 from senlin.common import scaleutils as su
 from senlin.common import utils as common_utils
 from senlin.engine.actions import base as am
+from senlin.engine.actions import cluster_action as ca
 from senlin.engine import dispatcher
 from senlin.engine import node as nm
 from senlin.engine import service
@@ -2114,3 +2115,16 @@ class ClusterTest(base.SenlinTestCase):
                 status=am.Action.READY)
 
             notify.assert_called_with()
+
+    @mock.patch.object(ca, 'CompleteLifecycleProc')
+    def test_cluster_complete_lifecycle(self, mock_lifecycle):
+        req = orco.ClusterCompleteLifecycleRequest(
+            identity='CLUSTER', lifecycle_action_token='NODE_ACTION_ID')
+
+        # do it
+        res = self.eng.cluster_complete_lifecycle(self.ctx,
+                                                  req.obj_to_primitive())
+
+        # verify
+        self.assertEqual({'action': 'NODE_ACTION_ID'}, res)
+        mock_lifecycle.assert_called_once_with(self.ctx, 'NODE_ACTION_ID')

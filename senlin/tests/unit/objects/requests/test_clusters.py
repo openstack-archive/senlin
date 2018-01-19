@@ -576,3 +576,13 @@ class TestClusterDelete(test_base.SenlinTestCase):
     def test_init(self):
         sot = clusters.ClusterDeleteRequest(identity='foo')
         self.assertEqual('foo', sot.identity)
+
+
+class TestClusterCompleteLifecycle(test_base.SenlinTestCase):
+
+    def test_init(self):
+        sot = clusters.ClusterCompleteLifecycleRequest(
+            identity='foo', lifecycle_action_token='abc')
+
+        self.assertEqual('foo', sot.identity)
+        self.assertEqual('abc', sot.lifecycle_action_token)

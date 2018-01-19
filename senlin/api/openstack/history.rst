@@ -98,3 +98,10 @@ it can be used by both users and developers.
 ---
 - Added ``force`` parameter to cluster delete request.
 - Added ``force`` parameter to node delete request.
+
+1.9
+---
+- Added ``cluster_complete_lifecycle`` API.  This API enables users to
+  trigger the immediate deletion of the nodes identified for deferred
+  deletion during scale-in operation.
+

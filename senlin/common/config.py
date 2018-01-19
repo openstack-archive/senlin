@@ -193,6 +193,19 @@ receiver_opts = [
 cfg.CONF.register_group(receiver_group)
 cfg.CONF.register_opts(receiver_opts, group=receiver_group)
 
+# Notification group
+notification_group = cfg.OptGroup('notification')
+notification_opts = [
+    cfg.IntOpt('max_message_size', default=65535,
+               help=_('The max size(bytes) of message can be posted to '
+                      'notification queue.')),
+    cfg.IntOpt('ttl', default=300,
+               help=_('The ttl in seconds of a message posted to '
+                      'notification queue.'))
+]
+cfg.CONF.register_group(notification_group)
+cfg.CONF.register_opts(notification_opts, group=notification_group)
+
 # Zaqar group
 zaqar_group = cfg.OptGroup(
     'zaqar', title='Zaqar Options',

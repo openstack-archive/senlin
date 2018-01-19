@@ -36,26 +36,36 @@ class DeletionPolicy(base.Policy):
     specified criteria.
     """
 
-    VERSION = '1.0'
+    VERSION = '1.1'
     VERSIONS = {
         '1.0': [
             {'status': consts.SUPPORTED, 'since': '2016.04'}
-        ]
+        ],
+        '1.1': [
+            {'status': consts.SUPPORTED, 'since': '2018.01'}
+        ],
     }
     PRIORITY = 400
 
     KEYS = (
         CRITERIA, DESTROY_AFTER_DELETION, GRACE_PERIOD,
-        REDUCE_DESIRED_CAPACITY,
+        REDUCE_DESIRED_CAPACITY, HOOKS, TYPE, PARAMS, QUEUE, URL, TIMEOUT
     ) = (
         'criteria', 'destroy_after_deletion', 'grace_period',
-        'reduce_desired_capacity',
+        'reduce_desired_capacity', 'hooks', 'type', 'params', 'queue', 'url',
+        'timeout'
     )
 
     CRITERIA_VALUES = (
         OLDEST_FIRST, OLDEST_PROFILE_FIRST, YOUNGEST_FIRST, RANDOM,
     ) = (
         'OLDEST_FIRST', 'OLDEST_PROFILE_FIRST', 'YOUNGEST_FIRST', 'RANDOM',
+    )
+
+    HOOK_VALUES = (
+        ZAQAR, WEBHOOK
+    ) = (
+        'zaqar', 'webhook',
     )
 
     TARGET = [
@@ -90,6 +100,37 @@ class DeletionPolicy(base.Policy):
             _('Whether the desired capacity of the cluster should be '
               'reduced along the deletion. Default to True.'),
             default=True,
+        ),
+        HOOKS: schema.Map(
+            _("Lifecycle hook properties"),
+            schema={
+                TYPE: schema.String(
+                    _("Type of lifecycle hook"),
+                    default=ZAQAR,
+                    constraints=[
+                        constraints.AllowedValues(HOOK_VALUES),
+                    ]
+                ),
+                PARAMS: schema.Map(
+                    schema={
+                        QUEUE: schema.String(
+                            _("Zaqar queue to receive lifecycle hook message"),
+                            default="",
+                        ),
+                        URL: schema.String(
+                            _("Url sink to which to send lifecycle hook "
+                              "message"),
+                            default="",
+                        ),
+                    },
+                    default={}
+                ),
+                TIMEOUT: schema.Integer(
+                    _('Number of seconds before actual deletion happens.'),
+                    default=0,
+                ),
+            },
+            default={}
         )
     }
 
@@ -102,6 +143,7 @@ class DeletionPolicy(base.Policy):
             self.DESTROY_AFTER_DELETION]
         self.reduce_desired_capacity = self.properties[
             self.REDUCE_DESIRED_CAPACITY]
+        self.hooks = self.properties[self.HOOKS]
 
     def _victims_by_regions(self, cluster, regions):
         victims = []
@@ -172,6 +214,13 @@ class DeletionPolicy(base.Policy):
         cluster = action.entity
         regions = None
         zones = None
+
+        hooks_data = self.hooks
+        action.data.update({'status': base.CHECK_OK,
+                            'reason': _('lifecycle hook parameters saved'),
+                            'hooks': hooks_data})
+        action.store(action.context)
+
         deletion = action.data.get('deletion', {})
         if deletion:
             # there are policy decisions

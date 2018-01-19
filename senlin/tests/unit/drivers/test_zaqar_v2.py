@@ -12,6 +12,8 @@
 
 import mock
 
+from openstack import exceptions as sdk_exc
+
 from senlin.drivers.openstack import sdk
 from senlin.drivers.openstack import zaqar_v2
 from senlin.tests.unit.common import base
@@ -40,6 +42,21 @@ class TestZaqarV2(base.SenlinTestCase):
         zc = zaqar_v2.ZaqarClient(self.conn_params)
         zc.queue_create(name='foo')
         self.message.create_queue.assert_called_once_with(name='foo')
+
+    def test_queue_exists(self):
+        zc = zaqar_v2.ZaqarClient(self.conn_params)
+        res = zc.queue_exists('foo')
+        self.message.get_queue.assert_called_once_with('foo')
+        self.assertTrue(res)
+
+    def test_queue_exists_false(self):
+        zc = zaqar_v2.ZaqarClient(self.conn_params)
+        self.message.get_queue = mock.Mock()
+        self.message.get_queue.side_effect = sdk_exc.ResourceNotFound
+
+        res = zc.queue_exists('foo')
+        self.message.get_queue.assert_called_once_with('foo')
+        self.assertFalse(res)
 
     def test_queue_delete(self):
         zc = zaqar_v2.ZaqarClient(self.conn_params)
@@ -121,3 +138,8 @@ class TestZaqarV2(base.SenlinTestCase):
         zc.message_delete('foo', 'MESSAGE_ID', 'CLAIM_ID')
         self.message.delete_message.assert_called_once_with(
             'foo', 'MESSAGE_ID', 'CLAIM_ID', True)
+
+    def test_message_post(self):
+        zc = zaqar_v2.ZaqarClient(self.conn_params)
+        zc.message_post('foo', 'MESSAGE')
+        self.message.post_message.assert_called_once_with('foo', 'MESSAGE')

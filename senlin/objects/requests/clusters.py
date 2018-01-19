@@ -286,3 +286,12 @@ class ClusterDeleteRequest(base.SenlinObject):
         if target_version < (1, 1):
             if 'force' in primitive['senlin_object.data']:
                 del primitive['senlin_object.data']['force']
+
+
+@base.SenlinObjectRegistry.register
+class ClusterCompleteLifecycleRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'lifecycle_action_token': fields.StringField(),
+    }

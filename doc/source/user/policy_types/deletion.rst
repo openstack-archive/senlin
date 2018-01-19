@@ -32,7 +32,7 @@ Below is a typical spec for a deletion policy:
 .. code-block:: yaml
 
   type: senlin.policy.deletion
-  version: 1.0
+  version: 1.1
   properties:
     criteria: OLDEST_FIRST
     destroy_after_deletion: false
@@ -119,6 +119,41 @@ desired capacity of the cluster to a smaller value and then change it back.
 If this is your use case, you can set ``reduce_desired_capacity`` to ``false``
 in the policy spec. The cluster's desired capacity won't be changed after
 cluster membership is modified.
+
+
+Lifecycle Hook
+~~~~~~~~~~~~~~
+
+If there is a need to receive notification of a node deletion, you can
+specify a lifecycle hook in the deletion policy:
+
+.. code-block:: yaml
+
+  type: senlin.policy.deletion
+  version: 1.1
+  properties:
+    hooks:
+      type: 'zaqar'
+      timeout: 120
+      params:
+        queue: 'my_queue'
+
+The valid values for the "``type`` are:
+
+- ``zaqar``: send message to zaqar queue.  The name of the zaqar must be
+specified in ``queue`` property.
+
+- ``webhook``: send message to webhook URL.  The URL of the webhook must be
+specified in ``url`` property.
+
+``timeout`` property specifies the number of seconds to wait before the
+actual node deletion happens.  This timeout can be preempted by calling
+complete lifecycle hook API.
+
+.. NOTE::
+
+  Hooks of type ``webhook`` will be supported in a future version.  Currently
+  only hooks of type ``zaqar`` are supported.
 
 
 Deleting Nodes Across Regions

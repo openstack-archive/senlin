@@ -31,6 +31,7 @@ from senlin.common import scaleutils as su
 from senlin.common import schema
 from senlin.common import utils
 from senlin.engine.actions import base as action_mod
+from senlin.engine.actions import cluster_action as cluster_action_mod
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
 from senlin.engine import environment
@@ -1463,6 +1464,21 @@ class EngineService(service.Service):
         LOG.info("Cluster recover action queued: %s.", action_id)
 
         return {'action': action_id}
+
+    @request_context
+    def cluster_complete_lifecycle(self, ctx, req):
+        """Complete lifecycle for a cluster's action token
+
+        :param ctx: Request context for the call.
+        :param req: An instance of the ClusterCompleteLifecycle object.
+        :return: A dict with the ID of the action fired.
+        """
+
+        LOG.info("Complete lifecycle for %s.", req.lifecycle_action_token)
+        cluster_action_mod.CompleteLifecycleProc(ctx,
+                                                 req.lifecycle_action_token)
+
+        return {'action': req.lifecycle_action_token}
 
     @request_context
     def cluster_op(self, ctx, req):

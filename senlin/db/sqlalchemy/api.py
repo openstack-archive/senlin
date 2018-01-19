@@ -1115,6 +1115,21 @@ def action_mark_succeeded(context, action_id, timestamp):
         subquery.delete(synchronize_session='fetch')
 
 
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
+def action_mark_ready(context, action_id, timestamp):
+    with session_for_write() as session:
+
+        query = session.query(models.Action).filter_by(id=action_id)
+        values = {
+            'owner': None,
+            'status': consts.ACTION_READY,
+            'status_reason': 'Lifecycle timeout.',
+            'end_time': timestamp,
+        }
+        query.update(values, synchronize_session=False)
+
+
 def _mark_failed(session, action_id, timestamp, reason=None):
     # mark myself as failed
     query = session.query(models.Action).filter_by(id=action_id)

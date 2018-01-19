@@ -12,7 +12,7 @@
 
 from senlin.drivers.openstack import ceilometer_v2
 from senlin.drivers.openstack import keystone_v3
-from senlin.drivers.openstack import zaqar_v2
+
 from senlin.drivers.openstack_test import cinder_v2
 from senlin.drivers.openstack_test import heat_v1
 from senlin.drivers.openstack_test import lbaas
@@ -20,6 +20,7 @@ from senlin.drivers.openstack_test import mistral_v2
 from senlin.drivers.openstack_test import neutron_v2
 from senlin.drivers.openstack_test import nova_v2
 from senlin.drivers.openstack_test import octavia_v2
+from senlin.drivers.openstack_test import zaqar_v2
 
 
 block_storage = cinder_v2.CinderClient

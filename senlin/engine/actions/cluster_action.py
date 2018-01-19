@@ -18,12 +18,15 @@ from oslo_utils import timeutils
 from osprofiler import profiler
 
 from senlin.common import consts
+from senlin.common import exception
+from senlin.common.i18n import _
 from senlin.common import scaleutils
 from senlin.common import utils
 from senlin.engine.actions import base
 from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
 from senlin.engine import node as node_mod
+from senlin.engine.notifications import message as msg
 from senlin.engine import scheduler
 from senlin.engine import senlin_lock
 from senlin.objects import action as ao
@@ -58,7 +61,7 @@ class ClusterAction(base.Action):
         if period:
             eventlet.sleep(period)
 
-    def _wait_for_dependents(self):
+    def _wait_for_dependents(self, lifecycle_hook_timeout=None):
         """Wait for dependent actions to complete.
 
         :returns: A tuple containing the result and the corresponding reason.
@@ -86,6 +89,15 @@ class ClusterAction(base.Action):
                     'action': self.action, 'id': self.id[:8]}
                 LOG.debug(reason)
                 return self.RES_TIMEOUT, reason
+
+            if (lifecycle_hook_timeout is not None and
+                    self.is_timeout(lifecycle_hook_timeout)):
+                # if lifecycle hook timeout is specified and Lifecycle hook
+                # timeout is reached, return
+                reason = _('%(action)s [%(id)s] lifecycle hook timeout') % {
+                    'action': self.action, 'id': self.id[:8]}
+                LOG.debug(reason)
+                return self.RES_LIFECYCLE_HOOK_TIMEOUT, reason
 
             # Continue waiting (with reschedule)
             scheduler.reschedule(self.id, 3)
@@ -298,25 +310,86 @@ class ClusterAction(base.Action):
             if destroy is False:
                 action_name = consts.NODE_LEAVE
 
+        # get lifecycle hook properties if specified
+        lifecycle_hook = self.data.get('hooks')
+        lifecycle_hook_timeout = None
+        if lifecycle_hook:
+            lifecycle_hook_timeout = lifecycle_hook.get('timeout')
+            lifecycle_hook_type = lifecycle_hook.get('type', None)
+            lifecycle_hook_params = lifecycle_hook.get('params')
+            if lifecycle_hook_type == "zaqar":
+                lifecycle_hook_target = lifecycle_hook_params.get('queue')
+            elif lifecycle_hook_type == "webhook":
+                lifecycle_hook_target = lifecycle_hook_params.get('url')
+            else:
+                return self.RES_ERROR, _("Invalid lifecycle hook type "
+                                         "specified in deletion policy")
+
         child = []
         for node_id in node_ids:
             kwargs = {
                 'name': 'node_delete_%s' % node_id[:8],
                 'cause': consts.CAUSE_DERIVED,
             }
+
+            if lifecycle_hook:
+                kwargs['cause'] = consts.CAUSE_DERIVED_LCH
+
             action_id = base.Action.create(self.context, node_id, action_name,
                                            **kwargs)
-            child.append(action_id)
+            child.append((action_id, node_id))
 
         if child:
-            dobj.Dependency.create(self.context, [c for c in child], self.id)
-            for cid in child:
-                # Build dependency and make the new action ready
-                ao.Action.update(self.context, cid,
-                                 {'status': base.Action.READY})
-            dispatcher.start_action()
+            dobj.Dependency.create(self.context, [aid for aid, nid in child],
+                                   self.id)
+            for action_id, node_id in child:
+                # Build dependency and make the new action ready or
+                # waiting for lifecycle completion if lifecycle hook properties
+                # are specified in deletion policy
 
-            res, reason = self._wait_for_dependents()
+                if not lifecycle_hook:
+                    status = base.Action.READY
+                else:
+                    status = base.Action.WAITING_LIFECYCLE_COMPLETION
+
+                ao.Action.update(self.context, action_id,
+                                 {'status': status})
+                if lifecycle_hook:
+                    if lifecycle_hook_type == "zaqar":
+                        # post message to zaqar
+                        kwargs = {
+                            'user': self.context.user_id,
+                            'project': self.context.project_id,
+                            'domain': self.context.domain_id
+                        }
+
+                        notifier = msg.Message(lifecycle_hook_target, **kwargs)
+                        notifier.post_lifecycle_hook_message(
+                            action_id, node_id,
+                            consts.LIFECYCLE_NODE_TERMINATION)
+                    else:
+                        reason = _("Lifecycle hook type '{}' is not "
+                                   "implemented").format(lifecycle_hook_type)
+                        return self.RES_ERROR, reason
+
+            res = None
+            if lifecycle_hook:
+                dispatcher.start_action()
+                res, reason = self._wait_for_dependents(lifecycle_hook_timeout)
+
+                if res == self.RES_LIFECYCLE_HOOK_TIMEOUT:
+                    for action_id, node_id in child:
+                        status = ao.Action.check_status(self.context,
+                                                        action_id, 0)
+                        if (status ==
+                                consts.ACTION_WAITING_LIFECYCLE_COMPLETION):
+                            ao.Action.update(self.context, action_id,
+                                             {'status': base.Action.READY})
+
+            if res is None or res == self.RES_LIFECYCLE_HOOK_TIMEOUT:
+                dispatcher.start_action()
+                res, reason = self._wait_for_dependents()
+
             if res == self.RES_OK:
                 self.outputs['nodes_removed'] = node_ids
                 for node_id in node_ids:
@@ -1042,3 +1115,22 @@ class ClusterAction(base.Action):
     def cancel(self):
         """Handler to cancel the execution of action."""
         return self.RES_OK
+
+
+def CompleteLifecycleProc(context, action_id):
+    """Complete lifecycle process."""
+
+    action = base.Action.load(context, action_id=action_id, project_safe=False)
+    if action is None:
+        LOG.error("Action %s could not be found.", action_id)
+        raise exception.ResourceNotFound(type='action', id=action_id)
+
+    if action.get_status() == consts.ACTION_WAITING_LIFECYCLE_COMPLETION:
+        action.set_status(base.Action.RES_LIFECYCLE_COMPLETE)
+        dispatcher.start_action()
+    else:
+        LOG.debug('Action %s status is not WAITING_LIFECYCLE.  '
+                  'Skip CompleteLifecycleProc', action_id)
+        return False
+
+    return True

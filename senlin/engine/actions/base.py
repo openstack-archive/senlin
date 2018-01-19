@@ -39,8 +39,10 @@ class Action(object):
 
     RETURNS = (
         RES_OK, RES_ERROR, RES_RETRY, RES_CANCEL, RES_TIMEOUT,
+        RES_LIFECYCLE_COMPLETE, RES_LIFECYCLE_HOOK_TIMEOUT,
     ) = (
-        'OK', 'ERROR', 'RETRY', 'CANCEL', 'TIMEOUT',
+        'OK', 'ERROR', 'RETRY', 'CANCEL', 'TIMEOUT', 'LIFECYCLE_COMPLETE',
+        'LIFECYCLE_HOOK_TIMEOUT'
     )
 
     # Action status definitions:
@@ -53,10 +55,10 @@ class Action(object):
     #  CANCELLED: Action cancelled because worker thread was cancelled.
     STATUSES = (
         INIT, WAITING, READY, RUNNING, SUSPENDED,
-        SUCCEEDED, FAILED, CANCELLED
+        SUCCEEDED, FAILED, CANCELLED, WAITING_LIFECYCLE_COMPLETION
     ) = (
         'INIT', 'WAITING', 'READY', 'RUNNING', 'SUSPENDED',
-        'SUCCEEDED', 'FAILED', 'CANCELLED',
+        'SUCCEEDED', 'FAILED', 'CANCELLED', 'WAITING_LIFECYCLE_COMPLETION'
     )
 
     # Signal commands
@@ -315,6 +317,10 @@ class Action(object):
             status = self.CANCELLED
             ao.Action.mark_cancelled(self.context, self.id, timestamp)
 
+        elif result == self.RES_LIFECYCLE_COMPLETE:
+            status = self.SUCCEEDED
+            ao.Action.mark_ready(self.context, self.id, timestamp)
+
         else:  # result == self.RES_RETRY:
             retries = self.data.get('retries', 0)
             # Action failed at the moment, but can be retried
@@ -350,9 +356,11 @@ class Action(object):
         self.status = status
         return status
 
-    def is_timeout(self):
+    def is_timeout(self, timeout=None):
+        if timeout is None:
+            timeout = self.timeout
         time_elapse = wallclock() - self.start_time
-        return time_elapse > self.timeout
+        return time_elapse > timeout
 
     def _check_signal(self):
         # Check timeout first, if true, return timeout message

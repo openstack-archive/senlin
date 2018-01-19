@@ -368,6 +368,10 @@ def action_mark_succeeded(context, action_id, timestamp):
     return IMPL.action_mark_succeeded(context, action_id, timestamp)
 
 
+def action_mark_ready(context, action_id, timestamp):
+    return IMPL.action_mark_ready(context, action_id, timestamp)
+
+
 def action_mark_failed(context, action_id, timestamp, reason=None):
     return IMPL.action_mark_failed(context, action_id, timestamp, reason)
 

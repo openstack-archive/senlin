@@ -376,6 +376,18 @@ the ``CLUSTER_DEL_NODES`` action will save the list of UUIDs of the deleted
 nodes into the action's ``data`` field so that those policies could update the
 associated resources.
 
+If a deletion policy with hooks property is attached to the cluster, the
+``CLUSTER_DEL_NODES`` action will create the ``CLUSTER_DEL_NODES`` actions
+in ``WAITING_LIFECYCLE_COMPLETION`` status which does not execute them.  It
+also sends the lifecycle hook message to the target specified in the
+deletion policy.  If the complete lifecylcle API is called for a
+``CLUSTER_DEL_NODES`` action, it will be executed.  If all the
+``CLUSTER_DEL_NODES`` actions are not executed before the hook timeout
+specified in the deletion policy is reached, the remaining
+``CLUSTER_DEL_NODES`` actions are moved into ``READY`` status and scheduled
+for execution.  When all actions complete, the ``CLUSTER_DEL_NODES``
+returns with a success.
+
 Note also that by default Senlin won't destroy the nodes that are deleted
 from the cluster. It simply removes the nodes from the cluster so that they
 become orphan nodes.

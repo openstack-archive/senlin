@@ -517,6 +517,30 @@ class DBAPIActionTest(base.SenlinTestCase):
         result = db_api.dependency_get_dependents(self.ctx, id_of['A01'])
         self.assertEqual(0, len(result))
 
+    def test_action_mark_ready(self):
+        timestamp = time.time()
+
+        specs = [
+            {'name': 'A01', 'status': 'INIT', 'target': 'cluster_001'},
+            {'name': 'A02', 'status': 'INIT', 'target': 'node_001'},
+            {'name': 'A03', 'status': 'INIT', 'target': 'node_002'},
+            {'name': 'A04', 'status': 'INIT', 'target': 'node_003'},
+            {'name': 'A05', 'status': 'INIT', 'target': 'cluster_002'},
+            {'name': 'A06', 'status': 'INIT', 'target': 'cluster_003'},
+            {'name': 'A07', 'status': 'INIT', 'target': 'cluster_004'},
+        ]
+
+        id_of = {}
+        for spec in specs:
+            action = _create_action(self.ctx, **spec)
+            id_of[spec['name']] = action.id
+
+        db_api.action_mark_ready(self.ctx, id_of['A01'], timestamp)
+
+        action = db_api.action_get(self.ctx, id_of['A01'])
+        self.assertEqual(consts.ACTION_READY, action.status)
+        self.assertEqual(timestamp, action.end_time)
+
     def test_action_acquire(self):
         action = _create_action(self.ctx)
         db_api.action_update(self.ctx, action.id, {'status': 'READY'})

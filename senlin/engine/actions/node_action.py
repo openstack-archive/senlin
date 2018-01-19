@@ -248,20 +248,24 @@ class NodeAction(base.Action):
         # Since node.cluster_id could be reset to '' during action execution,
         # we record it here for policy check and cluster lock release.
         saved_cluster_id = self.entity.cluster_id
-        if (saved_cluster_id and self.cause == consts.CAUSE_RPC):
-            res = senlin_lock.cluster_lock_acquire(
-                self.context, self.entity.cluster_id, self.id, self.owner,
-                senlin_lock.NODE_SCOPE, False)
+        if saved_cluster_id:
+            if self.cause == consts.CAUSE_RPC:
+                res = senlin_lock.cluster_lock_acquire(
+                    self.context, self.entity.cluster_id, self.id, self.owner,
+                    senlin_lock.NODE_SCOPE, False)
 
-            if not res:
-                return self.RES_RETRY, 'Failed in locking cluster'
+                if not res:
+                    return self.RES_RETRY, 'Failed in locking cluster'
 
-            self.policy_check(self.entity.cluster_id, 'BEFORE')
-            if self.data['status'] != pb.CHECK_OK:
-                # Don't emit message since policy_check should have done it
-                senlin_lock.cluster_lock_release(saved_cluster_id, self.id,
-                                                 senlin_lock.NODE_SCOPE)
-                return self.RES_ERROR, 'Policy check: ' + self.data['reason']
+                self.policy_check(self.entity.cluster_id, 'BEFORE')
+                if self.data['status'] != pb.CHECK_OK:
+                    # Don't emit message since policy_check should have done it
+                    senlin_lock.cluster_lock_release(saved_cluster_id, self.id,
+                                                     senlin_lock.NODE_SCOPE)
+                    return self.RES_ERROR, ('Policy check: ' +
+                                            self.data['reason'])
+            elif self.cause == consts.CAUSE_DERIVED_LCH:
+                self.policy_check(self.entity.cluster_id, 'BEFORE')
 
         reason = ''
         try:

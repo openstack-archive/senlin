@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from openstack import exceptions as sdk_exc
+
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
 
@@ -25,6 +27,14 @@ class ZaqarClient(base.DriverBase):
     @sdk.translate_exception
     def queue_create(self, **attrs):
         return self.conn.message.create_queue(**attrs)
+
+    @sdk.translate_exception
+    def queue_exists(self, queue_name):
+        try:
+            self.conn.message.get_queue(queue_name)
+            return True
+        except sdk_exc.ResourceNotFound:
+            return False
 
     @sdk.translate_exception
     def queue_delete(self, queue, ignore_missing=True):
@@ -54,3 +64,7 @@ class ZaqarClient(base.DriverBase):
                        ignore_missing=True):
         return self.conn.message.delete_message(queue_name, message,
                                                 claim_id, ignore_missing)
+
+    @sdk.translate_exception
+    def message_post(self, queue_name, message):
+        return self.conn.message.post_message(queue_name, message)

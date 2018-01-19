@@ -114,6 +114,10 @@ class Action(base.SenlinObject, base.VersionedObjectDictCompat):
         return db_api.action_mark_succeeded(context, action_id, timestamp)
 
     @classmethod
+    def mark_ready(cls, context, action_id, timestamp):
+        return db_api.action_mark_ready(context, action_id, timestamp)
+
+    @classmethod
     def mark_failed(cls, context, action_id, timestamp, reason=None):
         return db_api.action_mark_failed(context, action_id, timestamp, reason)
 

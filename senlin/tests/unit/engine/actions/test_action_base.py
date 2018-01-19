@@ -348,12 +348,14 @@ class ActionBaseTest(base.SenlinTestCase):
     @mock.patch.object(ao.Action, 'mark_succeeded')
     @mock.patch.object(ao.Action, 'mark_failed')
     @mock.patch.object(ao.Action, 'mark_cancelled')
+    @mock.patch.object(ao.Action, 'mark_ready')
     @mock.patch.object(ao.Action, 'abandon')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(eventlet, 'sleep')
     def test_set_status(self, mock_sleep, mock_start, mock_abandon,
-                        mark_cancel, mark_fail, mark_succeed, mock_event,
-                        mock_error, mock_info):
+                        mark_ready, mark_cancel, mark_fail,
+                        mark_succeed, mock_event, mock_error,
+                        mock_info):
         action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id='FAKE_ID')
         action.entity = mock.Mock()
 
@@ -383,6 +385,12 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertEqual('CANCELLED', action.status_reason)
         mark_cancel.assert_called_once_with(action.context, 'FAKE_ID',
                                             mock.ANY)
+
+        mark_fail.reset_mock()
+        action.set_status(action.RES_LIFECYCLE_COMPLETE, 'LIFECYCLE COMPLETE')
+        self.assertEqual(action.SUCCEEDED, action.status)
+        self.assertEqual('LIFECYCLE COMPLETE', action.status_reason)
+        mark_ready.assert_called_once_with(action.context, 'FAKE_ID', mock.ANY)
 
         mark_fail.reset_mock()
         action.set_status(action.RES_RETRY, 'BUSY')

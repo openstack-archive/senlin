@@ -1,0 +1,14 @@
+# Sample deletion policy that can be attached to a cluster.
+type: senlin.policy.deletion
+version: 1.1
+description: A policy for choosing victim node(s) from a cluster for deletion.
+properties:
+  hooks:
+    # type of lifecycle hook
+    type: zaqar
+    params:
+      # Name of zaqar queue to receive lifecycle hook message
+      queue: zaqar_queue_name
+    # Length in number of seconds before the actual deletion happens
+    timeout: 180
+
