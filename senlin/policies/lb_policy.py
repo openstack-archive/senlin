@@ -13,8 +13,8 @@
 """
 Policy for load-balancing among nodes in a cluster.
 
-NOTE: For full documentation about how the deletion policy works, check:
-https://docs.openstack.org/senlin/latest/developer/policies/
+NOTE: For full documentation about how the load-balancing policy works,
+check: https://docs.openstack.org/senlin/latest/developer/policies/
 load_balance_v1.html
 """
 
