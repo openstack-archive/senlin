@@ -745,10 +745,10 @@ class TestAdjustmentType(TestField):
         )
 
 
-class TestClusterActionName(TestField):
+class TestClusterActionNameField(TestField):
 
     def setUp(self):
-        super(TestClusterActionName, self).setUp()
+        super(TestClusterActionNameField, self).setUp()
         self.field = senlin_fields.ClusterActionNameField()
         self.coerce_good_values = [
             (action, action) for action in consts.CLUSTER_ACTION_NAMES]
@@ -761,11 +761,61 @@ class TestClusterActionName(TestField):
         self.assertEqual("'CLUSTER_RESIZE'",
                          self.field.stringify('CLUSTER_RESIZE'))
 
+    def test_get_schema(self):
+        self.assertEqual(
+            {
+                'type': ['string'],
+                'readonly': False,
+                'enum': ['CLUSTER_CREATE', 'CLUSTER_DELETE',
+                         'CLUSTER_UPDATE', 'CLUSTER_ADD_NODES',
+                         'CLUSTER_DEL_NODES', 'CLUSTER_RESIZE',
+                         'CLUSTER_CHECK', 'CLUSTER_RECOVER',
+                         'CLUSTER_REPLACE_NODES', 'CLUSTER_SCALE_OUT',
+                         'CLUSTER_SCALE_IN', 'CLUSTER_ATTACH_POLICY',
+                         'CLUSTER_DETACH_POLICY', 'CLUSTER_UPDATE_POLICY',
+                         'CLUSTER_OPERATION']
+            },
+            self.field.get_schema()
+        )
 
-class TestReceiverType(TestField):
+
+class TestClusterActionName(TestField):
 
     def setUp(self):
-        super(TestReceiverType, self).setUp()
+        super(TestClusterActionName, self).setUp()
+        self.field = senlin_fields.ClusterActionName()
+        self.coerce_good_values = [
+            (action, action) for action in consts.CLUSTER_ACTION_NAMES]
+        self.coerce_bad_values = ['BOGUS']
+
+        self.to_primitive_values = self.coerce_good_values[0:1]
+        self.from_primitive_values = self.coerce_good_values[0:1]
+
+    def test_stringify(self):
+        self.assertEqual("'CLUSTER_RESIZE'",
+                         self.field.stringify('CLUSTER_RESIZE'))
+
+    def test_get_schema(self):
+        self.assertEqual(
+            {
+                'type': ['string'],
+                'enum': ['CLUSTER_CREATE', 'CLUSTER_DELETE',
+                         'CLUSTER_UPDATE', 'CLUSTER_ADD_NODES',
+                         'CLUSTER_DEL_NODES', 'CLUSTER_RESIZE',
+                         'CLUSTER_CHECK', 'CLUSTER_RECOVER',
+                         'CLUSTER_REPLACE_NODES', 'CLUSTER_SCALE_OUT',
+                         'CLUSTER_SCALE_IN', 'CLUSTER_ATTACH_POLICY',
+                         'CLUSTER_DETACH_POLICY', 'CLUSTER_UPDATE_POLICY',
+                         'CLUSTER_OPERATION']
+            },
+            self.field.get_schema()
+        )
+
+
+class TestReceiverTypeField(TestField):
+
+    def setUp(self):
+        super(TestReceiverTypeField, self).setUp()
         self.field = senlin_fields.ReceiverTypeField()
         self.coerce_good_values = [
             (action, action) for action in consts.RECEIVER_TYPES]
@@ -777,3 +827,39 @@ class TestReceiverType(TestField):
     def test_stringify(self):
         self.assertEqual("'message'",
                          self.field.stringify('message'))
+
+    def test_get_schema(self):
+        self.assertEqual(
+            {
+                'type': ['string'],
+                'readonly': False,
+                'enum': ['webhook', 'message']
+            },
+            self.field.get_schema()
+        )
+
+
+class TestReceiverType(TestField):
+
+    def setUp(self):
+        super(TestReceiverType, self).setUp()
+        self.field = senlin_fields.ReceiverType()
+        self.coerce_good_values = [
+            (action, action) for action in consts.RECEIVER_TYPES]
+        self.coerce_bad_values = ['BOGUS']
+
+        self.to_primitive_values = self.coerce_good_values[0:1]
+        self.from_primitive_values = self.coerce_good_values[0:1]
+
+    def test_stringify(self):
+        self.assertEqual("'message'",
+                         self.field.stringify('message'))
+
+    def test_get_schema(self):
+        self.assertEqual(
+            {
+                'type': ['string'],
+                'enum': ['webhook', 'message']
+            },
+            self.field.get_schema()
+        )

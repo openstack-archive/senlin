@@ -395,6 +395,10 @@ class ClusterActionName(BaseEnum):
 
     ALL = consts.CLUSTER_ACTION_NAMES
 
+    def get_schema(self):
+        return {'type': ['string'],
+                'enum': self._valid_values}
+
 
 class ClusterStatus(BaseEnum):
 
@@ -414,6 +418,10 @@ class ActionStatus(BaseEnum):
 class ReceiverType(BaseEnum):
 
     ALL = consts.RECEIVER_TYPES
+
+    def get_schema(self):
+        return {'type': ['string'],
+                'enum': self._valid_values}
 
 
 class UniqueDict(fields.Dict):
