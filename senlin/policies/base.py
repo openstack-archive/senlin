@@ -295,7 +295,7 @@ class Policy(object):
             return self._octaviaclient
 
         params = self._build_conn_params(user, project)
-        self._octaviaclient = driver.SenlinDriver().network(params)
+        self._octaviaclient = driver.SenlinDriver().octavia(params)
 
         return self._octaviaclient
 
