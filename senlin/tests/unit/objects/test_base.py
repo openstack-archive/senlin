@@ -12,6 +12,7 @@
 
 import mock
 from oslo_versionedobjects import base as ovo_base
+from oslo_versionedobjects import exception as exc
 import six
 
 from senlin.objects import base as obj_base
@@ -70,11 +71,7 @@ class TestBaseObject(base.SenlinTestCase):
 
     def test_to_json_schema(self):
         obj = obj_base.SenlinObject()
-        expected = {
-            '$schema': 'http://json-schema.org/draft-04/schema#',
-            'title': 'SenlinObject'
-        }
-        self.assertEqual(expected, obj.to_json_schema())
+        self.assertRaises(exc.UnsupportedObjectError, obj.to_json_schema)
 
     @mock.patch.object(ovo_base.VersionedObject, 'obj_class_from_name')
     def test_obj_class_from_name_with_version(self, mock_convert):
