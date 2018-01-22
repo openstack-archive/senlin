@@ -1496,30 +1496,51 @@ class ServerProfile(base.Profile):
             return None
 
         server_id = obj.physical_id
-        driver = self.compute(obj)
+        nova_driver = self.compute(obj)
         try:
-            server = driver.server_get(server_id)
+            server = nova_driver.server_get(server_id)
         except exc.InternalError as ex:
             raise exc.EResourceOperation(op='rebuilding', type='server',
                                          id=server_id,
                                          message=six.text_type(ex))
 
-        if server is None or server.image is None:
+        if server is None:
             return None
+        # when booting a nova server from volume, the image property
+        # can be ignored.
+        # we try find a volume which is bootable and use its image_id
+        # for the server.
+        if server.image:
+            image_id = server.image
+        elif server.attached_volumes:
+            cinder_driver = self.block_storage(obj)
+            for volume_ids in server.attached_volumes:
+                try:
+                    vs = cinder_driver.volume_get(volume_ids['id'])
+                    if vs.is_bootable:
+                        image_id = vs.volume_image_metadata['image_id']
+                except exc.InternalError as ex:
+                    raise exc.EResourceOperation(op='rebuild', type='server',
+                                                 id=obj.physical_id,
+                                                 message=six.text_type(ex))
+        else:
+            msg = _("server doesn't have an image and it has no "
+                    "bootable volume")
+            raise exc.EResourceOperation(op="rebuild", type="server",
+                                         id=obj.physical_id,
+                                         message=msg)
 
-        image_id = server.image['id']
         admin_pass = self.properties.get(self.ADMIN_PASS)
         name = self.properties[self.NAME] or obj.name
         try:
-            driver.server_rebuild(server_id, image_id,
-                                  name, admin_pass)
-            driver.wait_for_server(server_id, 'ACTIVE')
+            nova_driver.server_rebuild(server_id, image_id,
+                                       name, admin_pass)
+            nova_driver.wait_for_server(server_id, 'ACTIVE')
             return server_id
         except exc.InternalError as ex:
             raise exc.EResourceOperation(op='rebuilding', type='server',
                                          id=server_id,
                                          message=six.text_type(ex))
-            return None
 
     def handle_change_password(self, obj, **options):
         """Handler for the change_password operation."""

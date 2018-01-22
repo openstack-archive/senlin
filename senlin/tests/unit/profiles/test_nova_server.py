@@ -1292,9 +1292,48 @@ class TestNovaServerBasic(base.SenlinTestCase):
         res = profile.handle_reboot(obj, type='foo')
         self.assertFalse(res)
 
-    def test_handle_rebuild(self):
+    def test_handle_rebuild_with_image(self):
         profile = server.ServerProfile('t', self.spec)
-        x_image = {'id': '123'}
+        x_image = '123'
+        x_server = mock.Mock(image=x_image)
+        cc = mock.Mock()
+        cc.server_get.return_value = x_server
+        cc.server_rebuild.return_value = True
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.handle_rebuild(node_obj)
+
+        self.assertEqual('FAKE_ID', res)
+        cc.server_get.assert_called_with('FAKE_ID')
+        cc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
+                                                  'FAKE_SERVER_NAME',
+                                                  'adminpass')
+        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
+
+    def test_handle_rebuild_with_bdm(self):
+        bdm_v2 = [
+            {
+                'volume_size': 1,
+                'uuid': '123',
+                'source_type': 'image',
+                'destination_type': 'volume',
+                'boot_index': 0,
+            }
+        ]
+        spec = {
+            'type': 'os.nova.server',
+            'version': '1.0',
+            'properties': {
+                'flavor': 'FLAV',
+                'admin_pass': 'adminpass',
+                'name': 'FAKE_SERVER_NAME',
+                'security_groups': ['HIGH_SECURITY_GROUP'],
+                'block_device_mapping_v2': bdm_v2,
+            }
+        }
+        profile = server.ServerProfile('t', spec)
+        x_image = '123'
         x_server = mock.Mock(image=x_image)
         cc = mock.Mock()
         cc.server_get.return_value = x_server
@@ -1330,7 +1369,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
     def test_handle_rebuild_failed_rebuild(self):
         profile = server.ServerProfile('t', self.spec)
-        x_image = {'id': '123'}
+        x_image = '123'
         x_server = mock.Mock(image=x_image)
         cc = mock.Mock()
         cc.server_get.return_value = x_server
@@ -1354,7 +1393,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
     def test_handle_rebuild_failed_waiting(self):
         profile = server.ServerProfile('t', self.spec)
-        x_image = {'id': '123'}
+        x_image = '123'
         x_server = mock.Mock(image=x_image)
         cc = mock.Mock()
         cc.server_get.return_value = x_server
@@ -1403,7 +1442,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
     def test_handle_rebuild_failed_with_name(self):
         self.spec['properties']['name'] = None
         profile = server.ServerProfile('t', self.spec)
-        x_image = {'id': '123'}
+        x_image = '123'
         x_server = mock.Mock(image=x_image)
         cc = mock.Mock()
         cc.server_get.return_value = x_server
