@@ -36,6 +36,7 @@
       - openstack/neutron-lbaas
       - openstack/python-zaqarclient
       - openstack/senlin
+      - openstack/senlin-tempest-plugin
       - openstack/tempest
       - openstack/zaqar
       - openstack/zaqar-ui
@@ -43,6 +44,7 @@
       - ^.*\.rst$
       - ^api-ref/.*$
       - ^doc/.*$
+      - ^senlin/tests/unit/.*$
       - ^releasenotes/.*$
 
 - job:
@@ -57,6 +59,7 @@
       - openstack/neutron-lbaas
       - openstack/python-zaqarclient
       - openstack/senlin
+      - openstack/senlin-tempest-plugin
       - openstack/tempest
       - openstack/zaqar
       - openstack/zaqar-ui
@@ -64,6 +67,7 @@
       - ^.*\.rst$
       - ^api-ref/.*$
       - ^doc/.*$
+      - ^senlin/tests/unit/.*$
       - ^releasenotes/.*$
 
 - job:
@@ -78,13 +82,16 @@
       - openstack/neutron-lbaas
       - openstack/python-zaqarclient
       - openstack/senlin
+      - openstack/senlin-tempest-plugin
       - openstack/tempest
       - openstack/zaqar
       - openstack/zaqar-ui
+      - openstack/zaqar-tempest-plugin
     irrelevant-files:
       - ^.*\.rst$
       - ^api-ref/.*$
       - ^doc/.*$
+      - ^senlin/tests/unit/.*$
       - ^releasenotes/.*$
 
 - job:
@@ -99,6 +106,7 @@
       - openstack/neutron-lbaas
       - openstack/python-zaqarclient
       - openstack/senlin
+      - openstack/senlin-tempest-plugin
       - openstack/tempest
       - openstack/zaqar
       - openstack/zaqar-ui
@@ -106,6 +114,7 @@
       - ^.*\.rst$
       - ^api-ref/.*$
       - ^doc/.*$
+      - ^senlin/tests/unit/.*$
       - ^releasenotes/.*$
 
 - job:
@@ -120,6 +129,7 @@
       - openstack/neutron-lbaas
       - openstack/python-zaqarclient
       - openstack/senlin
+      - openstack/senlin-tempest-plugin
       - openstack/tempest
       - openstack/zaqar
       - openstack/zaqar-ui
@@ -127,6 +137,7 @@
       - ^.*\.rst$
       - ^api-ref/.*$
       - ^doc/.*$
+      - ^senlin/tests/unit/.*$
       - ^releasenotes/.*$
 
 - job:
@@ -141,13 +152,16 @@
       - openstack/neutron-lbaas
       - openstack/python-zaqarclient
       - openstack/senlin
+      - openstack/senlin-tempest-plugin
       - openstack/tempest
       - openstack/zaqar
       - openstack/zaqar-ui
+      - openstack/zaqar-tempest-plugin
     irrelevant-files:
       - ^.*\.rst$
       - ^api-ref/.*$
       - ^doc/.*$
+      - ^senlin/tests/unit/.*$
       - ^releasenotes/.*$
 
 - job:

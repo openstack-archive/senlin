@@ -19,6 +19,7 @@ from senlin.tests.drivers.openstack import lbaas
 from senlin.tests.drivers.openstack import mistral_v2
 from senlin.tests.drivers.openstack import neutron_v2
 from senlin.tests.drivers.openstack import nova_v2
+from senlin.tests.drivers.openstack import octavia_v2
 
 
 compute = nova_v2.NovaClient
@@ -26,6 +27,7 @@ identity = keystone_v3.KeystoneClient
 loadbalancing = lbaas.LoadBalancerDriver
 message = zaqar_v2.ZaqarClient
 network = neutron_v2.NeutronClient
+octavia = octavia_v2.OctaviaClient
 orchestration = heat_v1.HeatClient
 telemetry = ceilometer_v2.CeilometerClient
 workflow = mistral_v2.MistralClient

@@ -31,10 +31,10 @@
           export PYTHONUNBUFFERED=True
           export DEVSTACK_GATE_NEUTRON=1
           export DEVSTACK_GATE_TEMPEST=1
+          export KEEP_LOCALRC=1
           export DEVSTACK_GATE_TEMPEST_NOTESTS=1
           export DEVSTACK_GATE_EXERCISES=0
           export DEVSTACK_GATE_INSTALL_TESTONLY=1
-          export KEEP_LOCALRC=1
 
           if [ "py35" == "py35" ]; then
             export DEVSTACK_GATE_USE_PYTHON3=True
@@ -42,7 +42,8 @@
             export DEVSTACK_GATE_USE_PYTHON3=False
           fi
 
-          export DEVSTACK_GATE_TEMPEST_REGEX="senlin.tests.tempest.api"
+          export SENLIN_TEST_TYPE="api"
+          export DEVSTACK_GATE_TEMPEST_REGEX="senlin_tempest_plugin.tests.${SENLIN_TEST_TYPE}"
 
           services=rabbit,mysql,dstat,key,tempest
           services+=,g-api,g-reg
@@ -57,7 +58,7 @@
           export PROJECTS="openstack/senlin $PROJECTS"
           export DEVSTACK_LOCAL_CONFIG="enable_plugin senlin https://git.openstack.org/openstack/senlin"
 
-          if [ "api" == "api" ]||[ "api" == "functional" ]; then
+          if [ "${SENLIN_TEST_TYPE}" == "api" ]||[ "${SENLIN_TEST_TYPE}" == "functional" ]; then
             export SENLIN_BACKEND="openstack_test"
           else
             export SENLIN_BACKEND="openstack"
@@ -76,6 +77,10 @@
             export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin zaqar git://git.openstack.org/openstack/zaqar"
           fi
 
+          # use senlin-tempest-plugin
+          export PROJECTS="openstack/senlin-tempest-plugin $PROJECTS"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"TEMPEST_PLUGINS+=' /opt/stack/new/senlin-tempest-plugin'"
+
           export OVERRIDE_ENABLED_SERVICES=$services
 
           if [ "$BRANCH_OVERRIDE" != "default" ] ; then
@@ -90,7 +95,7 @@
 
           function post_test_hook {
               cd /opt/stack/new/senlin/senlin/tests/tempest/
-              ./post_test_hook.sh
+              ./post_test_hook.sh senlin_tempest_plugin.tests.${SENLIN_TEST_TYPE}
           }
           export -f post_test_hook
 
