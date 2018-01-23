@@ -34,7 +34,6 @@ from sqlalchemy.sql.expression import func
 
 from senlin.common import consts
 from senlin.common import exception
-from senlin.common.i18n import _
 from senlin.db.sqlalchemy import migration
 from senlin.db.sqlalchemy import models
 from senlin.db.sqlalchemy import utils
@@ -324,7 +323,7 @@ def node_update(context, node_id, values):
                 if values['status'] == 'ERROR':
                     cluster.status = 'WARNING'
                 if 'status_reason' in values:
-                    cluster.status_reason = _('Node %(node)s: %(reason)s') % {
+                    cluster.status_reason = 'Node %(node)s: %(reason)s' % {
                         'node': node.name, 'reason': values['status_reason']}
                 cluster.save(session)
 
@@ -1039,7 +1038,7 @@ def action_check_status(context, action_id, timestamp):
         action = session.query(models.Action).get(action_id)
         if action.status == consts.ACTION_WAITING:
             action.status = consts.ACTION_READY
-            action.status_reason = _('All depended actions completed.')
+            action.status_reason = 'All depended actions completed.'
             action.end_time = timestamp
             action.save(session)
 
@@ -1065,7 +1064,7 @@ def dependency_get_dependents(context, action_id):
 def dependency_add(context, depended, dependent):
     if isinstance(depended, list) and isinstance(dependent, list):
         raise exception.NotSupport(
-            _('Multiple dependencies between lists not support'))
+            'Multiple dependencies between lists not support')
 
     with session_for_write() as session:
         if isinstance(depended, list):   # e.g. D depends on A,B,C
@@ -1075,7 +1074,7 @@ def dependency_add(context, depended, dependent):
 
             query = session.query(models.Action).filter_by(id=dependent)
             query.update({'status': consts.ACTION_WAITING,
-                          'status_reason': _('Waiting for depended actions.')},
+                          'status_reason': 'Waiting for depended actions.'},
                          synchronize_session='fetch')
             return
 
@@ -1093,7 +1092,7 @@ def dependency_add(context, depended, dependent):
         q = session.query(models.Action).filter(
             models.Action.id.in_(dependents))
         q.update({'status': consts.ACTION_WAITING,
-                  'status_reason': _('Waiting for depended actions.')},
+                  'status_reason': 'Waiting for depended actions.'},
                  synchronize_session='fetch')
 
 
@@ -1106,7 +1105,7 @@ def action_mark_succeeded(context, action_id, timestamp):
         values = {
             'owner': None,
             'status': consts.ACTION_SUCCEEDED,
-            'status_reason': _('Action completed successfully.'),
+            'status_reason': 'Action completed successfully.',
             'end_time': timestamp,
         }
         query.update(values, synchronize_session=False)
@@ -1123,7 +1122,7 @@ def _mark_failed(session, action_id, timestamp, reason=None):
         'owner': None,
         'status': consts.ACTION_FAILED,
         'status_reason': (six.text_type(reason) if reason else
-                          _('Action execution failed')),
+                          'Action execution failed'),
         'end_time': timestamp,
     }
     query.update(values, synchronize_session=False)
@@ -1150,7 +1149,7 @@ def _mark_cancelled(session, action_id, timestamp, reason=None):
         'owner': None,
         'status': consts.ACTION_CANCELLED,
         'status_reason': (six.text_type(reason) if reason else
-                          _('Action execution failed')),
+                          'Action execution failed'),
         'end_time': timestamp,
     }
     query.update(values, synchronize_session=False)
@@ -1184,14 +1183,13 @@ def action_acquire(context, action_id, owner, timestamp):
             return None
 
         if action.status != consts.ACTION_READY:
-            msg = _('The action is not in an executable status: '
-                    '%s') % action.status
+            msg = 'The action is not executable: %s' % action.status
             LOG.warning(msg)
             return None
         action.owner = owner
         action.start_time = timestamp
         action.status = consts.ACTION_RUNNING
-        action.status_reason = _('The action is being processed.')
+        action.status_reason = 'The action is being processed.'
         action.save(session)
 
         return action
@@ -1211,7 +1209,7 @@ def action_acquire_random_ready(context, owner, timestamp):
             action.owner = owner
             action.start_time = timestamp
             action.status = consts.ACTION_RUNNING
-            action.status_reason = _('The action is being processed.')
+            action.status_reason = 'The action is being processed.'
             action.save(session)
 
             return action
@@ -1228,7 +1226,7 @@ def _action_acquire_ready(session, owner, timestamp, order=None):
         action.owner = owner
         action.start_time = timestamp
         action.status = consts.ACTION_RUNNING
-        action.status_reason = _('The action is being processed.')
+        action.status_reason = 'The action is being processed.'
         action.save(session)
 
     return action
@@ -1254,7 +1252,7 @@ def action_abandon(context, action_id, values=None):
         action.owner = None
         action.start_time = None
         action.status = consts.ACTION_READY
-        action.status_reason = _('The action was abandoned.')
+        action.status_reason = 'The action was abandoned.'
         if values:
             action.update(values)
         action.save(session)
@@ -1306,8 +1304,7 @@ def action_delete_by_target(context, target, action=None,
                             action_excluded=None, status=None,
                             project_safe=True):
     if action and action_excluded:
-        msg = _("action and action_excluded cannot be specified "
-                "both.")
+        msg = "action and action_excluded cannot be both specified."
         LOG.warning(msg)
         return None
 
@@ -1454,7 +1451,7 @@ def _mark_engine_failed(session, action_id, timestamp, reason=None):
         'owner': None,
         'status': consts.ACTION_FAILED,
         'status_reason': (six.text_type(reason) if reason else
-                          _('Action execution failed')),
+                          'Action execution failed'),
         'end_time': timestamp,
     }
     action.update(values)
