@@ -22,6 +22,7 @@ from senlin.tests.drivers.openstack import nova_v2
 from senlin.tests.drivers.openstack import octavia_v2
 
 
+block_storage = cinder_v2.CinderClient
 compute = nova_v2.NovaClient
 identity = keystone_v3.KeystoneClient
 loadbalancing = lbaas.LoadBalancerDriver
@@ -31,4 +32,3 @@ octavia = octavia_v2.OctaviaClient
 orchestration = heat_v1.HeatClient
 telemetry = ceilometer_v2.CeilometerClient
 workflow = mistral_v2.MistralClient
-block_storage = cinder_v2.CinderClient
