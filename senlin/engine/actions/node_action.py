@@ -16,7 +16,6 @@ from oslo_log import log as logging
 from osprofiler import profiler
 
 from senlin.common import consts
-from senlin.common.i18n import _
 from senlin.common import scaleutils as su
 from senlin.engine.actions import base
 from senlin.engine import cluster as cm
@@ -78,9 +77,9 @@ class NodeAction(base.Action):
             cluster.eval_status(self.context, consts.NODE_CREATE,
                                 desired_capacity=desired)
         if res:
-            return self.RES_OK, _('Node created successfully.')
+            return self.RES_OK, 'Node created successfully.'
         else:
-            return self.RES_ERROR, _('Node creation failed.')
+            return self.RES_ERROR, 'Node creation failed.'
 
     @profiler.trace('NodeAction.do_delete', hide_args=False)
     def do_delete(self):
@@ -120,7 +119,7 @@ class NodeAction(base.Action):
             cluster.eval_status(self.context, consts.NODE_DELETE, **params)
 
         if not res:
-            return self.RES_ERROR, _('Node deletion failed.')
+            return self.RES_ERROR, 'Node deletion failed.'
 
         # Remove all action records which target on deleted
         # node except the on-going NODE_DELETE action from DB
@@ -132,7 +131,7 @@ class NodeAction(base.Action):
         except Exception as ex:
             LOG.warning('Failed to clean node action records: %s',
                         ex)
-        return self.RES_OK, _('Node deleted successfully.')
+        return self.RES_OK, 'Node deleted successfully.'
 
     @profiler.trace('NodeAction.do_update', hide_args=False)
     def do_update(self):
@@ -146,13 +145,13 @@ class NodeAction(base.Action):
             params.pop('new_profile_id')
 
         if not params:
-            return self.RES_OK, _('No property to update.')
+            return self.RES_OK, 'No property to update.'
 
         res = self.entity.do_update(self.context, params)
         if res:
-            return self.RES_OK, _('Node updated successfully.')
+            return self.RES_OK, 'Node updated successfully.'
         else:
-            return self.RES_ERROR, _('Node update failed.')
+            return self.RES_ERROR, 'Node update failed.'
 
     @profiler.trace('NodeAction.do_join', hide_args=False)
     def do_join(self):
@@ -168,9 +167,9 @@ class NodeAction(base.Action):
         cluster_id = self.inputs.get('cluster_id')
         result = self.entity.do_join(self.context, cluster_id)
         if result:
-            return self.RES_OK, _('Node successfully joined cluster.')
+            return self.RES_OK, 'Node successfully joined cluster.'
         else:
-            return self.RES_ERROR, _('Node failed in joining cluster.')
+            return self.RES_ERROR, 'Node failed in joining cluster.'
 
     @profiler.trace('NodeAction.do_leave', hide_args=False)
     def do_leave(self):
@@ -185,9 +184,9 @@ class NodeAction(base.Action):
         """
         res = self.entity.do_leave(self.context)
         if res:
-            return self.RES_OK, _('Node successfully left cluster.')
+            return self.RES_OK, 'Node successfully left cluster.'
         else:
-            return self.RES_ERROR, _('Node failed in leaving cluster.')
+            return self.RES_ERROR, 'Node failed in leaving cluster.'
 
     @profiler.trace('NodeAction.do_check', hide_args=False)
     def do_check(self):
@@ -197,9 +196,9 @@ class NodeAction(base.Action):
         """
         res = self.entity.do_check(self.context)
         if res:
-            return self.RES_OK, _('Node check succeeded.')
+            return self.RES_OK, 'Node check succeeded.'
         else:
-            return self.RES_ERROR, _('Node check failed.')
+            return self.RES_ERROR, 'Node check failed.'
 
     @profiler.trace('NodeAction.do_recover', hide_args=False)
     def do_recover(self):
@@ -209,9 +208,9 @@ class NodeAction(base.Action):
         """
         res = self.entity.do_recover(self.context, self)
         if res:
-            return self.RES_OK, _('Node recovered successfully.')
+            return self.RES_OK, 'Node recovered successfully.'
         else:
-            return self.RES_ERROR, _('Node recover failed.')
+            return self.RES_ERROR, 'Node recover failed.'
 
     @profiler.trace('NodeAction.do_operation', hide_args=False)
     def do_operation(self):
@@ -222,11 +221,9 @@ class NodeAction(base.Action):
         operation = self.inputs['operation']
         res = self.entity.do_operation(self.context, **self.inputs)
         if res:
-            return self.RES_OK, _("Node operation '%s' succeeded."
-                                  ) % operation
+            return self.RES_OK, "Node operation '%s' succeeded." % operation
         else:
-            return self.RES_ERROR, _("Node operation '%s' failed."
-                                     ) % operation
+            return self.RES_ERROR, "Node operation '%s' failed." % operation
 
     def _execute(self):
         """Private function that finds out the handler and execute it."""
@@ -236,7 +233,7 @@ class NodeAction(base.Action):
         method = getattr(self, method_name, None)
 
         if method is None:
-            reason = _('Unsupported action: %s') % self.action
+            reason = 'Unsupported action: %s' % self.action
             EVENT.error(self, consts.PHASE_ERROR, reason)
             return self.RES_ERROR, reason
 
@@ -257,7 +254,7 @@ class NodeAction(base.Action):
                 senlin_lock.NODE_SCOPE, False)
 
             if not res:
-                return self.RES_RETRY, _('Failed in locking cluster')
+                return self.RES_RETRY, 'Failed in locking cluster'
 
             self.policy_check(self.entity.cluster_id, 'BEFORE')
             if self.data['status'] != pb.CHECK_OK:
@@ -272,7 +269,7 @@ class NodeAction(base.Action):
                                                 self.id, self.owner, False)
             if not res:
                 res = self.RES_RETRY
-                reason = _('Failed in locking node')
+                reason = 'Failed in locking node'
             else:
                 res, reason = self._execute()
                 if (res == self.RES_OK and saved_cluster_id and

@@ -625,9 +625,9 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual({'recovery': 'RECREATE'}, node.data)
         mock_status.assert_has_calls([
             mock.call(self.context, 'RECOVERING',
-                      reason='Recover in progress'),
+                      reason='Recovery in progress'),
             mock.call(self.context, consts.NS_ACTIVE,
-                      reason='Recover succeeded',
+                      reason='Recovery succeeded',
                       physical_id=new_id,
                       data={'recovery': 'RECREATE'})])
 
@@ -647,9 +647,9 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(PROFILE_ID, node.profile_id)
         mock_status.assert_has_calls([
             mock.call(self.context, 'RECOVERING',
-                      reason='Recover in progress'),
+                      reason='Recovery in progress'),
             mock.call(self.context, consts.NS_ACTIVE,
-                      reason='Recover succeeded')])
+                      reason='Recovery succeeded')])
 
     @mock.patch.object(nodem.Node, 'set_status')
     def test_node_recover_check_active(self, mock_status):
@@ -695,9 +695,9 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(PROFILE_ID, node.profile_id)
         mock_status.assert_has_calls([
             mock.call(self.context, 'RECOVERING',
-                      reason='Recover in progress'),
+                      reason='Recovery in progress'),
             mock.call(self.context, consts.NS_ACTIVE,
-                      reason='Recover succeeded',
+                      reason='Recovery succeeded',
                       physical_id=new_id,
                       data={'recovery': 'RECREATE'})])
 
@@ -731,9 +731,9 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(PROFILE_ID, node.profile_id)
         mock_status.assert_has_calls([
             mock.call(self.context, 'RECOVERING',
-                      reason='Recover in progress'),
+                      reason='Recovery in progress'),
             mock.call(self.context, consts.NS_ACTIVE,
-                      reason='Recover succeeded',
+                      reason='Recovery succeeded',
                       physical_id=new_id,
                       data={'recovery': 'RECREATE'})])
 
@@ -768,9 +768,9 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(PROFILE_ID, node.profile_id)
         mock_status.assert_has_calls([
             mock.call(self.context, 'RECOVERING',
-                      reason='Recover in progress'),
+                      reason='Recovery in progress'),
             mock.call(self.context, consts.NS_ACTIVE,
-                      reason='Recover succeeded',
+                      reason='Recovery succeeded',
                       physical_id=new_id,
                       data={'recovery': 'RECREATE'})])
 
@@ -808,9 +808,9 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(PROFILE_ID, node.profile_id)
         mock_status.assert_has_calls([
             mock.call(self.context, 'RECOVERING',
-                      reason='Recover in progress'),
+                      reason='Recovery in progress'),
             mock.call(self.context, consts.NS_ACTIVE,
-                      reason='Recover succeeded',
+                      reason='Recovery succeeded',
                       physical_id=new_id,
                       data={'recovery': 'RECREATE'})])
 
@@ -827,9 +827,9 @@ class TestNode(base.SenlinTestCase):
         self.assertFalse(res)
         mock_status.assert_has_calls([
             mock.call(self.context, 'RECOVERING',
-                      reason='Recover in progress'),
+                      reason='Recovery in progress'),
             mock.call(self.context, consts.NS_ERROR,
-                      reason='Recover failed')])
+                      reason='Recovery failed')])
 
     def test_node_recover_no_physical_id(self):
         node = nodem.Node('node1', PROFILE_ID, None)

@@ -17,7 +17,6 @@ import six
 
 from senlin.common import consts
 from senlin.common import exception
-from senlin.common.i18n import _
 from senlin.engine import cluster_policy as cpm
 from senlin.engine import health_manager
 from senlin.engine import node as node_mod
@@ -248,7 +247,7 @@ class Cluster(object):
             LOG.error('Cluster is in status "%s"', self.status)
             return False
 
-        self.set_status(context, consts.CS_CREATING, _('Creation in progress'))
+        self.set_status(context, consts.CS_CREATING, 'Creation in progress')
         try:
             pfb.Profile.create_cluster_object(context, self)
         except exception.EResourceCreation as ex:
@@ -259,7 +258,7 @@ class Cluster(object):
 
     def do_delete(self, context, **kwargs):
         """Additional logic at the end of cluster deletion process."""
-        self.set_status(context, consts.CS_DELETING, _('Deletion in progress'))
+        self.set_status(context, consts.CS_DELETING, 'Deletion in progress')
 
         try:
             pfb.Profile.delete_cluster_object(context, self)
@@ -275,7 +274,7 @@ class Cluster(object):
 
         This method is intended to be called only from an action.
         '''
-        self.set_status(context, consts.CS_UPDATING, _('Update in progress'))
+        self.set_status(context, consts.CS_UPDATING, 'Update in progress')
         return True
 
     def do_check(self, context, **kwargs):
@@ -283,7 +282,7 @@ class Cluster(object):
 
         Set cluster status to CHECKING.
         """
-        self.set_status(context, consts.CS_CHECKING, _('Check in progress'))
+        self.set_status(context, consts.CS_CHECKING, 'Check in progress')
         return True
 
     def do_recover(self, context, **kwargs):
@@ -291,8 +290,7 @@ class Cluster(object):
 
         Set cluster status to RECOVERING.
         '''
-        self.set_status(context, consts.CS_RECOVERING,
-                        _('Recovery in progress'))
+        self.set_status(context, consts.CS_RECOVERING, 'Recovery in progress')
         return True
 
     def do_operation(self, context, **kwargs):
@@ -302,7 +300,7 @@ class Cluster(object):
         """
         operation = kwargs.get("operation", "unknown")
         self.set_status(context, consts.CS_OPERATING,
-                        _("Operation %s in progress") % operation)
+                        "Operation %s in progress" % operation)
         return True
 
     def attach_policy(self, ctx, policy_id, values):
@@ -322,17 +320,17 @@ class Cluster(object):
         for existing in self.rt['policies']:
             # Policy already attached
             if existing.id == policy_id:
-                return True, _('Policy already attached.')
+                return True, 'Policy already attached.'
 
             # Detect policy type conflicts
             if (existing.type == policy.type) and policy.singleton:
-                reason = _('Only one instance of policy type (%(ptype)s) can '
-                           'be attached to a cluster, but another instance '
-                           '(%(existing)s) is found attached to the cluster '
-                           '(%(cluster)s) already.'
-                           ) % {'ptype': policy.type,
-                                'existing': existing.id,
-                                'cluster': self.id}
+                reason = ("Only one instance of policy type (%(ptype)s) can "
+                          "be attached to a cluster, but another instance "
+                          "(%(existing)s) is found attached to the cluster "
+                          "(%(cluster)s) already."
+                          ) % {'ptype': policy.type,
+                               'existing': existing.id,
+                               'cluster': self.id}
                 return False, reason
 
         # invoke policy callback
@@ -353,7 +351,7 @@ class Cluster(object):
         # refresh cached runtime
         self.rt['policies'].append(policy)
 
-        return True, _('Policy attached.')
+        return True, 'Policy attached.'
 
     def update_policy(self, ctx, policy_id, **values):
         """Update a policy that is already attached to a cluster.
@@ -372,11 +370,11 @@ class Cluster(object):
                 found = True
                 break
         if not found:
-            return False, _('Policy not attached.')
+            return False, 'Policy not attached.'
 
         enabled = values.get('enabled', None)
         if enabled is None:
-            return True, _('No update is needed.')
+            return True, 'No update is needed.'
 
         params = {'enabled': bool(enabled)}
         # disable health check if necessary
@@ -387,7 +385,7 @@ class Cluster(object):
                 health_manager.disable(self.id)
 
         cpo.ClusterPolicy.update(ctx, self.id, policy_id, params)
-        return True, _('Policy updated.')
+        return True, 'Policy updated.'
 
     def detach_policy(self, ctx, policy_id):
         """Detach policy object from the cluster.
@@ -406,7 +404,7 @@ class Cluster(object):
                 found = existing
                 break
         if found is None:
-            return False, _('Policy not attached.')
+            return False, 'Policy not attached.'
 
         policy = pcb.Policy.load(ctx, policy_id)
         res, reason = policy.detach(self)
@@ -416,7 +414,7 @@ class Cluster(object):
         cpo.ClusterPolicy.delete(ctx, self.id, policy_id)
         self.rt['policies'].remove(found)
 
-        return True, _('Policy detached.')
+        return True, 'Policy detached.'
 
     @property
     def nodes(self):
@@ -556,22 +554,22 @@ class Cluster(object):
         values = params or {}
         if active_count < min_size:
             status = consts.CS_ERROR
-            reason = _("%(o)s: number of active nodes is below min_size "
-                       "(%(n)d).") % {'o': operation, 'n': min_size}
+            reason = ("%(o)s: number of active nodes is below min_size "
+                      "(%(n)d).") % {'o': operation, 'n': min_size}
         elif active_count < desired:
             status = consts.CS_WARNING
-            reason = _("%(o)s: number of active nodes is below "
-                       "desired_capacity "
-                       "(%(n)d).") % {'o': operation, 'n': desired}
+            reason = ("%(o)s: number of active nodes is below "
+                      "desired_capacity "
+                      "(%(n)d).") % {'o': operation, 'n': desired}
         elif max_size < 0 or active_count <= max_size:
             status = consts.CS_ACTIVE
-            reason = _("%(o)s: number of active nodes is equal or above "
-                       "desired_capacity "
-                       "(%(n)d).") % {'o': operation, 'n': desired}
+            reason = ("%(o)s: number of active nodes is equal or above "
+                      "desired_capacity "
+                      "(%(n)d).") % {'o': operation, 'n': desired}
         else:
             status = consts.CS_WARNING
-            reason = _("%(o)s: number of active nodes is above max_size "
-                       "(%(n)d).") % {'o': operation, 'n': max_size}
+            reason = ("%(o)s: number of active nodes is above max_size "
+                      "(%(n)d).") % {'o': operation, 'n': max_size}
 
         values.update({'status': status, 'status_reason': reason})
         co.Cluster.update(ctx, self.id, values)
