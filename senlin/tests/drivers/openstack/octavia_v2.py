@@ -11,11 +11,14 @@
 # under the License.
 
 from senlin.drivers import base
+from senlin.tests.drivers.openstack import sdk
 
 
 class OctaviaClient(base.DriverBase):
-    def __init__(self, params):
-        self.lb_result = {
+    '''Fake octavia V2 driver for test.'''
+
+    def __init__(self, ctx):
+        self.fake_lb = {
             "loadbalancer": "a36c20d0-18e9-42ce-88fd-82a35977ee8c",
             "vip_address": "192.168.1.100",
             "listener": "35cb8516-1173-4035-8dae-0dae3453f37f",
@@ -24,3 +27,44 @@ class OctaviaClient(base.DriverBase):
         }
 
         self.member_id = "9a7aff27-fd41-4ec1-ba4c-3eb92c629313"
+
+    def loadbalancer_create(self, vip_subnet_id, vip_address=None,
+                            admin_state_up=True, name=None, description=None):
+        return sdk.FakeResourceObject(self.fake_lb)
+
+    def loadbalancer_delete(self, lb_id, ignore_missing=True):
+        return
+
+    def loadbalancer_get(self, name_or_id, ignore_missing=True,
+                         show_deleted=False):
+        return
+
+    def listener_create(self, loadbalancer_id, protocol, protocol_port,
+                        connection_limit=None, admin_state_up=True,
+                        name=None, description=None):
+        return
+
+    def listener_delete(self, listener_id, ignore_missing=True):
+        return
+
+    def pool_create(self, lb_algorithm, listener_id, protocol,
+                    admin_state_up=True, name=None, description=None):
+        return
+
+    def pool_delete(self, pool_id, ignore_missing=True):
+        return
+
+    def pool_member_create(self, pool_id, address, protocol_port, subnet_id,
+                           weight=None, admin_state_up=True):
+        return
+
+    def pool_member_delete(self, pool_id, member_id, ignore_missing=True):
+        return
+
+    def healthmonitor_create(self, hm_type, delay, timeout, max_retries,
+                             pool_id, admin_state_up=True, http_method=None,
+                             url_path=None, expected_codes=None):
+        return
+
+    def healthmonitor_delete(self, hm_id, ignore_missing=True):
+        return
