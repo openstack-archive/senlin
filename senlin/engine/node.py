@@ -17,7 +17,6 @@ import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
-from senlin.common.i18n import _
 from senlin.common import utils
 from senlin.objects import node as no
 from senlin.profiles import base as pb
@@ -214,7 +213,7 @@ class Node(object):
             LOG.error('Node is in status "%s"', self.status)
             return False
 
-        self.set_status(context, consts.NS_CREATING, _('Creation in progress'))
+        self.set_status(context, consts.NS_CREATING, 'Creation in progress')
         try:
             physical_id = pb.Profile.create_object(context, self)
         except exc.EResourceCreation as ex:
@@ -223,12 +222,12 @@ class Node(object):
                             physical_id=physical_id)
             return False
 
-        self.set_status(context, consts.NS_ACTIVE, _('Creation succeeded'),
+        self.set_status(context, consts.NS_ACTIVE, 'Creation succeeded',
                         physical_id=physical_id)
         return True
 
     def do_delete(self, context):
-        self.set_status(context, consts.NS_DELETING, _('Deletion in progress'))
+        self.set_status(context, consts.NS_DELETING, 'Deletion in progress')
         try:
             # The following operation always return True unless exception
             # is thrown
@@ -332,16 +331,16 @@ class Node(object):
         # senlin was WARNING. We only update the status_reason
         if res:
             if self.status == consts.NS_WARNING:
-                msg = _("Check: Physical object is ACTIVE but the node status "
-                        "was WARNING. %s") % self.status_reason
+                msg = ("Check: Physical object is ACTIVE but the node status "
+                       "was WARNING. %s") % self.status_reason
                 self.set_status(context, consts.NS_WARNING, msg)
                 return True
 
             self.set_status(context, consts.NS_ACTIVE,
-                            _("Check: Node is ACTIVE."))
+                            "Check: Node is ACTIVE.")
         else:
             self.set_status(context, consts.NS_ERROR,
-                            _("Check: Node is not ACTIVE."))
+                            "Check: Node is not ACTIVE.")
 
         return True
 
@@ -366,11 +365,11 @@ class Node(object):
 
             if res:
                 self.set_status(context, consts.NS_ACTIVE,
-                                reason=_("Recover: Node is ACTIVE."))
+                                reason="Recover: Node is ACTIVE.")
                 return True
 
         self.set_status(context, consts.NS_RECOVERING,
-                        reason=_('Recover in progress'))
+                        reason='Recovery in progress')
 
         try:
             physical_id = pb.Profile.recover_object(context, self, **options)
@@ -379,8 +378,7 @@ class Node(object):
             return False
 
         if not physical_id:
-            self.set_status(context, consts.NS_ERROR,
-                            reason=_('Recover failed'))
+            self.set_status(context, consts.NS_ERROR, reason='Recovery failed')
             return False
 
         params = {}
@@ -389,7 +387,7 @@ class Node(object):
             params['data'] = self.data
             params['physical_id'] = physical_id
         self.set_status(context, consts.NS_ACTIVE,
-                        reason=_('Recover succeeded'), **params)
+                        reason='Recovery succeeded', **params)
 
         return True
 
@@ -406,7 +404,7 @@ class Node(object):
         op = inputs['operation']
         params = inputs.get('params', {})
         self.set_status(context, consts.NS_OPERATING,
-                        reason=_("Operation '%s' in progress") % op)
+                        reason="Operation '%s' in progress" % op)
 
         try:
             profile = self.rt['profile']
@@ -417,7 +415,7 @@ class Node(object):
             return False
 
         self.set_status(context, consts.NS_ACTIVE,
-                        reason=_("Operation '%s' succeeded") % op)
+                        reason="Operation '%s' succeeded" % op)
         return True
 
     def run_workflow(self, **options):
