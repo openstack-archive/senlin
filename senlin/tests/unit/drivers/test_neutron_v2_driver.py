@@ -11,6 +11,7 @@
 # under the License.
 
 import mock
+from oslo_utils import uuidutils
 
 from senlin.drivers.openstack import neutron_v2
 from senlin.drivers.openstack import sdk
@@ -35,14 +36,25 @@ class TestNeutronV2Driver(base.SenlinTestCase):
         neutron_v2.NeutronClient(params)
         mock_create_connection.assert_called_once_with(params)
 
-    def test_network_get(self):
-        net_id = 'network_identifier'
+    def test_network_get_with_uuid(self):
+        net_id = uuidutils.generate_uuid()
         network_obj = mock.Mock()
 
         self.conn.network.find_network.return_value = network_obj
         res = self.nc.network_get(net_id)
         self.conn.network.find_network.assert_called_once_with(net_id, False)
         self.assertEqual(network_obj, res)
+
+    def test_network_get_with_name(self):
+        net_id = 'network_identifier'
+        net1 = mock.Mock()
+        net2 = mock.Mock()
+        self.conn.network.networks.return_value = [net1, net2]
+
+        res = self.nc.network_get(net_id)
+        self.assertEqual(0, self.conn.network.find_network.call_count)
+        self.conn.network.networks.assert_called_once_with(name=net_id)
+        self.assertEqual(net1, res)
 
     def test_port_find(self):
         port_id = 'port_identifier'

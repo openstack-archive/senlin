@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_utils import uuidutils
+
 from senlin.drivers import base
 from senlin.drivers.openstack import sdk
 
@@ -23,8 +25,15 @@ class NeutronClient(base.DriverBase):
 
     @sdk.translate_exception
     def network_get(self, name_or_id, ignore_missing=False):
-        network = self.conn.network.find_network(name_or_id, ignore_missing)
-        return network
+        # There are cases where network have the same names
+        # we have to do client side search by ourselves
+        if uuidutils.is_uuid_like(name_or_id):
+            return self.conn.network.find_network(name_or_id, ignore_missing)
+
+        networks = [n for n in self.conn.network.networks(name=name_or_id)]
+        if len(networks) > 0:
+            return networks[0]
+        return None
 
     @sdk.translate_exception
     def network_create(self, **attr):
