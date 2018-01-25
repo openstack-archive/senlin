@@ -17,6 +17,7 @@
 set -x
 
 export localconf=$BASE/new/devstack/local.conf
+
 export SENLIN_CONF=/etc/senlin/senlin.conf
 export ZAQAR_CONF=/etc/zaqar/zaqar.conf
 export SENLIN_BACKEND=${SENLIN_BACKEND:-'openstack_test'}

@@ -1,6 +1,5 @@
 - hosts: all
-  name: Autoconverted job legacy-senlin-dsvm-tempest-py27-integration from old job
-    gate-senlin-dsvm-tempest-py27-integration-nv
+  name: gate-senlin-dsvm-tempest-py27-integration-nv
   tasks:
 
     - name: Ensure legacy workspace directory
@@ -37,11 +36,7 @@
           export DEVSTACK_GATE_INSTALL_TESTONLY=1
           export KEEP_LOCALRC=1
 
-          if [ "py27" == "py35" ]; then
-            export DEVSTACK_GATE_USE_PYTHON3=True
-          else
-            export DEVSTACK_GATE_USE_PYTHON3=False
-          fi
+          export DEVSTACK_GATE_USE_PYTHON3=False
 
           export SENLIN_TEST_TYPE="integration"
           export DEVSTACK_GATE_TEMPEST_REGEX="senlin_tempest_plugin.tests.${SENLIN_TEST_TYPE}"
@@ -59,26 +54,23 @@
           export PROJECTS="openstack/senlin $PROJECTS"
           export DEVSTACK_LOCAL_CONFIG="enable_plugin senlin https://git.openstack.org/openstack/senlin"
 
-          if [ "${SENLIN_TEST_TYPE}" == "api" ]||[ "${SENLIN_TEST_TYPE}" == "functional" ]; then
-            export SENLIN_BACKEND="openstack_test"
-          else
-            export SENLIN_BACKEND="openstack"
-            export PROJECTS="openstack/heat $PROJECTS"
-            export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin heat git://git.openstack.org/openstack/heat"
+          export PROJECTS="openstack/heat $PROJECTS"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin heat git://git.openstack.org/openstack/heat"
 
-            # Enable LBaaS V2 plugin
-            services+=,q-lbaasv2
-            export PROJECTS="openstack/neutron-lbaas $PROJECTS"
-            export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin neutron-lbaas https://git.openstack.org/openstack/neutron-lbaas"
+          # Enable LBaaS V2 plugin
+          services+=,q-lbaasv2
+          export PROJECTS="openstack/neutron-lbaas $PROJECTS"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin neutron-lbaas https://git.openstack.org/openstack/neutron-lbaas"
 
-            # Enable Zaqar
-            export PROJECTS="openstack/zaqar $PROJECTS"
-            export PROJECTS="openstack/python-zaqarclient $PROJECTS"
-            export PROJECTS="openstack/zaqar-ui $PROJECTS"
-            export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin zaqar git://git.openstack.org/openstack/zaqar"
-            export PROJECTS="openstack/zaqar-tempest-plugin $PROJECTS"
-            export DEVSTACK_LOCAL_CONFIG+=$'\n'"TEMPEST_PLUGINS+=' /opt/stack/new/zaqar-tempest-plugin'"
-          fi
+          # Enable Zaqar
+          export PROJECTS="openstack/zaqar $PROJECTS"
+          export PROJECTS="openstack/python-zaqarclient $PROJECTS"
+          export PROJECTS="openstack/zaqar-ui $PROJECTS"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin zaqar git://git.openstack.org/openstack/zaqar"
+          export PROJECTS="openstack/zaqar-tempest-plugin $PROJECTS"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"TEMPEST_PLUGINS+=' /opt/stack/new/zaqar-tempest-plugin'"
+
+          export SENLIN_BACKEND="openstack"
 
           # use senlin-tempest-plugin
           export PROJECTS="openstack/senlin-tempest-plugin $PROJECTS"

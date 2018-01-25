@@ -22,8 +22,6 @@ export SENLIN_DIR=$DEST/senlin
 
 source $DEVSTACK_DIR/openrc admin admin
 
-if [ ! -z "$1" ]; then
-  cd $DEST/tempest
-  echo "Running tempest with regex $1"
-  sudo tox -evenv-tempest -- tempest run --regex $1
-fi
+cd $DEST/tempest
+echo "Running tempest " $SENLIN_TEST_TYPE "tests"
+sudo tox -evenv-tempest -- tempest run --regex $DEVSTACK_GATE_TEMPEST_REGEX

@@ -32,14 +32,9 @@
     timeout: 7800
     required-projects:
       - openstack-infra/devstack-gate
-      - openstack/heat
-      - openstack/neutron-lbaas
-      - openstack/python-zaqarclient
       - openstack/senlin
       - openstack/senlin-tempest-plugin
       - openstack/tempest
-      - openstack/zaqar
-      - openstack/zaqar-ui
     irrelevant-files:
       - ^.*\.rst$
       - ^api-ref/.*$
@@ -102,14 +97,9 @@
     timeout: 7800
     required-projects:
       - openstack-infra/devstack-gate
-      - openstack/heat
-      - openstack/neutron-lbaas
-      - openstack/python-zaqarclient
       - openstack/senlin
       - openstack/senlin-tempest-plugin
       - openstack/tempest
-      - openstack/zaqar
-      - openstack/zaqar-ui
     irrelevant-files:
       - ^.*\.rst$
       - ^api-ref/.*$
