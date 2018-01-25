@@ -1,5 +1,4 @@
 - project:
-    name: openstack/senlin
     check:
       jobs:
         - senlin-dsvm-tempest-py27-api
