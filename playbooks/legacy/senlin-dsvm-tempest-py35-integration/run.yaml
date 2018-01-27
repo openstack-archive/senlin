@@ -39,20 +39,21 @@
           export DEVSTACK_GATE_USE_PYTHON3=True
 
           export SENLIN_TEST_TYPE="integration"
+          export SENLIN_BACKEND="openstack"
           export DEVSTACK_GATE_TEMPEST_REGEX="senlin_tempest_plugin.tests.integration"
 
           services=rabbit,mysql,dstat,key,tempest
           services+=,g-api,g-reg
           services+=,n-api,n-cpu,n-cond,n-sch,n-crt
-          # placement services mandatory for nova from ocata
           if [[ "stable/newton" != $ZUUL_BRANCH ]]; then
              services+=,placement-api,placement-client
           fi
-          services+=,c-sch,c-api,c-vol,c-bak
+          # services+=,c-sch,c-api,c-vol,c-bak
           services+=,q-svc,q-dhcp,q-meta,q-agt,q-l3
 
           export PROJECTS="openstack/senlin $PROJECTS"
           export DEVSTACK_LOCAL_CONFIG="enable_plugin senlin https://git.openstack.org/openstack/senlin"
+
           export PROJECTS="openstack/heat $PROJECTS"
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin heat git://git.openstack.org/openstack/heat"
 
@@ -73,7 +74,6 @@
           export PROJECTS="openstack/senlin-tempest-plugin $PROJECTS"
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"TEMPEST_PLUGINS+=' /opt/stack/new/senlin-tempest-plugin'"
 
-          export SENLIN_BACKEND="openstack"
           export OVERRIDE_ENABLED_SERVICES=$services
 
           if [ "$BRANCH_OVERRIDE" != "default" ] ; then
@@ -82,13 +82,13 @@
 
           function pre_test_hook {
               cd /opt/stack/new/senlin/senlin/tests/tempest/
-              ./pre_test_hook.sh
+              source ./pre_test_hook.sh
           }
           export -f pre_test_hook
 
           function post_test_hook {
               cd /opt/stack/new/senlin/senlin/tests/tempest/
-              ./post_test_hook.sh senlin_tempest_plugin.tests.${SENLIN_TEST_TYPE}
+              source ./post_test_hook.sh
           }
           export -f post_test_hook
 

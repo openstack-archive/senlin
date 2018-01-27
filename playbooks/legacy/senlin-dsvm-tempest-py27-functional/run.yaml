@@ -51,6 +51,7 @@
 
           export PROJECTS="openstack/senlin $PROJECTS"
           export DEVSTACK_LOCAL_CONFIG="enable_plugin senlin https://git.openstack.org/openstack/senlin"
+
           export PROJECTS="openstack/senlin-tempest-plugin $PROJECTS"
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"TEMPEST_PLUGINS+=' /opt/stack/new/senlin-tempest-plugin'"
 
