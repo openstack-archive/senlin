@@ -20,7 +20,7 @@ export DEST=${DEST:-/opt/stack/new}
 export DEVSTACK_DIR=$DEST/devstack
 export SENLIN_DIR=$DEST/senlin
 
-source $DEVSTACK_DIR/openrc admin admin
+. $DEVSTACK_DIR/openrc admin admin
 
 cd $DEST/tempest
 echo "Running tempest " $SENLIN_TEST_TYPE "tests"
