@@ -1509,7 +1509,7 @@ class ServerProfile(base.Profile):
             return None
         # when booting a nova server from volume, the image property
         # can be ignored.
-        # we try find a volume which is bootable and use its image_id
+        # we try to find a volume which is bootable and use its image_id
         # for the server.
         if server.image:
             image_id = server.image

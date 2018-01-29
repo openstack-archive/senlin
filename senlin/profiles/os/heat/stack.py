@@ -184,7 +184,7 @@ class StackProfile(base.Profile):
         :param obj: The node object to operate on.
         :param kwargs params: Optional keyword arguments for the delete
                               operation.
-        :returns: This operation always return True unless exception is
+        :returns: This operation always returns True unless exception is
                   caught.
         :raises: `EResourceDeletion` if interaction with heat fails.
         """

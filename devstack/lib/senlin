@@ -284,7 +284,7 @@ function create_senlin_accounts {
         "$senlin_api_url" \
         "$senlin_api_url"
 
-    # get or adds 'service' role to 'senlin' on 'demo' project
+    # get or add 'service' role to 'senlin' on 'demo' project
     get_or_add_user_project_role "service" "senlin" "demo"
 }
 
