@@ -11,7 +11,7 @@
 # under the License.
 
 from senlin.drivers import base
-from senlin.drivers.openstack_test import sdk
+from senlin.drivers import sdk
 
 FAKE_LB_ID = "607226db-27ef-4d41-ae89-f2a800e9c2db"
 FAKE_LISTENER_ID = "023f2e34-7806-443b-bfae-16c324569a3d"

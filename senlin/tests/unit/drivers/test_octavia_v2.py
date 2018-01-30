@@ -12,8 +12,8 @@
 
 import mock
 
-from senlin.drivers.openstack import octavia_v2
-from senlin.drivers.openstack import sdk
+from senlin.drivers.os import octavia_v2
+from senlin.drivers import sdk
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 

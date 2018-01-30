@@ -41,7 +41,6 @@ class SenlinDriver(object):
         self.network = backend.network
         self.octavia = backend.octavia
         self.orchestration = backend.orchestration
-        self.telemetry = backend.telemetry
         self.identity = backend.identity
         self.message = backend.message
         self.workflow = backend.workflow

@@ -12,8 +12,8 @@
 
 import mock
 
-from senlin.drivers.openstack import cinder_v2
-from senlin.drivers.openstack import sdk
+from senlin.drivers.os import cinder_v2
+from senlin.drivers import sdk
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 

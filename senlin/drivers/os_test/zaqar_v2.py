@@ -11,7 +11,7 @@
 # under the License.
 
 from senlin.drivers import base
-from senlin.drivers.openstack_test import sdk
+from senlin.drivers import sdk
 
 FAKE_SUBSCRIPTION_ID = "0d8dbb71-1538-42ac-99fb-bb52d0ad1b6f"
 FAKE_MESSAGE_ID = "51db6f78c508f17ddc924357"
@@ -51,24 +51,24 @@ class ZaqarClient(base.DriverBase):
         return True
 
     def queue_delete(self, queue, ignore_missing=True):
-        return
+        return None
 
     def subscription_create(self, queue_name, **attrs):
         return sdk.FakeResourceObject(self.fake_subscription)
 
     def subscription_delete(self, queue_name, subscription,
                             ignore_missing=True):
-        return
+        return None
 
     def claim_create(self, queue_name, **attrs):
         return sdk.FakeResourceObject(self.fake_claim)
 
     def claim_delete(self, queue_name, claim, ignore_missing=True):
-        return
+        return None
 
     def message_delete(self, queue_name, message, claim_id=None,
                        ignore_missing=True):
-        return
+        return None
 
     def message_post(self, queue_name, message):
         return sdk.FakeResourceObject(self.fake_message)

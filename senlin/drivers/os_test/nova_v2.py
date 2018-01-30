@@ -15,7 +15,7 @@ import copy
 from oslo_utils import uuidutils
 
 from senlin.drivers import base
-from senlin.drivers.openstack_test import sdk
+from senlin.drivers import sdk
 
 
 class NovaClient(base.DriverBase):

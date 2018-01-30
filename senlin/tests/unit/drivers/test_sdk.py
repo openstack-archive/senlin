@@ -20,7 +20,7 @@ from requests import exceptions as req_exc
 import six
 
 from senlin.common import exception as senlin_exc
-from senlin.drivers.openstack import sdk
+from senlin.drivers import sdk
 from senlin.tests.unit.common import base
 
 

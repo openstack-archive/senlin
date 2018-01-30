@@ -19,8 +19,8 @@ from oslo_log import log as logging
 from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.drivers import base
-from senlin.drivers.openstack import neutron_v2 as neutronclient
-from senlin.drivers.openstack import octavia_v2 as octaviaclient
+from senlin.drivers.os import neutron_v2 as neutronclient
+from senlin.drivers.os import octavia_v2 as octaviaclient
 from senlin.engine import node as nodem
 
 LOG = logging.getLogger(__name__)

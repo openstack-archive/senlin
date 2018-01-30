@@ -16,16 +16,15 @@ SDK Client
 import sys
 
 import functools
-from oslo_config import cfg
-from oslo_log import log as logging
-import six
-
 from openstack import connection
 from openstack import exceptions as sdk_exc
 from openstack import profile
 from openstack import utils as sdk_utils
+from oslo_config import cfg
+from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from requests import exceptions as req_exc
+import six
 
 from senlin.common import exception as senlin_exc
 
@@ -138,3 +137,20 @@ def authenticate(**kwargs):
     }
 
     return access_info
+
+
+class FakeResourceObject(object):
+    '''Generate a fake SDK resource object based on given dictionary'''
+    def __init__(self, params):
+        for key in params:
+            setattr(self, key, params[key])
+
+    def to_dict(self):
+        '''Override this function in subclass to handle special attributes'''
+        data = {}
+        for attr in dir(self):
+            if not attr.startswith('__'):
+                # Exclude built-in attributes of python object
+                data[attr] = getattr(self, attr)
+
+        return data

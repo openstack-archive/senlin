@@ -13,7 +13,7 @@
 from openstack import exceptions as sdk_exc
 
 from senlin.drivers import base
-from senlin.drivers.openstack import sdk
+from senlin.drivers import sdk
 
 
 class ZaqarClient(base.DriverBase):

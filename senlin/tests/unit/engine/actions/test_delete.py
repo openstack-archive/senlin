@@ -286,8 +286,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
         # assertions (other assertions are skipped)
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual(
-            'Invalid lifecycle hook type specified in deletion policy',
-            res_msg)
+            "Lifecycle hook type 'unknown_type' is not implemented", res_msg)
 
     @mock.patch.object(ao.Action, 'update')
     @mock.patch.object(ab.Action, 'create')
@@ -317,8 +316,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
         # assertions (other assertions are skipped)
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual(
-            'Lifecycle hook type \'webhook\' is not implemented',
-            res_msg)
+            "Lifecycle hook type \'webhook\' is not implemented", res_msg)
 
     @mock.patch.object(ao.Action, 'update')
     @mock.patch.object(ab.Action, 'create')

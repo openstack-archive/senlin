@@ -301,6 +301,13 @@ class ClusterAction(base.Action):
         result, reason = self._update_nodes(profile_id, self.entity.nodes)
         return result, reason
 
+    def _handle_lifecycle_timeout(self, child):
+        for action_id, node_id in child:
+            status = ao.Action.check_status(self.context, action_id, 0)
+            if (status == consts.ACTION_WAITING_LIFECYCLE_COMPLETION):
+                ao.Action.update(self.context, action_id,
+                                 {'status': base.Action.READY})
+
     def _delete_nodes(self, node_ids):
         action_name = consts.NODE_DELETE
 
@@ -319,11 +326,10 @@ class ClusterAction(base.Action):
             lifecycle_hook_params = lifecycle_hook.get('params')
             if lifecycle_hook_type == "zaqar":
                 lifecycle_hook_target = lifecycle_hook_params.get('queue')
-            elif lifecycle_hook_type == "webhook":
-                lifecycle_hook_target = lifecycle_hook_params.get('url')
             else:
-                return self.RES_ERROR, _("Invalid lifecycle hook type "
-                                         "specified in deletion policy")
+                # lifecycle_hook_target = lifecycle_hook_params.get('url')
+                return self.RES_ERROR, _("Lifecycle hook type '%s' is not "
+                                         "implemented") % lifecycle_hook_type
 
         child = []
         for node_id in node_ids:
@@ -355,22 +361,18 @@ class ClusterAction(base.Action):
                 ao.Action.update(self.context, action_id,
                                  {'status': status})
                 if lifecycle_hook:
-                    if lifecycle_hook_type == "zaqar":
-                        # post message to zaqar
-                        kwargs = {
-                            'user': self.context.user_id,
-                            'project': self.context.project_id,
-                            'domain': self.context.domain_id
-                        }
+                    # lifecycle_hook_type has to be "zaqar"
+                    # post message to zaqar
+                    kwargs = {
+                        'user': self.context.user_id,
+                        'project': self.context.project_id,
+                        'domain': self.context.domain_id
+                    }
 
-                        notifier = msg.Message(lifecycle_hook_target, **kwargs)
-                        notifier.post_lifecycle_hook_message(
-                            action_id, node_id,
-                            consts.LIFECYCLE_NODE_TERMINATION)
-                    else:
-                        reason = _("Lifecycle hook type '{}' is not "
-                                   "implemented").format(lifecycle_hook_type)
-                        return self.RES_ERROR, reason
+                    notifier = msg.Message(lifecycle_hook_target, **kwargs)
+                    notifier.post_lifecycle_hook_message(
+                        action_id, node_id,
+                        consts.LIFECYCLE_NODE_TERMINATION)
 
             res = None
             if lifecycle_hook:
@@ -378,13 +380,7 @@ class ClusterAction(base.Action):
                 res, reason = self._wait_for_dependents(lifecycle_hook_timeout)
 
                 if res == self.RES_LIFECYCLE_HOOK_TIMEOUT:
-                    for action_id, node_id in child:
-                        status = ao.Action.check_status(self.context,
-                                                        action_id, 0)
-                        if (status ==
-                                consts.ACTION_WAITING_LIFECYCLE_COMPLETION):
-                            ao.Action.update(self.context, action_id,
-                                             {'status': base.Action.READY})
+                    self._handle_lifecycle_timeout(child)
 
             if res is None or res == self.RES_LIFECYCLE_HOOK_TIMEOUT:
                 dispatcher.start_action()

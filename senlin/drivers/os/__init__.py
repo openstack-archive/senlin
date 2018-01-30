@@ -10,17 +10,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from senlin.drivers.openstack import ceilometer_v2
-from senlin.drivers.openstack import keystone_v3
-
-from senlin.drivers.openstack_test import cinder_v2
-from senlin.drivers.openstack_test import heat_v1
-from senlin.drivers.openstack_test import lbaas
-from senlin.drivers.openstack_test import mistral_v2
-from senlin.drivers.openstack_test import neutron_v2
-from senlin.drivers.openstack_test import nova_v2
-from senlin.drivers.openstack_test import octavia_v2
-from senlin.drivers.openstack_test import zaqar_v2
+from senlin.drivers.os import cinder_v2
+from senlin.drivers.os import heat_v1
+from senlin.drivers.os import keystone_v3
+from senlin.drivers.os import lbaas
+from senlin.drivers.os import mistral_v2
+from senlin.drivers.os import neutron_v2
+from senlin.drivers.os import nova_v2
+from senlin.drivers.os import octavia_v2
+from senlin.drivers.os import zaqar_v2
 
 
 block_storage = cinder_v2.CinderClient
@@ -31,5 +29,4 @@ message = zaqar_v2.ZaqarClient
 network = neutron_v2.NeutronClient
 octavia = octavia_v2.OctaviaClient
 orchestration = heat_v1.HeatClient
-telemetry = ceilometer_v2.CeilometerClient
 workflow = mistral_v2.MistralClient

@@ -14,8 +14,8 @@ import mock
 
 from openstack import exceptions as sdk_exc
 
-from senlin.drivers.openstack import sdk
-from senlin.drivers.openstack import zaqar_v2
+from senlin.drivers.os import zaqar_v2
+from senlin.drivers import sdk
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 

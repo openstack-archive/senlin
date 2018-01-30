@@ -14,7 +14,7 @@ from oslo_config import cfg
 from oslo_log import log
 
 from senlin.drivers import base
-from senlin.drivers.openstack import sdk
+from senlin.drivers import sdk
 
 LOG = log.getLogger(__name__)
 CONF = cfg.CONF

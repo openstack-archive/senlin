@@ -17,9 +17,9 @@ from oslo_context import context as oslo_context
 
 from senlin.common import exception
 from senlin.common.i18n import _
-from senlin.drivers.openstack import lbaas
-from senlin.drivers.openstack import neutron_v2
-from senlin.drivers.openstack import octavia_v2
+from senlin.drivers.os import lbaas
+from senlin.drivers.os import neutron_v2
+from senlin.drivers.os import octavia_v2
 from senlin.engine import node as nodem
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils

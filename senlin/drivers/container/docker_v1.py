@@ -12,7 +12,7 @@
 
 import docker
 
-from senlin.drivers.openstack import sdk
+from senlin.drivers import sdk
 
 
 class DockerClient(object):

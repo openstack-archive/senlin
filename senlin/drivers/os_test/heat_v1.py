@@ -11,7 +11,7 @@
 # under the License.
 
 from senlin.drivers import base
-from senlin.drivers.openstack_test import sdk
+from senlin.drivers import sdk
 
 
 class HeatClient(base.DriverBase):

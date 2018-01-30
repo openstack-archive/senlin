@@ -15,8 +15,8 @@ import copy
 import mock
 from oslo_config import cfg
 
-from senlin.drivers.openstack import keystone_v3 as kv3
-from senlin.drivers.openstack import sdk
+from senlin.drivers.os import keystone_v3 as kv3
+from senlin.drivers import sdk
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 

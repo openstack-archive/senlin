@@ -13,7 +13,7 @@
 from oslo_config import cfg
 
 from senlin.drivers import base
-from senlin.drivers.openstack import sdk
+from senlin.drivers import sdk
 
 
 class HeatClient(base.DriverBase):

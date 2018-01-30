@@ -13,8 +13,8 @@
 import mock
 from oslo_utils import uuidutils
 
-from senlin.drivers.openstack import neutron_v2
-from senlin.drivers.openstack import sdk
+from senlin.drivers.os import neutron_v2
+from senlin.drivers import sdk
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 

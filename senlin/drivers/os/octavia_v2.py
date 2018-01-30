@@ -11,7 +11,7 @@
 # under the License.
 
 from senlin.drivers import base
-from senlin.drivers.openstack import sdk
+from senlin.drivers import sdk
 
 
 class OctaviaClient(base.DriverBase):
