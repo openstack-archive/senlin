@@ -14,7 +14,7 @@
 from oslo_utils import uuidutils
 
 from senlin.drivers import base
-from senlin.tests.drivers.openstack import sdk
+from senlin.drivers.openstack_test import sdk
 
 
 class MistralClient(base.DriverBase):
