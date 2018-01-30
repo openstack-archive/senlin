@@ -5,7 +5,7 @@ XTRACE=$(set +o | grep xtrace)
 set -o xtrace
 
 echo_summary "senlin's plugin.sh was called..."
-source $DEST/senlin/devstack/lib/senlin
+. $DEST/senlin/devstack/lib/senlin
 (set -o posix; set)
 
 if is_service_enabled sl-api sl-eng; then
