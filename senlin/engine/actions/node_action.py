@@ -64,7 +64,7 @@ class NodeAction(base.Action):
             if result:
                 # cannot place node into the cluster
                 no.Node.update(self.context, self.entity.id,
-                               {'cluster_id': ''})
+                               {'cluster_id': '', 'status': consts.NS_ERROR})
                 return self.RES_ERROR, result
 
         res = self.entity.do_create(self.context)

@@ -114,7 +114,8 @@ class NodeActionTest(base.SenlinTestCase):
         mock_count.assert_called_once_with(action.context, 'CID')
         mock_check.assert_called_once_with(cluster, 11, None, None, True)
         mock_update.assert_called_once_with(action.context, 'NID',
-                                            {'cluster_id': ''})
+                                            {'cluster_id': '',
+                                             'status': consts.NS_ERROR})
         self.assertEqual(0, node.do_create.call_count)
         self.assertEqual(0, cluster.eval_status.call_count)
 
