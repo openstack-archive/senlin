@@ -1,0 +1,5 @@
+---
+features:
+  - New version of deletion policy (v1.1) is implemented which supports the
+    specification of lifecycle hooks to be invoked before shrinking the size
+    of a cluster. For details, please check the policy documentation.
