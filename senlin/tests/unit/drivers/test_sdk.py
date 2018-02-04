@@ -14,7 +14,6 @@ import types
 
 import mock
 from openstack import connection
-from openstack import profile
 from oslo_serialization import jsonutils
 from requests import exceptions as req_exc
 import six
@@ -22,9 +21,14 @@ import six
 from senlin.common import exception as senlin_exc
 from senlin.drivers import sdk
 from senlin.tests.unit.common import base
+from senlin import version
 
 
 class OpenStackSDKTest(base.SenlinTestCase):
+
+    def setUp(self):
+        super(OpenStackSDKTest, self).setUp()
+        self.app_version = version.version_info.version_string()
 
     def test_parse_exception_http_exception_with_details(self):
         details = jsonutils.dumps({
@@ -33,7 +37,8 @@ class OpenStackSDKTest(base.SenlinTestCase):
                 'message': 'Resource BAR is not found.'
             }
         })
-        raw = sdk.exc.ResourceNotFound('A message', details, http_status=404)
+        raw = sdk.exc.ResourceNotFound(message='A message', details=details,
+                                       response=None, http_status=404)
         ex = self.assertRaises(senlin_exc.InternalError,
                                sdk.parse_exception, raw)
 
@@ -46,7 +51,8 @@ class OpenStackSDKTest(base.SenlinTestCase):
                 'message': 'Quota exceeded for instances.'
             }
         })
-        raw = sdk.exc.ResourceNotFound('A message', details, 403)
+        raw = sdk.exc.ResourceNotFound(message='A message', details=details,
+                                       http_status=403)
         ex = self.assertRaises(senlin_exc.InternalError,
                                sdk.parse_exception, raw)
 
@@ -54,9 +60,12 @@ class OpenStackSDKTest(base.SenlinTestCase):
         self.assertEqual('Quota exceeded for instances.', six.text_type(ex))
 
     def test_parse_exception_http_exception_no_details(self):
-        details = "An error message"
+        resp = mock.Mock(headers={'x-openstack-request-id': 'FAKE_ID'})
+        resp.json.return_value = {}
+        resp.status_code = 404
 
-        raw = sdk.exc.ResourceNotFound('A message.', details, http_status=404)
+        raw = sdk.exc.ResourceNotFound(message='A message.', details=None,
+                                       response=resp, http_status=404)
         ex = self.assertRaises(senlin_exc.InternalError,
                                sdk.parse_exception, raw)
 
@@ -66,7 +75,8 @@ class OpenStackSDKTest(base.SenlinTestCase):
     def test_parse_exception_http_exception_no_details_no_response(self):
         details = "An error message"
 
-        raw = sdk.exc.ResourceNotFound('A message.', details, http_status=404)
+        raw = sdk.exc.ResourceNotFound(message='A message.', details=details,
+                                       http_status=404)
         raw.details = None
         raw.response = None
         ex = self.assertRaises(senlin_exc.InternalError,
@@ -82,8 +92,8 @@ class OpenStackSDKTest(base.SenlinTestCase):
             }
         })
 
-        raw = sdk.exc.HttpException(message='A message.', details=details,
-                                    http_status=400)
+        raw = sdk.exc.HttpException(
+            message='A message.', details=details, http_status=400)
         ex = self.assertRaises(senlin_exc.InternalError,
                                sdk.parse_exception, raw)
 
@@ -140,32 +150,25 @@ class OpenStackSDKTest(base.SenlinTestCase):
         self.assertEqual(500, ex.code)
         self.assertEqual('BOOM', ex.message)
 
-    @mock.patch.object(profile, 'Profile')
     @mock.patch.object(connection, 'Connection')
-    def test_create_connection_token(self, mock_conn, mock_profile):
-        x_profile = mock.Mock()
-        mock_profile.return_value = x_profile
+    def test_create_connection_token(self, mock_conn):
         x_conn = mock.Mock()
         mock_conn.return_value = x_conn
 
         res = sdk.create_connection({'token': 'TOKEN', 'foo': 'bar'})
 
         self.assertEqual(x_conn, res)
-        mock_profile.assert_called_once_with()
-        x_profile.set_version.assert_has_calls([
-            mock.call('identity', 'v3'),
-            mock.call('messaging', 'v2')])
-        mock_conn.assert_called_once_with(profile=x_profile,
-                                          user_agent=sdk.USER_AGENT,
-                                          auth_plugin='token',
-                                          token='TOKEN',
-                                          foo='bar')
+        mock_conn.assert_called_once_with(
+            app_name=sdk.USER_AGENT, app_version=self.app_version,
+            identity_api_version='3',
+            messaging_api_version='2',
+            region_name=None,
+            auth_type='token',
+            token='TOKEN',
+            foo='bar')
 
-    @mock.patch.object(profile, 'Profile')
     @mock.patch.object(connection, 'Connection')
-    def test_create_connection_password(self, mock_conn, mock_profile):
-        x_profile = mock.Mock()
-        mock_profile.return_value = x_profile
+    def test_create_connection_password(self, mock_conn):
         x_conn = mock.Mock()
         mock_conn.return_value = x_conn
 
@@ -173,42 +176,32 @@ class OpenStackSDKTest(base.SenlinTestCase):
                                      'foo': 'bar'})
 
         self.assertEqual(x_conn, res)
-        mock_profile.assert_called_once_with()
-        x_profile.set_version.assert_has_calls([
-            mock.call('identity', 'v3'),
-            mock.call('messaging', 'v2')])
-        mock_conn.assert_called_once_with(profile=x_profile,
-                                          user_agent=sdk.USER_AGENT,
-                                          auth_plugin='password',
-                                          user_id='123',
-                                          password='abc',
-                                          foo='bar')
+        mock_conn.assert_called_once_with(
+            app_name=sdk.USER_AGENT, app_version=self.app_version,
+            identity_api_version='3',
+            messaging_api_version='2',
+            region_name=None,
+            user_id='123',
+            password='abc',
+            foo='bar')
 
-    @mock.patch.object(profile, 'Profile')
     @mock.patch.object(connection, 'Connection')
-    def test_create_connection_with_region(self, mock_conn, mock_profile):
-        x_profile = mock.Mock()
-        mock_profile.return_value = x_profile
+    def test_create_connection_with_region(self, mock_conn):
         x_conn = mock.Mock()
         mock_conn.return_value = x_conn
 
         res = sdk.create_connection({'region_name': 'REGION_ONE'})
 
         self.assertEqual(x_conn, res)
-        mock_profile.assert_called_once_with()
-        x_profile.set_region.assert_called_once_with(x_profile.ALL,
-                                                     'REGION_ONE')
-        mock_conn.assert_called_once_with(profile=x_profile,
-                                          user_agent=sdk.USER_AGENT,
-                                          auth_plugin='password')
+        mock_conn.assert_called_once_with(
+            app_name=sdk.USER_AGENT, app_version=self.app_version,
+            identity_api_version='3',
+            messaging_api_version='2',
+            region_name='REGION_ONE')
 
-    @mock.patch.object(profile, 'Profile')
     @mock.patch.object(connection, 'Connection')
     @mock.patch.object(sdk, 'parse_exception')
-    def test_create_connection_with_exception(self, mock_parse, mock_conn,
-                                              mock_profile):
-        x_profile = mock.Mock()
-        mock_profile.return_value = x_profile
+    def test_create_connection_with_exception(self, mock_parse, mock_conn):
         ex_raw = Exception('Whatever')
         mock_conn.side_effect = ex_raw
         mock_parse.side_effect = senlin_exc.InternalError(code=123,
@@ -217,10 +210,11 @@ class OpenStackSDKTest(base.SenlinTestCase):
         ex = self.assertRaises(senlin_exc.InternalError,
                                sdk.create_connection)
 
-        mock_profile.assert_called_once_with()
-        mock_conn.assert_called_once_with(profile=x_profile,
-                                          user_agent=sdk.USER_AGENT,
-                                          auth_plugin='password')
+        mock_conn.assert_called_once_with(
+            app_name=sdk.USER_AGENT, app_version=self.app_version,
+            identity_api_version='3',
+            messaging_api_version='2',
+            region_name=None)
         mock_parse.assert_called_once_with(ex_raw)
         self.assertEqual(123, ex.code)
         self.assertEqual('BOOM', ex.message)

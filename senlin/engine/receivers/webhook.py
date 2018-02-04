@@ -43,6 +43,8 @@ class Webhook(base.Receiver):
                         'using local hostname (%(host)s) for webhook url.'
                         ) % {'host': host}
                 LOG.warning(msg)
+            elif base.rfind("v1") == -1:
+                base = "%s/v1" % base
 
         if not base:
             base = "http://%(h)s:%(p)s/v1" % {'h': host, 'p': port}

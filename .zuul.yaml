@@ -1,7 +1,8 @@
 - project:
     check:
       jobs:
-        - senlin-dsvm-tempest-py27-api
+        - senlin-dsvm-tempest-py27-api:
+            voting: false
         - senlin-dsvm-tempest-py35-api:
             voting: false
             branches: ^(?!stable/newton).*$
@@ -16,7 +17,7 @@
             branches: ^(?!stable/newton).*$
     gate:
       jobs:
-        - senlin-dsvm-tempest-py27-api
+        # - senlin-dsvm-tempest-py27-api
         - senlin-dsvm-tempest-py27-functional
     experimental:
       jobs:

@@ -421,7 +421,8 @@ def cluster_lock_acquire(cluster_id, action_id, scope):
     :return: A list of action IDs that currently works on the cluster.
     '''
     with session_for_write() as session:
-        lock = session.query(models.ClusterLock).get(cluster_id)
+        query = session.query(models.ClusterLock).with_lockmode('update')
+        lock = query.get(cluster_id)
         if lock is not None:
             if scope == 1 and lock.semaphore > 0:
                 if action_id not in lock.action_ids:
