@@ -96,9 +96,11 @@ The following options are supported for the command
   once attached.
 
 For example, the following command attaches a policy named ``up01`` to the
-cluster ``c3``, with its enabled status set to ``True``::
+cluster ``c3``, When a policy is attached to a cluster, it is enabled by
+default. To keep it disabled, the user can use the parameter ``--enabled False``.
+For example::
 
-  $ openstack cluster policy attach --enabled True --policy up01 c3
+  $ openstack cluster policy attach --policy up01 --enabled False c3
 
 Note that most of the time, Senlin doesn't allow more than one policy of the
 same type to be attached to the same cluster. This restriction is relaxed for
