@@ -243,6 +243,28 @@ the physical object that backs the node. For example::
   $ openstack cluster node show --details test_node
 
 
+Checking a Node
+~~~~~~~~~~~~~~~
+
+Once a node has been created, you can use the name, the ID or the "short ID" of
+a node to name a node for check. senlin-engine performs a profile-specific check
+operation to get the latest status of the physical resource (for example a virtual
+machine). If the virtual machine status is not ACTIVE, the node will be set to
+ERROR status. For example::
+
+  $ openstack cluster node check node-biQA3BOM
+
+
+Recovering a Node
+~~~~~~~~~~~~~~~~~
+After a node has been created and running for a period of time, if the node goes
+into ERROR status, you can use to try to restore the node to ACTIVE status, using
+the :command:`openstack cluster node recover`. The restore operation will delete
+the specified node and recreate it. For example::
+
+  $ openstack cluster node recover node-biQA3BOM
+
+
 Updating a Node
 ~~~~~~~~~~~~~~~
 
