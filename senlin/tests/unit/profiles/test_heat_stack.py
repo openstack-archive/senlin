@@ -772,7 +772,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         oc = mock.Mock()
         oc.stack_get = mock.Mock(return_value=x_stack)
 
-        # mock enviroment
+        # mock environment
         env = mock.Mock()
         env.to_dict.return_value = {'ke': 've'}
         oc.stack_get_environment = mock.Mock(return_value=env)
