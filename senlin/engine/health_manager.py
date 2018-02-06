@@ -87,8 +87,8 @@ class NovaNotificationEndpoint(object):
             node_id = meta.get('cluster_node_id')
             if node_id:
                 LOG.info("Requesting node recovery: %s", node_id)
-                ctx = context.get_service_context(project=self.project_id,
-                                                  user=payload['user_id'])
+                ctx = context.get_service_context(project_id=self.project_id,
+                                                  user_id=payload['user_id'])
                 req = objects.NodeRecoverRequest(identity=node_id,
                                                  params=params)
                 self.rpc.call(ctx, 'node_recover', req)
@@ -154,8 +154,8 @@ class HeatNotificationEndpoint(object):
             'operation': self.recover_action['operation'],
         }
         LOG.info("Requesting stack recovery: %s", node_id)
-        ctx = context.get_service_context(project=self.project_id,
-                                          user=payload['user_identity'])
+        ctx = context.get_service_context(project_id=self.project_id,
+                                          user_id=payload['user_identity'])
         req = objects.NodeRecoverRequest(identity=node_id, params=params)
         self.rpc.call(ctx, 'node_recover', req)
 
@@ -250,8 +250,8 @@ class HealthManager(service.Service):
             LOG.warning("Cluster (%s) is not found.", cluster_id)
             return _chase_up(start_time, timeout)
 
-        ctx = context.get_service_context(user=cluster.user,
-                                          project=cluster.project)
+        ctx = context.get_service_context(user_id=cluster.user,
+                                          project_id=cluster.project)
         params = {'delete_check_action': True}
         try:
             req = objects.ClusterCheckRequest(identity=cluster_id,
