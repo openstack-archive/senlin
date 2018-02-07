@@ -19,7 +19,6 @@ from osprofiler import profiler
 
 from senlin.common import consts
 from senlin.common import exception
-from senlin.common.i18n import _
 from senlin.common import scaleutils
 from senlin.common import utils
 from senlin.engine.actions import base
@@ -94,8 +93,8 @@ class ClusterAction(base.Action):
                     self.is_timeout(lifecycle_hook_timeout)):
                 # if lifecycle hook timeout is specified and Lifecycle hook
                 # timeout is reached, return
-                reason = _('%(action)s [%(id)s] lifecycle hook timeout') % {
-                    'action': self.action, 'id': self.id[:8]}
+                reason = ('%(action)s [%(id)s] lifecycle hook timeout'
+                          '') % {'action': self.action, 'id': self.id[:8]}
                 LOG.debug(reason)
                 return self.RES_LIFECYCLE_HOOK_TIMEOUT, reason
 
@@ -328,8 +327,8 @@ class ClusterAction(base.Action):
                 lifecycle_hook_target = lifecycle_hook_params.get('queue')
             else:
                 # lifecycle_hook_target = lifecycle_hook_params.get('url')
-                return self.RES_ERROR, _("Lifecycle hook type '%s' is not "
-                                         "implemented") % lifecycle_hook_type
+                return self.RES_ERROR, ("Lifecycle hook type '%s' is not "
+                                        "implemented") % lifecycle_hook_type
 
         child = []
         for node_id in node_ids:
