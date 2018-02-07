@@ -10,7 +10,7 @@ properties:
 
   recovery:
     # Action that can be retried on a failed node, will improve to
-    # support multpile actions in the future. Valid values incluste:
+    # support multiple actions in the future. Valid values include:
     # REBOOT, REBUILD, RECREATE
     actions:
       - name: RECREATE
