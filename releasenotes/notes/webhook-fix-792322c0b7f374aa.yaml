@@ -1,0 +1,4 @@
+---
+fixes:
+  - Fixed a bug where API version negotiation is not effective when invoked via
+    OpenStack SDK. The API impacted is limited to webhook triggering.
