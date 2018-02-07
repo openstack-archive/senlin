@@ -378,7 +378,8 @@ class Cluster(object):
 
         params = {'enabled': bool(enabled)}
         # disable health check if necessary
-        if existing.type == 'senlin.policy.health':
+        policy_type = existing.type.split('-')[0]
+        if policy_type == 'senlin.policy.health':
             if enabled is True:
                 health_manager.enable(self.id)
             else:
