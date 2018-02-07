@@ -19,13 +19,13 @@ LOG = logging.getLogger(__name__)
 
 
 class PluginInfo(object):
-    '''Base mapping of plugin type to implementation.'''
+    """Base mapping of plugin type to implementation."""
 
     def __new__(cls, registry, name, plugin, **kwargs):
-        '''Create a new PluginInfo of the appropriate class.
+        """Create a new PluginInfo of the appropriate class.
 
         Placeholder for class hierarchy extensibility
-        '''
+        """
         return super(PluginInfo, cls).__new__(cls)
 
     def __init__(self, registry, name, plugin):
@@ -62,7 +62,7 @@ class PluginInfo(object):
 
 
 class Registry(object):
-    '''A registry for managing profile or policy classes.'''
+    """A registry for managing profile or policy classes."""
 
     def __init__(self, registry_name, global_registry=None):
         self.registry_name = registry_name
@@ -71,12 +71,12 @@ class Registry(object):
         self.global_registry = global_registry
 
     def _register_info(self, name, info):
-        '''place the new info in the correct location in the registry.
+        """place the new info in the correct location in the registry.
 
-        :param path: a string of plugin name.
+        :param name: a string of plugin name.
         :param info: reference to a PluginInfo data structure, deregister a
                      PluginInfo if specified as None.
-        '''
+        """
         registry = self._registry
         if info is None:
             # delete this entry.
@@ -131,7 +131,7 @@ class Registry(object):
         return dict((k, v.plugin) for k, v in self._registry.items())
 
     def get_types(self):
-        '''Return a list of valid plugin types.'''
+        """Return a list of valid plugin types."""
         return [
             {
                 'name': name.split('-')[0] if '-' in name else name,

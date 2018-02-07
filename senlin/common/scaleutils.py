@@ -242,7 +242,6 @@ def filter_error_nodes(nodes):
     """Filter out ERROR nodes from the given node list.
 
     :param nodes: candidate nodes for filter.
-    :param count: maximum number of nodes for selection.
     :return: a tuple containing the chosen nodes' IDs and the undecided
              (good) nodes.
     """

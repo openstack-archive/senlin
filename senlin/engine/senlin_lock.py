@@ -42,6 +42,7 @@ def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
                          scope=CLUSTER_SCOPE, forced=False):
     """Try to lock the specified cluster.
 
+    :param context: the context used for DB operations.
     :param cluster_id: ID of the cluster to be locked.
     :param action_id: ID of the action which wants to lock the cluster.
     :param engine: ID of the engine which wants to lock the cluster.
@@ -103,7 +104,7 @@ def node_lock_acquire(context, node_id, action_id, engine=None,
                       forced=False):
     """Try to lock the specified node.
 
-    :param context: the context used for DB operations;
+    :param context: the context used for DB operations.
     :param node_id: ID of the node to be locked.
     :param action_id: ID of the action that attempts to lock the node.
     :param engine: ID of the engine that attempts to lock the node.
