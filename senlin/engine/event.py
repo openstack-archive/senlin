@@ -43,8 +43,11 @@ def _event_data(action, phase=None, reason=None):
     action_name = action.action
     if action_name in [consts.NODE_OPERATION, consts.CLUSTER_OPERATION]:
         action_name = action.inputs.get('operation', action_name)
-    return dict(name=action.entity.name,
-                obj_id=action.entity.id[:8],
+    name = action.entity.name if action.entity else "Unknown"
+    obj_id = action.entity.id[:8] if action.entity else "Unknown"
+
+    return dict(name=name,
+                obj_id=obj_id,
                 action=action_name,
                 id=action.id[:8],
                 phase=phase,

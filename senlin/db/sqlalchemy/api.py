@@ -1073,7 +1073,8 @@ def dependency_add(context, depended, dependent):
                 r = models.ActionDependency(depended=d, dependent=dependent)
                 session.add(r)
 
-            query = session.query(models.Action).filter_by(id=dependent)
+            query = session.query(models.Action).with_lockmode('update')
+            query = query.filter_by(id=dependent)
             query.update({'status': consts.ACTION_WAITING,
                           'status_reason': 'Waiting for depended actions.'},
                          synchronize_session='fetch')
@@ -1090,8 +1091,8 @@ def dependency_add(context, depended, dependent):
             r = models.ActionDependency(depended=depended, dependent=d)
             session.add(r)
 
-        q = session.query(models.Action).filter(
-            models.Action.id.in_(dependents))
+        q = session.query(models.Action).with_lockmode('update')
+        q = q.filter(models.Action.id.in_(dependents))
         q.update({'status': consts.ACTION_WAITING,
                   'status_reason': 'Waiting for depended actions.'},
                  synchronize_session='fetch')
