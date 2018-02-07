@@ -427,6 +427,31 @@ policies attached to the cluster. If this option is omitted, however, Senlin
 will treat it as implicitly set to value 1.
 
 
+Checking a Cluster
+~~~~~~~~~~~~~~~~~~
+
+A cluster can be checked using the :command:`openstack cluster check`
+command, for example::
+
+  $ openstack cluster check mycluster
+
+All nodes belonging to the specified cluster will perform the check operation.
+If a node's physical resource is not ACTIVE, the node status will be changed
+as part of the check operation.
+
+
+Recovering a Cluster
+~~~~~~~~~~~~~~~~~~~~
+A cluster can be recovered using the :command:`openstack cluster recover`
+command, for example::
+
+  $ openstack cluster recover mycluster --check true
+
+The option :option:`--check <boolean>` is optional. If this option is set,
+the cluster will perform check operation before doing recovery. The restore
+operation will delete nodes from the specified cluster and recreate it.
+
+
 Deleting a Cluster
 ~~~~~~~~~~~~~~~~~~
 
