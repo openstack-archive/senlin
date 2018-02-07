@@ -605,8 +605,8 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual(mock_chase.return_value, res)
         mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
                                          project_safe=False)
-        mock_ctx.assert_called_once_with(user=x_cluster.user,
-                                         project=x_cluster.project)
+        mock_ctx.assert_called_once_with(user_id=x_cluster.user,
+                                         project_id=x_cluster.project)
         mock_rpc.assert_has_calls([
             mock.call(ctx, 'cluster_check', mock.ANY),
             mock.call(ctx, 'node_recover', mock.ANY)
@@ -647,7 +647,8 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual(mock_chase.return_value, res)
         mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
                                          project_safe=False)
-        mock_ctx.assert_called_once_with(user='USER_ID', project='PROJECT_ID')
+        mock_ctx.assert_called_once_with(user_id='USER_ID',
+                                         project_id='PROJECT_ID')
         mock_check.assert_called_once_with(ctx, 'cluster_check', mock.ANY)
         mock_chase.assert_called_once_with(mock.ANY, 123)
 
@@ -673,7 +674,8 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual(mock_chase.return_value, res)
         mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
                                          project_safe=False)
-        mock_ctx.assert_called_once_with(user='USER_ID', project='PROJECT_ID')
+        mock_ctx.assert_called_once_with(user_id='USER_ID',
+                                         project_id='PROJECT_ID')
         mock_rpc.assert_called_once_with(ctx, 'cluster_check', mock.ANY)
         mock_wait.assert_called_once_with(ctx, "CHECK_ID", 456)
         mock_chase.assert_called_once_with(mock.ANY, 456)
