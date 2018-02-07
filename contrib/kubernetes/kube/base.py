@@ -33,11 +33,13 @@ def GenKubeToken():
     token = '.'.join(token_id, token_secret)
     return token
 
+
 def loadScript(path):
     script_file = os.path.join(os.path.dirname(__file__), path)
     with open(script_file, "r") as f:
         content = f.read()
     return content
+
 
 class KubeBaseProfile(server.ServerProfile):
     """Kubernetes Base Profile."""
