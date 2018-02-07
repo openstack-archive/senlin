@@ -208,7 +208,18 @@ class Action(object):
             'data': obj.data,
         }
 
-        return cls(obj.target, obj.action, ctx, **kwargs)
+        target_type = obj.action.split('_')[0]
+        if target_type == 'CLUSTER':
+            from senlin.engine.actions import cluster_action
+            ActionClass = cluster_action.ClusterAction
+        elif target_type == 'NODE':
+            from senlin.engine.actions import node_action
+            ActionClass = node_action.NodeAction
+        else:
+            from senlin.engine.actions import custom_action
+            ActionClass = custom_action.CustomAction
+
+        return ActionClass(obj.target, obj.action, ctx, **kwargs)
 
     @classmethod
     def load(cls, ctx, action_id=None, db_action=None, project_safe=True):
