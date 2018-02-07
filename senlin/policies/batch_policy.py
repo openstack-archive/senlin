@@ -98,9 +98,6 @@ class BatchPolicy(base.Policy):
         :param total: Total number of nodes.
         :returns: Size of each batch and number of batches.
         """
-        batch_num = 0
-        batch_size = 0
-        diff = 0
 
         # if the number of nodes less than min_in_service,
         # we divided it to 2 batches
