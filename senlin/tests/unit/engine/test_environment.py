@@ -184,17 +184,17 @@ class TestEnvironment(base.SenlinTestCase):
 
     def test_get_profile_types(self):
         env = environment.Environment()
-        plugin1 = mock.Mock(VERSIONS={'k': 'v'})
+        plugin1 = mock.Mock(VERSIONS={'1.0': 'v'})
         env.register_profile('foo-1.0', plugin1)
-        plugin2 = mock.Mock(VERSIONS={'k': 'v1'})
+        plugin2 = mock.Mock(VERSIONS={'1.2': 'v1'})
         env.register_profile('bar-1.2', plugin2)
 
         actual = env.get_profile_types()
         self.assertIn(
-            {'name': 'foo', 'version': '1.0', 'support_status': {'k': 'v'}},
+            {'name': 'foo', 'version': '1.0', 'support_status': {'1.0': 'v'}},
             actual)
         self.assertIn(
-            {'name': 'bar', 'version': '1.2', 'support_status': {'k': 'v1'}},
+            {'name': 'bar', 'version': '1.2', 'support_status': {'1.2': 'v1'}},
             actual)
 
     def test_register_and_get_policy(self):
@@ -211,17 +211,17 @@ class TestEnvironment(base.SenlinTestCase):
 
     def test_get_policy_types(self):
         env = environment.Environment()
-        plugin1 = mock.Mock(VERSIONS={'k': 'v'})
+        plugin1 = mock.Mock(VERSIONS={'0.1': 'v'})
         env.register_policy('foo-0.1', plugin1)
-        plugin2 = mock.Mock(VERSIONS={'k': 'v1'})
-        env.register_policy('bar-0.2', plugin2)
+        plugin2 = mock.Mock(VERSIONS={'0.1': 'v1'})
+        env.register_policy('bar-0.1', plugin2)
 
         actual = env.get_policy_types()
         self.assertIn(
-            {'name': 'foo', 'version': '0.1', 'support_status': {'k': 'v'}},
+            {'name': 'foo', 'version': '0.1', 'support_status': {'0.1': 'v'}},
             actual)
         self.assertIn(
-            {'name': 'bar', 'version': '0.2', 'support_status': {'k': 'v1'}},
+            {'name': 'bar', 'version': '0.1', 'support_status': {'0.1': 'v1'}},
             actual)
 
     def test_register_and_get_driver_types(self):
@@ -245,10 +245,10 @@ class TestEnvironment(base.SenlinTestCase):
 
         actual = env.get_driver_types()
         self.assertIn(
-            {'name': 'foo', 'version': '', 'support_status': {}},
+            {'name': 'foo', 'version': '', 'support_status': {'': ''}},
             actual)
         self.assertIn(
-            {'name': 'bar', 'version': '', 'support_status': {}},
+            {'name': 'bar', 'version': '', 'support_status': {'': ''}},
             actual)
 
     def test_register_and_get_endpoints(self):
