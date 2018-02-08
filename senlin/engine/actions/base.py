@@ -21,7 +21,6 @@ from oslo_utils import timeutils
 from senlin.common import consts
 from senlin.common import context as req_context
 from senlin.common import exception
-from senlin.common.i18n import _
 from senlin.common import utils
 from senlin.engine import dispatcher
 from senlin.engine import event as EVENT
@@ -347,8 +346,9 @@ class Action(object):
                 dispatcher.start_action(self.id)
             else:
                 status = self.RES_ERROR
-                reason = reason or _('Exceeded maximum number of retries (%d)'
-                                     ) % cfg.CONF.lock_retry_times
+                if not reason:
+                    reason = ('Exceeded maximum number of retries (%d)'
+                              '') % cfg.CONF.lock_retry_times
                 ao.Action.mark_failed(self.context, self.id, timestamp, reason)
 
         if status == self.SUCCEEDED:
@@ -402,8 +402,8 @@ class Action(object):
         if self.data['status'] == policy_mod.CHECK_OK:
             return True
 
-        self.data['reason'] = _("Failed policy '%(name)s': %(reason)s"
-                                ) % {'name': name, 'reason': reason}
+        self.data['reason'] = ("Failed policy '%(name)s': %(reason)s"
+                               ) % {'name': name, 'reason': reason}
         return False
 
     def policy_check(self, cluster_id, target):
@@ -423,7 +423,7 @@ class Action(object):
                                              filters={'enabled': True})
         # default values
         self.data['status'] = policy_mod.CHECK_OK
-        self.data['reason'] = _('Completed policy checking.')
+        self.data['reason'] = 'Completed policy checking.'
 
         for pb in bindings:
             policy = policy_mod.Policy.load(self.context, pb.policy_id)
@@ -447,8 +447,8 @@ class Action(object):
             if getattr(policy, 'cooldown', None):
                 if pb.cooldown_inprogress(policy.cooldown):
                     self.data['status'] = policy_mod.CHECK_ERROR
-                    self.data['reason'] = _('Policy %s cooldown is still '
-                                            'in progress.') % policy.id
+                    self.data['reason'] = ('Policy %s cooldown is still '
+                                           'in progress.') % policy.id
                     return
 
             if method is not None:
