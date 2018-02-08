@@ -46,7 +46,10 @@ class LoadBalancingPolicy(base.Policy):
     VERSIONS = {
         '1.0': [
             {'status': consts.SUPPORTED, 'since': '2016.04'}
-        ]
+        ],
+        '1.1': [
+            {'status': consts.SUPPORTED, 'since': '2018.01'}
+        ],
     }
 
     PRIORITY = 500
