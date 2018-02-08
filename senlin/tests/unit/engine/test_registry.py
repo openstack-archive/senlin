@@ -200,22 +200,22 @@ class RegistryTest(base.SenlinTestCase):
 
     def test_get_types(self):
         reg = registry.Registry('GLOBAL', None)
-        plugin1 = mock.Mock(VERSIONS={'foo': 'bar'})
+        plugin1 = mock.Mock(VERSIONS={'1.0': 'bar'})
         reg.register_plugin('FOO-1.0', plugin1)
-        plugin2 = mock.Mock(VERSIONS={'zoo': 'car'})
+        plugin2 = mock.Mock(VERSIONS={'1.1': 'car'})
         reg.register_plugin('BAR-1.1', plugin2)
 
         self.assertIn(
             {
                 'name': 'FOO',
                 'version': '1.0',
-                'support_status': {'foo': 'bar'}
+                'support_status': {'1.0': 'bar'}
             },
             reg.get_types())
         self.assertIn(
             {
                 'name': 'BAR',
                 'version': '1.1',
-                'support_status': {'zoo': 'car'}
+                'support_status': {'1.1': 'car'}
             },
             reg.get_types())
