@@ -52,7 +52,7 @@ Proposed change
 
 1. Add a new attribute 'fast_scaling' in metadata to cluster, with the
 attribute set, senlin will create standby nodes when create a new cluster.
-The number of standby nodes could be specify，but sum of standby nodes and
+The number of standby nodes could be specify, but sum of standby nodes and
 nodes in cluster should less than max size of the cluster.
 
 2. Revise cluster create and cluster delete operation for support new attr,
