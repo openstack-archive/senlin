@@ -206,6 +206,13 @@ notification_opts = [
 cfg.CONF.register_group(notification_group)
 cfg.CONF.register_opts(notification_opts, group=notification_group)
 
+# Notification topic
+notification_topic_opts = [
+    cfg.ListOpt('notification_topics',
+                default=['versioned_notifications'],
+                help=_('Default notification topic.'))]
+cfg.CONF.register_opts(notification_topic_opts)
+
 # Zaqar group
 zaqar_group = cfg.OptGroup(
     'zaqar', title='Zaqar Options',

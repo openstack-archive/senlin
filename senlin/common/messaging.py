@@ -94,7 +94,7 @@ def setup(url=None, optional=False):
         serializer = RequestContextSerializer(JsonPayloadSerializer())
         NOTIFIER = messaging.Notifier(NOTIFICATION_TRANSPORT,
                                       serializer=serializer,
-                                      topics=['versioned_notifications'])
+                                      topics=cfg.CONF.notification_topics)
 
 
 def cleanup():
