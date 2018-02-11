@@ -132,11 +132,12 @@ class Registry(object):
 
     def get_types(self):
         """Return a list of valid plugin types."""
-        return [
-            {
-                'name': name.split('-')[0] if '-' in name else name,
-                'version': name.split('-')[1] if '-' in name else '',
-                'support_status': pi.plugin.VERSIONS
-            }
-            for name, pi in self._registry.items()
-        ]
+        types_support = []
+        for tn, ts in self._registry.items():
+            name = tn.split('-')[0] if '-' in tn else tn
+            version = tn.split('-')[1] if '-' in tn else ''
+            support = ts.plugin.VERSIONS[version] if version != '' else ''
+            pi = {version: support}
+            types_support.append({'name': name, 'version': version,
+                                  'support_status': pi})
+        return types_support
