@@ -392,7 +392,7 @@ class Action(object):
         return self._check_signal() == self.SIG_RESUME
 
     def _check_result(self, name):
-        """Check policy check status and generate event.
+        """Check policy status and generate event.
 
         :param name: Name of policy checked
         :return: True if the policy checking can be continued, or False if the
