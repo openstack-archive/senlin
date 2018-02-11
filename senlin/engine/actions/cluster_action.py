@@ -66,7 +66,6 @@ class ClusterAction(base.Action):
         :returns: A tuple containing the result and the corresponding reason.
         """
         status = self.get_status()
-        reason = ''
         while status != self.READY:
             if status == self.FAILED:
                 reason = ('%(action)s [%(id)s] failed') % {
@@ -211,7 +210,6 @@ class ClusterAction(base.Action):
                 nodes_list.append(node.id)
             plan.append(set(nodes_list))
 
-        nodes = []
         for node_set in plan:
             child = []
             nodes = list(node_set)
