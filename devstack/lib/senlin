@@ -192,7 +192,7 @@ function install_senlinclient {
         git_clone $SENLINCLIENT_REPO $SENLINCLIENT_DIR $SENLINCLIENT_BRANCH
         setup_develop $SENLINCLIENT_DIR
     else
-        pip_install python-senlinclient
+        pip_install --upgrade --force-reinstall python-senlinclient
     fi
 }
 
@@ -209,7 +209,7 @@ function install_senlin_dashboard {
         setup_develop $SENLIN_DASHBOARD_DIR
         mv $SENLIN_DASHBOARD_DIR/_test-requirements.txt $SENLIN_DASHBOARD_DIR/test-requirements.txt
     else
-        pip_install senlin-dashboard
+        pip_install --upgrade --force-reinstall senlin-dashboard
     fi
 }
 
