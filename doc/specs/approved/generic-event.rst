@@ -160,7 +160,7 @@ Performance Impact
 * An overloaded message queue may lead to slower response of senlin-engine?
   Not quite sure.
 
-* A overloaded DBMS may slow down the senlin-engine.
+* An overloaded DBMS may slow down the senlin-engine.
 
 * High frequency of event generation, based on common sense, will impact the
   service performance.
