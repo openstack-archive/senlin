@@ -364,7 +364,7 @@ class ServerProfile(base.Profile):
             flavor = self.compute(obj).flavor_find(name_or_id, False)
         except exc.InternalError as ex:
             msg = six.text_type(ex)
-            if reason is None:  # reaons is 'validate'
+            if reason is None:  # reason is 'validate'
                 if ex.code == 404:
                     msg = _("The specified %(k)s '%(v)s' could not be found."
                             ) % {'k': self.FLAVOR, 'v': name_or_id}

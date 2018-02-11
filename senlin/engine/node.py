@@ -291,7 +291,7 @@ class Node(object):
             return True
 
         # rollback
-        db_node = no.Node.migrate(context, self.id, None, timestamp)
+        no.Node.migrate(context, self.id, None, timestamp)
         self.cluster_id = ''
         self.updated_at = timestamp
         self.index = -1
