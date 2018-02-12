@@ -64,7 +64,7 @@ The most common options to be customized include:
 ::
 
   [database]
-  connection = mysql://senlin:<MYSQL_SENLIN_PW>@127.0.0.1/senlin?charset=utf8
+  connection = mysql+pymysql://senlin:<MYSQL_SENLIN_PW>@127.0.0.1/senlin?charset=utf8
 
   [keystone_authtoken]
   auth_uri = http://<HOST>:5000/v3
