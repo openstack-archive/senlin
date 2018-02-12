@@ -1,0 +1,6 @@
+---
+issues:
+  - There are cases where the event listener based health management cannot
+    successfully stop all listeners.
+fixes:
+  - Enable old versions of builtin policy types to be listed and used.
