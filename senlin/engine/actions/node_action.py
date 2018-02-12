@@ -267,7 +267,6 @@ class NodeAction(base.Action):
             elif self.cause == consts.CAUSE_DERIVED_LCH:
                 self.policy_check(self.entity.cluster_id, 'BEFORE')
 
-        reason = ''
         try:
             res = senlin_lock.node_lock_acquire(self.context, self.entity.id,
                                                 self.id, self.owner, False)

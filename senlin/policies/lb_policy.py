@@ -550,7 +550,7 @@ class LoadBalancingPolicy(base.Policy):
 
     def _get_post_candidates(self, action):
         # This method will parse action data passed from action layer
-        candidates = []
+
         if (action.action == consts.NODE_CREATE or
                 action.action == consts.NODE_RECOVER):
             candidates = [action.entity.id]
