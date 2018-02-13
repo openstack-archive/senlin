@@ -340,7 +340,7 @@ class Cluster(object):
             return False, data
 
         kwargs = {
-            'enabled': values['enabled'],
+            'enabled': enabled,
             'data': data,
             'priority': policy.PRIORITY
         }
