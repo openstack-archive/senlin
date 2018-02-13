@@ -73,6 +73,14 @@ def get_backend():
     return sys.modules[__name__]
 
 
+def retry_on_deadlock(f):
+    return oslo_db_api.wrap_db_retry(retry_on_deadlock=True,
+                                     max_retries=10,
+                                     retry_interval=0.1,
+                                     inc_retry_interval=True,
+                                     max_retry_interval=2)(f)
+
+
 def model_query(context, *args):
     with session_for_read() as session:
         query = session.query(*args).options(joinedload_all('*'))
@@ -411,6 +419,7 @@ def node_delete(context, node_id):
 
 
 # Locks
+@retry_on_deadlock
 def cluster_lock_acquire(cluster_id, action_id, scope):
     '''Acquire lock on a cluster.
 
