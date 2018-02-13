@@ -12,7 +12,7 @@
 #    under the License.
 
 """
-Cluster endpoint for Senlin v1 ReST API.
+Cluster endpoint for Senlin v1 REST API.
 """
 
 from webob import exc

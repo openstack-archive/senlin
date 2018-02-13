@@ -11,7 +11,7 @@
 # under the License.
 
 """
-Policy type endpoint for Senlin v1 ReST API.
+Policy type endpoint for Senlin v1 REST API.
 """
 
 from senlin.api.common import util
