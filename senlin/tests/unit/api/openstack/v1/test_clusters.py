@@ -1081,7 +1081,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test__do_check_failed_request(self, mock_call, mock_parse, _ign):
-        cid = 'fake-cluster'
         data = {}
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
@@ -1138,7 +1137,6 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test__do_recover_failed_request(self, mock_call, mock_parse, _ign):
-        cid = 'fake-cluster'
         data = {}
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'

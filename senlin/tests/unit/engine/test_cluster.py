@@ -534,7 +534,7 @@ class TestCluster(base.SenlinTestCase):
         mock_cp.return_value = binding
 
         values = {'enabled': True}
-        res, reason = cluster.attach_policy(self.context, POLICY_ID, values)
+        cluster.attach_policy(self.context, POLICY_ID, values)
         policy.attach.assert_called_once_with(cluster, enabled=True)
         mock_load.assert_called_once_with(self.context, POLICY_ID)
         mock_cp.assert_called_once_with(CLUSTER_ID, POLICY_ID, priority=10,
