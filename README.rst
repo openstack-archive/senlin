@@ -61,7 +61,7 @@ Code Repository
 
 Blueprints
 ----------
-- Blueprints: https://blueprints.launchpad.net/senlinA
+- Blueprints: https://blueprints.launchpad.net/senlin
 
 Bug Tracking
 ------------
