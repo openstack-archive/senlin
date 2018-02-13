@@ -11,7 +11,7 @@
 # under the License.
 
 """
-Profile type endpoint for Senlin v1 ReST API.
+Profile type endpoint for Senlin v1 REST API.
 """
 
 from senlin.api.common import util

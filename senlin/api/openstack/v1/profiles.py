@@ -11,7 +11,7 @@
 # under the License.
 
 """
-Profile endpoint for Senlin v1 ReST API.
+Profile endpoint for Senlin v1 REST API.
 """
 
 from webob import exc

@@ -11,7 +11,7 @@
 # under the License.
 
 """
-ClusterPolicies endpoint for Senlin v1 ReST API.
+ClusterPolicies endpoint for Senlin v1 REST API.
 """
 
 from webob import exc

@@ -11,7 +11,7 @@
 # under the License.
 
 """
-Event endpoint for Senlin v1 ReST API.
+Event endpoint for Senlin v1 REST API.
 """
 
 from webob import exc

@@ -11,7 +11,7 @@
 # under the License.
 
 """
-Webhook endpoint for Senlin v1 ReST API.
+Webhook endpoint for Senlin v1 REST API.
 """
 
 from webob import exc

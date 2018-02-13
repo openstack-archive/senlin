@@ -11,7 +11,7 @@
 # under the License.
 
 """
-Policy endpoint for Senlin v1 ReST API.
+Policy endpoint for Senlin v1 REST API.
 """
 
 from webob import exc
