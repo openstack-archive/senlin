@@ -329,7 +329,7 @@ def node_update(context, node_id, values):
             cluster = session.query(models.Cluster).get(node.cluster_id)
             if cluster is not None:
                 if values['status'] == 'ERROR':
-                    cluster.status = 'WARNING'
+                    cluster.status = consts.CS_WARNING
                 if 'status_reason' in values:
                     cluster.status_reason = 'Node %(node)s: %(reason)s' % {
                         'node': node.name, 'reason': values['status_reason']}
@@ -1319,8 +1319,9 @@ def action_delete(context, action_id):
         action = session.query(models.Action).get(action_id)
         if not action:
             return
-        if ((action.status == 'WAITING') or (action.status == 'RUNNING') or
-                (action.status == 'SUSPENDED')):
+        if ((action.status == consts.ACTION_WAITING) or
+                (action.status == consts.ACTION_RUNNING) or
+                (action.status == consts.ACTION_SUSPENDED)):
 
             raise exception.EResourceBusy(type='action', id=action_id)
         session.delete(action)

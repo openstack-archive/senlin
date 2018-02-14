@@ -457,7 +457,7 @@ class ClusterAction(base.Action):
                               '' % {'n': nid, 'c': node.cluster_id})
                 continue
 
-            if node.status != "ACTIVE":
+            if node.status != consts.NS_ACTIVE:
                 errors.append('Node %s is not in ACTIVE status.' % nid)
                 continue
 
@@ -777,7 +777,8 @@ class ClusterAction(base.Action):
             dobj.Dependency.create(self.context, [c for c in children],
                                    self.id)
             for cid in children:
-                ao.Action.update(self.context, cid, {'status': 'READY'})
+                ao.Action.update(self.context, cid,
+                                 {'status': consts.ACTION_READY})
             dispatcher.start_action()
 
             # Wait for dependent action if any

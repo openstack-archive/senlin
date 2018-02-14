@@ -13,6 +13,7 @@
 from oslo_config import cfg
 from oslo_log import log
 
+from senlin.common import consts
 from senlin.drivers import base
 from senlin.drivers import sdk
 
@@ -148,7 +149,8 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.create_server_image(server, name, metadata)
 
     @sdk.translate_exception
-    def wait_for_server(self, server, status='ACTIVE', failures=['ERROR'],
+    def wait_for_server(self, server, status=consts.VS_ACTIVE,
+                        failures=[consts.VS_ERROR],
                         interval=2, timeout=None):
         '''Wait for server creation complete'''
         if timeout is None:
