@@ -226,7 +226,7 @@ class Policy(object):
         """Build trust-based connection parameters.
 
         :param user: the user for which the trust will be checked.
-        :param object: the user for which the trust will be checked.
+        :param project: the user for which the trust will be checked.
         """
         service_creds = senlin_context.get_service_credentials()
         params = {
@@ -315,13 +315,13 @@ class Policy(object):
         return self._lbaasclient
 
     def attach(self, cluster, enabled=True):
-        '''Method to be invoked before policy is attached to a cluster.
+        """Method to be invoked before policy is attached to a cluster.
 
         :param cluster: The cluster to which the policy is being attached to.
         :param enabled: The attached cluster policy is enabled or disabled.
         :returns: (True, message) if the operation is successful, or (False,
                  error) otherwise.
-        '''
+        """
         if self.PROFILE_TYPE == ['ANY']:
             return True, None
 
@@ -334,7 +334,7 @@ class Policy(object):
         return True, None
 
     def detach(self, cluster):
-        '''Method to be invoked before policy is detached from a cluster.'''
+        """Method to be invoked before policy is detached from a cluster."""
         return True, None
 
     def need_check(self, target, action):
@@ -347,11 +347,11 @@ class Policy(object):
             return False
 
     def pre_op(self, cluster_id, action):
-        '''A method that will be invoked before an action execution.'''
+        """A method that will be invoked before an action execution."""
         return
 
     def post_op(self, cluster_id, action):
-        '''A method that will be invoked after an action execution.'''
+        """A method that will be invoked after an action execution."""
         return
 
     def to_dict(self):
