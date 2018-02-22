@@ -889,7 +889,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         # Test normal path
         nova_server = mock.Mock()
-        nova_server.to_dict.return_value = {
+        data = {
             'addresses': {
                 'private': [{
                     'version': 4,
@@ -919,29 +919,14 @@ class TestNovaServerBasic(base.SenlinTestCase):
                 'name': 'webserver',
             }],
         }
+        nova_server.to_dict.return_value = data
         cc.server_get.return_value = nova_server
+
         res = profile.do_get_details(node_obj)
-        expected = {
-            'flavor': 'FAKE_FLAVOR',
-            'id': 'FAKE_ID',
-            'image': 'FAKE_IMAGE',
-            'attached_volumes': ['FAKE_VOLUME'],
-            'addresses': {
-                'private': [{
-                    'version': 4,
-                    'addr': '10.0.0.3',
-                }, {
-                    'version': 4,
-                    'addr': '192.168.43.3'
-                }],
-                'public': [{
-                    'version': 4,
-                    'addr': '172.16.5.3',
-                }]
-            },
-            'security_groups': ['default', 'webserver'],
-        }
-        self.assertEqual(expected, res)
+
+        self.assertEqual(set(data['addresses']), set(res['addresses']))
+        self.assertEqual(set(['default', 'webserver']),
+                         set(res['security_groups']))
         cc.server_get.assert_called_once_with('FAKE_ID')
 
     def test_do_get_details_no_physical_id(self):

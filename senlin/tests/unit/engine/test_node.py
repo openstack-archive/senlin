@@ -932,10 +932,10 @@ class TestNode(base.SenlinTestCase):
             {'bar': 'baz'}, scope='private')
 
         final_dict = {
-            'FAKE_KEY1': 'FAKE_VALUE1',
-            'FAKE_KEY2': 'FAKE_VALUE2',
             'cluster_id': 'FAKE_CLUSTER',
             'node_id': 'FAKE_NODE',
+            'FAKE_KEY1': 'FAKE_VALUE1',
+            'FAKE_KEY2': 'FAKE_VALUE2',
         }
         final_inputs = jsonutils.dumps(final_dict)
         wfc.execution_create.assert_called_once_with('foo', final_inputs)
@@ -975,10 +975,10 @@ class TestNode(base.SenlinTestCase):
         wfc.workflow_find.assert_called_once_with('foo')
         self.assertEqual(0, wfc.workflow_create.call_count)
         final_dict = {
-            'FAKE_KEY1': 'FAKE_VALUE1',
-            'FAKE_KEY2': 'FAKE_VALUE2',
             'cluster_id': 'FAKE_CLUSTER',
             'node_id': 'FAKE_NODE',
+            'FAKE_KEY1': 'FAKE_VALUE1',
+            'FAKE_KEY2': 'FAKE_VALUE2',
         }
         final_inputs = jsonutils.dumps(final_dict)
         wfc.execution_create.assert_called_once_with('foo', final_inputs)
@@ -1050,10 +1050,10 @@ class TestNode(base.SenlinTestCase):
         wfc.workflow_create.assert_called_once_with(
             {'bar': 'baz'}, scope='private')
         final_dict = {
-            'FAKE_KEY1': 'FAKE_VALUE1',
-            'FAKE_KEY2': 'FAKE_VALUE2',
             'cluster_id': 'FAKE_CLUSTER',
             'node_id': 'FAKE_NODE',
+            'FAKE_KEY1': 'FAKE_VALUE1',
+            'FAKE_KEY2': 'FAKE_VALUE2',
         }
         final_inputs = jsonutils.dumps(final_dict)
         wfc.execution_create.assert_called_once_with('foo', final_inputs)
