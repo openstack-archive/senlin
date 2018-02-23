@@ -1325,6 +1325,37 @@ class ServerProfile(base.Profile):
 
         return dict((k, details[k]) for k in sorted(details))
 
+    def _get_image_id(self, obj, server, op):
+        """Get image id.
+
+        :param obj: The node object.
+        :param server: The server object.
+        :param op: The operate on the node.
+        :return: The image_id for the server.
+        """
+        image_id = None
+
+        if server.image:
+            image_id = server.image['id'] or server.image
+        elif server.attached_volumes:
+            cinder_driver = self.block_storage(obj)
+            for volume_ids in server.attached_volumes:
+                try:
+                    vs = cinder_driver.volume_get(volume_ids['id'])
+                    if vs.is_bootable:
+                        image_id = vs.volume_image_metadata['image_id']
+                except exc.InternalError as ex:
+                    raise exc.EResourceOperation(op=op, type='server',
+                                                 id=obj.physical_id,
+                                                 message=six.text_type(ex))
+        else:
+            msg = _("server doesn't have an image and it has no "
+                    "bootable volume")
+            raise exc.EResourceOperation(op=op, type="server",
+                                         id=obj.physical_id,
+                                         message=msg)
+        return image_id
+
     def do_adopt(self, obj, overrides=None, snapshot=False):
         """Adopt an existing server node for management.
 
@@ -1368,7 +1399,7 @@ class ServerProfile(base.Profile):
 
         spec[self.CONFIG_DRIVE] = server.has_config_drive or False
         spec[self.FLAVOR] = server.flavor['id']
-        spec[self.IMAGE] = server.image['id'] or server.image
+        spec[self.IMAGE] = self._get_image_id(obj, server, 'adopting')
         spec[self.KEY_NAME] = server.key_name
 
         # metadata
