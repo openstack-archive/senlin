@@ -132,6 +132,7 @@ using a profile named ``pstack``::
   | data          | {}                                   |
   | dependents    | {}                                   |
   | details       | None                                 |
+  | domain_id     | None                                 |
   | id            | 1984b5a0-9dd7-4dda-b1e6-e8c1f640598f |
   | index         | -1                                   |
   | init_at       | 2015-07-09T11:41:18                  |
