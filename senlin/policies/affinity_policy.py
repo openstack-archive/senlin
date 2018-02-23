@@ -14,7 +14,7 @@
 Policy for placing nodes based on Nova server groups.
 
 NOTE:  For full documentation about how the affinity policy works, check:
-https://docs.openstack.org/senlin/latest/developer/policies/affinity_v1.html
+https://docs.openstack.org/senlin/latest/contributor/policies/affinity_v1.html
 """
 
 import re

@@ -14,7 +14,7 @@
 Policy for scheduling nodes across multiple regions.
 
 NOTE: For full documentation about how the policy works, check:
-https://docs.openstack.org/senlin/latest/developer/policies/region_v1.html
+https://docs.openstack.org/senlin/latest/contributor/policies/region_v1.html
 """
 
 import math
