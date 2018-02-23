@@ -544,7 +544,7 @@ class Cluster(object):
 
         active_count = 0
         for node in self.nodes:
-            if node.status == 'ACTIVE':
+            if node.status == consts.NS_ACTIVE:
                 active_count += 1
 
         # get provided desired_capacity/min_size/max_size

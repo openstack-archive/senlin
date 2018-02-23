@@ -222,8 +222,10 @@ class HealthManager(service.Service):
         with timeutils.StopWatch(timeout) as timeout_watch:
             while timeout > 0:
                 action = self.rpc_client.call(ctx, 'action_get', req)
-                if action['status'] in ['SUCCEEDED', 'FAILED', 'CANCELLED']:
-                    if action['status'] == 'SUCCEEDED':
+                if action['status'] in [consts.ACTION_SUCCEEDED,
+                                        consts.ACTION_FAILED,
+                                        consts.ACTION_CANCELLED]:
+                    if action['status'] == consts.ACTION_SUCCEEDED:
                         done = True
                     break
                 time.sleep(2)
@@ -272,7 +274,7 @@ class HealthManager(service.Service):
         # loop through nodes to trigger recovery
         nodes = objects.Node.get_all_by_cluster(ctx, cluster_id)
         for node in nodes:
-            if node.status != 'ACTIVE':
+            if node.status != consts.NS_ACTIVE:
                 LOG.info("Requesting node recovery: %s", node.id)
                 req = objects.NodeRecoverRequest(identity=node.id,
                                                  params=recover_action)

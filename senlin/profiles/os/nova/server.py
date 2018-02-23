@@ -1002,7 +1002,7 @@ class ServerProfile(base.Profile):
             msg = six.text_type(ex)
             try:
                 cc.server_resize_revert(obj.physical_id)
-                cc.wait_for_server(obj.physical_id, 'ACTIVE')
+                cc.wait_for_server(obj.physical_id, consts.VS_ACTIVE)
             except exc.InternalError as ex1:
                 msg = six.text_type(ex1)
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
@@ -1010,7 +1010,7 @@ class ServerProfile(base.Profile):
 
         try:
             cc.server_resize_confirm(obj.physical_id)
-            cc.wait_for_server(obj.physical_id, 'ACTIVE')
+            cc.wait_for_server(obj.physical_id, consts.VS_ACTIVE)
         except exc.InternalError as ex:
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
                                       message=six.text_type(ex))
@@ -1058,7 +1058,7 @@ class ServerProfile(base.Profile):
         try:
             driver.server_rebuild(obj.physical_id, new_image_id,
                                   new_name, new_password)
-            driver.wait_for_server(obj.physical_id, 'ACTIVE')
+            driver.wait_for_server(obj.physical_id, consts.VS_ACTIVE)
         except exc.InternalError as ex:
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
                                       message=six.text_type(ex))
@@ -1440,7 +1440,7 @@ class ServerProfile(base.Profile):
                                              id=obj.physical_id,
                                              message=six.text_type(ex))
 
-        if (server is None or server.status != 'ACTIVE'):
+        if (server is None or server.status != consts.VS_ACTIVE):
             return False
 
         return True
@@ -1482,7 +1482,8 @@ class ServerProfile(base.Profile):
             return False
 
         self.compute(obj).server_reboot(obj.physical_id, reboot_type)
-        self.compute(obj).wait_for_server(obj.physical_id, 'ACTIVE')
+        self.compute(obj).wait_for_server(obj.physical_id,
+                                          consts.VS_ACTIVE)
         return True
 
     def handle_rebuild(self, obj, **options):
@@ -1536,7 +1537,7 @@ class ServerProfile(base.Profile):
         try:
             nova_driver.server_rebuild(server_id, image_id,
                                        name, admin_pass)
-            nova_driver.wait_for_server(server_id, 'ACTIVE')
+            nova_driver.wait_for_server(server_id, consts.VS_ACTIVE)
             return server_id
         except exc.InternalError as ex:
             raise exc.EResourceOperation(op='rebuilding', type='server',
