@@ -1276,7 +1276,7 @@ class EngineService(service.Service):
 
     @request_context
     def cluster_scale_out(self, ctx, req):
-        """Inflate the size of a cluster by then given number (optional).
+        """Inflate the size of a cluster by the given number (optional).
 
         :param ctx: Request context for the call.
         :param req: An instance of the ClusterScaleOutRequest object.

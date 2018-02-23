@@ -29,7 +29,7 @@ class WebhookMiddleware(wsgi.Middleware):
     """Middleware for authenticating webhook triggering requests.
 
     This middleware authenticates the webhook trigger requests and then
-    rebuild the request header so that the request will successfully pass
+    rebuilds the request header so that the request will successfully pass
     the verification of keystone auth_token middleware.
     """
     def process_request(self, req):
