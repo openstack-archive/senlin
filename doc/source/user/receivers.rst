@@ -99,6 +99,28 @@ using the option :option:`--type`, for example:
      --action CLUSTER_SCALE_OUT \
      --type webhook \
      test-receiver
+  +------------+-----------------------------------------------------------+
+  | Field      | Value                                                     |
+  +------------+-----------------------------------------------------------+
+  | action     | CLUSTER_SCALE_OUT                                         |
+  | actor      | {                                                         |
+  |            |   "trust_id": "2e76547947954e6ea62b61a658ffb8e5"          |
+  |            | }                                                         |
+  | channel    | {                                                         |
+  |            |   "alarm_url": "http://10.20.10.17:8778/v1/webhooks/...." |
+  |            | }                                                         |
+  | cluster_id | 9f1883a7-6837-4fe4-b621-6ec6ba6c3668                      |
+  | created_at | 2018-02-24T09:23:48Z                                      |
+  | domain_id  | None                                                      |
+  | id         | 2a5a266d-0c3a-456c-bbb7-f8b26ef3b7f3                      |
+  | location   | None                                                      |
+  | name       | test-receiver                                             |
+  | params     | {}                                                        |
+  | project_id | bdeecc1b58004bb19302da77ac056b44                          |
+  | type       | webhook                                                   |
+  | updated_at | None                                                      |
+  | user_id    | e1ddb7e7538845968789fd3a863de928                          |
+  +------------+-----------------------------------------------------------+
 
 Senlin service will return the receiver information with its channel ready to
 receive HTTP POST requests. For a webhook receiver, this means you can check
