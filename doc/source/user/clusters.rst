@@ -143,6 +143,7 @@ associated with the cluster. For example::
   +------------------+--------------------------------------+
   | Property         | Value                                |
   +------------------+--------------------------------------+
+  | config           | {}                                   |
   | created_at       | None                                 |
   | data             | {}                                   |
   | dependents       | {}                                   |
