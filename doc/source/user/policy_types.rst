@@ -66,10 +66,13 @@ of policy types using the following command::
   | senlin.policy.affinity         | 1.0     | SUPPORTED since 2016.10    |
   | senlin.policy.batch            | 1.0     | EXPERIMENTAL since 2017.02 |
   | senlin.policy.deletion         | 1.0     | SUPPORTED since 2016.04    |
+  | senlin.policy.deletion         | 1.1     | SUPPORTED since 2018.01    |
   | senlin.policy.health           | 1.0     | EXPERIMENTAL since 2017.02 |
   | senlin.policy.loadbalance      | 1.0     | SUPPORTED since 2016.04    |
+  | senlin.policy.loadbalance      | 1.1     | SUPPORTED since 2018.01    |
   | senlin.policy.region_placement | 1.0     | EXPERIMENTAL since 2016.04 |
   |                                |         | SUPPORTED since 2016.10    |
+  | senlin.policy.scaling          | 1.0     | SUPPORTED since 2016.04    |
   | senlin.policy.zone_placement   | 1.0     | EXPERIMENTAL since 2016.04 |
   |                                |         | SUPPORTED since 2016.10    |
   +--------------------------------+---------+----------------------------+
