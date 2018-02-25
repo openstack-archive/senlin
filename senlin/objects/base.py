@@ -91,12 +91,12 @@ class SenlinObject(base.VersionedObject):
         req_minor = int(match.group(2))
         # base version is '1.0'
         matched_version = cls.BASE_VERSION
-        for api_ver, obj_ver in cls.VERSION_MAP.items():
+        for api_ver in sorted(cls.VERSION_MAP.keys()):
             match = re.match(r"^([1-9]\d*)\.([1-9]\d*|0)$", api_ver)
             api_major = int(match.group(1))
             api_minor = int(match.group(2))
             if (api_major, api_minor) <= (req_major, req_minor):
-                matched_version = obj_ver
+                matched_version = cls.VERSION_MAP[api_ver]
             else:
                 break
 
