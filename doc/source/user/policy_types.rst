@@ -86,20 +86,23 @@ that describes the names and types of the properties that can be accepted. To
 show the schema of a specific policy type along with other properties, you can
 use the following command::
 
-  $ openstack cluster policy type show senlin.policy.deletion-1.0
+  $ openstack cluster policy type show senlin.policy.deletion-1.1
   support_status:
     '1.0':
     - since: '2016.04'
       status: SUPPORTED
-  id: senlin.policy.deletion-1.0
+    '1.1':
+    - since: '2018.01'
+      status: SUPPORTED
+  id: senlin.policy.deletion-1.1
   location: null
-  name: senlin.policy.deletion
+  name: senlin.policy.deletion-1.1
   schema:
     criteria:
       constraints:
       - constraint:
         - OLDEST_FIRST
-        - OLDEST_PROFILE_FRIST
+        - OLDEST_PROFILE_FIRST
         - YOUNGEST_FIRST
         - RANDOM
         type: AllowedValues
@@ -110,8 +113,8 @@ use the following command::
       updatable: false
     destroy_after_deletion:
       default: true
-      description: Whether a node should be completely destroyed after
-        deletion. Default to True
+      description: Whether a node should be completely destroyed after deletion. Default
+        to True
       required: false
       type: Boolean
       updatable: false
@@ -121,10 +124,52 @@ use the following command::
       required: false
       type: Integer
       updatable: false
+    hooks:
+      default: {}
+      description: Lifecycle hook properties
+      required: false
+      schema:
+        params:
+          default: {}
+          required: false
+          schema:
+            queue:
+              default: ''
+              description: Zaqar queue to receive lifecycle hook message
+              required: false
+              type: String
+              updatable: false
+            url:
+              default: ''
+              description: Url sink to which to send lifecycle hook message
+              required: false
+              type: String
+              updatable: false
+          type: Map
+          updatable: false
+        timeout:
+          default: 0
+          description: Number of seconds before actual deletion happens.
+          required: false
+          type: Integer
+          updatable: false
+        type:
+          constraints:
+          - constraint:
+            - zaqar
+            - webhook
+            type: AllowedValues
+          default: zaqar
+          description: Type of lifecycle hook
+          required: false
+          type: String
+          updatable: false
+      type: Map
+      updatable: false
     reduce_desired_capacity:
-      default: false
-      description: Whether the desired capacity of the cluster should be
-        reduced along with the deletion. Default to False.
+      default: true
+      description: Whether the desired capacity of the cluster should be reduced along
+        the deletion. Default to True.
       required: false
       type: Boolean
       updatable: false
