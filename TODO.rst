@@ -81,7 +81,7 @@ PROFILE
   - Support disk property update for os.nova.server profile
 
 DOC
------
+---
   - Provide a sample conf file for customizing senlin options.
 
 TEST

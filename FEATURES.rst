@@ -25,7 +25,7 @@ Provide TOSCA support in Senlin (maybe reuse heat-translator/tosca-parser?)
 
 
 Advanced Container Clustering
-----------------------------
+-----------------------------
 
 Container cluster management:
 

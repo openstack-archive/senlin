@@ -397,7 +397,7 @@ instead of becoming orphan nodes.
 
 
 Replacing Nodes in a Cluster
------------------------------
+----------------------------
 
 Senlin API provides the ``replace_nodes`` action for user to replace some existing
 nodes in the specified cluster. The parameter for this action is interpreted

@@ -4,9 +4,9 @@
 
  http://creativecommons.org/licenses/by/3.0/legalcode
 
-==========================================
+=======================================
 Add lifecycle hooks for scale in action
-==========================================
+=======================================
 
 
 The AWS autoscaling service provides a 'lifecycle hook' feature that Senlin

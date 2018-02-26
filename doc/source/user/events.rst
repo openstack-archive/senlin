@@ -43,7 +43,7 @@ level value of the event:
   run into some bugs. User intervention is required to do a recovery.
 
 Event Dispatcher Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Senlin provides an open architecture for event dispatching. Two of the
 built-in dispatchers are ``database`` and ``message``.
