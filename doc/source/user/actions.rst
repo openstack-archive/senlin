@@ -155,8 +155,8 @@ An example is shown below::
   | action        | CLUSTER_DELETE                       |
   | cause         | RPC Request                          |
   | created_at    | 2016-09-23T09:00:25Z                 |
-  | depended_by   | []                                   |
-  | depends_on    | []                                   |
+  | depended_by   |                                      |
+  | depends_on    |                                      |
   | domain_id     | None                                 |
   | end_at        | 1450683904.0                         |
   | id            | 8fac487f-861a-449e-9678-478133bea8de |
@@ -166,6 +166,7 @@ An example is shown below::
   | name          | cluster_delete_7deb546f              |
   | outputs       | {}                                   |
   | owner_id      | None                                 |
+  | project_id    | bdeecc1b58004bb19302da77ac056b44     |
   | start_at      | 1450683904.0                         |
   | status        | SUCCEEDED                            |
   | status_reason | Action completed successfully.       |
