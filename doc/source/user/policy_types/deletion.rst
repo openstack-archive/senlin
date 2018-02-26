@@ -99,8 +99,8 @@ it will not exceed the typical timeout value for action execution. Or else the
 node deletion will be a failure.
 
 
-Reduce Desired Capacity or Not?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Reduce Desired Capacity or Not
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In most cases, users would anticipate the "desired_capacity" of a cluster be
 reduced when there are nodes removed from it. Since the victim selection
