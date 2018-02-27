@@ -72,7 +72,7 @@ Triggering Scaling
 
 Once you have received a channel from the created receiver, you can use it to
 trigger the associated action on the specified cluster. The simplest way to
-do this is to use the :command:`cURL` command as shown below:
+do this is to use the :command:`curl` command as shown below:
 
 .. code-block:: console
 
