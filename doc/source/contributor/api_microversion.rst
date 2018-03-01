@@ -44,8 +44,8 @@ a client to always invoke the most recent version of APIs from the server.
   time.
 
 
-When to Bump the Microversion?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+When to Bump the Microversion
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A microversion is needed when the contract to the user is changed. The user
 contract covers many kinds of information such as:
