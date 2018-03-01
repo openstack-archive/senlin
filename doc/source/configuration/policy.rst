@@ -12,9 +12,9 @@
   under the License.
 
 
-======================================
+=======================================
 Senlin Sample Policy Configuration File
-======================================
+=======================================
 
 The following is an overview of all available access policies in Senlin.
 For a sample configuration file, refer to :doc:`sample-policy-yaml`.

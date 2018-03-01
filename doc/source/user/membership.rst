@@ -134,7 +134,7 @@ reset to -1.
 
 
 Replacing Node(s) in a Cluster
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The :program:`openstack cluster` command line also provides command
 :command:`cluster members replace` to replace node(s) in a cluster. The argument
