@@ -55,30 +55,40 @@ Then you can create a cluster using the profile named "``pserver``":
 .. code-block:: console
 
   $ openstack cluster create --profile pserver --desired-capacity 2 mycluster
-  +------------------+--------------------------------------+
-  | Field            | Value                                |
-  +------------------+--------------------------------------+
-  | created_at       | 2016-06-07T02:26:33Z                 |
-  | data             | {}                                   |
-  | desired_capacity | 2                                    |
-  | domain_id        | None                                 |
-  | id               | 10c80bfe-41af-41f7-b9b1-9c81c9e5d21f |
-  | init_at          | 2016-06-07T02:26:17Z                 |
-  | max_size         | -1                                   |
-  | metadata         | {}                                   |
-  | min_size         | 0                                    |
-  | name             | mycluster                            |
-  | node_ids         | 14936837-1459-416b-a1f3-dea026f6cffc |
-  |                  | 99ab3862-a230-4c09-af73-076dc0dec39b |
-  | profile_id       | 1de5686a-09bb-4fb0-9502-34fa38833010 |
-  | profile_name     | pserver                              |
-  | project_id       | 99185bcde62c478e8d05b702e52d8b8d     |
-  | status           | ACTIVE                               |
-  | status_reason    | Cluster creation succeeded.          |
-  | timeout          | 3600                                 |
-  | updated_at       | 2016-06-13T02:42:47Z                 |
-  | user_id          | 6c369aec78b74a4da413f86dadb0255e     |
-  +------------------+--------------------------------------+
+
+You can show cluster details, useing the command `openstack cluster show mycluster`
+
+.. code-block:: console
+
+  $ openstack cluster show mycluster
+  +------------------+--------------------------------------------------------------------------------+
+  | Field            | Value                                                                          |
+  +------------------+--------------------------------------------------------------------------------+
+  | config           | {}                                                                             |
+  | created_at       | 2016-08-01T02:14:38Z                                                           |
+  | data             | {}                                                                             |
+  | dependents       | {}                                                                             |
+  | desired_capacity | 2                                                                              |
+  | domain_id        | None                                                                           |
+  | id               | 09e9b90c-03e3-41e3-8a31-e9bde6707585                                           |
+  | init_at          | 2016-08-01T02:13:59Z                                                           |
+  | location         | None                                                                           |
+  | max_size         | -1                                                                             |
+  | metadata         | {}                                                                             |
+  | min_size         | 0                                                                              |
+  | name             | mycluster                                                                      |
+  | node_ids         | 78509587-fa74-49cb-984f-a2e033316a63                                           |
+  |                  | 8ccc31e6-14a3-4882-b0ef-27108cdb238d                                           |
+  | profile_id       | 8f81a3a5-e91b-4fd5-91f1-e4a04ddae20f                                           |
+  | profile_name     | pserver                                                                        |
+  | project_id       | e127900ee5d94ff5aff30173aa607765                                               |
+  | status           | ACTIVE                                                                         |
+  | status_reason    | CLUSTER_CREATE: number of active nodes is equal or above desired_capacity (2). |
+  | timeout          | 3600                                                                           |
+  | updated_at       | 2016-08-01T02:14:38Z                                                           |
+  | user_id          | 3914a2df5b7e49e3acbba86044e820ef                                               |
+  +------------------+--------------------------------------------------------------------------------+
+
 
 This creates a cluster with 2 nodes created at the beginning. We export the
 cluster ID into an environment variable for convenience:
@@ -127,31 +137,30 @@ by two nodes every time it is triggered:
 .. code-block:: console
 
   $ openstack cluster receiver create --action CLUSTER_SCALE_OUT --params count=2 --cluster mycluster r_01
-  +------------+----------------------------------------------------------------------------+
-  | Field      | Value                                                                      |
-  +------------+----------------------------------------------------------------------------+
-  | action     | CLUSTER_SCALE_OUT                                                          |
-  | actor      | {                                                                          |
-  |            |   "trust_id": "432f81d339444cac959bab2fd9ba92fa"                           |
-  |            | }                                                                          |
-  | channel    | {                                                                          |
-  |            |   "alarm_url": "http://node1:8778/v1/webhooks/ba...5a/trigger?V=1&count=2" |
-  |            | }                                                                          |
-  | cluster_id | b75d25e7-e84d-4742-abf7-d8a3001e25a9                                       |
-  | created_at | 2016-08-01T02:17:14Z                                                       |
-  | domain_id  | -                                                                          |
-  | id         | ba13f7cd-7a95-4545-b646-6a833ba6505a                                       |
-  | location   | -                                                                          |
-  | name       | r_01                                                                       |
-  | params     | {                                                                          |
-  |            |   "count": "2"                                                             |
-  |            | }                                                                          |
-  | project_id | 99185bcde62c478e8d05b702e52d8b8d                                           |
-  | type       | webhook                                                                    |
-  | updated_at | -                                                                          |
-  | user_id    | 6c369aec78b74a4da413f86dadb0255e                                           |
-  +------------+----------------------------------------------------------------------------+
-
+  +------------+---------------------------------------------------------------------------------+
+  | Field      | Value                                                                           |
+  +------------+---------------------------------------------------------------------------------+
+  | action     | CLUSTER_SCALE_OUT                                                               |
+  | actor      | {                                                                               |
+  |            |   "trust_id": "432f81d339444cac959bab2fd9ba92fa"                                |
+  |            | }                                                                               |
+  | channel    | {                                                                               |
+  |            |   "alarm_url": "http://node1:8778/v1/webhooks/ba...5a/trigger?V=1&count=2       |
+  |            | }                                                                               |
+  | cluster_id | b75d25e7-e84d-4742-abf7-d8a3001e25a9                                            |
+  | created_at | 2016-08-01T02:17:14Z                                                            |
+  | domain_id  | None                                                                            |
+  | id         | ba13f7cd-7a95-4545-b646-6a833ba6505a                                            |
+  | location   | None                                                                            |
+  | name       | r_01                                                                            |
+  | params     | {                                                                               |
+  |            |   "count": "2"                                                                  |
+  |            | }                                                                               |
+  | project_id | 99185bcde62c478e8d05b702e52d8b8d                                                |
+  | type       | webhook                                                                         |
+  | updated_at | None                                                                            |
+  | user_id    | 6c369aec78b74a4da413f86dadb0255e                                                |
+  +------------+---------------------------------------------------------------------------------+
 At present, all property values shown for a receiver are read only. You cannot
 change their values once the receiver is created. The only type of receivers
 senlin understands is "``webhook``". For the "``action``" parameter, there are
