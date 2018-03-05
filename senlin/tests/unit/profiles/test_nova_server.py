@@ -1279,7 +1279,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
     def test_handle_rebuild_with_image(self):
         profile = server.ServerProfile('t', self.spec)
-        x_image = '123'
+        x_image = {'id': '123'}
         x_server = mock.Mock(image=x_image)
         cc = mock.Mock()
         cc.server_get.return_value = x_server
@@ -1318,7 +1318,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
             }
         }
         profile = server.ServerProfile('t', spec)
-        x_image = '123'
+        x_image = {'id': '123'}
         x_server = mock.Mock(image=x_image)
         cc = mock.Mock()
         cc.server_get.return_value = x_server
@@ -1354,7 +1354,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
     def test_handle_rebuild_failed_rebuild(self):
         profile = server.ServerProfile('t', self.spec)
-        x_image = '123'
+        x_image = {'id': '123'}
         x_server = mock.Mock(image=x_image)
         cc = mock.Mock()
         cc.server_get.return_value = x_server
@@ -1378,7 +1378,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
     def test_handle_rebuild_failed_waiting(self):
         profile = server.ServerProfile('t', self.spec)
-        x_image = '123'
+        x_image = {'id': '123'}
         x_server = mock.Mock(image=x_image)
         cc = mock.Mock()
         cc.server_get.return_value = x_server
@@ -1427,7 +1427,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
     def test_handle_rebuild_failed_with_name(self):
         self.spec['properties']['name'] = None
         profile = server.ServerProfile('t', self.spec)
-        x_image = '123'
+        x_image = {'id': '123'}
         x_server = mock.Mock(image=x_image)
         cc = mock.Mock()
         cc.server_get.return_value = x_server

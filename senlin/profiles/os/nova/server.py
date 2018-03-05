@@ -1337,6 +1337,10 @@ class ServerProfile(base.Profile):
 
         if server.image:
             image_id = server.image['id'] or server.image
+        # when booting a nova server from volume, the image property
+        # can be ignored.
+        # we try to find a volume which is bootable and use its image_id
+        # for the server.
         elif server.attached_volumes:
             cinder_driver = self.block_storage(obj)
             for volume_ids in server.attached_volumes:
@@ -1539,29 +1543,7 @@ class ServerProfile(base.Profile):
 
         if server is None:
             return None
-        # when booting a nova server from volume, the image property
-        # can be ignored.
-        # we try to find a volume which is bootable and use its image_id
-        # for the server.
-        if server.image:
-            image_id = server.image
-        elif server.attached_volumes:
-            cinder_driver = self.block_storage(obj)
-            for volume_ids in server.attached_volumes:
-                try:
-                    vs = cinder_driver.volume_get(volume_ids['id'])
-                    if vs.is_bootable:
-                        image_id = vs.volume_image_metadata['image_id']
-                except exc.InternalError as ex:
-                    raise exc.EResourceOperation(op='rebuild', type='server',
-                                                 id=obj.physical_id,
-                                                 message=six.text_type(ex))
-        else:
-            msg = _("server doesn't have an image and it has no "
-                    "bootable volume")
-            raise exc.EResourceOperation(op="rebuild", type="server",
-                                         id=obj.physical_id,
-                                         message=msg)
+        image_id = self._get_image_id(obj, server, 'rebuilding')
 
         admin_pass = self.properties.get(self.ADMIN_PASS)
         name = self.properties[self.NAME] or obj.name
