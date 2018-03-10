@@ -1,0 +1,2018 @@
+# Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
+# Frank Kloeker <eumel@arcor.de>, 2018. #zanata
+msgid ""
+msgstr ""
+"Project-Id-Version: senlin VERSION\n"
+"Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
+"POT-Creation-Date: 2018-03-09 06:43+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2018-03-06 07:50+0000\n"
+"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"Language-Team: German\n"
+"Language: de\n"
+"X-Generator: Zanata 4.3.3\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+
+#, python-format
+msgid "\"%s\" is not a List"
+msgstr "'%s' ist keine Liste"
+
+#, python-format
+msgid "%(feature)s is not supported."
+msgstr "%(feature)s wird nicht unterstützt."
+
+#, python-format
+msgid ""
+"%(key)s (max_version=%(max)s) is not supported by spec version %(version)s."
+msgstr ""
+"%(key)s (max_version=%(max)s) wird von der Spezifikationsversion %(version)s "
+"nicht unterstützt."
+
+#, python-format
+msgid ""
+"%(key)s (min_version=%(min)s) is not supported by spec version %(version)s."
+msgstr ""
+"%(key)s (min_version=%(min)s) wird von der Spezifikationsversion %(version)s "
+"nicht unterstützt."
+
+#, python-format
+msgid "%(message)s"
+msgstr "%(message)s"
+
+#, python-format
+msgid "%(msg)s."
+msgstr "%(msg)s."
+
+#, python-format
+msgid "%(user)s is not allowed to trigger actions on cluster %(cid)s."
+msgstr "%(user)s darf keine Aktionen auf Cluster %(cid)s auslösen."
+
+#, python-format
+msgid "%s type name is not a string"
+msgstr "%s-Typname ist keine Zeichenfolge"
+
+#, python-format
+msgid "%s type name not specified"
+msgstr "%s Typenname nicht angegeben"
+
+#, python-format
+msgid "'%(other)s' must be an instance of '%(cls)s'"
+msgstr "'%(other)s' muss eine Instanz von '%(cls)s' sein"
+
+#, python-format
+msgid "'%(value)s' must be one of the allowed values: %(allowed)s"
+msgstr "'%(value)s' muss einer der erlaubten Werte sein: %(allowed)s"
+
+#, python-format
+msgid "'%s' is not a List"
+msgstr "'%s' ist keine Liste"
+
+#, python-format
+msgid "'%s' is not a Map"
+msgstr "'%s' ist keine Map"
+
+msgid "A boolean specifying whether a stack operation can be rolled back."
+msgstr ""
+"Ein boolescher Wert, der angibt, ob eine Stapeloperation zurückgesetzt "
+"werden kann."
+
+msgid ""
+"A collection of key/value pairs to be associated with the Scheduler hints. "
+"Both key and value must be <=255 chars."
+msgstr ""
+"Eine Auflistung von Schlüssel/Wert-Paaren, die den Scheduler-Hinweisen "
+"zugeordnet werden sollen. Schlüssel und Wert müssen <= 255 Zeichen sein."
+
+msgid ""
+"A collection of key/value pairs to be associated with the server created. "
+"Both key and value must be <=255 chars."
+msgstr ""
+"Eine Auflistung von Schlüssel/Wert-Paaren, die dem erstellten Server "
+"zugeordnet werden sollen. Schlüssel und Wert müssen <= 255 Zeichen sein."
+
+msgid "A dictionary for specifying the customized context for stack operations"
+msgstr ""
+"Ein Wörterbuch zum Festlegen des benutzerdefinierten Kontexts für "
+"Stapeloperationen"
+
+msgid ""
+"A integer that specifies the number of minutes that a stack operation times "
+"out."
+msgstr ""
+"Eine ganze Zahl, die die Anzahl der Minuten angibt, die eine Stapeloperation "
+"abläuft."
+
+msgid "A list of security groups to be attached to this port."
+msgstr ""
+"Eine Liste der Sicherheitsgruppen, die an diesen Port angeschlossen werden "
+"sollen."
+
+msgid ""
+"A list specifying the properties of block devices to be used for this server."
+msgstr ""
+"Eine Liste, die die Eigenschaften von Blockgeräten angibt, die für diesen "
+"Server verwendet werden sollen."
+
+msgid "A map specifying the path & contents for an injected file."
+msgstr ""
+"Eine Map, die den Pfad und den Inhalt für eine injizierte Datei angibt."
+
+msgid ""
+"A map specifying the properties of a block device to be used by the server."
+msgstr ""
+"Eine Karte, die die Eigenschaften eines vom Server zu verwendenden "
+"Blockgeräts angibt."
+
+msgid "A map specifying the properties of a network for uses."
+msgstr ""
+"Eine Map, die die Eigenschaften eines Netzwerks für Verwendungen angibt."
+
+msgid "A map that specifies the environment used for stack operations."
+msgstr ""
+"Eine Zuordnung, die die für Stapeloperationen verwendete Umgebung angibt."
+
+msgid "A number specifying the amount of adjustment."
+msgstr "Eine Zahl, die den Anpassungsbetrag angibt."
+
+#, python-format
+msgid "A policy named '%(name)s' already exists."
+msgstr "Eine Richtlinie mit dem Namen '%(name)s' existiert bereits."
+
+#, python-format
+msgid "A profile named '%(name)s' already exists."
+msgstr "Ein Profil namens '%(name)s' existiert bereits."
+
+#, python-format
+msgid "A receiver named '%s' already exists."
+msgstr "Ein Empfänger namens '%s' existiert bereits."
+
+msgid "A string referencing the image to use."
+msgstr "Eine Zeichenfolge, die auf das zu verwendende Abbild verweist."
+
+msgid "A text description of policy."
+msgstr "Eine Textbeschreibung der Richtlinie."
+
+#, python-format
+msgid ""
+"API Version String '%(version)s' is of invalid format. It must be of format "
+"'major.minor'."
+msgstr ""
+"API-Version String '%(version)s' hat ein ungültiges Format. Es muss das "
+"Format 'major.minor' haben."
+
+#, python-format
+msgid "API version '%(version)s' is not supported on this method."
+msgstr ""
+"Die API-Version '%(version)s' wird für diese Methode nicht unterstützt."
+
+msgid "Abandon a heat stack node."
+msgstr "Verlassen Sie einen Heat Stack-Knoten."
+
+#, python-format
+msgid "Action name cannot be any of %s."
+msgstr "Der Aktionsname darf nicht %s sein."
+
+msgid "Action name is required for creating webhook receiver."
+msgstr "Der Aktionsname wird zum Erstellen des Webhook-Empfängers benötigt."
+
+#, python-format
+msgid "Action parameter %s is not recognizable."
+msgstr "Aktionsparameter %s ist nicht erkennbar."
+
+msgid "Action to try for node recovery."
+msgstr "Aktion für die Wiederherstellung des Knotens."
+
+#, python-format
+msgid "Actions %(actions)s were successfully built."
+msgstr "Aktionen %(actions)s wurden erfolgreich erstellt."
+
+msgid ""
+"Address to bind the server. Useful when selecting a particular network "
+"interface."
+msgstr ""
+"Adresse zum Binden des Servers. Nützlich bei der Auswahl einer bestimmten "
+"Netzwerkschnittstelle."
+
+msgid "Administrative state of the VIP."
+msgstr "Verwaltungsstatus des VIPs."
+
+msgid "Administrative state of the health monitor."
+msgstr "Verwaltungszustand des Gesundheitsmonitors"
+
+msgid "Administrative state of the pool."
+msgstr "Verwaltungszustand des Pools"
+
+#, python-format
+msgid "Allowed values: %s"
+msgstr "Erlaubte Werte: %s"
+
+msgid "AllowedValues must be a list or a string"
+msgstr "AllowedValues muss eine Liste oder eine Zeichenfolge sein"
+
+msgid "An availability zone as candidate."
+msgstr "Eine Verfügbarkeitszone als Kandidat."
+
+msgid "An region as a candidate."
+msgstr "Eine Region als Kandidat."
+
+msgid "An unknown exception occurred."
+msgstr "Eine unbekannte Ausnahme ist aufgetreten."
+
+msgid "Batching request validated."
+msgstr "Batching-Anfrage validiert"
+
+msgid "Binary"
+msgstr "Binär"
+
+msgid "Both cluster identity and action must be specified."
+msgstr ""
+"Sowohl die Clusteridentität als auch die Aktion müssen angegeben werden."
+
+#, python-format
+msgid "Both template and template_url are not specified for profile '%s'."
+msgstr ""
+"Sowohl die Vorlage als auch template_url sind für das Profil '%s' nicht "
+"angegeben."
+
+msgid "Bus of the device."
+msgstr "Bus des Geräts."
+
+#, python-format
+msgid ""
+"Can not build trust between user %(user)s and zaqar service user %(zaqar)s "
+"for receiver %(receiver)s."
+msgstr ""
+"Es kann keine Vertrauensstellung zwischen Benutzer %(user)s und Zaqar-"
+"Dienstbenutzer %(zaqar)s für Empfänger %(receiver)s hergestellt werden."
+
+msgid "Candidates generated"
+msgstr "Kandidaten generiert"
+
+#, python-format
+msgid "Cannot find the given cluster: %s"
+msgstr "Der angegebene Cluster kann nicht gefunden werden:%s"
+
+msgid "Cannot update a cluster to a different profile type, operation aborted."
+msgstr ""
+"Ein Cluster kann nicht auf einen anderen Profiltyp aktualisiert werden, der "
+"Vorgang wurde abgebrochen."
+
+msgid "Cannot update a node to a different profile type, operation aborted."
+msgstr ""
+"Ein Knoten kann nicht auf einen anderen Profiltyp aktualisiert werden, der "
+"Vorgang wurde abgebrochen."
+
+msgid "Change the administrator password."
+msgstr "Ändern Sie das Administratorkennwort."
+
+#, python-format
+msgid "Cluster %(id)s cannot be deleted without having all policies detached."
+msgstr ""
+"Cluster %(id)s können nicht gelöscht werden, ohne dass alle Richtlinien "
+"entfernt wurden."
+
+#, python-format
+msgid "Cluster %(id)s cannot be deleted without having all receivers deleted."
+msgstr ""
+"Cluster %(id)s können nicht gelöscht werden, ohne dass alle Empfänger "
+"gelöscht wurden."
+
+#, python-format
+msgid "Cluster (%(cid)s) cannot be found."
+msgstr "Cluster (%(cid)s) kann nicht gefunden werden."
+
+msgid "Cluster (c1) cannot be found."
+msgstr "Cluster (c1) kann nicht gefunden werden."
+
+msgid "Cluster identity is required for creating webhook receiver."
+msgstr ""
+"Die Cluster-Identität wird für die Erstellung des Webhook-Empfängers "
+"benötigt."
+
+msgid "Complete public identity V3 API endpoint."
+msgstr "Komplette öffentliche Identität V3 API-Endpunkt."
+
+msgid "Configuration options for zaqar trustee."
+msgstr "Konfigurationsoptionen für den zaqar-Treuhänder"
+
+msgid "Contents of files referenced by the template, if any."
+msgstr "Inhalt von Dateien, auf die die Vorlage verweist, falls vorhanden."
+
+msgid "Contents of the file to be injected."
+msgstr "Inhalt der zu injizierenden Datei."
+
+msgid "Count for scale-in request cannot be 0."
+msgstr "Die Anzahl der Scale-In-Anforderungen kann nicht 0 sein."
+
+msgid "Count for scale-out request cannot be 0."
+msgstr "Die Anzahl der Scale-Out-Anforderungen kann nicht 0 sein."
+
+msgid "Created At"
+msgstr "Hergestellt in"
+
+msgid "Criteria used in selecting candidates for deletion"
+msgstr ""
+"Kriterien, die bei der Auswahl von Kandidaten zum Löschen verwendet werden"
+
+msgid "Customized security context for operating containers."
+msgstr "Angepasster Sicherheitskontext zum Bedienen von Containern"
+
+msgid "Customized security context for operating servers."
+msgstr "Angepasster Sicherheitskontext für den Betrieb von Servern."
+
+#, python-format
+msgid "Dead service %s is removed."
+msgstr "Der tote Service %s wurde entfernt."
+
+msgid "Default cloud backend to use."
+msgstr "Zu verwendendes Standard-Cloud-Backend"
+
+msgid "Default region name used to get services endpoints."
+msgstr ""
+"Name der Standardregion, der zum Abrufen von Dienstendpunkten verwendet wird."
+
+msgid "Define the boot order of the device"
+msgstr "Definieren Sie die Startreihenfolge des Geräts"
+
+msgid "Detailed specification for scaling adjustments."
+msgstr "Detaillierte Spezifikation für Skalierungseinstellungen."
+
+#, python-format
+msgid "Driver plugin %(name)s is not found."
+msgstr "Treiber-Plugin %(name)s wurde nicht gefunden."
+
+#, python-format
+msgid "Either '%(c)s' or '%(n)s' must be specified, but not both."
+msgstr ""
+"Es muss entweder '%(c)s' oder '%(n)s' angegeben werden, aber nicht beides."
+
+#, python-format
+msgid "Either '%(c)s' or '%(n)s' must be specified."
+msgstr "Entweder '%(c)s' oder '%(n)s' muss angegeben werden."
+
+msgid "Enable vSphere DRS extension."
+msgstr "Aktivieren Sie die vSphere DRS-Erweiterung."
+
+#, python-format
+msgid "Endpoint plugin %(name)s is not found."
+msgstr "Endpoint-Plugin %(name)s wurde nicht gefunden."
+
+#, python-format
+msgid ""
+"Engine %(id)s has launched %(num)s node actions consecutively, stop "
+"scheduling node action for %(interval)s second..."
+msgstr ""
+"Engine %(id)s hat %(num)s Node-Aktionen nacheinander gestartet, beendet die "
+"Planung der Node-Aktion für %(interval)s Sekunde ..."
+
+msgid "Engine died when executing this action."
+msgstr "Beim Ausführen dieser Aktion ist die Engine abgestürzt."
+
+msgid "Enum field only support string values."
+msgstr "Enum-Feld unterstützt nur String-Werte."
+
+#, python-format
+msgid "Error parsing input: %s"
+msgstr "Fehler beim Parsen der Eingabe:%s"
+
+msgid "Evacuate the server to a different host."
+msgstr "Evakuiere den Server auf einen anderen Host."
+
+msgid "Event dispatchers to enable."
+msgstr "Event-Dispatcher aktivieren."
+
+msgid ""
+"Event that will trigger this policy. Must be one of CLUSTER_SCALE_IN and "
+"CLUSTER_SCALE_OUT."
+msgstr ""
+"Ereignis, das diese Richtlinie auslöst Muss einer von CLUSTER_SCALE_IN und "
+"CLUSTER_SCALE_OUT sein."
+
+msgid "Exchange name for heat notifications."
+msgstr "Name für Wärmebenachrichtigungen austauschen"
+
+msgid "Exchange name for nova notifications."
+msgstr "Exchange-Name für Nova-Benachrichtigungen"
+
+msgid "Exclude derived actions from events dumping."
+msgstr "Eingeschlossene Aktionen von Ereignissen ausschließen"
+
+msgid "Expected HTTP codes for a passing HTTP(S) monitor."
+msgstr "Erwartete HTTP-Codes für einen übergehenden HTTP (S) -Monitor."
+
+#, python-format
+msgid "Failed in %(op)s %(type)s '%(id)s': %(message)s."
+msgstr "Fehlgeschlagen in %(op)s %(type)s '%(id)s': %(message)s."
+
+msgid "Failed in adding node into lb pool."
+msgstr "Fehler beim Hinzufügen eines Knotens zum lb-Pool."
+
+#, python-format
+msgid "Failed in adding nodes into lb pool: %s"
+msgstr "Fehler beim Hinzufügen von Knoten zu lb pool: %s"
+
+#, python-format
+msgid "Failed in building action: %s"
+msgstr "Fehler beim Erstellen einer Aktion: %s"
+
+#, python-format
+msgid "Failed in claiming message: %s"
+msgstr "Fehler beim Anfordern der Nachricht: %s"
+
+#, python-format
+msgid "Failed in creating %(type)s: %(message)s."
+msgstr "Fehler beim Erstellen von %(type)s: %(message)s."
+
+#, python-format
+msgid "Failed in creating health monitor (%s)."
+msgstr "Fehler beim Erstellen des Integritätsmonitors (%s)."
+
+msgid "Failed in creating lb health monitor: CREATE FAILED."
+msgstr "Fehler beim Erstellen des lb-Gesundheitsmonitors: CREATE FAILED."
+
+msgid "Failed in creating lb listener: CREATE FAILED."
+msgstr "Fehler beim Erstellen von lb-Listener: CREATE FAILED."
+
+msgid "Failed in creating lb pool: CREATE FAILED."
+msgstr "Fehler beim Erstellen des lb-Pools: CREATE FAILED."
+
+#, python-format
+msgid "Failed in creating listener (%s)."
+msgstr "Fehler beim Erstellen des Listeners (%s)."
+
+#, python-format
+msgid "Failed in creating loadbalancer (%s)."
+msgstr "Fehler beim Erstellen des Loadbalancers (%s)."
+
+msgid "Failed in creating loadbalancer: CREATE FAILED."
+msgstr "Fehler beim Erstellen von loadbalancer: CREATE FAILED."
+
+#, python-format
+msgid "Failed in creating pool (%s)."
+msgstr "Fehler beim Erstellen des Pools (%s)."
+
+#, python-format
+msgid "Failed in creating profile %(name)s: %(error)s"
+msgstr "Fehler beim Erstellen des Profils %(name)s: %(error)s"
+
+msgid "Failed in creating servergroup."
+msgstr "Fehler beim Erstellen der Servergruppe."
+
+#, python-format
+msgid "Failed in deleting %(type)s '%(id)s': %(message)s."
+msgstr "Fehler beim Löschen von %(type)s '%(id)s': %(message)s."
+
+msgid "Failed in deleting healthmonitor: DELETE FAILED."
+msgstr "Fehler beim Löschen von 'healthmonitor': DELETE FAILED."
+
+msgid "Failed in deleting lb pool: DELETE FAILED."
+msgstr "Fehler beim Löschen des lb-Pools: DELETE FAILED."
+
+msgid "Failed in deleting listener: DELETE FAILED."
+msgstr "Fehler beim Löschen des Listeners: DELETE FAILED."
+
+#, python-format
+msgid "Failed in deleting message %(id)s: %(reason)s"
+msgstr "Fehler beim Löschen der Nachricht %(id)s: %(reason)s"
+
+msgid "Failed in deleting servergroup."
+msgstr "Fehler beim Löschen der Servergruppe."
+
+#, python-format
+msgid "Failed in found %(type)s '%(id)s': %(message)s."
+msgstr "Fehlgeschlagen gefunden in %(type)s '%(id)s': %(message)s."
+
+msgid "Failed in getting subnet: GET FAILED."
+msgstr "Fehler beim Abrufen des Subnetzes: GET FAILED."
+
+#, python-format
+msgid "Failed in removing deleted node(s) from lb pool: %s"
+msgstr "Fehler beim Entfernen gelöschter Knoten aus dem lb-Pool: %s"
+
+msgid "Failed in removing node from lb pool."
+msgstr "Fehler beim Entfernen des Knotens aus dem lb Pool."
+
+#, python-format
+msgid "Failed in retrieving servergroup '%s'."
+msgstr "Fehler beim Abrufen der Servergruppe '%s'."
+
+#, python-format
+msgid "Failed in updating %(type)s '%(id)s': %(message)s."
+msgstr "Fehler beim Aktualisieren von %(type)s '%(id)s' :%(message)s."
+
+#, python-format
+msgid "Failed in validating template: %s"
+msgstr "Fehler beim Überprüfen der Vorlage: %s"
+
+msgid "Failed to remove servers from existed LB."
+msgstr "Fehler beim Entfernen von Servern aus vorhandener LB."
+
+#, python-format
+msgid "Failed to retrieve data: %s"
+msgstr "Fehler beim Abrufen der Daten: %s"
+
+#, python-format
+msgid "Filter key '%s' is unsupported"
+msgstr "Filtertaste '%s' wird nicht unterstützt"
+
+msgid "Fixed IP to be used by the network."
+msgstr "Feste IP, die vom Netzwerk verwendet werden soll."
+
+msgid ""
+"Flag to indicate whether to enforce unique names for Senlin objects "
+"belonging to the same project."
+msgstr ""
+"Flag, um anzugeben, ob eindeutige Namen für Senlin-Objekte erzwungen werden "
+"sollen, die zu demselben Projekt gehören."
+
+msgid "Health monitor for loadbalancer."
+msgstr "Gesundheitsmonitor für Loadbalancer."
+
+msgid "Heat stack template url."
+msgstr "Heat-Stack Vorlagen-URL."
+
+msgid "Heat stack template."
+msgstr "Heat-Stack-Vorlage."
+
+msgid "Host"
+msgstr "Gastgeber"
+
+msgid "ID of flavor used for the server."
+msgstr "ID der Variante, die für den Server verwendet wird."
+
+msgid "ID of image to be used for the new server."
+msgstr "ID des Abbildes, das für den neuen Server verwendet werden soll."
+
+msgid "ID of pool for the cluster on which nodes can be connected."
+msgstr ""
+"ID des Pools für den Cluster, auf dem die Knoten verbunden werden können."
+
+msgid "ID of the health manager for the loadbalancer."
+msgstr "ID des Gesundheitsmanagers für den Loadbalancer."
+
+msgid "ID of the source image, snapshot or volume"
+msgstr "ID des Quellabbildes, Schattenkopie oder Datenträger"
+
+msgid "IP address of the VIP."
+msgstr "IP-Adresse des VIPs"
+
+msgid "If false, closes the client socket explicitly."
+msgstr "Wenn false, wird der Client-Socket explizit geschlossen."
+
+#, python-format
+msgid "Illegal cluster action '%s' specified."
+msgstr "Illegale Clusteraktion '%s' angegeben"
+
+msgid "Illegal cluster action 'foo' specified."
+msgstr "Illegale Clusteraktion 'foo' angegeben."
+
+msgid "In-instance path for the file to be injected."
+msgstr "In-Instance-Pfad für die zu injizierende Datei."
+
+msgid "Internal error happened"
+msgstr "Interner Fehler ist aufgetreten"
+
+msgid "Interval in seconds between update batches if any."
+msgstr "Intervall in Sekunden zwischen den Update-Batches, falls vorhanden."
+
+#, python-format
+msgid "Invalid URL scheme %s"
+msgstr "Ungültiges URL-Schema %s"
+
+#, python-format
+msgid "Invalid attribute path - %s"
+msgstr "Ungültiger Attributpfad - %s"
+
+#, python-format
+msgid "Invalid content type %(content_type)s"
+msgstr "Ungültiger Inhaltstyp %(content_type)s"
+
+#, python-format
+msgid "Invalid count (%(c)s) for action '%(a)s'."
+msgstr "Ungültige Anzahl (%(c)s) für die Aktion '%(a)s'."
+
+#, python-format
+msgid "Invalid default %(default)s: %(exc)s"
+msgstr "Ungültiger Standard %(default)s: %(exc)s"
+
+#, python-format
+msgid "Invalid parameter %s"
+msgstr "Ungültige Parameter %s"
+
+#, python-format
+msgid "Invalid parameter '%s'"
+msgstr "Ungültige Parameter '%s'"
+
+#, python-format
+msgid "Invalid value '%(value)s' specified for '%(name)s'"
+msgstr "Ungültiger Wert '%(value)s' für '%(name)s' angegeben"
+
+#, python-format
+msgid "Items for '%(attr)s' must be unique"
+msgstr "Elemente für '%(attr)s' müssen eindeutig sein"
+
+#, python-format
+msgid ""
+"JSON body size (%(len)s bytes) exceeds maximum allowed size (%(limit)s "
+"bytes)."
+msgstr ""
+"Die JSON-Körpergröße (%(len)s Bytes) überschreitet die maximal zulässige "
+"Größe (%(limit)s Byte)."
+
+msgid "LB deletion succeeded"
+msgstr "LB-Löschung erfolgreich"
+
+msgid "LB pool properties."
+msgstr "LB-Pooleigenschaften"
+
+msgid "LB resources deletion succeeded."
+msgstr "Löschen von LB-Ressourcen erfolgreich"
+
+msgid "Lifecycle hook properties"
+msgstr "Lebenszyklus-Hook-Eigenschaften"
+
+msgid "List of actions to try for node recovery."
+msgstr ""
+"Liste der Aktionen, die für die Knotenwiederherstellung ausgeführt werden "
+"sollen."
+
+msgid "List of availability zones to choose from."
+msgstr "Liste der verfügbaren Zonen zur Auswahl."
+
+msgid "List of files to be injected into the server, where each."
+msgstr "Liste der Dateien, die in den Server injiziert werden sollen."
+
+msgid "List of networks for the server."
+msgstr "Liste der Netzwerke für den Server."
+
+msgid "List of regions to choose from."
+msgstr "Liste der Regionen zur Auswahl."
+
+msgid "List of security groups."
+msgstr "Liste der Sicherheitsgruppen"
+
+msgid "List of services to be fenced."
+msgstr "Liste der Dienste, die eingezäunt werden sollen."
+
+msgid "Load balancing algorithm."
+msgstr "Lastenausgleichsalgorithmus"
+
+msgid "Location of the SSL certificate file to use for SSL mode."
+msgstr "Speicherort der SSL-Zertifikatsdatei für den SSL-Modus"
+
+msgid "Location of the SSL key file to use for enabling SSL mode."
+msgstr ""
+"Speicherort der SSL-Schlüsseldatei, die zum Aktivieren des SSL-Modus "
+"verwendet werden soll."
+
+msgid "Lock the server."
+msgstr "Sperren Sie den Server."
+
+msgid "Lowest event priorities to be dispatched."
+msgstr "Niedrigste Ereignisprioritäten, die gesendet werden sollen."
+
+msgid "Malformed request data, missing 'cluster' key in request body."
+msgstr "Fehlerhafte Anfragedaten, fehlender Clusterschlüssel im Anfragetext."
+
+msgid "Malformed request data, missing 'node' key in request body."
+msgstr ""
+"Fehlgeschlagene Anfragedaten, fehlender Knotenschlüssel im Anfragetext."
+
+msgid "Malformed request data, missing 'policy' key in request body."
+msgstr ""
+"Fehlerhafte Anforderungsdaten, fehlender 'Richtlinienschlüssel' im "
+"Anfragetext."
+
+msgid "Malformed request data, missing 'profile' key in request body."
+msgstr ""
+"Fehlgeschlagene Anfragedaten, fehlender 'Profil'-Schlüssel im Anfragetext."
+
+msgid "Malformed request data, missing 'receiver' key in request body."
+msgstr ""
+"Fehlgeschlagene Anfragedaten, fehlender Empfängerschlüssel im Anfragetext."
+
+msgid "Map contains duplicated values"
+msgstr "Map enthält doppelte Werte"
+
+msgid ""
+"Maximum line size of message headers to be accepted. max_header_line may "
+"need to be increased when using large tokens (typically those generated by "
+"the Keystone v3 API with big service catalogs)."
+msgstr ""
+"Maximale Zeilengröße von Nachrichtenheadern, die akzeptiert werden sollen. "
+"max_header_line muss möglicherweise erhöht werden, wenn große Token "
+"verwendet werden (normalerweise solche, die von der Keystone v3-API mit "
+"großen Servicekatalogen generiert werden)."
+
+msgid "Maximum nodes allowed per top-level cluster."
+msgstr "Maximal zulässige Anzahl von Knoten pro Cluster auf oberster Ebene."
+
+msgid "Maximum number of clusters any one project may have active at one time."
+msgstr ""
+"Maximale Anzahl an Clustern, die ein Projekt gleichzeitig aktiv sein kann."
+
+msgid "Maximum number of connections per second allowed for this VIP"
+msgstr ""
+"Maximale Anzahl an Verbindungen pro Sekunde, die für diesen VIP zulässig sind"
+
+msgid ""
+"Maximum number of node actions that each engine worker can schedule "
+"consecutively per batch. 0 means no limit."
+msgstr ""
+"Maximale Anzahl von Knotenaktionen, die jeder Engine Worker nacheinander pro "
+"Batch einplanen kann. 0 bedeutet keine Begrenzung."
+
+msgid ""
+"Maximum number of nodes in this region. The default is -1 which means no cap "
+"set."
+msgstr ""
+"Maximale Anzahl von Knoten in dieser Region Der Standardwert ist -1, was "
+"bedeutet, dass kein Cap gesetzt ist."
+
+msgid "Maximum number of nodes that will be updated in parallel."
+msgstr "Maximale Anzahl der Knoten, die parallel aktualisiert werden."
+
+msgid "Maximum raw byte size of JSON request body."
+msgstr "Maximale Raw-Byte-Größe des JSON-Anforderungshauptteils"
+
+msgid "Maximum raw byte size of data from web response."
+msgstr "Maximale Byte-Rohgröße der Daten aus der Web-Antwort."
+
+msgid "Maximum seconds between cluster check to be called."
+msgstr "Maximale Zeit zwischen dem zu prüfenden Cluster-Check."
+
+msgid "Maximum seconds between periodic tasks to be called."
+msgstr ""
+"Maximale Sekunden zwischen periodischen Tasks, die aufgerufen werden sollen."
+
+msgid "Maximum time since last check-in for a service to be considered up."
+msgstr ""
+"Maximale Zeit seit dem letzten Check-In für einen Service, der "
+"berücksichtigt werden muss."
+
+msgid "Message body is empty."
+msgstr "Der Nachrichtentext ist leer."
+
+msgid "Minimum number of nodes in service when performing updates."
+msgstr ""
+"Minimale Anzahl von Knoten, die beim Ausführen von Aktualisierungen in "
+"Betrieb sind."
+
+msgid "Missing adjustment_type value for size adjustment."
+msgstr "Fehlender Wert von adjustment_type für die Größenanpassung."
+
+msgid "Missing number value for size adjustment."
+msgstr "Fehlender Zahlenwert für die Größenanpassung."
+
+#, python-format
+msgid "Missing sort key for '%s'."
+msgstr "Fehlender Sortierschlüssel für '%s'."
+
+msgid "Multiple actions specified"
+msgstr "Mehrere Aktionen angegeben"
+
+msgid "Multiple actions specified."
+msgstr "Mehrere Aktionen angegeben"
+
+msgid "Multiple operations specified"
+msgstr "Mehrere Vorgänge angegeben"
+
+msgid "Multiple operations specified."
+msgstr "Mehrere Vorgänge angegeben"
+
+#, python-format
+msgid ""
+"Multiple results found matching the query criteria '%(arg)s'. Please be more "
+"specific."
+msgstr ""
+"Es wurden mehrere Ergebnisse gefunden, die den Suchkriterien '%(arg)s' "
+"entsprechen. Seien Sie bitte spezifischer."
+
+msgid "Must specify a network to create floating IP"
+msgstr "Muss ein Netzwerk angeben, um Floating IP zu erstellen"
+
+msgid "Name of Nova keypair to be injected to server."
+msgstr "Name des Nova-Schlüsselpaars, das in den Server injiziert werden soll."
+
+msgid "Name of a region."
+msgstr "Name einer Region"
+
+msgid "Name of a security group"
+msgstr "Name einer Sicherheitsgruppe"
+
+msgid "Name of action to execute."
+msgstr "Name der auszuführenden Aktion"
+
+msgid "Name of an availability zone."
+msgstr "Name einer Verfügbarkeitszone"
+
+msgid "Name of availability zone for running the server."
+msgstr "Name der Verfügbarkeitszone zum Ausführen des Servers."
+
+msgid "Name of cookie if type set to APP_COOKIE."
+msgstr "Name des Cookies, wenn der Typ auf APP_COOKIE gesetzt ist."
+
+msgid "Name of the availability zone to place the nodes."
+msgstr "Name der Verfügbarkeitszone zum Platzieren der Knoten."
+
+msgid "Name of the device(e.g. vda, xda, ....)."
+msgstr "Name des Gerätes (z.B. vda, xda, ....)."
+
+msgid "Name of the domain for the service project."
+msgstr "Name der Domäne für das Serviceprojekt"
+
+msgid "Name of the domain for the service user."
+msgstr "Name der Domäne für den Servicebenutzer"
+
+msgid ""
+"Name of the engine node. This can be an opaque identifier. It is not "
+"necessarily a hostname, FQDN or IP address."
+msgstr ""
+"Name des Motorknotens Dies kann eine undurchsichtige Kennung sein. Es ist "
+"nicht unbedingt ein Hostname, FQDN oder IP-Adresse."
+
+msgid "Name of the policy type."
+msgstr "Name des Richtlinientyps"
+
+msgid "Name of the profile type."
+msgstr "Name des Profiltyps"
+
+msgid "Name of the server. When omitted, the node name will be used."
+msgstr "Name des Servers. Ohne Angabe wird der Knotenname verwendet."
+
+msgid "Name of the service project."
+msgstr "Name des Serviceprojekts"
+
+msgid "Name or ID of Subnet on which the VIP address will be allocated."
+msgstr "Name oder ID des Subnetzes, dem die VIP-Adresse zugewiesen wird."
+
+msgid ""
+"Name or ID of loadbalancer for the cluster on which nodes can be connected."
+msgstr ""
+"Name oder ID des Loadbalancers für den Cluster, an den Knoten angeschlossen "
+"werden können."
+
+msgid "Name or ID of network to create a port on."
+msgstr "Name oder ID des Netzwerks, auf dem ein Port erstellt werden soll."
+
+msgid "Name or ID of subnet for the port on which nodes can be connected."
+msgstr ""
+"Name oder ID des Subnetzes für den Port, an den die Knoten angeschlossen "
+"werden können."
+
+msgid "New password for the administrator."
+msgstr "Neues Passwort für den Administrator"
+
+msgid "No action name specified"
+msgstr "Kein Aktionsname angegeben"
+
+msgid "No action specified"
+msgstr "Keine Aktion angegeben"
+
+msgid "No action specified."
+msgstr "Keine Aktion angegeben"
+
+msgid "No availability zone found available."
+msgstr "Keine Verfügbarkeitszone gefunden verfügbar."
+
+msgid "No list of valid values provided for enum."
+msgstr "Keine Liste gültiger Werte für die Enumeration."
+
+msgid "No node (matching the filter) could be found"
+msgstr "Kein Knoten (passend zum Filter) konnte gefunden werden"
+
+msgid "No operation specified"
+msgstr "Keine Operation angegeben"
+
+msgid "No operation specified."
+msgstr "Keine Operation angegeben"
+
+msgid "No property needs an update."
+msgstr "Keine Eigenschaft benötigt ein Update."
+
+msgid "No region is found usable."
+msgstr "Keine Region wird als verwendbar befunden."
+
+msgid "No suitable vSphere host is available."
+msgstr "Es ist kein geeigneter vSphere-Host verfügbar."
+
+msgid "No target specified"
+msgstr "Kein Ziel angegeben"
+
+msgid "Node and cluster have different profile type, operation aborted."
+msgstr ""
+"Knoten und Cluster haben einen anderen Profiltyp, Operation abgebrochen."
+
+#, python-format
+msgid "Nodes %s already member of a cluster."
+msgstr "Knoten %s ist bereits Mitglied eines Clusters."
+
+msgid "Nodes ['NEW1'] already member of a cluster."
+msgstr "Knoten ['NEW1'] ist bereits Mitglied eines Clusters."
+
+msgid "Nodes ['NODE2'] already owned by some cluster."
+msgstr "Knoten ['NODE2'] gehören bereits zu einigen Clustern."
+
+#, python-format
+msgid "Nodes are not ACTIVE: %s."
+msgstr "Knoten sind nicht AKTIV: %s."
+
+msgid "Nodes are not ACTIVE: ['NEW1']."
+msgstr "Knoten sind nicht AKTIV: ['NEW1']."
+
+msgid "Nodes are not ACTIVE: ['NODE2']."
+msgstr "Knoten sind nicht AKTIV: ['NODE2']."
+
+msgid "Nodes not found:"
+msgstr "Knoten nicht gefunden:"
+
+#, python-format
+msgid "Nodes not found: %s."
+msgstr "Knoten nicht gefunden: %s."
+
+#, python-format
+msgid "Nodes not members of specified cluster: %s."
+msgstr "Knoten, die nicht Mitglieder des angegebenen Clusters sind: %s."
+
+msgid "Nodes not members of specified cluster: ['NODE1']."
+msgstr "Knoten, die nicht Mitglieder des angegebenen Clusters sind: ['NODE1']."
+
+msgid "Not enough parameters to do resize action."
+msgstr "Nicht genügend Parameter, um die Aktion zu ändern."
+
+msgid "Notification endpoints to enable."
+msgstr "Benachrichtigungsendpunkte zum Aktivieren"
+
+msgid "Notifying non-message receiver is not allowed."
+msgstr "Das Benachrichtigen von Nicht-Nachrichtenempfängern ist nicht erlaubt."
+
+msgid "Number of backlog requests to configure the socket with."
+msgstr ""
+"Anzahl der Backlog-Anfragen, mit denen der Socket konfiguriert werden soll."
+
+msgid "Number of seconds before actual deletion happens."
+msgstr "Anzahl der Sekunden vor dem tatsächlichen Löschen"
+
+msgid "Number of seconds before real deletion happens."
+msgstr "Anzahl der Sekunden vor dem tatsächlichen Löschen"
+
+msgid "Number of seconds between lock retries."
+msgstr "Anzahl der Sekunden zwischen Sperrversuche."
+
+msgid ""
+"Number of seconds between pollings. Only required when type is "
+"'NODE_STATUS_POLLING'."
+msgstr ""
+"Anzahl der Sekunden zwischen den Befragungen Wird nur benötigt, wenn der Typ "
+"'NODE_STATUS_POLLING' ist."
+
+msgid ""
+"Number of seconds to hold the cluster for cool-down before allowing cluster "
+"to be resized again."
+msgstr ""
+"Anzahl der Sekunden, in denen der Cluster zum Abkühlen gehalten wird, bevor "
+"die Größe des Clusters erneut geändert werden kann."
+
+msgid "Number of seconds to wait before killing the container."
+msgstr ""
+"Anzahl der Sekunden, die gewartet werden muss, bevor der Container beendet "
+"wird"
+
+msgid "Number of senlin-engine processes to fork and run."
+msgstr "Anzahl der Senlin-Engine-Prozesse zum Abzweigen und Ausführen"
+
+msgid "Number of times trying to grab a lock."
+msgstr "Anzahl der Versuche, eine Sperre zu erfassen."
+
+msgid "Number of workers for Senlin service."
+msgstr "Anzahl der Arbeiter für den Senlin-Dienst."
+
+#, python-format
+msgid "One of '%(p)s' and '%(n)s' must be provided"
+msgstr "Eines von '%(p)s' und '%(n)s' muss angegeben werden"
+
+#, python-format
+msgid "Only one '%s' is supported for now."
+msgstr "Nur ein '%s' wird jetzt unterstützt."
+
+#, python-format
+msgid "Original nodes not found: %s."
+msgstr "Ursprüngliche Knoten nicht gefunden: %s."
+
+msgid "Output 'fixed_ip' is missing from the provided stack node"
+msgstr "Die Ausgabe 'fixed_ip' fehlt im angegebenen Stack-Knoten"
+
+msgid "Parameters for the action"
+msgstr "Parameter für die Aktion"
+
+msgid "Parameters to be passed to Heat for stack operations."
+msgstr "Parameter, die an Heat für Stapeloperationen übergeben werden."
+
+msgid "Password for the administrator account."
+msgstr "Passwort für das Administratorkonto"
+
+msgid "Password specified for the Senlin service user."
+msgstr "Das Passwort wurde für den Benutzer des Senlin-Dienstes festgelegt."
+
+msgid "Pause a container."
+msgstr "Pausiere einen Container."
+
+msgid "Pause the server from running."
+msgstr "Unterbrechen Sie die Ausführung des Servers."
+
+#, python-format
+msgid ""
+"Policies specified (%(specified)s) doesn't match that of the existing "
+"servergroup (%(existing)s)."
+msgstr ""
+"Die angegebenen Richtlinien (%(specified)s) stimmen nicht mit denen der "
+"vorhandenen Servergruppe (%(existing)s) überein."
+
+msgid "Policy aspect for node failure detection."
+msgstr "Richtlinienaspekt für die Erkennung von Knotenfehlern."
+
+msgid "Policy aspect for node failure recovery."
+msgstr "Richtlinienaspekt für die Wiederherstellung von Knotenfehlern."
+
+#, python-format
+msgid "Policy not applicable on profile type: %s"
+msgstr "Richtlinie gilt nicht für Profiltyp:%s"
+
+msgid "Policy not specified."
+msgstr "Richtlinie nicht angegeben"
+
+msgid "Port ID to be used by the network."
+msgstr "Port ID, die vom Netzwerk verwendet werden soll."
+
+msgid "Port on which servers are running on the nodes."
+msgstr "Port, auf dem Server auf den Knoten ausgeführt werden."
+
+msgid "Profile not specified."
+msgstr "Profil nicht angegeben."
+
+#, python-format
+msgid "Profile type of nodes %s do not match that of the cluster."
+msgstr "Der Profiltyp der Knoten %s stimmt nicht mit dem des Clusters überein."
+
+#, python-format
+msgid "Profile type of nodes %s does not match that of the cluster."
+msgstr "Der Profiltyp der Knoten %s stimmt nicht mit dem des Clusters überein."
+
+msgid "Properties for the policy."
+msgstr "Eigenschaften für die Richtlinie"
+
+msgid "Properties for the profile."
+msgstr "Eigenschaften für das Profil"
+
+msgid "Properties of the VM server group"
+msgstr "Eigenschaften der VM-Servergruppe"
+
+msgid "Protocol used for VIP."
+msgstr "Protokoll für VIP verwendet."
+
+msgid "Protocol used for load balancing."
+msgstr "Protokoll zum Lastenausgleich."
+
+msgid ""
+"Purge event records which were created in the specified time period. The "
+"time is specified by age and granularity, whose value must be one of 'days', "
+"'hours', 'minutes' or 'seconds' (default)."
+msgstr ""
+"Ereignisdatensätze löschen, die im angegebenen Zeitraum erstellt wurden. Die "
+"Zeit wird nach Alter und Granularität angegeben, deren Wert entweder 'Tage', "
+"'Stunden', 'Minuten' oder 'Sekunden' (Standard) sein muss."
+
+msgid ""
+"Purge event records which were created in the specified time period. The "
+"time is specified by age and granularity. For example, granularity=hours and "
+"age=2 means purging events created two hours ago. Defaults to 30."
+msgstr ""
+"Ereignisdatensätze löschen, die im angegebenen Zeitraum erstellt wurden. Die "
+"Zeit wird durch Alter und Granularität angegeben. Granularität = Stunden und "
+"Alter = 2 bedeutet beispielsweise, dass Ereignisse gelöscht werden, die vor "
+"zwei Stunden erstellt wurden. Der Standardwert ist 30."
+
+msgid ""
+"Purge event records with specified project. This can be specified multiple "
+"times, or once with parameters separated by semicolon."
+msgstr ""
+"Ereignisdatensätze mit dem angegebenen Projekt löschen Dies kann mehrmals "
+"oder einmal mit durch Semikolon getrennten Parametern angegeben werden."
+
+msgid ""
+"RPC timeout for the engine liveness check that is used for cluster locking."
+msgstr ""
+"RPC-Zeitlimit für die Überprüfung der Systemlebensdauer, die für die "
+"Clustersperrung verwendet wird."
+
+msgid ""
+"Range of seconds to randomly delay when starting the periodic task scheduler "
+"to reduce stampeding. (Disable by setting to 0)"
+msgstr ""
+"Sekundenbereich, der beim Starten des periodischen Task-Schedulers zufällig "
+"verzögert wird, um den Ansturm zu reduzieren. (Deaktivieren durch "
+"Einstellung auf 0)"
+
+msgid "Reboot the nova server."
+msgstr "Starte den nova Server neu."
+
+msgid "Rebuild the server using current image and admin password."
+msgstr ""
+"Erstellen Sie den Server mit dem aktuellen Abbild und dem "
+"Administratorkennwort neu."
+
+#, python-format
+msgid ""
+"Receiver notification host is not specified in configuration file and Senlin "
+"service endpoint can not be found, using local hostname (%(host)s) for "
+"subscriber url."
+msgstr ""
+"Der Empfängerbenachrichtigungshost ist in der Konfigurationsdatei nicht "
+"angegeben, und der Senlin-Dienstendpunkt kann nicht gefunden werden, wobei "
+"der lokale Hostname (%(host)s) für die Teilnehmer-URL verwendet wird."
+
+msgid "Recovery action REBOOT is only applicable to os.nova.server clusters."
+msgstr "Recovery-Aktion REBOOT ist nur auf os.nova.server-Cluster anwendbar."
+
+msgid "Recovery action REBUILD is only applicable to os.nova.server clusters."
+msgstr ""
+"Die Wiederherstellungsaktion REBUILD ist nur auf os.nova.server-Cluster "
+"anwendbar."
+
+#, python-format
+msgid "Replacement nodes not found: %s."
+msgstr "Ersatzknoten nicht gefunden: %s."
+
+#, python-format
+msgid "Request body missing '%s' key."
+msgstr "Anfragekörper fehlt Schlüssel '%s'."
+
+#, python-format
+msgid "Request limit exceeded: %(message)s"
+msgstr "Anforderungslimit überschritten: %(message)s"
+
+#, python-format
+msgid "Required parameter '%s' not provided"
+msgstr "Erforderlicher Parameter '%s' nicht angegeben"
+
+msgid "Required path attribute is missing."
+msgstr "Erforderliches Pfadattribut fehlt."
+
+#, python-format
+msgid "Required spec item '%s' not provided"
+msgstr "Das erforderliche Spezifikationselement '%s' wurde nicht angegeben"
+
+msgid "Rescue the server."
+msgstr "Retten Sie den Server."
+
+#, python-format
+msgid ""
+"Resizing cluster '%(cluster)s': type=%(adj_type)s, number=%(number)s, "
+"min_size=%(min_size)s, max_size=%(max_size)s, min_step=%(min_step)s, strict="
+"%(strict)s."
+msgstr ""
+"Größenanpassung des Clusters '%(cluster)s': typ=%(adj_type)s, anzahl="
+"%(number)s, min_size=%(min_size)s, max_size=%(max_size)s, min_step="
+"%(min_step)s,strict=%(strict)s."
+
+msgid "Restart a container."
+msgstr "Starten Sie einen Container neu."
+
+msgid "Resume the running of the server."
+msgstr "Fortsetzen der Ausführung des Servers."
+
+msgid "Scaling request validated."
+msgstr "Skalierungsanforderung validiert."
+
+#, python-format
+msgid "Schema valid only for List or Map, not %s"
+msgstr "Schema ist nur für Liste oder Map gültig, nicht %s"
+
+msgid "Seconds between running periodic tasks."
+msgstr "Sekunden zwischen dem Ausführen periodischer Aufgaben."
+
+msgid ""
+"Seconds to pause between scheduling two consecutive batches of node actions."
+msgstr ""
+"Sekunden, um zwischen der Planung zweier aufeinander folgender Stapel von "
+"Knotenaktionen zu pausieren."
+
+msgid "Senlin API revision."
+msgstr "Senlin API Revision."
+
+#, python-format
+msgid "Senlin endpoint can not be found: %s."
+msgstr "Der Senlin-Endpunkt wurde nicht gefunden: %s."
+
+msgid "Senlin engine revision."
+msgstr "Senlin-Engineüberarbeitung."
+
+msgid "Senlin service user name."
+msgstr "Senlin-Dienstbenutzername"
+
+msgid "Servergroup resource deletion succeeded."
+msgstr "Löschen der Servergruppenressource erfolgreich"
+
+msgid "Service ID"
+msgstr "Dienst-ID"
+
+msgid "Service to be fenced."
+msgstr "Service der eingezäunt werden soll."
+
+msgid "Session persistence configuration."
+msgstr "Konfiguration der Sitzungspersistenz"
+
+msgid "Show available commands."
+msgstr "Zeige verfügbare Befehle."
+
+msgid "Size of the block device in MB(for swap) and in GB(for other formats)"
+msgstr "Größe des Blockgeräts in MB (für Swap) und in GB (für andere Formate)"
+
+#, python-format
+msgid "Some keys in 'context' are invalid: %s"
+msgstr "Einige Schlüssel im 'Kontext' sind ungültig: %s"
+
+msgid "Specifies the disk file system format(e.g. swap, ephemeral, ...)."
+msgstr "Gibt das Dateisystem des Dateisystems an (z. B. swap, ephemeral, ...)."
+
+msgid "Start the server."
+msgstr "Starten Sie den Server."
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Stop the server."
+msgstr "Stoppen Sie den Server."
+
+msgid "Suspend the running of the server."
+msgstr "Unterbrechen Sie die Ausführung des Servers."
+
+msgid "System SIGHUP signal received."
+msgstr "System SIGHUP-Signal empfangen."
+
+msgid "TCP port to listen on."
+msgstr "TCP-Port zum Anhören."
+
+#, python-format
+msgid "Testing message %(text)s"
+msgstr "Testnachricht %(text)s"
+
+#, python-format
+msgid "The %(type)s '%(id)s' cannot be deleted: %(reason)s."
+msgstr "Die %(type)s '%(id)s' kann nicht gelöscht werden: %(reason)s."
+
+#, python-format
+msgid "The %(type)s '%(id)s' could not be found."
+msgstr "Die %(type)s '%(id)s' konnte nicht gefunden werden."
+
+#, python-format
+msgid "The %(type)s '%(id)s' is busy now."
+msgstr "Die %(type)s '%(id)s' ist jetzt beschäftigt."
+
+#, python-format
+msgid "The %(type)s '%(id)s' is in status %(status)s."
+msgstr "Die %(type)s '%(id)s' hat den Status %(status)s."
+
+#, python-format
+msgid ""
+"The '%(p)s' property and the '%(fip)s' property cannot be specified at the "
+"same time"
+msgstr ""
+"Die Eigenschaft '%(p)s' und die Eigenschaft '%(fip)s' können nicht "
+"gleichzeitig angegeben werden"
+
+#, python-format
+msgid "The 'number' must be positive integer for adjustment type '%s'."
+msgstr ""
+"Die 'Nummer' muss eine positive Ganzzahl für den Anpassungstyp '%s' sein."
+
+msgid "The 'type' key is missing from the provided spec map."
+msgstr "Der Typschlüssel fehlt in der angegebenen Spezifikationsübersicht."
+
+msgid "The 'version' key is missing from the provided spec map."
+msgstr ""
+"Der Schlüssel 'Version' fehlt in der bereitgestellten "
+"Spezifikationsübersicht."
+
+msgid "The API paste config file to use."
+msgstr "Die zu verwendende API-Einfügekonfigurationsdatei."
+
+msgid "The HTTP method that the monitor uses for requests."
+msgstr "Die HTTP-Methode, die der Monitor für Anforderungen verwendet."
+
+msgid ""
+"The HTTP path of the request sent by the monitor to test the health of a "
+"member."
+msgstr ""
+"Der HTTP-Pfad der Anfrage, die vom Monitor gesendet wurde, um den Status "
+"eines Mitglieds zu testen."
+
+msgid ""
+"The address for notifying and triggering receivers. It is useful for case "
+"Senlin API service is running behind a proxy."
+msgstr ""
+"Die Adresse zum Benachrichtigen und Auslösen von Empfängern. Dies ist "
+"nützlich, wenn der Senlin-API-Dienst hinter einem Proxy ausgeführt wird."
+
+msgid "The amount of time in milliseconds between sending probes to members."
+msgstr ""
+"Die Zeit in Millisekunden zwischen dem Senden von Probes an Mitglieder."
+
+msgid ""
+"The cluster 'FAKE_CLUSTER' cannot be deleted: still referenced by "
+"profile(s): ['profile1']."
+msgstr ""
+"Der Cluster 'FAKE_CLUSTER' kann nicht gelöscht werden: wird immer noch von "
+"Profil (en) referenziert: ['profile1']."
+
+msgid ""
+"The cluster 'IDENTITY' cannot be deleted: there is still policy(s) attached "
+"to it."
+msgstr ""
+"Der Cluster 'IDENTITY' kann nicht gelöscht werden: Es sind noch Richtlinien "
+"beigefügt."
+
+msgid ""
+"The cluster 'IDENTITY' cannot be deleted: there is still receiver(s) "
+"associated with it."
+msgstr ""
+"Der Cluster 'IDENTITY' kann nicht gelöscht werden: Es sind immer noch "
+"Empfänger zugeordnet."
+
+#, python-format
+msgid "The cluster (%s) contains no active nodes"
+msgstr "Der Cluster (%s) enthält keine aktiven Knoten"
+
+msgid "The cluster (host_cluster) contains no active nodes"
+msgstr "Der Cluster (host_cluster) enthält keine aktiven Knoten"
+
+msgid "The cluster on which container will be launched."
+msgstr "Der Cluster, auf dem der Container gestartet werden soll."
+
+msgid "The command to run when container is started."
+msgstr "Der Befehl, der beim Starten des Containers ausgeführt werden soll."
+
+msgid "The data provided is not a map"
+msgstr "Die bereitgestellten Daten sind keine Map"
+
+msgid "The directory to search for environment files."
+msgstr "Das Verzeichnis für die Suche nach Umgebungsdateien."
+
+msgid "The floating IP address to be associated with this port."
+msgstr "Die Floating-IP-Adresse, die diesem Port zugeordnet werden soll."
+
+msgid "The host cluster 'host_cluster' could not be found."
+msgstr "Der Host-Cluster 'host_cluster' konnte nicht gefunden werden."
+
+msgid "The host node 'fake_node' could not be found."
+msgstr "Der Hostknoten 'fake_node' konnte nicht gefunden werden."
+
+msgid "The image used to create a container"
+msgstr "Das Abbild, das zum Erstellen eines Containers verwendet wird"
+
+msgid "The input is not a JSON object or YAML mapping."
+msgstr "Die Eingabe ist kein JSON-Objekt oder YAML-Mapping."
+
+msgid "The max size(bytes) of message can be posted to notification queue."
+msgstr ""
+"Die maximale Größe (Bytes) der Nachricht kann an die "
+"Benachrichtigungswarteschlange gesendet werden."
+
+msgid "The max size(bytes) of message can be posted to receiver queue."
+msgstr ""
+"Die maximale Größe (Bytes) der Nachricht kann an die Empfängerwarteschlange "
+"gesendet werden."
+
+msgid ""
+"The maximum time in milliseconds that a monitor waits to connect before it "
+"times out."
+msgstr ""
+"Die maximale Zeit in Millisekunden, die ein Monitor auf die Verbindung "
+"wartet, bevor das Zeitlimit überschritten wird."
+
+msgid "The name of the container."
+msgstr "Der Name des Containers."
+
+msgid "The name of the server group"
+msgstr "Der Name der Servergruppe"
+
+#, python-format
+msgid "The node named (%(name)s) already exists."
+msgstr "Der Knoten mit dem Namen (%(name)s) existiert bereits."
+
+#, python-format
+msgid "The node named (%s) already exists."
+msgstr "Der Knoten mit dem Namen (%s) existiert bereits."
+
+msgid "The node named (NODE1) already exists."
+msgstr "Der Knoten mit dem Namen (NODE1) existiert bereits."
+
+msgid "The node on which container will be launched."
+msgstr "Der Knoten, auf dem der Container gestartet werden soll."
+
+msgid ""
+"The number of allowed connection failures before changing the status of the "
+"member to INACTIVE."
+msgstr ""
+"Die Anzahl der zulässigen Verbindungsfehler, bevor der Status des Mitglieds "
+"in INACTIVE geändert wird."
+
+msgid "The params provided is not a map."
+msgstr "Die bereitgestellten Params sind keine Karte."
+
+#, python-format
+msgid "The policy '%(p)s' is not attached to the specified cluster '%(c)s'."
+msgstr ""
+"Die Richtlinie '%(p)s' ist nicht an den angegebenen Cluster %(c)s' angehängt."
+
+#, python-format
+msgid ""
+"The policy '%(policy)s' is not attached to the specified cluster "
+"'%(cluster)s'."
+msgstr ""
+"Die Richtlinie '%(policy)s' ist nicht an den angegebenen Cluster "
+"'%(cluster)s' angehängt."
+
+#, python-format
+msgid ""
+"The policy '%(policy)s' is not found attached to the specified cluster "
+"'%(identity)s'."
+msgstr ""
+"Die Richtlinie '%(policy)s' wurde nicht an den angegebenen Cluster "
+"'%(identity)s' angehängt gefunden."
+
+msgid ""
+"The policy 'POLICY_ID' cannot be deleted: still attached to some clusters."
+msgstr ""
+"Die Richtlinie 'POLICY_ID' kann nicht gelöscht werden: immer noch an einige "
+"Cluster angehängt."
+
+#, python-format
+msgid "The policy with type '%(policy_type)s' already exists."
+msgstr "Die Richtlinie mit dem Typ '%(policy_type)s' existiert bereits."
+
+msgid ""
+"The port for notifying and triggering receivers. It is useful for case "
+"Senlin API service is running behind a proxy."
+msgstr ""
+"Der Port zum Benachrichtigen und Auslösen von Empfängern. Dies ist nützlich, "
+"wenn der Senlin-API-Dienst hinter einem Proxy ausgeführt wird."
+
+msgid "The port number used to connect to docker daemon."
+msgstr ""
+"Die Portnummer, die für die Verbindung mit dem Docker-Dämon verwendet wird."
+
+msgid "The port on which the server will listen."
+msgstr "Der Port, an dem der Server zuhören soll."
+
+msgid "The provided spec is not a map."
+msgstr "Die angegebene Spezifikation ist keine Karte."
+
+#, python-format
+msgid ""
+"The requested operation '%(o)s' is not supported by the profile type '%(t)s'."
+msgstr ""
+"Die angeforderte Operation '%(o)s' wird vom Profiltyp '%(t)s' nicht "
+"unterstützt."
+
+msgid ""
+"The server could not comply with the request since it is either malformed or "
+"otherwise incorrect."
+msgstr ""
+"Der Server konnte der Anforderung nicht entsprechen, da sie entweder "
+"fehlerhaft oder auf andere Weise falsch ist."
+
+msgid "The server group policies."
+msgstr "Die Servergruppenrichtlinien."
+
+#, python-format
+msgid "The specified %(k)s '%(v)s' could not be found."
+msgstr "Das angegebene %(k)s '%(v)s' konnte nicht gefunden werden."
+
+#, python-format
+msgid "The specified %(k)s '%(v)s' is disabled"
+msgstr "Das angegebene %(k)s '%(v)s' ist deaktiviert"
+
+#, python-format
+msgid "The specified %(key)s '%(val)s' could not be found or is not unique."
+msgstr ""
+"Der angegebene %(key)s '%(val)s' konnte nicht gefunden werden oder ist nicht "
+"eindeutig."
+
+#, python-format
+msgid "The specified %(key)s '%(value)s' could not be found"
+msgstr "Der angegebene %(key)s '%(value)s' konnte nicht gefunden werden"
+
+#, python-format
+msgid "The specified %(key)s '%(value)s' could not be found."
+msgstr "Der angegebene %(key)s '%(value)s' konnte nicht gefunden werden."
+
+#, python-format
+msgid ""
+"The specified max_size (%(m)s) is greater than the maximum number of nodes "
+"allowed per cluster (%(mc)s)."
+msgstr ""
+"Die angegebene max_size (%(m)s) ist größer als die maximale Anzahl an Knoten "
+"pro Cluster (%(mc)s)."
+
+#, python-format
+msgid ""
+"The specified max_size (%(m)s) is less than the current desired_capacity "
+"(%(d)s) of the cluster."
+msgstr ""
+"Die angegebene max_size (%(m)s) ist kleiner als die aktuelle Sollkapazität "
+"(%(d)s) des Clusters."
+
+#, python-format
+msgid ""
+"The specified max_size (%(m)s) is less than the current min_size (%(n)s) of "
+"the cluster."
+msgstr ""
+"Die angegebene max_size (%(m)s) ist kleiner als die aktuelle min_size "
+"(%(n)s) des Clusters."
+
+#, python-format
+msgid ""
+"The specified min_size (%(n)s) is greater than the current desired_capacity "
+"(%(d)s) of the cluster."
+msgstr ""
+"Die angegebene min_size (%(n)s) ist größer als die aktuelle Sollkapazität "
+"(%(d)s) des Clusters."
+
+#, python-format
+msgid ""
+"The specified min_size (%(n)s) is greater than the current max_size (%(m)s) "
+"of the cluster."
+msgstr ""
+"Die angegebene min_size (%(n)s) ist größer als die aktuelle max_size (%(m)s "
+"des Clusters."
+
+#, python-format
+msgid ""
+"The specified min_size (%(n)s) is greater than the specified max_size "
+"(%(m)s)."
+msgstr ""
+"Die angegebene min_size (%(n)s) ist größer als die angegebene max_size "
+"(%(m)s)."
+
+#, python-format
+msgid ""
+"The specified nodes %(n)s to be replaced are not members of the cluster "
+"%(c)s."
+msgstr ""
+"Die angegebenen Knoten %(n)s, die ersetzt werden sollen, sind keine "
+"Mitglieder des Clusters %(c)s."
+
+#, python-format
+msgid "The specified regions '%(value)s' could not be found."
+msgstr "Die angegebenen Regionen '%(value)s ' konnten nicht gefunden werden."
+
+#, python-format
+msgid "The status of the port %(p)s must be DOWN"
+msgstr "Der Status des Ports %(p)s muss DOWN sein"
+
+#, python-format
+msgid ""
+"The target capacity (%(d)s) is greater than the cluster's max_size (%(m)s)."
+msgstr ""
+"Die Zielkapazität (%(d)s) ist größer als die max_size des Clusters (%(m)s)."
+
+#, python-format
+msgid ""
+"The target capacity (%(d)s) is greater than the maximum number of nodes "
+"allowed per cluster (%(m)s)."
+msgstr ""
+"Die Zielkapazität (%(d)s) ist größer als die maximale Anzahl der pro Cluster "
+"zulässigen Knoten (%(m)s)."
+
+#, python-format
+msgid ""
+"The target capacity (%(d)s) is greater than the specified max_size (%(m)s)."
+msgstr ""
+"Die Zielkapazität (%(d)s) ist größer als die angegebene max_size (%(m)s)."
+
+#, python-format
+msgid ""
+"The target capacity (%(d)s) is less than the cluster's min_size (%(m)s)."
+msgstr ""
+"Die Zielkapazität (%(d)s) ist kleiner als die min_size des Clusters (%(m)s)."
+
+#, python-format
+msgid ""
+"The target capacity (%(d)s) is less than the specified min_size (%(m)s)."
+msgstr ""
+"Die Zielkapazität (%(d)s) ist kleiner als die angegebene min_size (%(m)s)."
+
+msgid "The target capacity (11) is greater than the specified max_size (10)."
+msgstr "Die Zielkapazität (11) ist größer als die angegebene max_size (10)."
+
+msgid "The target host to evacuate the server."
+msgstr "Der Zielhost, um den Server zu evakuieren."
+
+#, python-format
+msgid "The trust for trustor '%(trustor)s' could not be found."
+msgstr "Der Trust für Treugeber '%(trustor)s' konnte nicht gefunden werden."
+
+msgid "The ttl in seconds of a message posted to notification queue."
+msgstr ""
+"Der Wert in Sekunden für eine Nachricht, die an die "
+"Benachrichtigungswarteschlange gesendet wurde."
+
+msgid "The type of probe sent by the loadbalancer to verify the member state."
+msgstr ""
+"Die Art der Sonde, die vom Loadbalancer gesendet wird, um den "
+"Mitgliedszustand zu überprüfen."
+
+#, python-format
+msgid "The value '%s' is not a valid Boolean"
+msgstr "Der Wert '%s' ist kein gültiger boolescher Wert"
+
+#, python-format
+msgid "The value '%s' is not a valid Integer"
+msgstr "Der Wert '%s' ist keine gültige Ganzzahl"
+
+#, python-format
+msgid "The value '%s' is not a valid number."
+msgstr "Der Wert '%s' ist keine gültige Zahl."
+
+#, python-format
+msgid "The value '%s' is not a valid string."
+msgstr "Der Wert '%s' ist keine gültige Zeichenfolge."
+
+#, python-format
+msgid "The value (%s) is not a valid JSON."
+msgstr "Der Wert (%s) ist kein gültiger JSON."
+
+#, python-format
+msgid "The value for %(attr)s is not a valid UUID: '%(value)s'."
+msgstr "Der Wert für %(attr)s ist keine gültige UUID: '%(value)s'."
+
+#, python-format
+msgid "The value for %(attr)s must be an integer: '%(value)s'."
+msgstr "Der Wert für %(attr)s muss eine Ganzzahl sein: '%(value)s'."
+
+#, python-format
+msgid "The value for the %(a)s field must be greater than or equal to %(n)d."
+msgstr "Der Wert für das Feld %(a)s muss größer oder gleich %(n)d sein."
+
+#, python-format
+msgid "The value for the %(a)s field must be less than or equal to %(n)d."
+msgstr "Der Wert für das Feld %(a)s muss kleiner oder gleich %(n)d sein."
+
+#, python-format
+msgid ""
+"The value for the %(attr)s field must be at least %(count)d characters long."
+msgstr ""
+"Der Wert für das Feld %(attr)s muss mindestens %(count)d Zeichen lang sein."
+
+#, python-format
+msgid ""
+"The value for the %(attr)s field must be less than %(count)d characters long."
+msgstr ""
+"Der Wert für das Feld %(attr)s muss kleiner als %(count)d Zeichen lang sein."
+
+#, python-format
+msgid ""
+"The value for the '%(attr)s' (%(value)s) contains illegal characters. It "
+"must contain only alphanumeric or \"_-.~\" characters and must start with "
+"letter."
+msgstr ""
+"Der Wert für '%(attr)s' (%(value)s) enthält ungültige Zeichen. Es darf nur "
+"alphanumerische oder '_-. ~' Zeichen enthalten und muss mit einem Buchstaben "
+"beginnen."
+
+msgid ""
+"The value for the socket option TCP_KEEPIDLE.  This is the time in seconds "
+"that the connection must be idle before TCP starts sending keepalive probes."
+msgstr ""
+"Der Wert für die Socketoption TCP_KEEPIDLE. Dies ist die Zeit in Sekunden, "
+"in der die Verbindung inaktiv sein muss, bevor TCP mit dem Senden von "
+"Keepalive-Tests beginnt."
+
+#, python-format
+msgid ""
+"The value of 'maximum' cannot be greater than the global constraint (%(m)d)."
+msgstr ""
+"Der Wert von 'Maximum' darf nicht größer sein als die globale Einschränkung "
+"(%(m)d)."
+
+msgid ""
+"The value of 'maximum' must be greater than or equal to that of the "
+"'minimum' specified."
+msgstr ""
+"Der Wert von 'Maximum' muss größer oder gleich dem angegebenen 'Minimum' "
+"sein."
+
+#, python-format
+msgid ""
+"The value of 'minimum' cannot be greater than the global constraint (%(m)d)."
+msgstr ""
+"Der Wert von 'Minimum' darf nicht größer sein als die globale Einschränkung "
+"(%(m)d)."
+
+msgid "There is no feasible plan to handle all nodes."
+msgstr "Es gibt keinen realisierbaren Plan, um alle Knoten zu behandeln."
+
+msgid ""
+"Time in second to wait for loadbalancer to become ready after senlin "
+"requests LBaaS V2 service for operations."
+msgstr ""
+"Zeit in Sekunden, um auf den Loadbalancer zu warten, nachdem senlin den "
+"LBaaS V2-Dienst für Operationen angefordert hat."
+
+msgid ""
+"Timeout for client connections' socket operations. If an incoming connection "
+"is idle for this number of seconds it will be closed. A value of '0' "
+"indicates waiting forever."
+msgstr ""
+"Timeout für Socket-Operationen von Clientverbindungen Wenn eine eingehende "
+"Verbindung für diese Anzahl von Sekunden inaktiv ist, wird sie geschlossen. "
+"Ein Wert von '0' zeigt an, dass auf ewig gewartet wird."
+
+msgid "Timeout in seconds for actions."
+msgstr "Timeout in Sekunden für Aktionen"
+
+msgid "Topic"
+msgstr "Thema"
+
+msgid "Type of adjustment when scaling is triggered."
+msgstr "Art der Anpassung, wenn die Skalierung ausgelöst wird."
+
+#, python-format
+msgid "Type of host node (%s) is not supported"
+msgstr "Der Typ des Host-Knotens (%s) wird nicht unterstützt"
+
+msgid "Type of host node (wrong_type) is not supported"
+msgstr "Der Typ des Host-Knotens (falscher_Typ) wird nicht unterstützt"
+
+msgid "Type of lifecycle hook"
+msgstr "Art des Lebenszyklus-Hooks"
+
+msgid "Type of node failure detection."
+msgstr "Art der Knotenfehlererkennung."
+
+msgid "Type of reboot which can be 'SOFT' or 'HARD'."
+msgstr "Art des Neustarts, der 'SOFT' oder 'HARD' sein kann."
+
+msgid "Type of session persistence implementation."
+msgstr "Art der Implementierung der Sitzungspersistenz"
+
+msgid "Type of the device(e.g. disk, cdrom, ...)."
+msgstr "Typ des Gerätes (z.B. Disk, CD-ROM, ...)."
+
+msgid "Unable to determine the IP address of host node"
+msgstr "Die IP-Adresse des Host-Knotens konnte nicht ermittelt werden"
+
+#, python-format
+msgid ""
+"Unable to load %(app_name)s from configuration file %(conf_file)s.\n"
+"Got: %(e)r"
+msgstr ""
+"%(app_name)s konnte nicht aus der Konfigurationsdatei %(conf_file)s geladen "
+"werden. Bekam: %(e)r"
+
+msgid "Unable to locate config file"
+msgstr "Die Konfigurationsdatei konnte nicht gefunden werden"
+
+msgid "Unlock the server."
+msgstr "Entsperren Sie den Server."
+
+msgid "Unpause a container."
+msgstr "Heben Sie einen Container auf."
+
+msgid "Unpause the server to running state."
+msgstr "Hängen Sie den Server in den aktiven Zustand."
+
+#, python-format
+msgid "Unrecognizable parameter '%s'"
+msgstr "Nicht erkennbarer Parameter '%s'"
+
+#, python-format
+msgid "Unrecognizable spec item '%s'"
+msgstr "Nicht erkennbarer Objekttyp '%s'"
+
+#, python-format
+msgid "Unrecognized action '%s' specified"
+msgstr "Nicht erkannte Aktion '%s' angegeben"
+
+msgid "Unrescue the server."
+msgstr "Entlasten Sie den Server."
+
+msgid "Unsupported action"
+msgstr "Nicht unterstützte Aktion"
+
+#, python-format
+msgid "Unsupported sort dir '%(value)s' for '%(attr)s'."
+msgstr "Nicht unterstütztes Sortierziel '%(value)s' für '%(attr)s'."
+
+#, python-format
+msgid "Unsupported sort key '%(value)s' for '%(attr)s'."
+msgstr "Nicht unterstützter Sortierschlüssel '%(value)s' für '%(attr)ss'."
+
+msgid "Updated At"
+msgstr "Aktualisiert am"
+
+msgid "Updating Nova server with image set to None is not supported by Nova"
+msgstr ""
+"Die Aktualisierung von Nova Server mit Image auf 'None' wird von Nova nicht "
+"unterstützt"
+
+msgid "Updating a cluster in error state"
+msgstr "Aktualisieren eines Clusters im Fehlerzustand"
+
+msgid "Url sink to which to send lifecycle hook message"
+msgstr "URL-Senke, an die die Lifecycle-Hook-Nachricht gesendet werden soll"
+
+msgid "User data to be exposed by the metadata server."
+msgstr ""
+"Benutzerdaten, die vom Metadatenserver verfügbar gemacht werden sollen."
+
+msgid "VIP address and port of the pool."
+msgstr "VIP-Adresse und Port des Pools."
+
+#, python-format
+msgid "Value '%(value)s' is not acceptable for field '%(attr)s'."
+msgstr "Der Wert '%(value)s' ist für das Feld '%(attr)s' nicht akzeptabel."
+
+#, python-format
+msgid "Value for '%(attr)s' must have at least %(num)s item(s)."
+msgstr "Der Wert für '%(attr)s' muss mindestens %(num)s Element(e) enthalten."
+
+#, python-format
+msgid "Value must be >= 0 for field '%s'."
+msgstr "Der Wert muss für das Feld '%s' >= 0 sein."
+
+#, python-format
+msgid ""
+"Version '%(req_ver)s' is not supported by the API. Minimum is '%(min_ver)s' "
+"and maximum is '%(max_ver)s'."
+msgstr ""
+"Version '%(req_ver)s' wird von der API nicht unterstützt. Minimum ist "
+"'%(min_ver)s' und Maximum ist '%(max_ver)s'."
+
+msgid "Version number of the policy type."
+msgstr "Versionsnummer des Richtlinientyps"
+
+msgid "Version number of the profile type."
+msgstr "Versionsnummer des Profiltyps"
+
+msgid "Volume destination type, must be 'volume' or 'local'"
+msgstr "Datenträger-Zieltyp muss 'volume' oder 'local' sein"
+
+msgid ""
+"Volume source type, must be one of 'image', 'snapshot', 'volume' or 'blank'"
+msgstr ""
+"Datenträger-Quellentyp, muss entweder 'image', 'snapshot', 'volume' oder "
+"'blank' sein"
+
+#, python-format
+msgid "Warning: %(key)s will be deprecated after version %(version)s!"
+msgstr "Warnung: %(key)s wird nach Version %(version)s veraltet sein!"
+
+#, python-format
+msgid "Webhook failed authentication: %s."
+msgstr "Webhook fehlgeschlagene Authentifizierung: %s."
+
+#, python-format
+msgid ""
+"Webhook host is not specified in configuration file and Senlin service "
+"endpoint can not be found,using local hostname (%(host)s) for webhook url."
+msgstr ""
+"Der Webhook-Host ist in der Konfigurationsdatei nicht angegeben, und der "
+"Senlin-Dienstendpunkt kann nicht gefunden werden, indem der lokale Hostname "
+"(%(host)s) für die Webhook-URL verwendet wird."
+
+msgid "Weight of the availability zone (default is 100)."
+msgstr "Gewicht der Verfügbarkeitszone (Standard ist 100)."
+
+msgid "Weight of the region. The default is 100."
+msgstr "Gewicht der Region. Der Standardwert ist 100."
+
+msgid ""
+"When adjustment type is set to \"CHANGE_IN_PERCENTAGE\", this specifies the "
+"cluster size will be decreased by at least this number of nodes."
+msgstr ""
+"Wenn der Anpassungstyp auf 'CHANGE_IN_PERCENTAGE' eingestellt ist, bedeutet "
+"dies, dass die Clustergröße um mindestens diese Anzahl von Knoten verringert "
+"wird."
+
+msgid ""
+"When running server in SSL mode, you must specify both a cert_file and "
+"key_file option value in your configuration file"
+msgstr ""
+"Wenn Sie den Server im SSL-Modus ausführen, müssen Sie in der "
+"Konfigurationsdatei den Wert cert_file und den Wert für die Option key_file "
+"angeben"
+
+msgid ""
+"Whether a node should be completely destroyed after deletion. Default to True"
+msgstr ""
+"Ob ein Knoten nach dem Löschen vollständig zerstört werden soll. Standard "
+"auf Wahr"
+
+msgid "Whether config drive should be enabled for the server."
+msgstr "Ob das Konfigurationslaufwerk für den Server aktiviert werden soll."
+
+msgid ""
+"Whether do best effort scaling when new size of cluster will break the size "
+"limitation"
+msgstr ""
+"Ob Best-Effort-Skalierung, wenn die neue Clustergröße die Größenbeschränkung "
+"überschreitet"
+
+msgid ""
+"Whether the desired capacity of the cluster should be reduced along the "
+"deletion. Default to True."
+msgstr ""
+"Ob die gewünschte Kapazität des Clusters entlang der Löschung reduziert "
+"werden soll. Standard auf Wahr."
+
+msgid "Whether the disk partition is done automatically."
+msgstr "Gibt an, ob die Festplattenpartition automatisch erstellt wird."
+
+msgid "Whether the evacuation should be a forced one."
+msgstr "Ob die Evakuierung eine erzwungene sein sollte."
+
+msgid "Whether to delete the volume when the server stops."
+msgstr "Gibt an, ob das Volume beim Stoppen des Servers gelöscht werden soll."
+
+msgid "You are not authenticated."
+msgstr "Sie sind nicht authentifiziert."
+
+msgid "You are not authorized to complete this operation."
+msgstr "Sie sind nicht berechtigt, diesen Vorgang abzuschließen."
+
+msgid "Zaqar queue to receive lifecycle hook message"
+msgstr "Zaqar-Warteschlange, um Lifecycle-Hook-Nachricht zu erhalten"
+
+#, python-format
+msgid "a cluster named '%s' already exists."
+msgstr "Ein Cluster namens '%s' existiert bereits."
+
+msgid "a cluster named 'CLUSTER' already exists."
+msgstr "Ein Cluster mit dem Namen 'CLUSTER' existiert bereits."
+
+msgid "age must be a positive integer."
+msgstr "Alter muss eine positive Ganzzahl sein."
+
+#, python-format
+msgid "environment has unknown section \"%s\""
+msgstr "Umgebung hat unbekannten Abschnitt '%s'"
+
+msgid "lifecycle hook parameters saved"
+msgstr "Lifecycle-Hook-Parameter gespeichert"
+
+#, python-format
+msgid ""
+"nodes %s are depended by other nodes, so can't be deleted or become orphan "
+"nodes"
+msgstr ""
+"Knoten %s sind von anderen Knoten abhängig und können daher nicht gelöscht "
+"oder zu verwaisten Knoten werden"
+
+msgid ""
+"nodes ['NODE1'] are depended by other nodes, so can't be deleted or become "
+"orphan nodes"
+msgstr ""
+"Knoten ['NODE1'] sind von anderen Knoten abhängig und können daher nicht "
+"gelöscht oder zu verwaisten Knoten werden"
+
+msgid "server doesn't have an image and it has no bootable volume"
+msgstr "Der Server hat kein Abbild und keinen bootfähigen Datenträger"
+
+msgid "still attached to some clusters"
+msgstr "immer noch an einige Cluster angehängt"
+
+msgid "still depended by other clusters and/or nodes"
+msgstr "immer noch von anderen Clustern und/oder Knoten abhängig"
+
+msgid "still in one of WAITING, RUNNING or SUSPENDED state"
+msgstr "immer noch in einem Zustand WAITING, RUNNING oder SUSPENDED"
+
+#, python-format
+msgid "still referenced by profile(s): %s"
+msgstr "immer noch nach Profil(en) referenziert: %s"
+
+msgid "still referenced by some clusters and/or nodes."
+msgstr "wird immer noch von einigen Clustern und / oder Knoten referenziert."
+
+msgid "the 'cooldown' for 'adjustment' must be >= 0"
+msgstr "Die 'Abklingzeit' für 'Anpassung' muss >= 0 sein"
+
+msgid "the 'min_step' for 'adjustment' must be >= 0"
+msgstr "der 'min_step' für 'adjustment' muss >= 0 sein"
+
+msgid "the 'number' for 'adjustment' must be > 0"
+msgstr "Die 'Nummer' für 'Anpassung' muss > 0 sein"
+
+#, python-format
+msgid "the floating IP %s has been used."
+msgstr "die Floating IP %s wurde verwendet."
+
+msgid "there is still policy(s) attached to it."
+msgstr "Es sind noch Richtlinien beigefügt."
+
+msgid "there is still receiver(s) associated with it."
+msgstr "Es sind immer noch Empfänger verbunden."
