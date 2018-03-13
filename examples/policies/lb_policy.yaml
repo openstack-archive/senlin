@@ -24,6 +24,9 @@ properties:
       # Name of cookie if type set to APP_COOKIE
       cookie_name: whatever
 
+    # ID of pool for the cluster on which nodes can be connected.
+    # id: <ID>
+
   vip:
     # Name or ID of Subnet on which VIP address will be allocated
     subnet: public-subnet
@@ -66,6 +69,12 @@ properties:
     # Expected HTTP codes for a passing HTTP(S) monitor.
     expected_codes: '200, 202'
 
+    # ID of the health manager for the loadbalancer.
+    # id: <ID>
+
   # Time in second to wait for loadbalancer to become ready before and after
   # senlin requests lbaas V2 service for lb operations.
   lb_status_timeout: 300
+
+  # Name or ID of loadbalancer for the cluster on which nodes can be connected.
+  # loadbalancer: <ID>
