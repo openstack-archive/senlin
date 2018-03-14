@@ -16,7 +16,7 @@ SQLAlchemy models for Senlin data.
 
 from oslo_db.sqlalchemy import models
 from oslo_utils import uuidutils
-from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer
+from sqlalchemy import Boolean, Column, Numeric, ForeignKey, Integer
 from sqlalchemy import String, Text
 from sqlalchemy.ext import declarative
 from sqlalchemy.orm import backref
@@ -228,9 +228,8 @@ class Action(BASE, TimestampMixin, models.ModelBase):
     cause = Column(String(255))
     owner = Column(String(36))
     interval = Column(Integer)
-    # FIXME: Don't specify fixed precision.
-    start_time = Column(Float(precision='24,8'))
-    end_time = Column(Float(precision='24,8'))
+    start_time = Column(Numeric(18, 6))
+    end_time = Column(Numeric(18, 6))
     timeout = Column(Integer)
     status = Column(String(255))
     status_reason = Column(Text)
