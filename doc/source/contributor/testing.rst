@@ -159,17 +159,18 @@ Interface (see: `tempest_plugin`_ ).
 Writing an API Test Case
 ------------------------
 
-When new APIs are added or existing APIs are changed, an API test case should
-be added to the :file:`senlin/tests/tempest/api` sub-directory, based on the
-resources impacted by the change.
+API tests are hosted in the `senlin-tempest-plugin` project. When new APIs are added
+or existing APIs are changed, an API test case should be added to the
+:file:`senlin_tempest_plugin/tests/api` sub-directory, based on the resources impacted
+by the change.
 
 Each test case should derive from the class
-:class:`senlin.tests.tempest.api.base.BaseSenlinAPITest`. Positive test cases
-should be separated from negative ones. We don't encourage combining more than
-one test case into a single method, unless there is an obvious reason.
+:class:`senlin_tempest_plugin.tests.api.base.BaseSenlinAPITest`. Positive
+test cases should be separated from negative ones. We don't encourage combining
+more than one test case into a single method, unless there is an obvious reason.
 
 To improve the readability of the test cases, Senlin has provided a utility
-module which can be leveraged - :file:`senlin/tests/tempest/common/utils.py`.
+module which can be leveraged - :file:`senlin_tempest_plugin/common/utils.py`.
 
 
 Running API Tests
@@ -199,7 +200,7 @@ To run a single test case, you can specify the test case name. For example::
 
   $ cd /opt/stack/tempest
   $ nosetests -v -- \
-    senlin.tests.tempest.api.clusters.test_cluster_create
+    senlin_tempest_plugin.tests.api.clusters.test_cluster_create
 
 If you prefer running API tests in a virtual environment, you can simply use
 the following command::
@@ -222,8 +223,9 @@ Interface (see: `tempest_plugin`_).
 Writing Functional Tests
 ------------------------
 
-There are current a limited collection of functional test cases which can be
-found under :file:`senlin/tests/tempest/functional/` subdirectory. In future,
+Functional tests are hosted in the `senlin-tempest-plugin` project. There are current
+a limited collection of functional test cases which can be
+found under :file:`senlin_tempest_plugin/tests/functional/` subdirectory. In future,
 we may add more test cases when needed. The above subdirectory will remain the
 home of newly added functional tests.
 
@@ -247,7 +249,7 @@ If you prefer running a particular functional test case, you can do the
 following as well::
 
   $ cd /opt/stack/senlin
-  $ python -m testtools.run senlin.tests.tempest.functional.test_cluster_basic
+  $ python -m testtools.run senlin_tempest_plugin.tests.functional.test_cluster_basic
 
 
 Integration Tests
@@ -261,21 +263,22 @@ drivers so the *senlin-engine* is talking to real services.
 Writing Integration Tests
 -------------------------
 
-Integration tests are designed to be run at Gerrit gate to ensure that changes
-to senlin code won't break its interactions with other (backend) services.
+Integration tests are hosted in the `senlin-tempest-plugin` project. Integration tests
+are designed to be run at Gerrit gate to ensure that changes to senlin code
+won't break its interactions with other (backend) services.
 Since OpenStack gate infrastructure is a shared resource pool for all
 OpenStack projects, we are supposed to be very careful when adding new test
 cases. The test cases added are supposed to focus more on the interaction
 between senlin and other services than other things.
 
 All integration test cases are to be placed under the subdirectory
-:file:`senlin/tests/tempest/integration`. Test cases are expected to be
+:file:`senlin_tempest_plugin/tests/integration`. Test cases are expected to be
 organized into a small number of story lines that can exercise as many
 interactions between senlin and backend services as possible.
 
 Each "story line" should be organized into a separate class module that
 inherits from the ``BaseSenlinIntegrationTest`` class which can be found at
-:file:`senlin/tests/tempest/integration/base.py` file. Each test case should
+:file:`senlin_tempest_plugin/tests/integration/base.py` file. Each test case should
 be annotated with a ``decorators.attr`` annotator and an idempotent ID as shown
 below:
 
@@ -320,7 +323,7 @@ command:
 
   $ cd /opt/stack/senlin
   $ python -m testtools.run \
-      senlin.tests.tempest.integration.test_nova_server_cluster
+      senlin_tempest_plugin.tests.integration.test_nova_server_cluster
 
 
 Stress Tests
