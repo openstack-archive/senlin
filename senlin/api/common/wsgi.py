@@ -190,7 +190,6 @@ class Server(object):
         """Run a WSGI server with the given application.
 
         :param application: The application to run in the WSGI server
-        :param conf: a cfg.ConfigOpts object
         :param default_port: Port to bind to if none is specified in conf
         """
 
@@ -253,7 +252,7 @@ class Server(object):
         the existing socket is reused.
 
         :param old_conf: Cached old configuration settings (if any)
-        :param has changed: callable to determine if a parameter has changed
+        :param has_changed: callable to determine if a parameter has changed
         """
 
         new_sock = (old_conf is None or (
