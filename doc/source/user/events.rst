@@ -74,7 +74,8 @@ means you can only access to the events by the message queue.
 both the ``database`` and ``message`` dispatchers if needed by the following
 configuration::
   [default]
-  event_dispatchers = database, message
+  event_dispatchers = database
+  event_dispatchers = message
 
   [oslo_messaging_notifications]
   driver = messaging
