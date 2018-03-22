@@ -206,7 +206,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertIn(action.name, ('A02', 'A04'))
         self.assertEqual('worker2', action.owner)
         self.assertEqual(consts.ACTION_RUNNING, action.status)
-        self.assertEqual(timestamp, action.start_time)
+        self.assertEqual(timestamp, float(action.start_time))
 
     def test_action_get_all_by_owner(self):
         specs = [
@@ -283,7 +283,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         action1 = db_api.action_get(self.ctx, id_of['A01'])
         self.assertEqual('All depended actions completed.',
                          action1.status_reason)
-        self.assertEqual(timestamp, action1.end_time)
+        self.assertEqual(round(timestamp, 6), float(action1.end_time))
 
     def _check_dependency_add_dependent_list(self):
         specs = [
@@ -376,7 +376,7 @@ class DBAPIActionTest(base.SenlinTestCase):
 
         action = db_api.action_get(self.ctx, id_of['A01'])
         self.assertEqual(consts.ACTION_SUCCEEDED, action.status)
-        self.assertEqual(timestamp, action.end_time)
+        self.assertEqual(round(timestamp, 6), float(action.end_time))
 
         for aid in [id_of['A02'], id_of['A03'], id_of['A04']]:
             res = db_api.dependency_get_dependents(self.ctx, aid)
@@ -451,12 +451,12 @@ class DBAPIActionTest(base.SenlinTestCase):
             action = db_api.action_get(self.ctx, aid)
             self.assertEqual(consts.ACTION_FAILED, action.status)
             self.assertEqual('BOOM', action.status_reason)
-            self.assertEqual(timestamp, action.end_time)
+            self.assertEqual(round(timestamp, 6), float(action.end_time))
 
         action = db_api.action_get(self.ctx, id_of['A01'])
         self.assertEqual(consts.ACTION_FAILED, action.status)
         self.assertEqual('BOOM', action.status_reason)
-        self.assertEqual(timestamp, action.end_time)
+        self.assertEqual(round(timestamp, 6), float(action.end_time))
 
         for aid in [id_of['A02'], id_of['A03'], id_of['A04']]:
             result = db_api.dependency_get_dependents(self.ctx, aid)
@@ -473,17 +473,17 @@ class DBAPIActionTest(base.SenlinTestCase):
             action = db_api.action_get(self.ctx, aid)
             self.assertEqual(consts.ACTION_INIT, action.status)
             self.assertNotEqual('BOOM', action.status_reason)
-            self.assertNotEqual(timestamp, action.end_time)
+            self.assertIsNone(action.end_time)
 
         action = db_api.action_get(self.ctx, id_of['A01'])
         self.assertEqual(consts.ACTION_WAITING, action.status)
         self.assertNotEqual('BOOM', action.status_reason)
-        self.assertNotEqual(timestamp, action.end_time)
+        self.assertIsNone(action.end_time)
 
         action_d = db_api.action_get(self.ctx, id_of['A02'])
         self.assertEqual(consts.ACTION_FAILED, action_d.status)
         self.assertEqual('BOOM', action_d.status_reason)
-        self.assertEqual(timestamp, action_d.end_time)
+        self.assertEqual(round(timestamp, 6), float(action_d.end_time))
 
         for aid in [id_of['A03'], id_of['A04']]:
             result = db_api.dependency_get_dependents(self.ctx, aid)
@@ -499,7 +499,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         for aid in [id_of['A05'], id_of['A06'], id_of['A07']]:
             action = db_api.action_get(self.ctx, aid)
             self.assertEqual(consts.ACTION_FAILED, action.status)
-            self.assertEqual(timestamp, action.end_time)
+            self.assertEqual(round(timestamp, 6), float(action.end_time))
 
         result = db_api.dependency_get_dependents(self.ctx, id_of['A01'])
         self.assertEqual(0, len(result))
@@ -512,7 +512,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         for aid in [id_of['A05'], id_of['A06'], id_of['A07']]:
             action = db_api.action_get(self.ctx, aid)
             self.assertEqual(consts.ACTION_CANCELLED, action.status)
-            self.assertEqual(timestamp, action.end_time)
+            self.assertEqual(round(timestamp, 6), float(action.end_time))
 
         result = db_api.dependency_get_dependents(self.ctx, id_of['A01'])
         self.assertEqual(0, len(result))
@@ -539,7 +539,7 @@ class DBAPIActionTest(base.SenlinTestCase):
 
         action = db_api.action_get(self.ctx, id_of['A01'])
         self.assertEqual(consts.ACTION_READY, action.status)
-        self.assertEqual(timestamp, action.end_time)
+        self.assertEqual(round(timestamp, 6), float(action.end_time))
 
     def test_action_acquire(self):
         action = _create_action(self.ctx)
