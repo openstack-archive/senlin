@@ -844,7 +844,7 @@ class ServerProfile(base.Profile):
 
             if 'servergroup' in obj.data['placement']:
                 group_id = obj.data['placement']['servergroup']
-                hints = self.properties.get(self.SCHEDULER_HINTS, {})
+                hints = self.properties.get(self.SCHEDULER_HINTS) or {}
                 hints.update({'group': group_id})
                 kwargs['scheduler_hints'] = hints
 
