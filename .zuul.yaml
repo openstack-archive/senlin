@@ -14,10 +14,12 @@
         - senlin-dsvm-tempest-py35-integration:
             voting: false
             branches: ^(?!stable/newton).*$
+        - openstack-tox-lower-constraints
     gate:
       jobs:
         - senlin-dsvm-tempest-py27-api
         - senlin-dsvm-tempest-py27-functional
+        - openstack-tox-lower-constraints
     experimental:
       jobs:
         - rally-dsvm-senlin-senlin:
