@@ -38,10 +38,9 @@ a client to always invoke the most recent version of APIs from the server.
 .. warning:: The ``latest`` value is mostly meant for integration testing and
   would be dangerous to rely on in client code since Senlin microversions are
   not following semver and therefore backward compatibility is not guaranteed.
-  Clients, like python-senlinclient or python-openstacksdk,
-  python-openstackclient should always require a specific microversion but
-  limit what is acceptable to the version range that it understands at the
-  time.
+  Clients, like python-senlinclient or openstacksdk, python-openstackclient
+  should always require a specific microversion but limit what is acceptable
+  to the version range that it understands at the time.
 
 
 When to Bump the Microversion
@@ -348,10 +347,10 @@ start working on the changes in the following order:
    more changes rather than one single change, the update of
    ``_MAX_API_VERSION`` needs to be done only once if this is the case.
 
-9. Commit patches to the ``python-openstacksdk`` project so that new API
+9. Commit patches to the ``openstacksdk`` project so that new API
    changes are accessible from client side.
 
-10. Wait for the new release of ``python-openstacksdk`` project that includes
+10. Wait for the new release of ``openstacksdk`` project that includes
     the new changes and then propose changes to ``python-senlinclient``
     project.
 

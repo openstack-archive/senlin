@@ -258,7 +258,7 @@ Discuss things that will affect other developers, such as:
 * If the blueprint proposes a change to the driver API, discussion of how
   other drivers would implement the feature is required.
 
-* Does this change have an impact on python-openstacksdk?
+* Does this change have an impact on openstacksdk?
 
 
 Implementation

@@ -343,7 +343,7 @@ None
 Developer impact
 ----------------
 
-The python-openstacksdk requires modification to add the new 'complete
+The openstacksdk requires modification to add the new 'complete
 lifecycle' API endpoint.
 
 

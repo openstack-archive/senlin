@@ -39,8 +39,8 @@ the authentication and the authorization process are:
 - The Senlin client (i.e. the `python-senlinclient` package) which accepts
   user credentials provided through environment variables and/or the command
   line arguments and forwards them to the OpenStack SDK (i.e. the
-  `python-openstacksdk` package) when making service requests to Senlin API.
-- The OpenStack SDK (`python-openstacksdk`) is used by Senlin engine to
+  `openstacksdk` package) when making service requests to Senlin API.
+- The OpenStack SDK (`openstacksdk`) is used by Senlin engine to
   interact with any other OpenStack services. The Senlin client also uses the
   SDK to talk to the Senlin API. The SDK package translates the user-provided
   credentials into a token by invoking the Keystone service.
