@@ -129,7 +129,7 @@ class VersionNegotiationFilter(wsgi.Middleware):
         :returns: ``None``
         :raises: ``HTTPBadRequest`` if API version string is bad.
         """
-        api_version = mp.get_version(req.headers, service_type='clustering')
+        api_version = mp.get_version(req.headers, 'clustering')
         if api_version is None:
             api_version = controller.DEFAULT_API_VERSION
         elif api_version.lower() == 'latest':
