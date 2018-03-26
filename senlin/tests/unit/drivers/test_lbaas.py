@@ -563,7 +563,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
     @mock.patch.object(oslo_context, 'get_current')
     def test_member_add_wait_for_lb_timeout(self, mock_get_current, mock_load):
         node = mock.Mock()
-        subnet_obj = mock.Mock(id='SUBNET_ID', nework_id='NETWORK_ID')
+        subnet_obj = mock.Mock(id='SUBNET_ID', network_id='NETWORK_ID')
         subnet_obj.name = 'subnet'
         network_obj = mock.Mock(id='NETWORK_ID')
         network_obj.name = 'network1'
