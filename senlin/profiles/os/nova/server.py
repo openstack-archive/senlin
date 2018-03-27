@@ -448,11 +448,15 @@ class ServerProfile(base.Profile):
 
         return True
 
-    def _resolve_bdm(self, bdm):
+    def _resolve_bdm(self, obj, bdm, reason=None):
         for bd in bdm:
             for key in self.BDM2_KEYS:
                 if bd[key] is None:
                     del bd[key]
+            if 'uuid' in bd and 'source_type' in bd:
+                if bd['source_type'] == 'image':
+                    self._validate_image(obj, bd['uuid'], reason)
+
         return bdm
 
     def _check_security_groups(self, nc, net_spec, result):
@@ -820,7 +824,7 @@ class ServerProfile(base.Profile):
         block_device_mapping_v2 = self.properties[self.BLOCK_DEVICE_MAPPING_V2]
         if block_device_mapping_v2 is not None:
             kwargs['block_device_mapping_v2'] = self._resolve_bdm(
-                block_device_mapping_v2)
+                obj, block_device_mapping_v2, 'create')
 
         user_data = self.properties[self.USER_DATA]
         if user_data is not None:
