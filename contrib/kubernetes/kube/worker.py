@@ -100,7 +100,8 @@ class ServerProfile(base.KubeBaseProfile):
         self.server_id = None
 
     def _get_master_cluster_info(self, obj):
-        ctx = context.get_service_context(user=obj.user, project=obj.project)
+        ctx = context.get_service_context(user_id=obj.user,
+                                          project_id=obj.project)
         master = self.properties[self.MASTER_CLUSTER]
         try:
             cluster = cluster_obj.Cluster.find(ctx, master)
@@ -116,7 +117,8 @@ class ServerProfile(base.KubeBaseProfile):
         return cluster.data
 
     def _get_cluster_data(self, obj):
-        ctx = context.get_service_context(user=obj.user, project=obj.project)
+        ctx = context.get_service_context(user_id=obj.user,
+                                          project_id=obj.project)
         if obj.cluster_id:
             cluster = cluster_obj.Cluster.get(ctx, obj.cluster_id)
             return cluster.data

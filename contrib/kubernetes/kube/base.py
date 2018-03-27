@@ -52,21 +52,24 @@ class KubeBaseProfile(server.ServerProfile):
         token = GenKubeToken()
         # store generated token
 
-        ctx = context.get_service_context(user=obj.user, project=obj.project)
+        ctx = context.get_service_context(user_id=obj.user,
+                                          project_id=obj.project)
         data = obj.data
         data[self.KUBEADM_TOKEN] = token
         cluster_obj.Cluster.update(ctx, obj.id, {'data': data})
         return token
 
     def _get_kubeadm_token(self, obj):
-        ctx = context.get_service_context(user=obj.user, project=obj.project)
+        ctx = context.get_service_context(user_id=obj.user,
+                                          project_id=obj.project)
         if obj.cluster_id:
             cluster = cluster_obj.Cluster.get(ctx, obj.cluster_id)
             return cluster.data.get(self.KUBEADM_TOKEN)
         return None
 
     def _update_master_ip(self, obj, ip):
-        ctx = context.get_service_context(user=obj.user, project=obj.project)
+        ctx = context.get_service_context(user_id=obj.user,
+                                          project_id=obj.project)
         if obj.cluster_id:
             cluster = cluster_obj.Cluster.get(ctx, obj.cluster_id)
             cluster.data['kube_master_ip'] = ip
@@ -83,7 +86,8 @@ class KubeBaseProfile(server.ServerProfile):
         client.add_interface_to_router(router, subnet_id=subnet.id)
         fip = client.floatingip_create(floating_network_id=pub_net.id)
 
-        ctx = context.get_service_context(user=obj.user, project=obj.project)
+        ctx = context.get_service_context(user_id=obj.user,
+                                          project_id=obj.project)
         data = obj.data
         data[self.PRIVATE_NETWORK] = net.id
         data[self.PRIVATE_SUBNET] = subnet.id
@@ -110,14 +114,16 @@ class KubeBaseProfile(server.ServerProfile):
         client.network_delete(net, ignore_missing=True)
 
     def _associate_floatingip(self, obj, server):
-        ctx = context.get_service_context(user=obj.user, project=obj.project)
+        ctx = context.get_service_context(user_id=obj.user,
+                                          project_id=obj.project)
         if obj.cluster_id:
             cluster = cluster_obj.Cluster.get(ctx, obj.cluster_id)
             fip = cluster.data.get(self.KUBE_MASTER_FLOATINGIP)
             self.compute(obj).server_floatingip_associate(server, fip)
 
     def _disassociate_floatingip(self, obj, server):
-        ctx = context.get_service_context(user=obj.user, project=obj.project)
+        ctx = context.get_service_context(user_id=obj.user,
+                                          project_id=obj.project)
         if obj.cluster_id:
             cluster = cluster_obj.Cluster.get(ctx, obj.cluster_id)
             fip = cluster.data.get(self.KUBE_MASTER_FLOATINGIP)
@@ -127,21 +133,24 @@ class KubeBaseProfile(server.ServerProfile):
                 pass
 
     def _get_cluster_data(self, obj):
-        ctx = context.get_service_context(user=obj.user, project=obj.project)
+        ctx = context.get_service_context(user_id=obj.user,
+                                          project_id=obj.project)
         if obj.cluster_id:
             cluster = cluster_obj.Cluster.get(ctx, obj.cluster_id)
             return cluster.data
         return {}
 
     def _get_network(self, obj):
-        ctx = context.get_service_context(user=obj.user, project=obj.project)
+        ctx = context.get_service_context(user_id=obj.user,
+                                          project_id=obj.project)
         if obj.cluster_id:
             cluster = cluster_obj.Cluster.get(ctx, obj.cluster_id)
             return cluster.data.get(self.PRIVATE_NETWORK)
         return None
 
     def _create_security_group(self, obj):
-        ctx = context.get_service_context(user=obj.user, project=obj.project)
+        ctx = context.get_service_context(user_id=obj.user,
+                                          project_id=obj.project)
         sgid = obj.data.get(self.SECURITY_GROUP, None)
         if sgid:
             return sgid
@@ -160,7 +169,8 @@ class KubeBaseProfile(server.ServerProfile):
         return sg.id
 
     def _get_security_group(self, obj):
-        ctx = context.get_service_context(user=obj.user, project=obj.project)
+        ctx = context.get_service_context(user_id=obj.user,
+                                          project_id=obj.project)
         if obj.cluster_id:
             cluster = cluster_obj.Cluster.get(ctx, obj.cluster_id)
             return cluster.data.get(self.SECURITY_GROUP)
