@@ -30,7 +30,7 @@ def GenKubeToken():
         string.digits + string.ascii_lowercase) for i in range(6)])
     token_secret = ''.join([random.choice(
         string.digits + string.ascii_lowercase) for i in range(16)])
-    token = '.'.join(token_id, token_secret)
+    token = '.'.join([token_id, token_secret])
     return token
 
 
