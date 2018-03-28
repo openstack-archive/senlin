@@ -281,6 +281,7 @@ webhook_params:
 webhook_version:
   type: string
   in: query
+  required: True
   description: |
     The webhook implementation version requested.
 

@@ -20,6 +20,7 @@ Response Codes
 
 .. rest_status_code:: error status.yaml
 
+   - 400
    - 403
    - 404
    - 503
