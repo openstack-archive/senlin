@@ -1031,7 +1031,6 @@ class ServerProfile(base.Profile):
         :returns: A boolean indicating whether the image needs an update.
         :raises: ``InternalError`` if operation was a failure.
         """
-        old_image = self.properties[self.IMAGE]
         new_image = new_profile.properties[self.IMAGE]
         if not new_image:
             msg = _("Updating Nova server with image set to None is not "
@@ -1043,18 +1042,13 @@ class ServerProfile(base.Profile):
         new_image_id = img_new.id
 
         driver = self.compute(obj)
-        if old_image:
-            img_old = self._validate_image(obj, old_image, reason='update')
-            old_image_id = img_old.id
-        else:
-            try:
-                server = driver.server_get(obj.physical_id)
-            except exc.InternalError as ex:
-                raise exc.EResourceUpdate(type='server', id=obj.physical_id,
-                                          message=six.text_type(ex))
-            # Still, this 'old_image_id' could be empty, but it doesn't matter
-            # because the comparison below would fail if that is the case
-            old_image_id = server.image.get('id', None)
+
+        try:
+            server = driver.server_get(obj.physical_id)
+        except exc.InternalError as ex:
+            raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                      message=six.text_type(ex))
+        old_image_id = self._get_image_id(obj, server, 'updating')
 
         if new_image_id == old_image_id:
             return False
