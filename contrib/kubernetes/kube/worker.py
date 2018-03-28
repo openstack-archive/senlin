@@ -38,9 +38,9 @@ class ServerProfile(base.KubeBaseProfile):
     }
 
     KEYS = (
-        CONTEXT, FLAVOR, IMAGE, KEY_NAME,
+        CONTEXT, FLAVOR, IMAGE, KEY_NAME, BLOCK_DEVICE_MAPPING_V2
     ) = (
-        'context', 'flavor', 'image', 'key_name',
+        'context', 'flavor', 'image', 'key_name', 'block_device_mapping_v2',
     )
 
     KUBE_KEYS = (
@@ -71,6 +71,17 @@ class ServerProfile(base.KubeBaseProfile):
         'floating_network', 'floating_ip',
     )
 
+    BDM2_KEYS = (
+        BDM2_UUID, BDM2_SOURCE_TYPE, BDM2_DESTINATION_TYPE,
+        BDM2_DISK_BUS, BDM2_DEVICE_NAME, BDM2_VOLUME_SIZE,
+        BDM2_GUEST_FORMAT, BDM2_BOOT_INDEX, BDM2_DEVICE_TYPE,
+        BDM2_DELETE_ON_TERMINATION,
+    ) = (
+        'uuid', 'source_type', 'destination_type', 'disk_bus',
+        'device_name', 'volume_size', 'guest_format', 'boot_index',
+        'device_type', 'delete_on_termination',
+    )
+
     properties_schema = {
         CONTEXT: schema.Map(
             _('Customized security context for operating servers.'),
@@ -92,6 +103,54 @@ class ServerProfile(base.KubeBaseProfile):
         MASTER_CLUSTER: schema.String(
             _('Cluster running kubernetes master.'),
             required=True,
+        ),
+        BLOCK_DEVICE_MAPPING_V2: schema.List(
+            _('A list specifying the properties of block devices to be used '
+              'for this server.'),
+            schema=schema.Map(
+                _('A map specifying the properties of a block device to be '
+                  'used by the server.'),
+                schema={
+                    BDM2_UUID: schema.String(
+                        _('ID of the source image, snapshot or volume'),
+                    ),
+                    BDM2_SOURCE_TYPE: schema.String(
+                        _("Volume source type, must be one of 'image', "
+                          "'snapshot', 'volume' or 'blank'"),
+                        required=True,
+                    ),
+                    BDM2_DESTINATION_TYPE: schema.String(
+                        _("Volume destination type, must be 'volume' or "
+                          "'local'"),
+                        required=True,
+                    ),
+                    BDM2_DISK_BUS: schema.String(
+                        _('Bus of the device.'),
+                    ),
+                    BDM2_DEVICE_NAME: schema.String(
+                        _('Name of the device(e.g. vda, xda, ....).'),
+                    ),
+                    BDM2_VOLUME_SIZE: schema.Integer(
+                        _('Size of the block device in MB(for swap) and '
+                          'in GB(for other formats)'),
+                        required=True,
+                    ),
+                    BDM2_GUEST_FORMAT: schema.String(
+                        _('Specifies the disk file system format(e.g. swap, '
+                          'ephemeral, ...).'),
+                    ),
+                    BDM2_BOOT_INDEX: schema.Integer(
+                        _('Define the boot order of the device'),
+                    ),
+                    BDM2_DEVICE_TYPE: schema.String(
+                        _('Type of the device(e.g. disk, cdrom, ...).'),
+                    ),
+                    BDM2_DELETE_ON_TERMINATION: schema.Boolean(
+                        _('Whether to delete the volume when the server '
+                          'stops.'),
+                    ),
+                }
+            ),
         ),
     }
 
@@ -191,6 +250,11 @@ class ServerProfile(base.KubeBaseProfile):
         kwargs['networks'] = [{'uuid': master_cluster[self.PRIVATE_NETWORK]}]
         jj_vars['KUBETOKEN'] = master_cluster[self.KUBEADM_TOKEN]
         jj_vars['MASTERIP'] = master_cluster[self.KUBE_MASTER_IP]
+
+        block_device_mapping_v2 = self.properties[self.BLOCK_DEVICE_MAPPING_V2]
+        if block_device_mapping_v2 is not None:
+            kwargs['block_device_mapping_v2'] = self._resolve_bdm(
+                obj, block_device_mapping_v2, 'create')
 
         user_data = base.loadScript('./scripts/worker.sh')
         if user_data is not None:
