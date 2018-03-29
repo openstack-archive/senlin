@@ -292,7 +292,7 @@ class DockerProfile(base.Profile):
 
         params = {
             'image': self.properties[self.IMAGE],
-            'name': self.properties[self.NAME],
+            'name': name,
             'command': self.properties[self.COMMAND],
         }
 
