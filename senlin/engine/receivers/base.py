@@ -218,7 +218,8 @@ class Receiver(object):
         try:
             base = kc.get_senlin_endpoint()
         except exception.InternalError as ex:
-            msg = _('Senlin endpoint can not be found: %s.') % ex.message
+            msg = _('Senlin endpoint can not be found: %s.'
+                    ) % ex
             LOG.warning(msg)
 
         return base
