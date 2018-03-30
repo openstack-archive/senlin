@@ -13,6 +13,7 @@
 from oslo_log import log as logging
 import six
 from six.moves.urllib import parse as urlparse
+import webob
 
 from senlin.api.common import util
 from senlin.api.common import wsgi
@@ -75,6 +76,7 @@ class WebhookMiddleware(wsgi.Middleware):
         parts = urlparse.urlparse(url)
         p = parts.path.split('/')
 
+        # check if URL is a webhook trigger request
         # expected: ['', 'v1', 'webhooks', 'webhook-id', 'trigger']
         if len(p) != 5:
             return None
@@ -82,10 +84,16 @@ class WebhookMiddleware(wsgi.Middleware):
         if any((p[0] != '', p[2] != 'webhooks', p[4] != 'trigger')):
             return None
 
+        # at this point it has been determined that the URL is a webhook
+        # trigger request
         qs = urlparse.parse_qs(parts.query)
-        if 'V' not in qs:
-            return None
-        qs.pop('V')
+        if 'V' in qs:
+            qs.pop('V')
+        else:
+            raise webob.exc.HTTPBadRequest(
+                explanation=_('V query parameter is required in webhook '
+                              'trigger URL'))
+
         params = dict((k, v[0]) for k, v in qs.items())
         return p[3], params
 

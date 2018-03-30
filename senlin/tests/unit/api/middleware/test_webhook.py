@@ -13,6 +13,8 @@
 import mock
 
 from oslo_config import cfg
+import six
+import webob
 
 from senlin.api.common import util as common_util
 from senlin.api.common import version_request as vr
@@ -55,6 +57,40 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         res = self.middleware._parse_url(self._generate_url())
         self.assertEqual(('WEBHOOK_ID', {'key': 'TEST_KEY'}), res)
 
+    def test_parse_url_version_provided_no_key(self):
+        # The structure /<webhook_id>/trigger?V=1 should be valid
+        self.url_slices.pop('05_params')
+
+        res = self.middleware._parse_url(self._generate_url())
+        self.assertEqual(('WEBHOOK_ID', {}), res)
+
+    def test_parse_url_no_version_provided_no_key_provided(self):
+        # The structure /<webhook_id>/trigger should be invalid
+        # because version is missing
+        self.url_slices.pop('04_version')
+        self.url_slices.pop('05_params')
+
+        ex = self.assertRaises(webob.exc.HTTPBadRequest,
+                               self.middleware._parse_url,
+                               self._generate_url())
+
+        self.assertEqual("V query parameter is required in webhook trigger "
+                         "URL", six.text_type(ex))
+
+    def test_parse_url_no_version_provided_key_provided(self):
+        # The structure /<webhook_id>/trigger?key=value should be invalid
+        # because version is missing
+        self.url_slices.pop('04_version')
+        self.url_slices.pop('05_params')
+        self.url_slices['05_params'] = 'key=TEST_KEY'
+
+        ex = self.assertRaises(webob.exc.HTTPBadRequest,
+                               self.middleware._parse_url,
+                               self._generate_url())
+
+        self.assertEqual("V query parameter is required in webhook trigger "
+                         "URL", six.text_type(ex))
+
     def test_parse_url_webhooks_not_found(self):
         # String 'webhooks' is not found in url
         self.url_slices['01_webhook_str'] = '/foo/'
@@ -76,12 +112,6 @@ class TestWebhookMiddleware(base.SenlinTestCase):
     def test_parse_url_no_trigger_word(self):
         # Bottom string of the url does not start with 'trigger'
         self.url_slices['03_trigger_str'] = '/foo-trigger?'
-        res = self.middleware._parse_url(self._generate_url())
-        self.assertIsNone(res)
-
-    def test_parse_url_no_key_provided(self):
-        # Bottom string of the url does not start with 'trigger'
-        self.url_slices['04_key_str'] = 'version=1'
         res = self.middleware._parse_url(self._generate_url())
         self.assertIsNone(res)
 
