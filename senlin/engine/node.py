@@ -280,38 +280,39 @@ class Node(object):
         if self.cluster_id == cluster_id:
             return True
 
+        try:
+            res = pb.Profile.join_cluster(context, self, cluster_id)
+        except exc.EResourceUpdate as ex:
+            LOG.error('Node join cluster faild: %s.', ex)
+            return False
+
+        if not res:
+            return False
         timestamp = timeutils.utcnow(True)
         db_node = no.Node.migrate(context, self.id, cluster_id, timestamp)
         self.cluster_id = cluster_id
         self.updated_at = timestamp
         self.index = db_node.index
-
-        res = pb.Profile.join_cluster(context, self, cluster_id)
-        if res:
-            return True
-
-        # rollback
-        no.Node.migrate(context, self.id, None, timestamp)
-        self.cluster_id = ''
-        self.updated_at = timestamp
-        self.index = -1
-
-        return False
+        return True
 
     def do_leave(self, context):
         if self.cluster_id == '':
             return True
 
-        res = pb.Profile.leave_cluster(context, self)
-        if res:
-            timestamp = timeutils.utcnow(True)
-            no.Node.migrate(context, self.id, None, timestamp)
-            self.cluster_id = ''
-            self.updated_at = timestamp
-            self.index = -1
-            return True
-        else:
+        try:
+            res = pb.Profile.leave_cluster(context, self)
+        except exc.EResourceDeletion as ex:
+            LOG.error('Node leave cluster faild: %s.', ex)
             return False
+
+        if not res:
+            return False
+        timestamp = timeutils.utcnow(True)
+        no.Node.migrate(context, self.id, None, timestamp)
+        self.cluster_id = ''
+        self.updated_at = timestamp
+        self.index = -1
+        return True
 
     def do_check(self, context):
         if not self.physical_id:

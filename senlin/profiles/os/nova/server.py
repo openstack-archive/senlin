@@ -1443,10 +1443,14 @@ class ServerProfile(base.Profile):
             return False
 
         driver = self.compute(obj)
-        metadata = driver.server_metadata_get(obj.physical_id) or {}
-        metadata['cluster_id'] = cluster_id
-        metadata['cluster_node_index'] = six.text_type(obj.index)
-        driver.server_metadata_update(obj.physical_id, metadata)
+        try:
+            metadata = driver.server_metadata_get(obj.physical_id) or {}
+            metadata['cluster_id'] = cluster_id
+            metadata['cluster_node_index'] = six.text_type(obj.index)
+            driver.server_metadata_update(obj.physical_id, metadata)
+        except exc.InternalError as ex:
+            raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                      message=six.text_type(ex))
         return super(ServerProfile, self).do_join(obj, cluster_id)
 
     def do_leave(self, obj):
@@ -1454,7 +1458,11 @@ class ServerProfile(base.Profile):
             return False
 
         keys = ['cluster_id', 'cluster_node_index']
-        self.compute(obj).server_metadata_delete(obj.physical_id, keys)
+        try:
+            self.compute(obj).server_metadata_delete(obj.physical_id, keys)
+        except exc.InternalError as ex:
+            raise exc.EResourceDeletion(type='server', id=obj.physical_id,
+                                        message=six.text_type(ex))
         return super(ServerProfile, self).do_leave(obj)
 
     def do_check(self, obj):
