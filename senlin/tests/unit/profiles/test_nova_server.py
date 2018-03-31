@@ -253,6 +253,57 @@ class TestNovaServerBasic(base.SenlinTestCase):
         mock_volume.assert_called_once_with(
             node_obj, expected_volume, 'create')
 
+    def test_do_create_bdm_invalid_volume(self):
+        cc = mock.Mock()
+        nc = mock.Mock()
+        node_obj = mock.Mock(id='FAKE_NODE_ID', data={}, index=123,
+                             cluster_id='FAKE_CLUSTER_ID')
+        bdm_v2 = [
+            {
+                'volume_size': 1,
+                'uuid': '6ce0be68',
+                'source_type': 'volume',
+                'destination_type': 'volume',
+                'boot_index': 0,
+            },
+        ]
+        spec = {
+            'type': 'os.nova.server',
+            'version': '1.0',
+            'properties': {
+                'flavor': 'FLAV',
+                'name': 'FAKE_SERVER_NAME',
+                'security_groups': ['HIGH_SECURITY_GROUP'],
+                'block_device_mapping_v2': bdm_v2,
+            }
+        }
+        profile = server.ServerProfile('s2', spec)
+        profile._computeclient = cc
+        profile._networkclient = nc
+        self._stubout_profile(profile, mock_image=True, mock_flavor=True,
+                              mock_keypair=True)
+        err = exc.EResourceCreation(type='server', message='FOO')
+        mock_volume = self.patchobject(profile, '_resolve_bdm',
+                                       side_effect=err)
+
+        self.assertRaises(exc.EResourceCreation,
+                          profile.do_create,
+                          node_obj)
+        expected_volume = [{
+            'guest_format': None,
+            'boot_index': 0,
+            'uuid': '6ce0be68',
+            'volume_size': 1,
+            'device_name': None,
+            'disk_bus': None,
+            'source_type': 'volume',
+            'device_type': None,
+            'destination_type': 'volume',
+            'delete_on_termination': None
+        }]
+        mock_volume.assert_called_once_with(
+            node_obj, expected_volume, 'create')
+
     def test_do_create_invalid_flavor(self):
         profile = server.ServerProfile('s2', self.spec)
         self._stubout_profile(profile, mock_image=True)

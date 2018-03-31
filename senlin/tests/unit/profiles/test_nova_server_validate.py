@@ -331,6 +331,106 @@ class TestImageValidation(base.SenlinTestCase):
         self.cc.image_find.assert_called_once_with(image, False)
 
 
+class TestVolumeValidation(base.SenlinTestCase):
+
+    scenarios = [
+        ('validate:success', dict(
+            reason=None,
+            success=True,
+            validate_result=[mock.Mock(id='VOLUME_ID', status='available')],
+            result='VOLUME_ID',
+            exception=None,
+            message='')),
+        ('validate:failure', dict(
+            reason=None,
+            success=False,
+            validate_result=[mock.Mock(id='VOLUME_ID', status='in-use')],
+            result='VOLUME_ID',
+            exception=exc.InvalidSpec,
+            message="The volume VOLUME should be in 'available' "
+                    "status but is in 'in-use' status.")),
+        ('validate:driver_failure', dict(
+            reason=None,
+            success=False,
+            validate_result=exc.InternalError(message='BANG.'),
+            result='FID',
+            exception=exc.InternalError,
+            message='BANG.')),
+        ('validate:not_found', dict(
+            reason=None,
+            success=False,
+            validate_result=exc.InternalError(code=404, message='BANG.'),
+            result='FID',
+            exception=exc.InvalidSpec,
+            message="The specified volume 'VOLUME' could not be found.")),
+        ('create:success', dict(
+            reason='create',
+            success=True,
+            validate_result=[mock.Mock(id='VOLUME_ID', status='available')],
+            result='VOLUME_ID',
+            exception=None,
+            message='')),
+        ('create:driver_failure', dict(
+            reason='create',
+            success=False,
+            validate_result=exc.InternalError(message='BANG'),
+            result='FID',
+            exception=exc.EResourceCreation,
+            message='Failed in creating server: BANG.')),
+        ('create:not_found', dict(
+            reason='create',
+            success=False,
+            validate_result=exc.InternalError(code=404, message='BANG'),
+            result='FID',
+            exception=exc.EResourceCreation,
+            message="Failed in creating server: BANG.")),
+    ]
+
+    def setUp(self):
+        super(TestVolumeValidation, self).setUp()
+        bdm_v2 = [
+            {
+                'volume_size': 1,
+                'uuid': '6ce0be68',
+                'source_type': 'volume',
+                'destination_type': 'volume',
+                'boot_index': 0,
+            },
+        ]
+
+        volume_spec = {
+            'type': 'os.nova.server',
+            'version': '1.0',
+            'properties': {
+                'flavor': 'FLAV',
+                'name': 'FAKE_SERVER_NAME',
+                'security_groups': ['HIGH_SECURITY_GROUP'],
+                'block_device_mapping_v2': bdm_v2,
+            }
+        }
+
+        self.vc = mock.Mock()
+        self.profile = server.ServerProfile('t', volume_spec)
+        self.profile._block_storageclient = self.vc
+
+    def test_validation(self):
+        self.vc.volume_get.side_effect = self.validate_result
+        node = mock.Mock(id='NODE_ID', physical_id='NOVA_ID')
+        volume = 'VOLUME'
+
+        if self.success:
+            res = self.profile._validate_volume(node, volume, self.reason)
+            self.assertIsNotNone(res)
+            self.assertEqual(self.result, res.id)
+        else:
+            ex = self.assertRaises(self.exception,
+                                   self.profile._validate_volume,
+                                   node, volume, self.reason)
+            self.assertEqual(self.message, six.text_type(ex))
+
+        self.vc.volume_get.assert_called_once_with(volume)
+
+
 class TestKeypairValidation(base.SenlinTestCase):
 
     scenarios = [

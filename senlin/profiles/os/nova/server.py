@@ -417,6 +417,27 @@ class ServerProfile(base.Profile):
             else:
                 raise
 
+    def _validate_volume(self, obj, name_or_id, reason=None):
+        try:
+            volume = self.block_storage(obj).volume_get(name_or_id)
+            if volume.status == 'available':
+                return volume
+
+            msg = _("The volume %(k)s should be in 'available' status "
+                    "but is in '%(v)s' status."
+                    ) % {'k': name_or_id, 'v': volume.status}
+            raise exc.InvalidSpec(message=msg)
+        except exc.InternalError as ex:
+            if reason == 'create':
+                raise exc.EResourceCreation(type='server',
+                                            message=six.text_type(ex))
+            elif ex.code == 404:
+                msg = _("The specified volume '%(k)s' could not be found."
+                        ) % {'k': name_or_id}
+                raise exc.InvalidSpec(message=msg)
+            else:
+                raise
+
     def do_validate(self, obj):
         """Validate if the spec has provided valid info for server creation.
 
@@ -456,6 +477,8 @@ class ServerProfile(base.Profile):
             if 'uuid' in bd and 'source_type' in bd:
                 if bd['source_type'] == 'image':
                     self._validate_image(obj, bd['uuid'], reason)
+                elif bd['source_type'] == 'volume':
+                    self._validate_volume(obj, bd['uuid'], reason)
 
         return bdm
 
