@@ -16,6 +16,7 @@ from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import uuidutils
+import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
@@ -103,7 +104,7 @@ class Message(base.Receiver):
                          'receiver': self.id}
             LOG.error(msg)
             raise exc.EResourceCreation(type='trust',
-                                        message=ex.message)
+                                        message=six.text_type(ex))
         return trust.id
 
     def _create_queue(self):
@@ -116,7 +117,8 @@ class Message(base.Receiver):
         try:
             self.zaqar().queue_create(**kwargs)
         except exc.InternalError as ex:
-            raise exc.EResourceCreation(type='queue', message=ex.message)
+            raise exc.EResourceCreation(type='queue',
+                                        message=six.text_type(ex))
 
         return queue_name
 
@@ -139,7 +141,7 @@ class Message(base.Receiver):
                                                             **kwargs)
         except exc.InternalError as ex:
             raise exc.EResourceCreation(type='subscription',
-                                        message=ex.message)
+                                        message=six.text_type(ex))
         return subscription
 
     def _find_cluster(self, context, identity):
@@ -233,14 +235,14 @@ class Message(base.Receiver):
         except exc.InternalError as ex:
             raise exc.EResourceDeletion(type='subscription',
                                         id='subscription',
-                                        message=ex.message)
+                                        message=six.text_type(ex))
         # Delete zaqar queue
         try:
             self.zaqar().queue_delete(queue_name)
         except exc.InternalError as ex:
             raise exc.EResourceDeletion(type='queue',
                                         id='queue_name',
-                                        message=ex.message)
+                                        message=six.text_type(ex))
 
     def notify(self, context, params=None):
         queue_name = self.channel['queue_name']
@@ -262,7 +264,8 @@ class Message(base.Receiver):
                     action_id = self._build_action(context, message)
                     actions.append(action_id)
                 except exc.InternalError as ex:
-                    LOG.error(_('Failed in building action: %s'), ex.message)
+                    LOG.error(_('Failed in building action: %s'),
+                              ex)
                 try:
                     self.zaqar().message_delete(queue_name, message['id'],
                                                 claim.id)

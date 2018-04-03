@@ -278,7 +278,8 @@ class ServerProfile(base.KubeBaseProfile):
         except exc.InternalError as ex:
             if server and server.id:
                 resource_id = server.id
-            raise exc.EResourceCreation(type='server', message=ex.message,
+            raise exc.EResourceCreation(type='server',
+                                        message=six.text_type(ex),
                                         resource_id=resource_id)
 
     def do_delete(self, obj, **params):

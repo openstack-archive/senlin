@@ -176,7 +176,8 @@ class StackProfile(base.Profile):
                                                    timeout=timeout)
             return stack.id
         except exc.InternalError as ex:
-            raise exc.EResourceCreation(type='stack', message=ex.message)
+            raise exc.EResourceCreation(type='stack',
+                                        message=six.text_type(ex))
 
     def do_delete(self, obj, **params):
         """Delete the physical stack behind the node object.
@@ -256,7 +257,7 @@ class StackProfile(base.Profile):
                               timeout=timeout)
         except exc.InternalError as ex:
             raise exc.EResourceUpdate(type='stack', id=self.stack_id,
-                                      message=ex.message)
+                                      message=six.text_type(ex))
 
         return True
 

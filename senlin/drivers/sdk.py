@@ -47,7 +47,7 @@ def parse_exception(ex):
         elif hasattr(ex, "http_status") and ex.http_status is not None:
             code = ex.http_status
 
-        message = ex.message
+        message = six.text_type(ex)
         data = {}
         if ex.details is None and ex.response is not None:
             data = ex.response.json()
@@ -78,7 +78,7 @@ def parse_exception(ex):
     elif isinstance(ex, sdk_exc.SDKException):
         # Besides HttpException there are some other exceptions like
         # ResourceTimeout can be raised from SDK, handle them here.
-        message = ex.message
+        message = six.text_type(ex)
     elif isinstance(ex, req_exc.RequestException):
         # Exceptions that are not captured by SDK
         code = ex.errno
