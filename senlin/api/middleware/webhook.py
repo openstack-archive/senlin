@@ -11,7 +11,6 @@
 # under the License.
 
 from oslo_log import log as logging
-import six
 from six.moves.urllib import parse as urlparse
 import webob
 
@@ -105,8 +104,7 @@ class WebhookMiddleware(wsgi.Middleware):
         try:
             token = driver_base.SenlinDriver().identity.get_token(**kwargs)
         except Exception as ex:
-            LOG.exception(_('Webhook failed authentication: %s.'),
-                          six.text_type(ex))
+            LOG.exception('Webhook failed authentication: %s.', ex)
             raise exc.Forbidden()
 
         return token

@@ -97,7 +97,7 @@ class Registry(object):
                         details)
         else:
             msg = 'Registering %(name)s -> %(value)s'
-            LOG.info(msg, {'name': name, 'value': str(info.plugin)})
+            LOG.info(msg, {'name': name, 'value': info.plugin})
 
         info.user_provided = not self.is_global
         registry[name] = info

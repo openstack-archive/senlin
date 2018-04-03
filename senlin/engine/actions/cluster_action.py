@@ -195,8 +195,8 @@ class ClusterAction(base.Action):
 
     def _update_nodes(self, profile_id, nodes_obj):
         # Get batching policy data if any
-        fmt = "Updating cluster '%(cluster)s': profile='%(profile)s'."
-        LOG.info(fmt, {'cluster': self.entity.id, 'profile': profile_id})
+        LOG.info("Updating cluster '%(cluster)s': profile='%(profile)s'.",
+                 {'cluster': self.entity.id, 'profile': profile_id})
         plan = []
 
         pd = self.data.get('update', None)
@@ -917,9 +917,9 @@ class ClusterAction(base.Action):
         # desired is checked when strict is True
         curr_size = no.Node.count_by_cluster(self.context, self.target)
         if count > curr_size:
-            msg = ("Triming count (%(count)s) to current "
-                   "cluster size (%(curr)s) for scaling in")
-            LOG.warning(msg, {'count': count, 'curr': curr_size})
+            LOG.warning("Triming count (%(count)s) to current cluster size "
+                        "(%(curr)s) for scaling in",
+                        {'count': count, 'curr': curr_size})
             count = curr_size
         new_size = curr_size - count
 

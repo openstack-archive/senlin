@@ -18,7 +18,6 @@ https://docs.openstack.org/senlin/latest/contributor/policies/affinity_v1.html
 """
 
 import re
-import six
 
 from oslo_log import log as logging
 from senlin.common import constraints
@@ -158,8 +157,7 @@ class AffinityPolicy(base.Policy):
             except exc.InternalError as ex:
                 msg = _("Failed in retrieving servergroup '%s'."
                         ) % group_name
-                LOG.exception('%(msg)s: %(ex)s' % {
-                              'msg': msg, 'ex': six.text_type(ex)})
+                LOG.exception('%(msg)s: %(ex)s', {'msg': msg, 'ex': ex})
                 return False, msg
 
             if server_group:
@@ -185,8 +183,7 @@ class AffinityPolicy(base.Policy):
                     policies=[group.get(self.GROUP_POLICIES)])
             except Exception as ex:
                 msg = _('Failed in creating servergroup.')
-                LOG.exception('%(msg)s: %(ex)s' % {
-                    'msg': msg, 'ex': six.text_type(ex)})
+                LOG.exception('%(msg)s: %(ex)s', {'msg': msg, 'ex': ex})
                 return False, msg
 
             data['servergroup_id'] = server_group.id
@@ -225,8 +222,7 @@ class AffinityPolicy(base.Policy):
                 nc.server_group_delete(group_id)
             except Exception as ex:
                 msg = _('Failed in deleting servergroup.')
-                LOG.exception('%(msg)s: %(ex)s' % {
-                    'msg': msg, 'ex': six.text_type(ex)})
+                LOG.exception('%(msg)s: %(ex)s', {'msg': msg, 'ex': ex})
                 return False, msg
 
         return True, reason

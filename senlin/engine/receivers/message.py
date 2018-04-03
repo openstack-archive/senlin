@@ -63,11 +63,11 @@ class Message(base.Receiver):
             # is not provided in configuration file
             base = self._get_base_url()
             if not base:
-                msg = _('Receiver notification host is not specified in '
-                        'configuration file and Senlin service endpoint can '
-                        'not be found, using local hostname (%(host)s) for '
-                        'subscriber url.') % {'host': host}
-                LOG.warning(msg)
+                LOG.warning('Receiver notification host is not specified in '
+                            'configuration file and Senlin service '
+                            'endpoint can not be found, using local'
+                            ' hostname (%(host)s) for subscriber url.',
+                            {'host': host})
                 host = socket.gethostname()
 
         if not base:
@@ -98,11 +98,13 @@ class Message(base.Receiver):
                                                      self.project,
                                                      roles)
         except exc.InternalError as ex:
-            msg = _('Can not build trust between user %(user)s and zaqar '
-                    'service user %(zaqar)s for receiver %(receiver)s.'
-                    ) % {'user': self.user, 'zaqar': zaqar_trustee_user_id,
-                         'receiver': self.id}
-            LOG.error(msg)
+            LOG.error('Can not build trust between user %(user)s and zaqar '
+                      'service user %(zaqar)s for receiver %(receiver)s.',
+                      {
+                          'user': self.user,
+                          'zaqar': zaqar_trustee_user_id,
+                          'receiver': self.id
+                      })
             raise exc.EResourceCreation(type='trust',
                                         message=six.text_type(ex))
         return trust.id
@@ -253,7 +255,7 @@ class Message(base.Receiver):
             claim = self.zaqar().claim_create(queue_name)
             messages = claim.messages
         except exc.InternalError as ex:
-            LOG.error(_('Failed in claiming message: %s'), str(ex))
+            LOG.error('Failed in claiming message: %s', ex)
             return
 
         # Build actions
@@ -264,21 +266,17 @@ class Message(base.Receiver):
                     action_id = self._build_action(context, message)
                     actions.append(action_id)
                 except exc.InternalError as ex:
-                    LOG.error(_('Failed in building action: %s'),
-                              ex)
+                    LOG.error('Failed in building action: %s', ex)
                 try:
                     self.zaqar().message_delete(queue_name, message['id'],
                                                 claim.id)
                 except exc.InternalError as ex:
-                    LOG.error(_('Failed in deleting message %(id)s: %(reason)s'
-                                ), {'id': message['id'],
-                                    'reason': ex.message})
+                    LOG.error('Failed in deleting message %(id)s: %(reason)s',
+                              {'id': message['id'], 'reason': ex})
 
             self.zaqar().claim_delete(queue_name, claim.id)
-
-            msg = _('Actions %(actions)s were successfully built.'
-                    ) % {'actions': actions}
-            LOG.info(msg)
+            LOG.info('Actions %(actions)s were successfully built.',
+                     {'actions': actions})
 
             dispatcher.start_action()
 

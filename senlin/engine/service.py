@@ -1245,14 +1245,14 @@ class EngineService(service.Service):
         if res:
             raise exception.BadRequest(msg=res)
 
-        fmt = _("Resizing cluster '%(cluster)s': type=%(adj_type)s, "
-                "number=%(number)s, min_size=%(min_size)s, "
-                "max_size=%(max_size)s, min_step=%(min_step)s, "
-                "strict=%(strict)s.")
-        LOG.info(fmt, {'cluster': req.identity, 'adj_type': adj_type,
-                       'number': number, 'min_size': min_size,
-                       'max_size': max_size, 'min_step': min_step,
-                       'strict': strict})
+        LOG.info("Resizing cluster '%(cluster)s': type=%(adj_type)s, "
+                 "number=%(number)s, min_size=%(min_size)s, "
+                 "max_size=%(max_size)s, min_step=%(min_step)s, "
+                 "strict=%(strict)s.",
+                 {'cluster': req.identity, 'adj_type': adj_type,
+                  'number': number, 'min_size': min_size,
+                  'max_size': max_size, 'min_step': min_step,
+                  'strict': strict})
 
         params = {
             'name': 'cluster_resize_%s' % db_cluster.id[:8],

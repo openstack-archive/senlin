@@ -122,10 +122,9 @@ class SchemaBase(collections.Mapping):
                              'key': key}
                 raise exc.ESchema(message=msg)
             else:
-                msg = _('Warning: %(key)s will be deprecated after version '
-                        '%(version)s!') % {'key': key,
-                                           'version': self.max_version}
-                LOG.warning(msg)
+                LOG.warning('Warning: %(key)s will be deprecated after '
+                            'version %(version)s!',
+                            {'key': key, 'version': self.max_version})
 
     def __getitem__(self, key):
         if key == self.DESCRIPTION:

@@ -18,7 +18,6 @@ from oslo_utils import uuidutils
 from senlin.common import consts
 from senlin.common import context as senlin_context
 from senlin.common import exception
-from senlin.common.i18n import _
 from senlin.common import utils
 from senlin.drivers import base as driver_base
 from senlin.objects import credential as co
@@ -218,9 +217,7 @@ class Receiver(object):
         try:
             base = kc.get_senlin_endpoint()
         except exception.InternalError as ex:
-            msg = _('Senlin endpoint can not be found: %s.'
-                    ) % ex
-            LOG.warning(msg)
+            LOG.warning('Senlin endpoint can not be found: %s.', ex)
 
         return base
 

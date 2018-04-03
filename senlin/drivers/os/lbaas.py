@@ -74,9 +74,7 @@ class LoadBalancerDriver(base.DriverBase):
             try:
                 lb = self.oc().loadbalancer_get(lb_id, ignore_missing=True)
             except exception.InternalError as ex:
-                msg = ('Failed in getting loadbalancer: %s.'
-                       % six.text_type(ex))
-                LOG.exception(msg)
+                LOG.exception('Failed in getting loadbalancer: %s.', ex)
                 return False
             if lb is None:
                 lb_ready = ignore_not_found
@@ -112,7 +110,7 @@ class LoadBalancerDriver(base.DriverBase):
         try:
             subnet = self.nc().subnet_get(vip['subnet'])
         except exception.InternalError as ex:
-            msg = 'Failed in getting subnet: %s.' % six.text_type(ex)
+            msg = 'Failed in getting subnet: %s.' % ex
             LOG.exception(msg)
             return False, msg
         subnet_id = subnet.id
@@ -280,9 +278,8 @@ class LoadBalancerDriver(base.DriverBase):
             net = self.nc().network_get(net_id)
         except exception.InternalError as ex:
             resource = 'subnet' if subnet in ex.message else 'network'
-            msg = ('Failed in getting %(resource)s: %(msg)s.'
-                   % {'resource': resource, 'msg': six.text_type(ex)})
-            LOG.exception(msg)
+            LOG.exception('Failed in getting %(resource)s: %(msg)s.',
+                          {'resource': resource, 'msg': ex})
             return None
         net_name = net.name
 
@@ -291,8 +288,7 @@ class LoadBalancerDriver(base.DriverBase):
         node_detail = node_obj.get_details(ctx)
         addresses = node_detail.get('addresses')
         if net_name not in addresses:
-            msg = 'Node is not in subnet %(subnet)s'
-            LOG.error(msg, {'subnet': subnet})
+            LOG.error('Node is not in subnet %(subnet)s', {'subnet': subnet})
             return None
 
         # Use the first IP address if more than one are found in target network
@@ -312,9 +308,7 @@ class LoadBalancerDriver(base.DriverBase):
             member = self.oc().pool_member_create(pool_id, address, port,
                                                   subnet_obj.id)
         except (exception.InternalError, exception.Error) as ex:
-            msg = ('Failed in creating lb pool member: %s.'
-                   % six.text_type(ex))
-            LOG.exception(msg)
+            LOG.exception('Failed in creating lb pool member: %s.', ex)
             return None
         res = self._wait_for_lb_ready(lb_id)
         if res is False:
@@ -345,10 +339,8 @@ class LoadBalancerDriver(base.DriverBase):
                 raise exception.Error(msg)
             self.oc().pool_member_delete(pool_id, member_id)
         except (exception.InternalError, exception.Error) as ex:
-            msg = ('Failed in removing member %(m)s from pool %(p)s: '
-                   '%(ex)s' % {'m': member_id, 'p': pool_id,
-                               'ex': six.text_type(ex)})
-            LOG.exception(msg)
+            LOG.exception('Failed in removing member %(m)s from pool %(p)s: '
+                          '%(ex)s', {'m': member_id, 'p': pool_id, 'ex': ex})
             return None
         res = self._wait_for_lb_ready(lb_id)
         if res is False:

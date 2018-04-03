@@ -16,7 +16,6 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from six.moves.urllib import parse
 
-from senlin.common.i18n import _
 from senlin.engine.receivers import base
 
 LOG = logging.getLogger(__name__)
@@ -38,11 +37,11 @@ class Webhook(base.Receiver):
             base = self._get_base_url()
             if not base:
                 host = socket.gethostname()
-                msg = _('Webhook host is not specified in configuration '
-                        'file and Senlin service endpoint can not be found,'
-                        'using local hostname (%(host)s) for webhook url.'
-                        ) % {'host': host}
-                LOG.warning(msg)
+                LOG.warning(
+                    'Webhook host is not specified in configuration '
+                    'file and Senlin service endpoint can not be found,'
+                    'using local hostname (%(host)s) for webhook url.',
+                    {'host': host})
             elif base.rfind("v1") == -1:
                 base = "%s/v1" % base
 

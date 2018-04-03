@@ -52,7 +52,7 @@ class SenlinException(Exception):
             # log the issue and the kwargs
             LOG.exception('Exception in string format operation')
             for name, value in kwargs.items():
-                LOG.error("%s: %s" % (name, value))  # noqa
+                LOG.error("%s: %s", name, value)  # noqa
 
             if _FATAL_EXCEPTION_FORMAT_ERRORS:
                 raise

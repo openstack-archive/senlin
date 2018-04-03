@@ -46,9 +46,8 @@ class VersionNegotiationFilter(wsgi.Middleware):
         If there is a version identifier in the URI, simply return the correct
         API controller, otherwise, if we find an Accept: header, process it
         """
-        msg = ("Processing request: %(m)s %(p)s Accept: %(a)s" %
-               {'m': req.method, 'p': req.path, 'a': req.accept})
-        LOG.debug(msg)
+        LOG.debug("Processing request: %(m)s %(p)s Accept: %(a)s",
+                  {'m': req.method, 'p': req.path, 'a': req.accept})
 
         # If the request is for /versions, just return the versions container
         if req.path_info_peek() in ("versions", ""):
@@ -62,8 +61,8 @@ class VersionNegotiationFilter(wsgi.Middleware):
             self._check_version_request(req, controller)
             major = req.environ['api.major']
             minor = req.environ['api.minor']
-            LOG.debug("Matched versioned URI. Version: %(major)d.%(minor)d"
-                      % {'major': major, 'minor': minor})
+            LOG.debug("Matched versioned URI. Version: %(major)d.%(minor)d",
+                      {'major': major, 'minor': minor})
             # Strip the version from the path
             req.path_info_pop()
             path = req.path_info_peek()

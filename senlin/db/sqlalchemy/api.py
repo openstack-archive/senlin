@@ -1209,8 +1209,7 @@ def action_acquire(context, action_id, owner, timestamp):
             return None
 
         if action.status != consts.ACTION_READY:
-            msg = 'The action is not executable: %s' % action.status
-            LOG.warning(msg)
+            LOG.warning('The action is not executable: %s', action.status)
             return None
         action.owner = owner
         action.start_time = timestamp
@@ -1331,8 +1330,7 @@ def action_delete_by_target(context, target, action=None,
                             action_excluded=None, status=None,
                             project_safe=True):
     if action and action_excluded:
-        msg = "action and action_excluded cannot be both specified."
-        LOG.warning(msg)
+        LOG.warning("action and action_excluded cannot be both specified.")
         return None
 
     with session_for_write() as session:
