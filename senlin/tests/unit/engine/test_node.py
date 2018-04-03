@@ -452,9 +452,8 @@ class TestNode(base.SenlinTestCase):
         self.assertEqual(mock_migrate.return_value.index, node.index)
         self.assertIsNotNone(node.updated_at)
 
-    @mock.patch.object(node_obj.Node, 'migrate')
     @mock.patch.object(pb.Profile, 'join_cluster')
-    def test_node_join_fail_profile_call(self, mock_join, mock_migrate):
+    def test_node_join_fail_profile_call(self, mock_join):
         node = nodem.Node('node1', PROFILE_ID, None, self.context)
         node.id = uuidutils.generate_uuid()
         mock_join.return_value = False
@@ -464,11 +463,6 @@ class TestNode(base.SenlinTestCase):
 
         self.assertFalse(res)
         mock_join.assert_called_once_with(self.context, node, cluster_id)
-        mock_migrate.assert_has_calls([
-            mock.call(self.context, node.id, cluster_id, mock.ANY),
-            mock.call(self.context, node.id, None, mock.ANY),
-        ])
-        self.assertEqual('', node.cluster_id)
         self.assertEqual(-1, node.index)
 
     @mock.patch.object(node_obj.Node, 'migrate')

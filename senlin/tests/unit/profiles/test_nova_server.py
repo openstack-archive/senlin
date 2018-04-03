@@ -1199,6 +1199,22 @@ class TestNovaServerBasic(base.SenlinTestCase):
         self.assertIn('GROUP2', res['security_groups'])
         cc.server_get.assert_called_once_with('FAKE_ID')
 
+    def test_do_join_successful(self):
+        cc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        metadata = {}
+        cc.server_metadata_get.return_value = metadata
+        profile._computeclient = cc
+
+        node_obj = mock.Mock(physical_id='FAKE_ID', index='123')
+        res = profile.do_join(node_obj, 'FAKE_CLUSTER_ID')
+        self.assertTrue(res)
+
+        meta = {'cluster_id': 'FAKE_CLUSTER_ID',
+                'cluster_node_index': '123'}
+        cc.server_metadata_update.assert_called_once_with(
+            'FAKE_ID', meta)
+
     def test_do_join_server_not_created(self):
         # Test path where server not specified
         profile = server.ServerProfile('t', self.spec)
