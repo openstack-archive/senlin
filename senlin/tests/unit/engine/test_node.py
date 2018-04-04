@@ -603,7 +603,7 @@ class TestNode(base.SenlinTestCase):
 
         # action = node_action.NodeAction(node.id, 'ACTION', self.ctx)
 
-        mock_recover.return_value = new_id
+        mock_recover.return_value = new_id, True
         mock_status.side_effect = set_status
         action = mock.Mock()
         action.inputs = {'operation': ['SWIM', 'DANCE']}
@@ -630,7 +630,7 @@ class TestNode(base.SenlinTestCase):
     def test_node_recover_in_place(self, mock_recover, mock_status):
         node = nodem.Node('node1', PROFILE_ID, None)
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
-        mock_recover.return_value = node.physical_id
+        mock_recover.return_value = node.physical_id, True
         action = mock.Mock(inputs={})
 
         res = node.do_recover(self.context, action)
@@ -672,7 +672,7 @@ class TestNode(base.SenlinTestCase):
         node = nodem.Node('node1', PROFILE_ID, '')
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         new_id = '166db83b-b4a4-49ef-96a8-6c0fdd882d1a'
-        mock_recover.return_value = new_id
+        mock_recover.return_value = new_id, True
         mock_status.side_effect = set_status
         mock_check = self.patchobject(pb.Profile, 'check_object')
         mock_check.return_value = False
@@ -706,7 +706,7 @@ class TestNode(base.SenlinTestCase):
         node = nodem.Node('node1', PROFILE_ID, '', id='fake')
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         new_id = '166db83b-b4a4-49ef-96a8-6c0fdd882d1a'
-        mock_recover.return_value = new_id
+        mock_recover.return_value = new_id, True
         mock_status.side_effect = set_status
         mock_check = self.patchobject(pb.Profile, 'check_object')
         mock_check.return_value = False
@@ -742,7 +742,7 @@ class TestNode(base.SenlinTestCase):
         node = nodem.Node('node1', PROFILE_ID, '', id='fake')
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         new_id = '166db83b-b4a4-49ef-96a8-6c0fdd882d1a'
-        mock_recover.return_value = new_id
+        mock_recover.return_value = new_id, True
         mock_status.side_effect = set_status
         mock_check = self.patchobject(pb.Profile, 'check_object')
         mock_check.return_value = False
@@ -779,7 +779,7 @@ class TestNode(base.SenlinTestCase):
         node = nodem.Node('node1', PROFILE_ID, '')
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         new_id = '166db83b-b4a4-49ef-96a8-6c0fdd882d1a'
-        mock_recover.return_value = new_id
+        mock_recover.return_value = new_id, True
         mock_status.side_effect = set_status
         mock_check = self.patchobject(pb.Profile, 'check_object')
         mock_check.side_effect = exception.EResourceOperation(
@@ -813,7 +813,7 @@ class TestNode(base.SenlinTestCase):
     def test_node_recover_failed_recover(self, mock_recover, mock_status):
         node = nodem.Node('node1', PROFILE_ID, None)
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
-        mock_recover.return_value = None
+        mock_recover.return_value = node.physical_id, None
         action = mock.Mock(inputs={'operation': [{'name': 'RECREATE'}]})
 
         res = node.do_recover(self.context, action)

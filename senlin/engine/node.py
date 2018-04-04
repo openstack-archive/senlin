@@ -373,17 +373,18 @@ class Node(object):
                         reason='Recovery in progress')
 
         try:
-            physical_id = pb.Profile.recover_object(context, self, **options)
+            physical_id, status = pb.Profile.recover_object(context,
+                                                            self, **options)
         except exc.EResourceOperation as ex:
             self.set_status(context, consts.NS_ERROR, reason=six.text_type(ex))
             return False
 
-        if not physical_id:
+        if not status:
             self.set_status(context, consts.NS_ERROR, reason='Recovery failed')
             return False
 
         params = {}
-        if self.physical_id != physical_id:
+        if physical_id and self.physical_id != physical_id:
             self.data['recovery'] = consts.RECOVER_RECREATE
             params['data'] = self.data
             params['physical_id'] = physical_id
