@@ -187,7 +187,7 @@ Install and configure components
   connection = mysql://senlin:<MYSQL_SENLIN_PW>@127.0.0.1/senlin?charset=utf8
 
   [keystone_authtoken]
-  auth_uri = http://<HOST>:5000/v3
+  www_authenticate_uri = http://<HOST>:5000/v3
   auth_version = 3
   identity_uri = http://<HOST>:35357
   admin_user = senlin
