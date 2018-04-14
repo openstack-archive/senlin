@@ -178,22 +178,28 @@ class EngineService(service.Service):
         super(EngineService, self).stop()
 
     def service_manage_report(self):
-        ctx = senlin_context.get_admin_context()
-        service_obj.Service.update(ctx, self.engine_id)
+        try:
+            ctx = senlin_context.get_admin_context()
+            service_obj.Service.update(ctx, self.engine_id)
+        except Exception as ex:
+            LOG.error('Error while updating engine service: %s', ex)
 
     def _service_manage_cleanup(self):
-        ctx = senlin_context.get_admin_context()
-        time_window = (2 * CONF.periodic_interval)
-        svcs = service_obj.Service.get_all(ctx)
-        for svc in svcs:
-            if svc['id'] == self.engine_id:
-                continue
-            if timeutils.is_older_than(svc['updated_at'], time_window):
-                LOG.info('Service %s was aborted', svc['id'])
-                LOG.info('Breaking locks for dead engine %s', svc['id'])
-                service_obj.Service.gc_by_engine(svc['id'])
-                LOG.info('Done breaking locks for engine %s', svc['id'])
-                service_obj.Service.delete(svc['id'])
+        try:
+            ctx = senlin_context.get_admin_context()
+            time_window = (2 * CONF.periodic_interval)
+            svcs = service_obj.Service.get_all(ctx)
+            for svc in svcs:
+                if svc['id'] == self.engine_id:
+                    continue
+                if timeutils.is_older_than(svc['updated_at'], time_window):
+                    LOG.info('Service %s was aborted', svc['id'])
+                    LOG.info('Breaking locks for dead engine %s', svc['id'])
+                    service_obj.Service.gc_by_engine(svc['id'])
+                    LOG.info('Done breaking locks for engine %s', svc['id'])
+                    service_obj.Service.delete(svc['id'])
+        except Exception as ex:
+            LOG.error('Error while cleaning up engine service: %s', ex)
 
     def service_manage_cleanup(self):
         self._service_manage_cleanup()

@@ -11,6 +11,7 @@
 # under the License.
 
 import datetime
+import eventlet
 import mock
 
 from oslo_config import cfg
@@ -128,6 +129,37 @@ class EngineStatusTest(base.SenlinTestCase):
         self.get_rpc = self.patchobject(rpc_messaging, 'get_rpc_server',
                                         return_value=self.fake_rpc_server)
 
+    @mock.patch('senlin.engine.dispatcher.Dispatcher')
+    @mock.patch('senlin.engine.health_manager.HealthManager')
+    @mock.patch('oslo_messaging.Target')
+    @mock.patch.object(service_obj.Service, 'update')
+    def test_engine_manage_report(self, mock_update, mock_msg_cls, mock_hm_cls,
+                                  mock_disp_cls):
+        cfg.CONF.set_override('periodic_interval', 1)
+
+        # start engine and verify that update is being called more than once
+        self.eng.start()
+        eventlet.sleep(6)
+        self.assertGreater(mock_update.call_count, 1)
+        self.eng.stop()
+
+    @mock.patch('senlin.engine.dispatcher.Dispatcher')
+    @mock.patch('senlin.engine.health_manager.HealthManager')
+    @mock.patch('oslo_messaging.Target')
+    @mock.patch.object(service_obj.Service, 'update')
+    def test_engine_manage_report_with_exception(self, mock_update,
+                                                 mock_msg_cls, mock_hm_cls,
+                                                 mock_disp_cls):
+        cfg.CONF.set_override('periodic_interval', 1)
+
+        # start engine and verify that update is being called more than once
+        # even with the exception being thrown
+        mock_update.side_effect = Exception('blah')
+        self.eng.start()
+        eventlet.sleep(6)
+        self.assertGreater(mock_update.call_count, 1)
+        self.eng.stop()
+
     @mock.patch.object(service_obj.Service, 'update')
     def test_service_manage_report_update(self, mock_update):
         mock_update.return_value = mock.Mock()
@@ -144,3 +176,34 @@ class EngineStatusTest(base.SenlinTestCase):
         self.eng._service_manage_cleanup()
         mock_delete.assert_called_once_with('foo')
         mock_gc.assert_called_once_with('foo')
+
+    @mock.patch('senlin.engine.dispatcher.Dispatcher')
+    @mock.patch('senlin.engine.health_manager.HealthManager')
+    @mock.patch('oslo_messaging.Target')
+    @mock.patch.object(service_obj.Service, 'get_all')
+    def test_service_manage_cleanup(self, mock_get_all, mock_msg_cls,
+                                    mock_hm_cls, mock_disp_cls):
+        cfg.CONF.set_override('periodic_interval', 1)
+
+        # start engine and verify that get_all is being called more than once
+        self.eng.start()
+        eventlet.sleep(6)
+        self.assertGreater(mock_get_all.call_count, 1)
+        self.eng.stop()
+
+    @mock.patch('senlin.engine.dispatcher.Dispatcher')
+    @mock.patch('senlin.engine.health_manager.HealthManager')
+    @mock.patch('oslo_messaging.Target')
+    @mock.patch.object(service_obj.Service, 'get_all')
+    def test_service_manage_cleanup_with_exception(self, mock_get_all,
+                                                   mock_msg_cls, mock_hm_cls,
+                                                   mock_disp_cls):
+        cfg.CONF.set_override('periodic_interval', 1)
+
+        # start engine and verify that get_all is being called more than once
+        # even with the exception being thrown
+        mock_get_all.side_effect = Exception('blah')
+        self.eng.start()
+        eventlet.sleep(6)
+        self.assertGreater(mock_get_all.call_count, 1)
+        self.eng.stop()
