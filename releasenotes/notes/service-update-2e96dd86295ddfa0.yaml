@@ -1,0 +1,4 @@
+---
+fixes:
+  - Added exception handling for service status update. This is making service
+    management more stable.

@@ -1,0 +1,4 @@
+---
+fixes:
+  - Fixed nova profile logic when updating image. We will always use the
+    current image as the effective one.

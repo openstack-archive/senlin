@@ -1,0 +1,4 @@
+---
+fixes:
+  - The 'V' query parameter when triggering a webhook receiver is strictly
+    required.

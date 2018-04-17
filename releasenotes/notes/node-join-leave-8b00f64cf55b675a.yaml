@@ -1,0 +1,3 @@
+---
+fixes:
+  - Added exception handling for node-join and node-leave operations.
