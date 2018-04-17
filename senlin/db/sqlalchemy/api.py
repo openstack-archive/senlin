@@ -1504,6 +1504,8 @@ def dummy_gc(engine_id):
                     _release_cluster_lock(session, clock, action.id, 1)
 
 
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
 def gc_by_engine(engine_id):
     # Get all actions locked by an engine
     with session_for_write() as session:
