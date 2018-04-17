@@ -1,0 +1,4 @@
+---
+fixes:
+  - The UUID used by the block_device_mapping_v2 in nova.server profile is
+    validated.

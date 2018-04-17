@@ -1,0 +1,4 @@
+---
+fixes:
+  - The data type problem related to action start time and end time is fixed.
+    We now use decimal type instead of float for these columns.
