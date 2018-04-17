@@ -464,6 +464,7 @@ def _release_cluster_lock(session, lock, action_id, scope):
     return success
 
 
+@retry_on_deadlock
 def cluster_lock_release(cluster_id, action_id, scope):
     '''Release lock on a cluster.
 
@@ -474,16 +475,19 @@ def cluster_lock_release(cluster_id, action_id, scope):
     :return: True indicates successful release, False indicates failure.
     '''
     with session_for_write() as session:
-        lock = session.query(models.ClusterLock).get(cluster_id)
+        lock = session.query(
+            models.ClusterLock).with_lockmode('update').get(cluster_id)
         if lock is None:
             return False
 
         return _release_cluster_lock(session, lock, action_id, scope)
 
 
+@retry_on_deadlock
 def cluster_lock_steal(cluster_id, action_id):
     with session_for_write() as session:
-        lock = session.query(models.ClusterLock).get(cluster_id)
+        lock = session.query(
+            models.ClusterLock).with_lockmode('update').get(cluster_id)
         if lock is not None:
             lock.action_ids = [action_id]
             lock.semaphore = -1
@@ -497,9 +501,11 @@ def cluster_lock_steal(cluster_id, action_id):
         return lock.action_ids
 
 
+@retry_on_deadlock
 def node_lock_acquire(node_id, action_id):
     with session_for_write() as session:
-        lock = session.query(models.NodeLock).get(node_id)
+        lock = session.query(
+            models.NodeLock).with_lockmode('update').get(node_id)
         if lock is None:
             lock = models.NodeLock(node_id=node_id, action_id=action_id)
             session.add(lock)
@@ -507,11 +513,12 @@ def node_lock_acquire(node_id, action_id):
         return lock.action_id
 
 
+@retry_on_deadlock
 def node_lock_release(node_id, action_id):
     with session_for_write() as session:
-
         success = False
-        lock = session.query(models.NodeLock).get(node_id)
+        lock = session.query(
+            models.NodeLock).with_lockmode('update').get(node_id)
         if lock is not None and lock.action_id == action_id:
             session.delete(lock)
             success = True
@@ -519,9 +526,11 @@ def node_lock_release(node_id, action_id):
         return success
 
 
+@retry_on_deadlock
 def node_lock_steal(node_id, action_id):
     with session_for_write() as session:
-        lock = session.query(models.NodeLock).get(node_id)
+        lock = session.query(
+            models.NodeLock).with_lockmode('update').get(node_id)
         if lock is not None:
             lock.action_id = action_id
             lock.save(session)
