@@ -77,14 +77,25 @@ class KubeBaseProfile(server.ServerProfile):
 
     def _create_network(self, obj):
         client = self.network(obj)
-        net = client.network_create()
-        subnet = client.subnet_create(network_id=net.id, cidr='10.7.0.0/24',
-                                      ip_version=4)
+        try:
+            net = client.network_create()
+            subnet = client.subnet_create(network_id=net.id,
+                                          cidr='10.7.0.0/24',
+                                          ip_version=4)
+        except exc.InternalError as ex:
+            raise exc.EResourceCreation(type='kubernetes',
+                                        message=six.text_type(ex),
+                                        resource_id=obj.id)
         pub_net = client.network_get(self.properties[self.PUBLIC_NETWORK])
-        router = client.router_create(
-            external_gateway_info={"network_id": pub_net.id})
-        client.add_interface_to_router(router, subnet_id=subnet.id)
-        fip = client.floatingip_create(floating_network_id=pub_net.id)
+        try:
+            router = client.router_create(
+                external_gateway_info={"network_id": pub_net.id})
+            client.add_interface_to_router(router, subnet_id=subnet.id)
+            fip = client.floatingip_create(floating_network_id=pub_net.id)
+        except exc.InternalError as ex:
+            raise exc.EResourceCreation(type='kubernetes',
+                                        message=six.text_type(ex),
+                                        resource_id=obj.id)
 
         ctx = context.get_service_context(user_id=obj.user,
                                           project_id=obj.project)
@@ -102,24 +113,59 @@ class KubeBaseProfile(server.ServerProfile):
     def _delete_network(self, obj):
         client = self.network(obj)
         fip_id = obj.data.get(self.KUBE_MASTER_FLOATINGIP_ID)
-        client.floatingip_delete(fip_id)
+        if fip_id:
+            try:
+                # delete floating ip
+                client.floatingip_delete(fip_id)
+            except exc.InternalError as ex:
+                raise exc.EResourceDeletion(type='kubernetes', id=fip_id,
+                                            message=six.text_type(ex))
 
         router = obj.data.get(self.PRIVATE_ROUTER)
         subnet = obj.data.get(self.PRIVATE_SUBNET)
-        client.remove_interface_from_router(router, subnet_id=subnet)
+        if router and subnet:
+            try:
+                client.remove_interface_from_router(router, subnet_id=subnet)
+            except exc.InternalError as ex:
+                raise exc.EResourceDeletion(type='kubernetes',
+                                            id=subnet,
+                                            message=six.text_type(ex))
 
-        # delete router and network
-        client.router_delete(router, ignore_missing=True)
+        if router:
+            try:
+                # delete router
+                client.router_delete(router, ignore_missing=True)
+            except exc.InternalError as ex:
+                raise exc.EResourceDeletion(type='kubernetes',
+                                            id=router,
+                                            message=six.text_type(ex))
+
         net = obj.data.get(self.PRIVATE_NETWORK)
-        client.network_delete(net, ignore_missing=True)
+        if net:
+            try:
+                # delete network
+                client.network_delete(net, ignore_missing=True)
+            except exc.InternalError as ex:
+                raise exc.EResourceDeletion(type='kubernetes',
+                                            id=net,
+                                            message=six.text_type(ex))
 
     def _associate_floatingip(self, obj, server):
         ctx = context.get_service_context(user_id=obj.user,
                                           project_id=obj.project)
+
         if obj.cluster_id:
             cluster = cluster_obj.Cluster.get(ctx, obj.cluster_id)
             fip = cluster.data.get(self.KUBE_MASTER_FLOATINGIP)
-            self.compute(obj).server_floatingip_associate(server, fip)
+            if fip:
+                try:
+                    self.compute(obj).server_floatingip_associate(server,
+                                                                  fip)
+                except exc.InternalError as ex:
+                    raise exc.EResourceOperation(op='floatingip',
+                                                 type='kubernetes',
+                                                 id=fip,
+                                                 message=six.text_type(ex))
 
     def _disassociate_floatingip(self, obj, server):
         ctx = context.get_service_context(user_id=obj.user,
@@ -127,10 +173,15 @@ class KubeBaseProfile(server.ServerProfile):
         if obj.cluster_id:
             cluster = cluster_obj.Cluster.get(ctx, obj.cluster_id)
             fip = cluster.data.get(self.KUBE_MASTER_FLOATINGIP)
-            try:
-                self.compute(obj).server_floatingip_disassociate(server, fip)
-            except Exception:
-                pass
+            if fip:
+                try:
+                    self.compute(obj).server_floatingip_disassociate(server,
+                                                                     fip)
+                except exc.InternalError as ex:
+                    raise exc.EResourceOperation(op='floatingip',
+                                                 type='kubernetes',
+                                                 id=fip,
+                                                 message=six.text_type(ex))
 
     def _get_cluster_data(self, obj):
         ctx = context.get_service_context(user_id=obj.user,
@@ -159,7 +210,7 @@ class KubeBaseProfile(server.ServerProfile):
         try:
             sg = client.security_group_create(name=self.name)
         except Exception as ex:
-            raise exc.EResourceCreation(type='kubernetes.master',
+            raise exc.EResourceCreation(type='kubernetes',
                                         message=six.text_type(ex))
         data = obj.data
         data[self.SECURITY_GROUP] = sg.id
@@ -189,13 +240,19 @@ class KubeBaseProfile(server.ServerProfile):
                 try:
                     client.security_group_rule_create(sgid, port, protocol=p)
                 except Exception as ex:
-                    raise exc.EResourceCreation(type='kubernetes.master',
+                    raise exc.EResourceCreation(type='kubernetes',
                                                 message=six.text_type(ex))
 
     def _delete_security_group(self, obj):
         sgid = obj.data.get(self.SECURITY_GROUP)
         if sgid:
-            self.network(obj).security_group_delete(sgid, ignore_missing=True)
+            try:
+                self.network(obj).security_group_delete(sgid,
+                                                        ignore_missing=True)
+            except exc.InternalError as ex:
+                raise exc.EResourceDeletion(type='kubernetes',
+                                            id=sgid,
+                                            message=six.text_type(ex))
 
     def do_validate(self, obj):
         """Validate if the spec has provided valid info for server creation.
