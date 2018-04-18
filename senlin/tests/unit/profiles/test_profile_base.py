@@ -751,11 +751,12 @@ class TestProfileBase(base.SenlinTestCase):
         self.patchobject(profile, 'do_create', return_value=True)
         self.patchobject(profile, 'do_delete', return_value=True)
 
-        res = profile.do_recover(mock.Mock())
-        self.assertTrue(res)
+        res, status = profile.do_recover(mock.Mock())
+        self.assertTrue(status)
 
-        res = profile.do_recover(mock.Mock(), operation=[{'name': 'bar'}])
-        self.assertFalse(res)
+        res, status = profile.do_recover(
+            mock.Mock(), operation=[{'name': 'bar'}])
+        self.assertFalse(status)
 
     def test_do_recover_with_fencing(self):
         profile = self._create_profile('test-profile')

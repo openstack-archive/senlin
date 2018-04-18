@@ -1327,14 +1327,26 @@ class TestNovaServerBasic(base.SenlinTestCase):
         self.assertEqual(mock_rebuild.return_value, res)
         mock_rebuild.assert_called_once_with(node_obj)
 
+    @mock.patch.object(server.ServerProfile, 'handle_reboot')
+    def test_do_recover_reboot(self, mock_reboot):
+        profile = server.ServerProfile('t', self.spec)
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_recover(node_obj, operation=[{'name': 'REBOOT'}])
+
+        self.assertTrue(res)
+        self.assertEqual(mock_reboot.return_value, res)
+        mock_reboot.assert_called_once_with(node_obj, type='HARD')
+
     @mock.patch.object(profiles_base.Profile, 'do_recover')
     def test_do_recover_bad_operation(self, mock_base_recover):
         profile = server.ServerProfile('t', self.spec)
         node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        res = profile.do_recover(node_obj, operation=[{'name': 'BLAHBLAH'}])
+        res, status = profile.do_recover(node_obj,
+                                         operation=[{'name': 'BLAHBLAH'}])
 
-        self.assertFalse(res)
+        self.assertFalse(status)
 
     @mock.patch.object(profiles_base.Profile, 'do_recover')
     def test_do_recover_fallback(self, mock_base_recover):
@@ -1367,9 +1379,9 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile = server.ServerProfile('t', self.spec)
 
         # do it
-        res = profile.handle_reboot(obj, type='SOFT')
+        res, status = profile.handle_reboot(obj, type='SOFT')
 
-        self.assertFalse(res)
+        self.assertFalse(status)
 
     def test_handle_reboot_default_type(self):
         obj = mock.Mock(physical_id='FAKE_ID')
@@ -1392,11 +1404,11 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._computeclient = mock.Mock()
 
         # do it
-        res = profile.handle_reboot(obj, type=['foo'])
-        self.assertFalse(res)
+        res, status = profile.handle_reboot(obj, type=['foo'])
+        self.assertFalse(status)
 
-        res = profile.handle_reboot(obj, type='foo')
-        self.assertFalse(res)
+        res, status = profile.handle_reboot(obj, type='foo')
+        self.assertFalse(status)
 
     def test_handle_rebuild_with_image(self):
         profile = server.ServerProfile('t', self.spec)
@@ -1410,7 +1422,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         res = profile.handle_rebuild(node_obj)
 
-        self.assertEqual('FAKE_ID', res)
+        self.assertTrue(res)
         cc.server_get.assert_called_with('FAKE_ID')
         cc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
                                                   'FAKE_SERVER_NAME',
@@ -1449,7 +1461,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         res = profile.handle_rebuild(node_obj)
 
-        self.assertEqual('FAKE_ID', res)
+        self.assertTrue(res)
         cc.server_get.assert_called_with('FAKE_ID')
         cc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
                                                   'FAKE_SERVER_NAME',
@@ -1527,9 +1539,9 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._computeclient = cc
         node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        res = profile.handle_rebuild(node_obj)
+        res, status = profile.handle_rebuild(node_obj)
 
-        self.assertFalse(res)
+        self.assertFalse(status)
         cc.server_get.assert_called_once_with('FAKE_ID')
         self.assertEqual(0, cc.server_rebuild.call_count)
         self.assertEqual(0, cc.wait_for_server.call_count)
@@ -1541,9 +1553,9 @@ class TestNovaServerBasic(base.SenlinTestCase):
         test_server = mock.Mock()
         test_server.physical_id = None
 
-        res = profile.handle_rebuild(test_server)
+        res, status = profile.handle_rebuild(test_server)
 
-        self.assertFalse(res)
+        self.assertFalse(status)
 
     def test_handle_rebuild_failed_with_name(self):
         self.spec['properties']['name'] = None

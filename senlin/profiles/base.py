@@ -487,6 +487,10 @@ class Profile(object):
 
         :param obj: The node object to operate on.
         :param options: Keyword arguments for the recover operation.
+        :return id: New id of the recovered resource or None if recovery
+            failed.
+        :return status: True indicates successful recovery, False indicates
+            failure.
         """
         operation = options.pop('operation', None)
 
@@ -496,7 +500,7 @@ class Profile(object):
 
         if operation and operation['name'] != consts.RECOVER_RECREATE:
             LOG.error("Recover operation not supported: %s", operation)
-            return False
+            return None, False
 
         extra_params = options.get('params', {})
         fence_compute = extra_params.get('fence_compute', False)
@@ -505,13 +509,12 @@ class Profile(object):
         except exc.EResourceDeletion as ex:
             raise exc.EResourceOperation(op='recovering', type='node',
                                          id=obj.id, message=six.text_type(ex))
-        res = None
         try:
             res = self.do_create(obj)
         except exc.EResourceCreation as ex:
             raise exc.EResourceOperation(op='recovering', type='node',
                                          id=obj.id, message=six.text_type(ex))
-        return res
+        return res, True
 
     def do_validate(self, obj):
         """For subclass to override."""

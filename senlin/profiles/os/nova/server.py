@@ -1516,6 +1516,10 @@ class ServerProfile(base.Profile):
         :param obj: The node object.
         :param dict options: A list for operations each of which has a name
             and optionally a map from parameter to values.
+        :return id: New id of the recovered resource or None if recovery
+            failed.
+        :return status: True indicates successful recovery, False indicates
+            failure.
         """
         operation = options.get('operation', None)
 
@@ -1526,10 +1530,15 @@ class ServerProfile(base.Profile):
             op_name = operation['name']
             if op_name.upper() != consts.RECOVER_RECREATE:
                 op_params = operation.get('params', {})
+                # nova recover operation always use hard reboot
+                # vm in error or stop status soft reboot can't succeed
+                if op_name.upper() == consts.RECOVER_REBOOT:
+                    if self.REBOOT_TYPE not in op_params:
+                        op_params[self.REBOOT_TYPE] = self.REBOOT_HARD
                 if op_name.lower() not in self.OP_NAMES:
                     LOG.error("The operation '%s' is not supported",
                               op_name)
-                    return False
+                    return obj.physical_id, False
 
                 method = getattr(self, "handle_" + op_name.lower())
                 return method(obj, **op_params)
@@ -1539,17 +1548,27 @@ class ServerProfile(base.Profile):
     def handle_reboot(self, obj, **options):
         """Handler for the reboot operation."""
         if not obj.physical_id:
-            return False
+            return None, False
 
+        server_id = obj.physical_id
         reboot_type = options.get(self.REBOOT_TYPE, self.REBOOT_SOFT)
         if (not isinstance(reboot_type, six.string_types) or
                 reboot_type not in self.REBOOT_TYPES):
-            return False
+            return server_id, False
 
-        self.compute(obj).server_reboot(obj.physical_id, reboot_type)
-        self.compute(obj).wait_for_server(obj.physical_id,
-                                          consts.VS_ACTIVE)
-        return True
+        nova_driver = self.compute(obj)
+        try:
+            server = nova_driver.server_get(server_id)
+            if server is None:
+                return None, False
+            nova_driver.server_reboot(server_id, reboot_type)
+            nova_driver.wait_for_server(obj.physical_id,
+                                        consts.VS_ACTIVE)
+            return server_id, True
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(op='rebooting', type='server',
+                                         id=server_id,
+                                         message=six.text_type(ex))
 
     def handle_rebuild(self, obj, **options):
         """Handler for the rebuild operation.
@@ -1557,10 +1576,13 @@ class ServerProfile(base.Profile):
         :param obj: The node object.
         :param dict options: A list for operations each of which has a name
             and optionally a map from parameter to values.
-        :returns: The server ID if successful or None if failed.
+        :return id: New id of the recovered resource or None if recovery
+            failed.
+        :return status: True indicates successful recovery, False indicates
+            failure.
         """
         if not obj.physical_id:
-            return None
+            return None, False
 
         server_id = obj.physical_id
         nova_driver = self.compute(obj)
@@ -1572,7 +1594,7 @@ class ServerProfile(base.Profile):
                                          message=six.text_type(ex))
 
         if server is None:
-            return None
+            return None, False
         image_id = self._get_image_id(obj, server, 'rebuilding')
 
         admin_pass = self.properties.get(self.ADMIN_PASS)
@@ -1581,7 +1603,7 @@ class ServerProfile(base.Profile):
             nova_driver.server_rebuild(server_id, image_id,
                                        name, admin_pass)
             nova_driver.wait_for_server(server_id, consts.VS_ACTIVE)
-            return server_id
+            return server_id, True
         except exc.InternalError as ex:
             raise exc.EResourceOperation(op='rebuilding', type='server',
                                          id=server_id,
