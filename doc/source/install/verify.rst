@@ -17,23 +17,34 @@
 Verify Your Installation
 ========================
 
-To check whether Senlin server and Senlin client have been installed
-successfully, run command ``openstack cluster build info`` in a console.
-The installation is successful if the command output looks similar to the
-following.
+Verify operation of the Cluster service.
 
-::
 
-  $ openstack cluster build info
-  +--------+---------------------+
-  | Field  | Value               |
-  +--------+---------------------+
-  | api    | {                   |
-  |        |   "revision": "1.0" |
-  |        | }                   |
-  | engine | {                   |
-  |        |   "revision": "1.0" |
-  |        | }                   |
-  +--------+---------------------+
+.. note::
+
+   Perform these commands on the controller node.
+
+#. Source the ``admin`` tenant credentials:
+
+   .. code-block:: console
+
+      $ . admin-openrc
+
+#. List service components to verify successful launch and
+   registration of each process:
+
+   .. code-block:: console
+
+      $ openstack cluster build info
+      +--------+---------------------+
+      | Field  | Value               |
+      +--------+---------------------+
+      | api    | {                   |
+      |        |   "revision": "1.0" |
+      |        | }                   |
+      | engine | {                   |
+      |        |   "revision": "1.0" |
+      |        | }                   |
+      +--------+---------------------+
 
 You are ready to begin your journey (aka. adventure) with Senlin, now.
