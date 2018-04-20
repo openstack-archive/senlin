@@ -353,11 +353,25 @@ class ClusterAction(base.Action):
                 if not lifecycle_hook:
                     status = base.Action.READY
                 else:
-                    status = base.Action.WAITING_LIFECYCLE_COMPLETION
+                    # only go into wait lifecycle complete if node exists and
+                    # is active
+                    node = no.Node.get(self.context, node_id)
+                    if not node:
+                        LOG.warning('Node %s is not found. '
+                                    'Skipping wait for lifecycle completion.',
+                                    node_id)
+                        status = base.Action.READY
+                    elif node.status != consts.NS_ACTIVE:
+                        LOG.warning('Node %s is not in ACTIVE status. '
+                                    'Skipping wait for lifecycle completion.',
+                                    node_id)
+                        status = base.Action.READY
+                    else:
+                        status = base.Action.WAITING_LIFECYCLE_COMPLETION
 
                 ao.Action.update(self.context, action_id,
                                  {'status': status})
-                if lifecycle_hook:
+                if status == base.Action.WAITING_LIFECYCLE_COMPLETION:
                     # lifecycle_hook_type has to be "zaqar"
                     # post message to zaqar
                     kwargs = {
