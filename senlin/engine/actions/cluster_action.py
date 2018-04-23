@@ -305,38 +305,22 @@ class ClusterAction(base.Action):
                 ao.Action.update(self.context, action_id,
                                  {'status': base.Action.READY})
 
-    def _delete_nodes(self, node_ids):
-        action_name = consts.NODE_DELETE
-
-        pd = self.data.get('deletion', None)
-        if pd is not None:
-            destroy = pd.get('destroy_after_deletion', True)
-            if destroy is False:
-                action_name = consts.NODE_LEAVE
-
-        # get lifecycle hook properties if specified
-        lifecycle_hook = self.data.get('hooks')
-        lifecycle_hook_timeout = None
-        if lifecycle_hook:
-            lifecycle_hook_timeout = lifecycle_hook.get('timeout')
-            lifecycle_hook_type = lifecycle_hook.get('type', None)
-            lifecycle_hook_params = lifecycle_hook.get('params')
-            if lifecycle_hook_type == "zaqar":
-                lifecycle_hook_target = lifecycle_hook_params.get('queue')
-            else:
-                # lifecycle_hook_target = lifecycle_hook_params.get('url')
-                return self.RES_ERROR, ("Lifecycle hook type '%s' is not "
-                                        "implemented") % lifecycle_hook_type
-
+    def _delete_nodes_with_hook(self, action_name, node_ids, lifecycle_hook):
+        lifecycle_hook_timeout = lifecycle_hook.get('timeout')
+        lifecycle_hook_type = lifecycle_hook.get('type', None)
+        lifecycle_hook_params = lifecycle_hook.get('params')
+        if lifecycle_hook_type == "zaqar":
+            lifecycle_hook_target = lifecycle_hook_params.get('queue')
+        else:
+            # lifecycle_hook_target = lifecycle_hook_params.get('url')
+            return self.RES_ERROR, ("Lifecycle hook type '%s' is not "
+                                    "implemented") % lifecycle_hook_type
         child = []
         for node_id in node_ids:
             kwargs = {
                 'name': 'node_delete_%s' % node_id[:8],
-                'cause': consts.CAUSE_DERIVED,
+                'cause': consts.CAUSE_DERIVED_LCH,
             }
-
-            if lifecycle_hook:
-                kwargs['cause'] = consts.CAUSE_DERIVED_LCH
 
             action_id = base.Action.create(self.context, node_id, action_name,
                                            **kwargs)
@@ -346,28 +330,20 @@ class ClusterAction(base.Action):
             dobj.Dependency.create(self.context, [aid for aid, nid in child],
                                    self.id)
             for action_id, node_id in child:
-                # Build dependency and make the new action ready or
-                # waiting for lifecycle completion if lifecycle hook properties
-                # are specified in deletion policy
-
-                if not lifecycle_hook:
+                # wait lifecycle complete if node exists and is active
+                node = no.Node.get(self.context, node_id)
+                if not node:
+                    LOG.warning('Node %s is not found. '
+                                'Skipping wait for lifecycle completion.',
+                                node_id)
+                    status = base.Action.READY
+                elif node.status != consts.NS_ACTIVE:
+                    LOG.warning('Node %s is not in ACTIVE status. '
+                                'Skipping wait for lifecycle completion.',
+                                node_id)
                     status = base.Action.READY
                 else:
-                    # only go into wait lifecycle complete if node exists and
-                    # is active
-                    node = no.Node.get(self.context, node_id)
-                    if not node:
-                        LOG.warning('Node %s is not found. '
-                                    'Skipping wait for lifecycle completion.',
-                                    node_id)
-                        status = base.Action.READY
-                    elif node.status != consts.NS_ACTIVE:
-                        LOG.warning('Node %s is not in ACTIVE status. '
-                                    'Skipping wait for lifecycle completion.',
-                                    node_id)
-                        status = base.Action.READY
-                    else:
-                        status = base.Action.WAITING_LIFECYCLE_COMPLETION
+                    status = base.Action.WAITING_LIFECYCLE_COMPLETION
 
                 ao.Action.update(self.context, action_id,
                                  {'status': status})
@@ -385,28 +361,70 @@ class ClusterAction(base.Action):
                         action_id, node_id,
                         consts.LIFECYCLE_NODE_TERMINATION)
 
-            res = None
-            if lifecycle_hook:
-                dispatcher.start_action()
-                res, reason = self._wait_for_dependents(lifecycle_hook_timeout)
+            dispatcher.start_action()
+            res, reason = self._wait_for_dependents(lifecycle_hook_timeout)
 
-                if res == self.RES_LIFECYCLE_HOOK_TIMEOUT:
-                    self._handle_lifecycle_timeout(child)
+            if res == self.RES_LIFECYCLE_HOOK_TIMEOUT:
+                self._handle_lifecycle_timeout(child)
 
             if res is None or res == self.RES_LIFECYCLE_HOOK_TIMEOUT:
                 dispatcher.start_action()
                 res, reason = self._wait_for_dependents()
 
-            if res == self.RES_OK:
-                self.outputs['nodes_removed'] = node_ids
-                for node_id in node_ids:
-                    self.entity.remove_node(node_id)
-            else:
-                reason = 'Failed in deleting nodes.'
-
             return res, reason
 
         return self.RES_OK, ''
+
+    def _delete_nodes_normally(self, action_name, node_ids):
+        child = []
+        for node_id in node_ids:
+            kwargs = {
+                'name': 'node_delete_%s' % node_id[:8],
+                'cause': consts.CAUSE_DERIVED,
+            }
+
+            action_id = base.Action.create(self.context, node_id, action_name,
+                                           **kwargs)
+            child.append((action_id, node_id))
+
+        if child:
+            dobj.Dependency.create(self.context, [aid for aid, nid in child],
+                                   self.id)
+            for action_id, node_id in child:
+                ao.Action.update(self.context, action_id,
+                                 {'status': base.Action.READY})
+
+            dispatcher.start_action()
+            res, reason = self._wait_for_dependents()
+            return res, reason
+
+        return self.RES_OK, ''
+
+    def _delete_nodes(self, node_ids):
+        action_name = consts.NODE_DELETE
+
+        pd = self.data.get('deletion', None)
+        if pd is not None:
+            destroy = pd.get('destroy_after_deletion', True)
+            if destroy is False:
+                action_name = consts.NODE_LEAVE
+
+        # get lifecycle hook properties if specified
+        lifecycle_hook = self.data.get('hooks')
+        if lifecycle_hook:
+            res, reason = self._delete_nodes_with_hook(action_name, node_ids,
+                                                       lifecycle_hook)
+        else:
+            res, reason = self._delete_nodes_normally(action_name, node_ids)
+
+        if res == self.RES_OK:
+            self.outputs['nodes_removed'] = node_ids
+            for node_id in node_ids:
+                self.entity.remove_node(node_id)
+        else:
+            reason = 'Failed in deleting nodes:%s' % reason
+
+        return res, reason
 
     @profiler.trace('ClusterAction.do_delete', hide_args=False)
     def do_delete(self):
