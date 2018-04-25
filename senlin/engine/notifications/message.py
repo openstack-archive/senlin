@@ -67,14 +67,15 @@ class Message(object):
 
         return params
 
-    def post_lifecycle_hook_message(self, lifecycle_action_token,
-                                    node_id, lifecycle_transition_type):
+    def post_lifecycle_hook_message(self, lifecycle_action_token, node_id,
+                                    resource_id, lifecycle_transition_type):
         try:
             message_list = [{
                 "ttl": CONF.notification.ttl,
                 "body": {
                     "lifecycle_action_token": lifecycle_action_token,
                     "node_id": node_id,
+                    "resource_id": resource_id,
                     "lifecycle_transition_type": lifecycle_transition_type
                 }
             }]

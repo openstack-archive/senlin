@@ -329,6 +329,16 @@ class ClusterAction(base.Action):
         if child:
             dobj.Dependency.create(self.context, [aid for aid, nid in child],
                                    self.id)
+            # lifecycle_hook_type has to be "zaqar"
+            # post message to zaqar
+            kwargs = {
+                'user': self.context.user_id,
+                'project': self.context.project_id,
+                'domain': self.context.domain_id
+            }
+
+            notifier = msg.Message(lifecycle_hook_target, **kwargs)
+
             for action_id, node_id in child:
                 # wait lifecycle complete if node exists and is active
                 node = no.Node.get(self.context, node_id)
@@ -337,28 +347,21 @@ class ClusterAction(base.Action):
                                 'Skipping wait for lifecycle completion.',
                                 node_id)
                     status = base.Action.READY
-                elif node.status != consts.NS_ACTIVE:
+                    child.remove((action_id, node_id))
+                elif node.status != consts.NS_ACTIVE or not node.physical_id:
                     LOG.warning('Node %s is not in ACTIVE status. '
                                 'Skipping wait for lifecycle completion.',
                                 node_id)
                     status = base.Action.READY
+                    child.remove((action_id, node_id))
                 else:
                     status = base.Action.WAITING_LIFECYCLE_COMPLETION
 
                 ao.Action.update(self.context, action_id,
                                  {'status': status})
                 if status == base.Action.WAITING_LIFECYCLE_COMPLETION:
-                    # lifecycle_hook_type has to be "zaqar"
-                    # post message to zaqar
-                    kwargs = {
-                        'user': self.context.user_id,
-                        'project': self.context.project_id,
-                        'domain': self.context.domain_id
-                    }
-
-                    notifier = msg.Message(lifecycle_hook_target, **kwargs)
                     notifier.post_lifecycle_hook_message(
-                        action_id, node_id,
+                        action_id, node_id, node.physical_id,
                         consts.LIFECYCLE_NODE_TERMINATION)
 
             dispatcher.start_action()
