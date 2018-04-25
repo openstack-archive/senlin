@@ -46,7 +46,7 @@ class DummyThreadGroup(object):
     def add_thread(self, callback, cnxt, trace, func, *args, **kwargs):
         # callback here is _start_with_trace, func is the 'real' callback
         self.threads.append(func)
-        return DummyThread()
+        return DummyThread(func)
 
     def stop(self, graceful=False):
         pass
@@ -65,9 +65,6 @@ class SchedulerTest(base.SenlinTestCase):
         self.mock_tg.return_value = self.fake_tg
 
     def test_create(self):
-        tgm = scheduler.ThreadGroupManager()
-        self.assertEqual({}, tgm.workers)
-
         mock_group = mock.Mock()
         self.mock_tg.return_value = mock_group
         tgm = scheduler.ThreadGroupManager()
@@ -109,9 +106,6 @@ class SchedulerTest(base.SenlinTestCase):
             oslo_context.get_current(),
             None, actionm.ActionProc,
             tgm.db_session, '0123')
-        mock_thread = mock_group.add_thread.return_value
-        self.assertEqual(mock_thread, tgm.workers['0123'])
-        mock_thread.link.assert_called_once_with(mock.ANY, '0123')
 
     @mock.patch.object(db_api, 'action_acquire_first_ready')
     def test_start_action_no_action_id(self, mock_acquire_action):
@@ -130,9 +124,6 @@ class SchedulerTest(base.SenlinTestCase):
             oslo_context.get_current(),
             None, actionm.ActionProc,
             tgm.db_session, '0123')
-        mock_thread = mock_group.add_thread.return_value
-        self.assertEqual(mock_thread, tgm.workers['0123'])
-        mock_thread.link.assert_called_once_with(mock.ANY, '0123')
 
     @mock.patch.object(scheduler, 'sleep')
     @mock.patch.object(db_api, 'action_acquire_first_ready')
@@ -151,12 +142,40 @@ class SchedulerTest(base.SenlinTestCase):
         mock_group = mock.Mock()
         self.mock_tg.return_value = mock_group
         cfg.CONF.set_override('max_actions_per_batch', 1)
-        cfg.CONF.set_override('batch_interval', 3)
+        cfg.CONF.set_override('batch_interval', 2)
 
         tgm = scheduler.ThreadGroupManager()
         tgm.start_action('4567')
 
-        mock_sleep.assert_called_once_with(3)
+        mock_sleep.assert_called_once_with(2)
+        self.assertEqual(mock_group.add_thread.call_count, 3)
+
+    @mock.patch.object(scheduler, 'sleep')
+    @mock.patch.object(db_api, 'action_acquire_first_ready')
+    def test_start_action_multiple_batches(self, mock_acquire_action,
+                                           mock_sleep):
+        action_types = ['NODE_CREATE', 'NODE_DELETE']
+        actions = []
+        for index in range(10):
+            mock_action = mock.Mock()
+            mock_action.id = 'ID%d' % (index + 1)
+            mock_action.action = action_types[index % 2]
+            actions.append(mock_action)
+
+        # Add a None at the end to end the process.
+        actions.insert(len(actions), None)
+
+        mock_acquire_action.side_effect = actions
+        mock_group = mock.Mock()
+        self.mock_tg.return_value = mock_group
+        cfg.CONF.set_override('max_actions_per_batch', 3)
+        cfg.CONF.set_override('batch_interval', 5)
+
+        tgm = scheduler.ThreadGroupManager()
+        tgm.start_action(worker_id='4567')
+
+        self.assertEqual(mock_sleep.call_count, 3)
+        self.assertEqual(mock_group.add_thread.call_count, 10)
 
     @mock.patch.object(db_api, 'action_acquire_first_ready')
     @mock.patch.object(db_api, 'action_acquire')
