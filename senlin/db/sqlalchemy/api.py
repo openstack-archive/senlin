@@ -39,9 +39,14 @@ from senlin.db.sqlalchemy import models
 from senlin.db.sqlalchemy import utils
 
 LOG = logging.getLogger(__name__)
+CONF = cfg.CONF
 
 _main_context_manager = None
 _CONTEXT = threading.local()
+
+cfg.CONF.import_opt('database_retry_limit', 'senlin.common.config')
+cfg.CONF.import_opt('database_retry_interval', 'senlin.common.config')
+cfg.CONF.import_opt('database_max_retry_interval', 'senlin.common.config')
 
 
 def _get_main_context_manager():
@@ -74,11 +79,12 @@ def get_backend():
 
 
 def retry_on_deadlock(f):
-    return oslo_db_api.wrap_db_retry(retry_on_deadlock=True,
-                                     max_retries=10,
-                                     retry_interval=0.1,
-                                     inc_retry_interval=True,
-                                     max_retry_interval=2)(f)
+    return oslo_db_api.wrap_db_retry(
+        retry_on_deadlock=True,
+        max_retries=CONF.database_retry_limit,
+        retry_interval=CONF.database_retry_interval,
+        inc_retry_interval=True,
+        max_retry_interval=CONF.database_max_retry_interval)(f)
 
 
 def model_query(context, *args):
@@ -1078,8 +1084,7 @@ def dependency_get_dependents(context, action_id):
         return [d.dependent for d in q.all()]
 
 
-@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+@retry_on_deadlock
 def dependency_add(context, depended, dependent):
     if isinstance(depended, list) and isinstance(dependent, list):
         raise exception.NotSupport(
@@ -1116,8 +1121,7 @@ def dependency_add(context, depended, dependent):
                  synchronize_session='fetch')
 
 
-@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+@retry_on_deadlock
 def action_mark_succeeded(context, action_id, timestamp):
     with session_for_write() as session:
 
@@ -1135,8 +1139,7 @@ def action_mark_succeeded(context, action_id, timestamp):
         subquery.delete(synchronize_session='fetch')
 
 
-@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+@retry_on_deadlock
 def action_mark_ready(context, action_id, timestamp):
     with session_for_write() as session:
 
@@ -1171,8 +1174,7 @@ def _mark_failed(session, action_id, timestamp, reason=None):
         _mark_failed(session, d, timestamp)
 
 
-@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+@retry_on_deadlock
 def action_mark_failed(context, action_id, timestamp, reason=None):
     with session_for_write() as session:
         _mark_failed(session, action_id, timestamp, reason)
@@ -1198,15 +1200,13 @@ def _mark_cancelled(session, action_id, timestamp, reason=None):
         _mark_cancelled(session, d, timestamp)
 
 
-@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+@retry_on_deadlock
 def action_mark_cancelled(context, action_id, timestamp, reason=None):
     with session_for_write() as session:
         _mark_cancelled(session, action_id, timestamp, reason)
 
 
-@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+@retry_on_deadlock
 def action_acquire(context, action_id, owner, timestamp):
     with session_for_write() as session:
         action = session.query(models.Action).with_for_update().\
@@ -1229,8 +1229,7 @@ def action_acquire(context, action_id, owner, timestamp):
         return action
 
 
-@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+@retry_on_deadlock
 def action_acquire_random_ready(context, owner, timestamp):
     with session_for_write() as session:
         action = session.query(models.Action).\
@@ -1266,8 +1265,7 @@ def _action_acquire_ready(session, owner, timestamp, order=None):
     return action
 
 
-@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+@retry_on_deadlock
 def action_acquire_first_ready(context, owner, timestamp):
     with session_for_write() as session:
         return _action_acquire_ready(session, owner, timestamp,
@@ -1492,8 +1490,7 @@ def _mark_engine_failed(session, action_id, timestamp, reason=None):
     action.save(session)
 
 
-@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+@retry_on_deadlock
 def dummy_gc(engine_id):
     with session_for_write() as session:
         q_actions = session.query(models.Action).filter_by(owner=engine_id)
@@ -1513,8 +1510,7 @@ def dummy_gc(engine_id):
                     _release_cluster_lock(session, clock, action.id, 1)
 
 
-@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+@retry_on_deadlock
 def gc_by_engine(engine_id):
     # Get all actions locked by an engine
     with session_for_write() as session:
