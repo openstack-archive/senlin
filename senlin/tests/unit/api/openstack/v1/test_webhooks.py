@@ -48,7 +48,7 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._post('/webhooks/test_webhook_id/trigger',
-                         jsonutils.dumps(body))
+                         jsonutils.dumps(body), version='1.10')
         mock_call.return_value = engine_response
         obj = mock.Mock()
         mock_parse.return_value = obj
@@ -58,7 +58,7 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual(action_id, resp['action'])
         self.assertEqual('/actions/test_action_id', resp['location'])
         mock_parse.assert_called_once_with(
-            'WebhookTriggerRequest', req, mock.ANY)
+            'WebhookTriggerRequestParamsInBody', req, mock.ANY)
         mock_call.assert_called_once_with(req.context, 'webhook_trigger', obj)
 
     @mock.patch.object(util, 'parse_request')
@@ -72,7 +72,7 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         engine_response = {'action': 'FAKE_ACTION'}
 
         req = self._post('/webhooks/test_webhook_id/trigger',
-                         jsonutils.dumps(body))
+                         jsonutils.dumps(body), version='1.10')
         mock_call.return_value = engine_response
         obj = mock.Mock()
         mock_parse.return_value = obj
@@ -82,7 +82,7 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertEqual('FAKE_ACTION', resp['action'])
         self.assertEqual('/actions/FAKE_ACTION', resp['location'])
         mock_parse.assert_called_once_with(
-            'WebhookTriggerRequest', req, mock.ANY)
+            'WebhookTriggerRequestParamsInBody', req, mock.ANY)
         mock_call.assert_called_once_with(req.context, 'webhook_trigger', obj)
 
     @mock.patch.object(util, 'parse_request')

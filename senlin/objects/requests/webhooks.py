@@ -15,6 +15,15 @@ from senlin.objects import fields
 
 
 @base.SenlinObjectRegistry.register
+class WebhookTriggerRequestParamsInBody(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'body': fields.JsonField(nullable=True, default={})
+    }
+
+
+@base.SenlinObjectRegistry.register
 class WebhookTriggerRequest(base.SenlinObject):
 
     fields = {

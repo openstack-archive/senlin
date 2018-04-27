@@ -60,3 +60,32 @@ class TestWebhookTrigger(test_base.SenlinTestCase):
         self.assertEqual('1.0', res['senlin_object.version'])
         self.assertEqual('senlin', res['senlin_object.namespace'])
         self.assertEqual(u'fake', res['senlin_object.data']['identity'])
+
+    def test_webhook_trigger_params_in_body_none_param(self):
+        body = None
+        sot = webhooks.WebhookTriggerRequestParamsInBody(
+            identity='fake', params=body)
+        self.assertEqual('fake', sot.identity)
+        self.assertIsNone(sot.params)
+
+    def test_webhook_trigger_params_in_body(self):
+        body = {'foo': 'boo'}
+        sot = webhooks.WebhookTriggerRequestParamsInBody(
+            identity='fake', params=body)
+        self.assertEqual('fake', sot.identity)
+        self.assertIsInstance(sot.params, dict)
+
+    def test_webhook_trigger_params_in_body_to_primitive(self):
+        body = {'foo': 'boo'}
+        sot = webhooks.WebhookTriggerRequestParamsInBody(
+            identity='fake', params=body)
+        self.assertEqual('fake', sot.identity)
+        self.assertIsInstance(sot.params, dict)
+
+        res = sot.obj_to_primitive()
+
+        self.assertIn('identity', res['senlin_object.changes'])
+        self.assertIn('WebhookTriggerRequest', res['senlin_object.name'])
+        self.assertEqual('1.0', res['senlin_object.version'])
+        self.assertEqual('senlin', res['senlin_object.namespace'])
+        self.assertEqual(u'fake', res['senlin_object.data']['identity'])

@@ -276,7 +276,8 @@ webhook_params:
   type: object
   in: query
   description: |
-    The query string that forms the inputs to use for the targeted action.
+    The query string that forms the inputs to use for the targeted action
+    for API microversion less than 1.10.
 
 webhook_version:
   type: string
