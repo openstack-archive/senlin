@@ -2493,7 +2493,11 @@ class EngineService(service.Service):
         :return: A dictionary contains the ID of the action fired.
         """
         identity = req.identity
-        params = req.body.params
+        if hasattr(req.body, 'params'):
+            # API version < 1.10
+            params = req.body.params
+        else:
+            params = req.body
 
         LOG.info("Triggering webhook (%s)", identity)
         receiver = receiver_obj.Receiver.find(ctx, identity)

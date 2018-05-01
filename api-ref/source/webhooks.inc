@@ -2,7 +2,11 @@
 Webhooks (webhooks)
 ===================
 
-Triggers an action represented by a webhook.
+Triggers an action represented by a webhook. For API microversion less than
+1.10, optional params in the query are sent as inputs to be used by the
+targeted action. For API microversion equal or greater than 1.10, any
+key-value pairs in the request body are sent as inputs to be used by the
+targeted action.
 
 Trigger webhook action
 ======================

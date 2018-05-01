@@ -24,6 +24,7 @@ class WebhookController(wsgi.Controller):
 
     REQUEST_SCOPE = 'webhooks'
 
+    @wsgi.Controller.api_version("1.0", "1.9")
     @util.policy_enforce
     def trigger(self, req, webhook_id, body=None):
         if body is None:
@@ -34,6 +35,18 @@ class WebhookController(wsgi.Controller):
         obj = util.parse_request(
             'WebhookTriggerRequest', req, {'identity': webhook_id,
                                            'body': body})
+
+        res = self.rpc_client.call(req.context, 'webhook_trigger', obj)
+        location = {'location': '/actions/%s' % res['action']}
+        res.update(location)
+        return res
+
+    @wsgi.Controller.api_version("1.10")  # noqa
+    @util.policy_enforce
+    def trigger(self, req, webhook_id, body=None):
+        obj = util.parse_request(
+            'WebhookTriggerRequestParamsInBody', req, {'identity': webhook_id,
+                                                       'body': body})
 
         res = self.rpc_client.call(req.context, 'webhook_trigger', obj)
         location = {'location': '/actions/%s' % res['action']}

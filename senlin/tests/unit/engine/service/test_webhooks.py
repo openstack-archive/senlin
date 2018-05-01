@@ -37,6 +37,105 @@ class WebhookTest(base.SenlinTestCase):
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(ro.Receiver, 'find')
+    def test_webhook_trigger_params_in_body_with_params(
+            self, mock_get, mock_find, mock_action, notify):
+        mock_find.return_value = mock.Mock(id='FAKE_CLUSTER')
+        mock_get.return_value = mock.Mock(id='01234567-abcd-efef',
+                                          cluster_id='FAKE_CLUSTER',
+                                          action='DANCE',
+                                          params={'foo': 'bar'})
+        mock_action.return_value = 'ACTION_ID'
+
+        body = {'kee': 'vee'}
+        req = vorw.WebhookTriggerRequestParamsInBody(identity='FAKE_RECEIVER',
+                                                     body=body)
+        res = self.eng.webhook_trigger(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, res)
+
+        mock_get.assert_called_once_with(self.ctx, 'FAKE_RECEIVER')
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
+        mock_action.assert_called_once_with(
+            self.ctx, 'FAKE_CLUSTER', 'DANCE',
+            name='webhook_01234567',
+            cause=consts.CAUSE_RPC,
+            status=action_mod.Action.READY,
+            inputs={'kee': 'vee', 'foo': 'bar'},
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(action_mod.Action, 'create')
+    @mock.patch.object(co.Cluster, 'find')
+    @mock.patch.object(ro.Receiver, 'find')
+    def test_webhook_trigger_params_in_body_no_params(
+            self, mock_get, mock_find, mock_action, notify):
+        mock_find.return_value = mock.Mock(id='FAKE_CLUSTER')
+        mock_get.return_value = mock.Mock(id='01234567-abcd-efef',
+                                          cluster_id='FAKE_CLUSTER',
+                                          action='DANCE',
+                                          params={'foo': 'bar'})
+        mock_action.return_value = 'ACTION_ID'
+
+        body = {}
+        req = vorw.WebhookTriggerRequestParamsInBody(identity='FAKE_RECEIVER',
+                                                     body=body)
+        res = self.eng.webhook_trigger(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, res)
+
+        mock_get.assert_called_once_with(self.ctx, 'FAKE_RECEIVER')
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
+        mock_action.assert_called_once_with(
+            self.ctx, 'FAKE_CLUSTER', 'DANCE',
+            name='webhook_01234567',
+            cause=consts.CAUSE_RPC,
+            status=action_mod.Action.READY,
+            inputs={'foo': 'bar'},
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(ro.Receiver, 'find')
+    def test_webhook_trigger_params_in_body_receiver_not_found(
+            self, mock_find):
+        mock_find.side_effect = exception.ResourceNotFound(type='receiver',
+                                                           id='RRR')
+        body = None
+        req = vorw.WebhookTriggerRequestParamsInBody(identity='RRR', body=body)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.webhook_trigger, self.ctx,
+                               req.obj_to_primitive())
+
+        self.assertEqual(exception.ResourceNotFound, ex.exc_info[0])
+        self.assertEqual("The receiver 'RRR' could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'RRR')
+
+    @mock.patch.object(ro.Receiver, 'find')
+    @mock.patch.object(co.Cluster, 'find')
+    def test_webhook_trigger_params_in_body_cluster_not_found(
+            self, mock_cluster, mock_find):
+        receiver = mock.Mock()
+        receiver.cluster_id = 'BOGUS'
+        mock_find.return_value = receiver
+        mock_cluster.side_effect = exception.ResourceNotFound(type='cluster',
+                                                              id='BOGUS')
+        body = None
+        req = vorw.WebhookTriggerRequestParamsInBody(identity='RRR', body=body)
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.webhook_trigger, self.ctx,
+                               req.obj_to_primitive())
+
+        self.assertEqual(exception.BadRequest, ex.exc_info[0])
+        self.assertEqual("The referenced cluster 'BOGUS' could not be found.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'RRR')
+        mock_cluster.assert_called_once_with(self.ctx, 'BOGUS')
+
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(action_mod.Action, 'create')
+    @mock.patch.object(co.Cluster, 'find')
+    @mock.patch.object(ro.Receiver, 'find')
     def test_webhook_trigger_with_params(self, mock_get, mock_find,
                                          mock_action, notify):
         mock_find.return_value = mock.Mock(id='FAKE_CLUSTER')
