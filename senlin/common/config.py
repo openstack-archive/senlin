@@ -82,6 +82,16 @@ engine_opts = [
     cfg.IntOpt('lock_retry_interval',
                default=10,
                help=_('Number of seconds between lock retries.')),
+    cfg.IntOpt('database_retry_limit',
+               default=10,
+               help=_('Number of times retrying a failed operation on the '
+                      'database.')),
+    cfg.IntOpt('database_retry_interval',
+               default=0.1,
+               help=_('Initial number of seconds between database retries.')),
+    cfg.IntOpt('database_max_retry_interval',
+               default=2,
+               help=_('Maximum number of seconds between database retries.')),
     cfg.IntOpt('engine_life_check_timeout',
                default=2,
                help=_('RPC timeout for the engine liveness check that is used'
