@@ -1630,3 +1630,72 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         res = profile.handle_change_password(obj, foo='bar')
         self.assertFalse(res)
+
+    def test_handle_suspend(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = mock.Mock()
+
+        # do it
+        res = profile.handle_suspend(obj)
+        self.assertTrue(res)
+
+    def test_handle_suspend_no_physical_id(self):
+        obj = mock.Mock(physical_id=None)
+        profile = server.ServerProfile('t', self.spec)
+
+        # do it
+        res = profile.handle_suspend(obj)
+        self.assertFalse(res)
+
+    def test_handle_suspend_failed_waiting(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        ex = exc.InternalError(code=500, message='timeout')
+        cc.wait_for_server.side_effect = ex
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               profile.handle_suspend,
+                               node_obj)
+
+        self.assertEqual("Failed in suspend server 'FAKE_ID': "
+                         "timeout.", six.text_type(ex))
+        cc.server_suspend.assert_called_once_with('FAKE_ID')
+        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'SUSPENDED')
+
+    def test_handle_resume(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = mock.Mock()
+
+        # do it
+        res = profile.handle_resume(obj)
+        self.assertTrue(res)
+
+    def test_handle_resume_no_physical_id(self):
+        obj = mock.Mock(physical_id=None)
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = mock.Mock()
+
+        # do it
+        res = profile.handle_resume(obj)
+        self.assertFalse(res)
+
+    def test_handle_resume_failed_waiting(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        ex = exc.InternalError(code=500, message='timeout')
+        cc.wait_for_server.side_effect = ex
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               profile.handle_resume,
+                               node_obj)
+
+        self.assertEqual("Failed in resume server 'FAKE_ID': "
+                         "timeout.", six.text_type(ex))
+        cc.server_resume.assert_called_once_with('FAKE_ID')
+        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
