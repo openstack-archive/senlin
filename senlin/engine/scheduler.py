@@ -20,7 +20,6 @@ from oslo_service import threadgroup
 from osprofiler import profiler
 
 from senlin.common import context
-from senlin.common.i18n import _
 from senlin.engine.actions import base as action_mod
 from senlin.objects import action as ao
 
@@ -34,7 +33,6 @@ class ThreadGroupManager(object):
 
     def __init__(self):
         super(ThreadGroupManager, self).__init__()
-        self.workers = {}
         self.group = threadgroup.ThreadGroup()
 
         # Create dummy service task, because when there is nothing queued
@@ -78,11 +76,11 @@ class ThreadGroupManager(object):
 
     def start(self, func, *args, **kwargs):
         '''Run the given method in a thread.'''
-
         req_cnxt = oslo_context.get_current()
-        return self.group.add_thread(self._start_with_trace, req_cnxt,
-                                     self._serialize_profile_info(),
-                                     func, *args, **kwargs)
+        self.group.add_thread(
+            self._start_with_trace, req_cnxt,
+            self._serialize_profile_info(),
+            func, *args, **kwargs)
 
     def start_action(self, worker_id, action_id=None):
         '''Run action(s) in sub-thread(s).
@@ -92,52 +90,48 @@ class ThreadGroupManager(object):
         :param action_id: ID of the action to be executed. None means all
                           ready actions will be acquired and scheduled to run.
         '''
-        def launch(action_id):
-            '''Launch a sub-thread to run given action.'''
-            th = self.start(action_mod.ActionProc, self.db_session, action_id)
-            self.workers[action_id] = th
-            th.link(release, action_id)
-            return th
-
-        def release(thread, action_id):
-            '''Callback function that will be passed to GreenThread.link().'''
-            # Remove action thread from thread list
-            self.workers.pop(action_id)
-
         actions_launched = 0
+        max_batch_size = cfg.CONF.max_actions_per_batch
+        batch_interval = cfg.CONF.batch_interval
+
         if action_id is not None:
             timestamp = wallclock()
             action = ao.Action.acquire(self.db_session, action_id, worker_id,
                                        timestamp)
             if action:
-                launch(action.id)
+                self.start(action_mod.ActionProc, self.db_session, action.id)
                 actions_launched += 1
 
-        batch_size = cfg.CONF.max_actions_per_batch
-        batch_interval = cfg.CONF.batch_interval
         while True:
             timestamp = wallclock()
             action = ao.Action.acquire_first_ready(self.db_session, worker_id,
                                                    timestamp)
-            if action:
-                if batch_size > 0 and 'NODE' in action.action:
-                    if actions_launched < batch_size:
-                        launch(action.id)
-                        actions_launched += 1
-                    else:
-                        msg = _('Engine %(id)s has launched %(num)s node '
-                                'actions consecutively, stop scheduling '
-                                'node action for %(interval)s second...'
-                                ) % {'id': worker_id, 'num': batch_size,
-                                     'interval': batch_interval}
-                        LOG.debug(msg)
-                        sleep(batch_interval)
-                        launch(action.id)
-                        actions_launched = 1
-                else:
-                    launch(action.id)
-            else:
+            if not action:
                 break
+
+            if max_batch_size == 0 or 'NODE' not in action.action:
+                self.start(action_mod.ActionProc, self.db_session, action.id)
+                continue
+
+            if max_batch_size > actions_launched:
+                self.start(action_mod.ActionProc, self.db_session, action.id)
+                actions_launched += 1
+                continue
+
+            self.start(action_mod.ActionProc, self.db_session, action.id)
+
+            LOG.debug(
+                'Engine %(id)s has launched %(num)s node actions '
+                'consecutively, stop scheduling node action for '
+                '%(interval)s second...',
+                {
+                    'id': worker_id,
+                    'num': max_batch_size,
+                    'interval': batch_interval
+                })
+
+            sleep(batch_interval)
+            actions_launched = 1
 
     def cancel_action(self, action_id):
         '''Cancel an action execution progress.'''
