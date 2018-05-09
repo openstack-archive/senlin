@@ -180,7 +180,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
         }
         mock_wait.return_value = (action.RES_OK, 'All dependents completed')
         mock_action.return_value = 'NODE_ACTION_ID'
-        mock_node_get.return_value = mock.Mock(status=consts.NS_ACTIVE)
+        mock_node_get.return_value = mock.Mock(
+            status=consts.NS_ACTIVE, id='NODE_ID', physical_id="nova-server")
         # do it
         res_code, res_msg = action._delete_nodes(['NODE_ID'])
 
@@ -198,6 +199,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
         ]
         mock_update.assert_has_calls(update_calls)
         mock_post.assert_called_once_with('NODE_ACTION_ID', 'NODE_ID',
+                                          'nova-server',
                                           consts.LIFECYCLE_NODE_TERMINATION)
         mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with(action.data['hooks']['timeout'])
@@ -308,7 +310,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
             (action.RES_OK, 'All dependents completed')
         ]
         mock_action.return_value = 'NODE_ACTION_ID'
-        mock_node_get.return_value = mock.Mock(status=consts.NS_ACTIVE)
+        mock_node_get.return_value = mock.Mock(
+            status=consts.NS_ACTIVE, id='NODE_ID', physical_id="nova-server")
         mock_check_status.return_value = 'WAITING_LIFECYCLE_COMPLETION'
         # do it
         res_code, res_msg = action._delete_nodes(['NODE_ID'])
@@ -329,6 +332,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
         ]
         mock_update.assert_has_calls(update_calls)
         mock_post.assert_called_once_with('NODE_ACTION_ID', 'NODE_ID',
+                                          'nova-server',
                                           consts.LIFECYCLE_NODE_TERMINATION)
         mock_start.assert_has_calls([mock.call(), mock.call()])
         wait_calls = [
@@ -736,7 +740,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
         }
         mock_wait.return_value = (action.RES_OK, 'All dependents completed')
         mock_action.return_value = 'NODE_ACTION_ID'
-        mock_node_get.return_value = mock.Mock(status=consts.NS_ACTIVE)
+        mock_node_get.return_value = mock.Mock(
+            status=consts.NS_ACTIVE, id='NODE_ID', physical_id="nova-server")
         # do it
         res_code, res_msg = action._delete_nodes_with_hook(
             'NODE_DELETE', ['NODE_ID'], action.data['hooks'])
@@ -755,6 +760,72 @@ class ClusterDeleteTest(base.SenlinTestCase):
         ]
         mock_update.assert_has_calls(update_calls)
         mock_post.assert_called_once_with('NODE_ACTION_ID', 'NODE_ID',
+                                          'nova-server',
                                           consts.LIFECYCLE_NODE_TERMINATION)
         mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with(action.data['hooks']['timeout'])
+
+    @mock.patch.object(ao.Action, 'update')
+    @mock.patch.object(ab.Action, 'create')
+    @mock.patch.object(no.Node, 'get')
+    @mock.patch.object(dobj.Dependency, 'create')
+    @mock.patch.object(msg.Message, 'post_lifecycle_hook_message')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
+    def test__delete_nodes_with_error_nodes(self, mock_wait, mock_start,
+                                            mock_post, mock_dep,
+                                            mock_node_get, mock_action,
+                                            mock_update, mock_load):
+        # prepare mocks
+        cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100)
+        mock_load.return_value = cluster
+
+        # cluster action is real
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
+        action.id = 'CLUSTER_ACTION_ID'
+        action.data = {
+            'hooks': {
+                'timeout': 10,
+                'type': 'zaqar',
+                'params': {
+                    'queue': 'myqueue'
+                }
+            }
+        }
+        mock_action.side_effect = ['NODE_ACTION_1', 'NODE_ACTION_2']
+        mock_wait.return_value = (action.RES_OK, 'All dependents completed')
+        node1 = mock.Mock(status=consts.NS_ACTIVE, id='NODE_1',
+                          physical_id="nova-server-1")
+        node2 = mock.Mock(status=consts.NS_ACTIVE, id='NODE_2',
+                          physical_id=None)
+        mock_node_get.side_effect = [node1, node2]
+        # do it
+        res_code, res_msg = action._delete_nodes_with_hook(
+            'NODE_DELETE', ['NODE_1', 'NODE_2'], action.data['hooks'])
+
+        # assertions
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('All dependents completed', res_msg)
+        update_calls = [
+            mock.call(action.context, 'NODE_ACTION_1',
+                      {'status': 'WAITING_LIFECYCLE_COMPLETION'}),
+            mock.call(action.context, 'NODE_ACTION_2', {'status': 'READY'})
+        ]
+        mock_update.assert_has_calls(update_calls)
+        create_actions = [
+            mock.call(action.context, 'NODE_1', 'NODE_DELETE',
+                      name='node_delete_NODE_1', cause='Derived Action with '
+                                                       'Lifecycle Hook'),
+            mock.call(action.context, 'NODE_2', 'NODE_DELETE',
+                      name='node_delete_NODE_2', cause='Derived Action with '
+                                                       'Lifecycle Hook')
+        ]
+        mock_action.assert_has_calls(create_actions)
+
+        mock_post.assert_called_once_with('NODE_ACTION_1', 'NODE_1',
+                                          node1.physical_id,
+                                          consts.LIFECYCLE_NODE_TERMINATION)
+        mock_start.assert_called_once_with()
+        mock_wait.assert_called_once_with(action.data['hooks']['timeout'])
+
+        self.assertEqual(1, mock_dep.call_count)
