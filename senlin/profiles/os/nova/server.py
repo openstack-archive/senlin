@@ -1652,3 +1652,35 @@ class ServerProfile(base.Profile):
             raise exc.EResourceOperation(op='resume', type='server',
                                          id=server_id,
                                          message=six.text_type(ex))
+
+    def handle_start(self, obj):
+        """Handler for the start operation."""
+        if not obj.physical_id:
+            return False
+        server_id = obj.physical_id
+        nova_driver = self.compute(obj)
+
+        try:
+            nova_driver.server_start(server_id)
+            nova_driver.wait_for_server(server_id, consts.VS_ACTIVE)
+            return True
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(op='start', type='server',
+                                         id=server_id,
+                                         message=six.text_type(ex))
+
+    def handle_stop(self, obj):
+        """Handler for the stop operation."""
+        if not obj.physical_id:
+            return False
+        server_id = obj.physical_id
+        nova_driver = self.compute(obj)
+
+        try:
+            nova_driver.server_stop(server_id)
+            nova_driver.wait_for_server(server_id, consts.VS_SHUTOFF)
+            return True
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(op='stop', type='server',
+                                         id=server_id,
+                                         message=six.text_type(ex))
