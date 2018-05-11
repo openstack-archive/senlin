@@ -25,7 +25,7 @@ class NodeCreateRequestBody(base.SenlinObject):
         'metadata': fields.JsonField(nullable=True, default={}),
         'name': fields.NameField(),
         'profile_id': fields.StringField(),
-        'role': fields.fields.StringField(nullable=True, default='')
+        'role': fields.StringField(nullable=True, default='')
     }
 
 
@@ -71,7 +71,7 @@ class NodeUpdateRequest(base.SenlinObject):
         'metadata': fields.JsonField(nullable=True),
         'name': fields.NameField(nullable=True),
         'profile_id': fields.StringField(nullable=True),
-        'role': fields.fields.StringField(nullable=True)
+        'role': fields.StringField(nullable=True)
     }
 
 
