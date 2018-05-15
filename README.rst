@@ -31,7 +31,8 @@ For Users
 ---------
 
 If you want to install Senlin for a try out, please refer to the documents
-under the ``doc/source/user/`` subdirectory.
+under the ``doc/source/user/`` subdirectory. User guide online link:
+https://docs.openstack.org/senlin/latest/#user-references
 
 --------------
 For Developers
@@ -39,7 +40,8 @@ For Developers
 
 There are many ways to help improve the software, for example, filing a bug,
 submitting or reviewing a patch, writing or reviewing some documents. There
-are documents under the ``doc/source/developer/`` subdirectory.
+are documents under the ``doc/source/contributor`` subdirectory. Developer
+guide online link: https://docs.openstack.org/senlin/latest/#developer-s-guide
 
 ---------
 Resources
