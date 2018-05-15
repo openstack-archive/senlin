@@ -1620,3 +1620,35 @@ class ServerProfile(base.Profile):
 
         self.compute(obj).server_change_password(obj.physical_id, password)
         return True
+
+    def handle_suspend(self, obj):
+        """Handler for the suspend operation."""
+        if not obj.physical_id:
+            return False
+        server_id = obj.physical_id
+        nova_driver = self.compute(obj)
+
+        try:
+            nova_driver.server_suspend(server_id)
+            nova_driver.wait_for_server(server_id, consts.VS_SUSPENDED)
+            return True
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(op='suspend', type='server',
+                                         id=server_id,
+                                         message=six.text_type(ex))
+
+    def handle_resume(self, obj):
+        """Handler for the resume operation."""
+        if not obj.physical_id:
+            return False
+        server_id = obj.physical_id
+        nova_driver = self.compute(obj)
+
+        try:
+            nova_driver.server_resume(server_id)
+            nova_driver.wait_for_server(server_id, consts.VS_ACTIVE)
+            return True
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(op='resume', type='server',
+                                         id=server_id,
+                                         message=six.text_type(ex))
