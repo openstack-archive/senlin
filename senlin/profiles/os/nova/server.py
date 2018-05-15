@@ -1684,3 +1684,31 @@ class ServerProfile(base.Profile):
             raise exc.EResourceOperation(op='stop', type='server',
                                          id=server_id,
                                          message=six.text_type(ex))
+
+    def handle_lock(self, obj):
+        """Handler for the lock operation."""
+        if not obj.physical_id:
+            return False
+        server_id = obj.physical_id
+
+        try:
+            self.compute(obj).server_lock(server_id)
+            return True
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(op='lock', type='server',
+                                         id=server_id,
+                                         message=six.text_type(ex))
+
+    def handle_unlock(self, obj):
+        """Handler for the unlock operation."""
+        if not obj.physical_id:
+            return False
+        server_id = obj.physical_id
+
+        try:
+            self.compute(obj).server_unlock(server_id)
+            return True
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(op='unlock', type='server',
+                                         id=server_id,
+                                         message=six.text_type(ex))

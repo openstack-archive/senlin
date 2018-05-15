@@ -1768,3 +1768,38 @@ class TestNovaServerBasic(base.SenlinTestCase):
                          "timeout.", six.text_type(ex))
         cc.server_stop.assert_called_once_with('FAKE_ID')
         cc.wait_for_server.assert_called_once_with('FAKE_ID', 'SHUTOFF')
+
+    def test_handle_lock(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = mock.Mock()
+
+        # do it
+        res = profile.handle_lock(obj)
+        self.assertTrue(res)
+
+    def test_handle_lock_no_physical_id(self):
+        obj = mock.Mock(physical_id=None)
+        profile = server.ServerProfile('t', self.spec)
+
+        # do it
+        res = profile.handle_lock(obj)
+        self.assertFalse(res)
+
+    def test_handle_unlock(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = mock.Mock()
+
+        # do it
+        res = profile.handle_unlock(obj)
+        self.assertTrue(res)
+
+    def test_handle_unlock_no_physical_id(self):
+        obj = mock.Mock(physical_id=None)
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = mock.Mock()
+
+        # do it
+        res = profile.handle_unlock(obj)
+        self.assertFalse(res)
