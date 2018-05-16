@@ -1803,3 +1803,71 @@ class TestNovaServerBasic(base.SenlinTestCase):
         # do it
         res = profile.handle_unlock(obj)
         self.assertFalse(res)
+
+    def test_handle_pause(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = mock.Mock()
+
+        # do it
+        res = profile.handle_pause(obj)
+        self.assertTrue(res)
+
+    def test_handle_pause_no_physical_id(self):
+        obj = mock.Mock(physical_id=None)
+        profile = server.ServerProfile('t', self.spec)
+
+        # do it
+        res = profile.handle_pause(obj)
+        self.assertFalse(res)
+
+    def test_handle_pause_failed_waiting(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        ex = exc.InternalError(code=500, message='timeout')
+        cc.wait_for_server.side_effect = ex
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               profile.handle_pause,
+                               node_obj)
+
+        self.assertEqual("Failed in pause server 'FAKE_ID': "
+                         "timeout.", six.text_type(ex))
+        cc.server_pause.assert_called_once_with('FAKE_ID')
+        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'PAUSED')
+
+    def test_handle_unpause(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = mock.Mock()
+
+        # do it
+        res = profile.handle_unpause(obj)
+        self.assertTrue(res)
+
+    def test_handle_unpause_no_physical_id(self):
+        obj = mock.Mock(physical_id=None)
+        profile = server.ServerProfile('t', self.spec)
+
+        # do it
+        res = profile.handle_unpause(obj)
+        self.assertFalse(res)
+
+    def test_handle_unpause_failed_waiting(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        ex = exc.InternalError(code=500, message='timeout')
+        cc.wait_for_server.side_effect = ex
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               profile.handle_unpause,
+                               node_obj)
+
+        self.assertEqual("Failed in unpause server 'FAKE_ID': "
+                         "timeout.", six.text_type(ex))
+        cc.server_unpause.assert_called_once_with('FAKE_ID')
+        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
