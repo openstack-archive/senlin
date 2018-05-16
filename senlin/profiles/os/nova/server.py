@@ -1712,3 +1712,35 @@ class ServerProfile(base.Profile):
             raise exc.EResourceOperation(op='unlock', type='server',
                                          id=server_id,
                                          message=six.text_type(ex))
+
+    def handle_pause(self, obj):
+        """Handler for the pause operation."""
+        if not obj.physical_id:
+            return False
+        server_id = obj.physical_id
+        nova_driver = self.compute(obj)
+
+        try:
+            nova_driver.server_pause(server_id)
+            nova_driver.wait_for_server(server_id, consts.VS_PAUSED)
+            return True
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(op='pause', type='server',
+                                         id=server_id,
+                                         message=six.text_type(ex))
+
+    def handle_unpause(self, obj):
+        """Handler for the unpause operation."""
+        if not obj.physical_id:
+            return False
+        server_id = obj.physical_id
+        nova_driver = self.compute(obj)
+
+        try:
+            nova_driver.server_unpause(server_id)
+            nova_driver.wait_for_server(server_id, consts.VS_ACTIVE)
+            return True
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(op='unpause', type='server',
+                                         id=server_id,
+                                         message=six.text_type(ex))
