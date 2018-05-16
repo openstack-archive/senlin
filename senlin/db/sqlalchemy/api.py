@@ -697,6 +697,7 @@ def cluster_policy_get_by_name(context, cluster_id, policy_name, filters=None):
     return query.all()
 
 
+@retry_on_deadlock
 def cluster_policy_attach(context, cluster_id, policy_id, values):
     with session_for_write() as session:
         binding = models.ClusterPolicies()
@@ -708,6 +709,7 @@ def cluster_policy_attach(context, cluster_id, policy_id, values):
     return cluster_policy_get(context, cluster_id, policy_id)
 
 
+@retry_on_deadlock
 def cluster_policy_detach(context, cluster_id, policy_id):
     with session_for_write() as session:
         query = session.query(models.ClusterPolicies)
@@ -718,6 +720,7 @@ def cluster_policy_detach(context, cluster_id, policy_id):
         session.delete(bindings)
 
 
+@retry_on_deadlock
 def cluster_policy_update(context, cluster_id, policy_id, values):
     with session_for_write() as session:
         query = session.query(models.ClusterPolicies)
