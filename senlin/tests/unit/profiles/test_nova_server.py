@@ -1597,8 +1597,8 @@ class TestNovaServerBasic(base.SenlinTestCase):
         res = profile.handle_change_password(obj, admin_pass='new_pass')
 
         self.assertTrue(res)
-        cc.server_change_password.assert_called_once_with('FAKE_ID',
-                                                          'new_pass')
+        cc.server_change_password.assert_called_once_with(
+            'FAKE_ID', new_password='new_pass')
 
     def test_handle_change_password_no_physical_id(self):
         obj = mock.Mock(physical_id=None)
