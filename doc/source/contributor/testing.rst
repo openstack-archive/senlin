@@ -102,7 +102,7 @@ An example directory structure::
 Writing a Unit Test
 -------------------
 
-The *os-testr* software (see: http://pypi.python.org/pypi/os-testr) is used to
+The *os-testr* software (see: https://pypi.org/project/os-testr/) is used to
 find and run tests, parallelize their runs, and record timing/results.
 
 If new dependencies are introduced upon the development of a test, the
