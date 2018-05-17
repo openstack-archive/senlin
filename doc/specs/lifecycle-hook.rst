@@ -148,7 +148,7 @@ REST API impact
     Code            Reason
     =============== ===========================================================
     202 - Accepted  Request was accepted for processing, but the processing has
-                    not been completed. A ‘location’ header is included in the
+                    not been completed. A 'location' header is included in the
                     response which contains a link to check the progress of the
                     request.
     =============== ===========================================================
