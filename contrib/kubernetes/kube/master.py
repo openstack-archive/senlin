@@ -156,6 +156,13 @@ class ServerProfile(base.KubeBaseProfile):
         self._create_network(obj)
 
     def do_cluster_delete(self, obj):
+        if obj.dependents and 'kube-node' in obj.dependents:
+            msg = ("Cluster %s delete failed, "
+                   "Node clusters %s must be deleted first." %
+                   (obj.id, obj.dependents['kube-node']))
+            raise exc.EResourceDeletion(type='kubernetes.master',
+                                        id=obj.id,
+                                        message=msg)
         self._delete_network(obj)
         self._delete_security_group(obj)
 

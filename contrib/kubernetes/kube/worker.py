@@ -175,6 +175,41 @@ class ServerProfile(base.KubeBaseProfile):
 
         return cluster.data
 
+    def _set_cluster_dependents(self, obj):
+        ctx = context.get_service_context(user_id=obj.user,
+                                          project_id=obj.project)
+        master = self.properties[self.MASTER_CLUSTER]
+        try:
+            master_cluster = cluster_obj.Cluster.find(ctx, master)
+        except exc.ResourceNotFound:
+            msg = _("Cannot find the given cluster: %s") % master
+            raise exc.BadRequest(msg=msg)
+        if master_cluster:
+            # configure kube master dependents, kube master record kube node
+            # cluster uuid
+            master_dependents = master_cluster.dependents
+            master_dependents['kube-node'] = obj.id
+            cluster_obj.Cluster.update(ctx, master_cluster.id,
+                                       {'dependents': master_dependents})
+
+    def _del_cluster_dependents(self, obj):
+        ctx = context.get_service_context(user_id=obj.user,
+                                          project_id=obj.project)
+        master = self.properties[self.MASTER_CLUSTER]
+        try:
+            master_cluster = cluster_obj.Cluster.find(ctx, master)
+        except exc.ResourceNotFound:
+            msg = _("Cannot find the given cluster: %s") % master
+            raise exc.BadRequest(msg=msg)
+
+        if master_cluster:
+            # remove kube master record kube node dependents
+            master_dependents = master_cluster.dependents
+            if master_dependents and 'kube-node' in master_dependents:
+                master_dependents.pop('kube-node')
+                cluster_obj.Cluster.update(ctx, master_cluster.id,
+                                           {'dependents': master_dependents})
+
     def _get_cluster_data(self, obj):
         ctx = context.get_service_context(user_id=obj.user,
                                           project_id=obj.project)
@@ -186,9 +221,11 @@ class ServerProfile(base.KubeBaseProfile):
 
     def do_cluster_create(self, obj):
         self._create_security_group(obj)
+        self._set_cluster_dependents(obj)
 
     def do_cluster_delete(self, obj):
         self._delete_security_group(obj)
+        self._del_cluster_dependents(obj)
 
     def do_validate(self, obj):
         """Validate if the spec has provided valid info for server creation.
