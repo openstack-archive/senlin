@@ -1382,6 +1382,26 @@ class ServerProfile(base.Profile):
                                          message=msg)
         return image_id
 
+    def _handle_generic_op(self, obj, driver_func_name,
+                           op_name, expected_server_status=None,
+                           **kwargs):
+        """Generic handler for standard server operations."""
+        if not obj.physical_id:
+            return False
+        server_id = obj.physical_id
+        nova_driver = self.compute(obj)
+
+        try:
+            driver_func = getattr(nova_driver, driver_func_name)
+            driver_func(server_id, **kwargs)
+            if expected_server_status:
+                nova_driver.wait_for_server(server_id, expected_server_status)
+            return True
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(op=op_name, type='server',
+                                         id=server_id,
+                                         message=six.text_type(ex))
+
     def do_adopt(self, obj, overrides=None, snapshot=False):
         """Adopt an existing server node for management.
 
@@ -1611,136 +1631,49 @@ class ServerProfile(base.Profile):
 
     def handle_change_password(self, obj, **options):
         """Handler for the change_password operation."""
-        if not obj.physical_id:
-            return False
-
         password = options.get(self.ADMIN_PASSWORD, None)
         if (password is None or not isinstance(password, six.string_types)):
             return False
-
-        self.compute(obj).server_change_password(obj.physical_id, password)
-        return True
+        return self._handle_generic_op(obj, 'server_change_password',
+                                       'change_password',
+                                       new_password=password)
 
     def handle_suspend(self, obj):
         """Handler for the suspend operation."""
-        if not obj.physical_id:
-            return False
-        server_id = obj.physical_id
-        nova_driver = self.compute(obj)
-
-        try:
-            nova_driver.server_suspend(server_id)
-            nova_driver.wait_for_server(server_id, consts.VS_SUSPENDED)
-            return True
-        except exc.InternalError as ex:
-            raise exc.EResourceOperation(op='suspend', type='server',
-                                         id=server_id,
-                                         message=six.text_type(ex))
+        return self._handle_generic_op(obj, 'server_suspend',
+                                       'suspend', consts.VS_SUSPENDED)
 
     def handle_resume(self, obj):
         """Handler for the resume operation."""
-        if not obj.physical_id:
-            return False
-        server_id = obj.physical_id
-        nova_driver = self.compute(obj)
-
-        try:
-            nova_driver.server_resume(server_id)
-            nova_driver.wait_for_server(server_id, consts.VS_ACTIVE)
-            return True
-        except exc.InternalError as ex:
-            raise exc.EResourceOperation(op='resume', type='server',
-                                         id=server_id,
-                                         message=six.text_type(ex))
+        return self._handle_generic_op(obj, 'server_resume',
+                                       'resume', consts.VS_ACTIVE)
 
     def handle_start(self, obj):
         """Handler for the start operation."""
-        if not obj.physical_id:
-            return False
-        server_id = obj.physical_id
-        nova_driver = self.compute(obj)
-
-        try:
-            nova_driver.server_start(server_id)
-            nova_driver.wait_for_server(server_id, consts.VS_ACTIVE)
-            return True
-        except exc.InternalError as ex:
-            raise exc.EResourceOperation(op='start', type='server',
-                                         id=server_id,
-                                         message=six.text_type(ex))
+        return self._handle_generic_op(obj, 'server_start',
+                                       'start', consts.VS_ACTIVE)
 
     def handle_stop(self, obj):
         """Handler for the stop operation."""
-        if not obj.physical_id:
-            return False
-        server_id = obj.physical_id
-        nova_driver = self.compute(obj)
-
-        try:
-            nova_driver.server_stop(server_id)
-            nova_driver.wait_for_server(server_id, consts.VS_SHUTOFF)
-            return True
-        except exc.InternalError as ex:
-            raise exc.EResourceOperation(op='stop', type='server',
-                                         id=server_id,
-                                         message=six.text_type(ex))
+        return self._handle_generic_op(obj, 'server_stop',
+                                       'stop', consts.VS_SHUTOFF)
 
     def handle_lock(self, obj):
         """Handler for the lock operation."""
-        if not obj.physical_id:
-            return False
-        server_id = obj.physical_id
-
-        try:
-            self.compute(obj).server_lock(server_id)
-            return True
-        except exc.InternalError as ex:
-            raise exc.EResourceOperation(op='lock', type='server',
-                                         id=server_id,
-                                         message=six.text_type(ex))
+        return self._handle_generic_op(obj, 'server_lock',
+                                       'lock')
 
     def handle_unlock(self, obj):
         """Handler for the unlock operation."""
-        if not obj.physical_id:
-            return False
-        server_id = obj.physical_id
-
-        try:
-            self.compute(obj).server_unlock(server_id)
-            return True
-        except exc.InternalError as ex:
-            raise exc.EResourceOperation(op='unlock', type='server',
-                                         id=server_id,
-                                         message=six.text_type(ex))
+        return self._handle_generic_op(obj, 'server_unlock',
+                                       'unlock')
 
     def handle_pause(self, obj):
         """Handler for the pause operation."""
-        if not obj.physical_id:
-            return False
-        server_id = obj.physical_id
-        nova_driver = self.compute(obj)
-
-        try:
-            nova_driver.server_pause(server_id)
-            nova_driver.wait_for_server(server_id, consts.VS_PAUSED)
-            return True
-        except exc.InternalError as ex:
-            raise exc.EResourceOperation(op='pause', type='server',
-                                         id=server_id,
-                                         message=six.text_type(ex))
+        return self._handle_generic_op(obj, 'server_pause',
+                                       'pause', consts.VS_PAUSED)
 
     def handle_unpause(self, obj):
         """Handler for the unpause operation."""
-        if not obj.physical_id:
-            return False
-        server_id = obj.physical_id
-        nova_driver = self.compute(obj)
-
-        try:
-            nova_driver.server_unpause(server_id)
-            nova_driver.wait_for_server(server_id, consts.VS_ACTIVE)
-            return True
-        except exc.InternalError as ex:
-            raise exc.EResourceOperation(op='unpause', type='server',
-                                         id=server_id,
-                                         message=six.text_type(ex))
+        return self._handle_generic_op(obj, 'server_unpause',
+                                       'unpause', consts.VS_ACTIVE)
