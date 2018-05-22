@@ -56,7 +56,7 @@ Then you can create a cluster using the profile named "``pserver``":
 
   $ openstack cluster create --profile pserver --desired-capacity 2 mycluster
 
-You can show cluster details, useing the command `openstack cluster show mycluster`
+You can show cluster details, using the command `openstack cluster show mycluster`
 
 .. code-block:: console
 
