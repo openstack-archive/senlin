@@ -1677,3 +1677,21 @@ class ServerProfile(base.Profile):
         """Handler for the unpause operation."""
         return self._handle_generic_op(obj, 'server_unpause',
                                        'unpause', consts.VS_ACTIVE)
+
+    def handle_rescue(self, obj, **options):
+        """Handler for the rescue operation."""
+        password = options.get(self.ADMIN_PASSWORD, None)
+        image = options.get(self.IMAGE, None)
+        if not image:
+            return False
+
+        self._validate_image(obj, image)
+        return self._handle_generic_op(obj, 'server_rescue',
+                                       'rescue', consts.VS_RESCUE,
+                                       admin_pass=password,
+                                       image_ref=image)
+
+    def handle_unrescue(self, obj):
+        """Handler for the unrescue operation."""
+        return self._handle_generic_op(obj, 'server_unrescue',
+                                       'unrescue', consts.VS_ACTIVE)
