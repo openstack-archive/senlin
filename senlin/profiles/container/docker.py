@@ -342,7 +342,7 @@ class DockerProfile(base.Profile):
         else:
             params = {}
         try:
-            self.docker(obj).reboot(obj.physical_id, **params)
+            self.docker(obj).restart(obj.physical_id, **params)
         except exc.InternalError as ex:
             raise exc.EResourceOperation(type='container',
                                          id=obj.physical_id[:8],
