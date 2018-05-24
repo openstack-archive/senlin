@@ -639,3 +639,67 @@ class TestContainerDockerProfile(base.SenlinTestCase):
 
         self.assertEqual("Failed in unpausing container 'FAKE_ID': "
                          "Boom.", six.text_type(ex))
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_handle_stop(self, mock_docker):
+        x_docker = mock.Mock()
+        x_docker = mock_docker.return_value
+        obj = mock.Mock(physical_id='FAKE_ID')
+
+        docker = dp.DockerProfile('container', self.spec)
+        params = {'timeout': None}
+        res = docker.handle_stop(obj, **params)
+
+        self.assertIsNone(res)
+        mock_docker.assert_called_once_with(obj)
+        x_docker.stop.assert_called_once_with('FAKE_ID', **params)
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_handle_stop_with_timeout(self, mock_docker):
+        x_docker = mock.Mock()
+        x_docker = mock_docker.return_value
+        obj = mock.Mock(physical_id='FAKE_ID')
+
+        docker = dp.DockerProfile('container', self.spec)
+        params = {'timeout': 200}
+        res = docker.handle_stop(obj, **params)
+
+        self.assertIsNone(res)
+        mock_docker.assert_called_once_with(obj)
+        x_docker.stop.assert_called_once_with('FAKE_ID', **params)
+
+    def test_handle_stop_no_physical_id(self):
+        obj = mock.Mock(physical_id=None)
+        docker = dp.DockerProfile('container', self.spec)
+
+        res = docker.handle_stop(obj)
+
+        self.assertIsNone(res)
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_handle_stop_driver_failure(self, mock_docker):
+        mock_docker.side_effect = exc.InternalError(message="Boom")
+        obj = mock.Mock(physical_id='FAKE_ID')
+        docker = dp.DockerProfile('container', self.spec)
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               docker.handle_stop,
+                               obj)
+
+        self.assertEqual("Failed in stop container 'FAKE_ID': "
+                         "Boom.", six.text_type(ex))
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_handle_stop_docker_failure(self, mock_docker):
+        x_docker = mock.Mock()
+        mock_docker.return_value = x_docker
+        x_docker.stop.side_effect = exc.InternalError(message="Boom")
+        obj = mock.Mock(physical_id='FAKE_ID')
+        docker = dp.DockerProfile('container', self.spec)
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               docker.handle_stop,
+                               obj)
+
+        self.assertEqual("Failed in stop container 'FAKE_ID': "
+                         "Boom.", six.text_type(ex))

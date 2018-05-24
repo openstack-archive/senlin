@@ -302,6 +302,7 @@ class DockerProfile(base.Profile):
             dockerclient = self.docker(obj)
             db_api.node_add_dependents(ctx, self.host.id, obj.id)
             container = dockerclient.container_create(**params)
+            dockerclient.start(container['Id'])
         except exc.InternalError as ex:
             raise exc.EResourceCreation(type='container',
                                         message=six.text_type(ex))
@@ -319,6 +320,7 @@ class DockerProfile(base.Profile):
             return
 
         try:
+            self.handle_stop(obj)
             self.docker(obj).container_delete(obj.physical_id)
         except exc.InternalError as ex:
             raise exc.EResourceDeletion(type='container',
@@ -385,3 +387,18 @@ class DockerProfile(base.Profile):
                                          op='unpausing',
                                          message=six.text_type(ex))
         return
+
+    def handle_stop(self, obj, **options):
+        """Handler for the stop operation."""
+        if not obj.physical_id:
+            return
+        timeout = options.get('timeout', None)
+        if timeout:
+            timeout = int(timeout)
+        try:
+            self.docker(obj).stop(obj.physical_id, timeout=timeout)
+        except exc.InternalError as ex:
+            raise exc.EResourceOperation(type='container',
+                                         id=obj.physical_id[:8],
+                                         op='stop',
+                                         message=six.text_type(ex))

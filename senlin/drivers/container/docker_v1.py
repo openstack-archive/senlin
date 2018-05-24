@@ -43,3 +43,12 @@ class DockerClient(object):
     @sdk.translate_exception
     def unpause(self, container):
         self._dockerclient.unpause(container)
+
+    @sdk.translate_exception
+    def start(self, container):
+        self._dockerclient.start(container)
+
+    @sdk.translate_exception
+    def stop(self, container, timeout=None):
+        params = {'timeout': timeout}
+        self._dockerclient.stop(container, **params)
