@@ -1871,3 +1871,89 @@ class TestNovaServerBasic(base.SenlinTestCase):
                          "timeout.", six.text_type(ex))
         cc.server_unpause.assert_called_once_with('FAKE_ID')
         cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
+
+    def test_handle_rescue(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        profile._computeclient = cc
+
+        # do it
+        res = profile.handle_rescue(obj, admin_pass='new_pass',
+                                    image='FAKE_IMAGE')
+
+        self.assertTrue(res)
+        cc.server_rescue.assert_called_once_with(
+            'FAKE_ID', admin_pass='new_pass', image_ref='FAKE_IMAGE')
+
+    def test_handle_rescue_image_none(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        profile._computeclient = cc
+
+        res = profile.handle_rescue(obj, admin_pass='new_pass',
+                                    image=None)
+        self.assertFalse(res)
+
+    def test_handle_rescue_no_physical_id(self):
+        obj = mock.Mock(physical_id=None)
+        profile = server.ServerProfile('t', self.spec)
+
+        # do it
+        res = profile.handle_rescue(obj)
+        self.assertFalse(res)
+
+    def test_handle_rescue_failed_waiting(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        ex = exc.InternalError(code=500, message='timeout')
+        cc.wait_for_server.side_effect = ex
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               profile.handle_rescue,
+                               node_obj, admin_pass='new_pass',
+                               image='FAKE_IMAGE')
+
+        self.assertEqual("Failed in rescue server 'FAKE_ID': "
+                         "timeout.", six.text_type(ex))
+        cc.server_rescue.assert_called_once_with('FAKE_ID',
+                                                 admin_pass='new_pass',
+                                                 image_ref='FAKE_IMAGE')
+        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'RESCUE')
+
+    def test_handle_unrescue(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = mock.Mock()
+
+        # do it
+        res = profile.handle_unrescue(obj)
+        self.assertTrue(res)
+
+    def test_handle_unresuce_no_physical_id(self):
+        obj = mock.Mock(physical_id=None)
+        profile = server.ServerProfile('t', self.spec)
+
+        # do it
+        res = profile.handle_unrescue(obj)
+        self.assertFalse(res)
+
+    def test_handle_unrescue_failed_waiting(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        ex = exc.InternalError(code=500, message='timeout')
+        cc.wait_for_server.side_effect = ex
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               profile.handle_unrescue,
+                               node_obj)
+
+        self.assertEqual("Failed in unrescue server 'FAKE_ID': "
+                         "timeout.", six.text_type(ex))
+        cc.server_unrescue.assert_called_once_with('FAKE_ID')
+        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
