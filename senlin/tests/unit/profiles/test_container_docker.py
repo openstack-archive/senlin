@@ -488,7 +488,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
 
         self.assertIsNone(res)
         mock_docker.assert_called_once_with(obj)
-        x_docker.reboot.assert_called_once_with('FAKE_ID')
+        x_docker.restart.assert_called_once_with('FAKE_ID')
 
     @mock.patch.object(dp.DockerProfile, 'docker')
     def test_handle_reboot_with_timeout(self, mock_docker):
@@ -502,7 +502,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
 
         self.assertIsNone(res)
         mock_docker.assert_called_once_with(obj)
-        x_docker.reboot.assert_called_once_with('FAKE_ID', timeout=200)
+        x_docker.restart.assert_called_once_with('FAKE_ID', timeout=200)
 
     def test_handle_reboot_no_physical_id(self):
         obj = mock.Mock(physical_id=None)
@@ -529,7 +529,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
     def test_handle_reboot_docker_failure(self, mock_docker):
         x_docker = mock.Mock()
         mock_docker.return_value = x_docker
-        x_docker.reboot.side_effect = exc.InternalError(message="Boom")
+        x_docker.restart.side_effect = exc.InternalError(message="Boom")
         obj = mock.Mock(physical_id='FAKE_ID')
         docker = dp.DockerProfile('container', self.spec)
 
