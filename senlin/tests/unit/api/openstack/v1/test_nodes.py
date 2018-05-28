@@ -1009,11 +1009,13 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.return_value = obj
         mock_call.return_value = engine_response
 
-        response = self.controller.operation(req, node_id=node_id, body=body)
+        response = self.controller.operation(req, node_id=node_id,
+                                             body=body)
 
-        location = {'location': '/actions/action-id'}
-        engine_response.update(location)
-        self.assertEqual(engine_response, response)
+        expected_response = {'location': '/actions/action-id',
+                             'action': 'action-id'}
+
+        self.assertEqual(response, expected_response)
         mock_parse.assert_called_once_with(
             'NodeOperationRequest', req,
             {'identity': 'xxxx-yyyy',

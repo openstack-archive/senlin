@@ -217,5 +217,6 @@ class NodeController(wsgi.Controller):
         action_id = node.pop('action')
         result = {
             'location': '/actions/%s' % action_id,
+            'action': action_id
         }
         return result
