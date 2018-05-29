@@ -37,7 +37,8 @@ fix does have a unit test, be sure to add a new one that fails without the
 patch and passes with the patch.
 
 For more information on creating and running unit tests , please read
-senlin/doc/source/developer/testing.txt.
+senlin/doc/source/contributor/testing.rst. Test guide online link:
+https://docs.openstack.org/senlin/latest/contributor/testing.html
 
 
 Running Tests
