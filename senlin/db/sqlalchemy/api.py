@@ -124,6 +124,7 @@ def query_by_name(context, model, name, project_safe=True):
 
 
 # Clusters
+@retry_on_deadlock
 def cluster_create(context, values):
     with session_for_write() as session:
         cluster_ref = models.Cluster()
@@ -195,6 +196,7 @@ def cluster_count_all(context, filters=None, project_safe=True):
     return query.count()
 
 
+@retry_on_deadlock
 def cluster_update(context, cluster_id, values):
     with session_for_write() as session:
         cluster = session.query(models.Cluster).get(cluster_id)
@@ -206,6 +208,7 @@ def cluster_update(context, cluster_id, values):
         cluster.save(session)
 
 
+@retry_on_deadlock
 def cluster_delete(context, cluster_id):
     with session_for_write() as session:
         cluster = session.query(models.Cluster).get(cluster_id)
@@ -228,6 +231,7 @@ def cluster_delete(context, cluster_id):
 
 
 # Nodes
+@retry_on_deadlock
 def node_create(context, values):
     # This operation is always called with cluster and node locked
     with session_for_write() as session:
@@ -317,6 +321,7 @@ def node_count_by_cluster(context, cluster_id, **kwargs):
     return query.count()
 
 
+@retry_on_deadlock
 def node_update(context, node_id, values):
     '''Update a node with new property values.
 
@@ -342,6 +347,7 @@ def node_update(context, node_id, values):
                 cluster.save(session)
 
 
+@retry_on_deadlock
 def node_add_dependents(context, depended, dependent, dep_type=None):
     """Add dependency between nodes.
 
@@ -368,6 +374,7 @@ def node_add_dependents(context, depended, dependent, dep_type=None):
         dep_node.save(session)
 
 
+@retry_on_deadlock
 def node_remove_dependents(context, depended, dependent, dep_type=None):
     """Remove dependency between nodes.
 
@@ -400,6 +407,7 @@ def node_remove_dependents(context, depended, dependent, dep_type=None):
             dep_node.save(session)
 
 
+@retry_on_deadlock
 def node_migrate(context, node_id, to_cluster, timestamp, role=None):
     with session_for_write() as session:
         node = session.query(models.Node).get(node_id)
@@ -415,6 +423,7 @@ def node_migrate(context, node_id, to_cluster, timestamp, role=None):
         return node
 
 
+@retry_on_deadlock
 def node_delete(context, node_id):
     with session_for_write() as session:
         node = session.query(models.Node).get(node_id)
@@ -452,8 +461,8 @@ def cluster_lock_acquire(cluster_id, action_id, scope):
         return lock.action_ids
 
 
+@retry_on_deadlock
 def _release_cluster_lock(session, lock, action_id, scope):
-
     success = False
     if (scope == -1 and lock.semaphore < 0) or lock.semaphore == 1:
         if six.text_type(action_id) in lock.action_ids:
@@ -547,6 +556,7 @@ def node_lock_steal(node_id, action_id):
 
 
 # Policies
+@retry_on_deadlock
 def policy_create(context, values):
     with session_for_write() as session:
         policy = models.Policy()
@@ -596,6 +606,7 @@ def policy_get_all(context, limit=None, marker=None, sort=None, filters=None,
                                    marker=marker, sort_dirs=dirs).all()
 
 
+@retry_on_deadlock
 def policy_update(context, policy_id, values):
     with session_for_write() as session:
         policy = session.query(models.Policy).get(policy_id)
@@ -607,6 +618,7 @@ def policy_update(context, policy_id, values):
         return policy
 
 
+@retry_on_deadlock
 def policy_delete(context, policy_id):
     with session_for_write() as session:
         policy = session.query(models.Policy).get(policy_id)
@@ -778,6 +790,7 @@ def cluster_remove_dependents(context, cluster_id, profile_id):
 
 
 # Profiles
+@retry_on_deadlock
 def profile_create(context, values):
     with session_for_write() as session:
         profile = models.Profile()
@@ -827,6 +840,7 @@ def profile_get_all(context, limit=None, marker=None, sort=None, filters=None,
                                    marker=marker, sort_dirs=dirs).all()
 
 
+@retry_on_deadlock
 def profile_update(context, profile_id, values):
     with session_for_write() as session:
         profile = session.query(models.Profile).get(profile_id)
@@ -838,6 +852,7 @@ def profile_update(context, profile_id, values):
         return profile
 
 
+@retry_on_deadlock
 def profile_delete(context, profile_id):
     with session_for_write() as session:
         profile = session.query(models.Profile).get(profile_id)
@@ -858,6 +873,7 @@ def profile_delete(context, profile_id):
 
 
 # Credentials
+@retry_on_deadlock
 def cred_create(context, values):
     with session_for_write() as session:
         cred = models.Credential()
@@ -870,6 +886,7 @@ def cred_get(context, user, project):
     return model_query(context, models.Credential).get((user, project))
 
 
+@retry_on_deadlock
 def cred_update(context, user, project, values):
     with session_for_write() as session:
         cred = session.query(models.Credential).get((user, project))
@@ -878,6 +895,7 @@ def cred_update(context, user, project, values):
         return cred
 
 
+@retry_on_deadlock
 def cred_delete(context, user, project):
     with session_for_write() as session:
         cred = session.query(models.Credential).get((user, project))
@@ -886,6 +904,7 @@ def cred_delete(context, user, project):
         session.delete(cred)
 
 
+@retry_on_deadlock
 def cred_create_update(context, values):
     try:
         return cred_create(context, values)
@@ -896,6 +915,7 @@ def cred_create_update(context, values):
 
 
 # Events
+@retry_on_deadlock
 def event_create(context, values):
     with session_for_write() as session:
         event = models.Event()
@@ -904,6 +924,7 @@ def event_create(context, values):
         return event
 
 
+@retry_on_deadlock
 def event_get(context, event_id, project_safe=True):
     event = model_query(context, models.Event).get(event_id)
     if project_safe and event is not None:
@@ -962,6 +983,7 @@ def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
                                         limit=limit, marker=marker, sort=sort)
 
 
+@retry_on_deadlock
 def event_prune(context, cluster_id, project_safe=True):
     with session_for_write() as session:
         query = session.query(models.Event).with_for_update()
@@ -972,6 +994,7 @@ def event_prune(context, cluster_id, project_safe=True):
         return query.delete(synchronize_session='fetch')
 
 
+@retry_on_deadlock
 def event_purge(project, granularity='days', age=30):
     with session_for_write() as session:
         query = session.query(models.Event).with_for_update()
@@ -991,6 +1014,7 @@ def event_purge(project, granularity='days', age=30):
 
 
 # Actions
+@retry_on_deadlock
 def action_create(context, values):
     with session_for_write() as session:
         action = models.Action()
@@ -999,6 +1023,7 @@ def action_create(context, values):
         return action
 
 
+@retry_on_deadlock
 def action_update(context, action_id, values):
     with session_for_write() as session:
         action = session.query(models.Action).get(action_id)
@@ -1156,6 +1181,7 @@ def action_mark_ready(context, action_id, timestamp):
         query.update(values, synchronize_session=False)
 
 
+@retry_on_deadlock
 def _mark_failed(session, action_id, timestamp, reason=None):
     # mark myself as failed
     query = session.query(models.Action).filter_by(id=action_id)
@@ -1183,6 +1209,7 @@ def action_mark_failed(context, action_id, timestamp, reason=None):
         _mark_failed(session, action_id, timestamp, reason)
 
 
+@retry_on_deadlock
 def _mark_cancelled(session, action_id, timestamp, reason=None):
     query = session.query(models.Action).filter_by(id=action_id)
     values = {
@@ -1251,6 +1278,7 @@ def action_acquire_random_ready(context, owner, timestamp):
             return action
 
 
+@retry_on_deadlock
 def _action_acquire_ready(session, owner, timestamp, order=None):
     action = session.query(models.Action).\
         filter_by(status=consts.ACTION_READY).\
@@ -1275,6 +1303,7 @@ def action_acquire_first_ready(context, owner, timestamp):
                                      consts.ACTION_CREATED_AT)
 
 
+@retry_on_deadlock
 def action_abandon(context, action_id, values=None):
     '''Abandon an action for other workers to execute again.
 
@@ -1323,6 +1352,7 @@ def action_signal_query(context, action_id):
     return action.control
 
 
+@retry_on_deadlock
 def action_delete(context, action_id):
     with session_for_write() as session:
         action = session.query(models.Action).get(action_id)
@@ -1336,6 +1366,7 @@ def action_delete(context, action_id):
         session.delete(action)
 
 
+@retry_on_deadlock
 def action_delete_by_target(context, target, action=None,
                             action_excluded=None, status=None,
                             project_safe=True):
@@ -1360,6 +1391,7 @@ def action_delete_by_target(context, target, action=None,
 
 
 # Receivers
+@retry_on_deadlock
 def receiver_create(context, values):
     with session_for_write() as session:
         receiver = models.Receiver()
@@ -1406,6 +1438,7 @@ def receiver_get_by_short_id(context, short_id, project_safe=True):
                              project_safe=project_safe)
 
 
+@retry_on_deadlock
 def receiver_delete(context, receiver_id):
     with session_for_write() as session:
         receiver = session.query(models.Receiver).get(receiver_id)
@@ -1414,6 +1447,7 @@ def receiver_delete(context, receiver_id):
         session.delete(receiver)
 
 
+@retry_on_deadlock
 def receiver_update(context, receiver_id, values):
     with session_for_write() as session:
         receiver = session.query(models.Receiver).get(receiver_id)
@@ -1425,6 +1459,7 @@ def receiver_update(context, receiver_id, values):
         return receiver
 
 
+@retry_on_deadlock
 def service_create(service_id, host=None, binary=None, topic=None):
     with session_for_write() as session:
         time_now = timeutils.utcnow(True)
@@ -1435,6 +1470,7 @@ def service_create(service_id, host=None, binary=None, topic=None):
         return svc
 
 
+@retry_on_deadlock
 def service_update(service_id, values=None):
     with session_for_write() as session:
         service = session.query(models.Service).get(service_id)
@@ -1450,6 +1486,7 @@ def service_update(service_id, values=None):
         return service
 
 
+@retry_on_deadlock
 def service_delete(service_id):
     with session_for_write() as session:
         session.query(models.Service).filter_by(
@@ -1535,6 +1572,7 @@ def gc_by_engine(engine_id):
 
 
 # HealthRegistry
+@retry_on_deadlock
 def registry_create(context, cluster_id, check_type, interval, params,
                     engine_id, enabled=True):
     with session_for_write() as session:
@@ -1549,6 +1587,7 @@ def registry_create(context, cluster_id, check_type, interval, params,
         return registry
 
 
+@retry_on_deadlock
 def registry_update(context, cluster_id, values):
     with session_for_write() as session:
         query = session.query(models.HealthRegistry).with_lockmode('update')
@@ -1558,6 +1597,7 @@ def registry_update(context, cluster_id, values):
             registry.save(session)
 
 
+@retry_on_deadlock
 def registry_claim(context, engine_id):
     with session_for_write() as session:
         engines = session.query(models.Service).all()
@@ -1573,6 +1613,7 @@ def registry_claim(context, engine_id):
         return result
 
 
+@retry_on_deadlock
 def registry_delete(context, cluster_id):
     with session_for_write() as session:
         registry = session.query(models.HealthRegistry).filter_by(
