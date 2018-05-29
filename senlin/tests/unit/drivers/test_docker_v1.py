@@ -82,3 +82,27 @@ class TestDocker(base.SenlinTestCase):
 
         self.assertIsNone(res)
         self.x_docker.unpause.assert_called_once_with(container)
+
+    def test_start(self):
+        container = mock.Mock()
+
+        res = self.sot.start(container)
+
+        self.assertIsNone(res)
+        self.x_docker.start.assert_called_once_with(container)
+
+    def test_stop(self):
+        container = mock.Mock()
+        params = {'timeout': None}
+        res = self.sot.stop(container, **params)
+
+        self.assertIsNone(res)
+        self.x_docker.stop.assert_called_once_with(container, **params)
+
+    def test_stop_with_wait(self):
+        container = mock.Mock()
+        params = {'timeout': 20}
+        res = self.sot.stop(container, **params)
+
+        self.assertIsNone(res)
+        self.x_docker.stop.assert_called_once_with(container, **params)
