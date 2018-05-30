@@ -58,7 +58,8 @@ class DockerProfile(base.Profile):
             required=True,
         ),
         NAME: schema.String(
-            _('The name of the container.')
+            _('The name of the container.'),
+            updatable=True,
         ),
         COMMAND: schema.String(
             _('The command to run when container is started.')
@@ -329,6 +330,53 @@ class DockerProfile(base.Profile):
         ctx = context.get_admin_context()
         db_api.node_remove_dependents(ctx, self.host.id, obj.id)
         return
+
+    def do_update(self, obj, new_profile=None, **params):
+        """Perform update on the container.
+
+        :param obj: the container to operate on
+        :param new_profile: the new profile for the container.
+        :param params: a dictionary of optional parameters.
+        :returns: True if update was successful or False otherwise.
+        :raises: `EResourceUpdate` if operation fails.
+        """
+        self.server_id = obj.physical_id
+        if not self.server_id:
+            return False
+
+        if not new_profile:
+            return False
+
+        if not self.validate_for_update(new_profile):
+            return False
+
+        name_changed, new_name = self._check_container_name(obj, new_profile)
+        if name_changed:
+            self._update_name(obj, new_name)
+
+        return True
+
+    def _check_container_name(self, obj, profile):
+        """Check if there is a new name to be assigned to the container.
+
+        :param obj: The node object to operate on.
+        :param new_profile: The new profile which may contain a name for
+                            the container.
+        :return: A tuple consisting a boolean indicating whether the name
+                 needs change and the container name determined.
+        """
+        old_name = self.properties[self.NAME] or obj.name
+        new_name = profile.properties[self.NAME] or obj.name
+        if old_name == new_name:
+            return False, new_name
+        return True, new_name
+
+    def _update_name(self, obj, new_name):
+        try:
+            self.docker(obj).rename(obj.physical_id, new_name)
+        except exc.InternalError as ex:
+            raise exc.EResourceUpdate(type='container', id=obj.physical_id,
+                                      message=six.text_type(ex))
 
     def handle_reboot(self, obj, **options):
         """Handler for a reboot operation.

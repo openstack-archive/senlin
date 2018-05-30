@@ -477,6 +477,119 @@ class TestContainerDockerProfile(base.SenlinTestCase):
                           profile.do_delete, obj)
 
     @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_update_name(self, mock_docker):
+        x_docker = mock.Mock()
+        x_docker = mock_docker.return_value
+        obj = mock.Mock(physical_id='FAKE_ID')
+
+        docker = dp.DockerProfile('container', self.spec)
+        res = docker._update_name(obj, 'NEW_NAME')
+
+        self.assertIsNone(res)
+        x_docker.rename.assert_called_once_with('FAKE_ID', 'NEW_NAME')
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_update_name_docker_failure(self, mock_docker):
+        x_docker = mock.Mock()
+        x_docker = mock_docker.return_value
+        x_docker.rename.side_effect = exc.InternalError(message='BOOM')
+        obj = mock.Mock(physical_id='FAKE_ID')
+        docker = dp.DockerProfile('container', self.spec)
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               docker._update_name,
+                               obj, 'NEW_NAME')
+
+        self.assertEqual("Failed in updating container 'FAKE_ID': BOOM.",
+                         six.text_type(ex))
+        x_docker.rename.assert_called_once_with('FAKE_ID', 'NEW_NAME')
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_do_update(self, mock_docker):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        docker = dp.DockerProfile('container', self.spec)
+
+        new_spec = {
+            'type': 'container.dockerinc.docker',
+            'version': '1.0',
+            'properties': {
+                'context': {
+                    'region_name': 'RegionOne'
+                },
+                'name': 'new_name',
+                'image': 'hello-world',
+                'command': '/bin/sleep 30',
+                'port': 2375,
+                'host_node': 'fake_node',
+            }
+        }
+        new_profile = dp.DockerProfile('u', new_spec)
+        res = docker.do_update(obj, new_profile)
+
+        self.assertTrue(res)
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
+    def test_do_update_no_new_profile(self, mock_docker):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        docker = dp.DockerProfile('container', self.spec)
+
+        params = {}
+        res = docker.do_update(obj, params)
+
+        self.assertFalse(res)
+
+    def test_do_update_no_physical_id(self):
+        obj = mock.Mock(physical_id=None)
+        profile = dp.DockerProfile('container', self.spec)
+        self.assertFalse(profile.do_update(obj))
+
+    def test_check_container_name(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        docker = dp.DockerProfile('container', self.spec)
+
+        new_spec = {
+            'type': 'container.dockerinc.docker',
+            'version': '1.0',
+            'properties': {
+                'context': {
+                    'region_name': 'RegionOne'
+                },
+                'name': 'new_name',
+                'image': 'hello-world',
+                'command': '/bin/sleep 30',
+                'port': 2375,
+                'host_node': 'fake_node',
+            }
+        }
+        new_profile = dp.DockerProfile('u', new_spec)
+        res, new_name = docker._check_container_name(obj, new_profile)
+
+        self.assertTrue(res)
+
+    def test_check_container_same_name(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        docker = dp.DockerProfile('container', self.spec)
+
+        new_spec = {
+            'type': 'container.dockerinc.docker',
+            'version': '1.0',
+            'properties': {
+                'context': {
+                    'region_name': 'RegionOne'
+                },
+                'name': 'docker_container',
+                'image': 'hello-world',
+                'command': '/bin/sleep 30',
+                'port': 2375,
+                'host_node': 'fake_node',
+            }
+        }
+        new_profile = dp.DockerProfile('u', new_spec)
+        res, new_name = docker._check_container_name(obj, new_profile)
+
+        self.assertFalse(res)
+
+    @mock.patch.object(dp.DockerProfile, 'docker')
     def test_handle_reboot(self, mock_docker):
         x_docker = mock.Mock()
         x_docker = mock_docker.return_value
