@@ -1957,3 +1957,37 @@ class TestNovaServerBasic(base.SenlinTestCase):
                          "timeout.", six.text_type(ex))
         cc.server_unrescue.assert_called_once_with('FAKE_ID')
         cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
+
+    def test_handle_migrate(self):
+        obj = mock.Mock(physical_id='FAKE_ID')
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = mock.Mock()
+
+        # do it
+        res = profile.handle_migrate(obj)
+        self.assertTrue(res)
+
+    def test_handle_migrate_no_physical_id(self):
+        obj = mock.Mock(physical_id=None)
+        profile = server.ServerProfile('t', self.spec)
+
+        # do it
+        res = profile.handle_migrate(obj)
+        self.assertFalse(res)
+
+    def test_handle_migrate_failed_waiting(self):
+        profile = server.ServerProfile('t', self.spec)
+        cc = mock.Mock()
+        ex = exc.InternalError(code=500, message='timeout')
+        cc.wait_for_server.side_effect = ex
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        ex = self.assertRaises(exc.EResourceOperation,
+                               profile.handle_migrate,
+                               node_obj)
+
+        self.assertEqual("Failed in migrate server 'FAKE_ID': "
+                         "timeout.", six.text_type(ex))
+        cc.server_migrate.assert_called_once_with('FAKE_ID')
+        cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
