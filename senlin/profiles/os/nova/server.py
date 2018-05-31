@@ -1225,8 +1225,7 @@ class ServerProfile(base.Profile):
         :returns: True if update was successful or False otherwise.
         :raises: `EResourceUpdate` if operation fails.
         """
-        self.server_id = obj.physical_id
-        if not self.server_id:
+        if not obj.physical_id:
             return False
 
         if not new_profile:
