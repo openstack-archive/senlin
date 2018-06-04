@@ -106,3 +106,10 @@ class TestDocker(base.SenlinTestCase):
 
         self.assertIsNone(res)
         self.x_docker.stop.assert_called_once_with(container, **params)
+
+    def test_rename(self):
+        container = mock.Mock()
+        res = self.sot.rename(container, 'new_name')
+
+        self.assertIsNone(res)
+        self.x_docker.rename.assert_called_once_with(container, 'new_name')

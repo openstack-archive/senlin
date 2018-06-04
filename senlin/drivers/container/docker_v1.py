@@ -52,3 +52,7 @@ class DockerClient(object):
     def stop(self, container, timeout=None):
         params = {'timeout': timeout}
         self._dockerclient.stop(container, **params)
+
+    @sdk.translate_exception
+    def rename(self, container, name):
+        self._dockerclient.rename(container, name)
