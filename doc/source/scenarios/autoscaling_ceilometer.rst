@@ -214,11 +214,11 @@ following command creates a threshold alarm using aodh alarm service so that:
 .. code-block:: console
 
   $ aodh alarm create \
-    -t threshold --statistic avg --name cpu-high \
-    -m cpu_util --threshold 70 --comparison-operator gt \
-    --period 60 --evaluation-periods 1 \
-    --alarm-action $ALRM_URL01 \
-    --repeat-actions False \
+    --type gnocchi_resources_threshold --name cpu-high \
+    --metric cpu_util --threshold 70 --comparison-operator gt \
+    --description 'instance running hot' --evaluation-periods 1 \
+    --aggregation-method mean --alarm-action $ALRM_URL01 \
+    --granularity 600 --repeat-actions False \
     --query metadata.user_metadata.cluster_id=$MYCLUSTER_ID
 
 Note that we are referencing the two environment variables ``MYCLUSTER_ID``
