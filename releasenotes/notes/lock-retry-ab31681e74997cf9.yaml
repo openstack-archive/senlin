@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed cluster and node lock management so that failed lock acquire
+    operations are automatically retried. This is an important fix for
+    running multiple service engines.

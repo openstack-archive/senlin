@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    The policy attach and detach actions are improved to automatically retry
+    on failed attempts.

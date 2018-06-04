@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Added operation support to start and stop a nova server node.

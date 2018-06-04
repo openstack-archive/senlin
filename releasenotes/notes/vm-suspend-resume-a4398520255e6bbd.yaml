@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Added operation support for suspending and resuming a nova server node.

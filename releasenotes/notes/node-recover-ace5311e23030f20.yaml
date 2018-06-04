@@ -1,0 +1,8 @@
+---
+fixes:
+  - |
+    Fixed defects in node recover operation to ensure node status is properly
+    handled.
+  - |
+    Improved logic in rebooting and rebuilding nova server nodes so that
+    exceptions are caught and handled.

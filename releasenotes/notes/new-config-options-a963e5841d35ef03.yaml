@@ -1,0 +1,14 @@
+---
+features:
+  - |
+    New configuration option "database_retry_limit" is added for customizing
+    the maximum retries for failed operations on the database. The default
+    value is 10.
+  - |
+    New configuration option "database_retry_interval" is added for specifying
+    the number of seconds between database operation retries. The default
+    value is 0.1.
+  - |
+    New configuration option "database_max_retry_interval" is added for users
+    to specify the maximum number of seconds between database operation retries.
+    The default value is 2.

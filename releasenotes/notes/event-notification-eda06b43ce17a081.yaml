@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    The engine has been augmented to send event notifications only when a node
+    is active and it has a physical ID associated. This is targeting at the
+    lifecycle hooks and possibly other notifications.

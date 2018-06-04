@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Added operation support to pause and unpause a nova server node.

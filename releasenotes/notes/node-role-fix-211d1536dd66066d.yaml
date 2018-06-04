@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    Fixed the "role" field used when creating/updating a node.

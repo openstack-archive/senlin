@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    The lifecycle hooks feature added during Queens cycle is improved to handle
+    cases where a node no longer exists. The lifecycle is only effective when
+    the target node exists and active.

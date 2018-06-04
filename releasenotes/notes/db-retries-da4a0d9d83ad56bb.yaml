@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    All REST calls that involve a DB interaction are now automatically retried
+    upon deadlock exceptions.

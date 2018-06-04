@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    Fixed the return value from a node operation call.

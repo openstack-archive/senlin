@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    The API microversion 1.10 has fixed the webhook trigger API for easier
+    integration with Aodh. In previous microversions, the query parameters
+    are used as action inputs. Starting from 1.10, the key-value pairs in the
+    request body are also considered as request inputs.
