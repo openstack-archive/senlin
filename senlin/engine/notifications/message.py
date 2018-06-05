@@ -14,6 +14,7 @@ from oslo_config import cfg
 from oslo_context import context as oslo_context
 from oslo_log import log as logging
 import six
+import tenacity
 
 from senlin.common import context as senlin_context
 from senlin.common import exception
@@ -23,6 +24,11 @@ from senlin.objects import credential as co
 LOG = logging.getLogger(__name__)
 
 CONF = cfg.CONF
+
+RETRY_ATTEMPTS = 3
+RETRY_INITIAL_DELAY = 1
+RETRY_BACKOFF = 1
+RETRY_MAX = 3
 
 
 class Message(object):
@@ -67,19 +73,23 @@ class Message(object):
 
         return params
 
+    @tenacity.retry(
+        retry=tenacity.retry_if_exception_type(exception.EResourceCreation),
+        wait=tenacity.wait_incrementing(
+            RETRY_INITIAL_DELAY, RETRY_BACKOFF, RETRY_MAX),
+        stop=tenacity.stop_after_attempt(RETRY_ATTEMPTS))
     def post_lifecycle_hook_message(self, lifecycle_action_token, node_id,
                                     resource_id, lifecycle_transition_type):
+        message_list = [{
+            "ttl": CONF.notification.ttl,
+            "body": {
+                "lifecycle_action_token": lifecycle_action_token,
+                "node_id": node_id,
+                "resource_id": resource_id,
+                "lifecycle_transition_type": lifecycle_transition_type
+            }
+        }]
         try:
-            message_list = [{
-                "ttl": CONF.notification.ttl,
-                "body": {
-                    "lifecycle_action_token": lifecycle_action_token,
-                    "node_id": node_id,
-                    "resource_id": resource_id,
-                    "lifecycle_transition_type": lifecycle_transition_type
-                }
-            }]
-
             if not self.zaqar().queue_exists(self.queue_name):
                 kwargs = {
                     "_max_messages_post_size":
@@ -91,5 +101,6 @@ class Message(object):
 
             return self.zaqar().message_post(self.queue_name, message_list)
         except exception.InternalError as ex:
-            raise exception.EResourceCreation(type='queue',
-                                              message=six.text_type(ex))
+            raise exception.EResourceCreation(
+                type='queue',
+                message=six.text_type(ex))

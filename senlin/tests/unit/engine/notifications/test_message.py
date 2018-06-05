@@ -15,6 +15,7 @@ import mock
 
 from oslo_config import cfg
 
+from senlin.common import exception
 from senlin.drivers import base as driver_base
 from senlin.engine.notifications import message as mmod
 from senlin.tests.unit.common import base
@@ -121,3 +122,28 @@ class TestMessage(base.SenlinTestCase):
             }
         }]
         mock_zc.message_post.assert_called_once_with(queue_name, message_list)
+
+    @mock.patch.object(mmod.Message, 'zaqar')
+    def test_post_lifecycle_hook_message_queue_retry(self, mock_zaqar):
+        cfg.CONF.set_override('max_message_size', 8192, 'notification')
+        mock_zc = mock.Mock()
+        mock_zaqar.return_value = mock_zc
+        queue_name = 'my_queue'
+        message = mmod.Message(queue_name)
+        mock_zc.queue_exists.return_value = True
+        test_exception = exception.EResourceCreation(type='queue',
+                                                     message="test")
+        mock_zc.message_post.side_effect = [
+            test_exception, test_exception, None]
+
+        lifecycle_action_token = 'ACTION_ID'
+        node_id = 'NODE_ID'
+        resource_id = 'RESOURCE_ID'
+        lifecycle_transition_type = 'TYPE'
+
+        message.post_lifecycle_hook_message(lifecycle_action_token, node_id,
+                                            resource_id,
+                                            lifecycle_transition_type)
+
+        mock_zc.queue_create.assert_not_called()
+        self.assertEqual(3, mock_zc.message_post.call_count)
