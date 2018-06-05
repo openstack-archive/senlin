@@ -287,6 +287,16 @@ class TestNovaV2(base.SenlinTestCase):
         self.assertEqual(target.return_value, res)
         target.assert_called_once_with(server)
 
+    def test_server_migrate(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        server = mock.Mock()
+        target = d.conn.compute.migrate_server
+
+        res = d.server_migrate(server)
+
+        self.assertEqual(target.return_value, res)
+        target.assert_called_once_with(server)
+
     def test_server_evacuate(self):
         d = nova_v2.NovaClient(self.conn_params)
         server = mock.Mock()

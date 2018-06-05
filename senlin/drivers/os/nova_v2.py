@@ -140,6 +140,10 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.unrescue_server(server)
 
     @sdk.translate_exception
+    def server_migrate(self, server):
+        return self.conn.compute.migrate_server(server)
+
+    @sdk.translate_exception
     def server_evacuate(self, server, host=None, admin_pass=None, force=None):
         return self.conn.compute.evacuate_server(
             server, host=host, admin_pass=admin_pass, force=force)

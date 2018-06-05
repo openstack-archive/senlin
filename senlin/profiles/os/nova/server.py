@@ -241,11 +241,11 @@ class ServerProfile(base.Profile):
     OP_NAMES = (
         OP_REBOOT, OP_REBUILD, OP_CHANGE_PASSWORD, OP_PAUSE, OP_UNPAUSE,
         OP_SUSPEND, OP_RESUME, OP_LOCK, OP_UNLOCK, OP_START, OP_STOP,
-        OP_RESCUE, OP_UNRESCUE, OP_EVACUATE,
+        OP_RESCUE, OP_UNRESCUE, OP_EVACUATE, OP_MIGRATE,
     ) = (
         'reboot', 'rebuild', 'change_password', 'pause', 'unpause',
         'suspend', 'resume', 'lock', 'unlock', 'start', 'stop',
-        'rescue', 'unrescue', 'evacuate',
+        'rescue', 'unrescue', 'evacuate', 'migrate',
     )
 
     REBOOT_TYPE = 'type'
@@ -1694,3 +1694,8 @@ class ServerProfile(base.Profile):
         """Handler for the unrescue operation."""
         return self._handle_generic_op(obj, 'server_unrescue',
                                        'unrescue', consts.VS_ACTIVE)
+
+    def handle_migrate(self, obj):
+        """Handler for the migrate operation."""
+        return self._handle_generic_op(obj, 'server_migrate',
+                                       'migrate', consts.VS_ACTIVE)
