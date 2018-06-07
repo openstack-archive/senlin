@@ -12,10 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-# This tool is borrowed from Rally project and revised to enhance Senlin
-# coverage test.
+# This tool is borrowed from the Rally / Manila projects and revised to enhance
+# Senlin coverage test.
 
 ALLOWED_EXTRA_MISSING=4
+TESTR_ARGS="$*"
 
 show_diff () {
     head -1 $1
@@ -33,8 +34,8 @@ fi
 git checkout HEAD^
 
 baseline_report=$(mktemp -t senlin_coverageXXXXXXX)
-python setup.py test --coverage --testr-args="^(?!senlin\.tests\.tempest)"
-coverage report > $baseline_report
+find . -type f -name "*.py[c|o]" -delete && stestr run "$TESTR_ARGS" && coverage combine && coverage html -d cover
+coverage report --ignore-errors > $baseline_report
 cat $baseline_report
 if [ -d "cover-master" ]; then
     rm -rf cover-master
@@ -45,9 +46,10 @@ baseline_missing=$(awk 'END { print $3 }' $baseline_report)
 # Checkout back and save coverage report
 git checkout -
 
+# Generate and save coverage report
 current_report=$(mktemp -t senlin_coverageXXXXXXX)
-python setup.py test --coverage --testr-args="^(?!senlin\.tests\.tempest)"
-coverage report > $current_report
+find . -type f -name "*.py[c|o]" -delete && stestr run "$TESTR_ARGS" && coverage combine && coverage html -d cover
+coverage report --ignore-errors > $current_report
 cat $current_report
 current_missing=$(awk 'END { print $3 }' $current_report)
 
