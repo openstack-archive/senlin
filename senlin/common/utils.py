@@ -88,7 +88,7 @@ def level_from_number(value):
     return levels.get(n, None)
 
 
-def url_fetch(url, allowed_schemes=('http', 'https')):
+def url_fetch(url, allowed_schemes=('http', 'https'), verify=True):
     '''Get the data at the specified URL.
 
     The URL must use the http: or https: schemes.
@@ -110,7 +110,7 @@ def url_fetch(url, allowed_schemes=('http', 'https')):
             raise URLFetchError(_('Failed to retrieve data: %s') % uex)
 
     try:
-        resp = requests.get(url, stream=True)
+        resp = requests.get(url, stream=True, verify=verify)
         resp.raise_for_status()
 
         # We cannot use resp.text here because it would download the entire

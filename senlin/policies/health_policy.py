@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_config import cfg
+
 from senlin.common import constraints
 from senlin.common import consts
 from senlin.common import exception as exc
@@ -26,7 +28,8 @@ class HealthPolicy(base.Policy):
     VERSION = '1.0'
     VERSIONS = {
         '1.0': [
-            {'status': consts.EXPERIMENTAL, 'since': '2017.02'}
+            {'status': consts.EXPERIMENTAL, 'since': '2017.02'},
+            {'status': consts.SUPPORTED, 'since': '2018.06'},
         ]
     }
     PRIORITY = 600
@@ -58,15 +61,20 @@ class HealthPolicy(base.Policy):
     )
 
     _DETECTION_OPTIONS = (
-        DETECTION_INTERVAL,
+        DETECTION_INTERVAL, POLL_URL, POLL_URL_SSL_VERIFY,
+        POLL_URL_HEALTHY_RESPONSE, POLL_URL_RETRY_LIMIT,
+        POLL_URL_RETRY_INTERVAL, NODE_UPDATE_TIMEOUT,
     ) = (
-        'interval',
+        'interval', 'poll_url', 'poll_url_ssl_verify',
+        'poll_url_healthy_response', 'poll_url_retry_limit',
+        'poll_url_retry_interval', 'node_update_timeout',
     )
 
     _RECOVERY_KEYS = (
-        RECOVERY_ACTIONS, RECOVERY_FENCING
+        RECOVERY_ACTIONS, RECOVERY_FENCING, RECOVERY_DELETE_TIMEOUT,
+        RECOVERY_FORCE_RECREATE,
     ) = (
-        'actions', 'fencing'
+        'actions', 'fencing', 'node_delete_timeout', 'node_force_recreate',
     )
 
     FENCING_OPTION_VALUES = (
@@ -98,8 +106,47 @@ class HealthPolicy(base.Policy):
                     schema={
                         DETECTION_INTERVAL: schema.Integer(
                             _("Number of seconds between pollings. Only "
-                              "required when type is 'NODE_STATUS_POLLING'."),
+                              "required when type is 'NODE_STATUS_POLLING' or "
+                              "'NODE_STATUS_POLL_URL'."),
                             default=60,
+                        ),
+                        POLL_URL: schema.String(
+                            _("URL to poll for node status. See documentation "
+                              "for valid expansion parameters. Only required "
+                              "when type is 'NODE_STATUS_POLL_URL'."),
+                            default='',
+                        ),
+                        POLL_URL_SSL_VERIFY: schema.Boolean(
+                            _("Whether to verify SSL when calling URL to poll "
+                              "for node status. Only required when type is "
+                              "'NODE_STATUS_POLL_URL'."),
+                            default=True,
+                        ),
+                        POLL_URL_HEALTHY_RESPONSE: schema.String(
+                            _("String pattern in the poll URL response body "
+                              "that indicates a healthy node. "
+                              "Required when type is 'NODE_STATUS_POLL_URL'."),
+                            default='',
+                        ),
+                        POLL_URL_RETRY_LIMIT: schema.Integer(
+                            _("Number of times to retry URL polling when its "
+                              "return body is missing "
+                              "POLL_URL_HEALTHY_RESPONSE string before a node "
+                              "is considered down. Required when type is "
+                              "'NODE_STATUS_POLL_URL'."),
+                            default=3,
+                        ),
+                        POLL_URL_RETRY_INTERVAL: schema.Integer(
+                            _("Number of seconds between URL polling retries "
+                              "before a node is considered down. "
+                              "Required when type is 'NODE_STATUS_POLL_URL'."),
+                            default=3,
+                        ),
+                        NODE_UPDATE_TIMEOUT: schema.Integer(
+                            _("Number of seconds since last node update to "
+                              "wait before checking node health. "
+                              "Required when type is 'NODE_STATUS_POLL_URL'."),
+                            default=300,
                         ),
                     },
                     default={}
@@ -140,6 +187,21 @@ class HealthPolicy(base.Policy):
                         required=True,
                     ),
                 ),
+                RECOVERY_DELETE_TIMEOUT: schema.Integer(
+                    _("Number of seconds to wait for node deletion to "
+                      "finish and start node creation for recreate "
+                      "recovery option. Required when type is "
+                      "'NODE_STATUS_POLL_URL and recovery action "
+                      "is RECREATE'."),
+                    default=20,
+                ),
+                RECOVERY_FORCE_RECREATE: schema.Boolean(
+                    _("Whether to create node even if node deletion "
+                      "failed. Required when type is "
+                      "'NODE_STATUS_POLL_URL' and action recovery "
+                      "action is RECREATE."),
+                    default=False,
+                ),
             }
         ),
     }
@@ -148,11 +210,25 @@ class HealthPolicy(base.Policy):
         super(HealthPolicy, self).__init__(name, spec, **kwargs)
 
         self.check_type = self.properties[self.DETECTION][self.DETECTION_TYPE]
+
         options = self.properties[self.DETECTION][self.DETECTION_OPTIONS]
         self.interval = options.get(self.DETECTION_INTERVAL, 60)
+        self.poll_url = options.get(self.POLL_URL, '')
+        self.poll_url_ssl_verify = options.get(self.POLL_URL_SSL_VERIFY, True)
+        self.poll_url_healthy_response = options.get(
+            self.POLL_URL_HEALTHY_RESPONSE, '')
+        self.poll_url_retry_limit = options.get(self.POLL_URL_RETRY_LIMIT, '')
+        self.poll_url_retry_interval = options.get(
+            self.POLL_URL_RETRY_INTERVAL, '')
+        self.node_update_timeout = options.get(self.NODE_UPDATE_TIMEOUT, 300)
+
         recover_settings = self.properties[self.RECOVERY]
         self.recover_actions = recover_settings[self.RECOVERY_ACTIONS]
         self.fencing_types = recover_settings[self.RECOVERY_FENCING]
+        self.node_delete_timeout = recover_settings.get(
+            self.RECOVERY_DELETE_TIMEOUT, None)
+        self.node_force_recreate = recover_settings.get(
+            self.RECOVERY_FORCE_RECREATE, False)
 
     def validate(self, context, validate_props=False):
         super(HealthPolicy, self).validate(context,
@@ -162,6 +238,15 @@ class HealthPolicy(base.Policy):
             message = _("Only one '%s' is supported for now."
                         ) % self.RECOVERY_ACTIONS
             raise exc.ESchema(message=message)
+
+        if self.interval < cfg.CONF.health_check_interval_min:
+            message = _("Specified interval of %(interval)d seconds has to be "
+                        "larger than health_check_interval_min of "
+                        "%(min_interval)d seconds set in configuration."
+                        ) % {"interval": self.interval,
+                             "min_interval":
+                                 cfg.CONF.health_check_interval_min}
+            raise exc.InvalidSpec(message=message)
 
         # TODO(Qiming): Add detection of duplicated action names when
         # support to list of actions is implemented.
@@ -191,7 +276,17 @@ class HealthPolicy(base.Policy):
         kwargs = {
             'check_type': self.check_type,
             'interval': self.interval,
-            'params': {'recover_action': self.recover_actions},
+            'params': {
+                'recover_action': self.recover_actions,
+                'poll_url': self.poll_url,
+                'poll_url_ssl_verify': self.poll_url_ssl_verify,
+                'poll_url_healthy_response': self.poll_url_healthy_response,
+                'poll_url_retry_limit': self.poll_url_retry_limit,
+                'poll_url_retry_interval': self.poll_url_retry_interval,
+                'node_update_timeout': self.node_update_timeout,
+                'node_delete_timeout': self.node_delete_timeout,
+                'node_force_recreate': self.node_force_recreate,
+            },
             'enabled': enabled
         }
 
@@ -200,6 +295,14 @@ class HealthPolicy(base.Policy):
         data = {
             'check_type': self.check_type,
             'interval': self.interval,
+            'poll_url': self.poll_url,
+            'poll_url_ssl_verify': self.poll_url_ssl_verify,
+            'poll_url_healthy_response': self.poll_url_healthy_response,
+            'poll_url_retry_limit': self.poll_url_retry_limit,
+            'poll_url_retry_interval': self.poll_url_retry_interval,
+            'node_update_timeout': self.node_update_timeout,
+            'node_delete_timeout': self.node_delete_timeout,
+            'node_force_recreate': self.node_force_recreate,
         }
 
         return True, self._build_policy_data(data)

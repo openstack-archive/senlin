@@ -645,7 +645,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         self.assertTrue(res)
         cc.server_delete.assert_called_once_with('FAKE_ID', True)
-        cc.wait_for_server_delete.assert_called_once_with('FAKE_ID')
+        cc.wait_for_server_delete.assert_called_once_with('FAKE_ID', None)
 
     def test_do_delete_no_physical_id(self):
         profile = server.ServerProfile('t', self.spec)
@@ -694,7 +694,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         nc.floatingip_delete.assert_called_once_with('FAKE_FLOATING_ID')
         nc.port_delete.assert_called_once_with('FAKE_PORT_ID')
         cc.server_delete.assert_called_once_with('FAKE_ID', True)
-        cc.wait_for_server_delete.assert_called_once_with('FAKE_ID')
+        cc.wait_for_server_delete.assert_called_once_with('FAKE_ID', None)
 
     def test_do_delete_ignore_missing_force(self):
         profile = server.ServerProfile('t', self.spec)
@@ -709,12 +709,14 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         self.assertTrue(res)
         cc.server_force_delete.assert_called_once_with('FAKE_ID', False)
-        cc.wait_for_server_delete.assert_called_once_with('FAKE_ID')
+        cc.wait_for_server_delete.assert_called_once_with('FAKE_ID', None)
 
     def test_do_delete_with_delete_failure(self):
         cc = mock.Mock()
+        nc = mock.Mock()
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = cc
+        profile._networkclient = nc
 
         err = exc.InternalError(code=500, message='Nova Error')
         cc.server_delete.side_effect = err
@@ -728,11 +730,14 @@ class TestNovaServerBasic(base.SenlinTestCase):
                          "Nova Error.", six.text_type(ex))
         cc.server_delete.assert_called_once_with('FAKE_ID', True)
         self.assertEqual(0, cc.wait_for_server_delete.call_count)
+        nc.port_delete.assert_not_called()
 
     def test_do_delete_with_force_delete_failure(self):
         cc = mock.Mock()
+        nc = mock.Mock()
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = cc
+        profile._networkclient = nc
 
         err = exc.InternalError(code=500, message='Nova Error')
         cc.server_force_delete.side_effect = err
@@ -746,11 +751,14 @@ class TestNovaServerBasic(base.SenlinTestCase):
                          "Nova Error.", six.text_type(ex))
         cc.server_force_delete.assert_called_once_with('FAKE_ID', True)
         self.assertEqual(0, cc.wait_for_server_delete.call_count)
+        nc.port_delete.assert_not_called()
 
     def test_do_delete_wait_for_server_timeout(self):
         cc = mock.Mock()
+        nc = mock.Mock()
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = cc
+        profile._networkclient = nc
 
         obj = mock.Mock(physical_id='FAKE_ID')
         err = exc.InternalError(code=500, message='TIMEOUT')
@@ -758,12 +766,81 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         # do it
         ex = self.assertRaises(exc.EResourceDeletion,
-                               profile.do_delete, obj)
+                               profile.do_delete, obj, timeout=20)
 
         self.assertEqual("Failed in deleting server 'FAKE_ID': TIMEOUT.",
                          six.text_type(ex))
         cc.server_delete.assert_called_once_with('FAKE_ID', True)
-        cc.wait_for_server_delete.assert_called_once_with('FAKE_ID')
+        cc.wait_for_server_delete.assert_called_once_with('FAKE_ID', 20)
+        nc.port_delete.assert_not_called()
+
+    @mock.patch.object(node_ob.Node, 'update')
+    def test_do_delete_wait_for_server_timeout_delete_ports_on_failure(
+            self, mock_node_obj):
+        cc = mock.Mock()
+        nc = mock.Mock()
+        nc.port_delete.return_value = None
+        nc.floatingip_delete.return_value = None
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        profile._networkclient = nc
+
+        test_server = mock.Mock(physical_id='FAKE_ID')
+        test_server.Node = mock.Mock()
+        test_server.data = {'internal_ports': [{
+            'floating': {
+                'remove': True,
+                'id': 'FAKE_FLOATING_ID',
+            },
+            'id': 'FAKE_PORT_ID',
+            'remove': True
+        }]}
+
+        err = exc.InternalError(code=500, message='TIMEOUT')
+        cc.wait_for_server_delete.side_effect = err
+
+        # do it
+        ex = self.assertRaises(exc.EResourceDeletion,
+                               profile.do_delete, test_server, timeout=20,
+                               delete_ports_on_failure=True)
+
+        self.assertEqual("Failed in deleting server 'FAKE_ID': TIMEOUT.",
+                         six.text_type(ex))
+        mock_node_obj.assert_called_once_with(
+            mock.ANY, test_server.id, {'data': {'internal_ports': []}})
+        cc.server_delete.assert_called_once_with('FAKE_ID', True)
+        cc.wait_for_server_delete.assert_called_once_with('FAKE_ID', 20)
+        nc.port_delete.assert_called_once_with('FAKE_PORT_ID')
+
+    @mock.patch.object(node_ob.Node, 'update')
+    def test_do_delete_wait_for_server_timeout_no_internal_ports(
+            self, mock_node_obj):
+        cc = mock.Mock()
+        nc = mock.Mock()
+        nc.port_delete.return_value = None
+        nc.floatingip_delete.return_value = None
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        profile._networkclient = nc
+
+        test_server = mock.Mock(physical_id='FAKE_ID')
+        test_server.Node = mock.Mock()
+        test_server.data = {}
+
+        err = exc.InternalError(code=500, message='TIMEOUT')
+        cc.wait_for_server_delete.side_effect = err
+
+        # do it
+        ex = self.assertRaises(exc.EResourceDeletion,
+                               profile.do_delete, test_server, timeout=20,
+                               delete_ports_on_failure=True)
+
+        self.assertEqual("Failed in deleting server 'FAKE_ID': TIMEOUT.",
+                         six.text_type(ex))
+        mock_node_obj.assert_not_called()
+        cc.server_delete.assert_called_once_with('FAKE_ID', True)
+        cc.wait_for_server_delete.assert_called_once_with('FAKE_ID', 20)
+        nc.port_delete.assert_not_called()
 
     def test_do_get_details(self):
         cc = mock.Mock()
@@ -1304,7 +1381,9 @@ class TestNovaServerBasic(base.SenlinTestCase):
         res = profile.do_recover(node_obj, operation=None)
 
         self.assertTrue(res)
-        mock_delete.assert_called_once_with(node_obj, force=False)
+        mock_delete.assert_called_once_with(node_obj, force=False,
+                                            timeout=None,
+                                            delete_ports_on_failure=None)
         mock_create.assert_called_once_with(node_obj)
 
     @mock.patch.object(server.ServerProfile, 'handle_rebuild')

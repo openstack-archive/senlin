@@ -1,0 +1,8 @@
+---
+features:
+  - Health policy now contains NODE_STATUS_POLL_URL detection type. This
+    detection type queries the URL specified in the health policy for node
+    health status. This allows the user to integrate Senlin health checks
+    with an external health service.
+other:
+  - Health policy v1.0 was moved from EXPERIMENTAL to SUPPORTED status.

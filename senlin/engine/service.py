@@ -1960,6 +1960,14 @@ class EngineService(service.Service):
                 op_name = req.params.pop('operation')
                 kwargs['inputs']['operation'] = [{'name': op_name}]
 
+            if 'delete_timeout' in req.params:
+                kwargs['inputs']['delete_timeout'] = req.params.pop(
+                    'delete_timeout')
+
+            if 'force_recreate' in req.params:
+                kwargs['inputs']['force_recreate'] = req.params.pop(
+                    'force_recreate')
+
             if len(req.params):
                 keys = [str(k) for k in req.params]
                 msg = _("Action parameter %s is not recognizable."

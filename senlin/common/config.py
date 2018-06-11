@@ -46,6 +46,9 @@ engine_opts = [
     cfg.IntOpt('check_interval_max',
                default=3600,
                help=_('Maximum seconds between cluster check to be called.')),
+    cfg.IntOpt('health_check_interval_min',
+               default=60,
+               help=_('Minimum seconds between health check to be called.')),
     cfg.IntOpt('periodic_fuzzy_delay',
                default=10,
                help=_('Range of seconds to randomly delay when starting the '

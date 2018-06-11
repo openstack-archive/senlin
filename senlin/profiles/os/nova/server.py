@@ -908,6 +908,8 @@ class ServerProfile(base.Profile):
         ignore_missing = params.get('ignore_missing', True)
         internal_ports = obj.data.get('internal_ports', [])
         force = params.get('force', False)
+        timeout = params.get('timeout', None)
+        delete_ports_on_failure = params.get('delete_ports_on_failure', False)
 
         try:
             driver = self.compute(obj)
@@ -915,15 +917,25 @@ class ServerProfile(base.Profile):
                 driver.server_force_delete(server_id, ignore_missing)
             else:
                 driver.server_delete(server_id, ignore_missing)
-            driver.wait_for_server_delete(server_id)
-            if internal_ports:
-                ex = self._delete_ports(obj, internal_ports)
-                if ex:
-                    raise ex
-            return True
         except exc.InternalError as ex:
             raise exc.EResourceDeletion(type='server', id=server_id,
                                         message=six.text_type(ex))
+
+        try:
+            driver.wait_for_server_delete(server_id, timeout)
+        except exc.InternalError as ex:
+            if delete_ports_on_failure and internal_ports:
+                del_ports_ex = self._delete_ports(obj, internal_ports)
+                if del_ports_ex:
+                    raise del_ports_ex
+            raise exc.EResourceDeletion(type='server', id=server_id,
+                                        message=six.text_type(ex))
+
+        if internal_ports:
+            ex = self._delete_ports(obj, internal_ports)
+            if ex:
+                raise ex
+        return True
 
     def _check_server_name(self, obj, profile):
         """Check if there is a new name to be assigned to the server.
