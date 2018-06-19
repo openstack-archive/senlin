@@ -170,7 +170,7 @@ User Defined Actions
 
 Actions in Senlin are mostly built-in ones at present. There are requirements
 to incorporate Shell scripts and/or other structured software configuration
-tools into the whole picture. One of the option is to provide a easy way for
+tools into the whole picture. One of the option is to provide an easy way for
 Senlin to work with Ansible, for example.
 
 

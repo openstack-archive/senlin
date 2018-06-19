@@ -395,7 +395,7 @@ class LoadBalancingPolicy(base.Policy):
         :returns: When the operation was successful, returns a tuple of
             (True, data) where the data contains references to the resources
             created; otherwise returns a tuple of (False, err) where the err
-            contains a error message.
+            contains an error message.
         """
         reason = _('LB resources deletion succeeded.')
         lb_driver = self.lbaas(cluster.user, cluster.project)

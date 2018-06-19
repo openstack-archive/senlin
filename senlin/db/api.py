@@ -397,7 +397,7 @@ def action_abandon(context, action_id, values=None):
 
 
 def action_lock_check(context, action_id, owner=None):
-    '''Check whether an action has been locked(by a owner).'''
+    '''Check whether an action has been locked(by an owner).'''
     return IMPL.action_lock_check(context, action_id, owner)
 
 
