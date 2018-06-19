@@ -54,7 +54,6 @@ Response Parameters
   - data: policy_data
   - domain: domain
   - id: policy_id
-  - metadata: metadata
   - name: name
   - project: project
   - spec: policy_spec
