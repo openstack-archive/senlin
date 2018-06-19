@@ -64,13 +64,13 @@ class OpenStackSDKTest(base.SenlinTestCase):
         resp.json.return_value = {}
         resp.status_code = 404
 
-        raw = sdk.exc.ResourceNotFound(message='A message.', details=None,
+        raw = sdk.exc.ResourceNotFound(message='Error', details=None,
                                        response=resp, http_status=404)
         ex = self.assertRaises(senlin_exc.InternalError,
                                sdk.parse_exception, raw)
 
         self.assertEqual(404, ex.code)
-        self.assertEqual('A message.', six.text_type(ex))
+        self.assertEqual('Error', six.text_type(ex))
 
     def test_parse_exception_http_exception_no_details_no_response(self):
         details = "An error message"
