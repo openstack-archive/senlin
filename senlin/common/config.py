@@ -87,7 +87,7 @@ engine_opts = [
                help=_('Number of times retrying a failed operation on the '
                       'database.')),
     cfg.IntOpt('database_retry_interval',
-               default=0.1,
+               default=0.3,
                help=_('Initial number of seconds between database retries.')),
     cfg.IntOpt('database_max_retry_interval',
                default=2,

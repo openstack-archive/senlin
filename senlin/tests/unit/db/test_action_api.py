@@ -165,7 +165,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         self.assertIsNone(result)
 
     def test_acquire_first_ready_one(self):
-        data = {'created_at': tu.utcnow(True)}
+        data = {'created_at': tu.utcnow(True), 'id': 'fake_UUID'}
         _create_action(self.ctx, **data)
 
         result = db_api.action_acquire_first_ready(self.ctx, 'fake_o',
