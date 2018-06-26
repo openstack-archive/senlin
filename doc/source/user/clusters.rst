@@ -219,6 +219,13 @@ using the :program:`openstack cluster create` command line, you can use the
 option :option:`--timeout <TIMEOUT>` to specify the default time out in number
 of seconds. This value would be the global setting for the cluster.
 
+You can use the option :option:`--config` to pass in key-value pairs to the
+cluster to be created. The following config properties are supported:
+
+- ``node.name.format``: Specify how cluster nodes are automatically named.
+  The value can contain placeholders like ``$nI`` for node index padded with
+  n number of zeros to the left, or ``$nR`` for random string of length n.
+
 
 Showing Details of a Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
