@@ -136,7 +136,9 @@ class ClusterActionTest(base.SenlinTestCase):
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('success', res_msg)
-        mock_load.assert_called_once_with(action.context, 'FAKE_CLUSTER')
+        mock_load.assert_has_calls(
+            [mock.call(action.context, 'FAKE_CLUSTER'),
+             mock.call(action.context, 'FAKE_CLUSTER')])
         mock_acquire.assert_called_once_with(
             self.ctx, 'FAKE_CLUSTER', 'ACTION_ID', None,
             senlin_lock.CLUSTER_SCOPE, False)
@@ -174,7 +176,9 @@ class ClusterActionTest(base.SenlinTestCase):
 
         self.assertEqual(action.RES_ERROR, res_code)
         self.assertEqual('Failed execution.', res_msg)
-        mock_load.assert_called_once_with(action.context, cluster.id)
+        mock_load.assert_has_calls(
+            [mock.call(action.context, cluster.id),
+             mock.call(action.context, cluster.id)])
         mock_acquire.assert_called_once_with(
             self.ctx, 'CLUSTER_ID', 'ACTION_ID', None,
             senlin_lock.CLUSTER_SCOPE, True)
