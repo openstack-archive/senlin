@@ -1134,6 +1134,8 @@ class ClusterAction(base.Action):
             return self.RES_RETRY, 'Failed in locking cluster.'
 
         try:
+            # Refresh entity state to avoid stale data in action.
+            self.entity = cluster_mod.Cluster.load(self.context, self.target)
             res, reason = self._execute(**kwargs)
         finally:
             senlin_lock.cluster_lock_release(self.target, self.id,
