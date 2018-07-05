@@ -308,7 +308,7 @@ action_data:
   in: body
   required: True
   description: |
-    A structured representation of data associated with a action object.
+    A structured representation of data associated with an action object.
 
 action_id:
   type: UUID

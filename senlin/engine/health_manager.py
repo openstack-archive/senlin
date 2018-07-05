@@ -161,7 +161,7 @@ class HeatNotificationEndpoint(object):
 
 
 def ListenerProc(exchange, project_id, cluster_id, recover_action):
-    """Thread procedure for running a event listener.
+    """Thread procedure for running an event listener.
 
     :param exchange: The control exchange for a target service.
     :param project_id: The ID of the project to filter.

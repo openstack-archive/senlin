@@ -62,7 +62,7 @@ The proposed change will include three parts:
             host: Target_host
 
 * example: to add sample workflow definitions and health policy for Senlin
-           users to create a end2end story.
+           users to create an end2end story.
 
 Alternatives
 ------------

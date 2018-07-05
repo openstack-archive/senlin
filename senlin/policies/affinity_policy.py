@@ -199,7 +199,7 @@ class AffinityPolicy(base.Policy):
         :returns: When the operation was successful, returns a tuple of
                   (True, data) where the data contains references to the
                   resources created; otherwise returns a tuple of (False,
-                  error) where the err contains a error message.
+                  error) where the err contains an error message.
         """
 
         reason = _('Servergroup resource deletion succeeded.')
