@@ -40,7 +40,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
     def test__delete_nodes_single(self, mock_wait, mock_start, mock_dep,
                                   mock_action, mock_update, mock_load):
         # prepare mocks
-        cluster = mock.Mock(id='FAKE_CLUSTER', desired_capacity=100)
+        cluster = mock.Mock(id='FAKE_CLUSTER', desired_capacity=100, config={})
 
         # cluster action is real
         mock_load.return_value = cluster
@@ -58,7 +58,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
         self.assertEqual('All dependents completed', res_msg)
         mock_action.assert_called_once_with(
             action.context, 'NODE_ID', 'NODE_DELETE',
-            name='node_delete_NODE_ID', cause='Derived Action')
+            name='node_delete_NODE_ID', cause='Derived Action', inputs={})
         mock_dep.assert_called_once_with(action.context, ['NODE_ACTION_ID'],
                                          'CLUSTER_ACTION_ID')
         mock_update.assert_called_once_with(action.context, 'NODE_ACTION_ID',
@@ -73,10 +73,61 @@ class ClusterDeleteTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
+    def test__delete_nodes_single_stop_node(self, mock_wait, mock_start,
+                                            mock_dep, mock_action, mock_update,
+                                            mock_load):
+        # prepare mocks
+        cluster = mock.Mock(id='FAKE_CLUSTER', desired_capacity=100,
+                            config={'cluster.stop_node_before_delete': True})
+
+        # cluster action is real
+        mock_load.return_value = cluster
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
+        action.id = 'CLUSTER_ACTION_ID'
+        action.inputs = {'destroy_after_deletion': False}
+        mock_wait.return_value = (action.RES_OK, 'All dependents completed')
+        mock_action.return_value = 'NODE_ACTION_ID'
+
+        # do it
+        res_code, res_msg = action._delete_nodes(['NODE_ID'])
+
+        # assertions
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('All dependents completed', res_msg)
+        create_actions = [
+            mock.call(action.context, 'NODE_ID', 'NODE_OPERATION',
+                      name='node_delete_NODE_ID',
+                      cause='Derived Action',
+                      inputs={'operation': 'stop'}),
+            mock.call(action.context, 'NODE_ID', 'NODE_DELETE',
+                      name='node_delete_NODE_ID',
+                      cause='Derived Action', inputs={})
+        ]
+        mock_action.assert_has_calls(create_actions)
+        dep_calls = [
+            mock.call(action.context, ['NODE_ACTION_ID'], 'CLUSTER_ACTION_ID'),
+            mock.call(action.context, ['NODE_ACTION_ID'], 'CLUSTER_ACTION_ID'),
+        ]
+        mock_dep.assert_has_calls(dep_calls)
+        update_calls = [
+            mock.call(action.context, 'NODE_ACTION_ID', {'status': 'READY'}),
+            mock.call(action.context, 'NODE_ACTION_ID', {'status': 'READY'})
+        ]
+        mock_update.assert_has_calls(update_calls)
+        mock_start.assert_has_calls([mock.call(), mock.call()])
+        mock_wait.assert_has_calls([mock.call(), mock.call()])
+        self.assertEqual(['NODE_ID'], action.outputs['nodes_removed'])
+        cluster.remove_node.assert_called_once_with('NODE_ID')
+
+    @mock.patch.object(ao.Action, 'update')
+    @mock.patch.object(ab.Action, 'create')
+    @mock.patch.object(dobj.Dependency, 'create')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
     def test__delete_nodes_multi(self, mock_wait, mock_start, mock_dep,
                                  mock_action, mock_update, mock_load):
         # prepare mocks
-        cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100)
+        cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100, config={})
         mock_load.return_value = cluster
 
         # cluster action is real
@@ -128,7 +179,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
     def test__delete_nodes_with_pd(self, mock_wait, mock_start, mock_dep,
                                    mock_action, mock_update, mock_load):
         # prepare mocks
-        cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100)
+        cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100, config={})
         mock_load.return_value = cluster
         # cluster action is real
         action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
@@ -149,7 +200,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
         self.assertEqual('All dependents completed', res_msg)
         mock_action.assert_called_once_with(
             action.context, 'NODE_ID', 'NODE_LEAVE',
-            name='node_delete_NODE_ID', cause='Derived Action')
+            name='node_delete_NODE_ID', cause='Derived Action', inputs={})
 
     @mock.patch.object(ao.Action, 'update')
     @mock.patch.object(ab.Action, 'create')
@@ -164,7 +215,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
                                                mock_action, mock_update,
                                                mock_load):
         # prepare mocks
-        cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100)
+        cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100, config={})
         mock_load.return_value = cluster
         # cluster action is real
         action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
@@ -182,6 +233,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
         mock_action.return_value = 'NODE_ACTION_ID'
         mock_node_get.return_value = mock.Mock(
             status=consts.NS_ACTIVE, id='NODE_ID', physical_id="nova-server")
+
         # do it
         res_code, res_msg = action._delete_nodes(['NODE_ID'])
 
@@ -191,8 +243,9 @@ class ClusterDeleteTest(base.SenlinTestCase):
         self.assertEqual(1, mock_dep.call_count)
         mock_action.assert_called_once_with(
             action.context, 'NODE_ID', 'NODE_DELETE',
-            name='node_delete_NODE_ID', cause='Derived Action with '
-                                              'Lifecycle Hook')
+            name='node_delete_NODE_ID',
+            cause='Derived Action with Lifecycle Hook',
+            inputs={})
         update_calls = [
             mock.call(action.context, 'NODE_ACTION_ID',
                       {'status': 'WAITING_LIFECYCLE_COMPLETION'}),
@@ -237,7 +290,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
             self, mock_node_obj, mock_wait, mock_start, mock_post, mock_dep,
             mock_node_get, mock_action, mock_update, mock_load):
         # prepare mocks
-        cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100)
+        cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100, config={})
         mock_load.return_value = cluster
         # cluster action is real
         action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
@@ -263,8 +316,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
         self.assertEqual(1, mock_dep.call_count)
         mock_action.assert_called_once_with(
             action.context, 'NODE_ID', 'NODE_DELETE',
-            name='node_delete_NODE_ID', cause='Derived Action with '
-                                              'Lifecycle Hook')
+            name='node_delete_NODE_ID',
+            cause='Derived Action with Lifecycle Hook', inputs={})
         update_calls = [
             mock.call(action.context, 'NODE_ACTION_ID',
                       {'status': 'READY'}),
@@ -291,7 +344,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
                                                        mock_check_status,
                                                        mock_load):
         # prepare mocks
-        cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100)
+        cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100, config={})
         mock_load.return_value = cluster
         # cluster action is real
         action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
@@ -322,8 +375,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
         self.assertEqual(1, mock_dep.call_count)
         mock_action.assert_called_once_with(
             action.context, 'NODE_ID', 'NODE_DELETE',
-            name='node_delete_NODE_ID', cause='Derived Action with '
-                                              'Lifecycle Hook')
+            name='node_delete_NODE_ID',
+            cause='Derived Action with Lifecycle Hook', inputs={})
         update_calls = [
             mock.call(action.context, 'NODE_ACTION_ID',
                       {'status': 'WAITING_LIFECYCLE_COMPLETION'}),
@@ -346,7 +399,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
                                                             mock_action,
                                                             mock_load):
         # prepare mocks
-        cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100)
+        cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100, config={})
         mock_load.return_value = cluster
         # cluster action is real
         action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
@@ -376,7 +429,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
                                                                    mock_update,
                                                                    mock_load):
         # prepare mocks
-        cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100)
+        cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100, config={})
         mock_load.return_value = cluster
         # cluster action is real
         action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
@@ -399,31 +452,64 @@ class ClusterDeleteTest(base.SenlinTestCase):
         self.assertEqual("Failed in deleting nodes:Lifecycle hook type "
                          "'webhook' is not implemented", res_msg)
 
-    @mock.patch.object(ao.Action, 'update')
-    @mock.patch.object(ab.Action, 'create')
-    @mock.patch.object(dobj.Dependency, 'create')
-    @mock.patch.object(dispatcher, 'start_action')
-    @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__delete_nodes_failed_wait(self, mock_wait, mock_start, mock_dep,
-                                       mock_action, mock_update, mock_load):
+    @mock.patch.object(ca.ClusterAction, '_remove_nodes_normally')
+    def test__delete_nodes_failed_remove_stop_node(self, mock_remove,
+                                                   mock_load):
         # prepare mocks
-        cluster = mock.Mock(id='ID')
+        cluster = mock.Mock(id='ID',
+                            config={'cluster.stop_node_before_delete': True})
         mock_load.return_value = cluster
         # cluster action is real
         action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
         action.inputs = {'destroy_after_deletion': False}
         action.data = {}
-        mock_wait.return_value = (action.RES_TIMEOUT, 'Timeout!')
-        mock_action.return_value = 'NODE_ACTION_ID'
+        mock_remove.return_value = (action.RES_TIMEOUT, 'Timeout!')
 
         # do it
         res_code, res_msg = action._delete_nodes(['NODE_ID'])
 
         # assertions (other assertions are skipped)
         self.assertEqual(action.RES_TIMEOUT, res_code)
-        self.assertEqual('Failed in deleting nodes:Timeout!', res_msg)
+        self.assertEqual('Failed in stopping nodes:Timeout!', res_msg)
         self.assertEqual({}, action.data)
+        mock_remove.assert_called_once_with('NODE_OPERATION', ['NODE_ID'],
+                                            {'operation': 'stop'})
+
+    @mock.patch.object(ca.ClusterAction, '_remove_nodes_with_hook')
+    @mock.patch.object(ca.ClusterAction, '_remove_nodes_normally')
+    def test__delete_nodes_with_lifecycle_hook_failed_remove_stop_node(
+            self, mock_remove_normally, mock_remove_hook, mock_load):
+        # prepare mocks
+        cluster = mock.Mock(id='ID',
+                            config={'cluster.stop_node_before_delete': True})
+        mock_load.return_value = cluster
+        # cluster action is real
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
+        action.id = 'CLUSTER_ACTION_ID'
+        action.inputs = {'destroy_after_deletion': False}
+        lifecycle_hook = {
+            'timeout': 10,
+            'type': 'zaqar',
+            'params': {
+                'queue': 'myqueue'
+            }
+        }
+        action.data = {
+            'hooks': lifecycle_hook,
+        }
+        mock_remove_hook.return_value = (action.RES_TIMEOUT, 'Timeout!')
+
+        # do it
+        res_code, res_msg = action._delete_nodes(['NODE_ID'])
+
+        # assertions (other assertions are skipped)
+        self.assertEqual(action.RES_TIMEOUT, res_code)
+        self.assertEqual('Failed in stopping nodes:Timeout!', res_msg)
+        mock_remove_hook.assert_called_once_with(
+            'NODE_OPERATION', ['NODE_ID'], lifecycle_hook,
+            {'operation': 'stop'})
+        mock_remove_normally.assert_not_called()
 
     @mock.patch.object(ao.Action, 'delete_by_target')
     def test_do_delete_success(self, mock_action, mock_load):
@@ -683,7 +769,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__delete_nodes_normally(self, mock_wait, mock_start, mock_dep,
+    def test__remove_nodes_normally(self, mock_wait, mock_start, mock_dep,
                                     mock_action, mock_update, mock_load):
         # prepare mocks
         cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100)
@@ -697,7 +783,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
         mock_action.side_effect = ['NODE_ACTION_1', 'NODE_ACTION_2']
 
         # do it
-        res_code, res_msg = action._delete_nodes_normally('NODE_REMOVE',
+        res_code, res_msg = action._remove_nodes_normally('NODE_REMOVE',
                                                           ['NODE_1', 'NODE_2'])
 
         # assertions
@@ -720,7 +806,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
     @mock.patch.object(msg.Message, 'post_lifecycle_hook_message')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__delete_nodes_with_hook(self, mock_wait, mock_start, mock_post,
+    def test__remove_nodes_with_hook(self, mock_wait, mock_start, mock_post,
                                      mock_dep, mock_node_get, mock_action,
                                      mock_update, mock_load):
         # prepare mocks
@@ -743,7 +829,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
         mock_node_get.return_value = mock.Mock(
             status=consts.NS_ACTIVE, id='NODE_ID', physical_id="nova-server")
         # do it
-        res_code, res_msg = action._delete_nodes_with_hook(
+        res_code, res_msg = action._remove_nodes_with_hook(
             'NODE_DELETE', ['NODE_ID'], action.data['hooks'])
 
         # assertions (other assertions are skipped)
@@ -752,8 +838,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
         self.assertEqual(1, mock_dep.call_count)
         mock_action.assert_called_once_with(
             action.context, 'NODE_ID', 'NODE_DELETE',
-            name='node_delete_NODE_ID', cause='Derived Action with '
-                                              'Lifecycle Hook')
+            name='node_delete_NODE_ID',
+            cause='Derived Action with Lifecycle Hook', inputs={})
         update_calls = [
             mock.call(action.context, 'NODE_ACTION_ID',
                       {'status': 'WAITING_LIFECYCLE_COMPLETION'}),
@@ -764,6 +850,69 @@ class ClusterDeleteTest(base.SenlinTestCase):
                                           consts.LIFECYCLE_NODE_TERMINATION)
         mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with(action.data['hooks']['timeout'])
+
+    @mock.patch.object(ao.Action, 'update')
+    @mock.patch.object(ab.Action, 'create')
+    @mock.patch.object(dobj.Dependency, 'create')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
+    def test__remove_nodes_normally_failed_wait(self, mock_wait, mock_start,
+                                                mock_dep, mock_action,
+                                                mock_update, mock_load):
+        # prepare mocks
+        cluster = mock.Mock(id='ID', config={})
+        mock_load.return_value = cluster
+        # cluster action is real
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
+        action.id = 'CLUSTER_ACTION_ID'
+        action.inputs = {'destroy_after_deletion': False}
+        action.data = {}
+        mock_wait.return_value = (action.RES_TIMEOUT, 'Timeout!')
+        mock_action.return_value = 'NODE_ACTION_ID'
+
+        # do it
+        res_code, res_msg = action._remove_nodes_normally('NODE_REMOVE',
+                                                          ['NODE_ID'])
+
+        # assertions (other assertions are skipped)
+        self.assertEqual(action.RES_TIMEOUT, res_code)
+        self.assertEqual('Timeout!', res_msg)
+        self.assertEqual({}, action.data)
+
+    @mock.patch.object(ao.Action, 'update')
+    @mock.patch.object(ab.Action, 'create')
+    @mock.patch.object(dobj.Dependency, 'create')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
+    def test__remove_nodes_hook_failed_wait(self, mock_wait, mock_start,
+                                            mock_dep, mock_action,
+                                            mock_update, mock_load):
+        # prepare mocks
+        cluster = mock.Mock(id='ID', config={})
+        mock_load.return_value = cluster
+        # cluster action is real
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
+        action.id = 'CLUSTER_ACTION_ID'
+        action.inputs = {'destroy_after_deletion': False}
+        action.data = {
+            'hooks': {
+                'timeout': 10,
+                'type': 'zaqar',
+                'params': {
+                    'queue': 'myqueue'
+                }
+            }
+        }
+        mock_wait.return_value = (action.RES_TIMEOUT, 'Timeout!')
+        mock_action.return_value = 'NODE_ACTION_ID'
+
+        # do it
+        res_code, res_msg = action._remove_nodes_normally('NODE_REMOVE',
+                                                          ['NODE_ID'])
+
+        # assertions (other assertions are skipped)
+        self.assertEqual(action.RES_TIMEOUT, res_code)
+        self.assertEqual('Timeout!', res_msg)
 
     @mock.patch.object(ao.Action, 'update')
     @mock.patch.object(ab.Action, 'create')
@@ -800,7 +949,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
                           physical_id=None)
         mock_node_get.side_effect = [node1, node2]
         # do it
-        res_code, res_msg = action._delete_nodes_with_hook(
+        res_code, res_msg = action._remove_nodes_with_hook(
             'NODE_DELETE', ['NODE_1', 'NODE_2'], action.data['hooks'])
 
         # assertions
@@ -814,11 +963,11 @@ class ClusterDeleteTest(base.SenlinTestCase):
         mock_update.assert_has_calls(update_calls)
         create_actions = [
             mock.call(action.context, 'NODE_1', 'NODE_DELETE',
-                      name='node_delete_NODE_1', cause='Derived Action with '
-                                                       'Lifecycle Hook'),
+                      name='node_delete_NODE_1',
+                      cause='Derived Action with Lifecycle Hook', inputs={}),
             mock.call(action.context, 'NODE_2', 'NODE_DELETE',
-                      name='node_delete_NODE_2', cause='Derived Action with '
-                                                       'Lifecycle Hook')
+                      name='node_delete_NODE_2',
+                      cause='Derived Action with Lifecycle Hook', inputs={})
         ]
         mock_action.assert_has_calls(create_actions)
 

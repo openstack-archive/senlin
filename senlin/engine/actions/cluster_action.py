@@ -305,7 +305,8 @@ class ClusterAction(base.Action):
                 ao.Action.update(self.context, action_id,
                                  {'status': base.Action.READY})
 
-    def _delete_nodes_with_hook(self, action_name, node_ids, lifecycle_hook):
+    def _remove_nodes_with_hook(self, action_name, node_ids, lifecycle_hook,
+                                inputs=None):
         lifecycle_hook_timeout = lifecycle_hook.get('timeout')
         lifecycle_hook_type = lifecycle_hook.get('type', None)
         lifecycle_hook_params = lifecycle_hook.get('params')
@@ -320,6 +321,7 @@ class ClusterAction(base.Action):
             kwargs = {
                 'name': 'node_delete_%s' % node_id[:8],
                 'cause': consts.CAUSE_DERIVED_LCH,
+                'inputs': inputs or {},
             }
 
             action_id = base.Action.create(self.context, node_id, action_name,
@@ -378,12 +380,13 @@ class ClusterAction(base.Action):
 
         return self.RES_OK, ''
 
-    def _delete_nodes_normally(self, action_name, node_ids):
+    def _remove_nodes_normally(self, action_name, node_ids, inputs=None):
         child = []
         for node_id in node_ids:
             kwargs = {
                 'name': 'node_delete_%s' % node_id[:8],
                 'cause': consts.CAUSE_DERIVED,
+                'inputs': inputs or {},
             }
 
             action_id = base.Action.create(self.context, node_id, action_name,
@@ -412,13 +415,30 @@ class ClusterAction(base.Action):
             if destroy is False:
                 action_name = consts.NODE_LEAVE
 
+        stop_node_before_delete = self.entity.config.get(
+            "cluster.stop_node_before_delete", False)
+
         # get lifecycle hook properties if specified
         lifecycle_hook = self.data.get('hooks')
         if lifecycle_hook:
-            res, reason = self._delete_nodes_with_hook(action_name, node_ids,
-                                                       lifecycle_hook)
+            if stop_node_before_delete:
+                res, reason = self._remove_nodes_with_hook(
+                    consts.NODE_OPERATION, node_ids, lifecycle_hook,
+                    {'operation': 'stop'})
+                if res != self.RES_OK:
+                    return res, 'Failed in stopping nodes:%s' % reason
+                res, reason = self._remove_nodes_normally(action_name,
+                                                          node_ids)
+            else:
+                res, reason = self._remove_nodes_with_hook(
+                    action_name, node_ids, lifecycle_hook)
         else:
-            res, reason = self._delete_nodes_normally(action_name, node_ids)
+            if stop_node_before_delete:
+                res, reason = self._remove_nodes_normally(
+                    consts.NODE_OPERATION, node_ids, {'operation': 'stop'})
+                if res != self.RES_OK:
+                    return res, 'Failed in stopping nodes:%s' % reason
+            res, reason = self._remove_nodes_normally(action_name, node_ids)
 
         if res == self.RES_OK:
             self.outputs['nodes_removed'] = node_ids
