@@ -20,6 +20,7 @@ from oslo_utils import timeutils as tu
 from senlin.common import consts
 from senlin.common import context
 from senlin.common import messaging
+from senlin.common import utils
 from senlin.engine import health_manager as hm
 from senlin import objects
 from senlin.objects import cluster as obj_cluster
@@ -579,6 +580,26 @@ class TestHealthManager(base.SenlinTestCase):
             },
             self.hm.registries[1])
 
+    def test__expand_url_template(self):
+        url_template = 'https://abc123/foo/bar'
+        node = mock.Mock()
+
+        # do it
+        res = self.hm._expand_url_template(url_template, node)
+
+        self.assertEqual(res, url_template)
+
+    def test__expand_url_template_nodename(self):
+        node = mock.Mock()
+        node.name = 'name'
+        url_template = 'https://abc123/{nodename}/bar'
+        expanded_url = 'https://abc123/{}/bar'.format(node.name)
+
+        # do it
+        res = self.hm._expand_url_template(url_template, node)
+
+        self.assertEqual(res, expanded_url)
+
     @mock.patch.object(hm, "_chase_up")
     @mock.patch.object(obj_node.Node, 'get_all_by_cluster')
     @mock.patch.object(hm.HealthManager, "_wait_for_action")
@@ -678,6 +699,275 @@ class TestHealthManager(base.SenlinTestCase):
                                          project_id='PROJECT_ID')
         mock_rpc.assert_called_once_with(ctx, 'cluster_check', mock.ANY)
         mock_wait.assert_called_once_with(ctx, "CHECK_ID", 456)
+        mock_chase.assert_called_once_with(mock.ANY, 456)
+
+    @mock.patch.object(tu, "is_older_than")
+    @mock.patch.object(hm.HealthManager, "_expand_url_template")
+    @mock.patch.object(utils, 'url_fetch')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test__check_url_and_recover_node_healthy(
+            self, mock_rpc, mock_url_fetch, mock_expand_url, mock_time):
+        ctx = mock.Mock()
+        node = mock.Mock()
+        node.status = consts.NS_ACTIVE
+        mock_time.return_value = True
+        mock_expand_url.return_value = 'FAKE_EXPANDED_URL'
+        x_action_check = {'action': 'CHECK_ID'}
+        mock_rpc.return_value = x_action_check
+        mock_url_fetch.return_value = ("Healthy because this return value "
+                                       "contains FAKE_HEALTHY_PATTERN")
+        params = {
+            'poll_url': 'FAKE_POLL_URL',
+            'poll_url_ssl_verify': True,
+            'poll_url_healthy_response': 'FAKE_HEALTHY_PATTERN',
+            'poll_url_retry_limit': 2,
+            'poll_url_retry_interval': 1,
+            'node_update_timeout': 5,
+        }
+
+        recover_action = {'operation': 'REBUILD'}
+
+        # do it
+        res = self.hm._check_url_and_recover_node(ctx, node, recover_action,
+                                                  params)
+
+        self.assertIsNone(res)
+        mock_rpc.assert_not_called()
+        mock_url_fetch.assert_called_once_with('FAKE_EXPANDED_URL',
+                                               verify=True)
+
+    @mock.patch.object(tu, "is_older_than")
+    @mock.patch.object(hm.HealthManager, "_expand_url_template")
+    @mock.patch.object(utils, 'url_fetch')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test__check_url_and_recover_node_unhealthy_inactive(
+            self, mock_rpc, mock_url_fetch, mock_expand_url, mock_time):
+        ctx = mock.Mock()
+        node = mock.Mock()
+        node.status = consts.NS_RECOVERING
+        mock_time.return_value = True
+        mock_expand_url.return_value = 'FAKE_EXPANDED_URL'
+        x_action_check = {'action': 'CHECK_ID'}
+        mock_rpc.return_value = x_action_check
+        mock_url_fetch.return_value = ""
+        params = {
+            'poll_url': 'FAKE_POLL_URL',
+            'poll_url_ssl_verify': True,
+            'poll_url_healthy_response': 'FAKE_HEALTHY_PATTERN',
+            'poll_url_retry_limit': 2,
+            'poll_url_retry_interval': 1,
+            'node_update_timeout': 5,
+        }
+
+        recover_action = {'operation': 'REBUILD'}
+
+        # do it
+        res = self.hm._check_url_and_recover_node(ctx, node, recover_action,
+                                                  params)
+
+        self.assertIsNone(res)
+        mock_rpc.assert_not_called()
+        mock_url_fetch.assert_called_once_with('FAKE_EXPANDED_URL',
+                                               verify=True)
+
+    @mock.patch.object(tu, "is_older_than")
+    @mock.patch.object(hm.HealthManager, "_expand_url_template")
+    @mock.patch.object(utils, 'url_fetch')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test__check_url_and_recover_node_unhealthy_update_timeout(
+            self, mock_rpc, mock_url_fetch, mock_expand_url, mock_time):
+        ctx = mock.Mock()
+        node = mock.Mock()
+        node.id = 'FAKE_NODE_ID'
+        node.updated_at = 'FAKE_UPDATE_TIME'
+        node.status = consts.NS_ACTIVE
+        mock_time.return_value = False
+        mock_expand_url.return_value = 'FAKE_EXPANDED_URL'
+        x_action_check = {'action': 'CHECK_ID'}
+        mock_rpc.return_value = x_action_check
+        mock_url_fetch.return_value = ""
+        params = {
+            'poll_url': 'FAKE_POLL_URL',
+            'poll_url_ssl_verify': True,
+            'poll_url_healthy_response': 'FAKE_HEALTHY_PATTERN',
+            'poll_url_retry_limit': 2,
+            'poll_url_retry_interval': 1,
+            'node_update_timeout': 5,
+        }
+
+        recover_action = {'operation': 'REBUILD'}
+
+        # do it
+        res = self.hm._check_url_and_recover_node(ctx, node, recover_action,
+                                                  params)
+
+        self.assertIsNone(res)
+        mock_rpc.assert_not_called()
+        mock_url_fetch.assert_called_once_with('FAKE_EXPANDED_URL',
+                                               verify=True)
+
+    @mock.patch.object(tu, "is_older_than")
+    @mock.patch.object(hm.HealthManager, "_expand_url_template")
+    @mock.patch.object(utils, 'url_fetch')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test__check_url_and_recover_node_unhealthy_init_timeout(
+            self, mock_rpc, mock_url_fetch, mock_expand_url, mock_time):
+        ctx = mock.Mock()
+        node = mock.Mock()
+        node.id = 'FAKE_NODE_ID'
+        node.updated_at = None
+        node.init_at = 'FAKE_INIT_TIME'
+        node.status = consts.NS_ACTIVE
+        mock_time.return_value = False
+        mock_expand_url.return_value = 'FAKE_EXPANDED_URL'
+        x_action_check = {'action': 'CHECK_ID'}
+        mock_rpc.return_value = x_action_check
+        mock_url_fetch.return_value = ""
+        params = {
+            'poll_url': 'FAKE_POLL_URL',
+            'poll_url_ssl_verify': True,
+            'poll_url_healthy_response': 'FAKE_HEALTHY_PATTERN',
+            'poll_url_retry_limit': 2,
+            'poll_url_retry_interval': 1,
+            'node_update_timeout': 5,
+        }
+
+        recover_action = {'operation': 'REBUILD'}
+
+        # do it
+        res = self.hm._check_url_and_recover_node(ctx, node, recover_action,
+                                                  params)
+
+        self.assertIsNone(res)
+        mock_rpc.assert_not_called()
+        mock_url_fetch.assert_called_once_with('FAKE_EXPANDED_URL',
+                                               verify=True)
+
+    @mock.patch.object(time, "sleep")
+    @mock.patch.object(tu, "is_older_than")
+    @mock.patch.object(hm.HealthManager, "_expand_url_template")
+    @mock.patch.object(utils, 'url_fetch')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test__check_url_and_recover_node_unhealthy(self,
+                                                   mock_rpc, mock_url_fetch,
+                                                   mock_expand_url, mock_time,
+                                                   mock_sleep):
+        ctx = mock.Mock()
+        node = mock.Mock()
+        node.status = consts.NS_ACTIVE
+        node.id = 'FAKE_ID'
+        mock_time.return_value = True
+        mock_expand_url.return_value = 'FAKE_EXPANDED_URL'
+        x_action_check = {'action': 'CHECK_ID'}
+        mock_rpc.return_value = x_action_check
+        mock_url_fetch.return_value = ""
+        params = {
+            'poll_url': 'FAKE_POLL_URL',
+            'poll_url_ssl_verify': False,
+            'poll_url_healthy_response': 'FAKE_HEALTHY_PATTERN',
+            'poll_url_retry_limit': 2,
+            'poll_url_retry_interval': 1,
+            'node_update_timeout': 5,
+        }
+
+        recover_action = {'operation': 'REBUILD'}
+
+        # do it
+        res = self.hm._check_url_and_recover_node(ctx, node, recover_action,
+                                                  params)
+
+        self.assertEqual(mock_rpc.return_value, res)
+        mock_rpc.assert_called_once_with(ctx, 'node_recover', mock.ANY)
+        mock_url_fetch.assert_has_calls(
+            [
+                mock.call('FAKE_EXPANDED_URL', verify=False),
+                mock.call('FAKE_EXPANDED_URL', verify=False)
+            ]
+        )
+        mock_sleep.assert_has_calls([mock.call(1), mock.call(1)])
+
+    @mock.patch.object(hm, "_chase_up")
+    @mock.patch.object(hm.HealthManager, "_check_url_and_recover_node")
+    @mock.patch.object(obj_node.Node, 'get_all_by_cluster')
+    @mock.patch.object(hm.HealthManager, "_wait_for_action")
+    @mock.patch.object(obj_cluster.Cluster, 'get')
+    @mock.patch.object(context, 'get_service_context')
+    def test__poll_url(self, mock_ctx, mock_get, mock_wait, mock_nodes,
+                       mock_check_url, mock_chase):
+        x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
+        mock_get.return_value = x_cluster
+        ctx = mock.Mock()
+        mock_ctx.return_value = ctx
+        mock_wait.return_value = (True, "")
+        x_node = mock.Mock(id='FAKE_NODE', status="ERROR")
+        mock_nodes.return_value = [x_node]
+        x_action_recover = {'action': 'RECOVER_ID'}
+        mock_check_url.return_value = x_action_recover
+
+        recover_action = {'operation': 'REBUILD'}
+        params = {}
+
+        # do it
+        res = self.hm._poll_url('CLUSTER_ID', 456, recover_action, params)
+
+        self.assertEqual(mock_chase.return_value, res)
+        mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
+                                         project_safe=False)
+        mock_ctx.assert_called_once_with(user_id=x_cluster.user,
+                                         project_id=x_cluster.project)
+        mock_check_url.assert_called_once_with(ctx, x_node,
+                                               recover_action, params)
+        mock_wait.assert_called_once_with(ctx, "RECOVER_ID", 456)
+        mock_chase.assert_called_once_with(mock.ANY, 456)
+
+    @mock.patch.object(hm, "_chase_up")
+    @mock.patch.object(obj_cluster.Cluster, 'get')
+    @mock.patch.object(context, 'get_service_context')
+    def test__poll_url_cluster_not_found(self, mock_ctx, mock_get,
+                                         mock_chase):
+        mock_get.return_value = None
+
+        recover_action = {'operation': 'REBUILD'}
+        params = {}
+
+        # do it
+        res = self.hm._poll_url('CLUSTER_ID', 123, recover_action, params)
+
+        self.assertEqual(mock_chase.return_value, res)
+        mock_ctx.assert_not_called()
+        mock_chase.assert_called_once_with(mock.ANY, 123)
+
+    @mock.patch.object(hm, "_chase_up")
+    @mock.patch.object(hm.HealthManager, "_check_url_and_recover_node")
+    @mock.patch.object(obj_node.Node, 'get_all_by_cluster')
+    @mock.patch.object(hm.HealthManager, "_wait_for_action")
+    @mock.patch.object(obj_cluster.Cluster, 'get')
+    @mock.patch.object(context, 'get_service_context')
+    def test__poll_url_no_action(self, mock_ctx, mock_get, mock_wait,
+                                 mock_nodes, mock_check_url, mock_chase):
+        x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
+        mock_get.return_value = x_cluster
+        ctx = mock.Mock()
+        mock_ctx.return_value = ctx
+        mock_wait.return_value = (True, "")
+        x_node = mock.Mock(id='FAKE_NODE', status="ERROR")
+        mock_nodes.return_value = [x_node]
+        mock_check_url.return_value = None
+
+        recover_action = {'operation': 'REBUILD'}
+        params = {}
+
+        # do it
+        res = self.hm._poll_url('CLUSTER_ID', 456, recover_action, params)
+
+        self.assertEqual(mock_chase.return_value, res)
+        mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
+                                         project_safe=False)
+        mock_ctx.assert_called_once_with(user_id=x_cluster.user,
+                                         project_id=x_cluster.project)
+        mock_check_url.assert_called_once_with(ctx, x_node,
+                                               recover_action, params)
+        mock_wait.assert_not_called()
         mock_chase.assert_called_once_with(mock.ANY, 456)
 
     @mock.patch.object(obj_profile.Profile, 'get')
@@ -789,6 +1079,35 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual(expected, res)
         mock_add_timer.assert_called_once_with(
             self.hm._poll_cluster, None, None, 'CCID', 12, recover_action)
+
+    def test__start_check_for_poll_url(self):
+        x_timer = mock.Mock()
+        mock_add_timer = self.patchobject(self.hm.TG, 'add_dynamic_timer',
+                                          return_value=x_timer)
+
+        entry = {
+            'cluster_id': 'CCID',
+            'interval': 12,
+            'check_type': consts.NODE_STATUS_POLL_URL,
+            'params': {
+                'recover_action': [{'name': 'REBUILD'}],
+                'node_delete_timeout': 23,
+                'node_force_recreate': True
+            },
+        }
+        recover_action = {
+            'operation': 'REBUILD',
+            'delete_timeout': 23,
+            'force_recreate': True
+        }
+        res = self.hm._start_check(entry)
+
+        expected = copy.deepcopy(entry)
+        expected['timer'] = x_timer
+        self.assertEqual(expected, res)
+        mock_add_timer.assert_called_once_with(
+            self.hm._poll_url, None, None, 'CCID', 12, recover_action,
+            entry['params'])
 
     def test__start_check_for_listening(self):
         x_listener = mock.Mock()

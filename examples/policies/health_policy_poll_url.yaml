@@ -1,0 +1,18 @@
+type: senlin.policy.health
+version: 1.0
+description: A policy for maintaining node health by polling a URL
+properties:
+  detection:
+    type: NODE_STATUS_POLL_URL
+    options:
+      interval: 120
+      poll_url: "http://myhealthservice/health/node/{nodename}"
+      poll_url_healthy_response: "passing"
+      poll_url_retry_limit: 3
+      poll_url_retry_interval: 2
+      node_update_timeout: 240
+  recovery:
+    actions:
+      - name: RECREATE
+    node_delete_timeout: 90
+    node_force_recreate: True

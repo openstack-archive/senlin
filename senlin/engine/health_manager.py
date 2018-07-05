@@ -23,12 +23,14 @@ import oslo_messaging as messaging
 from oslo_service import service
 from oslo_service import threadgroup
 from oslo_utils import timeutils
+import re
 import six
 import time
 
 from senlin.common import consts
 from senlin.common import context
 from senlin.common import messaging as rpc
+from senlin.common import utils
 from senlin import objects
 from senlin.rpc import client as rpc_client
 
@@ -282,6 +284,123 @@ class HealthManager(service.Service):
 
         return _chase_up(start_time, timeout)
 
+    def _expand_url_template(self, url_template, node):
+        """Expands parameters in an URL template
+
+        :param url_template:
+            A string containing parameters that will be expanded. Currently
+            only the {nodename} parameter is supported, which will be replaced
+            by the actual node name.
+        :param node: The DB object for the node to use for parameter expansion
+        :returns: A string containing the expanded URL
+        """
+
+        nodename_pattern = re.compile("(\{nodename\})")
+        url = nodename_pattern.sub(node.name, url_template)
+
+        return url
+
+    def _check_url_and_recover_node(self, ctx, node, recover_action, params):
+        """Routine to check a node status from a url and recovery if necessary
+
+        :param ctx: The request context to use for recovery action
+        :param node: The node to be checked.
+        :param recover_action: The health policy action name.
+        :param params: Parameters specific to poll url or recovery action
+        :returns: action if node was triggered for recovery.  Otherwise None.
+        """
+
+        url_template = params['poll_url']
+        verify_ssl = params['poll_url_ssl_verify']
+        expected_resp_str = params['poll_url_healthy_response']
+        max_unhealthy_retry = params['poll_url_retry_limit']
+        retry_interval = params['poll_url_retry_interval']
+        node_update_timeout = params['node_update_timeout']
+
+        url = self._expand_url_template(url_template, node)
+        LOG.info("Polling node status from URL: %s", url)
+
+        available_attemps = max_unhealthy_retry
+        while available_attemps > 0:
+            available_attemps -= 1
+
+            try:
+                result = utils.url_fetch(url, verify=verify_ssl)
+            except utils.URLFetchError as ex:
+                LOG.error("Error when requesting node health status from"
+                          " %s: %s", url, ex)
+                return None
+
+            LOG.debug("Node status returned from URL(%s): %s", url,
+                      result)
+            if re.search(expected_resp_str, result):
+                LOG.debug('Node %s is healthy', node.id)
+                return None
+
+            if node.status != consts.NS_ACTIVE:
+                LOG.info("Skip node recovery because node %s is not in "
+                         "ACTIVE state", node.id)
+                return None
+
+            node_last_updated = node.updated_at or node.init_at
+            if not timeutils.is_older_than(
+                    node_last_updated, node_update_timeout):
+                LOG.info("Node %s was updated at %s which is less than "
+                         "%d secs ago. Skip node recovery.",
+                         node.id, node_last_updated, node_update_timeout)
+                return None
+
+            LOG.info("Node %s is reported as down (%d retries left)",
+                     node.id, available_attemps)
+            time.sleep(retry_interval)
+
+        # recover node after exhausting retries
+        LOG.info("Requesting node recovery: %s", node.id)
+        req = objects.NodeRecoverRequest(identity=node.id,
+                                         params=recover_action)
+
+        return self.rpc_client.call(ctx, 'node_recover', req)
+
+    def _poll_url(self, cluster_id, timeout, recover_action, params):
+        """Routine to be executed for polling node status from a url
+
+        :param cluster_id: The UUID of the cluster to be checked.
+        :param timeout: The maximum number of seconds to wait for recovery
+        action
+        :param recover_action: The health policy action name.
+        :param params: Parameters specific to poll url or recovery action
+        :returns: Nothing.
+        """
+        start_time = timeutils.utcnow(True)
+
+        cluster = objects.Cluster.get(self.ctx, cluster_id, project_safe=False)
+        if not cluster:
+            LOG.warning("Cluster (%s) is not found.", cluster_id)
+            return _chase_up(start_time, timeout)
+
+        ctx = context.get_service_context(user_id=cluster.user,
+                                          project_id=cluster.project)
+
+        actions = []
+
+        # loop through nodes to poll url for each node
+        nodes = objects.Node.get_all_by_cluster(ctx, cluster_id)
+        for node in nodes:
+            action = self._check_url_and_recover_node(ctx, node,
+                                                      recover_action, params)
+            if action:
+                actions.append(action)
+
+        for a in actions:
+            # wait for action to complete
+            res, reason = self._wait_for_action(ctx, a['action'], timeout)
+            if not res:
+                LOG.warning("Node recovery action %s did not complete "
+                            "within specified timeout: %s", a['action'],
+                            reason)
+
+        return _chase_up(start_time, timeout)
+
     def _add_listener(self, cluster_id, recover_action):
         """Routine to be executed for adding cluster listener.
 
@@ -317,7 +436,12 @@ class HealthManager(service.Service):
         ctype = entry['check_type']
         # Get the recover action parameter from the entry params
         params = entry['params']
+
         recover_action = {}
+        if 'node_delete_timeout' in params:
+            recover_action['delete_timeout'] = params['node_delete_timeout']
+        if 'node_force_recreate' in params:
+            recover_action['force_recreate'] = params['node_force_recreate']
         if 'recover_action' in params:
             rac = params['recover_action']
             for operation in rac:
@@ -329,6 +453,14 @@ class HealthManager(service.Service):
                                               None,  # initial_delay
                                               None,  # check_interval_max
                                               cid, interval, recover_action)
+            entry['timer'] = timer
+        elif ctype == consts.NODE_STATUS_POLL_URL:
+            interval = min(entry['interval'], cfg.CONF.check_interval_max)
+            timer = self.TG.add_dynamic_timer(self._poll_url,
+                                              None,  # initial_delay
+                                              None,  # check_interval_max
+                                              cid, interval,
+                                              recover_action, params)
             entry['timer'] = timer
         elif ctype == consts.LIFECYCLE_EVENTS:
             LOG.info("Start listening events for cluster (%s).", cid)
@@ -399,6 +531,7 @@ class HealthManager(service.Service):
                                        version=self.version)
         server = rpc.get_rpc_server(self.target, self)
         server.start()
+
         self.TG.add_timer(cfg.CONF.periodic_interval, self._dummy_task)
 
     def stop(self):

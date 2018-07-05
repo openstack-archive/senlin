@@ -15,6 +15,8 @@ import copy
 import mock
 import six
 
+from oslo_config import cfg
+
 from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.common import scaleutils as su
@@ -82,6 +84,32 @@ class TestHealthPolicy(base.SenlinTestCase):
         self.assertEqual("Only one 'actions' is supported for now.",
                          six.text_type(ex))
 
+    def test_validate_valid_interval(self):
+        spec = copy.deepcopy(self.spec)
+        spec["properties"]["detection"]["options"]["interval"] = 20
+        self.hp = health_policy.HealthPolicy('test-policy', spec)
+
+        cfg.CONF.set_override('health_check_interval_min', 20)
+
+        self.hp.validate(self.context)
+
+    def test_validate_invalid_interval(self):
+        spec = copy.deepcopy(self.spec)
+        spec["properties"]["detection"]["options"]["interval"] = 10
+        self.hp = health_policy.HealthPolicy('test-policy', spec)
+
+        cfg.CONF.set_override('health_check_interval_min', 20)
+
+        ex = self.assertRaises(exc.InvalidSpec,
+                               self.hp.validate,
+                               self.context)
+
+        expected_error = ("Specified interval of %(interval)d seconds has to "
+                          "be larger than health_check_interval_min of "
+                          "%(min_interval)d seconds set in configuration."
+                          ) % {"interval": 10, "min_interval": 20}
+        self.assertEqual(expected_error, six.text_type(ex))
+
     @mock.patch.object(health_manager, 'register')
     def test_attach(self, mock_hm_reg):
 
@@ -89,7 +117,16 @@ class TestHealthPolicy(base.SenlinTestCase):
             'HealthPolicy': {
                 'data': {
                     'check_type': self.hp.check_type,
-                    'interval': self.hp.interval},
+                    'interval': self.hp.interval,
+                    'poll_url': '',
+                    'poll_url_ssl_verify': True,
+                    'poll_url_healthy_response': '',
+                    'poll_url_retry_limit': 3,
+                    'poll_url_retry_interval': 3,
+                    'node_update_timeout': 300,
+                    'node_delete_timeout': 20,
+                    'node_force_recreate': False
+                },
                 'version': '1.0'
             }
         }
@@ -100,7 +137,17 @@ class TestHealthPolicy(base.SenlinTestCase):
         kwargs = {
             'check_type': self.hp.check_type,
             'interval': self.hp.interval,
-            'params': {'recover_action': self.hp.recover_actions},
+            'params': {
+                'recover_action': self.hp.recover_actions,
+                'poll_url': '',
+                'poll_url_ssl_verify': True,
+                'poll_url_healthy_response': '',
+                'poll_url_retry_limit': 3,
+                'poll_url_retry_interval': 3,
+                'node_update_timeout': 300,
+                'node_delete_timeout': 20,
+                'node_force_recreate': False
+            },
             'enabled': True
         }
         mock_hm_reg.assert_called_once_with('CLUSTER_ID',

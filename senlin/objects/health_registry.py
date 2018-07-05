@@ -35,7 +35,8 @@ class HealthRegistry(base.SenlinObject, base.VersionedObjectDictCompat):
     def create(cls, context, cluster_id, check_type, interval, params,
                engine_id, enabled=True):
         obj = db_api.registry_create(context, cluster_id, check_type,
-                                     interval, params, engine_id,
+                                     interval,
+                                     params, engine_id,
                                      enabled=enabled)
         return cls._from_db_object(context, cls(), obj)
 
