@@ -90,3 +90,7 @@ threads.
 
 
 .. _Freenode: https://freenode.net/
+
+Release notes
+------------------
+- Release notes: https://docs.openstack.org/releasenotes/senlin/
