@@ -189,7 +189,7 @@ Install and configure components
   [keystone_authtoken]
   www_authenticate_uri = http://<HOST>:5000/v3
   auth_version = 3
-  identity_uri = http://<HOST>:35357
+  identity_uri = http://<HOST>:5000
   admin_user = senlin
   admin_password = <SENLIN PASSWORD>
   admin_tenant_name = service
