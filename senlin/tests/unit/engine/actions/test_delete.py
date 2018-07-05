@@ -419,7 +419,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
 
         # assertions (other assertions are skipped)
         self.assertEqual(action.RES_ERROR, res_code)
-        self.assertEqual("Failed in deleting nodes:Lifecycle hook type "
+        self.assertEqual("Failed in deleting nodes: Lifecycle hook type "
                          "'unknown_type' is not implemented", res_msg)
 
     @mock.patch.object(ao.Action, 'update')
@@ -449,7 +449,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
 
         # assertions (other assertions are skipped)
         self.assertEqual(action.RES_ERROR, res_code)
-        self.assertEqual("Failed in deleting nodes:Lifecycle hook type "
+        self.assertEqual("Failed in deleting nodes: Lifecycle hook type "
                          "'webhook' is not implemented", res_msg)
 
     @mock.patch.object(ca.ClusterAction, '_remove_nodes_normally')
@@ -471,7 +471,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
 
         # assertions (other assertions are skipped)
         self.assertEqual(action.RES_TIMEOUT, res_code)
-        self.assertEqual('Failed in stopping nodes:Timeout!', res_msg)
+        self.assertEqual('Failed in stopping nodes: Timeout!', res_msg)
         self.assertEqual({}, action.data)
         mock_remove.assert_called_once_with('NODE_OPERATION', ['NODE_ID'],
                                             {'operation': 'stop'})
