@@ -426,7 +426,8 @@ class ClusterAction(base.Action):
                     consts.NODE_OPERATION, node_ids, lifecycle_hook,
                     {'operation': 'stop'})
                 if res != self.RES_OK:
-                    return res, 'Failed in stopping nodes:%s' % reason
+                    LOG.warning('Failure while stopping nodes. '
+                                'Proceed to delete nodes.')
                 res, reason = self._remove_nodes_normally(action_name,
                                                           node_ids)
             else:
@@ -437,7 +438,8 @@ class ClusterAction(base.Action):
                 res, reason = self._remove_nodes_normally(
                     consts.NODE_OPERATION, node_ids, {'operation': 'stop'})
                 if res != self.RES_OK:
-                    return res, 'Failed in stopping nodes: %s' % reason
+                    LOG.warning('Failure while stopping nodes. '
+                                'Proceed to delete nodes.')
             res, reason = self._remove_nodes_normally(action_name, node_ids)
 
         if res == self.RES_OK:

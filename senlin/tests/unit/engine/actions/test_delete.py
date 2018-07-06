@@ -464,17 +464,20 @@ class ClusterDeleteTest(base.SenlinTestCase):
         action.id = 'CLUSTER_ACTION_ID'
         action.inputs = {'destroy_after_deletion': False}
         action.data = {}
-        mock_remove.return_value = (action.RES_TIMEOUT, 'Timeout!')
+        mock_remove.side_effect = [(action.RES_TIMEOUT, 'Timeout!'),
+                                   (action.RES_OK, 'OK')]
 
         # do it
         res_code, res_msg = action._delete_nodes(['NODE_ID'])
 
         # assertions (other assertions are skipped)
-        self.assertEqual(action.RES_TIMEOUT, res_code)
-        self.assertEqual('Failed in stopping nodes: Timeout!', res_msg)
+        self.assertEqual(action.RES_OK, res_code)
         self.assertEqual({}, action.data)
-        mock_remove.assert_called_once_with('NODE_OPERATION', ['NODE_ID'],
-                                            {'operation': 'stop'})
+        remove_calls = [
+            mock.call('NODE_OPERATION', ['NODE_ID'], {'operation': 'stop'}),
+            mock.call('NODE_DELETE', ['NODE_ID']),
+        ]
+        mock_remove.assert_has_calls(remove_calls)
 
     @mock.patch.object(ca.ClusterAction, '_remove_nodes_with_hook')
     @mock.patch.object(ca.ClusterAction, '_remove_nodes_normally')
@@ -499,17 +502,18 @@ class ClusterDeleteTest(base.SenlinTestCase):
             'hooks': lifecycle_hook,
         }
         mock_remove_hook.return_value = (action.RES_TIMEOUT, 'Timeout!')
+        mock_remove_normally.return_value = (action.RES_OK, '')
 
         # do it
         res_code, res_msg = action._delete_nodes(['NODE_ID'])
 
         # assertions (other assertions are skipped)
-        self.assertEqual(action.RES_TIMEOUT, res_code)
-        self.assertEqual('Failed in stopping nodes:Timeout!', res_msg)
+        self.assertEqual(action.RES_OK, res_code)
         mock_remove_hook.assert_called_once_with(
             'NODE_OPERATION', ['NODE_ID'], lifecycle_hook,
             {'operation': 'stop'})
-        mock_remove_normally.assert_not_called()
+        mock_remove_normally.assert_called_once_with('NODE_DELETE',
+                                                     ['NODE_ID'])
 
     @mock.patch.object(ao.Action, 'delete_by_target')
     def test_do_delete_success(self, mock_action, mock_load):
