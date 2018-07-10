@@ -974,7 +974,7 @@ class TestNode(base.SenlinTestCase):
             'FAKE_KEY1': 'FAKE_VALUE1',
             'FAKE_KEY2': 'FAKE_VALUE2',
         }
-        final_inputs = jsonutils.dumps(final_dict)
+        final_inputs = jsonutils.dumps(final_dict, sort_keys=False)
         wfc.execution_create.assert_called_once_with('foo', final_inputs)
 
     def test_run_workflow_failed_creation(self):

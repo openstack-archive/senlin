@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Added scheduler thread pool size configuration value and changed default
+    thread pool size for scheduler from 10 to 1000. This fix prevents problems
+    when a large number of cluster operations are executed simultaneously.

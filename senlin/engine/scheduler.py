@@ -33,7 +33,8 @@ class ThreadGroupManager(object):
 
     def __init__(self):
         super(ThreadGroupManager, self).__init__()
-        self.group = threadgroup.ThreadGroup()
+        self.group = threadgroup.ThreadGroup(
+            thread_pool_size=cfg.CONF.scheduler_thread_pool_size)
 
         # Create dummy service task, because when there is nothing queued
         # on self.tg the process exits
