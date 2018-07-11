@@ -24,7 +24,6 @@ tags
 .idea
 .project
 .pydevproject
-.testrepository
 .tox
 .venv
 .DS_Store
