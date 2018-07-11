@@ -1097,3 +1097,61 @@ Response Example
 
 .. literalinclude:: samples/cluster-action-response.json
    :language: javascript
+
+
+Complete Lifecycle on a Cluster action
+======================================
+
+.. rest_method::  POST /v1/clusters/{cluster_id}/actions
+
+Complete lifecycle action and trigger deletion of nodes.
+
+This API is only available since API microversion 1.9.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 503
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - cluster_id: cluster_id_url
+  - action: action_request
+  - lifecycle_action_token: lifecycle_token_id
+
+The ``action_name`` in the body must be ``complete_lifecycle``.
+
+Request Example
+---------------
+
+.. literalinclude:: samples/cluster-complete-lifecycle-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - X-OpenStack-Request-ID: request_id
+  - Location: location
+  - action: action_action
+
+Response Example
+----------------
+
+.. literalinclude:: samples/cluster-action-response.json
+   :language: javascript

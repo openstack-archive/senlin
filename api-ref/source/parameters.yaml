@@ -827,6 +827,13 @@ interval:
     An integer that indicates the interval in seconds between two consecutive
     executions of a repeatable action.
 
+lifecycle_token_id:
+  type: UUID
+  in: body
+  required: True
+  description: |
+    The UUID of the lifecycle action to be completed.
+
 max_size:
   type: integer
   in: body
