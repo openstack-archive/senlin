@@ -76,5 +76,5 @@ Installation
 ~~~~~~~~~~~~
 
 You will need to make sure you have a suitable environment for deploying
-Senlin. Please refer to :ref:`Installation <guide-install>` for detailed
+Senlin. Please refer to :doc:`Installation </install/index>` for detailed
 instructions on setting up an environment to use the Senlin service.

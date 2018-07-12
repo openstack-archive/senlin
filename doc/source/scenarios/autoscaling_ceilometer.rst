@@ -161,6 +161,7 @@ by two nodes every time it is triggered:
   | updated_at | None                                                                            |
   | user_id    | 6c369aec78b74a4da413f86dadb0255e                                                |
   +------------+---------------------------------------------------------------------------------+
+
 At present, all property values shown for a receiver are read only. You cannot
 change their values once the receiver is created. The only type of receivers
 senlin understands is "``webhook``". For the "``action``" parameter, there are

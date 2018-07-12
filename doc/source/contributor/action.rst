@@ -191,9 +191,9 @@ An action can be in one of the following statuses during its lifetime:
 - ``WAITING``: Action object has dependencies on other actions, it may
   become ``READY`` only when the dependents are all completed with successes;
 - ``WAITING_LIFECYCLE_COMPLETION``: Action object is a node deletion that is
-awaiting lifecycle completion.  It will become ``READY`` when complete
-lifecycle API is called or the lifecycle hook timeout in deletion policy is
-reached.
+  awaiting lifecycle completion.  It will become ``READY`` when complete
+  lifecycle API is called or the lifecycle hook timeout in deletion policy is
+  reached.
 - ``RUNNING``: Action object is being executed by a worker thread;
 - ``SUSPENDED``: Action object is suspended during execution, so the only way
   to put it back to ``RUNNING`` status is to send it a ``RESUME`` signal;

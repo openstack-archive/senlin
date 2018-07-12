@@ -12,6 +12,10 @@
   under the License.
 
 
+==============
+Authentication
+==============
+
 (TBD)
 
 This document describes the authentication model used by Senlin.

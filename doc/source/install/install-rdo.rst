@@ -209,7 +209,7 @@ Install and configure components
   driver = messaging
 
 For more comprehensive helps on configuration options, please refer to
-:doc:`Configuration Options <configuration>` documentation.
+:doc:`Configuration Options </configuration/index>` documentation.
 
 
 3. Populate the Senlin database:
