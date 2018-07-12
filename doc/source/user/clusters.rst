@@ -226,6 +226,12 @@ cluster to be created. The following config properties are supported:
   The value can contain placeholders like ``$nI`` for node index padded with
   n number of zeros to the left, or ``$nR`` for random string of length n.
 
+- ``cluster.stop_node_before_delete``: If set to True, cluster operations that
+  result in a node deletion (e.g. scale-in, resize, etc) will request a node
+  stop first. Once the node has been successfully shutdown, the node is
+  deleted. The default setting is False for which a cluster performs a node
+  delete without stopping the node.
+
 
 Showing Details of a Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
