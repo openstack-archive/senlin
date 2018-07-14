@@ -89,7 +89,7 @@ The most common options to be customized include:
   driver = messaging
 
 For more comprehensive helps on configuration options, please refer to
-:doc:`Configuration Options <configuration>` documentation.
+:doc:`Configuration Options </configuration/index>` documentation.
 
 In case you want to modify access policies of Senlin, please generate sample
 policy file, copy it to `/etc/senlin/policy.yaml` and then update it.

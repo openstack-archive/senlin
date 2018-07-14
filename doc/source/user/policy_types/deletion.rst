@@ -138,13 +138,13 @@ specify a lifecycle hook in the deletion policy:
       params:
         queue: 'my_queue'
 
-The valid values for the "``type`` are:
+The valid values for the ``type`` are:
 
 - ``zaqar``: send message to zaqar queue.  The name of the zaqar must be
-specified in ``queue`` property.
+  specified in ``queue`` property.
 
 - ``webhook``: send message to webhook URL.  The URL of the webhook must be
-specified in ``url`` property.
+  specified in ``url`` property.
 
 ``timeout`` property specifies the number of seconds to wait before the
 actual node deletion happens.  This timeout can be preempted by calling

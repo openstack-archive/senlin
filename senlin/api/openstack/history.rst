@@ -106,7 +106,7 @@ it can be used by both users and developers.
   deletion during scale-in operation.
 
 1.10
----
+----
 - Modified the ``webhook_trigger`` API. Inputs for the targeted action
   are now sent directly in the query body rather than in the params
   field.

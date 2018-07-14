@@ -56,6 +56,7 @@ notifications and published on the global message queue. This dispatcher is
 by default disabled. To enable it, you can add the following line to the
 ``[DEFAULT]`` section of the ``senlin.conf`` file and then restart the service
 engine::
+
   [default]
   event_dispatchers = message
 
@@ -73,6 +74,7 @@ means you can only access to the events by the message queue.
 3. The ``event_dispatchers`` field is ``MultiString``, you can enable
 both the ``database`` and ``message`` dispatchers if needed by the following
 configuration::
+
   [default]
   event_dispatchers = database
   event_dispatchers = message

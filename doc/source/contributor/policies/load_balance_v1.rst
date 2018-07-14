@@ -13,7 +13,7 @@
 
 
 ==========================
-Load Balancing Policy V1.0
+Load Balancing Policy V1.1
 ==========================
 
 This policy is designed to enable senlin clusters to leverage the Neutron
