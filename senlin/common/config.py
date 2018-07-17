@@ -107,6 +107,9 @@ engine_opts = [
                default=60,
                help=_('Maximum time since last check-in for a service to be '
                       'considered up.')),
+    cfg.IntOpt('scheduler_thread_pool_size',
+               default=1000,
+               help=_('Maximum number of threads to use for scheduler.')),
 ]
 cfg.CONF.register_opts(engine_opts)
 
