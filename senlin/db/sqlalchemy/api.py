@@ -643,29 +643,30 @@ def cluster_policy_get(context, cluster_id, policy_id):
 
 
 def cluster_policy_get_all(context, cluster_id, filters=None, sort=None):
-    query = model_query(context, models.ClusterPolicies)
-    query = query.filter_by(cluster_id=cluster_id)
+    with session_for_read() as session:
+        query = session.query(models.ClusterPolicies)
+        query = query.filter_by(cluster_id=cluster_id)
 
-    if filters is not None:
-        key_enabled = consts.CP_ENABLED
-        if key_enabled in filters:
-            filter_enabled = {key_enabled: filters[key_enabled]}
-            query = utils.exact_filter(query, models.ClusterPolicies,
-                                       filter_enabled)
-        key_type = consts.CP_POLICY_TYPE
-        key_name = consts.CP_POLICY_NAME
-        if key_type in filters and key_name in filters:
-            query = query.join(models.Policy).filter(
-                models.Policy.type == filters[key_type] and
-                models.Policy.name == filters[key_name])
-        elif key_type in filters:
-            query = query.join(models.Policy).filter(
-                models.Policy.type == filters[key_type])
-        elif key_name in filters:
-            query = query.join(models.Policy).filter(
-                models.Policy.name == filters[key_name])
+        if filters is not None:
+            key_enabled = consts.CP_ENABLED
+            if key_enabled in filters:
+                filter_enabled = {key_enabled: filters[key_enabled]}
+                query = utils.exact_filter(query, models.ClusterPolicies,
+                                           filter_enabled)
+            key_type = consts.CP_POLICY_TYPE
+            key_name = consts.CP_POLICY_NAME
+            if key_type in filters and key_name in filters:
+                query = query.join(models.Policy).filter(
+                    models.Policy.type == filters[key_type] and
+                    models.Policy.name == filters[key_name])
+            elif key_type in filters:
+                query = query.join(models.Policy).filter(
+                    models.Policy.type == filters[key_type])
+            elif key_name in filters:
+                query = query.join(models.Policy).filter(
+                    models.Policy.name == filters[key_name])
 
-    keys, dirs = utils.get_sort_params(sort)
+        keys, dirs = utils.get_sort_params(sort)
     return sa_utils.paginate_query(query, models.ClusterPolicies, None,
                                    keys, sort_dirs=dirs).all()
 
