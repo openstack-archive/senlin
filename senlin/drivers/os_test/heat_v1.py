@@ -15,7 +15,7 @@ from senlin.drivers import sdk
 
 
 class HeatClient(base.DriverBase):
-    '''Heat V1 driver.'''
+    """Heat V1 driver."""
 
     def __init__(self, params):
         super(HeatClient, self).__init__(params)

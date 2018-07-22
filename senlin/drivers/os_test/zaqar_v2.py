@@ -19,7 +19,7 @@ FAKE_CLAIM_ID = "51db7067821e727dc24df754"
 
 
 class ZaqarClient(base.DriverBase):
-    '''Fake zaqar V2 driver for test.'''
+    """Fake zaqar V2 driver for test."""
 
     def __init__(self, ctx):
         self.fake_subscription = {

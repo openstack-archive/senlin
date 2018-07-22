@@ -19,7 +19,7 @@ from senlin.drivers import sdk
 
 
 class NovaClient(base.DriverBase):
-    '''Fake Nova V2 driver for test.'''
+    """Fake Nova V2 driver for test."""
 
     def __init__(self, ctx):
         self.fake_flavor = {

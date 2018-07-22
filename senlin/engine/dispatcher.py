@@ -55,22 +55,22 @@ class Dispatcher(service.Service):
         server.start()
 
     def listening(self, ctxt):
-        '''Respond affirmatively to confirm that engine is still alive.'''
+        """Respond affirmatively to confirm that engine is still alive."""
         return True
 
     def start_action(self, ctxt, action_id=None):
         self.TG.start_action(self.engine_id, action_id)
 
     def cancel_action(self, ctxt, action_id):
-        '''Cancel an action.'''
+        """Cancel an action."""
         self.TG.cancel_action(action_id)
 
     def suspend_action(self, ctxt, action_id):
-        '''Suspend an action.'''
+        """Suspend an action."""
         self.TG.suspend_action(action_id)
 
     def resume_action(self, ctxt, action_id):
-        '''Resume an action.'''
+        """Resume an action."""
         self.TG.resume_action(action_id)
 
     def stop(self):

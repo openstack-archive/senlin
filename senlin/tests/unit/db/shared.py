@@ -19,7 +19,7 @@ from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import parser
 
 
-sample_profile = '''
+sample_profile = """
   name: test_profile_name
   type: my_test_profile_type
   spec:
@@ -29,9 +29,9 @@ sample_profile = '''
         myrandom: OS::Heat::RandomString
       files:
         myfile: contents
-'''
+"""
 
-sample_action = '''
+sample_action = """
   name: test_cluster_create_action
   target: cluster_001
   action: create
@@ -44,7 +44,7 @@ sample_action = '''
     min_size: 1
     max_size: 10
     pause_time: PT10M
-'''
+"""
 
 
 UUIDs = (UUID1, UUID2, UUID3) = sorted([uuidutils.generate_uuid()

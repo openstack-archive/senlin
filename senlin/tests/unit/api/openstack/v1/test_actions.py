@@ -26,7 +26,7 @@ from senlin.tests.unit.common import base
 
 @mock.patch.object(policy, 'enforce')
 class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
-    '''Tests the API class which acts as the WSGI controller.'''
+    """Tests the API class which acts as the WSGI controller."""
 
     def setUp(self):
         super(ActionControllerTest, self).setUp()

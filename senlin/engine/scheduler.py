@@ -29,7 +29,7 @@ wallclock = time.time
 
 
 class ThreadGroupManager(object):
-    '''Thread group manager.'''
+    """Thread group manager."""
 
     def __init__(self):
         super(ThreadGroupManager, self).__init__()
@@ -45,7 +45,7 @@ class ThreadGroupManager(object):
         self.db_session = context.RequestContext(is_admin=True)
 
     def _service_task(self):
-        '''Dummy task which gets queued on the service.Service threadgroup.
+        """Dummy task which gets queued on the service.Service threadgroup.
 
         Without this service.Service sees nothing running i.e has nothing to
         wait() on, so the process exits..
@@ -53,7 +53,7 @@ class ThreadGroupManager(object):
         housekeeping tasks
 
         (Yanyan)Not sure this is still necessary, just keep it temporarily.
-        '''
+        """
         # TODO(Yanyan): have this task call dbapi purge events
         pass
 
@@ -76,7 +76,7 @@ class ThreadGroupManager(object):
         return func(*args, **kwargs)
 
     def start(self, func, *args, **kwargs):
-        '''Run the given method in a thread.'''
+        """Run the given method in a thread."""
         req_cnxt = oslo_context.get_current()
         self.group.add_thread(
             self._start_with_trace, req_cnxt,
@@ -84,13 +84,13 @@ class ThreadGroupManager(object):
             func, *args, **kwargs)
 
     def start_action(self, worker_id, action_id=None):
-        '''Run action(s) in sub-thread(s).
+        """Run action(s) in sub-thread(s).
 
         :param worker_id: ID of the worker thread; we fake workers using
                           senlin engines at the moment.
         :param action_id: ID of the action to be executed. None means all
                           ready actions will be acquired and scheduled to run.
-        '''
+        """
         actions_launched = 0
         max_batch_size = cfg.CONF.max_actions_per_batch
         batch_interval = cfg.CONF.batch_interval
@@ -135,29 +135,29 @@ class ThreadGroupManager(object):
             actions_launched = 1
 
     def cancel_action(self, action_id):
-        '''Cancel an action execution progress.'''
+        """Cancel an action execution progress."""
         action = action_mod.Action.load(self.db_session, action_id,
                                         project_safe=False)
         action.signal(action.SIG_CANCEL)
 
     def suspend_action(self, action_id):
-        '''Suspend an action execution progress.'''
+        """Suspend an action execution progress."""
         action = action_mod.Action.load(self.db_session, action_id,
                                         project_safe=False)
         action.signal(action.SIG_SUSPEND)
 
     def resume_action(self, action_id):
-        '''Resume an action execution progress.'''
+        """Resume an action execution progress."""
         action = action_mod.Action.load(self.db_session, action_id,
                                         project_safe=False)
         action.signal(action.SIG_RESUME)
 
     def add_timer(self, interval, func, *args, **kwargs):
-        '''Define a periodic task to be run in the thread group.
+        """Define a periodic task to be run in the thread group.
 
         The task will be executed in a separate green thread.
         Interval is from cfg.CONF.periodic_interval
-        '''
+        """
         timer = self.group.add_timer(interval, func, *args, **kwargs)
         return timer
 
@@ -165,7 +165,7 @@ class ThreadGroupManager(object):
         self.group.stop_timers()
 
     def stop(self, graceful=False):
-        '''Stop any active threads belong to this threadgroup.'''
+        """Stop any active threads belong to this threadgroup."""
         # Try to stop all threads gracefully
         self.group.stop(graceful)
         self.group.wait()
@@ -185,17 +185,17 @@ class ThreadGroupManager(object):
 
 
 def reschedule(action_id, sleep_time=1):
-    '''Eventlet Sleep for the specified number of seconds.
+    """Eventlet Sleep for the specified number of seconds.
 
     :param action_id: the action to put into sleep.
     :param sleep_time: seconds to sleep; if None, no sleep;
-    '''
+    """
     if sleep_time is not None:
         LOG.debug('Action %s sleep for %s seconds', action_id, sleep_time)
         eventlet.sleep(sleep_time)
 
 
 def sleep(sleep_time):
-    '''Interface for sleeping.'''
+    """Interface for sleeping."""
 
     eventlet.sleep(sleep_time)

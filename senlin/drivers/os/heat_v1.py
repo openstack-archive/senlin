@@ -17,7 +17,7 @@ from senlin.drivers import sdk
 
 
 class HeatClient(base.DriverBase):
-    '''Heat V1 driver.'''
+    """Heat V1 driver."""
 
     def __init__(self, params):
         super(HeatClient, self).__init__(params)
@@ -80,7 +80,7 @@ class HeatClient(base.DriverBase):
 
     @sdk.translate_exception
     def wait_for_stack_delete(self, stack_id, timeout=None):
-        '''Wait for stack deleting complete'''
+        """Wait for stack deleting complete"""
         if timeout is None:
             timeout = cfg.CONF.default_action_timeout
 

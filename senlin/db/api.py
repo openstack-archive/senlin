@@ -10,11 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
+"""
 Interface for database access.
 
 SQLAlchemy is currently the only supported backend.
-'''
+"""
 
 from oslo_config import cfg
 from oslo_db import api
@@ -397,17 +397,17 @@ def action_abandon(context, action_id, values=None):
 
 
 def action_lock_check(context, action_id, owner=None):
-    '''Check whether an action has been locked(by an owner).'''
+    """Check whether an action has been locked(by an owner)."""
     return IMPL.action_lock_check(context, action_id, owner)
 
 
 def action_signal(context, action_id, value):
-    '''Send signal to an action via DB.'''
+    """Send signal to an action via DB."""
     return IMPL.action_signal(context, action_id, value)
 
 
 def action_signal_query(context, action_id):
-    '''Query signal status for the specified action.'''
+    """Query signal status for the specified action."""
     return IMPL.action_signal_query(context, action_id)
 
 

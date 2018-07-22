@@ -48,9 +48,8 @@ class TestScalingPolicy(base.SenlinTestCase):
         self.profile = utils.create_profile(self.context, PROFILE_ID)
         self.cluster = utils.create_cluster(self.context, CLUSTER_ID,
                                             PROFILE_ID)
-        self.cluster_no_maxsize = utils. \
-            create_cluster(self.context, CLUSTER_NOMAXSIZE_ID,
-                           PROFILE_ID, max_size=-1)
+        self.cluster_no_maxsize = utils.create_cluster(
+            self.context, CLUSTER_NOMAXSIZE_ID, PROFILE_ID, max_size=-1)
 
     def _create_nodes(self, count):
         NODE_IDS = [

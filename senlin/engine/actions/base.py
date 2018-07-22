@@ -34,7 +34,7 @@ LOG = logging.getLogger(__name__)
 
 
 class Action(object):
-    '''An action can be performed on a cluster or a node of a cluster.'''
+    """An action can be performed on a cluster or a node of a cluster."""
 
     RETURNS = (
         RES_OK, RES_ERROR, RES_RETRY, RES_CANCEL, RES_TIMEOUT,
@@ -295,13 +295,13 @@ class Action(object):
         ao.Action.signal(self.context, self.id, cmd)
 
     def execute(self, **kwargs):
-        '''Execute the action.
+        """Execute the action.
 
         In theory, the action encapsulates all information needed for
         execution.  'kwargs' may specify additional parameters.
         :param kwargs: additional parameters that may override the default
                        properties stored in the action record.
-        '''
+        """
         raise NotImplementedError
 
     def set_status(self, result, reason=None):
@@ -493,7 +493,7 @@ class Action(object):
 
 
 def ActionProc(ctx, action_id):
-    '''Action process.'''
+    """Action process."""
 
     # Step 1: materialize the action object
     action = Action.load(ctx, action_id=action_id, project_safe=False)

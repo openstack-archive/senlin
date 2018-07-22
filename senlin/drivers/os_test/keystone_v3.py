@@ -21,7 +21,7 @@ CONF = cfg.CONF
 
 
 class KeystoneClient(base.DriverBase):
-    '''Keystone V3 driver.'''
+    """Keystone V3 driver."""
 
     def __init__(self, params):
         super(KeystoneClient, self).__init__(params)
@@ -30,7 +30,7 @@ class KeystoneClient(base.DriverBase):
 
     @sdk.translate_exception
     def trust_get_by_trustor(self, trustor, trustee=None, project=None):
-        '''Get trust by trustor.
+        """Get trust by trustor.
 
         Note we cannot provide two or more filters to keystone due to
         constraints in keystone implementation. We do additional filtering
@@ -40,7 +40,7 @@ class KeystoneClient(base.DriverBase):
         :param trustee: ID of the trustee;
         :param project: ID of the project to which the trust is scoped.
         :returns: The trust object or None if no matching trust is found.
-        '''
+        """
         filters = {'trustor_user_id': trustor}
 
         trusts = [t for t in self.conn.identity.trusts(**filters)]
@@ -59,7 +59,7 @@ class KeystoneClient(base.DriverBase):
     @sdk.translate_exception
     def trust_create(self, trustor, trustee, project, roles=None,
                      impersonation=True):
-        '''Create trust between two users.
+        """Create trust between two users.
 
         :param trustor: ID of the user who is the trustor.
         :param trustee: ID of the user who is the trustee.
@@ -67,7 +67,7 @@ class KeystoneClient(base.DriverBase):
         :param roles: List of roles the trustee will inherit from the trustor.
         :param impersonation: Whether the trustee is allowed to impersonate
                               the trustor.
-        '''
+        """
 
         if roles:
             role_list = [{'name': role} for role in roles]
@@ -89,7 +89,7 @@ class KeystoneClient(base.DriverBase):
     @classmethod
     @sdk.translate_exception
     def get_token(cls, **creds):
-        '''Get token using given credential'''
+        """Get token using given credential"""
 
         access_info = sdk.authenticate(**creds)
         return access_info['token']
@@ -97,18 +97,18 @@ class KeystoneClient(base.DriverBase):
     @classmethod
     @sdk.translate_exception
     def get_user_id(cls, **creds):
-        '''Get ID of the user with given credential'''
+        """Get ID of the user with given credential"""
 
         access_info = sdk.authenticate(**creds)
         return access_info['user_id']
 
     @classmethod
     def get_service_credentials(cls, **kwargs):
-        '''Senlin service credential to use with Keystone.
+        """Senlin service credential to use with Keystone.
 
         :param kwargs: An additional keyword argument list that can be used
                        for customizing the default settings.
-        '''
+        """
 
         creds = {
             'auth_url': CONF.authentication.auth_url,
@@ -143,7 +143,7 @@ class KeystoneClient(base.DriverBase):
 
     @sdk.translate_exception
     def get_senlin_endpoint(self):
-        '''Get Senlin service endpoint.'''
+        """Get Senlin service endpoint."""
         region = cfg.CONF.default_region_name
         # TODO(Yanyan Hu): Currently, region filtering is unsupported in
         # session.get_endpoint(). Need to propose fix to openstacksdk.

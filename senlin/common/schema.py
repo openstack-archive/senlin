@@ -498,14 +498,14 @@ class Spec(collections.Mapping):
             raise exc.ESchema(message=msg)
 
     def __getitem__(self, key):
-        '''Lazy evaluation for spec items.'''
+        """Lazy evaluation for spec items."""
         return self.resolve_value(key)
 
     def __len__(self):
-        '''Number of items in the spec.
+        """Number of items in the spec.
 
         A spec always contain all keys though some may be not specified.
-        '''
+        """
         return len(self._schema)
 
     def __contains__(self, key):

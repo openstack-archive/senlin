@@ -30,20 +30,20 @@ CONF = cfg.CONF
 
 
 def do_db_version():
-    '''Print database's current migration level.'''
+    """Print database's current migration level."""
     print(api.db_version(api.get_engine()))
 
 
 def do_db_sync():
-    '''Place a database under migration control and upgrade.
+    """Place a database under migration control and upgrade.
 
     DB is created first if necessary.
-    '''
+    """
     api.db_sync(api.get_engine(), CONF.command.version)
 
 
 def do_event_purge():
-    '''Purge the specified event records in senlin's database.'''
+    """Purge the specified event records in senlin's database."""
     if CONF.command.age < 0:
         print(_("age must be a positive integer."))
         return

@@ -10,9 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
+"""
 Utilities for scaling actions and related policies.
-'''
+"""
 
 import math
 import random

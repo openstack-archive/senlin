@@ -324,12 +324,12 @@ def node_count_by_cluster(context, cluster_id, **kwargs):
 
 @retry_on_deadlock
 def node_update(context, node_id, values):
-    '''Update a node with new property values.
+    """Update a node with new property values.
 
     :param node_id: ID of the node to be updated.
     :param values: A dictionary of values to be updated on the node.
     :raises ResourceNotFound: The specified node does not exist in database.
-    '''
+    """
     with session_for_write() as session:
         node = session.query(models.Node).get(node_id)
         if not node:
@@ -437,14 +437,14 @@ def node_delete(context, node_id):
 # Locks
 @retry_on_deadlock
 def cluster_lock_acquire(cluster_id, action_id, scope):
-    '''Acquire lock on a cluster.
+    """Acquire lock on a cluster.
 
     :param cluster_id: ID of the cluster.
     :param action_id: ID of the action that attempts to lock the cluster.
     :param scope: +1 means a node-level operation lock; -1 indicates
                   a cluster-level lock.
     :return: A list of action IDs that currently works on the cluster.
-    '''
+    """
     with session_for_write() as session:
         query = session.query(models.ClusterLock).with_for_update()
         lock = query.get(cluster_id)
@@ -482,14 +482,14 @@ def _release_cluster_lock(session, lock, action_id, scope):
 
 @retry_on_deadlock
 def cluster_lock_release(cluster_id, action_id, scope):
-    '''Release lock on a cluster.
+    """Release lock on a cluster.
 
     :param cluster_id: ID of the cluster.
     :param action_id: ID of the action that attempts to release the cluster.
     :param scope: +1 means a node-level operation lock; -1 indicates
                   a cluster-level lock.
     :return: True indicates successful release, False indicates failure.
-    '''
+    """
     with session_for_write() as session:
         lock = session.query(
             models.ClusterLock).with_for_update().get(cluster_id)
@@ -749,12 +749,12 @@ def cluster_policy_update(context, cluster_id, policy_id, values):
 
 
 def cluster_add_dependents(context, cluster_id, profile_id):
-    '''Add profile ID of container node to host cluster's 'dependents' property
+    """Add profile ID of container node to host cluster's 'dependents' property
 
     :param cluster_id: ID of the cluster to be updated.
     :param profile_id: Profile ID of the container node.
     :raises ResourceNotFound: The specified cluster does not exist in database.
-    '''
+    """
 
     with session_for_write() as session:
         cluster = session.query(models.Cluster).get(cluster_id)
@@ -768,12 +768,12 @@ def cluster_add_dependents(context, cluster_id, profile_id):
 
 
 def cluster_remove_dependents(context, cluster_id, profile_id):
-    '''Remove profile ID from host cluster's 'dependents' property
+    """Remove profile ID from host cluster's 'dependents' property
 
     :param cluster_id: ID of the cluster to be updated.
     :param profile_id: Profile ID of the container node.
     :raises ResourceNotFound: The specified cluster does not exist in database.
-    '''
+    """
 
     with session_for_write() as session:
         cluster = session.query(models.Cluster).get(cluster_id)
@@ -1060,8 +1060,7 @@ def action_get_by_short_id(context, short_id, project_safe=True):
 
 
 def action_get_all_by_owner(context, owner_id):
-    query = model_query(context, models.Action).\
-        filter_by(owner=owner_id)
+    query = model_query(context, models.Action).filter_by(owner=owner_id)
     return query.all()
 
 
@@ -1265,11 +1264,11 @@ def action_acquire(context, action_id, owner, timestamp):
 @retry_on_deadlock
 def action_acquire_random_ready(context, owner, timestamp):
     with session_for_write() as session:
-        action = session.query(models.Action).\
-            filter_by(status=consts.ACTION_READY).\
-            filter_by(owner=None).\
-            order_by(func.random()).\
-            with_for_update().first()
+        action = (session.query(models.Action).
+                  filter_by(status=consts.ACTION_READY).
+                  filter_by(owner=None).
+                  order_by(func.random()).
+                  with_for_update().first())
 
         if action:
             action.owner = owner
@@ -1294,11 +1293,11 @@ def action_acquire_first_ready(context, owner, timestamp):
 
 @retry_on_deadlock
 def action_abandon(context, action_id, values=None):
-    '''Abandon an action for other workers to execute again.
+    """Abandon an action for other workers to execute again.
 
     This API is always called with the action locked by the current
     worker. There is no chance the action is gone or stolen by others.
-    '''
+    """
     with session_for_write() as session:
         action = session.query(models.Action).get(action_id)
 
@@ -1364,8 +1363,7 @@ def action_delete_by_target(context, target, action=None,
         return None
 
     with session_for_write() as session:
-        q = session.query(models.Action).\
-            filter_by(target=target)
+        q = session.query(models.Action).filter_by(target=target)
 
         if project_safe:
             q = q.filter_by(project=context.project_id)
@@ -1528,8 +1526,8 @@ def dummy_gc(engine_id):
             _mark_engine_failed(session, action.id, timestamp,
                                 reason='Engine failure')
             # Release all node locks
-            query = session.query(models.NodeLock).\
-                filter_by(action_id=action.id)
+            query = (session.query(models.NodeLock).
+                     filter_by(action_id=action.id))
             query.delete(synchronize_session=False)
 
             # Release all cluster locks

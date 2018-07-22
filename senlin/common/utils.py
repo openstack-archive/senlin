@@ -89,13 +89,13 @@ def level_from_number(value):
 
 
 def url_fetch(url, allowed_schemes=('http', 'https'), verify=True):
-    '''Get the data at the specified URL.
+    """Get the data at the specified URL.
 
     The URL must use the http: or https: schemes.
     The file: scheme is also supported if you override
     the allowed_schemes argument.
     Raise an IOError if getting the data fails.
-    '''
+    """
     LOG.info('Fetching data from %s', url)
 
     components = urllib.parse.urlparse(url)

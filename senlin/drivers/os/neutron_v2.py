@@ -17,7 +17,7 @@ from senlin.drivers import sdk
 
 
 class NeutronClient(base.DriverBase):
-    '''Neutron V2 driver.'''
+    """Neutron V2 driver."""
 
     def __init__(self, params):
         super(NeutronClient, self).__init__(params)

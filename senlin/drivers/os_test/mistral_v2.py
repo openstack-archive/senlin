@@ -15,7 +15,7 @@ from senlin.drivers import sdk
 
 
 class MistralClient(base.DriverBase):
-    '''Fake Mistral V2 driver.'''
+    """Fake Mistral V2 driver."""
 
     def __init__(self, params):
         self.fake_workflow = {}

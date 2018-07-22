@@ -15,7 +15,7 @@ from senlin.drivers import sdk
 
 
 class CinderClient(base.DriverBase):
-    '''Fake Cinder V2 driver for test.'''
+    """Fake Cinder V2 driver for test."""
     def __init__(self, ctx):
         self.fake_volume_create = {
             "id": "3095aefc-09fb-4bc7-b1f0-f21a304e864c",

@@ -39,7 +39,7 @@ class TestOctaviaV2Driver(base.SenlinTestCase):
         lb_id = 'loadbalancer_identifier'
         loadbalancer_obj = mock.Mock()
 
-        self.conn.load_balancer.find_load_balancer.return_value =\
+        self.conn.load_balancer.find_load_balancer.return_value = \
             loadbalancer_obj
         res = self.oc.loadbalancer_get(lb_id)
         self.conn.load_balancer.find_load_balancer.assert_called_once_with(

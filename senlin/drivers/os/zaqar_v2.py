@@ -17,7 +17,7 @@ from senlin.drivers import sdk
 
 
 class ZaqarClient(base.DriverBase):
-    '''Zaqar V2 driver.'''
+    """Zaqar V2 driver."""
 
     def __init__(self, params):
         super(ZaqarClient, self).__init__(params)

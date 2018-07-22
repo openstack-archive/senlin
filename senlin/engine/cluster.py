@@ -41,10 +41,10 @@ class Cluster(object):
 
     def __init__(self, name, desired_capacity, profile_id,
                  context=None, **kwargs):
-        '''Initialize a cluster object.
+        """Initialize a cluster object.
 
         The cluster defaults to have 0 node with no profile assigned.
-        '''
+        """
 
         self.id = kwargs.get('id', None)
         self.name = name
@@ -105,10 +105,10 @@ class Cluster(object):
         }
 
     def store(self, context):
-        '''Store the cluster in database and return its ID.
+        """Store the cluster in database and return its ID.
 
         If the ID already exists, we do an update.
-        '''
+        """
 
         values = {
             'name': self.name,
@@ -177,7 +177,7 @@ class Cluster(object):
 
     @classmethod
     def load(cls, context, cluster_id=None, dbcluster=None, project_safe=True):
-        '''Retrieve a cluster from database.'''
+        """Retrieve a cluster from database."""
         if dbcluster is None:
             dbcluster = co.Cluster.get(context, cluster_id,
                                        project_safe=project_safe)
@@ -239,10 +239,10 @@ class Cluster(object):
         return
 
     def do_create(self, context, **kwargs):
-        '''Additional logic at the beginning of cluster creation process.
+        """Additional logic at the beginning of cluster creation process.
 
         Set cluster status to CREATING.
-        '''
+        """
         if self.status != consts.CS_INIT:
             LOG.error('Cluster is in status "%s"', self.status)
             return False
@@ -270,10 +270,10 @@ class Cluster(object):
         return True
 
     def do_update(self, context, **kwargs):
-        '''Additional logic at the beginning of cluster updating progress.
+        """Additional logic at the beginning of cluster updating progress.
 
         This method is intended to be called only from an action.
-        '''
+        """
         self.set_status(context, consts.CS_UPDATING, 'Update in progress')
         return True
 
@@ -286,10 +286,10 @@ class Cluster(object):
         return True
 
     def do_recover(self, context, **kwargs):
-        '''Additional logic at the beginning of cluster recovering process.
+        """Additional logic at the beginning of cluster recovering process.
 
         Set cluster status to RECOVERING.
-        '''
+        """
         self.set_status(context, consts.CS_RECOVERING, 'Recovery in progress')
         return True
 

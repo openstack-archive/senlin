@@ -33,7 +33,7 @@ def request_with_middleware(middleware, func, req, *args, **kwargs):
 
 
 def to_remote_error(error):
-    '''Prepend the given exception with the _Remote suffix.'''
+    """Prepend the given exception with the _Remote suffix."""
 
     exc_info = (type(error), error, None)
     serialized = rpc_common.serialize_remote_exception(exc_info)
@@ -43,7 +43,7 @@ def to_remote_error(error):
 
 
 class ControllerTest(object):
-    '''Common utilities for testing API Controllers.'''
+    """Common utilities for testing API Controllers."""
 
     def __init__(self, *args, **kwargs):
         super(ControllerTest, self).__init__(*args, **kwargs)

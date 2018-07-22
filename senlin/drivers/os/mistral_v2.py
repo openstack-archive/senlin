@@ -62,7 +62,7 @@ class MistralClient(base.DriverBase):
     def wait_for_execution(self, execution, status='SUCCESS',
                            failures=['ERROR'], interval=2,
                            timeout=None):
-        '''Wait for execution creation complete'''
+        """Wait for execution creation complete"""
         if timeout is None:
             timeout = cfg.CONF.default_action_timeout
 

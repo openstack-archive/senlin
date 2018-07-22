@@ -102,7 +102,7 @@ class StackProfile(base.Profile):
         self.stack_id = None
 
     def validate(self, validate_props=False):
-        '''Validate the schema and the data provided.'''
+        """Validate the schema and the data provided."""
         # general validation
         self.spec_data.validate()
         self.properties.validate()

@@ -20,14 +20,14 @@ CONF = cfg.CONF
 
 
 class DriverBase(object):
-    '''Base class for all drivers.'''
+    """Base class for all drivers."""
 
     def __init__(self, params):
         self.conn_params = copy.deepcopy(params)
 
 
 class SenlinDriver(object):
-    '''Generic driver class'''
+    """Generic driver class"""
 
     def __init__(self, backend_name=None):
 

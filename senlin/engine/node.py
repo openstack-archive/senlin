@@ -155,7 +155,7 @@ class Node(object):
 
     @classmethod
     def load(cls, context, node_id=None, db_node=None, project_safe=True):
-        '''Retrieve a node from database.'''
+        """Retrieve a node from database."""
         if db_node is None:
             db_node = no.Node.get(context, node_id, project_safe=project_safe)
             if db_node is None:
@@ -166,7 +166,7 @@ class Node(object):
     @classmethod
     def load_all(cls, context, cluster_id=None, limit=None, marker=None,
                  sort=None, filters=None, project_safe=True):
-        '''Retrieve all nodes of from database.'''
+        """Retrieve all nodes of from database."""
         objs = no.Node.get_all(context, cluster_id=cluster_id,
                                filters=filters, sort=sort,
                                limit=limit, marker=marker,

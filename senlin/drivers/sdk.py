@@ -10,9 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
+"""
 SDK Client
-'''
+"""
 import sys
 
 import functools
@@ -36,7 +36,7 @@ sdk_utils.enable_logging(debug=False, stream=sys.stdout)
 
 
 def parse_exception(ex):
-    '''Parse exception code and yield useful information.'''
+    """Parse exception code and yield useful information."""
     code = 500
 
     LOG.exception(ex)
@@ -125,7 +125,7 @@ def create_connection(params=None):
 
 
 def authenticate(**kwargs):
-    '''Authenticate using openstack sdk based on user credential'''
+    """Authenticate using openstack sdk based on user credential"""
 
     conn = create_connection(kwargs)
     access_info = {
@@ -138,13 +138,13 @@ def authenticate(**kwargs):
 
 
 class FakeResourceObject(object):
-    '''Generate a fake SDK resource object based on given dictionary'''
+    """Generate a fake SDK resource object based on given dictionary"""
     def __init__(self, params):
         for key in params:
             setattr(self, key, params[key])
 
     def to_dict(self):
-        '''Override this function in subclass to handle special attributes'''
+        """Override this function in subclass to handle special attributes"""
         data = {}
         for attr in dir(self):
             if not attr.startswith('__'):

@@ -30,12 +30,12 @@ class TestConstraintsSchema(testtools.TestCase):
         self.assertEqual(d, dict(r))
 
     def test_allowed_values_numeric_int(self):
-        '''Test AllowedValues constraint for numeric integer values.
+        """Test AllowedValues constraint for numeric integer values.
 
         Test if the AllowedValues constraint works for numeric values in any
         combination of numeric strings or numbers in the constraint and
         numeric strings or numbers as value.
-        '''
+        """
 
         # Allowed values defined as integer numbers
         s = schema.Integer(
@@ -69,12 +69,12 @@ class TestConstraintsSchema(testtools.TestCase):
                          six.text_type(err))
 
     def test_allowed_values_numeric_float(self):
-        '''Test AllowedValues constraint for numeric floating point values.
+        """Test AllowedValues constraint for numeric floating point values.
 
         Test if the AllowedValues constraint works for numeric values in any
         combination of numeric strings or numbers in the constraint and
         numeric strings or numbers as value.
-        '''
+        """
 
         # Allowed values defined as numbers
         s = schema.Number(

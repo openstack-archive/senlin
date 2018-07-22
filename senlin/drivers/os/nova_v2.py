@@ -21,7 +21,7 @@ LOG = log.getLogger(__name__)
 
 
 class NovaClient(base.DriverBase):
-    '''Nova V2 driver.'''
+    """Nova V2 driver."""
 
     def __init__(self, params):
         super(NovaClient, self).__init__(params)
@@ -156,7 +156,7 @@ class NovaClient(base.DriverBase):
     def wait_for_server(self, server, status=consts.VS_ACTIVE,
                         failures=[consts.VS_ERROR],
                         interval=2, timeout=None):
-        '''Wait for server creation complete'''
+        """Wait for server creation complete"""
         if timeout is None:
             timeout = cfg.CONF.default_action_timeout
 
@@ -169,7 +169,7 @@ class NovaClient(base.DriverBase):
 
     @sdk.translate_exception
     def wait_for_server_delete(self, server, timeout=None):
-        '''Wait for server deleting complete'''
+        """Wait for server deleting complete"""
         if timeout is None:
             timeout = cfg.CONF.default_action_timeout
 

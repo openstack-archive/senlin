@@ -15,10 +15,10 @@ from senlin.objects import cluster_policy as cpo
 
 
 class ClusterPolicy(object):
-    '''Object representing a binding between a cluster and a policy.
+    """Object representing a binding between a cluster and a policy.
 
     This object also records the runtime data of a policy, if any.
-    '''
+    """
     def __init__(self, cluster_id, policy_id, **kwargs):
         self.id = kwargs.get('id', None)
 
@@ -35,7 +35,7 @@ class ClusterPolicy(object):
         self.policy_type = kwargs.get('policy_type', '')
 
     def store(self, context):
-        '''Store the binding record into database table.'''
+        """Store the binding record into database table."""
         values = {
             'enabled': self.enabled,
             'data': self.data,
@@ -80,7 +80,7 @@ class ClusterPolicy(object):
 
     @classmethod
     def load(cls, context, cluster_id, policy_id):
-        '''Retrieve a cluster-policy binding from database.'''
+        """Retrieve a cluster-policy binding from database."""
 
         binding = cpo.ClusterPolicy.get(context, cluster_id, policy_id)
         if binding is None:

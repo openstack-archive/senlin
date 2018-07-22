@@ -130,10 +130,10 @@ class Profile(object):
 
     @classmethod
     def _from_object(cls, profile):
-        '''Construct a profile from profile object.
+        """Construct a profile from profile object.
 
         :param profile: a profile object that contains all required fields.
-        '''
+        """
         kwargs = {
             'id': profile.id,
             'type': profile.type,
@@ -150,7 +150,7 @@ class Profile(object):
 
     @classmethod
     def load(cls, ctx, profile=None, profile_id=None, project_safe=True):
-        '''Retrieve a profile object from database.'''
+        """Retrieve a profile object from database."""
         if profile is None:
             profile = po.Profile.get(ctx, profile_id,
                                      project_safe=project_safe)
@@ -191,7 +191,7 @@ class Profile(object):
         po.Profile.delete(ctx, profile_id)
 
     def store(self, ctx):
-        '''Store the profile into database and return its ID.'''
+        """Store the profile into database and return its ID."""
         timestamp = timeutils.utcnow(True)
 
         values = {
@@ -372,12 +372,12 @@ class Profile(object):
         return params
 
     def compute(self, obj):
-        '''Construct compute client based on object.
+        """Construct compute client based on object.
 
         :param obj: Object for which the client is created. It is expected to
                     be None when retrieving an existing client. When creating
                     a client, it contains the user and project to be used.
-        '''
+        """
 
         if self._computeclient is not None:
             return self._computeclient

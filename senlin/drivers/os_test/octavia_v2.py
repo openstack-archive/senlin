@@ -23,7 +23,7 @@ FAKE_SUBNET_ID = "bbb35f84-35cc-4b2f-84c2-a6a29bba68aa"
 
 
 class OctaviaClient(base.DriverBase):
-    '''Fake octavia V2 driver for test.'''
+    """Fake octavia V2 driver for test."""
 
     def __init__(self, ctx):
         self.fake_lb = {

@@ -109,14 +109,14 @@ def get_bind_addr(conf, default_port=None):
 
 
 def get_socket(conf, default_port):
-    '''Bind socket to bind ip:port in conf
+    """Bind socket to bind ip:port in conf
 
     :param conf: a cfg.ConfigOpts object
     :param default_port: port to bind to if none is specified in conf
 
     :returns : a socket object as returned from socket.listen or
                ssl.wrap_socket if conf specifies cert_file
-    '''
+    """
 
     bind_addr = get_bind_addr(conf, default_port)
 

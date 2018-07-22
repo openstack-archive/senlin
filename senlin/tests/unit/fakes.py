@@ -10,9 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
+"""
 A module that contains various fake entities
-'''
+"""
 
 from senlin.common import schema
 from senlin.policies import base as policy_base

@@ -25,11 +25,11 @@ class BaseConstraint(collections.Mapping):
     )
 
     def __str__(self):
-        '''Utility method for generating schema docs.'''
+        """Utility method for generating schema docs."""
         return self.desc()
 
     def validate(self, value, schema=None, context=None):
-        '''Base entry for validation.'''
+        """Base entry for validation."""
         if not self._validate(value, schema=schema, context=context):
             raise ValueError(self._error(value))
 

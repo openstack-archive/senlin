@@ -18,11 +18,11 @@ from senlin.drivers import base as driver_base
 
 
 class RequestContext(base_context.RequestContext):
-    '''Stores information about the security context.
+    """Stores information about the security context.
 
     The context encapsulates information related to the user accessing the
     system, as well as additional request information.
-    '''
+    """
 
     def __init__(self, auth_token=None, user_id=None, project_id=None,
                  domain_id=None, user_domain_id=None, project_domain_id=None,
@@ -33,7 +33,7 @@ class RequestContext(base_context.RequestContext):
                  auth_token_info=None, region_name=None, roles=None,
                  password=None, api_version=None, **kwargs):
 
-        '''Initializer of request context.'''
+        """Initializer of request context."""
         # We still have 'tenant' param because oslo_context still use it.
         super(RequestContext, self).__init__(
             auth_token=auth_token, user_id=user_id, project_id=project_id,

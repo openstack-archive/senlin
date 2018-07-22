@@ -166,7 +166,7 @@ class Policy(object):
         po.Policy.delete(context, policy_id)
 
     def store(self, context):
-        '''Store the policy object into database table.'''
+        """Store the policy object into database table."""
         timestamp = timeutils.utcnow(True)
 
         values = {
@@ -192,7 +192,7 @@ class Policy(object):
         return self.id
 
     def validate(self, context, validate_props=False):
-        '''Validate the schema and the data provided.'''
+        """Validate the schema and the data provided."""
         self.spec_data.validate()
         self.properties.validate()
 

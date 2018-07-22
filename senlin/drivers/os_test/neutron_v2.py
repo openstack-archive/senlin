@@ -15,7 +15,7 @@ from senlin.drivers import sdk
 
 
 class NeutronClient(base.DriverBase):
-    '''Fake Neutron V2 driver for test.'''
+    """Fake Neutron V2 driver for test."""
 
     def __init__(self, ctx):
         self.fake_network = {
