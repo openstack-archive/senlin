@@ -932,7 +932,9 @@ class TestNode(base.SenlinTestCase):
             'FAKE_KEY2': 'FAKE_VALUE2',
         }
         final_inputs = jsonutils.dumps(final_dict)
-        wfc.execution_create.assert_called_once_with('foo', final_inputs)
+        wfc.execution_create.assert_called_once_with(mock.ANY, mock.ANY)
+        call_args, call_kwargs = wfc.execution_create.call_args
+        self.assertEqual(call_args, ('foo', final_inputs))
 
     def test_run_workflow_no_physical_id(self):
         node = nodem.Node('node1', PROFILE_ID, 'FAKE_CLUSTER')
@@ -974,8 +976,10 @@ class TestNode(base.SenlinTestCase):
             'FAKE_KEY1': 'FAKE_VALUE1',
             'FAKE_KEY2': 'FAKE_VALUE2',
         }
-        final_inputs = jsonutils.dumps(final_dict, sort_keys=False)
-        wfc.execution_create.assert_called_once_with('foo', final_inputs)
+        final_inputs = jsonutils.dumps(final_dict)
+        wfc.execution_create.assert_called_once_with(mock.ANY, mock.ANY)
+        call_args, call_kwargs = wfc.execution_create.call_args
+        self.assertEqual(call_args, ('foo', final_inputs))
 
     def test_run_workflow_failed_creation(self):
         node = nodem.Node('node1', PROFILE_ID, 'FAKE_CLUSTER')
@@ -1050,4 +1054,6 @@ class TestNode(base.SenlinTestCase):
             'FAKE_KEY2': 'FAKE_VALUE2',
         }
         final_inputs = jsonutils.dumps(final_dict)
-        wfc.execution_create.assert_called_once_with('foo', final_inputs)
+        wfc.execution_create.assert_called_once_with(mock.ANY, mock.ANY)
+        call_args, call_kwargs = wfc.execution_create.call_args
+        self.assertEqual(call_args, ('foo', final_inputs))
