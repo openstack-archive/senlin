@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Added operation support to migrate a nova server node.

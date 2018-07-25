@@ -1,0 +1,5 @@
+---
+features:
+  - Added a new detection type that actively pools the node health using a URL specified in the
+    health policy. That way the user can intergate Senlin's health policy with another custom or 3rd
+    party health check service.
