@@ -41,7 +41,8 @@ def main():
     profiler.setup('senlin-engine', cfg.CONF.host)
     srv = engine.EngineService(cfg.CONF.host, consts.ENGINE_TOPIC)
     launcher = service.launch(cfg.CONF, srv,
-                              workers=cfg.CONF.num_engine_workers)
+                              workers=cfg.CONF.num_engine_workers,
+                              restart_method='mutate')
     # the following periodic tasks are intended serve as HA checking
     # srv.create_periodic_tasks()
     launcher.wait()
