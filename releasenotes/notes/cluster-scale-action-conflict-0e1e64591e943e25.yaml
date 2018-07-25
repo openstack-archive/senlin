@@ -1,0 +1,21 @@
+---
+prelude: >
+    This release alters the cluster_scale_in and cluster_scale_out actions to
+    no longer place the action into the actions table when a conflict is
+    detected. This behavior is an improvement on the old way actions are
+    processed as the requester will now receive immediate feedback from the
+    API when an action cannot be processed. This release also honors the
+    scaling action cooldown in the same manner by erring via the API when a
+    scaling action cannot be processed due to cooldown.
+features:
+  - |
+    Scaling actions (IN or OUT) now validate that there is no conflicting
+    action already being processed and will return an error via the API
+    informing the end user if a conflict is detected. A conflicting action is
+    detected when new action of either `CLUSTER_SCALE_IN` or
+    `CLUSTER_SCALE_OUT` is attempted while there is already cluster scaling
+    action in the action table in a pending status (READY, RUNNING, WAITING,
+    ACTION_WAITING_LIFECYCLE_COMPLETION).
+    Additinally the cooldown will be checked and enforced when a scaling
+    action is requested. If the cooldown is being observed the requester will
+    be informed of this when submitting the action via an error.

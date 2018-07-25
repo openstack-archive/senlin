@@ -111,3 +111,9 @@ it can be used by both users and developers.
   are now sent directly in the query body rather than in the params
   field.
 
+1.11
+----
+- Modified the ``cluster_action`` API. The API now responds with
+  response code 409 when a scaling action conflicts with one already
+  being processed or a cooldown for a scaling action is encountered.
+

@@ -49,14 +49,16 @@ scaling behavior in both directions using the same policy.
 
 Senlin has carefully designed the builtin policy types so that for scaling
 policies, you can attach more than one instance of the same policy type but
-you may get an error when you are attempting to attach two policies of anther
+you may get an error when you are attempting to attach two policies of another
 type (say ``senlin.policy.deletion``) to the same cluster.
 
 The value of the ``event`` property indicates when the policy will be checked.
 A policy with ``event`` set to "``CLUSTER_SCALE_IN``" will be checked when and
 only when a corresponding action is triggered on the cluster. A policy with
 ``event`` set to "``CLUSTER_SCALE_OUT``" will be checked when and only when
-a corresponding action is triggered.
+a corresponding action is triggered. If the cluster is currently processing a
+scaling action it will not accept another scaling action until the current
+action has been processed and cooldown has been observed.
 
 For both types of actions that can triggered the scaling policy, there are
 always three types of adjustments to choose from as listed below. The type

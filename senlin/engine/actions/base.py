@@ -274,6 +274,9 @@ class Action(object):
         }
         c = req_context.RequestContext.from_dict(params)
 
+        if action in consts.CLUSTER_SCALE_ACTIONS:
+            Action.validate_scaling_action(c, target, action)
+
         obj = cls(target, action, c, **kwargs)
         return obj.store(ctx)
 
@@ -465,6 +468,70 @@ class Action(object):
             if res is False:
                 return
         return
+
+    @staticmethod
+    def validate_scaling_action(ctx, cluster_id, action):
+        """Validate scaling action against actions table and policy cooldown.
+
+        :param ctx: An instance of the request context.
+        :param cluster_id: ID of the cluster the scaling action is targeting.
+        :param action: Scaling action being validated.
+        :return: None
+        :raises: An exception of ``ActionCooldown`` when the action being
+        validated is still in cooldown based off the policy or
+        ``ActionConflict`` when a scaling action is already in the action
+        table.
+        """
+        # Check for conflicting actions in the actions table.
+        conflicting_actions = Action._get_conflicting_scaling_actions(
+            ctx, cluster_id)
+        if conflicting_actions:
+            action_ids = [a.get('id', None) for a in conflicting_actions]
+            LOG.info("Unable to process %(action)s for cluster %(cluster_id)s "
+                     "the action conflicts with %(conflicts)s",
+                     {'action': action,
+                      'cluster_id': cluster_id,
+                      'conflicts': action_ids})
+            raise exception.ActionConflict(
+                type=action,
+                target=cluster_id,
+                actions=",".join(action_ids))
+
+        # Check to see if action cooldown should be observed.
+        bindings = cpo.ClusterPolicy.get_all(ctx, cluster_id,
+                                             sort='priority',
+                                             filters={'enabled': True})
+        for pb in bindings:
+            policy = policy_mod.Policy.load(ctx, pb.policy_id)
+            if getattr(policy, 'cooldown', None) and policy.event == action:
+                if pb.last_op and not timeutils.is_older_than(
+                        pb.last_op, policy.cooldown):
+                    LOG.info("Unable to process %(action)s for cluster "
+                             "%(cluster_id)s the actions policy %(policy)s "
+                             "cooldown still in progress",
+                             {'action': action,
+                              'cluster_id': cluster_id,
+                              'policy': pb.policy_id})
+                    raise exception.ActionCooldown(
+                        type=action,
+                        cluster=cluster_id,
+                        policy_id=pb.policy_id)
+        return
+
+    @staticmethod
+    def _get_conflicting_scaling_actions(ctx, cluster_id):
+        """Check actions table for conflicting scaling actions.
+
+        :param ctx: An instance of the request context.
+        :param cluster_id: ID of the cluster the scaling action is targeting.
+        :return: A list of conflicting actions.
+        """
+        scaling_actions = ao.Action.action_list_active_scaling(
+            ctx, cluster_id)
+        if scaling_actions:
+            return [a.to_dict() for a in scaling_actions]
+        else:
+            return None
 
     def to_dict(self):
         if self.id:

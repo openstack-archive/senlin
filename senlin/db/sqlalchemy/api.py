@@ -1067,6 +1067,25 @@ def action_get(context, action_id, project_safe=True, refresh=False):
         return action
 
 
+def action_list_active_scaling(context, cluster_id=None, project_safe=True):
+    with session_for_read() as session:
+        query = session.query(models.Action)
+        if project_safe:
+            query = query.filter_by(project=context.project_id)
+        if cluster_id:
+            query = query.filter_by(target=cluster_id)
+        query = query.filter(
+            models.Action.status.in_(
+                [consts.ACTION_READY,
+                 consts.ACTION_WAITING,
+                 consts.ACTION_RUNNING,
+                 consts.ACTION_WAITING_LIFECYCLE_COMPLETION]))
+        query = query.filter(
+            models.Action.action.in_(consts.CLUSTER_SCALE_ACTIONS))
+        scaling_actions = query.all()
+        return scaling_actions
+
+
 def action_get_by_name(context, name, project_safe=True):
     return query_by_name(context, models.Action, name,
                          project_safe=project_safe)

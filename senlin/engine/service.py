@@ -2511,7 +2511,7 @@ class EngineService(service.Service):
         receiver = receiver_obj.Receiver.find(ctx, identity)
 
         try:
-            cluster = co.Cluster.find(ctx, receiver.cluster_id)
+            db_cluster = co.Cluster.find(ctx, receiver.cluster_id)
         except (exception.ResourceNotFound, exception.MultipleChoices) as ex:
             msg = ex.enhance_msg('referenced', ex)
             raise exception.BadRequest(msg=msg)
@@ -2527,7 +2527,7 @@ class EngineService(service.Service):
             'inputs': data
         }
 
-        action_id = action_mod.Action.create(ctx, cluster.id,
+        action_id = action_mod.Action.create(ctx, db_cluster.id,
                                              receiver.action, **kwargs)
         dispatcher.start_action()
         LOG.info("Webhook %(w)s triggered with action queued: %(a)s.",
