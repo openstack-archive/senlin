@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Added a cluster entity refresh to the cluster action execute wrapper which will make sure the
+    state of the action does not become stale while in queue.

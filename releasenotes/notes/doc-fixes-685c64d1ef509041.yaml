@@ -1,0 +1,4 @@
+---
+fixes:
+  - Senlin API/Function/Integration test were moved to senlin-tempest-plugin project before, fixed
+    doc for this change.

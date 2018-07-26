@@ -1,0 +1,7 @@
+---
+fixes:
+  - In openstacksdk 0.14.0 release, a bug related to SDK exception was fixed
+    "https://review.openstack.org/#/c/571101/". With that change a SDK exception will contain the
+    detailed message only if the message string is equal to 'Error'. Fixed the
+    test_parse_exception_http_exception_no_details to use 'Error' as the exception message to make
+    the test case pass.

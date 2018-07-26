@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Added a new boolean cluster config option to stop node before delete for all cluster.
