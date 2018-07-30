@@ -47,7 +47,6 @@ ENGINE
 
 PROFILE
 -------
-  - Add support to VM migration operations for nova server profile.
   - Add support to snapshot/restore operations for nova server profile. The
     possible use case is rapid scale.
   - Add support to nova server so that "block_device_mapping_v2" can reference
