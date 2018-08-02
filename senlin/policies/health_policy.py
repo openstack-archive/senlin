@@ -62,12 +62,13 @@ class HealthPolicy(base.Policy):
 
     _DETECTION_OPTIONS = (
         DETECTION_INTERVAL, POLL_URL, POLL_URL_SSL_VERIFY,
-        POLL_URL_HEALTHY_RESPONSE, POLL_URL_RETRY_LIMIT,
-        POLL_URL_RETRY_INTERVAL, NODE_UPDATE_TIMEOUT,
+        POLL_URL_CONN_ERROR_AS_UNHEALTHY, POLL_URL_HEALTHY_RESPONSE,
+        POLL_URL_RETRY_LIMIT, POLL_URL_RETRY_INTERVAL, NODE_UPDATE_TIMEOUT,
     ) = (
         'interval', 'poll_url', 'poll_url_ssl_verify',
-        'poll_url_healthy_response', 'poll_url_retry_limit',
-        'poll_url_retry_interval', 'node_update_timeout',
+        'poll_url_conn_error_as_unhealthy', 'poll_url_healthy_response',
+        'poll_url_retry_limit', 'poll_url_retry_interval',
+        'node_update_timeout',
     )
 
     _RECOVERY_KEYS = (
@@ -120,6 +121,12 @@ class HealthPolicy(base.Policy):
                             _("Whether to verify SSL when calling URL to poll "
                               "for node status. Only required when type is "
                               "'NODE_STATUS_POLL_URL'."),
+                            default=True,
+                        ),
+                        POLL_URL_CONN_ERROR_AS_UNHEALTHY: schema.Boolean(
+                            _("Whether to treat URL connection errors as an "
+                              "indication of an unhealthy node. Only required "
+                              "when type is 'NODE_STATUS_POLL_URL'."),
                             default=True,
                         ),
                         POLL_URL_HEALTHY_RESPONSE: schema.String(
@@ -215,6 +222,8 @@ class HealthPolicy(base.Policy):
         self.interval = options.get(self.DETECTION_INTERVAL, 60)
         self.poll_url = options.get(self.POLL_URL, '')
         self.poll_url_ssl_verify = options.get(self.POLL_URL_SSL_VERIFY, True)
+        self.poll_url_conn_error_as_unhealthy = options.get(
+            self.POLL_URL_CONN_ERROR_AS_UNHEALTHY, True)
         self.poll_url_healthy_response = options.get(
             self.POLL_URL_HEALTHY_RESPONSE, '')
         self.poll_url_retry_limit = options.get(self.POLL_URL_RETRY_LIMIT, '')
@@ -280,6 +289,8 @@ class HealthPolicy(base.Policy):
                 'recover_action': self.recover_actions,
                 'poll_url': self.poll_url,
                 'poll_url_ssl_verify': self.poll_url_ssl_verify,
+                'poll_url_conn_error_as_unhealthy':
+                    self.poll_url_conn_error_as_unhealthy,
                 'poll_url_healthy_response': self.poll_url_healthy_response,
                 'poll_url_retry_limit': self.poll_url_retry_limit,
                 'poll_url_retry_interval': self.poll_url_retry_interval,
@@ -297,6 +308,8 @@ class HealthPolicy(base.Policy):
             'interval': self.interval,
             'poll_url': self.poll_url,
             'poll_url_ssl_verify': self.poll_url_ssl_verify,
+            'poll_url_conn_error_as_unhealthy':
+                self.poll_url_conn_error_as_unhealthy,
             'poll_url_healthy_response': self.poll_url_healthy_response,
             'poll_url_retry_limit': self.poll_url_retry_limit,
             'poll_url_retry_interval': self.poll_url_retry_interval,
