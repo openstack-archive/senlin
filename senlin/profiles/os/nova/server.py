@@ -1626,7 +1626,9 @@ class ServerProfile(base.Profile):
 
         if server is None:
             return None, False
-        image_id = self._get_image_id(obj, server, 'rebuilding')
+        image_id = options.get(self.IMAGE, None)
+        if not image_id:
+            image_id = self._get_image_id(obj, server, 'rebuilding')
 
         admin_pass = self.properties.get(self.ADMIN_PASS)
         name = self.properties[self.NAME] or obj.name
@@ -1711,3 +1713,16 @@ class ServerProfile(base.Profile):
         """Handler for the migrate operation."""
         return self._handle_generic_op(obj, 'server_migrate',
                                        'migrate', consts.VS_ACTIVE)
+
+    def handle_snapshot(self, obj):
+        """Handler for the snapshot operation."""
+        return self._handle_generic_op(obj, 'server_create_image',
+                                       'snapshot', consts.VS_ACTIVE,
+                                       name=obj.name)
+
+    def handle_restore(self, obj, **options):
+        """Handler for the restore operation."""
+        image = options.get(self.IMAGE, None)
+        if not image:
+            return False
+        return self.handle_rebuild(obj, **options)
