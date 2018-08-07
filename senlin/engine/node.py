@@ -316,7 +316,7 @@ class Node(object):
         self.index = -1
         return True
 
-    def do_check(self, context):
+    def do_check(self, context, return_check_result=False):
         if not self.physical_id:
             return False
 
@@ -329,6 +329,9 @@ class Node(object):
         except exc.EResourceOperation as ex:
             self.set_status(context, consts.NS_ERROR, six.text_type(ex))
             return False
+
+        if return_check_result:
+            return res
 
         # Physical object is ACTIVE but for some reason the node status in
         # senlin was WARNING. We only update the status_reason

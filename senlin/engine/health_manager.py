@@ -17,6 +17,8 @@ trigger corresponding actions to recover the clusters based on the pre-defined
 health policies.
 """
 
+from collections import defaultdict
+from collections import namedtuple
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging as messaging
@@ -24,13 +26,13 @@ from oslo_service import service
 from oslo_service import threadgroup
 from oslo_utils import timeutils
 import re
-import six
 import time
 
 from senlin.common import consts
 from senlin.common import context
 from senlin.common import messaging as rpc
 from senlin.common import utils
+from senlin.engine import node as node_mod
 from senlin import objects
 from senlin.rpc import client as rpc_client
 
@@ -195,94 +197,91 @@ def ListenerProc(exchange, project_id, cluster_id, recover_action):
     listener.start()
 
 
-class HealthManager(service.Service):
+class HealthCheckType(object):
+    @staticmethod
+    def factory(detection_type, cid, interval, params):
+        node_update_timeout = params['node_update_timeout']
+        detection_params = [
+            p for p in params['detection_modes']
+            if p['type'] == detection_type
+        ]
+        if len(detection_params) != 1:
+            raise Exception(
+                'The same detection mode cannot be used more than once in the '
+                'same policy. Encountered {} instances of '
+                'type {}.'.format(len(detection_params), detection_type)
+            )
 
-    def __init__(self, engine_service, topic, version):
-        super(HealthManager, self).__init__()
-
-        self.TG = threadgroup.ThreadGroup()
-        self.engine_id = engine_service.engine_id
-        self.topic = topic
-        self.version = version
-        self.ctx = context.get_admin_context()
-        self.rpc_client = rpc_client.EngineClient()
-        self.rt = {
-            'registries': [],
-        }
-
-    def _dummy_task(self):
-        """A Dummy task that is queued on the health manager thread group.
-
-        The task is here so that the service always has something to wait()
-        on, or else the process will exit.
-        """
-        self._load_runtime_registry()
-
-    def _wait_for_action(self, ctx, action_id, timeout):
-        done = False
-        req = objects.ActionGetRequest(identity=action_id)
-        with timeutils.StopWatch(timeout) as timeout_watch:
-            while timeout > 0:
-                action = self.rpc_client.call(ctx, 'action_get', req)
-                if action['status'] in [consts.ACTION_SUCCEEDED,
-                                        consts.ACTION_FAILED,
-                                        consts.ACTION_CANCELLED]:
-                    if action['status'] == consts.ACTION_SUCCEEDED:
-                        done = True
-                    break
-                time.sleep(2)
-                timeout = timeout_watch.leftover(True)
-
-        if done:
-            return True, ""
-        elif timeout <= 0:
-            return False, "Timeout while polling cluster status"
+        if detection_type == consts.NODE_STATUS_POLLING:
+            return NodePollStatusHealthCheck(
+                cid, interval, node_update_timeout, detection_params[0])
+        elif detection_type == consts.NODE_STATUS_POLL_URL:
+            return NodePollUrlHealthCheck(
+                cid, interval, node_update_timeout, detection_params[0])
         else:
-            return False, "Cluster check action failed or cancelled"
+            raise Exception(
+                'Invalid detection type: {}'.format(detection_type))
 
-    def _poll_cluster(self, cluster_id, timeout, recover_action):
-        """Routine to be executed for polling cluster status.
+    def __init__(self, cluster_id, interval, node_update_timeout, params):
+        """Initialize HealthCheckType
 
+        :param ctx:
         :param cluster_id: The UUID of the cluster to be checked.
-        :param timeout: The maximum number of seconds to wait.
-        :param recover_action: The health policy action name.
-        :returns: Nothing.
+        :param params: Parameters specific to poll url or recovery action.
         """
-        start_time = timeutils.utcnow(True)
-        cluster = objects.Cluster.get(self.ctx, cluster_id, project_safe=False)
-        if not cluster:
-            LOG.warning("Cluster (%s) is not found.", cluster_id)
-            return _chase_up(start_time, timeout)
+        self.cluster_id = cluster_id
+        self.interval = interval
+        self.node_update_timeout = node_update_timeout
+        self.params = params
 
-        ctx = context.get_service_context(user_id=cluster.user,
-                                          project_id=cluster.project)
-        params = {'delete_check_action': True}
+    def run_health_check(self, ctx, node):
+        """Run health check on node
+
+        :returns: True if node is healthy. False otherwise.
+        """
+        pass
+
+
+class NodePollStatusHealthCheck(HealthCheckType):
+    def run_health_check(self, ctx, node):
+        """Routine to be executed for polling node status.
+
+        :returns: True if node is healthy. False otherwise.
+        """
+
         try:
-            req = objects.ClusterCheckRequest(identity=cluster_id,
-                                              params=params)
-            action = self.rpc_client.call(ctx, 'cluster_check', req)
+            # create engine node from db node
+            entity = node_mod.Node._from_object(ctx, node)
+
+            if not entity.do_check(ctx, return_check_result=True):
+                # server was not found as a result of performing check
+                node_last_updated = node.updated_at or node.init_at
+                if not timeutils.is_older_than(
+                        node_last_updated, self.node_update_timeout):
+                    LOG.info("Node %s was updated at %s which is less "
+                             "than %d secs ago. Skip node recovery from "
+                             "NodePollStatusHealthCheck.",
+                             node.id, node_last_updated,
+                             self.node_update_timeout)
+                    return True
+                else:
+                    return False
+            else:
+                LOG.debug("NodePollStatusHealthCheck reports node %s is "
+                          "healthy.", node.id)
+                return True
         except Exception as ex:
-            LOG.warning("Failed in triggering 'cluster_check' RPC for "
-                        "'%(c)s': %(r)s",
-                        {'c': cluster_id, 'r': six.text_type(ex)})
-            return _chase_up(start_time, timeout)
+            LOG.warning(
+                'Error when performing health check on node %s: %s',
+                node.id, ex
+            )
+            return False
 
-        # wait for action to complete
-        res, reason = self._wait_for_action(ctx, action['action'], timeout)
-        if not res:
-            LOG.warning("%s", reason)
-            return _chase_up(start_time, timeout)
 
-        # loop through nodes to trigger recovery
-        nodes = objects.Node.get_all_by_cluster(ctx, cluster_id)
-        for node in nodes:
-            if node.status != consts.NS_ACTIVE:
-                LOG.info("Requesting node recovery: %s", node.id)
-                req = objects.NodeRecoverRequest(identity=node.id,
-                                                 params=recover_action)
-                self.rpc_client.call(ctx, 'node_recover', req)
-
-        return _chase_up(start_time, timeout)
+class NodePollUrlHealthCheck(HealthCheckType):
+    @staticmethod
+    def _convert_detection_tuple(dictionary):
+        return namedtuple('DetectionMode', dictionary.keys())(**dictionary)
 
     def _expand_url_template(self, url_template, node):
         """Expands parameters in an URL template
@@ -300,31 +299,29 @@ class HealthManager(service.Service):
 
         return url
 
-    def _check_url_and_recover_node(self, ctx, node, recover_action, params):
+    def run_health_check(self, ctx, node):
         """Routine to check a node status from a url and recovery if necessary
 
-        :param ctx: The request context to use for recovery action
         :param node: The node to be checked.
-        :param recover_action: The health policy action name.
-        :param params: Parameters specific to poll url or recovery action
-        :returns: action if node was triggered for recovery.  Otherwise None.
+        :returns: True if node is considered to be healthy.  False otherwise.
         """
 
-        url_template = params['poll_url']
-        verify_ssl = params['poll_url_ssl_verify']
-        conn_error_as_unhealthy = params['poll_url_conn_error_as_unhealthy']
-        expected_resp_str = params['poll_url_healthy_response']
-        max_unhealthy_retry = params['poll_url_retry_limit']
-        retry_interval = params['poll_url_retry_interval']
-        node_update_timeout = params['node_update_timeout']
+        url_template = self.params['poll_url']
+        verify_ssl = self.params['poll_url_ssl_verify']
+        conn_error_as_unhealthy = self.params[
+            'poll_url_conn_error_as_unhealthy']
+        expected_resp_str = self.params['poll_url_healthy_response']
+        max_unhealthy_retry = self.params['poll_url_retry_limit']
+        retry_interval = self.params['poll_url_retry_interval']
 
         def stop_node_recovery():
             node_last_updated = node.updated_at or node.init_at
             if not timeutils.is_older_than(
-                    node_last_updated, node_update_timeout):
+                    node_last_updated, self.node_update_timeout):
                 LOG.info("Node %s was updated at %s which is less than "
-                         "%d secs ago. Skip node recovery.",
-                         node.id, node_last_updated, node_update_timeout)
+                         "%d secs ago. Skip node recovery from "
+                         "NodePollUrlHealthCheck.",
+                         node.id, node_last_updated, self.node_update_timeout)
                 return True
 
             LOG.info("Node %s is reported as down (%d retries left)",
@@ -334,84 +331,71 @@ class HealthManager(service.Service):
             return False
 
         url = self._expand_url_template(url_template, node)
-        LOG.info("Polling node status from URL: %s", url)
+        LOG.debug("Polling node status from URL: %s", url)
 
         available_attemps = max_unhealthy_retry
+        timeout = max(retry_interval * 0.1, 1)
         while available_attemps > 0:
             available_attemps -= 1
 
             try:
-                result = utils.url_fetch(url, verify=verify_ssl)
+                result = utils.url_fetch(
+                    url, timeout=timeout, verify=verify_ssl)
             except utils.URLFetchError as ex:
                 if conn_error_as_unhealthy:
                     if stop_node_recovery():
-                        return None
+                        return True
                     continue
                 else:
                     LOG.error("Error when requesting node health status from"
                               " %s: %s", url, ex)
-                    return None
+                    return True
 
             LOG.debug("Node status returned from URL(%s): %s", url,
                       result)
             if re.search(expected_resp_str, result):
-                LOG.debug('Node %s is healthy', node.id)
-                return None
+                LOG.debug('NodePollUrlHealthCheck reports node %s is healthy.',
+                          node.id)
+                return True
 
             if node.status != consts.NS_ACTIVE:
                 LOG.info("Skip node recovery because node %s is not in "
-                         "ACTIVE state", node.id)
-                return None
+                         "ACTIVE state.", node.id)
+                return True
 
             if stop_node_recovery():
-                return None
+                return True
 
-        # recover node after exhausting retries
-        LOG.info("Requesting node recovery: %s", node.id)
-        req = objects.NodeRecoverRequest(identity=node.id,
-                                         params=recover_action)
+        return False
 
-        return self.rpc_client.call(ctx, 'node_recover', req)
 
-    def _poll_url(self, cluster_id, timeout, recover_action, params):
-        """Routine to be executed for polling node status from a url
+class HealthManager(service.Service):
 
-        :param cluster_id: The UUID of the cluster to be checked.
-        :param timeout: The maximum number of seconds to wait for recovery
-        action
-        :param recover_action: The health policy action name.
-        :param params: Parameters specific to poll url or recovery action
-        :returns: Nothing.
+    def __init__(self, engine_service, topic, version):
+        super(HealthManager, self).__init__()
+
+        self.TG = threadgroup.ThreadGroup()
+        self.engine_id = engine_service.engine_id
+        self.topic = topic
+        self.version = version
+        self.ctx = context.get_admin_context()
+        self.rpc_client = rpc_client.EngineClient()
+        self.rt = {
+            'registries': [],
+        }
+        self.health_check_types = defaultdict(lambda: [])
+
+    def _dummy_task(self):
+        """A Dummy task that is queued on the health manager thread group.
+
+        The task is here so that the service always has something to wait()
+        on, or else the process will exit.
         """
-        start_time = timeutils.utcnow(True)
 
-        cluster = objects.Cluster.get(self.ctx, cluster_id, project_safe=False)
-        if not cluster:
-            LOG.warning("Cluster (%s) is not found.", cluster_id)
-            return _chase_up(start_time, timeout)
-
-        ctx = context.get_service_context(user_id=cluster.user,
-                                          project_id=cluster.project)
-
-        actions = []
-
-        # loop through nodes to poll url for each node
-        nodes = objects.Node.get_all_by_cluster(ctx, cluster_id)
-        for node in nodes:
-            action = self._check_url_and_recover_node(ctx, node,
-                                                      recover_action, params)
-            if action:
-                actions.append(action)
-
-        for a in actions:
-            # wait for action to complete
-            res, reason = self._wait_for_action(ctx, a['action'], timeout)
-            if not res:
-                LOG.warning("Node recovery action %s did not complete "
-                            "within specified timeout: %s", a['action'],
-                            reason)
-
-        return _chase_up(start_time, timeout)
+        try:
+            self._load_runtime_registry()
+        except Exception as ex:
+            LOG.error("Failed when running '_load_runtime_registry': %s", ex)
 
     def _add_listener(self, cluster_id, recover_action):
         """Routine to be executed for adding cluster listener.
@@ -438,12 +422,129 @@ class HealthManager(service.Service):
         return self.TG.add_thread(ListenerProc, exchange, project, cluster_id,
                                   recover_action)
 
+    def _recover_node(self, node_id, ctx, recover_action):
+        """Recover node
+
+        :returns: Recover action
+        """
+        try:
+            LOG.info("%s is requesting node recovery "
+                     "for %s.", self.__class__.__name__, node_id)
+            req = objects.NodeRecoverRequest(identity=node_id,
+                                             params=recover_action)
+
+            return self.rpc_client.call(ctx, 'node_recover', req)
+        except Exception as ex:
+            LOG.error('Error when performing node recovery for %s: %s',
+                      node_id, ex)
+            return None
+
+    def _wait_for_action(self, ctx, action_id, timeout):
+        req = objects.ActionGetRequest(identity=action_id)
+        with timeutils.StopWatch(timeout) as timeout_watch:
+            while not timeout_watch.expired():
+                action = self.rpc_client.call(ctx, 'action_get', req)
+                if action['status'] in [
+                    consts.ACTION_SUCCEEDED, consts.ACTION_FAILED,
+                        consts.ACTION_CANCELLED]:
+                    break
+                time.sleep(2)
+
+        if action['status'] == consts.ACTION_SUCCEEDED:
+            return True, ""
+
+        if (action['status'] == consts.ACTION_FAILED or
+                action['status'] == consts.ACTION_CANCELLED):
+            return False, "Cluster check action failed or cancelled"
+
+        return False, ("Timeout while waiting for node recovery action to "
+                       "finish")
+
+    def _add_health_check(self, cluster_id, health_check):
+        self.health_check_types[cluster_id].append(health_check)
+
+    def _execute_health_check(self, interval, cluster_id,
+                              recover_action, recovery_cond,
+                              node_update_timeout):
+        start_time = timeutils.utcnow(True)
+
+        try:
+            if cluster_id not in self.health_check_types:
+                LOG.error("Cluster (%s) is not found in health_check_types.",
+                          self.cluster_id)
+                return _chase_up(start_time, interval)
+
+            if len(self.health_check_types[cluster_id]) == 0:
+                LOG.error("No health check types found for Cluster (%s).",
+                          self.cluster_id)
+                return _chase_up(start_time, interval)
+
+            cluster = objects.Cluster.get(self.ctx, cluster_id,
+                                          project_safe=False)
+            if not cluster:
+                LOG.warning("Cluster (%s) is not found.", self.cluster_id)
+                return _chase_up(start_time, interval)
+
+            ctx = context.get_service_context(user_id=cluster.user,
+                                              project_id=cluster.project)
+
+            actions = []
+
+            # loop through nodes and run all health checks on each node
+            nodes = objects.Node.get_all_by_cluster(ctx, cluster_id)
+
+            for node in nodes:
+                node_is_healthy = True
+
+                if recovery_cond == consts.ANY_FAILED:
+                    # recovery happens if any detection mode fails
+                    # i.e. the inverse logic is that node is considered healthy
+                    # if all detection modes pass
+                    node_is_healthy = all(
+                        hc.run_health_check(ctx, node)
+                        for hc in self.health_check_types[cluster_id])
+                elif recovery_cond == consts.ALL_FAILED:
+                    # recovery happens if all detection modes fail
+                    # i.e. the inverse logic is that node is considered healthy
+                    # if any detection mode passes
+                    node_is_healthy = any(
+                        hc.run_health_check(ctx, node)
+                        for hc in self.health_check_types[cluster_id])
+                else:
+                    raise Exception(
+                        '{} is an invalid recovery conditional'.format(
+                            recovery_cond))
+
+                if not node_is_healthy:
+                    action = self._recover_node(node.id, ctx,
+                                                recover_action)
+                    actions.append(action)
+
+            for a in actions:
+                # wait for action to complete
+                res, reason = self._wait_for_action(
+                    ctx, a['action'], node_update_timeout)
+                if not res:
+                    LOG.warning("Node recovery action %s did not complete "
+                                "within specified timeout: %s", a['action'],
+                                reason)
+
+            if len(actions) > 0:
+                LOG.info('Health check passed for all nodes in cluster %s.',
+                         cluster_id)
+        except Exception as ex:
+            LOG.warning('Error while performing health check: %s', ex)
+
+        return _chase_up(start_time, interval)
+
     def _start_check(self, entry):
         """Routine for starting the checking for a cluster.
 
         :param entry: A dict containing the data associated with the cluster.
         :returns: An updated registry entry record.
         """
+        LOG.info('Enabling health check for cluster %s.', entry['cluster_id'])
+
         cid = entry['cluster_id']
         ctype = entry['check_type']
         # Get the recover action parameter from the entry params
@@ -459,22 +560,24 @@ class HealthManager(service.Service):
             for operation in rac:
                 recover_action['operation'] = operation.get('name')
 
-        if ctype == consts.NODE_STATUS_POLLING:
+        polling_types = [consts.NODE_STATUS_POLLING,
+                         consts.NODE_STATUS_POLL_URL]
+
+        detection_types = ctype.split(',')
+        if all(check in polling_types for check in detection_types):
             interval = min(entry['interval'], cfg.CONF.check_interval_max)
-            timer = self.TG.add_dynamic_timer(self._poll_cluster,
-                                              None,  # initial_delay
-                                              None,  # check_interval_max
-                                              cid, interval, recover_action)
+            for check in ctype.split(','):
+                self._add_health_check(cid, HealthCheckType.factory(
+                    check, cid, interval, params))
+            timer = self.TG.add_dynamic_timer(self._execute_health_check,
+                                              None, None, interval, cid,
+                                              recover_action,
+                                              params['recovery_conditional'],
+                                              params['node_update_timeout'])
+
             entry['timer'] = timer
-        elif ctype == consts.NODE_STATUS_POLL_URL:
-            interval = min(entry['interval'], cfg.CONF.check_interval_max)
-            timer = self.TG.add_dynamic_timer(self._poll_url,
-                                              None,  # initial_delay
-                                              None,  # check_interval_max
-                                              cid, interval,
-                                              recover_action, params)
-            entry['timer'] = timer
-        elif ctype == consts.LIFECYCLE_EVENTS:
+        elif (len(detection_types) == 1 and
+              detection_types[0] == consts.LIFECYCLE_EVENTS):
             LOG.info("Start listening events for cluster (%s).", cid)
             listener = self._add_listener(cid, recover_action)
             if listener:
@@ -483,8 +586,8 @@ class HealthManager(service.Service):
                 LOG.warning("Error creating listener for cluster %s", cid)
                 return None
         else:
-            LOG.warning("Cluster %(id)s check type %(type)s is invalid.",
-                        {'id': cid, 'type': ctype})
+            LOG.error("Cluster %(id)s check type %(type)s is invalid.",
+                      {'id': cid, 'type': ctype})
             return None
 
         return entry
@@ -495,10 +598,17 @@ class HealthManager(service.Service):
         :param entry: A dict containing the data associated with the cluster.
         :returns: ``None``.
         """
+        LOG.info('Disabling health check for cluster %s.', entry['cluster_id'])
+
         timer = entry.get('timer', None)
         if timer:
+            # stop timer
             timer.stop()
+
+            # tell threadgroup to remove timer
             self.TG.timer_done(timer)
+            if entry['cluster_id'] in self.health_check_types:
+                self.health_check_types.pop(entry['cluster_id'])
             return
 
         listener = entry.get('listener', None)
@@ -558,19 +668,30 @@ class HealthManager(service.Service):
         """Respond to confirm that the rpc service is still alive."""
         return True
 
-    def register_cluster(self, ctx, cluster_id, check_type, interval=None,
-                         params=None, enabled=True):
+    def register_cluster(self, ctx, cluster_id, interval=None,
+                         node_update_timeout=None, params=None,
+                         enabled=True):
         """Register cluster for health checking.
 
         :param ctx: The context of notify request.
         :param cluster_id: The ID of the cluster to be checked.
-        :param check_type: A string indicating the type of checks.
         :param interval: An optional integer indicating the length of checking
                          periods in seconds.
         :param dict params: Other parameters for the health check.
         :return: None
         """
         params = params or {}
+
+        # extract check_type from params
+        check_type = ""
+        if 'detection_modes' in params:
+            check_type = ','.join([
+                NodePollUrlHealthCheck._convert_detection_tuple(d).type
+                for d in params['detection_modes']
+            ])
+
+        # add node_update_timeout to params
+        params['node_update_timeout'] = node_update_timeout
 
         registry = objects.HealthRegistry.create(ctx, cluster_id, check_type,
                                                  interval, params,
@@ -603,6 +724,7 @@ class HealthManager(service.Service):
                 self._stop_check(entry)
                 self.rt['registries'].pop(i)
         objects.HealthRegistry.delete(ctx, cluster_id)
+        LOG.debug('unregister done')
 
     def enable_cluster(self, ctx, cluster_id, params=None):
         for c in self.rt['registries']:
@@ -651,12 +773,12 @@ def notify(engine_id, method, **kwargs):
 def register(cluster_id, engine_id=None, **kwargs):
     params = kwargs.pop('params', {})
     interval = kwargs.pop('interval', cfg.CONF.periodic_interval)
-    check_type = kwargs.pop('check_type', consts.NODE_STATUS_POLLING)
+    node_update_timeout = kwargs.pop('node_update_timeout', 300)
     enabled = kwargs.pop('enabled', True)
     return notify(engine_id, 'register_cluster',
                   cluster_id=cluster_id,
                   interval=interval,
-                  check_type=check_type,
+                  node_update_timeout=node_update_timeout,
                   params=params,
                   enabled=enabled)
 

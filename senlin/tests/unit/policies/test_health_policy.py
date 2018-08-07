@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from collections import namedtuple
 import copy
 
 import mock
@@ -35,13 +36,15 @@ class TestHealthPolicy(base.SenlinTestCase):
 
         self.spec = {
             'type': 'senlin.policy.health',
-            'version': '1.0',
+            'version': '1.1',
             'properties': {
                 'detection': {
-                    'type': 'NODE_STATUS_POLLING',
-                    'options': {
-                        'interval': 60
-                    }
+                    "detection_modes": [
+                        {
+                            'type': 'NODE_STATUS_POLLING'
+                        },
+                    ],
+                    'interval': 60
                 },
                 'recovery': {
                     'fencing': ['COMPUTE'],
@@ -62,13 +65,94 @@ class TestHealthPolicy(base.SenlinTestCase):
         self.hp = health_policy.HealthPolicy('test-policy', self.spec)
 
     def test_policy_init(self):
-        self.assertIsNone(self.hp.id)
-        self.assertEqual('test-policy', self.hp.name)
-        self.assertEqual('senlin.policy.health-1.0', self.hp.type)
-        self.assertEqual('NODE_STATUS_POLLING', self.hp.check_type)
-        self.assertEqual(60, self.hp.interval)
+        DetectionMode = namedtuple(
+            'DetectionMode',
+            [self.hp.DETECTION_TYPE] + list(self.hp._DETECTION_OPTIONS))
+
+        detection_modes = [
+            DetectionMode(
+                type='NODE_STATUS_POLLING',
+                poll_url='',
+                poll_url_ssl_verify=True,
+                poll_url_conn_error_as_unhealthy=True,
+                poll_url_healthy_response='',
+                poll_url_retry_limit='',
+                poll_url_retry_interval=''
+            )
+        ]
+
+        spec = {
+            'type': 'senlin.policy.health',
+            'version': '1.1',
+            'properties': {
+                'detection': {
+                    "detection_modes": [
+                        {
+                            'type': 'NODE_STATUS_POLLING'
+                        },
+                    ],
+                    'interval': 60
+                },
+                'recovery': {
+                    'fencing': ['COMPUTE'],
+                    'actions': [
+                        {'name': 'REBUILD'}
+                    ]
+                }
+            }
+        }
+
+        hp = health_policy.HealthPolicy('test-policy', spec)
+
+        self.assertIsNone(hp.id)
+        self.assertEqual('test-policy', hp.name)
+        self.assertEqual('senlin.policy.health-1.1', hp.type)
+        self.assertEqual(detection_modes, hp.detection_modes)
+        self.assertEqual(60, hp.interval)
         self.assertEqual([{'name': 'REBUILD', 'params': None}],
-                         self.hp.recover_actions)
+                         hp.recover_actions)
+
+    def test_policy_init_ops(self):
+        spec = {
+            'type': 'senlin.policy.health',
+            'version': '1.1',
+            'properties': {
+                'detection': {
+                    "detection_modes": [
+                        {
+                            'type': 'NODE_STATUS_POLLING'
+                        },
+                        {
+                            'type': 'NODE_STATUS_POLL_URL'
+                        },
+                    ],
+                    'interval': 60
+                },
+                'recovery': {
+                    'fencing': ['COMPUTE'],
+                    'actions': [
+                        {'name': 'REBUILD'}
+                    ]
+                }
+            }
+        }
+
+        operations = [None, 'ALL_FAILED', 'ANY_FAILED']
+        for op in operations:
+            # set operation in spec
+            if op:
+                spec['properties']['detection']['recovery_conditional'] = op
+
+            # test __init__
+            hp = health_policy.HealthPolicy('test-policy', spec)
+
+            # check result
+            self.assertIsNone(hp.id)
+            self.assertEqual('test-policy', hp.name)
+            self.assertEqual('senlin.policy.health-1.1', hp.type)
+            self.assertEqual(60, hp.interval)
+            self.assertEqual([{'name': 'REBUILD', 'params': None}],
+                             hp.recover_actions)
 
     def test_validate(self):
         spec = copy.deepcopy(self.spec)
@@ -86,7 +170,7 @@ class TestHealthPolicy(base.SenlinTestCase):
 
     def test_validate_valid_interval(self):
         spec = copy.deepcopy(self.spec)
-        spec["properties"]["detection"]["options"]["interval"] = 20
+        spec["properties"]["detection"]["interval"] = 20
         self.hp = health_policy.HealthPolicy('test-policy', spec)
 
         cfg.CONF.set_override('health_check_interval_min', 20)
@@ -95,7 +179,7 @@ class TestHealthPolicy(base.SenlinTestCase):
 
     def test_validate_invalid_interval(self):
         spec = copy.deepcopy(self.spec)
-        spec["properties"]["detection"]["options"]["interval"] = 10
+        spec["properties"]["detection"]["interval"] = 10
         self.hp = health_policy.HealthPolicy('test-policy', spec)
 
         cfg.CONF.set_override('health_check_interval_min', 20)
@@ -116,19 +200,24 @@ class TestHealthPolicy(base.SenlinTestCase):
         policy_data = {
             'HealthPolicy': {
                 'data': {
-                    'check_type': self.hp.check_type,
                     'interval': self.hp.interval,
-                    'poll_url': '',
-                    'poll_url_ssl_verify': True,
-                    'poll_url_conn_error_as_unhealthy': True,
-                    'poll_url_healthy_response': '',
-                    'poll_url_retry_limit': 3,
-                    'poll_url_retry_interval': 3,
+                    'detection_modes': [
+                        {
+                            'type': 'NODE_STATUS_POLLING',
+                            'poll_url': '',
+                            'poll_url_ssl_verify': True,
+                            'poll_url_conn_error_as_unhealthy': True,
+                            'poll_url_healthy_response': '',
+                            'poll_url_retry_limit': '',
+                            'poll_url_retry_interval': ''
+                        }
+                    ],
                     'node_update_timeout': 300,
                     'node_delete_timeout': 20,
-                    'node_force_recreate': False
+                    'node_force_recreate': False,
+                    'recovery_conditional': 'ANY_FAILED'
                 },
-                'version': '1.0'
+                'version': '1.1'
             }
         }
 
@@ -136,19 +225,24 @@ class TestHealthPolicy(base.SenlinTestCase):
         self.assertTrue(res)
         self.assertEqual(policy_data, data)
         kwargs = {
-            'check_type': self.hp.check_type,
             'interval': self.hp.interval,
+            'node_update_timeout': 300,
             'params': {
                 'recover_action': self.hp.recover_actions,
-                'poll_url': '',
-                'poll_url_ssl_verify': True,
-                'poll_url_conn_error_as_unhealthy': True,
-                'poll_url_healthy_response': '',
-                'poll_url_retry_limit': 3,
-                'poll_url_retry_interval': 3,
-                'node_update_timeout': 300,
                 'node_delete_timeout': 20,
-                'node_force_recreate': False
+                'node_force_recreate': False,
+                'recovery_conditional': 'ANY_FAILED',
+                'detection_modes': [
+                    {
+                        'type': 'NODE_STATUS_POLLING',
+                        'poll_url': '',
+                        'poll_url_ssl_verify': True,
+                        'poll_url_conn_error_as_unhealthy': True,
+                        'poll_url_healthy_response': '',
+                        'poll_url_retry_limit': '',
+                        'poll_url_retry_interval': ''
+                    }
+                ],
             },
             'enabled': True
         }
