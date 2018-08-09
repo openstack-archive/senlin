@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: senlin VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2018-03-09 06:43+0000\n"
+"POT-Creation-Date: 2018-08-03 04:36+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -184,10 +184,6 @@ msgstr "Aktionsparameter %s ist nicht erkennbar."
 msgid "Action to try for node recovery."
 msgstr "Aktion für die Wiederherstellung des Knotens."
 
-#, python-format
-msgid "Actions %(actions)s were successfully built."
-msgstr "Aktionen %(actions)s wurden erfolgreich erstellt."
-
 msgid ""
 "Address to bind the server. Useful when selecting a particular network "
 "interface."
@@ -238,14 +234,6 @@ msgstr ""
 
 msgid "Bus of the device."
 msgstr "Bus des Geräts."
-
-#, python-format
-msgid ""
-"Can not build trust between user %(user)s and zaqar service user %(zaqar)s "
-"for receiver %(receiver)s."
-msgstr ""
-"Es kann keine Vertrauensstellung zwischen Benutzer %(user)s und Zaqar-"
-"Dienstbenutzer %(zaqar)s für Empfänger %(receiver)s hergestellt werden."
 
 msgid "Candidates generated"
 msgstr "Kandidaten generiert"
@@ -359,14 +347,6 @@ msgstr "Aktivieren Sie die vSphere DRS-Erweiterung."
 msgid "Endpoint plugin %(name)s is not found."
 msgstr "Endpoint-Plugin %(name)s wurde nicht gefunden."
 
-#, python-format
-msgid ""
-"Engine %(id)s has launched %(num)s node actions consecutively, stop "
-"scheduling node action for %(interval)s second..."
-msgstr ""
-"Engine %(id)s hat %(num)s Node-Aktionen nacheinander gestartet, beendet die "
-"Planung der Node-Aktion für %(interval)s Sekunde ..."
-
 msgid "Engine died when executing this action."
 msgstr "Beim Ausführen dieser Aktion ist die Engine abgestürzt."
 
@@ -412,14 +392,6 @@ msgstr "Fehler beim Hinzufügen eines Knotens zum lb-Pool."
 #, python-format
 msgid "Failed in adding nodes into lb pool: %s"
 msgstr "Fehler beim Hinzufügen von Knoten zu lb pool: %s"
-
-#, python-format
-msgid "Failed in building action: %s"
-msgstr "Fehler beim Erstellen einer Aktion: %s"
-
-#, python-format
-msgid "Failed in claiming message: %s"
-msgstr "Fehler beim Anfordern der Nachricht: %s"
 
 #, python-format
 msgid "Failed in creating %(type)s: %(message)s."
@@ -472,10 +444,6 @@ msgstr "Fehler beim Löschen des lb-Pools: DELETE FAILED."
 
 msgid "Failed in deleting listener: DELETE FAILED."
 msgstr "Fehler beim Löschen des Listeners: DELETE FAILED."
-
-#, python-format
-msgid "Failed in deleting message %(id)s: %(reason)s"
-msgstr "Fehler beim Löschen der Nachricht %(id)s: %(reason)s"
 
 msgid "Failed in deleting servergroup."
 msgstr "Fehler beim Löschen der Servergruppe."
@@ -962,13 +930,6 @@ msgid "Number of seconds between lock retries."
 msgstr "Anzahl der Sekunden zwischen Sperrversuche."
 
 msgid ""
-"Number of seconds between pollings. Only required when type is "
-"'NODE_STATUS_POLLING'."
-msgstr ""
-"Anzahl der Sekunden zwischen den Befragungen Wird nur benötigt, wenn der Typ "
-"'NODE_STATUS_POLLING' ist."
-
-msgid ""
 "Number of seconds to hold the cluster for cool-down before allowing cluster "
 "to be resized again."
 msgstr ""
@@ -1123,16 +1084,6 @@ msgstr ""
 "Erstellen Sie den Server mit dem aktuellen Abbild und dem "
 "Administratorkennwort neu."
 
-#, python-format
-msgid ""
-"Receiver notification host is not specified in configuration file and Senlin "
-"service endpoint can not be found, using local hostname (%(host)s) for "
-"subscriber url."
-msgstr ""
-"Der Empfängerbenachrichtigungshost ist in der Konfigurationsdatei nicht "
-"angegeben, und der Senlin-Dienstendpunkt kann nicht gefunden werden, wobei "
-"der lokale Hostname (%(host)s) für die Teilnehmer-URL verwendet wird."
-
 msgid "Recovery action REBOOT is only applicable to os.nova.server clusters."
 msgstr "Recovery-Aktion REBOOT ist nur auf os.nova.server-Cluster anwendbar."
 
@@ -1167,16 +1118,6 @@ msgstr "Das erforderliche Spezifikationselement '%s' wurde nicht angegeben"
 msgid "Rescue the server."
 msgstr "Retten Sie den Server."
 
-#, python-format
-msgid ""
-"Resizing cluster '%(cluster)s': type=%(adj_type)s, number=%(number)s, "
-"min_size=%(min_size)s, max_size=%(max_size)s, min_step=%(min_step)s, strict="
-"%(strict)s."
-msgstr ""
-"Größenanpassung des Clusters '%(cluster)s': typ=%(adj_type)s, anzahl="
-"%(number)s, min_size=%(min_size)s, max_size=%(max_size)s, min_step="
-"%(min_step)s,strict=%(strict)s."
-
 msgid "Restart a container."
 msgstr "Starten Sie einen Container neu."
 
@@ -1201,10 +1142,6 @@ msgstr ""
 
 msgid "Senlin API revision."
 msgstr "Senlin API Revision."
-
-#, python-format
-msgid "Senlin endpoint can not be found: %s."
-msgstr "Der Senlin-Endpunkt wurde nicht gefunden: %s."
 
 msgid "Senlin engine revision."
 msgstr "Senlin-Engineüberarbeitung."
@@ -1866,23 +1803,6 @@ msgid ""
 msgstr ""
 "Datenträger-Quellentyp, muss entweder 'image', 'snapshot', 'volume' oder "
 "'blank' sein"
-
-#, python-format
-msgid "Warning: %(key)s will be deprecated after version %(version)s!"
-msgstr "Warnung: %(key)s wird nach Version %(version)s veraltet sein!"
-
-#, python-format
-msgid "Webhook failed authentication: %s."
-msgstr "Webhook fehlgeschlagene Authentifizierung: %s."
-
-#, python-format
-msgid ""
-"Webhook host is not specified in configuration file and Senlin service "
-"endpoint can not be found,using local hostname (%(host)s) for webhook url."
-msgstr ""
-"Der Webhook-Host ist in der Konfigurationsdatei nicht angegeben, und der "
-"Senlin-Dienstendpunkt kann nicht gefunden werden, indem der lokale Hostname "
-"(%(host)s) für die Webhook-URL verwendet wird."
 
 msgid "Weight of the availability zone (default is 100)."
 msgstr "Gewicht der Verfügbarkeitszone (Standard ist 100)."

@@ -1,0 +1,113 @@
+# Andi Chandler <andi@gowling.com>, 2018. #zanata
+msgid ""
+msgstr ""
+"Project-Id-Version: senlin\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-08-03 04:35+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2018-01-19 08:19+0000\n"
+"Last-Translator: Andi Chandler <andi@gowling.com>\n"
+"Language-Team: English (United Kingdom)\n"
+"Language: en_GB\n"
+"X-Generator: Zanata 4.3.3\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+
+msgid "1.0.0"
+msgstr "1.0.0"
+
+msgid "2.0.0"
+msgstr "2.0.0"
+
+msgid "2.0.0.0b1"
+msgstr "2.0.0.0b1"
+
+msgid "2.0.0.0b2"
+msgstr "2.0.0.0b2"
+
+msgid "2.0.0.0b3"
+msgstr "2.0.0.0b3"
+
+msgid "2.0.0.0rc1"
+msgstr "2.0.0.0rc1"
+
+msgid "3.0.0"
+msgstr "3.0.0"
+
+msgid "3.0.1"
+msgstr "3.0.1"
+
+msgid "4.0.0"
+msgstr "4.0.0"
+
+msgid ""
+"A cluster in the middle of an on-going action should not be deletable. The "
+"engine service has been improved to detect this situation."
+msgstr ""
+"A cluster in the middle of an on-going action should not be deletable. The "
+"engine service has been improved to detect this situation."
+
+msgid ""
+"A configuration option \"exclude_derived_actions\" is introduced into the "
+"\"dispatchers\" group for controlling whether derived actions should lead "
+"into event notifications and/or DB records."
+msgstr ""
+"A configuration option \"exclude_derived_actions\" is introduced into the "
+"\"dispatchers\" group for controlling whether derived actions should lead "
+"into event notifications and/or DB records."
+
+msgid ""
+"A event_purge subcommand is added to senlin-manage tool for purging events "
+"generated in a specific project."
+msgstr ""
+"A event_purge subcommand is added to senlin-manage tool for purging events "
+"generated in a specific project."
+
+msgid "Current Series Release Notes"
+msgstr "Current Series Release Notes"
+
+msgid "Mitaka Series Release Notes"
+msgstr "Mitaka Series Release Notes"
+
+msgid "Newton Series Release Notes"
+msgstr "Newton Series Release Notes"
+
+msgid "Ocata Series Release Notes"
+msgstr "Ocata Series Release Notes"
+
+msgid "Pike Series Release Notes"
+msgstr "Pike Series Release Notes"
+
+msgid "Senlin Release Notes"
+msgstr "Senlin Release Notes"
+
+msgid ""
+"When referenced objects are not found in an API request, 400 is returned now."
+msgstr ""
+"When referenced objects are not found in an API request, 400 is returned now."
+
+msgid ""
+"With the new 'profile-validate' API, the nova server profile now supports "
+"the validation of its 'flavor', 'image' (if provided), 'availability_zone' "
+"and block device driver properties."
+msgstr ""
+"With the new 'profile-validate' API, the Nova server profile now supports "
+"the validation of its 'flavour', 'image' (if provided), 'availability_zone' "
+"and block device driver properties."
+
+msgid ""
+"With the newly added 'message' type of receivers, the 'cluster' and the "
+"'action' property are not always required when creating a receiver. They are "
+"still required if the receiver type is 'webhook' (the default)."
+msgstr ""
+"With the newly added 'message' type of receivers, the 'cluster' and the "
+"'action' property are not always required when creating a receiver. They are "
+"still required if the receiver type is 'webhook' (the default)."
+
+msgid ""
+"Zaqar resources including \"queue\", \"message\", \"subscription\" and "
+"\"claim\" are now supported in Senlin driver."
+msgstr ""
+"Zaqar resources including \"queue\", \"message\", \"subscription\" and "
+"\"claim\" are now supported in Senlin driver."
