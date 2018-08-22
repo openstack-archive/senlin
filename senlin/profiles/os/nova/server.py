@@ -517,6 +517,8 @@ class ServerProfile(base.Profile):
             return
         try:
             net_obj = nc.network_get(net)
+            if net_obj is None:
+                return _("The specified network %s could not be found.") % net
             result[self.NETWORK] = net_obj.id
         except exc.InternalError as ex:
             return six.text_type(ex)
@@ -554,6 +556,9 @@ class ServerProfile(base.Profile):
         if net:
             try:
                 net_obj = nc.network_get(net)
+                if net_obj is None:
+                    return _("The floating network %s could not be found."
+                             ) % net
                 result[self.FLOATING_NETWORK] = net_obj.id
             except exc.InternalError as ex:
                 return six.text_type(ex)
