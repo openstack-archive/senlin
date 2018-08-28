@@ -54,12 +54,11 @@ Creating a webhook receiver
 ---------------------------
 
 When a user requests to create a webhook receiver by invoking the
-:program:`senlin` command line tool or the equivalent :program:`openstack`
-command, the request comes with at least three parameters: the
-receiver type which should be ``webhook``, the targeted cluster and the
-intended action to invoke when the receiver is triggered. Optionally, the
-user can provide some additional parameters to use and/or the credentials of
-a different user.
+:program:`openstack` command, the request comes with at least three
+parameters: the receiver type which should be ``webhook``, the targeted
+cluster and the intended action to invoke when the receiver is triggered.
+Optionally, the user can provide some additional parameters to use and/or
+the credentials of a different user.
 
 When the Senlin API service receives the request, it does three things:
 
@@ -91,9 +90,8 @@ receiver object.
 Creating a message receiver
 ---------------------------
 
-When a user requests to create a message receiver by invoking :program:`senlin`
-command line tool or the equivalent :program:`openstack` command, the receiver
-type ``message`` is the only parameter need to be specified.
+When a user requests to create a message receiver by invoking :program:`openstack`
+command, the receiver type ``message`` is the only parameter need to be specified.
 
 When the Senlin API service receives the request, it does the following things:
 
