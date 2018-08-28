@@ -265,7 +265,7 @@ class String(PropertySchema):
         return self.to_schema_type(value)
 
     def validate(self, value, context=None):
-        if not isinstance(value, six.string_types):
+        if value is None:
             msg = _("The value '%s' is not a valid string.") % value
             raise exc.ESchema(message=msg)
 
@@ -384,9 +384,13 @@ class Map(PropertySchema):
             msg = _("'%s' is not a Map") % value
             raise exc.ESchema(message=msg)
 
+        if not self.schema:
+            return
+
         for key, child in self.schema.items():
             item_value = value.get(key)
-            child.validate(item_value, context)
+            if item_value:
+                child.validate(item_value, context)
 
 
 class StringParam(SchemaBase):
@@ -472,6 +476,7 @@ class Spec(collections.Mapping):
             try:
                 # Validate through resolve
                 self.resolve_value(k)
+
                 # Validate schema for version
                 if self._version:
                     self._schema[k]._validate_version(k, self._version)
@@ -490,6 +495,7 @@ class Spec(collections.Mapping):
         schema_item = self._schema[key]
         if key in self._data:
             raw_value = self._data[key]
+            schema_item.validate(raw_value)
             return schema_item.resolve(raw_value)
         elif schema_item.has_default():
             return schema_item.get_default()
