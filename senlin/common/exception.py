@@ -128,6 +128,15 @@ class ResourceInUse(SenlinException):
     msg_fmt = _("The %(type)s '%(id)s' cannot be deleted: %(reason)s.")
 
 
+class ResourceIsLocked(SenlinException):
+    """Generic exception for resource in use.
+
+    The resource type here can be 'cluster', 'node'.
+    """
+    msg_fmt = _("%(action)s for %(type)s '%(id)s' cannot be completed "
+                "because it is already locked.")
+
+
 class ProfileNotSpecified(SenlinException):
     msg_fmt = _("Profile not specified.")
 
@@ -178,6 +187,11 @@ class RequestLimitExceeded(SenlinException):
 
 class ActionInProgress(SenlinException):
     msg_fmt = _("The %(type)s '%(id)s' is in status %(status)s.")
+
+
+class ActionConflict(SenlinException):
+    msg_fmt = _("The %(type)s action for target %(target)s conflicts with "
+                "the following action(s): %(actions)s")
 
 
 class NodeNotOrphan(SenlinException):

@@ -31,6 +31,10 @@ class NodeLock(base.SenlinObject, base.VersionedObjectDictCompat):
         return db_api.node_lock_acquire(node_id, action_id)
 
     @classmethod
+    def is_locked(cls, cluster_id):
+        return db_api.node_is_locked(cluster_id)
+
+    @classmethod
     def release(cls, node_id, action_id):
         return db_api.node_lock_release(node_id, action_id)
 

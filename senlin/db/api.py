@@ -129,6 +129,10 @@ def cluster_lock_acquire(cluster_id, action_id, scope):
     return IMPL.cluster_lock_acquire(cluster_id, action_id, scope)
 
 
+def cluster_is_locked(cluster_id):
+    return IMPL.cluster_is_locked(cluster_id)
+
+
 def cluster_lock_release(cluster_id, action_id, scope):
     return IMPL.cluster_lock_release(cluster_id, action_id, scope)
 
@@ -139,6 +143,10 @@ def cluster_lock_steal(node_id, action_id):
 
 def node_lock_acquire(node_id, action_id):
     return IMPL.node_lock_acquire(node_id, action_id)
+
+
+def node_is_locked(node_id):
+    return IMPL.node_is_locked(node_id)
 
 
 def node_lock_release(node_id, action_id):
@@ -332,6 +340,11 @@ def action_get_by_short_id(context, short_id, project_safe=True):
 
 def action_get_all_by_owner(context, owner):
     return IMPL.action_get_all_by_owner(context, owner)
+
+
+def action_get_all_active_by_target(context, target_id, project_safe=True):
+    return IMPL.action_get_all_active_by_target(context, target_id,
+                                                project_safe=project_safe)
 
 
 def action_get_all(context, filters=None, limit=None, marker=None, sort=None,

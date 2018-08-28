@@ -244,6 +244,32 @@ class DBAPIActionTest(base.SenlinTestCase):
         for spec in specs:
             self.assertIn(spec['name'], names)
 
+    def test_action_get_all_active_by_target(self):
+        specs = [
+            {'name': 'A01', 'target': 'cluster_001', 'status': 'READY'},
+            {'name': 'A02', 'target': 'node_001'},
+            {'name': 'A03', 'target': 'cluster_001', 'status': 'INIT'},
+            {'name': 'A04', 'target': 'cluster_001', 'status': 'WAITING'},
+            {'name': 'A05', 'target': 'cluster_001', 'status': 'READY'},
+            {'name': 'A06', 'target': 'cluster_001', 'status': 'RUNNING'},
+            {'name': 'A07', 'target': 'cluster_001', 'status': 'SUCCEEDED'},
+            {'name': 'A08', 'target': 'cluster_001', 'status': 'FAILED'},
+            {'name': 'A09', 'target': 'cluster_001', 'status': 'CANCELLED'},
+            {'name': 'A10', 'target': 'cluster_001',
+             'status': 'WAITING_LIFECYCLE_COMPLETION'},
+            {'name': 'A11', 'target': 'cluster_001', 'status': 'SUSPENDED'},
+        ]
+
+        for spec in specs:
+            _create_action(self.ctx, **spec)
+
+        actions = db_api.action_get_all_active_by_target(self.ctx,
+                                                         'cluster_001')
+        self.assertEqual(5, len(actions))
+        names = [p.name for p in actions]
+        for name in names:
+            self.assertIn(name, ['A01', 'A04', 'A05', 'A06', 'A10'])
+
     def test_action_get_all_project_safe(self):
         parser.simple_parse(shared.sample_action)
         _create_action(self.ctx)

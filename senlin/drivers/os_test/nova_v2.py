@@ -11,6 +11,7 @@
 # under the License.
 
 import copy
+import time
 
 from oslo_utils import uuidutils
 
@@ -161,6 +162,8 @@ class NovaClient(base.DriverBase):
             'zoneName': 'nova',
         }
 
+        self.simulated_waits = {}
+
     def flavor_find(self, name_or_id, ignore_missing=False):
         return sdk.FakeResourceObject(self.fake_flavor)
 
@@ -180,17 +183,33 @@ class NovaClient(base.DriverBase):
         return sdk.FakeResourceObject(self.keypair)
 
     def server_create(self, **attrs):
-        self.fake_server_create['id'] = uuidutils.generate_uuid()
-        self.fake_server_get['id'] = self.fake_server_create['id']
+        server_id = uuidutils.generate_uuid()
+        self.fake_server_create['id'] = server_id
+        self.fake_server_get['id'] = server_id
+
+        # save simulated wait time if it was set in metadata
+        if ('metadata' in attrs and
+                'simulated_wait_time' in attrs['metadata']):
+            simulated_wait = attrs['metadata']['simulated_wait_time']
+            if (isinstance(simulated_wait, int) and simulated_wait > 0):
+                self.simulated_waits[server_id] = simulated_wait
+
         return sdk.FakeResourceObject(self.fake_server_create)
 
     def server_get(self, server):
         return sdk.FakeResourceObject(self.fake_server_get)
 
     def wait_for_server(self, server, timeout=None):
+        # sleep for simulated wait time if it was supplied during server_create
+        if server in self.simulated_waits:
+            time.sleep(self.simulated_waits[server])
         return
 
     def wait_for_server_delete(self, server, timeout=None):
+        # sleep for simulated wait time if it was supplied during server_create
+        if server in self.simulated_waits:
+            time.sleep(self.simulated_waits[server])
+            del self.simulated_waits[server]
         return
 
     def server_update(self, server, **attrs):

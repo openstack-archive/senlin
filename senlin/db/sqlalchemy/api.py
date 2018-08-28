@@ -463,6 +463,14 @@ def cluster_lock_acquire(cluster_id, action_id, scope):
 
 
 @retry_on_deadlock
+def cluster_is_locked(cluster_id):
+    with session_for_read() as session:
+        query = session.query(models.ClusterLock)
+        lock = query.get(cluster_id)
+        return lock is not None
+
+
+@retry_on_deadlock
 def _release_cluster_lock(session, lock, action_id, scope):
     success = False
     if (scope == -1 and lock.semaphore < 0) or lock.semaphore == 1:
@@ -527,6 +535,15 @@ def node_lock_acquire(node_id, action_id):
             session.add(lock)
 
         return lock.action_id
+
+
+@retry_on_deadlock
+def node_is_locked(node_id):
+    with session_for_read() as session:
+        query = session.query(models.NodeLock)
+        lock = query.get(node_id)
+
+        return lock is not None
 
 
 @retry_on_deadlock
@@ -1063,6 +1080,22 @@ def action_get_by_short_id(context, short_id, project_safe=True):
 def action_get_all_by_owner(context, owner_id):
     query = model_query(context, models.Action).filter_by(owner=owner_id)
     return query.all()
+
+
+def action_get_all_active_by_target(context, target_id, project_safe=True):
+    with session_for_read() as session:
+        query = session.query(models.Action)
+        if project_safe:
+            query = query.filter_by(project=context.project_id)
+        query = query.filter_by(target=target_id)
+        query = query.filter(
+            models.Action.status.in_(
+                [consts.ACTION_READY,
+                 consts.ACTION_WAITING,
+                 consts.ACTION_RUNNING,
+                 consts.ACTION_WAITING_LIFECYCLE_COMPLETION]))
+        actions = query.all()
+        return actions
 
 
 def action_get_all(context, filters=None, limit=None, marker=None, sort=None,
