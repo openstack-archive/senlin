@@ -84,6 +84,7 @@ class TestProfileBase(base.SenlinTestCase):
         self.ctx = utils.dummy_context(project='profile_test_project')
         g_env = environment.global_env()
         g_env.register_profile('os.dummy-1.0', DummyProfile)
+        g_env.register_profile('os.dummy-1.1', DummyProfile)
         self.spec = parser.simple_parse(sample_profile)
 
     def _create_profile(self, name, pid=None, context=None):
@@ -119,6 +120,72 @@ class TestProfileBase(base.SenlinTestCase):
         spec_data = profile.spec_data
         self.assertEqual('os.dummy', spec_data['type'])
         self.assertEqual('1.0', spec_data['version'])
+        self.assertEqual('value1', spec_data['properties']['key1'])
+        self.assertEqual(2, spec_data['properties']['key2'])
+        self.assertEqual('value1', profile.properties['key1'])
+        self.assertEqual(2, profile.properties['key2'])
+        self.assertEqual({'foo': 'bar'}, profile.context)
+
+        self.assertIsNone(profile._computeclient)
+        self.assertIsNone(profile._networkclient)
+        self.assertIsNone(profile._orchestrationclient)
+        self.assertIsNone(profile._block_storageclient)
+
+    @mock.patch.object(senlin_ctx, 'get_service_credentials')
+    def test_init_version_as_float(self, mock_creds):
+        mock_creds.return_value = {'foo': 'bar'}
+        self.spec['version'] = 1.1
+        profile = self._create_profile('test-profile')
+
+        self.assertIsNone(profile.id)
+        self.assertEqual('test-profile', profile.name)
+        self.assertEqual(self.spec, profile.spec)
+        self.assertEqual('os.dummy', profile.type_name)
+        self.assertEqual('1.1', profile.version)
+        self.assertEqual('os.dummy-1.1', profile.type)
+        self.assertEqual(self.ctx.user_id, profile.user)
+        self.assertEqual(self.ctx.project_id, profile.project)
+        self.assertEqual(self.ctx.domain_id, profile.domain)
+        self.assertEqual({}, profile.metadata)
+        self.assertIsNone(profile.created_at)
+        self.assertIsNone(profile.updated_at)
+
+        spec_data = profile.spec_data
+        self.assertEqual('os.dummy', spec_data['type'])
+        self.assertEqual('1.1', spec_data['version'])
+        self.assertEqual('value1', spec_data['properties']['key1'])
+        self.assertEqual(2, spec_data['properties']['key2'])
+        self.assertEqual('value1', profile.properties['key1'])
+        self.assertEqual(2, profile.properties['key2'])
+        self.assertEqual({'foo': 'bar'}, profile.context)
+
+        self.assertIsNone(profile._computeclient)
+        self.assertIsNone(profile._networkclient)
+        self.assertIsNone(profile._orchestrationclient)
+        self.assertIsNone(profile._block_storageclient)
+
+    @mock.patch.object(senlin_ctx, 'get_service_credentials')
+    def test_init_version_as_string(self, mock_creds):
+        mock_creds.return_value = {'foo': 'bar'}
+        self.spec['version'] = '1.1'
+        profile = self._create_profile('test-profile')
+
+        self.assertIsNone(profile.id)
+        self.assertEqual('test-profile', profile.name)
+        self.assertEqual(self.spec, profile.spec)
+        self.assertEqual('os.dummy', profile.type_name)
+        self.assertEqual('1.1', profile.version)
+        self.assertEqual('os.dummy-1.1', profile.type)
+        self.assertEqual(self.ctx.user_id, profile.user)
+        self.assertEqual(self.ctx.project_id, profile.project)
+        self.assertEqual(self.ctx.domain_id, profile.domain)
+        self.assertEqual({}, profile.metadata)
+        self.assertIsNone(profile.created_at)
+        self.assertIsNone(profile.updated_at)
+
+        spec_data = profile.spec_data
+        self.assertEqual('os.dummy', spec_data['type'])
+        self.assertEqual('1.1', spec_data['version'])
         self.assertEqual('value1', spec_data['properties']['key1'])
         self.assertEqual(2, spec_data['properties']['key2'])
         self.assertEqual('value1', profile.properties['key1'])
