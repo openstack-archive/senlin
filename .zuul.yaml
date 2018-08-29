@@ -1,10 +1,10 @@
 - project:
     templates:
       - check-requirements
-      - publish-openstack-sphinx-docs
+      - publish-openstack-docs-pti
       - openstack-python-jobs
       - openstack-python35-jobs
-      - release-notes-jobs
+      - release-notes-jobs-python3
     check:
       jobs:
         - senlin-dsvm-tempest-py27-api
