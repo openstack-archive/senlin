@@ -1,4 +1,10 @@
 - project:
+    templates:
+      - check-requirements
+      - publish-openstack-sphinx-docs
+      - openstack-python-jobs
+      - openstack-python35-jobs
+      - release-notes-jobs
     check:
       jobs:
         - senlin-dsvm-tempest-py27-api
@@ -15,7 +21,10 @@
             voting: false
             branches: ^(?!stable/newton).*$
         - openstack-tox-lower-constraints
+        - openstack-tox-cover:
+            voting: false
     gate:
+      queue: senlin
       jobs:
         - senlin-dsvm-tempest-py27-api
         - senlin-dsvm-tempest-py27-functional
