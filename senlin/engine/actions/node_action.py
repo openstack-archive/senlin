@@ -67,7 +67,7 @@ class NodeAction(base.Action):
                                {'cluster_id': '', 'status': consts.NS_ERROR})
                 return self.RES_ERROR, result
 
-        res = self.entity.do_create(self.context)
+        res, reason = self.entity.do_create(self.context)
 
         if cluster_id and self.cause == consts.CAUSE_RPC:
             # Update cluster's desired_capacity and re-evaluate its status no
@@ -79,7 +79,7 @@ class NodeAction(base.Action):
         if res:
             return self.RES_OK, 'Node created successfully.'
         else:
-            return self.RES_ERROR, 'Node creation failed.'
+            return self.RES_ERROR, reason
 
     @profiler.trace('NodeAction.do_delete', hide_args=False)
     def do_delete(self):

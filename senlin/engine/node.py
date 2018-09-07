@@ -211,7 +211,9 @@ class Node(object):
     def do_create(self, context):
         if self.status != consts.NS_INIT:
             LOG.error('Node is in status "%s"', self.status)
-            return False
+            self.set_status(context, consts.NS_ERROR,
+                            'Node must be in INIT status')
+            return False, 'Node must be in INIT status'
 
         self.set_status(context, consts.NS_CREATING, 'Creation in progress')
         try:
@@ -220,11 +222,11 @@ class Node(object):
             physical_id = ex.resource_id
             self.set_status(context, consts.NS_ERROR, six.text_type(ex),
                             physical_id=physical_id)
-            return False
+            return False, str(ex)
 
         self.set_status(context, consts.NS_ACTIVE, 'Creation succeeded',
                         physical_id=physical_id)
-        return True
+        return True, None
 
     def do_delete(self, context):
         self.set_status(context, consts.NS_DELETING, 'Deletion in progress')

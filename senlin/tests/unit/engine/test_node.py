@@ -251,11 +251,15 @@ class TestNode(base.SenlinTestCase):
                                     'Creation succeeded',
                                     physical_id=physical_id)
 
-    def test_node_create_not_init(self):
+    @mock.patch.object(nodem.Node, 'set_status')
+    def test_node_create_not_init(self, mock_status):
         node = nodem.Node('node1', PROFILE_ID, CLUSTER_ID, self.context)
         node.status = 'NOT_INIT'
-        res = node.do_create(self.context)
+        res, reason = node.do_create(self.context)
         self.assertFalse(res)
+        self.assertEqual('Node must be in INIT status', reason)
+        mock_status.assert_any_call(self.context, consts.NS_ERROR,
+                                    'Node must be in INIT status')
 
     @mock.patch.object(nodem.Node, 'set_status')
     @mock.patch.object(pb.Profile, 'create_object')
@@ -265,9 +269,10 @@ class TestNode(base.SenlinTestCase):
         mock_create.side_effect = exception.EResourceCreation(
             type='PROFILE', message='Boom', resource_id='test_id')
 
-        res = node.do_create(self.context)
+        res, reason = node.do_create(self.context)
 
         self.assertFalse(res)
+        self.assertEqual(str(reason), 'Failed in creating PROFILE: Boom.')
         mock_status.assert_any_call(self.context, consts.NS_CREATING,
                                     'Creation in progress')
         mock_status.assert_any_call(self.context, consts.NS_ERROR,

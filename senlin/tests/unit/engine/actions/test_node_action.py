@@ -37,7 +37,7 @@ class NodeActionTest(base.SenlinTestCase):
 
     def test_do_create_okay(self, mock_load):
         node = mock.Mock(id='NID')
-        node.do_create = mock.Mock(return_value=True)
+        node.do_create = mock.Mock(return_value=[True, ''])
         mock_load.return_value = node
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx)
 
@@ -49,7 +49,8 @@ class NodeActionTest(base.SenlinTestCase):
 
     def test_do_create_failed(self, mock_load):
         node = mock.Mock(id='NID')
-        node.do_create = mock.Mock(return_value=False)
+        node.do_create = mock.Mock(return_value=[False,
+                                                 'custom error message'])
         mock_load.return_value = node
         action = node_action.NodeAction(node.id, 'ACTION', self.ctx)
 
@@ -57,7 +58,7 @@ class NodeActionTest(base.SenlinTestCase):
         res_code, res_msg = action.do_create()
 
         self.assertEqual(action.RES_ERROR, res_code)
-        self.assertEqual('Node creation failed.', res_msg)
+        self.assertEqual('custom error message', res_msg)
         node.do_create.assert_called_once_with(action.context)
 
     @mock.patch.object(scaleutils, 'check_size_params')
@@ -68,7 +69,7 @@ class NodeActionTest(base.SenlinTestCase):
         cluster = mock.Mock(id='CID')
         mock_c_load.return_value = cluster
         node = mock.Mock(id='NID', cluster_id='CID')
-        node.do_create = mock.Mock(return_value=True)
+        node.do_create = mock.Mock(return_value=[True, ''])
         mock_load.return_value = node
         mock_count.return_value = 11
         mock_check.return_value = None
@@ -97,7 +98,7 @@ class NodeActionTest(base.SenlinTestCase):
         cluster = mock.Mock(id='CID')
         mock_c_load.return_value = cluster
         node = mock.Mock(id='NID', cluster_id='CID')
-        node.do_create = mock.Mock(return_value=True)
+        node.do_create = mock.Mock(return_value=[True, ''])
         mock_load.return_value = node
         mock_count.return_value = 11
         mock_check.return_value = 'overflow'
@@ -128,7 +129,8 @@ class NodeActionTest(base.SenlinTestCase):
         cluster = mock.Mock(id='CID')
         mock_c_load.return_value = cluster
         node = mock.Mock(id='NID', cluster_id='CID')
-        node.do_create = mock.Mock(return_value=False)
+        node.do_create = mock.Mock(return_value=[False,
+                                                 'custom error message'])
         mock_load.return_value = node
         mock_count.return_value = 11
         mock_check.return_value = ''
@@ -140,7 +142,7 @@ class NodeActionTest(base.SenlinTestCase):
 
         # assertions
         self.assertEqual(action.RES_ERROR, res_code)
-        self.assertEqual('Node creation failed.', res_msg)
+        self.assertEqual('custom error message', res_msg)
         mock_c_load.assert_called_once_with(action.context, 'CID')
         mock_count.assert_called_once_with(action.context, 'CID')
         mock_check.assert_called_once_with(cluster, 11, None, None, True)
