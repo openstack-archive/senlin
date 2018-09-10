@@ -312,10 +312,26 @@ class HealthManager(service.Service):
 
         url_template = params['poll_url']
         verify_ssl = params['poll_url_ssl_verify']
+        conn_error_as_unhealthy = params['poll_url_conn_error_as_unhealthy']
         expected_resp_str = params['poll_url_healthy_response']
         max_unhealthy_retry = params['poll_url_retry_limit']
         retry_interval = params['poll_url_retry_interval']
         node_update_timeout = params['node_update_timeout']
+
+        def stop_node_recovery():
+            node_last_updated = node.updated_at or node.init_at
+            if not timeutils.is_older_than(
+                    node_last_updated, node_update_timeout):
+                LOG.info("Node %s was updated at %s which is less than "
+                         "%d secs ago. Skip node recovery.",
+                         node.id, node_last_updated, node_update_timeout)
+                return True
+
+            LOG.info("Node %s is reported as down (%d retries left)",
+                     node.id, available_attemps)
+            time.sleep(retry_interval)
+
+            return False
 
         url = self._expand_url_template(url_template, node)
         LOG.info("Polling node status from URL: %s", url)
@@ -327,9 +343,14 @@ class HealthManager(service.Service):
             try:
                 result = utils.url_fetch(url, verify=verify_ssl)
             except utils.URLFetchError as ex:
-                LOG.error("Error when requesting node health status from"
-                          " %s: %s", url, ex)
-                return None
+                if conn_error_as_unhealthy:
+                    if stop_node_recovery():
+                        return None
+                    continue
+                else:
+                    LOG.error("Error when requesting node health status from"
+                              " %s: %s", url, ex)
+                    return None
 
             LOG.debug("Node status returned from URL(%s): %s", url,
                       result)
@@ -342,17 +363,8 @@ class HealthManager(service.Service):
                          "ACTIVE state", node.id)
                 return None
 
-            node_last_updated = node.updated_at or node.init_at
-            if not timeutils.is_older_than(
-                    node_last_updated, node_update_timeout):
-                LOG.info("Node %s was updated at %s which is less than "
-                         "%d secs ago. Skip node recovery.",
-                         node.id, node_last_updated, node_update_timeout)
+            if stop_node_recovery():
                 return None
-
-            LOG.info("Node %s is reported as down (%d retries left)",
-                     node.id, available_attemps)
-            time.sleep(retry_interval)
 
         # recover node after exhausting retries
         LOG.info("Requesting node recovery: %s", node.id)

@@ -719,6 +719,7 @@ class TestHealthManager(base.SenlinTestCase):
         params = {
             'poll_url': 'FAKE_POLL_URL',
             'poll_url_ssl_verify': True,
+            'poll_url_conn_error_as_unhealthy': True,
             'poll_url_healthy_response': 'FAKE_HEALTHY_PATTERN',
             'poll_url_retry_limit': 2,
             'poll_url_retry_interval': 1,
@@ -753,6 +754,7 @@ class TestHealthManager(base.SenlinTestCase):
         params = {
             'poll_url': 'FAKE_POLL_URL',
             'poll_url_ssl_verify': True,
+            'poll_url_conn_error_as_unhealthy': True,
             'poll_url_healthy_response': 'FAKE_HEALTHY_PATTERN',
             'poll_url_retry_limit': 2,
             'poll_url_retry_interval': 1,
@@ -789,6 +791,7 @@ class TestHealthManager(base.SenlinTestCase):
         params = {
             'poll_url': 'FAKE_POLL_URL',
             'poll_url_ssl_verify': True,
+            'poll_url_conn_error_as_unhealthy': True,
             'poll_url_healthy_response': 'FAKE_HEALTHY_PATTERN',
             'poll_url_retry_limit': 2,
             'poll_url_retry_interval': 1,
@@ -826,6 +829,7 @@ class TestHealthManager(base.SenlinTestCase):
         params = {
             'poll_url': 'FAKE_POLL_URL',
             'poll_url_ssl_verify': True,
+            'poll_url_conn_error_as_unhealthy': True,
             'poll_url_healthy_response': 'FAKE_HEALTHY_PATTERN',
             'poll_url_retry_limit': 2,
             'poll_url_retry_interval': 1,
@@ -864,6 +868,7 @@ class TestHealthManager(base.SenlinTestCase):
         params = {
             'poll_url': 'FAKE_POLL_URL',
             'poll_url_ssl_verify': False,
+            'poll_url_conn_error_as_unhealthy': True,
             'poll_url_healthy_response': 'FAKE_HEALTHY_PATTERN',
             'poll_url_retry_limit': 2,
             'poll_url_retry_interval': 1,
@@ -885,6 +890,89 @@ class TestHealthManager(base.SenlinTestCase):
             ]
         )
         mock_sleep.assert_has_calls([mock.call(1), mock.call(1)])
+
+    @mock.patch.object(time, "sleep")
+    @mock.patch.object(tu, "is_older_than")
+    @mock.patch.object(hm.HealthManager, "_expand_url_template")
+    @mock.patch.object(utils, 'url_fetch')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test__check_url_and_recover_node_conn_error(
+            self, mock_rpc, mock_url_fetch, mock_expand_url, mock_time,
+            mock_sleep):
+        ctx = mock.Mock()
+        node = mock.Mock()
+        node.status = consts.NS_ACTIVE
+        node.id = 'FAKE_ID'
+        mock_time.return_value = True
+        mock_expand_url.return_value = 'FAKE_EXPANDED_URL'
+        x_action_check = {'action': 'CHECK_ID'}
+        mock_rpc.return_value = x_action_check
+        mock_url_fetch.side_effect = utils.URLFetchError("Error")
+        params = {
+            'poll_url': 'FAKE_POLL_URL',
+            'poll_url_ssl_verify': False,
+            'poll_url_conn_error_as_unhealthy': True,
+            'poll_url_healthy_response': 'FAKE_HEALTHY_PATTERN',
+            'poll_url_retry_limit': 2,
+            'poll_url_retry_interval': 1,
+            'node_update_timeout': 5,
+        }
+
+        recover_action = {'operation': 'REBUILD'}
+
+        # do it
+        res = self.hm._check_url_and_recover_node(ctx, node, recover_action,
+                                                  params)
+
+        self.assertEqual(mock_rpc.return_value, res)
+        mock_rpc.assert_called_once_with(ctx, 'node_recover', mock.ANY)
+        mock_url_fetch.assert_has_calls(
+            [
+                mock.call('FAKE_EXPANDED_URL', verify=False),
+                mock.call('FAKE_EXPANDED_URL', verify=False)
+            ]
+        )
+        mock_sleep.assert_has_calls([mock.call(1), mock.call(1)])
+
+    @mock.patch.object(time, "sleep")
+    @mock.patch.object(tu, "is_older_than")
+    @mock.patch.object(hm.HealthManager, "_expand_url_template")
+    @mock.patch.object(utils, 'url_fetch')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test__check_url_and_recover_node_conn_error_noop(
+            self, mock_rpc, mock_url_fetch, mock_expand_url, mock_time,
+            mock_sleep):
+        ctx = mock.Mock()
+        node = mock.Mock()
+        node.status = consts.NS_ACTIVE
+        node.id = 'FAKE_ID'
+        mock_time.return_value = True
+        mock_expand_url.return_value = 'FAKE_EXPANDED_URL'
+        mock_url_fetch.side_effect = utils.URLFetchError("Error")
+        params = {
+            'poll_url': 'FAKE_POLL_URL',
+            'poll_url_ssl_verify': False,
+            'poll_url_conn_error_as_unhealthy': False,
+            'poll_url_healthy_response': 'FAKE_HEALTHY_PATTERN',
+            'poll_url_retry_limit': 2,
+            'poll_url_retry_interval': 1,
+            'node_update_timeout': 5,
+        }
+
+        recover_action = {'operation': 'REBUILD'}
+
+        # do it
+        res = self.hm._check_url_and_recover_node(ctx, node, recover_action,
+                                                  params)
+
+        self.assertIsNone(res)
+        mock_rpc.assert_not_called()
+        mock_url_fetch.assert_has_calls(
+            [
+                mock.call('FAKE_EXPANDED_URL', verify=False),
+            ]
+        )
+        mock_sleep.assert_not_called()
 
     @mock.patch.object(hm, "_chase_up")
     @mock.patch.object(hm.HealthManager, "_check_url_and_recover_node")
