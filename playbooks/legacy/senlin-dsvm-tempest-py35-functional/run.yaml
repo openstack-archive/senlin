@@ -63,13 +63,13 @@
           fi
 
           function pre_test_hook {
-              cd /opt/stack/new/senlin/senlin/tests/tempest/
+              cd /opt/stack/new/senlin-tempest-plugin/senlin_tempest_plugin
               source ./pre_test_hook.sh
           }
           export -f pre_test_hook
 
           function post_test_hook {
-              cd /opt/stack/new/senlin/senlin/tests/tempest/
+              cd /opt/stack/new/senlin-tempest-plugin/senlin_tempest_plugin
               source ./post_test_hook.sh
           }
           export -f post_test_hook
