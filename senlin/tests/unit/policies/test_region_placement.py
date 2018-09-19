@@ -109,7 +109,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         self.assertEqual("The specified regions '['R1', 'R3']' could not "
                          "be found.", six.text_type(ex))
 
-    def test__create_plan(self):
+    def test_create_plan(self):
         policy = rp.RegionPlacementPolicy('p1', self.spec)
         regions = policy.regions
 
@@ -133,7 +133,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         answer = {'R2': 1, 'R3': 1, 'R4': 1}
         self.assertEqual(answer, plan)
 
-    def test__get_count_node_create_no_region(self):
+    def test_get_count_node_create_no_region(self):
         x_profile = mock.Mock(CONTEXT='context', properties={'context': {}})
         x_node = mock.Mock(rt={'profile': x_profile})
         action = mock.Mock(action=consts.NODE_CREATE, entity=x_node)
@@ -143,7 +143,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(1, res)
 
-    def test__get_count_node_create_region_specified(self):
+    def test_get_count_node_create_region_specified(self):
         x_profile = mock.Mock(CONTEXT='context',
                               properties={'context': {'region_name': 'foo'}})
         x_node = mock.Mock(rt={'profile': x_profile})
@@ -154,7 +154,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(0, res)
 
-    def test__get_count_resize_deletion(self):
+    def test_get_count_resize_deletion(self):
         action = mock.Mock(action=consts.CLUSTER_RESIZE,
                            data={'deletion': {'count': 3}})
 
@@ -163,7 +163,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(-3, res)
 
-    def test__get_count_resize_creation(self):
+    def test_get_count_resize_creation(self):
         action = mock.Mock(action=consts.CLUSTER_RESIZE,
                            data={'creation': {'count': 3}})
         policy = rp.RegionPlacementPolicy('p1', self.spec)
@@ -173,7 +173,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         self.assertEqual(3, res)
 
     @mock.patch.object(su, 'parse_resize_params')
-    def test__get_count_resize_parse_error(self, mock_parse):
+    def test_get_count_resize_parse_error(self, mock_parse):
         x_cluster = mock.Mock()
         x_cluster.nodes = [mock.Mock(), mock.Mock()]
         action = mock.Mock(action=consts.CLUSTER_RESIZE, data={})
@@ -189,7 +189,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         self.assertEqual('Something wrong.', action.data['reason'])
 
     @mock.patch.object(su, 'parse_resize_params')
-    def test__get_count_resize_parse_creation(self, mock_parse):
+    def test_get_count_resize_parse_creation(self, mock_parse):
         def fake_parse(action, cluster, current):
             action.data = {'creation': {'count': 3}}
             return pb.CHECK_OK, ''
@@ -208,7 +208,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         mock_parse.assert_called_once_with(action, x_cluster, 0)
 
     @mock.patch.object(su, 'parse_resize_params')
-    def test__get_count_resize_parse_deletion(self, mock_parse):
+    def test_get_count_resize_parse_deletion(self, mock_parse):
         def fake_parse(action, cluster, current):
             action.data = {'deletion': {'count': 3}}
             return pb.CHECK_OK, ''
@@ -226,7 +226,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         self.assertEqual(-3, res)
         mock_parse.assert_called_once_with(action, x_cluster, 3)
 
-    def test__get_count_scale_in_with_data(self):
+    def test_get_count_scale_in_with_data(self):
         action = mock.Mock(action=consts.CLUSTER_SCALE_IN,
                            data={'deletion': {'count': 3}})
         policy = rp.RegionPlacementPolicy('p1', self.spec)
@@ -234,7 +234,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(-3, res)
 
-    def test__get_count_scale_in_with_no_data(self):
+    def test_get_count_scale_in_with_no_data(self):
         action = mock.Mock(action=consts.CLUSTER_SCALE_IN,
                            data={'deletion': {'num': 3}})
         policy = rp.RegionPlacementPolicy('p1', self.spec)
@@ -242,7 +242,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(-1, res)
 
-    def test__get_count_scale_in_with_inputs(self):
+    def test_get_count_scale_in_with_inputs(self):
         action = mock.Mock(action=consts.CLUSTER_SCALE_IN, data={},
                            inputs={'count': 3})
         policy = rp.RegionPlacementPolicy('p1', self.spec)
@@ -250,7 +250,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(-3, res)
 
-    def test__get_count_scale_in_with_incorrect_inputs(self):
+    def test_get_count_scale_in_with_incorrect_inputs(self):
         action = mock.Mock(action=consts.CLUSTER_SCALE_IN, data={},
                            inputs={'num': 3})
         policy = rp.RegionPlacementPolicy('p1', self.spec)
@@ -258,7 +258,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(-1, res)
 
-    def test__get_count_scale_out_with_data(self):
+    def test_get_count_scale_out_with_data(self):
         action = mock.Mock(action=consts.CLUSTER_SCALE_OUT,
                            data={'creation': {'count': 3}})
         policy = rp.RegionPlacementPolicy('p1', self.spec)
@@ -266,7 +266,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(3, res)
 
-    def test__get_count_scale_out_with_no_data(self):
+    def test_get_count_scale_out_with_no_data(self):
         action = mock.Mock(action=consts.CLUSTER_SCALE_OUT,
                            data={'creation': {'num': 3}})
         policy = rp.RegionPlacementPolicy('p1', self.spec)
@@ -274,7 +274,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(1, res)
 
-    def test__get_count_scale_out_with_inputs(self):
+    def test_get_count_scale_out_with_inputs(self):
         action = mock.Mock(action=consts.CLUSTER_SCALE_OUT, data={},
                            inputs={'count': 3})
         policy = rp.RegionPlacementPolicy('p1', self.spec)
@@ -282,7 +282,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(3, res)
 
-    def test__get_count_scale_out_with_incorrect_inputs(self):
+    def test_get_count_scale_out_with_incorrect_inputs(self):
         action = mock.Mock(action=consts.CLUSTER_SCALE_OUT, data={},
                            inputs={'num': 3})
         policy = rp.RegionPlacementPolicy('p1', self.spec)

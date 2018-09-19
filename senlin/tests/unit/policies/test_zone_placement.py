@@ -93,7 +93,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         self.assertEqual("The specified name '['AZ2', 'AZ3']' "
                          "could not be found.", six.text_type(ex))
 
-    def test__create_plan_default(self):
+    def test_create_plan_default(self):
         self.spec['properties']['zones'] = [
             {'name': 'AZ1'}, {'name': 'AZ2'}, {'name': 'AZ3'}, {'name': 'AZ4'}
         ]
@@ -105,7 +105,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         answer = {'AZ1': 1, 'AZ2': 1, 'AZ3': 1, 'AZ4': 2}
         self.assertEqual(answer, plan)
 
-    def test__create_plan(self):
+    def test_create_plan(self):
         policy = zp.ZonePlacementPolicy('test-policy', self.spec)
         zones = policy.zones
 
@@ -129,7 +129,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         answer = {'AZ4': 4}
         self.assertEqual(answer, plan)
 
-    def test__get_count_node_create_with_zone(self):
+    def test_get_count_node_create_with_zone(self):
         x_profile = mock.Mock(AVAILABILITY_ZONE='availability_zone',
                               properties={'availability_zone': 'zone1'})
         x_node = mock.Mock(rt={'profile': x_profile})
@@ -140,7 +140,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(0, res)
 
-    def test__get_count_node_create_without_zone(self):
+    def test_get_count_node_create_without_zone(self):
         x_profile = mock.Mock(AVAILABILITY_ZONE='availability_zone',
                               properties={'availability_zone': None})
         x_node = mock.Mock(rt={'profile': x_profile})
@@ -151,7 +151,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(1, res)
 
-    def test__get_count_resize_deletion(self):
+    def test_get_count_resize_deletion(self):
         action = mock.Mock(action=consts.CLUSTER_RESIZE,
                            data={'deletion': {'count': 3}})
 
@@ -160,7 +160,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(-3, res)
 
-    def test__get_count_resize_creation(self):
+    def test_get_count_resize_creation(self):
         action = mock.Mock(action=consts.CLUSTER_RESIZE,
                            data={'creation': {'count': 3}})
         policy = zp.ZonePlacementPolicy('p1', self.spec)
@@ -171,8 +171,8 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
     @mock.patch.object(no.Node, 'count_by_cluster')
     @mock.patch.object(su, 'parse_resize_params')
     @mock.patch.object(co.Cluster, 'get')
-    def test__get_count_resize_parse_error(self, mock_cluster, mock_parse,
-                                           mock_count):
+    def test_get_count_resize_parse_error(self, mock_cluster, mock_parse,
+                                          mock_count):
         x_cluster = mock.Mock()
         mock_cluster.return_value = x_cluster
         mock_count.return_value = 3
@@ -192,8 +192,8 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
     @mock.patch.object(no.Node, 'count_by_cluster')
     @mock.patch.object(su, 'parse_resize_params')
     @mock.patch.object(co.Cluster, 'get')
-    def test__get_count_resize_parse_creation(self, mock_cluster, mock_parse,
-                                              mock_count):
+    def test_get_count_resize_parse_creation(self, mock_cluster, mock_parse,
+                                             mock_count):
         def fake_parse(action, cluster, current):
             action.data = {'creation': {'count': 3}}
             return policy_base.CHECK_OK, ''
@@ -215,8 +215,8 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
     @mock.patch.object(no.Node, 'count_by_cluster')
     @mock.patch.object(su, 'parse_resize_params')
     @mock.patch.object(co.Cluster, 'get')
-    def test__get_count_resize_parse_deletion(self, mock_cluster, mock_parse,
-                                              mock_count):
+    def test_get_count_resize_parse_deletion(self, mock_cluster, mock_parse,
+                                             mock_count):
         def fake_parse(action, cluster, current):
             action.data = {'deletion': {'count': 3}}
             return policy_base.CHECK_OK, ''
@@ -235,7 +235,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         mock_count.assert_called_once_with(action.context, 'FOO')
         mock_parse.assert_called_once_with(action, x_cluster, 3)
 
-    def test__get_count_scale_in_with_data(self):
+    def test_get_count_scale_in_with_data(self):
         action = mock.Mock(action=consts.CLUSTER_SCALE_IN,
                            data={'deletion': {'count': 3}})
         policy = zp.ZonePlacementPolicy('p1', self.spec)
@@ -243,7 +243,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(-3, res)
 
-    def test__get_count_scale_in_with_no_data(self):
+    def test_get_count_scale_in_with_no_data(self):
         action = mock.Mock(action=consts.CLUSTER_SCALE_IN,
                            data={'deletion': {'num': 3}})
         policy = zp.ZonePlacementPolicy('p1', self.spec)
@@ -251,7 +251,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(-1, res)
 
-    def test__get_count_scale_in_with_inputs(self):
+    def test_get_count_scale_in_with_inputs(self):
         action = mock.Mock(action=consts.CLUSTER_SCALE_IN, data={},
                            inputs={'count': 3})
         policy = zp.ZonePlacementPolicy('p1', self.spec)
@@ -259,7 +259,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(-3, res)
 
-    def test__get_count_scale_in_with_incorrect_inputs(self):
+    def test_get_count_scale_in_with_incorrect_inputs(self):
         action = mock.Mock(action=consts.CLUSTER_SCALE_IN, data={},
                            inputs={'num': 3})
         policy = zp.ZonePlacementPolicy('p1', self.spec)
@@ -267,7 +267,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(-1, res)
 
-    def test__get_count_scale_out_with_data(self):
+    def test_get_count_scale_out_with_data(self):
         action = mock.Mock(action=consts.CLUSTER_SCALE_OUT,
                            data={'creation': {'count': 3}})
         policy = zp.ZonePlacementPolicy('p1', self.spec)
@@ -275,7 +275,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(3, res)
 
-    def test__get_count_scale_out_with_no_data(self):
+    def test_get_count_scale_out_with_no_data(self):
         action = mock.Mock(action=consts.CLUSTER_SCALE_OUT,
                            data={'creation': {'num': 3}})
         policy = zp.ZonePlacementPolicy('p1', self.spec)
@@ -283,7 +283,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(1, res)
 
-    def test__get_count_scale_out_with_inputs(self):
+    def test_get_count_scale_out_with_inputs(self):
         action = mock.Mock(action=consts.CLUSTER_SCALE_OUT, data={},
                            inputs={'count': 3})
         policy = zp.ZonePlacementPolicy('p1', self.spec)
@@ -291,7 +291,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         res = policy._get_count('FOO', action)
         self.assertEqual(3, res)
 
-    def test__get_count_scale_out_with_incorrect_inputs(self):
+    def test_get_count_scale_out_with_incorrect_inputs(self):
         action = mock.Mock(action=consts.CLUSTER_SCALE_OUT, data={},
                            inputs={'num': 3})
         policy = zp.ZonePlacementPolicy('p1', self.spec)

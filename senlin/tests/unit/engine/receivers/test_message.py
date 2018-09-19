@@ -87,7 +87,7 @@ class TestMessage(base.SenlinTestCase):
         mock_param.assert_called_once_with('user1', 'project1')
         sd.message.assert_called_once_with(params)
 
-    def test__generate_subscriber_url_host_provided(self):
+    def test_generate_subscriber_url_host_provided(self):
         cfg.CONF.set_override('host', 'web.com', 'receiver')
         cfg.CONF.set_override('port', '1234', 'receiver')
         message = mmod.Message('message', None, None, id=UUID)
@@ -97,7 +97,7 @@ class TestMessage(base.SenlinTestCase):
         self.assertEqual(expected, res)
 
     @mock.patch.object(mmod.Message, '_get_base_url')
-    def test__generate_subscriber_url_host_not_provided(
+    def test_generate_subscriber_url_host_not_provided(
             self, mock_get_base_url):
         mock_get_base_url.return_value = 'http://web.com:1234/v1'
         message = mmod.Message('message', None, None, id=UUID)
@@ -108,7 +108,7 @@ class TestMessage(base.SenlinTestCase):
 
     @mock.patch.object(socket, 'gethostname')
     @mock.patch.object(mmod.Message, '_get_base_url')
-    def test__generate_subscriber_url_no_host_no_base(
+    def test_generate_subscriber_url_no_host_no_base(
             self, mock_get_base_url, mock_gethostname):
         mock_get_base_url.return_value = None
         mock_gethostname.return_value = 'test-host'
@@ -160,7 +160,7 @@ class TestMessage(base.SenlinTestCase):
         mock_create_subscription.assert_called_once_with('test-queue')
 
     @mock.patch.object(mmod.Message, 'zaqar')
-    def test__create_queue(self, mock_zaqar):
+    def test_create_queue(self, mock_zaqar):
         cfg.CONF.set_override('max_message_size', 8192, 'receiver')
         mock_zc = mock.Mock()
         mock_zaqar.return_value = mock_zc
@@ -178,7 +178,7 @@ class TestMessage(base.SenlinTestCase):
         mock_zc.queue_create.assert_called_once_with(**kwargs)
 
     @mock.patch.object(mmod.Message, 'zaqar')
-    def test__create_queue_fail(self, mock_zaqar):
+    def test_create_queue_fail(self, mock_zaqar):
         cfg.CONF.set_override('max_message_size', 8192, 'receiver')
         mock_zc = mock.Mock()
         mock_zaqar.return_value = mock_zc
@@ -196,8 +196,8 @@ class TestMessage(base.SenlinTestCase):
     @mock.patch.object(mmod.Message, '_generate_subscriber_url')
     @mock.patch.object(mmod.Message, '_build_trust')
     @mock.patch.object(mmod.Message, 'zaqar')
-    def test__create_subscription(self, mock_zaqar, mock_build_trust,
-                                  mock_generate_subscriber_url):
+    def test_create_subscription(self, mock_zaqar, mock_build_trust,
+                                 mock_generate_subscriber_url):
         mock_zc = mock.Mock()
         mock_zaqar.return_value = mock_zc
         mock_build_trust.return_value = '123abc'
@@ -223,8 +223,8 @@ class TestMessage(base.SenlinTestCase):
     @mock.patch.object(mmod.Message, '_generate_subscriber_url')
     @mock.patch.object(mmod.Message, '_build_trust')
     @mock.patch.object(mmod.Message, 'zaqar')
-    def test__create_subscription_fail(self, mock_zaqar, mock_build_trust,
-                                       mock_generate_subscriber_url):
+    def test_create_subscription_fail(self, mock_zaqar, mock_build_trust,
+                                      mock_generate_subscriber_url):
         mock_zc = mock.Mock()
         mock_zaqar.return_value = mock_zc
         mock_build_trust.return_value = '123abc'
@@ -296,8 +296,8 @@ class TestMessage(base.SenlinTestCase):
     @mock.patch.object(ks_loading, 'load_auth_from_conf_options')
     @mock.patch.object(ks_loading, 'load_session_from_conf_options')
     @mock.patch.object(mmod.Message, 'keystone')
-    def test__build_trust_exists(self, mock_keystone, mock_load_session,
-                                 mock_load_auth):
+    def test_build_trust_exists(self, mock_keystone, mock_load_session,
+                                mock_load_auth):
         mock_auth = mock.Mock()
         mock_session = mock.Mock()
         mock_session.get_user_id.return_value = 'zaqar-trustee-user-id'
@@ -324,7 +324,7 @@ class TestMessage(base.SenlinTestCase):
     @mock.patch.object(ks_loading, 'load_auth_from_conf_options')
     @mock.patch.object(ks_loading, 'load_session_from_conf_options')
     @mock.patch.object(mmod.Message, 'keystone')
-    def test__build_trust_create_new_multiroles(
+    def test_build_trust_create_new_multiroles(
             self, mock_keystone, mock_load_session, mock_load_auth):
         mock_auth = mock.Mock()
         mock_session = mock.Mock()
@@ -352,7 +352,7 @@ class TestMessage(base.SenlinTestCase):
     @mock.patch.object(ks_loading, 'load_auth_from_conf_options')
     @mock.patch.object(ks_loading, 'load_session_from_conf_options')
     @mock.patch.object(mmod.Message, 'keystone')
-    def test__build_trust_create_new_single_admin_role(
+    def test_build_trust_create_new_single_admin_role(
             self, mock_keystone, mock_load_session, mock_load_auth):
         mock_auth = mock.Mock()
         mock_session = mock.Mock()
@@ -380,9 +380,9 @@ class TestMessage(base.SenlinTestCase):
     @mock.patch.object(ks_loading, 'load_auth_from_conf_options')
     @mock.patch.object(ks_loading, 'load_session_from_conf_options')
     @mock.patch.object(mmod.Message, 'keystone')
-    def test__build_trust_create_new_trust_failed(self, mock_keystone,
-                                                  mock_load_session,
-                                                  mock_load_auth):
+    def test_build_trust_create_new_trust_failed(self, mock_keystone,
+                                                 mock_load_session,
+                                                 mock_load_auth):
         mock_auth = mock.Mock()
         mock_session = mock.Mock()
         mock_session.get_user_id.return_value = 'zaqar-trustee-user-id'
@@ -409,9 +409,9 @@ class TestMessage(base.SenlinTestCase):
     @mock.patch.object(ks_loading, 'load_auth_from_conf_options')
     @mock.patch.object(ks_loading, 'load_session_from_conf_options')
     @mock.patch.object(mmod.Message, 'keystone')
-    def test__build_trust_get_trust_exception(self, mock_keystone,
-                                              mock_load_session,
-                                              mock_load_auth):
+    def test_build_trust_get_trust_exception(self, mock_keystone,
+                                             mock_load_session,
+                                             mock_load_auth):
         mock_auth = mock.Mock()
         mock_session = mock.Mock()
         mock_session.get_user_id.return_value = 'zaqar-trustee-user-id'

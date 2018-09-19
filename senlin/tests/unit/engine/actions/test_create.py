@@ -39,9 +39,9 @@ class ClusterCreateTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__create_nodes_single(self, mock_wait, mock_start, mock_dep,
-                                  mock_node, mock_index, mock_action,
-                                  mock_update, mock_load):
+    def test_create_nodes_single(self, mock_wait, mock_start, mock_dep,
+                                 mock_node, mock_index, mock_action,
+                                 mock_update, mock_load):
         # prepare mocks
         cluster = mock.Mock(id='CLUSTER_ID', profile_id='FAKE_PROFILE',
                             user='FAKE_USER', project='FAKE_PROJECT',
@@ -109,9 +109,9 @@ class ClusterCreateTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__create_nodes_multiple(self, mock_wait, mock_start, mock_dep,
-                                    mock_node, mock_index, mock_action,
-                                    mock_update, mock_load):
+    def test_create_nodes_multiple(self, mock_wait, mock_start, mock_dep,
+                                   mock_node, mock_index, mock_action,
+                                   mock_update, mock_load):
         cluster = mock.Mock(id='01234567-123434',
                             config={"node.name.format": "node-$3I"})
         node1 = mock.Mock(id='01234567-abcdef',
@@ -183,9 +183,9 @@ class ClusterCreateTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__create_nodes_multiple_failed_wait(self, mock_wait, mock_start,
-                                                mock_dep, mock_node, mock_get,
-                                                mock_update, mock_load):
+    def test_create_nodes_multiple_failed_wait(self, mock_wait, mock_start,
+                                               mock_dep, mock_node, mock_get,
+                                               mock_update, mock_load):
         cluster = mock.Mock(id='01234567-123434', config={})
         db_cluster = mock.Mock(next_index=1)
         mock_get.return_value = db_cluster

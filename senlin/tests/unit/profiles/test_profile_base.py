@@ -570,7 +570,7 @@ class TestProfileBase(base.SenlinTestCase):
         self.assertRaises(exception.ESchema, profile.validate)
 
     @mock.patch.object(senlin_ctx, 'get_service_credentials')
-    def test__init_context(self, mock_creds):
+    def test_init_context(self, mock_creds):
         fake_ctx = mock.Mock()
         mock_creds.return_value = fake_ctx
 
@@ -585,7 +585,7 @@ class TestProfileBase(base.SenlinTestCase):
         mock_creds.assert_called_once_with()
 
     @mock.patch.object(senlin_ctx, 'get_service_credentials')
-    def test__init_context_for_real(self, mock_creds):
+    def test_init_context_for_real(self, mock_creds):
         fake_ctx = {
             'project_name': 'this project',
             'project_domain_name': 'this domain',
@@ -607,7 +607,7 @@ class TestProfileBase(base.SenlinTestCase):
         self.assertEqual(expected, profile.context)
 
     @mock.patch.object(senlin_ctx, 'get_service_credentials')
-    def test__init_context_for_real_with_data(self, mock_creds):
+    def test_init_context_for_real_with_data(self, mock_creds):
         fake_ctx = {
             'project_name': 'this project',
             'project_domain_name': 'this domain',
@@ -633,7 +633,7 @@ class TestProfileBase(base.SenlinTestCase):
 
     @mock.patch.object(co.Credential, 'get')
     @mock.patch.object(oslo_ctx, 'get_current')
-    def test__build_conn_params(self, mock_current, mock_get):
+    def test_build_conn_params(self, mock_current, mock_get):
         profile = self._create_profile('test-profile')
         profile.context = {'foo': 'bar'}
         fake_cred = mock.Mock(cred={'openstack': {'trust': 'TRUST_ID'}})
@@ -655,7 +655,7 @@ class TestProfileBase(base.SenlinTestCase):
 
     @mock.patch.object(co.Credential, 'get')
     @mock.patch.object(oslo_ctx, 'get_current')
-    def test__build_conn_params_trust_not_found(self, mock_current, mock_get):
+    def test_build_conn_params_trust_not_found(self, mock_current, mock_get):
         profile = self._create_profile('test-profile')
         mock_get.return_value = None
         fake_ctx = mock.Mock()

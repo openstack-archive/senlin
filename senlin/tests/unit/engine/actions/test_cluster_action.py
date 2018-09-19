@@ -36,7 +36,7 @@ class ClusterActionTest(base.SenlinTestCase):
         self.ctx = utils.dummy_context()
 
     @mock.patch.object(ab.Action, 'policy_check')
-    def test__execute(self, mock_check, mock_load):
+    def test_execute(self, mock_check, mock_load):
         cluster = mock.Mock()
         cluster.id = 'FAKE_CLUSTER'
         mock_load.return_value = cluster
@@ -122,7 +122,7 @@ class ClusterActionTest(base.SenlinTestCase):
 
     @mock.patch.object(senlin_lock, 'cluster_lock_acquire')
     @mock.patch.object(senlin_lock, 'cluster_lock_release')
-    def test_execute(self, mock_release, mock_acquire, mock_load):
+    def test_execute_with_locking(self, mock_release, mock_acquire, mock_load):
         cluster = mock.Mock()
         cluster.id = 'FAKE_CLUSTER'
         mock_load.return_value = cluster

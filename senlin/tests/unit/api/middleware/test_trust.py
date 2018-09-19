@@ -31,7 +31,7 @@ class TestTrustMiddleware(base.SenlinTestCase):
         self.middleware = trust.TrustMiddleware(None)
 
     @mock.patch("senlin.rpc.client.EngineClient")
-    def test__get_trust_already_exists(self, mock_rpc):
+    def test_get_trust_already_exists(self, mock_rpc):
         x_cred = {'trust': 'FAKE_TRUST_ID'}
         x_rpc = mock.Mock()
         x_rpc.call.return_value = x_cred
@@ -51,7 +51,7 @@ class TestTrustMiddleware(base.SenlinTestCase):
     @mock.patch.object(context, "get_service_credentials")
     @mock.patch("senlin.drivers.base.SenlinDriver")
     @mock.patch("senlin.rpc.client.EngineClient")
-    def test__get_trust_bad(self, mock_rpc, mock_driver, mock_creds):
+    def test_get_trust_bad(self, mock_rpc, mock_driver, mock_creds):
         x_cred = {'foo': 'bar'}
         x_rpc = mock.Mock()
         x_rpc.call.return_value = x_cred
@@ -99,7 +99,7 @@ class TestTrustMiddleware(base.SenlinTestCase):
     @mock.patch.object(context, "get_service_credentials")
     @mock.patch("senlin.drivers.base.SenlinDriver")
     @mock.patch("senlin.rpc.client.EngineClient")
-    def test__get_trust_not_found(self, mock_rpc, mock_driver, mock_creds):
+    def test_get_trust_not_found(self, mock_rpc, mock_driver, mock_creds):
         x_rpc = mock.Mock()
         x_rpc.call.return_value = None
         mock_rpc.return_value = x_rpc
@@ -137,7 +137,7 @@ class TestTrustMiddleware(base.SenlinTestCase):
     @mock.patch.object(context, "get_service_credentials")
     @mock.patch("senlin.drivers.base.SenlinDriver")
     @mock.patch("senlin.rpc.client.EngineClient")
-    def test__get_trust_do_create(self, mock_rpc, mock_driver, mock_creds):
+    def test_get_trust_do_create(self, mock_rpc, mock_driver, mock_creds):
         x_rpc = mock.Mock()
         x_rpc.call.return_value = None
         mock_rpc.return_value = x_rpc
@@ -179,7 +179,7 @@ class TestTrustMiddleware(base.SenlinTestCase):
     @mock.patch.object(context, "get_service_credentials")
     @mock.patch("senlin.drivers.base.SenlinDriver")
     @mock.patch("senlin.rpc.client.EngineClient")
-    def test__get_trust_fatal(self, mock_rpc, mock_driver, mock_creds):
+    def test_get_trust_fatal(self, mock_rpc, mock_driver, mock_creds):
         x_rpc = mock.Mock()
         x_rpc.call.return_value = None
         mock_rpc.return_value = x_rpc

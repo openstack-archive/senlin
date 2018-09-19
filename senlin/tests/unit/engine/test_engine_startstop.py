@@ -169,7 +169,7 @@ class EngineStatusTest(base.SenlinTestCase):
     @mock.patch.object(service_obj.Service, 'gc_by_engine')
     @mock.patch.object(service_obj.Service, 'get_all')
     @mock.patch.object(service_obj.Service, 'delete')
-    def test__service_manage_cleanup(self, mock_delete, mock_get_all, mock_gc):
+    def test_service_manage_cleanup(self, mock_delete, mock_get_all, mock_gc):
         delta = datetime.timedelta(seconds=2 * cfg.CONF.periodic_interval)
         ages_a_go = timeutils.utcnow(True) - delta
         mock_get_all.return_value = [{'id': 'foo', 'updated_at': ages_a_go}]
@@ -181,8 +181,10 @@ class EngineStatusTest(base.SenlinTestCase):
     @mock.patch('senlin.engine.health_manager.HealthManager')
     @mock.patch('oslo_messaging.Target')
     @mock.patch.object(service_obj.Service, 'get_all')
-    def test_service_manage_cleanup(self, mock_get_all, mock_msg_cls,
-                                    mock_hm_cls, mock_disp_cls):
+    def test_service_manage_cleanup_without_exception(self, mock_get_all,
+                                                      mock_msg_cls,
+                                                      mock_hm_cls,
+                                                      mock_disp_cls):
         cfg.CONF.set_override('periodic_interval', 1)
 
         # start engine and verify that get_all is being called more than once

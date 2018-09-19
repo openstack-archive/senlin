@@ -37,8 +37,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__delete_nodes_single(self, mock_wait, mock_start, mock_dep,
-                                  mock_action, mock_update, mock_load):
+    def test_delete_nodes_single(self, mock_wait, mock_start, mock_dep,
+                                 mock_action, mock_update, mock_load):
         # prepare mocks
         cluster = mock.Mock(id='FAKE_CLUSTER', desired_capacity=100, config={})
 
@@ -73,9 +73,9 @@ class ClusterDeleteTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__delete_nodes_single_stop_node(self, mock_wait, mock_start,
-                                            mock_dep, mock_action, mock_update,
-                                            mock_load):
+    def test_delete_nodes_single_stop_node(self, mock_wait, mock_start,
+                                           mock_dep, mock_action, mock_update,
+                                           mock_load):
         # prepare mocks
         cluster = mock.Mock(id='FAKE_CLUSTER', desired_capacity=100,
                             config={'cluster.stop_node_before_delete': True})
@@ -124,8 +124,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__delete_nodes_multi(self, mock_wait, mock_start, mock_dep,
-                                 mock_action, mock_update, mock_load):
+    def test_delete_nodes_multi(self, mock_wait, mock_start, mock_dep,
+                                mock_action, mock_update, mock_load):
         # prepare mocks
         cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100, config={})
         mock_load.return_value = cluster
@@ -157,7 +157,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
         cluster.remove_node.assert_has_calls([
             mock.call('NODE_1'), mock.call('NODE_2')])
 
-    def test__delete_empty(self, mock_load):
+    def test_delete_empty(self, mock_load):
         # prepare mocks
         cluster = mock.Mock(id='CLUSTER_ID')
         mock_load.return_value = cluster
@@ -176,8 +176,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__delete_nodes_with_pd(self, mock_wait, mock_start, mock_dep,
-                                   mock_action, mock_update, mock_load):
+    def test_delete_nodes_with_pd(self, mock_wait, mock_start, mock_dep,
+                                  mock_action, mock_update, mock_load):
         # prepare mocks
         cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100, config={})
         mock_load.return_value = cluster
@@ -209,11 +209,11 @@ class ClusterDeleteTest(base.SenlinTestCase):
     @mock.patch.object(msg.Message, 'post_lifecycle_hook_message')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__delete_nodes_with_lifecycle_hook(self, mock_wait, mock_start,
-                                               mock_post, mock_dep,
-                                               mock_node_get,
-                                               mock_action, mock_update,
-                                               mock_load):
+    def test_delete_nodes_with_lifecycle_hook(self, mock_wait, mock_start,
+                                              mock_post, mock_dep,
+                                              mock_node_get,
+                                              mock_action, mock_update,
+                                              mock_load):
         # prepare mocks
         cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100, config={})
         mock_load.return_value = cluster
@@ -264,7 +264,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
     @mock.patch.object(msg.Message, 'post_lifecycle_hook_message')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__delete_nodes_with_lifecycle_hook_failed_node(
+    def test_delete_nodes_with_lifecycle_hook_failed_node(
             self, mock_wait, mock_start, mock_post, mock_dep, mock_node_get,
             mock_action, mock_update, mock_load):
         self.delete_nodes_with_lifecycle_hook_invalid_node(
@@ -279,7 +279,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
     @mock.patch.object(msg.Message, 'post_lifecycle_hook_message')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__delete_nodes_with_lifecycle_hook_missing_node(
+    def test_delete_nodes_with_lifecycle_hook_missing_node(
             self, mock_wait, mock_start, mock_post, mock_dep, mock_node_get,
             mock_action, mock_update, mock_load):
         self.delete_nodes_with_lifecycle_hook_invalid_node(
@@ -335,14 +335,14 @@ class ClusterDeleteTest(base.SenlinTestCase):
     @mock.patch.object(msg.Message, 'post_lifecycle_hook_message')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__delete_nodes_with_lifecycle_hook_timeout(self, mock_wait,
-                                                       mock_start,
-                                                       mock_post, mock_dep,
-                                                       mock_node_get,
-                                                       mock_action,
-                                                       mock_update,
-                                                       mock_check_status,
-                                                       mock_load):
+    def test_delete_nodes_with_lifecycle_hook_timeout(self, mock_wait,
+                                                      mock_start,
+                                                      mock_post, mock_dep,
+                                                      mock_node_get,
+                                                      mock_action,
+                                                      mock_update,
+                                                      mock_check_status,
+                                                      mock_load):
         # prepare mocks
         cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100, config={})
         mock_load.return_value = cluster
@@ -395,9 +395,9 @@ class ClusterDeleteTest(base.SenlinTestCase):
         mock_wait.assert_has_calls(wait_calls)
 
     @mock.patch.object(ab.Action, 'create')
-    def test__delete_nodes_with_lifecycle_hook_invalid_type(self,
-                                                            mock_action,
-                                                            mock_load):
+    def test_delete_nodes_with_lifecycle_hook_invalid_type(self,
+                                                           mock_action,
+                                                           mock_load):
         # prepare mocks
         cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100, config={})
         mock_load.return_value = cluster
@@ -424,10 +424,10 @@ class ClusterDeleteTest(base.SenlinTestCase):
 
     @mock.patch.object(ao.Action, 'update')
     @mock.patch.object(ab.Action, 'create')
-    def test__delete_nodes_with_lifecycle_hook_unsupported_webhook(self,
-                                                                   mock_action,
-                                                                   mock_update,
-                                                                   mock_load):
+    def test_delete_nodes_with_lifecycle_hook_unsupported_webhook(self,
+                                                                  mock_action,
+                                                                  mock_update,
+                                                                  mock_load):
         # prepare mocks
         cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100, config={})
         mock_load.return_value = cluster
@@ -453,8 +453,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
                          "'webhook' is not implemented", res_msg)
 
     @mock.patch.object(ca.ClusterAction, '_remove_nodes_normally')
-    def test__delete_nodes_failed_remove_stop_node(self, mock_remove,
-                                                   mock_load):
+    def test_delete_nodes_failed_remove_stop_node(self, mock_remove,
+                                                  mock_load):
         # prepare mocks
         cluster = mock.Mock(id='ID',
                             config={'cluster.stop_node_before_delete': True})
@@ -481,7 +481,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
 
     @mock.patch.object(ca.ClusterAction, '_remove_nodes_with_hook')
     @mock.patch.object(ca.ClusterAction, '_remove_nodes_normally')
-    def test__delete_nodes_with_lifecycle_hook_failed_remove_stop_node(
+    def test_delete_nodes_with_lifecycle_hook_failed_remove_stop_node(
             self, mock_remove_normally, mock_remove_hook, mock_load):
         # prepare mocks
         cluster = mock.Mock(id='ID',
@@ -773,8 +773,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__remove_nodes_normally(self, mock_wait, mock_start, mock_dep,
-                                    mock_action, mock_update, mock_load):
+    def test_remove_nodes_normally(self, mock_wait, mock_start, mock_dep,
+                                   mock_action, mock_update, mock_load):
         # prepare mocks
         cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100)
         mock_load.return_value = cluster
@@ -810,9 +810,9 @@ class ClusterDeleteTest(base.SenlinTestCase):
     @mock.patch.object(msg.Message, 'post_lifecycle_hook_message')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__remove_nodes_with_hook(self, mock_wait, mock_start, mock_post,
-                                     mock_dep, mock_node_get, mock_action,
-                                     mock_update, mock_load):
+    def test_remove_nodes_with_hook(self, mock_wait, mock_start, mock_post,
+                                    mock_dep, mock_node_get, mock_action,
+                                    mock_update, mock_load):
         # prepare mocks
         cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100)
         mock_load.return_value = cluster
@@ -860,9 +860,9 @@ class ClusterDeleteTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__remove_nodes_normally_failed_wait(self, mock_wait, mock_start,
-                                                mock_dep, mock_action,
-                                                mock_update, mock_load):
+    def test_remove_nodes_normally_failed_wait(self, mock_wait, mock_start,
+                                               mock_dep, mock_action,
+                                               mock_update, mock_load):
         # prepare mocks
         cluster = mock.Mock(id='ID', config={})
         mock_load.return_value = cluster
@@ -888,9 +888,9 @@ class ClusterDeleteTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__remove_nodes_hook_failed_wait(self, mock_wait, mock_start,
-                                            mock_dep, mock_action,
-                                            mock_update, mock_load):
+    def test_remove_nodes_hook_failed_wait(self, mock_wait, mock_start,
+                                           mock_dep, mock_action,
+                                           mock_update, mock_load):
         # prepare mocks
         cluster = mock.Mock(id='ID', config={})
         mock_load.return_value = cluster
@@ -925,10 +925,10 @@ class ClusterDeleteTest(base.SenlinTestCase):
     @mock.patch.object(msg.Message, 'post_lifecycle_hook_message')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__delete_nodes_with_error_nodes(self, mock_wait, mock_start,
-                                            mock_post, mock_dep,
-                                            mock_node_get, mock_action,
-                                            mock_update, mock_load):
+    def test_delete_nodes_with_error_nodes(self, mock_wait, mock_start,
+                                           mock_post, mock_dep,
+                                           mock_node_get, mock_action,
+                                           mock_update, mock_load):
         # prepare mocks
         cluster = mock.Mock(id='CLUSTER_ID', desired_capacity=100)
         mock_load.return_value = cluster

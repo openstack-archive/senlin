@@ -708,7 +708,7 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(environment.Environment, 'get_profile')
     @mock.patch.object(pb.Profile, 'adopt_node')
-    def test__node_adopt_preview(self, mock_adopt, mock_profile):
+    def test_node_adopt_preview_with_profile(self, mock_adopt, mock_profile):
         class FakeProfile(object):
             pass
 
@@ -742,7 +742,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(expected, s)
 
     @mock.patch.object(pb.Profile, 'adopt_node')
-    def test__node_adopt_preview_bad_type(self, mock_adopt):
+    def test_node_adopt_preview_bad_type(self, mock_adopt):
         req = mock.Mock(
             identity="FAKE_NODE",
             type="TestProfile-1.0",
@@ -760,7 +760,7 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(environment.Environment, 'get_profile')
     @mock.patch.object(pb.Profile, 'adopt_node')
-    def test__node_adopt_preview_failed_adopt(self, mock_adopt, mock_profile):
+    def test_node_adopt_preview_failed_adopt(self, mock_adopt, mock_profile):
         class FakeProfile(object):
             pass
 
