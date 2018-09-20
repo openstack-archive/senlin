@@ -464,10 +464,6 @@ class TestString(base.SenlinTestCase):
         res = sot.validate(u'unicode')
         self.assertIsNone(res)
 
-        ex = self.assertRaises(exc.ESchema, sot.validate, 1)
-        self.assertEqual("The value '1' is not a valid string.",
-                         six.text_type(ex))
-
         mock_constraints = self.patchobject(sot, 'validate_constraints',
                                             return_value=None)
 

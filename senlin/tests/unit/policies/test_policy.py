@@ -65,6 +65,8 @@ class TestPolicyBase(base.SenlinTestCase):
         self.ctx = utils.dummy_context()
         environment.global_env().register_policy('senlin.policy.dummy-1.0',
                                                  DummyPolicy)
+        environment.global_env().register_policy('senlin.policy.dummy-1.1',
+                                                 DummyPolicy)
         self.spec = parser.simple_parse(sample_policy)
 
     def _create_policy(self, policy_name, policy_id=None):
@@ -109,6 +111,52 @@ class TestPolicyBase(base.SenlinTestCase):
         spec_data = policy.spec_data
         self.assertEqual('senlin.policy.dummy', spec_data['type'])
         self.assertEqual('1.0', spec_data['version'])
+        self.assertEqual({'key1': 'value1', 'key2': 2},
+                         spec_data['properties'])
+        self.assertEqual({'key1': 'value1', 'key2': 2}, policy.properties)
+
+    def test_init_version_as_float(self):
+        self.spec['version'] = 1.1
+        policy = self._create_policy('test-policy')
+
+        self.assertIsNone(policy.id)
+        self.assertEqual('test-policy', policy.name)
+        self.assertEqual(self.spec, policy.spec)
+        self.assertEqual('senlin.policy.dummy-1.1', policy.type)
+        self.assertEqual(self.ctx.user_id, policy.user)
+        self.assertEqual(self.ctx.project_id, policy.project)
+        self.assertEqual(self.ctx.domain_id, policy.domain)
+        self.assertEqual({}, policy.data)
+        self.assertIsNone(policy.created_at)
+        self.assertIsNone(policy.updated_at)
+        self.assertTrue(policy.singleton)
+
+        spec_data = policy.spec_data
+        self.assertEqual('senlin.policy.dummy', spec_data['type'])
+        self.assertEqual('1.1', spec_data['version'])
+        self.assertEqual({'key1': 'value1', 'key2': 2},
+                         spec_data['properties'])
+        self.assertEqual({'key1': 'value1', 'key2': 2}, policy.properties)
+
+    def test_init_version_as_string(self):
+        self.spec['version'] = '1.1'
+        policy = self._create_policy('test-policy')
+
+        self.assertIsNone(policy.id)
+        self.assertEqual('test-policy', policy.name)
+        self.assertEqual(self.spec, policy.spec)
+        self.assertEqual('senlin.policy.dummy-1.1', policy.type)
+        self.assertEqual(self.ctx.user_id, policy.user)
+        self.assertEqual(self.ctx.project_id, policy.project)
+        self.assertEqual(self.ctx.domain_id, policy.domain)
+        self.assertEqual({}, policy.data)
+        self.assertIsNone(policy.created_at)
+        self.assertIsNone(policy.updated_at)
+        self.assertTrue(policy.singleton)
+
+        spec_data = policy.spec_data
+        self.assertEqual('senlin.policy.dummy', spec_data['type'])
+        self.assertEqual('1.1', spec_data['version'])
         self.assertEqual({'key1': 'value1', 'key2': 2},
                          spec_data['properties'])
         self.assertEqual({'key1': 'value1', 'key2': 2}, policy.properties)

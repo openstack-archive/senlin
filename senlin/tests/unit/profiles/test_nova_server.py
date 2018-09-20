@@ -1651,17 +1651,14 @@ class TestNovaServerBasic(base.SenlinTestCase):
         node_obj = mock.Mock(physical_id='FAKE_ID')
         node_obj.name = None
 
-        ex = self.assertRaises(exc.EResourceOperation,
+        ex = self.assertRaises(exc.ESchema,
                                profile.handle_rebuild,
                                node_obj)
 
-        self.assertEqual("Failed in rebuilding server 'FAKE_ID': "
-                         "Server name is not a string or unicode.",
+        self.assertEqual("The value 'None' is not a valid string.",
                          six.text_type(ex))
         cc.server_get.assert_called_once_with('FAKE_ID')
-        cc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
-                                                  None,
-                                                  'adminpass')
+        cc.server_rebuild.assert_not_called()
         self.assertEqual(0, cc.wait_for_server.call_count)
 
     def test_handle_change_password(self):
