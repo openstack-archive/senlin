@@ -522,13 +522,13 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual(0, len(self.hm.rt['registries']))
 
     @mock.patch.object(hm.HealthManager, "_load_runtime_registry")
-    def test__dummy_task(self, mock_load):
+    def test_dummy_task(self, mock_load):
         self.hm._dummy_task()
         mock_load.assert_called_once_with()
 
     @mock.patch.object(hr.HealthRegistry, 'claim')
     @mock.patch.object(objects.HealthRegistry, 'update')
-    def test__load_runtime_registry(self, mock_update, mock_claim):
+    def test_load_runtime_registry(self, mock_update, mock_claim):
         mock_claim.return_value = [
             mock.Mock(cluster_id='CID1',
                       check_type=consts.NODE_STATUS_POLLING,
@@ -580,7 +580,7 @@ class TestHealthManager(base.SenlinTestCase):
             },
             self.hm.registries[1])
 
-    def test__expand_url_template(self):
+    def test_expand_url_template(self):
         url_template = 'https://abc123/foo/bar'
         node = mock.Mock()
 
@@ -589,7 +589,7 @@ class TestHealthManager(base.SenlinTestCase):
 
         self.assertEqual(res, url_template)
 
-    def test__expand_url_template_nodename(self):
+    def test_expand_url_template_nodename(self):
         node = mock.Mock()
         node.name = 'name'
         url_template = 'https://abc123/{nodename}/bar'
@@ -606,8 +606,8 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(context, 'get_service_context')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__poll_cluster(self, mock_rpc, mock_ctx, mock_get,
-                           mock_wait, mock_nodes, mock_chase):
+    def test_poll_cluster(self, mock_rpc, mock_ctx, mock_get,
+                          mock_wait, mock_nodes, mock_chase):
         x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
         mock_get.return_value = x_cluster
         ctx = mock.Mock()
@@ -638,7 +638,7 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(hm, "_chase_up")
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__poll_cluster_not_found(self, mock_check, mock_get, mock_chase):
+    def test_poll_cluster_not_found(self, mock_check, mock_get, mock_chase):
         mock_get.return_value = None
 
         recover_action = {'operation': 'REBUILD'}
@@ -653,8 +653,8 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(context, 'get_service_context')
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__poll_cluster_failed_check_rpc(self, mock_check, mock_get,
-                                            mock_ctx, mock_chase):
+    def test_poll_cluster_failed_check_rpc(self, mock_check, mock_get,
+                                           mock_ctx, mock_chase):
         x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
         mock_get.return_value = x_cluster
         ctx = mock.Mock()
@@ -678,8 +678,8 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(context, 'get_service_context')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__poll_cluster_failed_wait(self, mock_rpc, mock_ctx,
-                                       mock_get, mock_wait, mock_chase):
+    def test_poll_cluster_failed_wait(self, mock_rpc, mock_ctx,
+                                      mock_get, mock_wait, mock_chase):
         x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
         mock_get.return_value = x_cluster
         ctx = mock.Mock()
@@ -705,7 +705,7 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(hm.HealthManager, "_expand_url_template")
     @mock.patch.object(utils, 'url_fetch')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__check_url_and_recover_node_healthy(
+    def test_check_url_and_recover_node_healthy(
             self, mock_rpc, mock_url_fetch, mock_expand_url, mock_time):
         ctx = mock.Mock()
         node = mock.Mock()
@@ -741,7 +741,7 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(hm.HealthManager, "_expand_url_template")
     @mock.patch.object(utils, 'url_fetch')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__check_url_and_recover_node_unhealthy_inactive(
+    def test_check_url_and_recover_node_unhealthy_inactive(
             self, mock_rpc, mock_url_fetch, mock_expand_url, mock_time):
         ctx = mock.Mock()
         node = mock.Mock()
@@ -776,7 +776,7 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(hm.HealthManager, "_expand_url_template")
     @mock.patch.object(utils, 'url_fetch')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__check_url_and_recover_node_unhealthy_update_timeout(
+    def test_check_url_and_recover_node_unhealthy_update_timeout(
             self, mock_rpc, mock_url_fetch, mock_expand_url, mock_time):
         ctx = mock.Mock()
         node = mock.Mock()
@@ -813,7 +813,7 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(hm.HealthManager, "_expand_url_template")
     @mock.patch.object(utils, 'url_fetch')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__check_url_and_recover_node_unhealthy_init_timeout(
+    def test_check_url_and_recover_node_unhealthy_init_timeout(
             self, mock_rpc, mock_url_fetch, mock_expand_url, mock_time):
         ctx = mock.Mock()
         node = mock.Mock()
@@ -852,10 +852,10 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(hm.HealthManager, "_expand_url_template")
     @mock.patch.object(utils, 'url_fetch')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__check_url_and_recover_node_unhealthy(self,
-                                                   mock_rpc, mock_url_fetch,
-                                                   mock_expand_url, mock_time,
-                                                   mock_sleep):
+    def test_check_url_and_recover_node_unhealthy(self,
+                                                  mock_rpc, mock_url_fetch,
+                                                  mock_expand_url, mock_time,
+                                                  mock_sleep):
         ctx = mock.Mock()
         node = mock.Mock()
         node.status = consts.NS_ACTIVE
@@ -896,7 +896,7 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(hm.HealthManager, "_expand_url_template")
     @mock.patch.object(utils, 'url_fetch')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__check_url_and_recover_node_conn_error(
+    def test_check_url_and_recover_node_conn_error(
             self, mock_rpc, mock_url_fetch, mock_expand_url, mock_time,
             mock_sleep):
         ctx = mock.Mock()
@@ -939,7 +939,7 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(hm.HealthManager, "_expand_url_template")
     @mock.patch.object(utils, 'url_fetch')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__check_url_and_recover_node_conn_error_noop(
+    def test_check_url_and_recover_node_conn_error_noop(
             self, mock_rpc, mock_url_fetch, mock_expand_url, mock_time,
             mock_sleep):
         ctx = mock.Mock()
@@ -980,8 +980,8 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(hm.HealthManager, "_wait_for_action")
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(context, 'get_service_context')
-    def test__poll_url(self, mock_ctx, mock_get, mock_wait, mock_nodes,
-                       mock_check_url, mock_chase):
+    def test_poll_url(self, mock_ctx, mock_get, mock_wait, mock_nodes,
+                      mock_check_url, mock_chase):
         x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
         mock_get.return_value = x_cluster
         ctx = mock.Mock()
@@ -1011,8 +1011,8 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(hm, "_chase_up")
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(context, 'get_service_context')
-    def test__poll_url_cluster_not_found(self, mock_ctx, mock_get,
-                                         mock_chase):
+    def test_poll_url_cluster_not_found(self, mock_ctx, mock_get,
+                                        mock_chase):
         mock_get.return_value = None
 
         recover_action = {'operation': 'REBUILD'}
@@ -1031,8 +1031,8 @@ class TestHealthManager(base.SenlinTestCase):
     @mock.patch.object(hm.HealthManager, "_wait_for_action")
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(context, 'get_service_context')
-    def test__poll_url_no_action(self, mock_ctx, mock_get, mock_wait,
-                                 mock_nodes, mock_check_url, mock_chase):
+    def test_poll_url_no_action(self, mock_ctx, mock_get, mock_wait,
+                                mock_nodes, mock_check_url, mock_chase):
         x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
         mock_get.return_value = x_cluster
         ctx = mock.Mock()
@@ -1060,7 +1060,7 @@ class TestHealthManager(base.SenlinTestCase):
 
     @mock.patch.object(obj_profile.Profile, 'get')
     @mock.patch.object(obj_cluster.Cluster, 'get')
-    def test__add_listener_nova(self, mock_cluster, mock_profile):
+    def test_add_listener_nova(self, mock_cluster, mock_profile):
         cfg.CONF.set_override('nova_control_exchange', 'FAKE_NOVA_EXCHANGE',
                               group='health_manager')
         x_listener = mock.Mock()
@@ -1087,7 +1087,7 @@ class TestHealthManager(base.SenlinTestCase):
 
     @mock.patch.object(obj_profile.Profile, 'get')
     @mock.patch.object(obj_cluster.Cluster, 'get')
-    def test__add_listener_heat(self, mock_cluster, mock_profile):
+    def test_add_listener_heat(self, mock_cluster, mock_profile):
         cfg.CONF.set_override('heat_control_exchange', 'FAKE_HEAT_EXCHANGE',
                               group='health_manager')
         x_listener = mock.Mock()
@@ -1114,7 +1114,7 @@ class TestHealthManager(base.SenlinTestCase):
 
     @mock.patch.object(obj_profile.Profile, 'get')
     @mock.patch.object(obj_cluster.Cluster, 'get')
-    def test__add_listener_other_types(self, mock_cluster, mock_profile):
+    def test_add_listener_other_types(self, mock_cluster, mock_profile):
         mock_add_thread = self.patchobject(self.hm.TG, 'add_thread')
         x_cluster = mock.Mock(project='PROJECT_ID', profile_id='PROFILE_ID')
         mock_cluster.return_value = x_cluster
@@ -1134,7 +1134,7 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertFalse(mock_add_thread.called)
 
     @mock.patch.object(obj_cluster.Cluster, 'get')
-    def test__add_listener_cluster_not_found(self, mock_get):
+    def test_add_listener_cluster_not_found(self, mock_get):
         mock_get.return_value = None
         mock_add_thread = self.patchobject(self.hm.TG, 'add_thread')
 
@@ -1148,7 +1148,7 @@ class TestHealthManager(base.SenlinTestCase):
                                          project_safe=False)
         self.assertEqual(0, mock_add_thread.call_count)
 
-    def test__start_check_for_polling(self):
+    def test_start_check_for_polling(self):
         x_timer = mock.Mock()
         mock_add_timer = self.patchobject(self.hm.TG, 'add_dynamic_timer',
                                           return_value=x_timer)
@@ -1168,7 +1168,7 @@ class TestHealthManager(base.SenlinTestCase):
         mock_add_timer.assert_called_once_with(
             self.hm._poll_cluster, None, None, 'CCID', 12, recover_action)
 
-    def test__start_check_for_poll_url(self):
+    def test_start_check_for_poll_url(self):
         x_timer = mock.Mock()
         mock_add_timer = self.patchobject(self.hm.TG, 'add_dynamic_timer',
                                           return_value=x_timer)
@@ -1197,7 +1197,7 @@ class TestHealthManager(base.SenlinTestCase):
             self.hm._poll_url, None, None, 'CCID', 12, recover_action,
             entry['params'])
 
-    def test__start_check_for_listening(self):
+    def test_start_check_for_listening(self):
         x_listener = mock.Mock()
         mock_add_listener = self.patchobject(self.hm, '_add_listener',
                                              return_value=x_listener)
@@ -1215,7 +1215,7 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual(expected, res)
         mock_add_listener.assert_called_once_with('CCID', recover_action)
 
-    def test__start_check_for_listening_failed(self):
+    def test_start_check_for_listening_failed(self):
         mock_add_listener = self.patchobject(self.hm, '_add_listener',
                                              return_value=None)
 
@@ -1230,7 +1230,7 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertIsNone(res)
         mock_add_listener.assert_called_once_with('CCID', recover_action)
 
-    def test__start_check_other_types(self):
+    def test_start_check_other_types(self):
         entry = {
             'cluster_id': 'CCID',
             'check_type': 'BOGUS TYPE',
@@ -1240,7 +1240,7 @@ class TestHealthManager(base.SenlinTestCase):
 
         self.assertIsNone(res)
 
-    def test__stop_check_with_timer(self):
+    def test_stop_check_with_timer(self):
         x_timer = mock.Mock()
         entry = {'timer': x_timer}
         mock_timer_done = self.patchobject(self.hm.TG, 'timer_done')
@@ -1252,7 +1252,7 @@ class TestHealthManager(base.SenlinTestCase):
         x_timer.stop.assert_called_once_with()
         mock_timer_done.assert_called_once_with(x_timer)
 
-    def test__stop_check_with_listener(self):
+    def test_stop_check_with_listener(self):
         x_thread = mock.Mock()
         entry = {'listener': x_thread}
         mock_thread_done = self.patchobject(self.hm.TG, 'thread_done')

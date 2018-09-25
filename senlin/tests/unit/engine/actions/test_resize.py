@@ -28,7 +28,7 @@ class ClusterResizeTest(base.SenlinTestCase):
         super(ClusterResizeTest, self).setUp()
         self.ctx = utils.dummy_context()
 
-    def test__update_cluster_size(self, mock_load):
+    def test_update_cluster_size(self, mock_load):
         cluster = mock.Mock(id='CID', desired_capacity=10, nodes=[])
         mock_load.return_value = cluster
         action = ca.ClusterAction(cluster.id, 'CLUSTER_RESIZE', self.ctx,
@@ -40,7 +40,7 @@ class ClusterResizeTest(base.SenlinTestCase):
             action.context, consts.CS_RESIZING, 'Cluster resize started.',
             desired_capacity=15, min_size=1, max_size=20)
 
-    def test__update_cluster_size_minimum(self, mock_load):
+    def test_update_cluster_size_minimum(self, mock_load):
         cluster = mock.Mock(id='CID', desired_capacity=10, nodes=[])
         mock_load.return_value = cluster
         action = ca.ClusterAction(cluster.id, 'CLUSTER_RESIZE', self.ctx,

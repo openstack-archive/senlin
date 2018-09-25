@@ -24,7 +24,7 @@ from senlin.tests.unit.common import base
 @mock.patch("senlin.api.openstack.versions.Controller")
 class VersionNegotiationTest(base.SenlinTestCase):
 
-    def test__get_version_controller(self, mock_vc):
+    def test_get_version_controller(self, mock_vc):
         gvc = mock_vc.return_value
         xvc = mock.Mock()
         gvc.get_controller = mock.Mock(return_value=xvc)
@@ -38,7 +38,7 @@ class VersionNegotiationTest(base.SenlinTestCase):
         self.assertEqual(0, request.environ['api.minor'])
         gvc.get_controller.assert_called_once_with('1.0')
 
-    def test__get_version_controller_shorter_version(self, mock_vc):
+    def test_get_version_controller_shorter_version(self, mock_vc):
         gvc = mock_vc.return_value
         xvc = mock.Mock()
         gvc.get_controller = mock.Mock(return_value=xvc)
@@ -52,7 +52,7 @@ class VersionNegotiationTest(base.SenlinTestCase):
         self.assertEqual(0, request.environ['api.minor'])
         gvc.get_controller.assert_called_once_with('1.0')
 
-    def test__get_controller_not_match_version(self, mock_vc):
+    def test_get_controller_not_match_version(self, mock_vc):
         gvc = mock_vc.return_value
         gvc.get_controller = mock.Mock(return_value=None)
         vnf = vn.VersionNegotiationFilter(None, None)
@@ -208,7 +208,7 @@ class VersionNegotiationTest(base.SenlinTestCase):
         response = vnf.process_request(request)
         self.assertEqual(gvc, response)
 
-    def test__check_version_request(self, mock_vc):
+    def test_check_version_request(self, mock_vc):
         controller = mock.Mock()
         minv = vr.APIVersionRequest('1.0')
         maxv = vr.APIVersionRequest('1.3')
@@ -224,7 +224,7 @@ class VersionNegotiationTest(base.SenlinTestCase):
         expected = vr.APIVersionRequest('1.0')
         self.assertEqual(expected, request.version_request)
 
-    def test__check_version_request_default(self, mock_vc):
+    def test_check_version_request_default(self, mock_vc):
         controller = mock.Mock()
         controller.DEFAULT_API_VERSION = "1.0"
         request = webob.Request({'PATH_INFO': 'resource'})
@@ -237,7 +237,7 @@ class VersionNegotiationTest(base.SenlinTestCase):
         expected = vr.APIVersionRequest(controller.DEFAULT_API_VERSION)
         self.assertEqual(expected, request.version_request)
 
-    def test__check_version_request_invalid_format(self, mock_vc):
+    def test_check_version_request_invalid_format(self, mock_vc):
         controller = mock.Mock()
         request = webob.Request({'PATH_INFO': 'resource'})
         request.headers[wsgi.API_VERSION_KEY] = 'clustering 2.03'
@@ -250,7 +250,7 @@ class VersionNegotiationTest(base.SenlinTestCase):
                          "must be of format 'major.minor'.",
                          six.text_type(ex))
 
-    def test__check_version_request_invalid_version(self, mock_vc):
+    def test_check_version_request_invalid_version(self, mock_vc):
         controller = mock.Mock()
         minv = vr.APIVersionRequest('1.0')
         maxv = vr.APIVersionRequest('1.100')
@@ -269,7 +269,7 @@ class VersionNegotiationTest(base.SenlinTestCase):
                     {'min_ver': str(minv), 'max_ver': str(maxv)})
         self.assertEqual(expected, six.text_type(ex))
 
-    def test__check_version_request_latest(self, mock_vc):
+    def test_check_version_request_latest(self, mock_vc):
         controller = mock.Mock()
         controller.max_api_version = mock.Mock(return_value='12.34')
 

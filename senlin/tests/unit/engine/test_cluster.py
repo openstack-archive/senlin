@@ -87,8 +87,8 @@ class TestCluster(base.SenlinTestCase):
     @mock.patch.object(pcb.Policy, 'load')
     @mock.patch.object(pfb.Profile, 'load')
     @mock.patch.object(no.Node, 'get_all_by_cluster')
-    def test__load_runtime_data(self, mock_nodes, mock_profile, mock_policy,
-                                mock_pb):
+    def test_load_runtime_data(self, mock_nodes, mock_profile, mock_policy,
+                               mock_pb):
         x_binding = mock.Mock()
         x_binding.policy_id = POLICY_ID
         mock_pb.return_value = [x_binding]
@@ -121,7 +121,7 @@ class TestCluster(base.SenlinTestCase):
                                              project_safe=False)
         mock_nodes.assert_called_once_with(self.context, CLUSTER_ID)
 
-    def test__load_runtime_data_id_is_none(self):
+    def test_load_runtime_data_id_is_none(self):
         cluster = cm.Cluster('test-cluster', 0, PROFILE_ID)
 
         cluster._load_runtime_data(self.context)

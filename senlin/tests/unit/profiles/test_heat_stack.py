@@ -801,7 +801,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         oc.stack_get.assert_called_once_with('FAKE_ID')
         oc.stack_get_template.assert_called_once_with('FAKE_ID')
 
-    def test__refresh_tags_empty_no_add(self):
+    def test_refresh_tags_empty_no_add(self):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock()
 
@@ -809,7 +809,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
 
         self.assertEqual(("", False), res)
 
-    def test__refresh_tags_with_contents_no_add(self):
+    def test_refresh_tags_with_contents_no_add(self):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock()
 
@@ -817,7 +817,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
 
         self.assertEqual(('foo', False), res)
 
-    def test__refresh_tags_deleted_no_add(self):
+    def test_refresh_tags_deleted_no_add(self):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock()
 
@@ -825,7 +825,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
 
         self.assertEqual(('bar', True), res)
 
-    def test__refresh_tags_empty_and_add(self):
+    def test_refresh_tags_empty_and_add(self):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock(id='NODE_ID', cluster_id='CLUSTER_ID', index=123)
 
@@ -836,7 +836,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
                              'cluster_node_index=123'])
         self.assertEqual((expected, True), res)
 
-    def test__refresh_tags_with_contents_and_add(self):
+    def test_refresh_tags_with_contents_and_add(self):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock(id='NODE_ID', cluster_id='CLUSTER_ID', index=123)
 
@@ -848,7 +848,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
                              'cluster_node_index=123'])
         self.assertEqual((expected, True), res)
 
-    def test__refresh_tags_deleted_and_add(self):
+    def test_refresh_tags_deleted_and_add(self):
         profile = stack.StackProfile('t', self.spec)
         node = mock.Mock(id='NODE_ID', cluster_id='CLUSTER_ID', index=123)
 

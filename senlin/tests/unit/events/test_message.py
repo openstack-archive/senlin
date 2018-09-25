@@ -35,7 +35,7 @@ class TestMessageEvent(testtools.TestCase):
         self.ctx = utils.dummy_context()
 
     @mock.patch.object(nobj.NotificationBase, '_emit')
-    def test__notify_cluster_action(self, mock_emit):
+    def test_notify_cluster_action(self, mock_emit):
         cluster_id = uuidutils.generate_uuid()
         profile_id = uuidutils.generate_uuid()
         cluster_init = timeutils.utcnow(True)
@@ -131,7 +131,7 @@ class TestMessageEvent(testtools.TestCase):
         self.assertEqual(expected_payload, payload)
 
     @mock.patch.object(nobj.NotificationBase, '_emit')
-    def test__notify_node_action(self, mock_emit):
+    def test_notify_node_action(self, mock_emit):
         node_id = uuidutils.generate_uuid()
         profile_id = uuidutils.generate_uuid()
         node_init = timeutils.utcnow(True)

@@ -366,7 +366,7 @@ class ClusterRecoverTest(base.SenlinTestCase):
         mock_desired.assert_called_once_with()
 
     @mock.patch.object(ca.ClusterAction, '_create_nodes')
-    def test__check_capacity_create(self, mock_create, mock_load):
+    def test_check_capacity_create(self, mock_create, mock_load):
         node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID', status='ACTIVE')
 
         cluster = mock.Mock(id='FAKE_ID', RECOVERING='RECOVERING',
@@ -383,8 +383,8 @@ class ClusterRecoverTest(base.SenlinTestCase):
     @mock.patch.object(su, 'nodes_by_random')
     @mock.patch.object(no.Node, 'get_all_by_cluster')
     @mock.patch.object(ca.ClusterAction, '_delete_nodes')
-    def test__check_capacity_delete(self, mock_delete, mock_get,
-                                    mock_su, mock_load):
+    def test_check_capacity_delete(self, mock_delete, mock_get,
+                                   mock_su, mock_load):
         node1 = mock.Mock(id='NODE_1', cluster_id='FAKE_ID', status='ACTIVE')
         node2 = mock.Mock(id='NODE_2', cluster_id='FAKE_ID', status='ERROR')
 

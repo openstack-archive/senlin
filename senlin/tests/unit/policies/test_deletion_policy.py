@@ -48,7 +48,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
         self.assertFalse(policy.reduce_desired_capacity)
 
     @mock.patch.object(su, 'nodes_by_random')
-    def test__victims_by_regions_random(self, mock_select):
+    def test_victims_by_regions_random(self, mock_select):
         cluster = mock.Mock()
         node1 = mock.Mock(id=1)
         node2 = mock.Mock(id=2)
@@ -72,7 +72,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
             mock.call('R1'), mock.call('R2')])
 
     @mock.patch.object(su, 'nodes_by_profile_age')
-    def test__victims_by_regions_profile_age(self, mock_select):
+    def test_victims_by_regions_profile_age(self, mock_select):
         cluster = mock.Mock()
         node1 = mock.Mock(id=1)
         node2 = mock.Mock(id=2)
@@ -96,7 +96,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
             mock.call('R1'), mock.call('R2')])
 
     @mock.patch.object(su, 'nodes_by_age')
-    def test__victims_by_regions_age_oldest(self, mock_select):
+    def test_victims_by_regions_age_oldest(self, mock_select):
         cluster = mock.Mock()
         node1 = mock.Mock(id=1)
         node2 = mock.Mock(id=2)
@@ -120,7 +120,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
             mock.call('R1'), mock.call('R2')])
 
     @mock.patch.object(su, 'nodes_by_age')
-    def test__victims_by_regions_age_youngest(self, mock_select):
+    def test_victims_by_regions_age_youngest(self, mock_select):
         cluster = mock.Mock()
         node1 = mock.Mock(id=1)
         node2 = mock.Mock(id=2)
@@ -144,7 +144,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
             mock.call('R1'), mock.call('R2')])
 
     @mock.patch.object(su, 'nodes_by_random')
-    def test__victims_by_zones_random(self, mock_select):
+    def test_victims_by_zones_random(self, mock_select):
         cluster = mock.Mock()
         node1 = mock.Mock(id=1)
         node2 = mock.Mock(id=2)
@@ -169,7 +169,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
         )
 
     @mock.patch.object(su, 'nodes_by_profile_age')
-    def test__victims_by_zones_profile_age(self, mock_select):
+    def test_victims_by_zones_profile_age(self, mock_select):
         cluster = mock.Mock()
         node1 = mock.Mock(id=1)
         node2 = mock.Mock(id=2)
@@ -196,7 +196,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
         )
 
     @mock.patch.object(su, 'nodes_by_age')
-    def test__victims_by_zones_age_oldest(self, mock_select):
+    def test_victims_by_zones_age_oldest(self, mock_select):
         cluster = mock.Mock()
         node1 = mock.Mock(id=1)
         node2 = mock.Mock(id=2)
@@ -221,7 +221,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
         )
 
     @mock.patch.object(su, 'nodes_by_age')
-    def test__victims_by_zones_age_youngest(self, mock_select):
+    def test_victims_by_zones_age_youngest(self, mock_select):
         cluster = mock.Mock()
         node1 = mock.Mock(id=1)
         node2 = mock.Mock(id=3)
@@ -247,7 +247,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
             [mock.call('AZ5'), mock.call('AZ6')],
         )
 
-    def test__update_action_clean(self):
+    def test_update_action_clean(self):
         action = mock.Mock()
         action.data = {}
 
@@ -269,7 +269,7 @@ class TestDeletionPolicy(base.SenlinTestCase):
         self.assertEqual(pd, action.data)
         action.store.assert_called_with(action.context)
 
-    def test__update_action_override(self):
+    def test_update_action_override(self):
         action = mock.Mock()
         action.data = {
             'deletion': {

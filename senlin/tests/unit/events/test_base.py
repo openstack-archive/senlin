@@ -27,7 +27,7 @@ class TestEventBackend(testtools.TestCase):
         self.ctx = utils.dummy_context()
 
     @mock.patch('oslo_utils.reflection.get_class_name')
-    def test__check_entity_cluster(self, mock_get):
+    def test_check_entity_cluster(self, mock_get):
         entity = mock.Mock()
         mock_get.return_value = 'Cluster'
 
@@ -37,7 +37,7 @@ class TestEventBackend(testtools.TestCase):
         mock_get.assert_called_once_with(entity, fully_qualified=False)
 
     @mock.patch('oslo_utils.reflection.get_class_name')
-    def test__check_entity_node(self, mock_get):
+    def test_check_entity_node(self, mock_get):
         entity = mock.Mock()
         mock_get.return_value = 'Node'
 
@@ -46,23 +46,23 @@ class TestEventBackend(testtools.TestCase):
         self.assertEqual('NODE', res)
         mock_get.assert_called_once_with(entity, fully_qualified=False)
 
-    def test__get_action_name_unexpected(self):
+    def test_get_action_name_unexpected(self):
         action = mock.Mock(action="UNEXPECTED")
         res = base.EventBackend._get_action_name(action)
         self.assertEqual('unexpected', res)
 
-    def test__get_action_name_correct_format(self):
+    def test_get_action_name_correct_format(self):
         action = mock.Mock(action="FOO_BAR")
         res = base.EventBackend._get_action_name(action)
         self.assertEqual('bar', res)
 
-    def test__get_action_name_operation_found(self):
+    def test_get_action_name_operation_found(self):
         action = mock.Mock(action=consts.NODE_OPERATION,
                            inputs={'operation': 'bar'})
         res = base.EventBackend._get_action_name(action)
         self.assertEqual('bar', res)
 
-    def test__get_action_name_operation_not_found(self):
+    def test_get_action_name_operation_not_found(self):
         action = mock.Mock(action="FOO_OPERATION", inputs={})
         res = base.EventBackend._get_action_name(action)
         self.assertEqual('operation', res)

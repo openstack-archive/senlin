@@ -697,8 +697,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'get')
     @mock.patch.object(no.Node, 'update')
-    def test__add_member(self, m_node_update, m_node_get,
-                         m_extract, m_load):
+    def test_add_member(self, m_node_update, m_node_get,
+                        m_extract, m_load):
         node1 = mock.Mock(id='NODE1_ID', data={})
         node2 = mock.Mock(id='NODE2_ID', data={})
         action = mock.Mock(context='action_context',
@@ -754,8 +754,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'get')
     @mock.patch.object(no.Node, 'update')
-    def test__add_member_fail(self, m_node_update, m_node_get,
-                              m_extract, m_load):
+    def test_add_member_fail(self, m_node_update, m_node_get,
+                             m_extract, m_load):
         node1 = mock.Mock(id='NODE1_ID', data={})
         action = mock.Mock(context='action_context',
                            action=consts.CLUSTER_RESIZE,
@@ -921,8 +921,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'get')
     @mock.patch.object(no.Node, 'update')
-    def test__remove_member(self, m_node_update, m_node_get,
-                            m_extract, m_load):
+    def test_remove_member(self, m_node_update, m_node_get,
+                           m_extract, m_load):
         node1 = mock.Mock(id='NODE1', data={'lb_member': 'MEM_ID1'})
         node2 = mock.Mock(id='NODE2', data={'lb_member': 'MEM_ID2'})
         action = mock.Mock(
@@ -976,8 +976,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'get')
     @mock.patch.object(no.Node, 'update')
-    def test__remove_member_not_in_pool(self, m_node_update, m_node_get,
-                                        m_extract, m_load):
+    def test_remove_member_not_in_pool(self, m_node_update, m_node_get,
+                                       m_extract, m_load):
         node1 = mock.Mock(id='NODE1', data={'lb_member': 'MEM_ID1'})
         node2 = mock.Mock(id='NODE2', data={})
         action = mock.Mock(
@@ -1025,8 +1025,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'get')
     @mock.patch.object(no.Node, 'update')
-    def test__remove_member_fail(self, m_node_update, m_node_get,
-                                 m_extract, m_load):
+    def test_remove_member_fail(self, m_node_update, m_node_get,
+                                m_extract, m_load):
         node1 = mock.Mock(id='NODE1', data={'lb_member': 'MEM_ID1'})
         action = mock.Mock(
             context='action_context', action=consts.CLUSTER_DEL_NODES,
@@ -1120,7 +1120,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
                                          mock.ANY, self.lb_driver)
 
     @mock.patch.object(no.Node, 'update')
-    def test__process_recovery_not_lb_member(self, m_update, m1, m2):
+    def test_process_recovery_not_lb_member(self, m_update, m1, m2):
         node = mock.Mock(id='NODE', data={})
         action = mock.Mock(
             action=consts.NODE_RECOVER,
@@ -1137,7 +1137,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'update')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
-    def test__process_recovery_reboot(self, m_remove, m_update, m1, m2):
+    def test_process_recovery_reboot(self, m_remove, m_update, m1, m2):
         node = mock.Mock(id='NODE', data={'lb_member': 'mem_1'})
         action = mock.Mock(
             action=consts.NODE_RECOVER,
@@ -1156,7 +1156,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'update')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
-    def test__process_recovery_recreate(self, m_remove, m_update, m1, m2):
+    def test_process_recovery_recreate(self, m_remove, m_update, m1, m2):
         node = mock.Mock(id='NODE', data={'lb_member': 'mem_1',
                                           'recovery': 'RECREATE'})
         action = mock.Mock(

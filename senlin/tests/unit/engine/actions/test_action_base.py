@@ -687,7 +687,7 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         self.assertEqual(0, mock_pre_op.call_count)
         self.assertEqual(0, mock_post_op.call_count)
 
-    def test__check_result_true(self):
+    def test_check_result_true(self):
         cluster_id = CLUSTER_ID
         action = ab.Action(cluster_id, 'OBJECT_ACTION', self.ctx)
         action.data['status'] = policy_mod.CHECK_OK
@@ -697,7 +697,7 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
 
         self.assertTrue(res)
 
-    def test__check_result_false(self):
+    def test_check_result_false(self):
         cluster_id = CLUSTER_ID
         action = ab.Action(cluster_id, 'OBJECT_ACTION', self.ctx)
         action.data['status'] = policy_mod.CHECK_ERROR

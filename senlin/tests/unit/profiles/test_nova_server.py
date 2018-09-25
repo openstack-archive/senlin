@@ -66,7 +66,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         self.assertIsNone(profile.server_id)
 
-    def test__build_metadata(self):
+    def test_build_metadata(self):
         obj = mock.Mock(id='NODE_ID', cluster_id='')
         profile = server.ServerProfile('t', self.spec)
 
@@ -74,7 +74,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         self.assertEqual({'cluster_node_id': 'NODE_ID'}, res)
 
-    def test__build_metadata_with_inputs(self):
+    def test_build_metadata_with_inputs(self):
         obj = mock.Mock(id='NODE_ID', cluster_id='')
         profile = server.ServerProfile('t', self.spec)
 
@@ -82,7 +82,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         self.assertEqual({'cluster_node_id': 'NODE_ID', 'foo': 'bar'}, res)
 
-    def test__build_metadata_for_cluster_node(self):
+    def test_build_metadata_for_cluster_node(self):
         obj = mock.Mock(id='NODE_ID', cluster_id='CLUSTER_ID', index=123)
         profile = server.ServerProfile('t', self.spec)
 

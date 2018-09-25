@@ -42,7 +42,7 @@ class TestBatchPolicy(base.SenlinTestCase):
         self.assertEqual(2, policy.max_batch_size)
         self.assertEqual(60, policy.pause_time)
 
-    def test__get_batch_size(self):
+    def test_get_batch_size(self):
         policy = bp.BatchPolicy('test-batch', self.spec)
 
         size, number = policy._get_batch_size(5)
@@ -50,7 +50,7 @@ class TestBatchPolicy(base.SenlinTestCase):
         self.assertEqual(2, size)
         self.assertEqual(3, number)
 
-    def test__get_batch_size_less_than_max(self):
+    def test_get_batch_size_less_than_max(self):
         spec = copy.deepcopy(self.spec)
         spec['properties']['max_batch_size'] = 3
         policy = bp.BatchPolicy('test-batch', spec)
@@ -60,7 +60,7 @@ class TestBatchPolicy(base.SenlinTestCase):
         self.assertEqual(2, size)
         self.assertEqual(2, number)
 
-    def test__get_batch_size_less_than_min(self):
+    def test_get_batch_size_less_than_min(self):
         spec = copy.deepcopy(self.spec)
         spec['properties']['min_in_service'] = 2
         policy = bp.BatchPolicy('test-batch', spec)
@@ -70,7 +70,7 @@ class TestBatchPolicy(base.SenlinTestCase):
         self.assertEqual(1, size)
         self.assertEqual(1, number)
 
-    def test__get_batch_size_with_default_max(self):
+    def test_get_batch_size_with_default_max(self):
         spec = copy.deepcopy(self.spec)
         spec['properties']['max_batch_size'] = -1
         policy = bp.BatchPolicy('test-batch', spec)
@@ -79,7 +79,7 @@ class TestBatchPolicy(base.SenlinTestCase):
         self.assertEqual(4, size)
         self.assertEqual(2, number)
 
-    def test__pick_nodes_all_active(self):
+    def test_pick_nodes_all_active(self):
         node1 = mock.Mock(id='1', status='ACTIVE')
         node2 = mock.Mock(id='2', status='ACTIVE')
         node3 = mock.Mock(id='3', status='ACTIVE')
@@ -93,7 +93,7 @@ class TestBatchPolicy(base.SenlinTestCase):
         self.assertIn(node2.id, nodes[0])
         self.assertIn(node3.id, nodes[1])
 
-    def test__pick_nodes_with_error_nodes(self):
+    def test_pick_nodes_with_error_nodes(self):
         node1 = mock.Mock(id='1', status='ACTIVE')
         node2 = mock.Mock(id='2', status='ACTIVE')
         node3 = mock.Mock(id='3', status='ERROR')
@@ -110,7 +110,7 @@ class TestBatchPolicy(base.SenlinTestCase):
 
     @mock.patch.object(bp.BatchPolicy, '_pick_nodes')
     @mock.patch.object(bp.BatchPolicy, '_get_batch_size')
-    def test__create_plan_for_update(self, mock_cal, mock_pick):
+    def test_create_plan_for_update(self, mock_cal, mock_pick):
         action = mock.Mock(context=self.context, action='CLUSTER_UPDATE')
         cluster = mock.Mock(id='cid')
         node1, node2, node3 = mock.Mock(), mock.Mock(), mock.Mock()
@@ -132,7 +132,7 @@ class TestBatchPolicy(base.SenlinTestCase):
         mock_cal.assert_called_once_with(3)
         mock_pick.assert_called_once_with([node1, node2, node3], 2, 2)
 
-    def test__create_plan_for_update_no_node(self):
+    def test_create_plan_for_update_no_node(self):
         action = mock.Mock(context=self.context, action='CLUSTER_UPDATE')
         cluster = mock.Mock(id='cid')
         cluster.nodes = []

@@ -279,7 +279,7 @@ class ScaleUtilsTest(base.SenlinTestCase):
         self.assertEqual(['N1', 'N2', 'N15', 'N13', 'N12'], res)
 
     @mock.patch.object(su, 'filter_error_nodes')
-    def test__victims_by_profile_age_oldest(self, mock_filter):
+    def test_victims_by_profile_age_oldest(self, mock_filter):
         good_nodes = [
             mock.Mock(id='N11', profile_created_at=110),
             mock.Mock(id='N15', profile_created_at=150),

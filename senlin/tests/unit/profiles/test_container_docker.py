@@ -178,7 +178,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         self.assertEqual(msg, ex.message)
 
     @mock.patch.object(node.Node, 'load')
-    def test__get_host_node_found_by_node(self, mock_load):
+    def test_get_host_node_found_by_node(self, mock_load):
         node = mock.Mock()
         mock_load.return_value = node
         ctx = mock.Mock()
@@ -190,7 +190,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         mock_load.assert_called_once_with(ctx, node_id='host_node')
 
     @mock.patch.object(dp.DockerProfile, '_get_random_node')
-    def test__get_host_node_found_by_cluster(self, mock_get):
+    def test_get_host_node_found_by_cluster(self, mock_get):
         node = mock.Mock()
         mock_get.return_value = node
         ctx = mock.Mock()
@@ -202,7 +202,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         mock_get.assert_called_once_with(ctx, 'host_cluster')
 
     @mock.patch.object(node.Node, 'load')
-    def test__get_host_node_not_found(self, mock_load):
+    def test_get_host_node_not_found(self, mock_load):
         mock_load.side_effect = exc.ResourceNotFound(type='node',
                                                      id='fake_node')
         profile = dp.DockerProfile('container', self.spec)
@@ -218,7 +218,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
     @mock.patch.object(node.Node, 'load')
     @mock.patch.object(no.Node, 'get_all_by_cluster')
     @mock.patch.object(cluster.Cluster, 'load')
-    def test__get_random_node(self, mock_cluster, mock_nodes, mock_load):
+    def test_get_random_node(self, mock_cluster, mock_nodes, mock_load):
         cluster = mock.Mock()
         mock_cluster.return_value = cluster
         node1 = mock.Mock()
@@ -240,7 +240,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
         self.assertIn(n, [node1, node2])
 
     @mock.patch.object(cluster.Cluster, 'load')
-    def test__get_random_node_cluster_not_found(self, mock_load):
+    def test_get_random_node_cluster_not_found(self, mock_load):
         mock_load.side_effect = exc.ResourceNotFound(type='cluster',
                                                      id='host_cluster')
         ctx = mock.Mock()
@@ -255,7 +255,7 @@ class TestContainerDockerProfile(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'get_all_by_cluster')
     @mock.patch.object(cluster.Cluster, 'load')
-    def test__get_random_node_empty_cluster(self, mock_cluster, mock_nodes):
+    def test_get_random_node_empty_cluster(self, mock_cluster, mock_nodes):
         cluster = mock.Mock()
         mock_cluster.return_value = cluster
         mock_nodes.return_value = []

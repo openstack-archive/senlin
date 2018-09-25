@@ -407,7 +407,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_add_nodes(self, mock_call, mock_parse, mock_enforce):
+    def test_do_add_nodes(self, mock_call, mock_parse, mock_enforce):
         req = mock.Mock()
         cid = 'FAKE_ID'
         data = dict(nodes=['NODE1'])
@@ -428,8 +428,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_add_nodes_failed_request(self, mock_call,
-                                          mock_parse, _ignore):
+    def test_do_add_nodes_failed_request(self, mock_call,
+                                         mock_parse, _ignore):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = dict(nodes=['NODE2'])
@@ -449,7 +449,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__add_nodes_failed_engine(self, mock_call, mock_parse, _ignore):
+    def test_add_nodes_failed_engine(self, mock_call, mock_parse, _ignore):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = dict(nodes=['NODE3'])
@@ -472,7 +472,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_del_nodes(self, mock_call, mock_parse, _ignore):
+    def test_do_del_nodes(self, mock_call, mock_parse, _ignore):
         req = mock.Mock()
         cid = 'FAKE_ID'
         data = dict(nodes=['NODE4'], destroy=False)
@@ -492,8 +492,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_del_nodes_failed_request(self, mock_call,
-                                          mock_parse, _ignore):
+    def test_do_del_nodes_failed_request(self, mock_call,
+                                         mock_parse, _ignore):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = dict(nodes=['NODE5'], destroy=False)
@@ -512,7 +512,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_del_nodes_failed_engine(self, mock_call, mock_parse, _ignore):
+    def test_do_del_nodes_failed_engine(self, mock_call, mock_parse, _ignore):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = dict(nodes=['NODE6'], destroy=False)
@@ -534,7 +534,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_replace_nodes(self, mock_call, mock_parse, _ignore):
+    def test_do_replace_nodes(self, mock_call, mock_parse, _ignore):
         req = mock.Mock()
         cid = 'FAKE_ID'
         data = dict(nodes={'OLD': 'NEW'})
@@ -555,7 +555,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_replace_nodes_none(self, mock_call, mock_parse, _ign):
+    def test_do_replace_nodes_none(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = dict(nodes=None)
@@ -569,8 +569,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_replace_nodes_failed_request(self, mock_call,
-                                              mock_parse, _ign):
+    def test_do_replace_nodes_failed_request(self, mock_call,
+                                             mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = dict(nodes={'OLD': 'NEW'})
@@ -590,8 +590,8 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_replace_nodes_failed_engine(self, mock_call,
-                                             mock_parse, _ign):
+    def test_do_replace_nodes_failed_engine(self, mock_call,
+                                            mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = dict(nodes={'OLD': 'NEW'})
@@ -641,18 +641,18 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'ClusterResizeRequest', req, params)
         mock_call.assert_called_once_with(req.context, 'cluster_resize', obj)
 
-    def test__do_resize_exact_capacity(self, mock_enforce):
+    def test_do_resize_exact_capacity(self, mock_enforce):
         self._test_do_resize_with_type('EXACT_CAPACITY')
 
-    def test__do_resize_with_change_capacity(self, mock_enforce):
+    def test_do_resize_with_change_capacity(self, mock_enforce):
         self._test_do_resize_with_type('CHANGE_IN_CAPACITY')
 
-    def test__do_resize_with_change_percentage(self, mock_enforce):
+    def test_do_resize_with_change_percentage(self, mock_enforce):
         self._test_do_resize_with_type('CHANGE_IN_PERCENTAGE')
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_resize_failed_request(self, mock_call, mock_parse, _ign):
+    def test_do_resize_failed_request(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {'adjustment_type': 'EXACT_CAPACITY', 'number': 10}
@@ -674,7 +674,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_resize_missing_number(self, mock_call, mock_parse, _ign):
+    def test_do_resize_missing_number(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {'adjustment_type': 'EXACT_CAPACITY'}
@@ -690,7 +690,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_resize_missing_type(self, mock_call, mock_parse, _ign):
+    def test_do_resize_missing_type(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {'number': 2}
@@ -707,7 +707,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_resize_max_size_too_small(self, mock_call, mock_parse, _ign):
+    def test_do_resize_max_size_too_small(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {'min_size': 2, 'max_size': 1}
@@ -724,7 +724,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_resize_empty_params(self, mock_call, mock_parse, _ign):
+    def test_do_resize_empty_params(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {}
@@ -739,7 +739,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_resize_failed_engine(self, mock_call, mock_parse, _ign):
+    def test_do_resize_failed_engine(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {'max_size': 200}
@@ -759,7 +759,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_scale_out(self, mock_call, mock_parse, _ignore):
+    def test_do_scale_out(self, mock_call, mock_parse, _ignore):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = dict(count=1)
@@ -780,7 +780,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_scale_out_failed_request(self, mock_call, mock_parse, _ign):
+    def test_do_scale_out_failed_request(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = dict(count=2)
@@ -800,7 +800,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_scale_out_failed_engine(self, mock_call, mock_parse, _ign):
+    def test_do_scale_out_failed_engine(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = dict(count=3)
@@ -823,7 +823,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_scale_in(self, mock_call, mock_parse, _ignore):
+    def test_do_scale_in(self, mock_call, mock_parse, _ignore):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = dict(count=4)
@@ -844,7 +844,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_scale_in_failed_request(self, mock_call, mock_parse, _ign):
+    def test_do_scale_in_failed_request(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = dict(count=5)
@@ -864,7 +864,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_scale_in_failed_engine(self, mock_call, mock_parse, _ign):
+    def test_do_scale_in_failed_engine(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = dict(count=6)
@@ -887,7 +887,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_policy_attach(self, mock_call, mock_parse, _ign):
+    def test_do_policy_attach(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {'policy_id': 'xxxx-yyyy'}
@@ -906,7 +906,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_policy_attach_failed_request(self, mock_call, mock_parse, _i):
+    def test_do_policy_attach_failed_request(self, mock_call, mock_parse, _i):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {'policy_id': 'xxxx-yyyy'}
@@ -924,7 +924,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_policy_attach_failed_engine(self, mock_call, mock_parse, _i):
+    def test_do_policy_attach_failed_engine(self, mock_call, mock_parse, _i):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {'policy_id': 'xxxx-yyyy'}
@@ -945,7 +945,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_policy_detach(self, mock_call, mock_parse, _ign):
+    def test_do_policy_detach(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {'policy_id': 'xxxx-yyyy'}
@@ -964,7 +964,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_policy_detach_failed_request(self, mock_call, mock_parse, _i):
+    def test_do_policy_detach_failed_request(self, mock_call, mock_parse, _i):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {'policy_id': 'xxxx-yyyy'}
@@ -982,7 +982,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_policy_detach_failed_engine(self, mock_call, mock_parse, _i):
+    def test_do_policy_detach_failed_engine(self, mock_call, mock_parse, _i):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {'policy_id': 'xxxx-yyyy'}
@@ -1003,7 +1003,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_policy_update(self, mock_call, mock_parse, _ign):
+    def test_do_policy_update(self, mock_call, mock_parse, _ign):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {'policy_id': 'xxxx-yyyy'}
@@ -1022,7 +1022,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_policy_update_failed_request(self, mock_call, mock_parse, _i):
+    def test_do_policy_update_failed_request(self, mock_call, mock_parse, _i):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {'policy_id': 'xxxx-yyyy'}
@@ -1040,7 +1040,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_policy_update_failed_engine(self, mock_call, mock_parse, _i):
+    def test_do_policy_update_failed_engine(self, mock_call, mock_parse, _i):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {'policy_id': 'xxxx-yyyy'}
@@ -1061,7 +1061,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_check(self, mock_call, mock_parse, _ignore):
+    def test_do_check(self, mock_call, mock_parse, _ignore):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {'op': 'value'}
@@ -1080,7 +1080,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_check_failed_request(self, mock_call, mock_parse, _ign):
+    def test_do_check_failed_request(self, mock_call, mock_parse, _ign):
         data = {}
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
@@ -1097,7 +1097,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_check_failed_engine(self, mock_call, mock_parse, _i):
+    def test_do_check_failed_engine(self, mock_call, mock_parse, _i):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {}
@@ -1117,7 +1117,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_recover(self, mock_call, mock_parse, _ignore):
+    def test_do_recover(self, mock_call, mock_parse, _ignore):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {'op': 'value'}
@@ -1136,7 +1136,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_recover_failed_request(self, mock_call, mock_parse, _ign):
+    def test_do_recover_failed_request(self, mock_call, mock_parse, _ign):
         data = {}
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
@@ -1153,7 +1153,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test__do_recover_failed_engine(self, mock_call, mock_parse, _i):
+    def test_do_recover_failed_engine(self, mock_call, mock_parse, _i):
         req = mock.Mock()
         cid = 'aaaa-bbbb-cccc'
         data = {}

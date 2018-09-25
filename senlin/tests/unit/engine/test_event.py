@@ -53,7 +53,7 @@ class TestEvent(testtools.TestCase):
             invoke_on_load=True,
             propagate_map_exceptions=True)
 
-    def test__event_data(self):
+    def test_event_data(self):
         entity = mock.Mock(id='ENTITY_ID')
         entity.name = 'FAKE_ENTITY'
         action = mock.Mock(id='ACTION_ID', action='ACTION', entity=entity)
@@ -65,7 +65,7 @@ class TestEvent(testtools.TestCase):
                           'id': 'ACTION_I'},
                          res)
 
-    def test__event_data_with_phase_reason(self):
+    def test_event_data_with_phase_reason(self):
         entity = mock.Mock(id='ENTITY_ID')
         entity.name = 'FAKE_ENTITY'
         action = mock.Mock(id='ACTION_ID', action='ACTION', entity=entity)
@@ -77,7 +77,7 @@ class TestEvent(testtools.TestCase):
                           'obj_id': 'ENTITY_I', 'reason': 'REASON1'},
                          res)
 
-    def test__dump(self):
+    def test_dump(self):
         cfg.CONF.set_override('debug', True)
         saved_dispathers = event.dispatchers
         event.dispatchers = mock.Mock()
@@ -90,7 +90,7 @@ class TestEvent(testtools.TestCase):
         finally:
             event.dispatchers = saved_dispathers
 
-    def test__dump_without_timestamp(self):
+    def test_dump_without_timestamp(self):
         cfg.CONF.set_override('debug', True)
         saved_dispathers = event.dispatchers
         event.dispatchers = mock.Mock()
@@ -104,7 +104,7 @@ class TestEvent(testtools.TestCase):
         finally:
             event.dispatchers = saved_dispathers
 
-    def test__dump_guarded(self):
+    def test_dump_guarded(self):
         cfg.CONF.set_override('debug', False)
         cfg.CONF.set_override('priority', 'warning', group='dispatchers')
         saved_dispathers = event.dispatchers
@@ -117,7 +117,7 @@ class TestEvent(testtools.TestCase):
         finally:
             event.dispatchers = saved_dispathers
 
-    def test__dump_exclude_derived_actions_positive(self):
+    def test_dump_exclude_derived_actions_positive(self):
         cfg.CONF.set_override('exclude_derived_actions', True,
                               group='dispatchers')
         saved_dispathers = event.dispatchers
@@ -130,7 +130,7 @@ class TestEvent(testtools.TestCase):
         finally:
             event.dispatchers = saved_dispathers
 
-    def test__dump_exclude_derived_actions_negative(self):
+    def test_dump_exclude_derived_actions_negative(self):
         cfg.CONF.set_override('exclude_derived_actions', False,
                               group='dispatchers')
         saved_dispathers = event.dispatchers
@@ -145,7 +145,7 @@ class TestEvent(testtools.TestCase):
         finally:
             event.dispatchers = saved_dispathers
 
-    def test__dump_with_exception(self):
+    def test_dump_with_exception(self):
         cfg.CONF.set_override('debug', True)
         saved_dispathers = event.dispatchers
         event.dispatchers = mock.Mock()

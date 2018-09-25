@@ -144,8 +144,8 @@ class ClusterUpdateTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__update_nodes_no_policy(self, mock_wait, mock_start, mock_dep,
-                                     mock_action, mock_update, mock_load):
+    def test_update_nodes_no_policy(self, mock_wait, mock_start, mock_dep,
+                                    mock_action, mock_update, mock_load):
         node1 = mock.Mock(id='node_id1')
         node2 = mock.Mock(id='node_id2')
         cluster = mock.Mock(id='FAKE_ID', nodes=[node1, node2],
@@ -176,8 +176,8 @@ class ClusterUpdateTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__update_nodes_batch_policy(self, mock_wait, mock_start, mock_dep,
-                                        mock_action, mock_update, mock_load):
+    def test_update_nodes_batch_policy(self, mock_wait, mock_start, mock_dep,
+                                       mock_action, mock_update, mock_load):
         node1 = mock.Mock(id='node_id1')
         node2 = mock.Mock(id='node_id2')
         cluster = mock.Mock(id='FAKE_ID', nodes=[node1, node2],
@@ -215,8 +215,8 @@ class ClusterUpdateTest(base.SenlinTestCase):
     @mock.patch.object(dobj.Dependency, 'create')
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
-    def test__update_nodes_fail_wait(self, mock_wait, mock_start, mock_dep,
-                                     mock_action, mock_update, mock_load):
+    def test_update_nodes_fail_wait(self, mock_wait, mock_start, mock_dep,
+                                    mock_action, mock_update, mock_load):
         node1 = mock.Mock(id='node_id1')
         node2 = mock.Mock(id='node_id2')
         cluster = mock.Mock(id='FAKE_ID', nodes=[node1, node2],

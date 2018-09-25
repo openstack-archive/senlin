@@ -90,12 +90,12 @@ class TestSchemaBase(base.SenlinTestCase):
         self.assertEqual('VVV', res)
         mock_resolve.assert_called_once_with('DEFAULT')
 
-    def test__validate_default(self):
+    def test_validate_default(self):
         sot = FakeSchema()
 
         self.assertIsNone(sot._validate_default(mock.Mock()))
 
-    def test__validate_default_with_value(self):
+    def test_validate_default_with_value(self):
         sot = FakeSchema(default='DEFAULT')
         mock_validate = self.patchobject(sot, 'validate', return_value=None)
         fake_context = mock.Mock()
@@ -105,7 +105,7 @@ class TestSchemaBase(base.SenlinTestCase):
         self.assertIsNone(res)
         mock_validate.assert_called_once_with('DEFAULT', fake_context)
 
-    def test__validate_default_with_value_but_failed(self):
+    def test_validate_default_with_value_but_failed(self):
         sot = FakeSchema(default='DEFAULT')
         mock_validate = self.patchobject(sot, 'validate',
                                          side_effect=ValueError('boom'))
@@ -143,7 +143,7 @@ class TestSchemaBase(base.SenlinTestCase):
         c1.validate.assert_called_once_with('FOO', schema=None, context=ctx)
         self.assertEqual('BOOM', six.text_type(ex))
 
-    def test__validate_version(self):
+    def test_validate_version(self):
         sot = FakeSchema(min_version='1.0', max_version='2.0')
 
         res = sot._validate_version('field', '1.0')
@@ -170,7 +170,7 @@ class TestSchemaBase(base.SenlinTestCase):
                          'spec version 2.1.',
                          six.text_type(ex))
 
-    def test__validate_version_no_min_version(self):
+    def test_validate_version_no_min_version(self):
         sot = FakeSchema(max_version='2.0')
 
         res = sot._validate_version('field', '1.0')
@@ -186,7 +186,7 @@ class TestSchemaBase(base.SenlinTestCase):
                          'spec version 2.1.',
                          six.text_type(ex))
 
-    def test__validate_version_no_max_version(self):
+    def test_validate_version_no_max_version(self):
         sot = FakeSchema(min_version='1.0')
 
         res = sot._validate_version('field', '1.0')
@@ -202,7 +202,7 @@ class TestSchemaBase(base.SenlinTestCase):
                          'spec version 0.5.',
                          six.text_type(ex))
 
-    def test__validate_version_no_version_restriction(self):
+    def test_validate_version_no_version_restriction(self):
         sot = FakeSchema()
 
         res = sot._validate_version('field', '1.0')
@@ -531,7 +531,7 @@ class TestList(base.SenlinTestCase):
         self.assertEqual('List', sot['type'])
         self.assertEqual('desc', sot['description'])
 
-    def test__get_children(self):
+    def test_get_children(self):
         sot = schema.List('desc', schema=schema.String())
 
         res = sot._get_children(['v1', 'v2'], [0, 1])
@@ -570,7 +570,7 @@ class TestMap(base.SenlinTestCase):
         self.assertEqual('Map', sot['type'])
         self.assertEqual('desc', sot['description'])
 
-    def test__get_children(self):
+    def test_get_children(self):
         sot = schema.Map('desc', schema={'foo': schema.String()})
 
         res = sot._get_children({'foo': 'bar'})
@@ -893,7 +893,7 @@ class TestSpec(base.SenlinTestCase):
         self.assertIn("Required spec item 'key2' not provided",
                       six.text_type(ex.message))
 
-    def test___getitem__(self):
+    def test__getitem__(self):
         data = {'key2': 2}
         sot = schema.Spec(self.spec_schema, data, version='1.2')
 
@@ -902,14 +902,14 @@ class TestSpec(base.SenlinTestCase):
         res = sot['key2']
         self.assertEqual(2, res)
 
-    def test___len__(self):
+    def test__len__(self):
         data = {'key2': 2}
         sot = schema.Spec(self.spec_schema, data, version='1.2')
 
         res = len(sot)
         self.assertEqual(2, res)
 
-    def test___contains__(self):
+    def test__contains__(self):
         data = {'key2': 2}
         sot = schema.Spec(self.spec_schema, data, version='1.2')
 

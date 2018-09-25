@@ -1570,7 +1570,7 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'find')
     @mock.patch.object(po.Profile, 'get')
-    def test__validate_replace_nodes(self, mock_profile, mock_node):
+    def test_validate_replace_nodes(self, mock_profile, mock_node):
         cluster = mock.Mock(id='CID', profile_id='FAKE_ID')
         mock_profile.return_value = mock.Mock(type='FAKE_TYPE')
         mock_node.side_effect = [
@@ -1595,8 +1595,8 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'find')
     @mock.patch.object(po.Profile, 'get')
-    def test__validate_replace_nodes_old_missing(self, mock_profile,
-                                                 mock_node):
+    def test_validate_replace_nodes_old_missing(self, mock_profile,
+                                                mock_node):
         c = mock.Mock(id='CID', profile_id='FAKE_ID')
         mock_node.side_effect = exc.ResourceNotFound(type='node', id='OLD')
 
@@ -1610,8 +1610,8 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'find')
     @mock.patch.object(po.Profile, 'get')
-    def test__validate_replace_nodes_new_missing(self, mock_profile,
-                                                 mock_node):
+    def test_validate_replace_nodes_new_missing(self, mock_profile,
+                                                mock_node):
         c = mock.Mock(id='CID', profile_id='FAKE_ID')
         mock_node.side_effect = [
             mock.Mock(),
@@ -1632,8 +1632,8 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'find')
     @mock.patch.object(po.Profile, 'get')
-    def test__validate_replace_nodes_old_not_member(self, mock_profile,
-                                                    mock_node):
+    def test_validate_replace_nodes_old_not_member(self, mock_profile,
+                                                   mock_node):
         c = mock.Mock(id='CID', profile_id='FAKE_ID')
         mock_node.side_effect = [
             mock.Mock(cluster_id='OTHER'),
@@ -1654,8 +1654,8 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'find')
     @mock.patch.object(po.Profile, 'get')
-    def test__validate_replace_nodes_new_not_orphan(self, mock_profile,
-                                                    mock_node):
+    def test_validate_replace_nodes_new_not_orphan(self, mock_profile,
+                                                   mock_node):
         c = mock.Mock(id='CID', profile_id='FAKE_ID')
         mock_node.side_effect = [
             mock.Mock(cluster_id='CID'),
@@ -1676,8 +1676,8 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'find')
     @mock.patch.object(po.Profile, 'get')
-    def test__validate_replace_nodes_new_bad_status(self, mock_profile,
-                                                    mock_node):
+    def test_validate_replace_nodes_new_bad_status(self, mock_profile,
+                                                   mock_node):
         c = mock.Mock(id='CID', profile_id='FAKE_ID')
         mock_node.side_effect = [
             mock.Mock(cluster_id='CID'),
@@ -1697,8 +1697,8 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'find')
     @mock.patch.object(po.Profile, 'get')
-    def test__validate_replace_nodes_mult_err(self, mock_profile,
-                                              mock_node):
+    def test_validate_replace_nodes_mult_err(self, mock_profile,
+                                             mock_node):
         c = mock.Mock(id='CID', profile_id='FAKE_ID')
         mock_node.side_effect = [
             mock.Mock(id='OLD1', cluster_id='CID'),
@@ -1721,7 +1721,7 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(no.Node, 'find')
     @mock.patch.object(po.Profile, 'get')
-    def test__validate_replace_nodes_new_profile_type_mismatch(
+    def test_validate_replace_nodes_new_profile_type_mismatch(
             self, mock_profile, mock_node):
         c = mock.Mock(id='CID', profile_id='FAKE_CLUSTER_PROFILE')
         mock_profile.side_effect = [
