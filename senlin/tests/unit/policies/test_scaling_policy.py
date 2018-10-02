@@ -11,10 +11,13 @@
 # under the License.
 
 import mock
+from oslo_utils import timeutils
 import six
+import time
 
 from senlin.common import consts
 from senlin.common import exception as exc
+from senlin.objects import cluster_policy as cpo
 from senlin.objects import node as no
 from senlin.policies import base as pb
 from senlin.policies import scaling_policy as sp
@@ -207,13 +210,16 @@ class TestScalingPolicy(base.SenlinTestCase):
         action = mock.Mock()
         action.context = self.context
         action.action = consts.CLUSTER_SCALE_IN
-        action.inputs = {'count': 1}
+        action.inputs = {'count': 1, 'last_op': timeutils.utcnow(True)}
         action.entity = self.cluster
 
         adjustment = self.spec['properties']['adjustment']
         adjustment['type'] = consts.CHANGE_IN_CAPACITY
         adjustment['number'] = 2
+        adjustment['cooldown'] = 1
         policy = sp.ScalingPolicy('p1', self.spec)
+
+        time.sleep(1)
 
         policy.pre_op(self.cluster['id'], action)
         pd = {
@@ -237,6 +243,26 @@ class TestScalingPolicy(base.SenlinTestCase):
             'status': pb.CHECK_OK,
         }
         action.data.update.assert_called_with(pd)
+
+    def test_pre_op_within_cooldown(self):
+        action = mock.Mock()
+        action.context = self.context
+        action.action = consts.CLUSTER_SCALE_IN
+        action.inputs = {'last_op': timeutils.utcnow(True)}
+        action.entity = self.cluster
+
+        adjustment = self.spec['properties']['adjustment']
+        adjustment['cooldown'] = 300
+        kwargs = {'id': "FAKE_ID"}
+        policy = sp.ScalingPolicy('p1', self.spec, **kwargs)
+
+        policy.pre_op('FAKE_CLUSTER_ID', action)
+        pd = {
+            'status': pb.CHECK_ERROR,
+            'reason': "Policy FAKE_ID cooldown is still in progress.",
+        }
+        action.data.update.assert_called_with(pd)
+        action.store.assert_called_with(self.context)
 
     @mock.patch.object(sp.ScalingPolicy, '_calculate_adjustment_count')
     def test_pre_op_pass_check_effort(self, mock_adjustmentcount):
@@ -367,7 +393,23 @@ class TestScalingPolicy(base.SenlinTestCase):
         action.data.update.assert_called_with(pd)
         action.store.assert_called_with(self.context)
 
-    def test_need_check_in_event(self):
+    @mock.patch.object(cpo.ClusterPolicy, 'update')
+    @mock.patch.object(timeutils, 'utcnow')
+    def test_post_op(self, mock_time, mock_cluster_policy):
+        action = mock.Mock()
+        action.context = self.context
+
+        mock_time.return_value = 'FAKE_TIME'
+
+        kwargs = {'id': 'FAKE_POLICY_ID'}
+        policy = sp.ScalingPolicy('test-policy', self.spec, **kwargs)
+
+        policy.post_op('FAKE_CLUSTER_ID', action)
+        mock_cluster_policy.assert_called_once_with(
+            action.context, 'FAKE_CLUSTER_ID', 'FAKE_POLICY_ID',
+            {'last_op': 'FAKE_TIME'})
+
+    def test_need_check_in_event_before(self):
         action = mock.Mock()
         action.context = self.context
         action.action = consts.CLUSTER_SCALE_IN
@@ -377,7 +419,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         res = policy.need_check('BEFORE', action)
         self.assertTrue(res)
 
-    def test_need_check_not_in_event(self):
+    def test_need_check_not_in_event_before(self):
         action = mock.Mock()
         action.context = self.context
         action.action = consts.CLUSTER_SCALE_OUT
@@ -385,4 +427,24 @@ class TestScalingPolicy(base.SenlinTestCase):
 
         policy = sp.ScalingPolicy('test-policy', self.spec)
         res = policy.need_check('BEFORE', action)
+        self.assertFalse(res)
+
+    def test_need_check_in_event_after(self):
+        action = mock.Mock()
+        action.context = self.context
+        action.action = consts.CLUSTER_SCALE_OUT
+        action.data = {}
+
+        policy = sp.ScalingPolicy('test-policy', self.spec)
+        res = policy.need_check('AFTER', action)
+        self.assertTrue(res)
+
+    def test_need_check_not_in_event_after(self):
+        action = mock.Mock()
+        action.context = self.context
+        action.action = consts.CLUSTER_ATTACH_POLICY
+        action.data = {}
+
+        policy = sp.ScalingPolicy('test-policy', self.spec)
+        res = policy.need_check('AFTER', action)
         self.assertFalse(res)

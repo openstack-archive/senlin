@@ -11,6 +11,7 @@
 # under the License.
 
 from oslo_config import cfg
+from oslo_utils import timeutils
 
 from senlin.common import constraints
 from senlin.common import consts
@@ -19,6 +20,7 @@ from senlin.common.i18n import _
 from senlin.common import scaleutils as su
 from senlin.common import schema
 from senlin.common import utils
+from senlin.objects import cluster_policy as cpo
 from senlin.policies import base
 
 
@@ -44,6 +46,8 @@ class ScalingPolicy(base.Policy):
     TARGET = [
         ('BEFORE', consts.CLUSTER_SCALE_IN),
         ('BEFORE', consts.CLUSTER_SCALE_OUT),
+        ('AFTER', consts.CLUSTER_SCALE_IN),
+        ('AFTER', consts.CLUSTER_SCALE_OUT),
     ]
 
     PROFILE_TYPE = [
@@ -186,6 +190,17 @@ class ScalingPolicy(base.Policy):
         :return: None.
         """
 
+        # check cooldown
+        last_op = action.inputs.get('last_op', None)
+        if last_op and not timeutils.is_older_than(last_op, self.cooldown):
+            action.data.update({
+                'status': base.CHECK_ERROR,
+                'reason': _('Policy %s cooldown is still '
+                            'in progress.') % self.id
+            })
+            action.store(action.context)
+            return
+
         # Use action input if count is provided
         count_value = action.inputs.get('count', None)
         cluster = action.entity
@@ -243,10 +258,26 @@ class ScalingPolicy(base.Policy):
 
         return
 
-    def need_check(self, target, action):
-        res = super(ScalingPolicy, self).need_check(target, action)
-        if res:
-            # Check if the action is expected by the policy
-            res = (self.event == action.action)
+    def post_op(self, cluster_id, action):
+        # update last_op for next cooldown check
+        ts = timeutils.utcnow(True)
+        cpo.ClusterPolicy.update(action.context, cluster_id,
+                                 self.id, {'last_op': ts})
 
-        return res
+    def need_check(self, target, action):
+        # check if target + action matches policy targets
+        if not super(ScalingPolicy, self).need_check(target, action):
+            return False
+
+        if target == 'BEFORE':
+            # Scaling policy BEFORE check should only be triggered if the
+            # incoming action matches the specific policy event.
+            # E.g. for scale-out policy the BEFORE check to select nodes for
+            # termination should only run for scale-out actions.
+            return self.event == action.action
+        else:
+            # Scaling policy AFTER check to reset cooldown timer should be
+            # triggered for all supported policy events (both scale-in and
+            # scale-out).  E.g. a scale-out policy should reset cooldown timer
+            # whenever scale-out or scale-in action completes.
+            return action.action in list(self._SUPPORTED_EVENTS)

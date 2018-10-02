@@ -682,7 +682,7 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
             filters={'enabled': True})
         mock_load.assert_called_once_with(action.context, policy.id)
         # last_op was updated anyway
-        self.assertIsNotNone(pb.last_op)
+        self.assertEqual(action.inputs['last_op'], pb.last_op)
         # neither pre_op nor post_op was called, because target not match
         self.assertEqual(0, mock_pre_op.call_count)
         self.assertEqual(0, mock_post_op.call_count)
@@ -768,44 +768,10 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
             filters={'enabled': True})
         mock_load.assert_called_once_with(action.context, policy.id)
         # last_op was updated for POST check
-        self.assertIsNotNone(pb.last_op)
+        self.assertEqual(action.inputs['last_op'], pb.last_op)
         # pre_op is called, but post_op was not called
         self.assertEqual(0, policy.pre_op.call_count)
         policy.post_op.assert_called_once_with(cluster_id, action)
-
-    @mock.patch.object(cpo.ClusterPolicy, 'cooldown_inprogress')
-    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
-    @mock.patch.object(policy_mod.Policy, 'load')
-    def test_policy_check_cooldown_inprogress(self, mock_load, mock_load_all,
-                                              mock_inprogress):
-        cluster_id = CLUSTER_ID
-        # Note: policy is mocked
-        policy_id = uuidutils.generate_uuid()
-        policy = mock.Mock(id=policy_id, TARGET=[('AFTER', 'OBJECT_ACTION')])
-        # Note: policy binding is created but not stored
-        pb = self._create_cp_binding(cluster_id, policy.id)
-        mock_inprogress.return_value = True
-        mock_load_all.return_value = [pb]
-        mock_load.return_value = policy
-        action = ab.Action(cluster_id, 'OBJECT_ACTION', self.ctx)
-
-        # Do it
-        res = action.policy_check(CLUSTER_ID, 'AFTER')
-
-        self.assertIsNone(res)
-        self.assertEqual(policy_mod.CHECK_ERROR, action.data['status'])
-        self.assertEqual(
-            'Policy %s cooldown is still in progress.' % policy_id,
-            six.text_type(action.data['reason']))
-        mock_load_all.assert_called_once_with(
-            action.context, cluster_id, sort='priority',
-            filters={'enabled': True})
-        mock_load.assert_called_once_with(action.context, policy.id)
-        # last_op was updated for POST check
-        self.assertIsNotNone(pb.last_op)
-        # neither pre_op nor post_op was not called, due to cooldown
-        self.assertEqual(0, policy.pre_op.call_count)
-        self.assertEqual(0, policy.post_op.call_count)
 
     @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     @mock.patch.object(policy_mod.Policy, 'load')
