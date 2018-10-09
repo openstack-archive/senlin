@@ -11,8 +11,10 @@
 # under the License.
 
 import copy
+import eventlet
 import inspect
 
+from oslo_config import cfg
 from oslo_context import context as oslo_context
 from oslo_log import log as logging
 from oslo_utils import timeutils
@@ -302,7 +304,7 @@ class Profile(object):
         try:
             return profile.do_check(obj)
         except exc.InternalError as ex:
-            LOG.error(ex)
+            LOG.debug(ex)
             return False
 
     @classmethod
@@ -518,6 +520,13 @@ class Profile(object):
                 raise exc.EResourceOperation(op='recovering', type='node',
                                              id=obj.id,
                                              message=six.text_type(ex))
+
+        # pause to allow deleted resource to get reclaimed by nova
+        # this is needed to avoid a problem when the compute resources are
+        # at their quota limit.  The deleted resource has to become available
+        # so that the new node can be created.
+        eventlet.sleep(cfg.CONF.batch_interval)
+
         res = None
         try:
             res = self.do_create(obj)

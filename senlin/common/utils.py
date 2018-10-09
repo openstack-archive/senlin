@@ -88,7 +88,7 @@ def level_from_number(value):
     return levels.get(n, None)
 
 
-def url_fetch(url, allowed_schemes=('http', 'https'), verify=True):
+def url_fetch(url, timeout=1, allowed_schemes=('http', 'https'), verify=True):
     """Get the data at the specified URL.
 
     The URL must use the http: or https: schemes.
@@ -96,7 +96,6 @@ def url_fetch(url, allowed_schemes=('http', 'https'), verify=True):
     the allowed_schemes argument.
     Raise an IOError if getting the data fails.
     """
-    LOG.info('Fetching data from %s', url)
 
     components = urllib.parse.urlparse(url)
 
@@ -105,12 +104,12 @@ def url_fetch(url, allowed_schemes=('http', 'https'), verify=True):
 
     if components.scheme == 'file':
         try:
-            return urllib.request.urlopen(url).read()
+            return urllib.request.urlopen(url, timeout=timeout).read()
         except urllib.error.URLError as uex:
             raise URLFetchError(_('Failed to retrieve data: %s') % uex)
 
     try:
-        resp = requests.get(url, stream=True, verify=verify)
+        resp = requests.get(url, stream=True, verify=verify, timeout=timeout)
         resp.raise_for_status()
 
         # We cannot use resp.text here because it would download the entire
