@@ -427,14 +427,10 @@ class Action(object):
 
         for pb in bindings:
             policy = policy_mod.Policy.load(self.context, pb.policy_id)
-            # We record the last operation time for all policies bound to the
-            # cluster, no matter that policy is only interested in the
-            # "BEFORE" or "AFTER" or both.
-            if target == 'AFTER':
-                ts = timeutils.utcnow(True)
-                pb.last_op = ts
-                cpo.ClusterPolicy.update(self.context, pb.cluster_id,
-                                         pb.policy_id, {'last_op': ts})
+
+            # add last_op as input for the policy so that it can be used
+            # during pre_op
+            self.inputs['last_op'] = pb.last_op
 
             if not policy.need_check(target, self):
                 continue
@@ -443,13 +439,6 @@ class Action(object):
                 method = getattr(policy, 'pre_op', None)
             else:  # target == 'AFTER'
                 method = getattr(policy, 'post_op', None)
-
-            if getattr(policy, 'cooldown', None):
-                if pb.cooldown_inprogress(policy.cooldown):
-                    self.data['status'] = policy_mod.CHECK_ERROR
-                    self.data['reason'] = ('Policy %s cooldown is still '
-                                           'in progress.') % policy.id
-                    return
 
             if method is not None:
                 method(cluster_id, self)
