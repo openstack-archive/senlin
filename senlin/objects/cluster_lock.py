@@ -32,6 +32,10 @@ class ClusterLock(base.SenlinObject, base.VersionedObjectDictCompat):
         return db_api.cluster_lock_acquire(cluster_id, action_id, scope)
 
     @classmethod
+    def is_locked(cls, cluster_id):
+        return db_api.cluster_is_locked(cluster_id)
+
+    @classmethod
     def release(cls, cluster_id, action_id, scope):
         return db_api.cluster_lock_release(cluster_id, action_id, scope)
 

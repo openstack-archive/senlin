@@ -25,8 +25,10 @@ from senlin.common import utils
 from senlin.engine import dispatcher
 from senlin.engine import event as EVENT
 from senlin.objects import action as ao
+from senlin.objects import cluster_lock as cl
 from senlin.objects import cluster_policy as cpo
 from senlin.objects import dependency as dobj
+from senlin.objects import node_lock as nl
 from senlin.policies import base as policy_mod
 
 wallclock = time.time
@@ -247,6 +249,21 @@ class Action(object):
         :param dict kwargs: Other keyword arguments for the action.
         :return: ID of the action created.
         """
+        if (action in list(consts.CLUSTER_ACTION_NAMES) and
+                cl.ClusterLock.is_locked(target)):
+            raise exception.ResourceIsLocked(
+                action=action, type='cluster', id=target)
+        elif (action in list(consts.NODE_ACTION_NAMES) and
+                nl.NodeLock.is_locked(target)):
+            raise exception.ResourceIsLocked(
+                action=action, type='node', id=target)
+
+        conflict_actions = ao.Action.get_all_active_by_target(ctx, target)
+        if conflict_actions:
+            action_ids = [a['id'] for a in conflict_actions]
+            raise exception.ActionConflict(
+                type=action, target=target, actions=",".join(action_ids))
+
         params = {
             'user_id': ctx.user_id,
             'project_id': ctx.project_id,
@@ -256,6 +273,7 @@ class Action(object):
             'trusts': ctx.trusts,
         }
         c = req_context.RequestContext.from_dict(params)
+
         obj = cls(target, action, c, **kwargs)
         return obj.store(ctx)
 

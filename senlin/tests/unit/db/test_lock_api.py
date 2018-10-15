@@ -174,6 +174,27 @@ class DBAPILockTest(base.SenlinTestCase):
         observed = db_api.cluster_lock_release(self.cluster.id, UUID1, -1)
         self.assertTrue(observed)
 
+    def test_cluster_is_locked(self):
+        # newly created cluster should not be locked
+        observed = db_api.cluster_is_locked(self.cluster.id)
+        self.assertFalse(observed)
+
+        # lock cluster
+        observed = db_api.cluster_lock_acquire(self.cluster.id, UUID1, -1)
+        self.assertIn(UUID1, observed)
+
+        # cluster should be locked
+        observed = db_api.cluster_is_locked(self.cluster.id)
+        self.assertTrue(observed)
+
+        # release cluster lock
+        observed = db_api.cluster_lock_release(self.cluster.id, UUID1, -1)
+        self.assertTrue(observed)
+
+        # cluster should not be locked anymore
+        observed = db_api.cluster_is_locked(self.cluster.id)
+        self.assertFalse(observed)
+
     def test_node_lock_acquire_release(self):
         observed = db_api.node_lock_acquire(self.node.id, UUID1)
         self.assertEqual(UUID1, observed)
@@ -220,6 +241,27 @@ class DBAPILockTest(base.SenlinTestCase):
 
         observed = db_api.node_lock_release(self.node.id, UUID2)
         self.assertTrue(observed)
+
+    def test_node_is_locked(self):
+        # newly created node should not be locked
+        observed = db_api.node_is_locked(self.node.id)
+        self.assertFalse(observed)
+
+        # lock node
+        observed = db_api.node_lock_acquire(self.node.id, UUID1)
+        self.assertIn(UUID1, observed)
+
+        # node should be locked
+        observed = db_api.node_is_locked(self.node.id)
+        self.assertTrue(observed)
+
+        # release node lock
+        observed = db_api.node_lock_release(self.node.id, UUID1)
+        self.assertTrue(observed)
+
+        # node should not be locked anymore
+        observed = db_api.node_is_locked(self.node.id)
+        self.assertFalse(observed)
 
 
 class GCByEngineTest(base.SenlinTestCase):

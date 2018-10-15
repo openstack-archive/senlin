@@ -56,6 +56,8 @@ class FaultWrapper(wsgi.Middleware):
         'ProfileOperationFailed': webob.exc.HTTPInternalServerError,
         'RequestLimitExceeded': webob.exc.HTTPBadRequest,
         'ResourceInUse': webob.exc.HTTPConflict,
+        'ResourceIsLocked': webob.exc.HTTPConflict,
+        'ActionConflict': webob.exc.HTTPConflict,
         'ResourceNotFound': webob.exc.HTTPNotFound,
     }
 

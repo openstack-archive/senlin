@@ -29,8 +29,10 @@ from senlin.engine import environment
 from senlin.engine import event as EVENT
 from senlin.engine import node as node_mod
 from senlin.objects import action as ao
+from senlin.objects import cluster_lock as cl
 from senlin.objects import cluster_policy as cpo
 from senlin.objects import dependency as dobj
+from senlin.objects import node_lock as nl
 from senlin.policies import base as policy_mod
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -244,6 +246,96 @@ class ActionBaseTest(base.SenlinTestCase):
 
         self.assertEqual('FAKE_ID', result)
         mock_store.assert_called_once_with(self.ctx)
+
+    @mock.patch.object(ab.Action, 'store')
+    @mock.patch.object(ao.Action, 'get_all_active_by_target')
+    @mock.patch.object(cl.ClusterLock, 'is_locked')
+    def test_action_create_lock_cluster_false(self, mock_lock,
+                                              mock_active, mock_store):
+        mock_store.return_value = 'FAKE_ID'
+        mock_active.return_value = None
+        mock_lock.return_value = False
+
+        result = ab.Action.create(self.ctx, OBJID, 'CLUSTER_CREATE',
+                                  name='test')
+
+        self.assertEqual('FAKE_ID', result)
+        mock_store.assert_called_once_with(self.ctx)
+        mock_active.assert_called_once_with(mock.ANY, OBJID)
+
+    @mock.patch.object(ab.Action, 'store')
+    @mock.patch.object(ao.Action, 'get_all_active_by_target')
+    @mock.patch.object(cl.ClusterLock, 'is_locked')
+    def test_action_create_lock_cluster_true(self, mock_lock,
+                                             mock_active, mock_store):
+        mock_store.return_value = 'FAKE_ID'
+        mock_active.return_value = None
+        mock_lock.return_value = True
+
+        error_message = (
+            'CLUSTER_CREATE for cluster \'{}\' cannot be completed because '
+            'it is already locked.').format(OBJID)
+        with self.assertRaisesRegexp(exception.ResourceIsLocked,
+                                     error_message):
+            ab.Action.create(self.ctx, OBJID, 'CLUSTER_CREATE', name='test')
+
+        mock_store.assert_not_called()
+        mock_active.assert_not_called()
+
+    @mock.patch.object(ab.Action, 'store')
+    @mock.patch.object(ao.Action, 'get_all_active_by_target')
+    @mock.patch.object(nl.NodeLock, 'is_locked')
+    def test_action_create_lock_node_false(self, mock_lock,
+                                           mock_active, mock_store):
+        mock_store.return_value = 'FAKE_ID'
+        mock_active.return_value = None
+        mock_lock.return_value = False
+
+        result = ab.Action.create(self.ctx, OBJID, 'NODE_CREATE',
+                                  name='test')
+
+        self.assertEqual('FAKE_ID', result)
+        mock_store.assert_called_once_with(self.ctx)
+        mock_active.assert_called_once_with(mock.ANY, OBJID)
+
+    @mock.patch.object(ab.Action, 'store')
+    @mock.patch.object(ao.Action, 'get_all_active_by_target')
+    @mock.patch.object(nl.NodeLock, 'is_locked')
+    def test_action_create_lock_node_true(self, mock_lock, mock_active,
+                                          mock_store):
+        mock_store.return_value = 'FAKE_ID'
+        mock_active.return_value = None
+        mock_lock.return_value = True
+
+        error_message = (
+            'NODE_CREATE for node \'{}\' cannot be completed because '
+            'it is already locked.').format(OBJID)
+        with self.assertRaisesRegexp(exception.ResourceIsLocked,
+                                     error_message):
+            ab.Action.create(self.ctx, OBJID, 'NODE_CREATE', name='test')
+
+        mock_store.assert_not_called()
+        mock_active.assert_not_called()
+
+    @mock.patch.object(ab.Action, 'store')
+    @mock.patch.object(ao.Action, 'get_all_active_by_target')
+    @mock.patch.object(cl.ClusterLock, 'is_locked')
+    def test_action_create_conflict(self, mock_lock, mock_active, mock_store):
+        mock_store.return_value = 'FAKE_ID'
+        uuid1 = 'ce982cd5-26da-4e2c-84e5-be8f720b7478'
+        uuid2 = 'ce982cd5-26da-4e2c-84e5-be8f720b7479'
+        mock_active.return_value = [ao.Action(id=uuid1), ao.Action(id=uuid2)]
+        mock_lock.return_value = False
+
+        error_message = (
+            'The NODE_CREATE action for target {} conflicts with the following'
+            ' action\(s\): {},{}').format(OBJID, uuid1, uuid2)
+        with self.assertRaisesRegexp(exception.ActionConflict,
+                                     error_message):
+            ab.Action.create(self.ctx, OBJID, 'NODE_CREATE', name='test')
+
+        mock_store.assert_not_called()
+        mock_active.assert_called_once_with(mock.ANY, OBJID)
 
     def test_action_delete(self):
         result = ab.Action.delete(self.ctx, 'non-existent')

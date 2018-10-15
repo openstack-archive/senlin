@@ -106,6 +106,11 @@ class Action(base.SenlinObject, base.VersionedObjectDictCompat):
         return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
     @classmethod
+    def get_all_active_by_target(cls, context, target):
+        objs = db_api.action_get_all_active_by_target(context, target)
+        return [cls._from_db_object(context, cls(), obj) for obj in objs]
+
+    @classmethod
     def check_status(cls, context, action_id, timestamp):
         return db_api.action_check_status(context, action_id, timestamp)
 
