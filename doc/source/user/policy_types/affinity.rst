@@ -11,6 +11,7 @@
   License for the specific language governing permissions and limitations
   under the License.
 
+.. _ref-affinity-policy:
 
 ===============
 Affinity Policy
@@ -28,19 +29,16 @@ words, the type name of the cluster's profile has to be ``os.nova.server``.
 Properties
 ~~~~~~~~~~
 
+.. schemaprops::
+  :package: senlin.policies.affinity_policy.AffinityPolicy
+
+Sample
+~~~~~~
+
 A typical spec for an affinity policy looks like the following example:
 
-.. code-block:: yaml
-
-  type: senlin.policy.affinity
-  version: 1.0
-  properties:
-    servergroup:
-      name: my_server_group
-      policies: affinity
-    availability_zone: nova
-    enable_drs_extension: false
-
+.. literalinclude :: /../../examples/policies/affinity_policy.yaml
+  :language: yaml
 
 The affinity policy has the following properties:
 

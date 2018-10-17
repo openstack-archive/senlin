@@ -27,17 +27,16 @@ is enforced when the cluster's size is about to be reduced.
 Properties
 ~~~~~~~~~~
 
+.. schemaprops::
+  :package: senlin.policies.deletion_policy.DeletionPolicy
+
+Sample
+~~~~~~
+
 Below is a typical spec for a deletion policy:
 
-.. code-block:: yaml
-
-  type: senlin.policy.deletion
-  version: 1.1
-  properties:
-    criteria: OLDEST_FIRST
-    destroy_after_deletion: false
-    grace_period: 30
-    reduce_desired_capacity: true
+.. literalinclude :: /../../examples/policies/deletion_policy.yaml
+  :language: yaml
 
 The valid values for the "``criteria`` property include:
 

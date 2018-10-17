@@ -30,17 +30,16 @@ for an elegant solution that can regulate the resource creation requests.
 Properties
 ~~~~~~~~~~
 
+.. schemaprops::
+  :package: senlin.policies.batch_policy.BatchPolicy
+
+Sample
+~~~~~~
+
 Below is a typical spec for a batch policy:
 
-.. code-block:: yaml
-
-  type: senlin.policy.batch
-  version: 1.0
-  properties:
-    min_in_service: 8
-    max_batch_size: 3
-    pause_time: 30
-
+.. literalinclude :: /../../examples/policies/batch_policy.yaml
+  :language: yaml
 
 The ``min_in_service`` property specifies the minimum number of nodes to be
 kept in ACTIVE status. This is mainly for cluster update use cases. The

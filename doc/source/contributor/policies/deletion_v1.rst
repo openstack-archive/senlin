@@ -19,11 +19,8 @@ Deletion Policy V1.1
 The deletion policy is designed to be enforced when a cluster's size is to be
 shrunk.
 
-
-Applicable Profiles
-~~~~~~~~~~~~~~~~~~~
-
-The policy is designed to handle any (``ANY``) profile types.
+.. schemaspec::
+    :package: senlin.policies.deletion_policy.DeletionPolicy
 
 
 Actions Handled

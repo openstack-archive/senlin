@@ -20,12 +20,8 @@ This policy is designed to enable senlin clusters to leverage the Neutron
 LBaaS V2 features so that workloads can be distributed across nodes in a
 reasonable manner.
 
-
-Applicable Profiles
-~~~~~~~~~~~~~~~~~~~
-
-The policy is designed to handle only Nova server clusters, i.e. clusters
-whose profile is a type of "``os.nova.server-1.0``".
+.. schemaspec::
+    :package: senlin.policies.lb_policy.LoadBalancingPolicy
 
 
 Actions Handled

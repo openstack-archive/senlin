@@ -28,20 +28,16 @@ The policy is designed to work with clusters of any profile types.
 Properties
 ~~~~~~~~~~
 
+.. schemaprops::
+  :package: senlin.policies.region_placement.RegionPlacementPolicy
+
+Sample
+~~~~~~
+
 A typical spec for a region placement policy is shown in the following sample:
 
-.. code-block:: yaml
-
-  type: senlin.policy.region_placement
-  version: 1.0
-  properties:
-    regions:
-      - name: region_1
-        weight: 100
-        cap: 50
-      - name: region_2
-        weight: 200
-        cap: 100
+.. literalinclude :: /../../examples/policies/placement_region.yaml
+  :language: yaml
 
 In this sample spec, two regions are provided, namely "``region_1``" and
 "``region_2``". There are "weight" and "cap" attributes associated with them,

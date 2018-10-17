@@ -21,12 +21,8 @@ exposed by the Nova compute service. The basic policy has been extended to
 work with vSphere hypervisor when VMware DRS feature is enabled. However, such
 an extension is only applicable to *admin* owned server clusters.
 
-
-Applicable Profiles
-~~~~~~~~~~~~~~~~~~~
-
-The policy is designed to handle only Nova server profile type, e.g.
-``os.nova.server-1.0``.
+.. schemaspec::
+    :package: senlin.policies.affinity_policy.AffinityPolicy
 
 
 Actions Handled

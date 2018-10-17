@@ -25,20 +25,16 @@ expected to be applicable on clusters of all profile types.
 Properties
 ~~~~~~~~~~
 
+.. schemaprops::
+  :package: senlin.policies.scaling_policy.ScalingPolicy
+
+Sample
+~~~~~~
+
 A typical spec for a scaling policy is shown below:
 
-.. code-block:: yaml
-
-  type: senlin.policy.scaling
-  version: 1.0
-  properties:
-    event: CLUSTER_SCALE_IN
-    adjustment:
-      type: CHANGE_IN_PERCENTAGE
-      number: 10
-      min_step: 1
-      best_effort: true
-      cooldown: 30
+.. literalinclude :: /../../examples/policies/scaling_policy.yaml
+  :language: yaml
 
 You should pay special attentions to the ``event`` property, whose valid
 values include "``CLUSTER_SCALE_IN``" and "``CLUSTER_SCALE_OUT``". One
