@@ -96,6 +96,11 @@ class Action(base.SenlinObject, base.VersionedObjectDictCompat):
         return cls._from_db_object(context, cls(), obj)
 
     @classmethod
+    def action_list_active_scaling(cls, context, cluster_id, **kwargs):
+        objs = db_api.action_list_active_scaling(context, cluster_id, **kwargs)
+        return [cls._from_db_object(context, cls(), obj) for obj in objs]
+
+    @classmethod
     def get_all(cls, context, **kwargs):
         objs = db_api.action_get_all(context, **kwargs)
         return [cls._from_db_object(context, cls(), obj) for obj in objs]

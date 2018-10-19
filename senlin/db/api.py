@@ -329,6 +329,11 @@ def action_get(context, action_id, project_safe=True, refresh=False):
                            refresh=refresh)
 
 
+def action_list_active_scaling(context, cluster_id, project_safe=True):
+    return IMPL.action_list_active_scaling(context, cluster_id,
+                                           project_safe=project_safe)
+
+
 def action_get_by_name(context, name, project_safe=True):
     return IMPL.action_get_by_name(context, name, project_safe=project_safe)
 

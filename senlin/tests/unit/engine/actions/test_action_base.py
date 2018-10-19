@@ -94,6 +94,11 @@ class ActionBaseTest(base.SenlinTestCase):
         self.assertIsNone(obj.updated_at)
         self.assertEqual({}, obj.data)
 
+    def _create_cp_binding(self, cluster_id, policy_id):
+        return cpo.ClusterPolicy(cluster_id=cluster_id, policy_id=policy_id,
+                                 enabled=True, id=uuidutils.generate_uuid(),
+                                 last_op=None)
+
     @mock.patch.object(cluster_mod.Cluster, 'load')
     def test_action_new_cluster(self, mock_load):
         fake_cluster = mock.Mock(timeout=cfg.CONF.default_action_timeout)
@@ -336,6 +341,43 @@ class ActionBaseTest(base.SenlinTestCase):
 
         mock_store.assert_not_called()
         mock_active.assert_called_once_with(mock.ANY, OBJID)
+
+    @mock.patch.object(timeutils, 'is_older_than')
+    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
+    @mock.patch.object(policy_mod.Policy, 'load')
+    @mock.patch.object(ab.Action, 'store')
+    def test_action_create_scaling_cooldown_in_progress(self, mock_store,
+                                                        mock_load,
+                                                        mock_load_all,
+                                                        mock_time_util):
+        cluster_id = CLUSTER_ID
+        # Note: policy is mocked
+        policy_id = uuidutils.generate_uuid()
+        policy = mock.Mock(id=policy_id,
+                           TARGET=[('AFTER', 'CLUSTER_SCALE_OUT')],
+                           event='CLUSTER_SCALE_OUT',
+                           cooldown=240)
+        pb = self._create_cp_binding(cluster_id, policy.id)
+        pb.last_op = timeutils.utcnow(True)
+        mock_load_all.return_value = [pb]
+        mock_load.return_value = policy
+        mock_time_util.return_value = False
+        self.assertRaises(exception.ActionCooldown, ab.Action.create, self.ctx,
+                          cluster_id, 'CLUSTER_SCALE_OUT')
+        self.assertEqual(0, mock_store.call_count)
+
+    @mock.patch.object(ao.Action, 'action_list_active_scaling')
+    @mock.patch.object(ab.Action, 'store')
+    def test_action_create_scaling_conflict(self, mock_store,
+                                            mock_list_active):
+        cluster_id = CLUSTER_ID
+
+        mock_action = mock.Mock()
+        mock_action.to_dict.return_value = {'id': 'fake_action_id'}
+        mock_list_active.return_value = [mock_action]
+        self.assertRaises(exception.ActionConflict, ab.Action.create, self.ctx,
+                          cluster_id, 'CLUSTER_SCALE_IN')
+        self.assertEqual(0, mock_store.call_count)
 
     def test_action_delete(self):
         result = ab.Action.delete(self.ctx, 'non-existent')

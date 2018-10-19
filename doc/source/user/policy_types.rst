@@ -22,7 +22,7 @@ Concept
 ~~~~~~~
 
 A :term:`Policy Type` is an abstract specification of the rules to be checked
-and/or enforced when certain :term:`Action` is performed on a cluster that
+and/or enforced when an :term:`Action` is performed on a cluster that
 contains nodes of certain :term:`Profile Type`.
 
 A registry of policy types is built in memory when the Senlin engine

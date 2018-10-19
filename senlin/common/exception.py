@@ -194,6 +194,12 @@ class ActionConflict(SenlinException):
                 "the following action(s): %(actions)s")
 
 
+class ActionCooldown(SenlinException):
+    msg_fmt = _("The %(type)s action for cluster %(cluster)s cannot be "
+                "processed due to Policy %(policy_id)s cooldown still in "
+                "progress")
+
+
 class NodeNotOrphan(SenlinException):
     msg_fmt = _("%(message)s")
 
@@ -202,8 +208,8 @@ class InternalError(SenlinException):
     """A base class for internal exceptions in senlin.
 
     The internal exception classes which inherit from :class:`SenlinException`
-    class should be translated to a user facing exception type if need to be
-    made user visible.
+    class should be translated to a user facing exception type if they need to
+    be made user visible.
     """
     msg_fmt = _("%(message)s")
     message = _('Internal error happened')

@@ -42,6 +42,8 @@ class FaultWrapper(wsgi.Middleware):
     """Replace error body with something the client can parse."""
 
     error_map = {
+        'ActionConflict': webob.exc.HTTPConflict,
+        'ActionCooldown': webob.exc.HTTPConflict,
         'ActionInProgress': webob.exc.HTTPConflict,
         'BadRequest': webob.exc.HTTPBadRequest,
         'FeatureNotSupported': webob.exc.HTTPConflict,
@@ -57,7 +59,6 @@ class FaultWrapper(wsgi.Middleware):
         'RequestLimitExceeded': webob.exc.HTTPBadRequest,
         'ResourceInUse': webob.exc.HTTPConflict,
         'ResourceIsLocked': webob.exc.HTTPConflict,
-        'ActionConflict': webob.exc.HTTPConflict,
         'ResourceNotFound': webob.exc.HTTPNotFound,
     }
 
