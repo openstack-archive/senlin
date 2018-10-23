@@ -310,11 +310,13 @@ class TestImageValidation(base.SenlinTestCase):
         super(TestImageValidation, self).setUp()
 
         self.cc = mock.Mock()
+        self.gc = mock.Mock()
         self.profile = server.ServerProfile('t', spec)
         self.profile._computeclient = self.cc
+        self.profile._glanceclient = self.gc
 
     def test_validation(self):
-        self.cc.image_find.side_effect = self.validate_result
+        self.gc.image_find.side_effect = self.validate_result
         node = mock.Mock(id='NODE_ID', physical_id='NOVA_ID')
         image = 'IMAGE'
 
@@ -328,7 +330,7 @@ class TestImageValidation(base.SenlinTestCase):
                                    node, image, self.reason)
             self.assertEqual(self.message, six.text_type(ex))
 
-        self.cc.image_find.assert_called_once_with(image, False)
+        self.gc.image_find.assert_called_once_with(image, False)
 
 
 class TestVolumeValidation(base.SenlinTestCase):

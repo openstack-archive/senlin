@@ -765,6 +765,25 @@ class TestProfileBase(base.SenlinTestCase):
 
     @mock.patch.object(pb.Profile, '_build_conn_params')
     @mock.patch("senlin.drivers.base.SenlinDriver")
+    def test_glance_client(self, mock_senlindriver, mock_params):
+        obj = mock.Mock()
+        sd = mock.Mock()
+        gc = mock.Mock()
+        sd.glance.return_value = gc
+        mock_senlindriver.return_value = sd
+        fake_params = mock.Mock()
+        mock_params.return_value = fake_params
+        profile = self._create_profile('test-profile')
+
+        res = profile.glance(obj)
+
+        self.assertEqual(gc, res)
+        self.assertEqual(gc, profile._glanceclient)
+        mock_params.assert_called_once_with(obj.user, obj.project)
+        sd.glance.assert_called_once_with(fake_params)
+
+    @mock.patch.object(pb.Profile, '_build_conn_params')
+    @mock.patch("senlin.drivers.base.SenlinDriver")
     def test_neutron_client(self, mock_senlindriver, mock_params):
         obj = mock.Mock()
         sd = mock.Mock()

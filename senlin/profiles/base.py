@@ -129,6 +129,7 @@ class Profile(object):
         self._orchestrationclient = None
         self._workflowclient = None
         self._block_storageclient = None
+        self._glanceclient = None
 
     @classmethod
     def _from_object(cls, profile):
@@ -386,6 +387,19 @@ class Profile(object):
         params = self._build_conn_params(obj.user, obj.project)
         self._computeclient = driver_base.SenlinDriver().compute(params)
         return self._computeclient
+
+    def glance(self, obj):
+        """Construct glance client based on object.
+
+        :param obj: Object for which the client is created. It is expected to
+                    be None when retrieving an existing client. When creating
+                    a client, it contains the user and project to be used.
+        """
+        if self._glanceclient is not None:
+            return self._glanceclient
+        params = self._build_conn_params(obj.user, obj.project)
+        self._glanceclient = driver_base.SenlinDriver().glance(params)
+        return self._glanceclient
 
     def network(self, obj):
         """Construct network client based on object.

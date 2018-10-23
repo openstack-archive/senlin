@@ -1136,7 +1136,9 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         x_server = mock.Mock(image=x_image)
         cc = mock.Mock()
         cc.server_get.return_value = x_server
+        gc = mock.Mock()
         profile._computeclient = cc
+        profile._glanceclient = gc
         new_spec = copy.deepcopy(self.spec)
         new_spec['properties']['flavor'] = 'FAKE_FLAVOR_NEW'
         new_profile = server.ServerProfile('t', new_spec)
@@ -1144,6 +1146,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         res = profile.do_update(obj, new_profile)
         self.assertTrue(res)
         mock_update_flavor.assert_called_with(obj, new_profile)
+        gc.image_find.assert_called_with('FAKE_IMAGE', False)
 
     @mock.patch.object(server.ServerProfile, '_update_flavor')
     def test_do_update_update_flavor_failed(self, mock_update_flavor):
@@ -1156,7 +1159,9 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         x_server = mock.Mock(image=x_image)
         cc = mock.Mock()
         cc.server_get.return_value = x_server
+        gc = mock.Mock()
         profile._computeclient = cc
+        profile._glanceclient = gc
         new_spec = copy.deepcopy(self.spec)
         new_spec['properties']['flavor'] = 'FAKE_FLAVOR_NEW'
         new_profile = server.ServerProfile('t', new_spec)
@@ -1169,6 +1174,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         self.assertEqual("Failed in updating server 'NOVA_ID': "
                          "Flavor Not Found.",
                          six.text_type(ex))
+        gc.image_find.assert_called_with('FAKE_IMAGE', False)
 
     @mock.patch.object(server.ServerProfile, '_update_flavor')
     @mock.patch.object(server.ServerProfile, '_update_network')
@@ -1179,8 +1185,10 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         x_image = {'id': '123'}
         x_server = mock.Mock(image=x_image)
         cc = mock.Mock()
+        gc = mock.Mock()
         cc.server_get.return_value = x_server
         profile._computeclient = cc
+        profile._glanceclient = gc
 
         obj = mock.Mock(physical_id='NOVA_ID')
 
@@ -1192,6 +1200,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
 
         res = profile.do_update(obj, new_profile)
         self.assertTrue(res)
+        gc.image_find.assert_called_with('FAKE_IMAGE', False)
         mock_update_network.assert_called_with(obj, new_profile)
 
     @mock.patch.object(server.ServerProfile, '_update_password')

@@ -385,7 +385,7 @@ class ServerProfile(base.Profile):
 
     def _validate_image(self, obj, name_or_id, reason=None):
         try:
-            return self.compute(obj).image_find(name_or_id, False)
+            return self.glance(obj).image_find(name_or_id, False)
         except exc.InternalError as ex:
             if reason == 'create':
                 raise exc.EResourceCreation(type='server',
