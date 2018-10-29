@@ -249,20 +249,9 @@ class Action(object):
         :param dict kwargs: Other keyword arguments for the action.
         :return: ID of the action created.
         """
-        if (action in list(consts.CLUSTER_ACTION_NAMES) and
-                cl.ClusterLock.is_locked(target)):
-            raise exception.ResourceIsLocked(
-                action=action, type='cluster', id=target)
-        elif (action in list(consts.NODE_ACTION_NAMES) and
-                nl.NodeLock.is_locked(target)):
-            raise exception.ResourceIsLocked(
-                action=action, type='node', id=target)
 
-        conflict_actions = ao.Action.get_all_active_by_target(ctx, target)
-        if conflict_actions:
-            action_ids = [a['id'] for a in conflict_actions]
-            raise exception.ActionConflict(
-                type=action, target=target, actions=",".join(action_ids))
+        cls._check_action_lock(target, action)
+        cls._check_conflicting_actions(ctx, target, action)
 
         params = {
             'user_id': ctx.user_id,
@@ -279,6 +268,35 @@ class Action(object):
 
         obj = cls(target, action, c, **kwargs)
         return obj.store(ctx)
+
+    @staticmethod
+    def _check_action_lock(target, action):
+        if action == consts.CLUSTER_DELETE:
+            # CLUSTER_DELETE actions do not care about cluster locks
+            return
+        elif (action in list(consts.CLUSTER_ACTION_NAMES) and
+                cl.ClusterLock.is_locked(target)):
+            raise exception.ResourceIsLocked(
+                action=action, type='cluster', id=target)
+        elif (action in list(consts.NODE_ACTION_NAMES) and
+              nl.NodeLock.is_locked(target)):
+            raise exception.ResourceIsLocked(
+                action=action, type='node', id=target)
+
+    @staticmethod
+    def _check_conflicting_actions(ctx, target, action):
+        conflict_actions = ao.Action.get_all_active_by_target(ctx, target)
+        if conflict_actions and action == consts.CLUSTER_DELETE:
+            delete_ids = [a['id'] for a in conflict_actions
+                          if a['action'] == consts.CLUSTER_DELETE]
+            if delete_ids:
+                raise exception.ActionConflict(
+                    type=action, target=target, actions=",".join(
+                        delete_ids))
+        elif conflict_actions:
+            action_ids = [a['id'] for a in conflict_actions]
+            raise exception.ActionConflict(
+                type=action, target=target, actions=",".join(action_ids))
 
     @classmethod
     def delete(cls, ctx, action_id):
