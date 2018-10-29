@@ -27,37 +27,19 @@ most deployment scenarios.
 The policy type is currently applicable to clusters whose profile type is one
 of ``os.nova.server`` or ``os.heat.stack``. This could be extended in future.
 
-
-.. note::
-
-  The health policy is still under rapid development. More features are being
-  designed, implemented and verified. Its support status is still
-  ``EXPERIMENTAL``, which means there could be changes at the discretion of
-  the development team before it is formally supported.
-
-
 Properties
 ~~~~~~~~~~
 
+.. schemaprops::
+  :package: senlin.policies.health_policy.HealthPolicy
+
+Sample
+~~~~~~
+
 A typical spec for a health policy looks like the following example:
 
-.. code-block:: yaml
-
-  type: senlin.policy.health
-  version: 1.0
-  properties:
-    detection:
-      type: NODE_STATUS_POLLING
-      options:
-        interval: 60
-    recovery:
-      actions:
-        - name: REBOOT
-          params:
-            type: soft
-      fencing:
-        - compute
-
+.. literalinclude :: /../../examples/policies/health_policy_poll.yaml
+  :language: yaml
 
 There are two groups of properties (``detection`` and ``recovery``),  each of
 which provides information related to the failure detection and the failure

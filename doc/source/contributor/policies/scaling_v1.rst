@@ -28,11 +28,8 @@ parameters for such a request.
 Note that when calculating the target capacity of the cluster, Senlin only
 considers the **ACTIVE** nodes.
 
-
-Applicable Profiles
-~~~~~~~~~~~~~~~~~~~
-
-The policy is designed to handle any (``ANY``) profile types.
+.. schemaspec::
+    :package: senlin.policies.scaling_policy.ScalingPolicy
 
 
 Actions Handled

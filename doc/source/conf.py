@@ -18,6 +18,13 @@ import sys
 from senlin.version import version_info as senlin_version
 
 sys.path.insert(0, os.path.abspath('../..'))
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(BASE_DIR, "..", ".."))
+
+sys.path.insert(0, ROOT)
+sys.path.insert(0, BASE_DIR)
+
 # -- General configuration ----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -31,6 +38,7 @@ extensions = [
     'oslo_config.sphinxext',
     'oslo_policy.sphinxext',
     'oslo_policy.sphinxpolicygen',
+    'ext.resources'
 ]
 
 # openstackdocstheme options

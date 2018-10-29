@@ -19,12 +19,8 @@ Health Policy V1.0
 The health policy is designed to automate the failure detection and recovery
 process for a cluster.
 
-
-Applicable Profile Types
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-The policy is designed to handle both ``os.nova.server`` and ``os.heat.stack``
-profile types.
+.. schemaspec::
+    :package: senlin.policies.health_policy.HealthPolicy
 
 
 Actions Handled

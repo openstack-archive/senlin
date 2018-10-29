@@ -19,12 +19,8 @@ Zone Placement Policy V1.0
 This policy is designed to make sure the nodes in a cluster are distributed
 across multiple availability zones according to a specified scheme.
 
-
-Applicable Profiles
-~~~~~~~~~~~~~~~~~~~
-
-The policy is designed to handle Nova server clusters only, i.e. clusters with
-a profile of type ``os.nova.server-1.0`` for example.
+.. schemaspec::
+    :package: senlin.policies.zone_placement.ZonePlacementPolicy
 
 
 Actions Handled

@@ -90,6 +90,22 @@ The following is a list of builtin policy types:
    user/policy_types/region_placement
    user/policy_types/zone_placement
 
+3.3 Built-in Profile Types
+--------------------------
+
+The senlin service is released with some built-in profile types that target
+some common use cases. You can develop and deploy your own profile types by
+following the instructions in the :ref:`developer-guide` section.
+
+The following is a list of builtin profile types:
+
+.. toctree::
+   :maxdepth: 1
+
+   user/profile_types/nova
+   user/profile_types/stack
+   user/profile_types/docker
+
 4 Usage Scenarios
 ~~~~~~~~~~~~~~~~~
 

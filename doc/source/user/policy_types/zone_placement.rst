@@ -31,19 +31,17 @@ Nova virtual machines only.
 Properties
 ~~~~~~~~~~
 
+.. schemaprops::
+  :package: senlin.policies.zone_placement.ZonePlacementPolicy
+
+Sample
+~~~~~~
+
 A typical spec for a zone placement policy is exemplified in the following
 sample:
 
-.. code-block:: yaml
-
-  type: senlin.policy.zone_placement
-  version: 1.0
-  properties:
-    regions:
-      - name: az_1
-        weight: 100
-      - name: az_2
-        weight: 200
+.. literalinclude :: /../../examples/policies/placement_zone.yaml
+  :language: yaml
 
 In this sample spec, two availability zones are provided, namely "``az_1``" and
 "``az_2``". Each availability zone can have an optional "``weight``" attribute

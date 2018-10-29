@@ -416,6 +416,9 @@ The following is a list of the links to documents related to profile's
 creation and usage:
 
 - :doc:`Working with Profile Types <profile_types>`
+- :ref:`Nova Profile <ref-nova-profile>`
+- :ref:`Stack Profile <ref-stack-profile>`
+- :ref:`Docker Profile <ref-docker-profile>`
 - :doc:`Creating and Managing Clusters <clusters>`
 - :doc:`Creating and Managing Nodes <nodes>`
 - :doc:`Managing Cluster Membership <membership>`

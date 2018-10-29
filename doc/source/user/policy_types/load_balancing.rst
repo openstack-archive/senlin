@@ -35,40 +35,17 @@ installed and configured properly.
 Properties
 ~~~~~~~~~~
 
+.. schemaprops::
+  :package: senlin.policies.lb_policy.LoadBalancingPolicy
+
+Sample
+~~~~~~
+
 The design of the load-balancing policy faithfully follows the interface and
 properties exposed by the LBaaS v2 service. A sample spec is shown below:
 
-.. code-block:: yaml
-
-  type: senlin.policy.loadbalance
-  version: 1.1
-  properties:
-    pool:
-      protocol: HTTP
-      protocol_port: 80
-      subnet: private_subnet
-      lb_method: ROUND_ROBIN
-      admin_state_up: true
-      session_persistence:
-        type: HTTP_COOKIE
-        cookie_name: my_cookie
-    vip:
-      subnet: public_subnet
-      address: 12.34.56.78
-      connection_limit: 5000
-      protocol: HTTP
-      protocol_port: 80
-      admin_state_up: true
-    health_monitor:
-      type: HTTP
-      delay: 20
-      timeout: 5
-      max_retries: 3
-      admin_state_up: true
-      http_method: GET
-      url_path: /health
-      expected_codes: 200
-    lb_status_timeout: 300
+.. literalinclude :: /../../examples/policies/lb_policy.yaml
+  :language: yaml
 
 As you can see, there are many properties related to the policy. The good news
 is that for most of them, there are reasonable default values. All properties

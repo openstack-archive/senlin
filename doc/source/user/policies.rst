@@ -234,5 +234,13 @@ The list below provides links to documents related to the creation and usage
 of policy objects.
 
 * :doc:`Working with Policy Types <policy_types>`
+* :ref:`Affinity Policy <ref-affinity-policy>`
+* :ref:`Batch Policy <ref-batch-policy>`
+* :ref:`Deletion Policy <ref-deletion-policy>`
+* :ref:`Health Policy <ref-health-policy>`
+* :ref:`Load-Balancing Policy <ref-lb-policy>`
+* :ref:`Region Placement Policy <ref-region-policy>`
+* :ref:`Scaling Policy <ref-scaling-policy>`
+* :ref:`Zone Placement Policy <ref-zone-policy>`
 * :doc:`Managing the Bindings between Clusters and Policies <bindings>`
 * :doc:`Browsing Events <events>`
