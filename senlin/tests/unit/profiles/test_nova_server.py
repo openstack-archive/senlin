@@ -1369,6 +1369,76 @@ class TestNovaServerBasic(base.SenlinTestCase):
                          six.text_type(ex))
         cc.server_get.assert_called_once_with('FAKE_ID')
 
+    def test_do_healthcheck_active(self):
+        profile = server.ServerProfile('t', self.spec)
+
+        cc = mock.Mock()
+        cc.server_get.return_value = mock.Mock(status='ACTIVE')
+        profile._computeclient = cc
+
+        test_server = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_healthcheck(test_server)
+        cc.server_get.assert_called_once_with('FAKE_ID')
+        self.assertTrue(res)
+
+    def test_do_healthcheck_empty_server_obj(self):
+        profile = server.ServerProfile('t', self.spec)
+
+        cc = mock.Mock()
+        cc.server_get.return_value = None
+        profile._computeclient = cc
+
+        test_server = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_healthcheck(test_server)
+        cc.server_get.assert_called_once_with('FAKE_ID')
+        self.assertTrue(res)
+
+    def test_do_healthcheck_exception(self):
+        profile = server.ServerProfile('t', self.spec)
+
+        cc = mock.Mock()
+        ex = exc.InternalError(code=503, message='Error')
+        cc.server_get.side_effect = ex
+        profile._computeclient = cc
+
+        test_server = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_healthcheck(test_server)
+
+        cc.server_get.assert_called_once_with('FAKE_ID')
+        self.assertTrue(res)
+
+    def test_do_healthcheck_error(self):
+        profile = server.ServerProfile('t', self.spec)
+
+        cc = mock.Mock()
+        cc.server_get.return_value = mock.Mock(status='ERROR')
+        profile._computeclient = cc
+
+        test_server = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_healthcheck(test_server)
+
+        cc.server_get.assert_called_once_with('FAKE_ID')
+        self.assertFalse(res)
+
+    def test_do_healthcheck_server_not_found(self):
+        profile = server.ServerProfile('t', self.spec)
+
+        cc = mock.Mock()
+        ex = exc.InternalError(code=404, message='No Server found')
+        cc.server_get.side_effect = ex
+        profile._computeclient = cc
+
+        test_server = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_healthcheck(test_server)
+
+        cc.server_get.assert_called_once_with('FAKE_ID')
+        self.assertFalse(res)
+
     @mock.patch.object(server.ServerProfile, 'do_delete')
     @mock.patch.object(server.ServerProfile, 'do_create')
     def test_do_recover_operation_is_none(self, mock_create, mock_delete):

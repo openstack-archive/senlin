@@ -317,6 +317,16 @@ LIFECYCLE_TRANSITION_TYPE = (
 
 VM_STATUS = (
     VS_ACTIVE, VS_ERROR, VS_SUSPENDED, VS_SHUTOFF, VS_PAUSED, VS_RESCUE,
+    VS_DELETED,
 ) = (
-    'ACTIVE', 'ERROR', 'SUSPENDED', 'SHUTOFF', 'PAUSED', 'RESCUE',
+    'ACTIVE', 'ERROR', 'SUSPENDED', 'SHUTOFF', 'PAUSED', 'RESCUE', 'DELETED',
+)
+
+HEALTH_CHECK_MESSAGE = (
+    POLL_STATUS_PASS, POLL_STATUS_FAIL, POLL_URL_PASS, POLL_URL_FAIL,
+) = (
+    'Poll Status health check passed',
+    'Poll Status health check failed',
+    'Poll URL health check passed',
+    'Poll URL health check failed',
 )

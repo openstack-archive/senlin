@@ -301,11 +301,13 @@ class Profile(object):
     @profiler.trace('Profile.check_object', hide_args=False)
     def check_object(cls, ctx, obj):
         profile = cls.load(ctx, profile_id=obj.profile_id)
-        try:
-            return profile.do_check(obj)
-        except exc.InternalError as ex:
-            LOG.debug(ex)
-            return False
+        return profile.do_check(obj)
+
+    @classmethod
+    @profiler.trace('Profile.check_object', hide_args=False)
+    def healthcheck_object(cls, ctx, obj):
+        profile = cls.load(ctx, profile_id=obj.profile_id)
+        return profile.do_healthcheck(obj)
 
     @classmethod
     @profiler.trace('Profile.recover_object', hide_args=False)
@@ -460,6 +462,18 @@ class Profile(object):
         """For subclass to override."""
         LOG.warning("Check operation not supported.")
         return True
+
+    def do_healthcheck(self, obj):
+        """Default healthcheck operation.
+
+        This is provided as a fallback if a specific profile type does not
+        override this method.
+
+        :param obj: The node object to operate on.
+        :return status: True indicates node is healthy, False indicates
+            it is unhealthy.
+        """
+        return self.do_check(obj)
 
     def do_get_details(self, obj):
         """For subclass to override."""

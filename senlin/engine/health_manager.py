@@ -26,6 +26,7 @@ from oslo_service import service
 from oslo_service import threadgroup
 from oslo_utils import timeutils
 import re
+import tenacity
 import time
 
 from senlin.common import consts
@@ -241,6 +242,32 @@ class HealthCheckType(object):
         """
         pass
 
+    def _node_within_grace_period(self, node):
+        """Check if current time is within the node_update_timeout grace period
+
+        :returns: True if current time is less than node_update_timeout since
+            last node update action. False otherwise.
+        """
+
+        node_last_updated = node.updated_at or node.init_at
+        if timeutils.is_older_than(node_last_updated,
+                                   self.node_update_timeout):
+            # node was last updated more than node_update_timeout seconds ago
+            # -> we are outside the grace period
+            LOG.info("%s was updated at %s which is more "
+                     "than %d secs ago. Mark node as unhealthy.",
+                     node.name, node_last_updated,
+                     self.node_update_timeout)
+            return False
+        else:
+            # node was last updated less than node_update_timeout seconds ago
+            # -> we are inside the grace period
+            LOG.info("%s was updated at %s which is less "
+                     "than %d secs ago. Mark node as healthy.",
+                     node.name, node_last_updated,
+                     self.node_update_timeout)
+            return True
+
 
 class NodePollStatusHealthCheck(HealthCheckType):
     def run_health_check(self, ctx, node):
@@ -248,34 +275,26 @@ class NodePollStatusHealthCheck(HealthCheckType):
 
         :returns: True if node is healthy. False otherwise.
         """
-
         try:
             # create engine node from db node
             entity = node_mod.Node._from_object(ctx, node)
 
-            if not entity.do_check(ctx, return_check_result=True):
-                # server was not found as a result of performing check
-                node_last_updated = node.updated_at or node.init_at
-                if not timeutils.is_older_than(
-                        node_last_updated, self.node_update_timeout):
-                    LOG.info("Node %s was updated at %s which is less "
-                             "than %d secs ago. Skip node recovery from "
-                             "NodePollStatusHealthCheck.",
-                             node.id, node_last_updated,
-                             self.node_update_timeout)
-                    return True
-                else:
-                    return False
-            else:
-                LOG.debug("NodePollStatusHealthCheck reports node %s is "
-                          "healthy.", node.id)
-                return True
+            # If health check returns True, return True to mark node as
+            # healthy. Else return True to mark node as healthy if we are still
+            # within the node's grace period to allow the node to warm-up.
+            # Return False to mark the node as unhealthy if we are outside the
+            # grace period.
+
+            return (entity.do_healthcheck(ctx) or
+                    self._node_within_grace_period(node))
         except Exception as ex:
             LOG.warning(
                 'Error when performing health check on node %s: %s',
                 node.id, ex
             )
-            return False
+
+            # treat node as healthy when an exception is encountered
+            return True
 
 
 class NodePollUrlHealthCheck(HealthCheckType):
@@ -299,74 +318,88 @@ class NodePollUrlHealthCheck(HealthCheckType):
 
         return url
 
-    def run_health_check(self, ctx, node):
-        """Routine to check a node status from a url and recovery if necessary
-
-        :param node: The node to be checked.
-        :returns: True if node is considered to be healthy.  False otherwise.
-        """
-
-        url_template = self.params['poll_url']
+    def _poll_url(self, url, node):
         verify_ssl = self.params['poll_url_ssl_verify']
         conn_error_as_unhealthy = self.params[
             'poll_url_conn_error_as_unhealthy']
         expected_resp_str = self.params['poll_url_healthy_response']
+        retry_interval = self.params['poll_url_retry_interval']
+
+        timeout = max(retry_interval * 0.1, 1)
+
+        try:
+            result = utils.url_fetch(url, timeout=timeout,
+                                     verify=verify_ssl)
+        except Exception as ex:
+            if conn_error_as_unhealthy:
+                LOG.info('%s for %s: connection error when polling URL (%s)',
+                         consts.POLL_URL_FAIL, node.name, ex)
+                return False
+            else:
+                LOG.info('%s for %s: ignoring connection error when polling '
+                         'URL (%s)',
+                         consts.POLL_URL_PASS, node.name, ex)
+                return True
+
+        if not re.search(expected_resp_str, result):
+            LOG.info('%s for %s: did not find expected response string %s in '
+                     'URL result (%s)',
+                     consts.POLL_URL_FAIL, node.name, expected_resp_str,
+                     result)
+            return False
+
+        LOG.info('%s for %s: matched expected response string.',
+                 consts.POLL_URL_PASS, node.name)
+        return True
+
+    def run_health_check(self, ctx, node):
+        """Routine to check a node status from a url and recovery if necessary
+
+        :param node: The node to be checked.
+        :returns: True if node is healthy. False otherwise.
+        """
+
         max_unhealthy_retry = self.params['poll_url_retry_limit']
         retry_interval = self.params['poll_url_retry_interval']
 
-        def stop_node_recovery():
-            node_last_updated = node.updated_at or node.init_at
-            if not timeutils.is_older_than(
-                    node_last_updated, self.node_update_timeout):
-                LOG.info("Node %s was updated at %s which is less than "
-                         "%d secs ago. Skip node recovery from "
-                         "NodePollUrlHealthCheck.",
-                         node.id, node_last_updated, self.node_update_timeout)
-                return True
+        def _return_last_value(retry_state):
+            return retry_state.outcome.result()
 
-            LOG.info("Node %s is reported as down (%d retries left)",
-                     node.id, available_attemps)
-            time.sleep(retry_interval)
+        @tenacity.retry(
+            retry=tenacity.retry_if_result(lambda x: x is False),
+            wait=tenacity.wait_fixed(retry_interval),
+            retry_error_callback=_return_last_value,
+            stop=tenacity.stop_after_attempt(max_unhealthy_retry)
+        )
+        def _poll_url_with_retry(url):
+            return self._poll_url(url, node)
 
-            return False
-
-        url = self._expand_url_template(url_template, node)
-        LOG.debug("Polling node status from URL: %s", url)
-
-        available_attemps = max_unhealthy_retry
-        timeout = max(retry_interval * 0.1, 1)
-        while available_attemps > 0:
-            available_attemps -= 1
-
-            try:
-                result = utils.url_fetch(
-                    url, timeout=timeout, verify=verify_ssl)
-            except utils.URLFetchError as ex:
-                if conn_error_as_unhealthy:
-                    if stop_node_recovery():
-                        return True
-                    continue
-                else:
-                    LOG.error("Error when requesting node health status from"
-                              " %s: %s", url, ex)
-                    return True
-
-            LOG.debug("Node status returned from URL(%s): %s", url,
-                      result)
-            if re.search(expected_resp_str, result):
-                LOG.debug('NodePollUrlHealthCheck reports node %s is healthy.',
-                          node.id)
-                return True
-
+        try:
             if node.status != consts.NS_ACTIVE:
-                LOG.info("Skip node recovery because node %s is not in "
-                         "ACTIVE state.", node.id)
+                LOG.info('%s for %s: node is not in ACTIVE state, so skip '
+                         'poll url',
+                         consts.POLL_URL_PASS, node.name)
                 return True
 
-            if stop_node_recovery():
-                return True
+            url_template = self.params['poll_url']
+            url = self._expand_url_template(url_template, node)
 
-        return False
+            # If health check returns True, return True to mark node as
+            # healthy. Else return True to mark node as healthy if we are still
+            # within the node's grace period to allow the node to warm-up.
+            # Return False to mark the node as unhealthy if we are outside the
+            # grace period.
+
+            return (_poll_url_with_retry(url) or
+                    self._node_within_grace_period(node))
+        except Exception as ex:
+            LOG.warning(
+                '%s for %s: Ignoring error on poll URL: %s',
+                consts.POLL_URL_PASS, node.name, ex
+            )
+
+            # treat node as healthy when an exception is encountered
+            return True
 
 
 class HealthManager(service.Service):
@@ -428,8 +461,6 @@ class HealthManager(service.Service):
         :returns: Recover action
         """
         try:
-            LOG.info("%s is requesting node recovery "
-                     "for %s.", self.__class__.__name__, node_id)
             req = objects.NodeRecoverRequest(identity=node_id,
                                              params=recover_action)
 
@@ -516,6 +547,9 @@ class HealthManager(service.Service):
                             recovery_cond))
 
                 if not node_is_healthy:
+                    LOG.info("Health check failed for %s in %s and "
+                             "recovery has started.",
+                             node.name, cluster.name)
                     action = self._recover_node(node.id, ctx,
                                                 recover_action)
                     actions.append(action)
@@ -529,7 +563,7 @@ class HealthManager(service.Service):
                                 "within specified timeout: %s", a['action'],
                                 reason)
 
-            if len(actions) > 0:
+            if len(actions) == 0:
                 LOG.info('Health check passed for all nodes in cluster %s.',
                          cluster_id)
         except Exception as ex:

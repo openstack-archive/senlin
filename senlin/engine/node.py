@@ -316,7 +316,7 @@ class Node(object):
         self.index = -1
         return True
 
-    def do_check(self, context, return_check_result=False):
+    def do_check(self, context):
         if not self.physical_id:
             return False
 
@@ -329,9 +329,6 @@ class Node(object):
         except exc.EResourceOperation as ex:
             self.set_status(context, consts.NS_ERROR, six.text_type(ex))
             return False
-
-        if return_check_result:
-            return res
 
         # Physical object is ACTIVE but for some reason the node status in
         # senlin was WARNING. We only update the status_reason
@@ -350,6 +347,17 @@ class Node(object):
 
         return True
 
+    def do_healthcheck(self, context):
+        """health check a node.
+
+        This function is supposed to be invoked from the health manager to
+        check the health of a given node
+        :param context: The request context of the action.
+        :returns: True if node is healthy. False otherwise.
+        """
+
+        return pb.Profile.healthcheck_object(context, self)
+
     def do_recover(self, context, action):
         """recover a node.
 
@@ -358,10 +366,19 @@ class Node(object):
         :param dict options: A map containing the recovery actions (with
             parameters if any) and fencing settings.
         """
-        if not self.physical_id:
+        options = action.inputs
+
+        operations = options.get('operation', [{'name': ''}])
+        reboot_ops = [op for op in operations
+                      if op.get('name') == consts.RECOVER_REBOOT]
+        rebuild_ops = [op for op in operations
+                       if op.get('name') == consts.RECOVER_REBUILD]
+        if not self.physical_id and (reboot_ops or rebuild_ops):
+            # physical id is required for REBOOT or REBUILD operations
+            LOG.warning('Recovery failed because node has no physical id'
+                        ' was provided for reboot or rebuild operation.')
             return False
 
-        options = action.inputs
         if options.get('check', False):
             res = False
             try:

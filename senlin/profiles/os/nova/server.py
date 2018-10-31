@@ -1532,7 +1532,7 @@ class ServerProfile(base.Profile):
         try:
             server = self.compute(obj).server_get(obj.physical_id)
         except exc.InternalError as ex:
-            if "No Server found" in six.text_type(ex):
+            if ex.code == 404:
                 raise exc.EServerNotFound(type='server',
                                           id=obj.physical_id,
                                           message=six.text_type(ex))
@@ -1544,6 +1544,60 @@ class ServerProfile(base.Profile):
         if (server is None or server.status != consts.VS_ACTIVE):
             return False
 
+        return True
+
+    def do_healthcheck(self, obj):
+        """Healthcheck operation.
+
+        This method checks if a server node is healthy by getting the server
+        status from nova.  A server is considered unhealthy if it does not
+        exist or its status is one of the following:
+        - ERROR
+        - SHUTOFF
+        - DELETED
+
+        :param obj: The node object to operate on.
+        :return status: True indicates node is healthy, False indicates
+            it is unhealthy.
+        """
+        unhealthy_server_status = [consts.VS_ERROR, consts.VS_SHUTOFF,
+                                   consts.VS_DELETED]
+
+        if not obj.physical_id:
+            LOG.info('%s for %s: server has no physical ID.',
+                     consts.POLL_STATUS_FAIL, obj.name)
+            return False
+
+        try:
+            server = self.compute(obj).server_get(obj.physical_id)
+        except Exception as ex:
+            if isinstance(ex, exc.InternalError) and ex.code == 404:
+                # treat resource not found exception as unhealthy
+                LOG.info('%s for %s: server was not found.',
+                         consts.POLL_STATUS_FAIL, obj.name)
+                return False
+            else:
+                # treat all other exceptions as healthy
+                LOG.info(
+                    '%s for %s: Exception when trying to get server info but '
+                    'ignoring this error: %s.',
+                    consts.POLL_STATUS_PASS, obj.name, ex.message)
+                return True
+
+        if server is None:
+            # no server information is available, treat the node as healthy
+            LOG.info(
+                '%s for %s: No server information was returned but ignoring '
+                'this error.',
+                consts.POLL_STATUS_PASS, obj.name)
+            return True
+
+        if server.status in unhealthy_server_status:
+            LOG.info('%s for %s: server status is unhealthy.',
+                     consts.POLL_STATUS_FAIL, obj.name)
+            return False
+
+        LOG.info('%s for %s', consts.POLL_STATUS_PASS, obj.name)
         return True
 
     def do_recover(self, obj, **options):
