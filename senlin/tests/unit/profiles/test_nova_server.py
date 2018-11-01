@@ -1952,7 +1952,9 @@ class TestNovaServerBasic(base.SenlinTestCase):
         obj = mock.Mock(physical_id='FAKE_ID')
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
+        gc = mock.Mock()
         profile._computeclient = cc
+        profile._glanceclient = gc
 
         # do it
         res = profile.handle_rescue(obj, admin_pass='new_pass',
@@ -1961,6 +1963,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         self.assertTrue(res)
         cc.server_rescue.assert_called_once_with(
             'FAKE_ID', admin_pass='new_pass', image_ref='FAKE_IMAGE')
+        gc.image_find.assert_called_once_with('FAKE_IMAGE', False)
 
     def test_handle_rescue_image_none(self):
         obj = mock.Mock(physical_id='FAKE_ID')
@@ -1983,9 +1986,11 @@ class TestNovaServerBasic(base.SenlinTestCase):
     def test_handle_rescue_failed_waiting(self):
         profile = server.ServerProfile('t', self.spec)
         cc = mock.Mock()
+        gc = mock.Mock()
         ex = exc.InternalError(code=500, message='timeout')
         cc.wait_for_server.side_effect = ex
         profile._computeclient = cc
+        profile._glanceclient = gc
         node_obj = mock.Mock(physical_id='FAKE_ID')
 
         ex = self.assertRaises(exc.EResourceOperation,
@@ -1999,6 +2004,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                                  admin_pass='new_pass',
                                                  image_ref='FAKE_IMAGE')
         cc.wait_for_server.assert_called_once_with('FAKE_ID', 'RESCUE')
+        gc.image_find.assert_called_once_with('FAKE_IMAGE', False)
 
     def test_handle_unrescue(self):
         obj = mock.Mock(physical_id='FAKE_ID')

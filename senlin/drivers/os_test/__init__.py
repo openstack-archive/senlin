@@ -12,6 +12,7 @@
 
 
 from senlin.drivers.os_test import cinder_v2
+from senlin.drivers.os_test import glance_v2
 from senlin.drivers.os_test import heat_v1
 from senlin.drivers.os_test import keystone_v3
 from senlin.drivers.os_test import lbaas
@@ -24,6 +25,7 @@ from senlin.drivers.os_test import zaqar_v2
 
 block_storage = cinder_v2.CinderClient
 compute = nova_v2.NovaClient
+glance = glance_v2.GlanceClient
 identity = keystone_v3.KeystoneClient
 loadbalancing = lbaas.LoadBalancerDriver
 message = zaqar_v2.ZaqarClient

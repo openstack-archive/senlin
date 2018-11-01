@@ -50,19 +50,6 @@ class TestNovaV2(base.SenlinTestCase):
         d.flavor_find('foo', False)
         self.compute.find_flavor.assert_called_once_with('foo', False)
 
-    def test_image_find(self):
-        d = nova_v2.NovaClient(self.conn_params)
-        d.image_find('foo')
-        self.compute.find_image.assert_called_once_with('foo', False)
-        self.compute.find_image.reset_mock()
-
-        d.image_find('foo', True)
-        self.compute.find_image.assert_called_once_with('foo', True)
-        self.compute.find_image.reset_mock()
-
-        d.image_find('foo', False)
-        self.compute.find_image.assert_called_once_with('foo', False)
-
     def test_keypair_create(self):
         d = nova_v2.NovaClient(self.conn_params)
         d.keypair_create(name='foo')
