@@ -16,7 +16,6 @@
 Senlin Engine Server.
 """
 from oslo_config import cfg
-from oslo_i18n import _lazy
 from oslo_log import log as logging
 from oslo_service import service
 
@@ -24,8 +23,6 @@ from senlin.common import consts
 from senlin.common import messaging
 from senlin.common import profiler
 from senlin import objects
-
-_lazy.enable_lazy()
 
 
 def main():
