@@ -56,13 +56,13 @@ def _get_main_context_manager():
         cfg.CONF.import_group('profiler', 'senlin.common.config')
         if cfg.CONF.profiler.enabled:
             if cfg.CONF.profiler.trace_sqlalchemy:
-                eng = _main_context_manager.get_legacy_facade().get_engine()
+                eng = _main_context_manager.writer.get_engine()
                 osprofiler.sqlalchemy.add_tracing(sqlalchemy, eng, "db")
     return _main_context_manager
 
 
 def get_engine():
-    return _get_main_context_manager().get_legacy_facade().get_engine()
+    return _get_main_context_manager().writer.get_engine()
 
 
 def session_for_read():
