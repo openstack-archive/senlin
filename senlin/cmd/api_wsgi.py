@@ -19,7 +19,6 @@ Use this file for deploying senlin-api under Apache2(mode-wsgi).
 
 
 from oslo_config import cfg
-import oslo_i18n as i18n
 from oslo_log import log as logging
 
 from senlin.api.common import wsgi
@@ -30,8 +29,6 @@ from senlin import version
 
 
 def init_app():
-    i18n.enable_lazy()
-
     logging.register_options(cfg.CONF)
     cfg.CONF(project='senlin', prog='senlin-api',
              version=version.version_info.version_string())

@@ -18,7 +18,6 @@ Senlin API Server.
 import sys
 
 from oslo_config import cfg
-from oslo_i18n import _lazy
 from oslo_log import log as logging
 from oslo_service import systemd
 import six
@@ -29,8 +28,6 @@ from senlin.common import messaging
 from senlin.common import profiler
 from senlin import objects
 from senlin import version
-
-_lazy.enable_lazy()
 
 LOG = logging.getLogger('senlin.api')
 

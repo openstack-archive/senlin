@@ -216,7 +216,8 @@ class InternalError(SenlinException):
 
     def __init__(self, **kwargs):
         self.code = kwargs.pop('code', 500)
-        self.message = kwargs.pop('message', self.message)
+        # If a "message" is not provided, or None or blank, use the default.
+        self.message = kwargs.pop('message', self.message) or self.message
         super(InternalError, self).__init__(
             code=self.code, message=self.message, **kwargs)
 
