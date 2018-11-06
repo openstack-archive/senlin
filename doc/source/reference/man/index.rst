@@ -20,3 +20,4 @@ Senlin utilities
    :maxdepth: 1
 
    senlin-manage
+   senlin-status
