@@ -116,6 +116,7 @@ function configure_senlin {
     #configure_auth_token_middleware $SENLIN_CONF senlin $SENLIN_AUTH_CACHE_DIR
     iniset $SENLIN_CONF keystone_authtoken cafile $SSL_BUNDLE_FILE
     iniset $SENLIN_CONF keystone_authtoken auth_url $KEYSTONE_AUTH_URI
+    iniset $SENLIN_CONF keystone_authtoken www_authenticate_uri $KEYSTONE_SERVICE_URI_V3
     iniset $SENLIN_CONF keystone_authtoken username senlin
     iniset $SENLIN_CONF keystone_authtoken password $SERVICE_PASSWORD
     iniset $SENLIN_CONF keystone_authtoken project_name $SERVICE_TENANT_NAME
