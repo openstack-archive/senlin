@@ -97,8 +97,11 @@ function configure_senlin {
     iniset $SENLIN_CONF DEFAULT auth_encryption_key $(generate_hex_string 16)
     iniset $SENLIN_CONF DEFAULT default_region_name "$REGION_NAME"
 
-    iniset $SENLIN_CONF DEFAULT use_syslog $SYSLOG
-    if [ "$LOG_COLOR" == "True" ] && [ "$SYSLOG" == "False" ] && [ "$SENLIN_USE_MOD_WSGI" == "False" ]; then
+    if [ "$USE_SYSTEMD" != "False" ]; then
+        setup_systemd_logging $SENLIN_CONF
+    fi
+
+    if [ "$LOG_COLOR" == "True" ] && [ "$USE_SYSTEMD" == "False" ] && [ "$SENLIN_USE_MOD_WSGI" == "False" ]; then
         # Add color to logging output
         setup_colorized_logging $SENLIN_CONF DEFAULT
     fi
