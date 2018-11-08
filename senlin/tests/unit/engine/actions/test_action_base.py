@@ -305,6 +305,22 @@ class ActionBaseTest(base.SenlinTestCase):
 
     @mock.patch.object(ab.Action, 'store')
     @mock.patch.object(ao.Action, 'get_all_active_by_target')
+    @mock.patch.object(cl.ClusterLock, 'is_locked')
+    def test_action_create_lock_cluster_true_delete(self, mock_lock,
+                                                    mock_active, mock_store):
+        mock_store.return_value = 'FAKE_ID'
+        mock_active.return_value = None
+        mock_lock.return_value = True
+
+        result = ab.Action.create(self.ctx, OBJID, 'CLUSTER_DELETE',
+                                  name='test')
+
+        self.assertEqual('FAKE_ID', result)
+        mock_store.assert_called_once_with(self.ctx)
+        mock_active.assert_called_once_with(mock.ANY, OBJID)
+
+    @mock.patch.object(ab.Action, 'store')
+    @mock.patch.object(ao.Action, 'get_all_active_by_target')
     @mock.patch.object(nl.NodeLock, 'is_locked')
     def test_action_create_lock_node_true(self, mock_lock, mock_active,
                                           mock_store):
@@ -340,6 +356,51 @@ class ActionBaseTest(base.SenlinTestCase):
             ab.Action.create(self.ctx, OBJID, 'NODE_CREATE', name='test')
 
         mock_store.assert_not_called()
+        mock_active.assert_called_once_with(mock.ANY, OBJID)
+
+    @mock.patch.object(ab.Action, 'store')
+    @mock.patch.object(ao.Action, 'get_all_active_by_target')
+    @mock.patch.object(cl.ClusterLock, 'is_locked')
+    def test_action_create_delete_conflict(self, mock_lock, mock_active,
+                                           mock_store):
+        mock_store.return_value = 'FAKE_ID'
+        uuid1 = 'ce982cd5-26da-4e2c-84e5-be8f720b7478'
+        uuid2 = 'ce982cd5-26da-4e2c-84e5-be8f720b7479'
+        mock_active.return_value = [
+            ao.Action(id=uuid1, action='CLUSTER_DELETE'),
+            ao.Action(id=uuid2, action='NODE_DELETE')
+        ]
+        mock_lock.return_value = True
+
+        error_message = (
+            'The CLUSTER_DELETE action for target {} conflicts with the '
+            'following action\(s\): {}').format(OBJID, uuid1)
+        with self.assertRaisesRegexp(exception.ActionConflict,
+                                     error_message):
+            ab.Action.create(self.ctx, OBJID, 'CLUSTER_DELETE', name='test')
+
+        mock_store.assert_not_called()
+        mock_active.assert_called_once_with(mock.ANY, OBJID)
+
+    @mock.patch.object(ab.Action, 'store')
+    @mock.patch.object(ao.Action, 'get_all_active_by_target')
+    @mock.patch.object(cl.ClusterLock, 'is_locked')
+    def test_action_create_delete_no_conflict(self, mock_lock, mock_active,
+                                              mock_store):
+        mock_store.return_value = 'FAKE_ID'
+        uuid1 = 'ce982cd5-26da-4e2c-84e5-be8f720b7478'
+        uuid2 = 'ce982cd5-26da-4e2c-84e5-be8f720b7479'
+        mock_active.return_value = [
+            ao.Action(id=uuid1, action='NODE_DELETE'),
+            ao.Action(id=uuid2, action='NODE_DELETE')
+        ]
+        mock_lock.return_value = True
+
+        result = ab.Action.create(self.ctx, OBJID, 'CLUSTER_DELETE',
+                                  name='test')
+
+        self.assertEqual('FAKE_ID', result)
+        mock_store.assert_called_once_with(self.ctx)
         mock_active.assert_called_once_with(mock.ANY, OBJID)
 
     @mock.patch.object(timeutils, 'is_older_than')
