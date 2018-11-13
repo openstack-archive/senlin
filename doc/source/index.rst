@@ -110,7 +110,7 @@ The following is a list of builtin profile types:
 ~~~~~~~~~~~~~~~~~
 
 This section provides some guides for typical usage scenarios. More scenarios
-are to be added
+are to be added.
 
 4.1 Managing Node Affinity
 --------------------------
