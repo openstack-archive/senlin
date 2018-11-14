@@ -39,6 +39,17 @@ rules = [
                 'method': 'GET'
             }
         ]
+    ),
+    policy.DocumentedRuleDefault(
+        name="actions:update",
+        check_str=base.UNPROTECTED,
+        description="Update action",
+        operations=[
+            {
+                'path': '/v1/actions/{action_id}',
+                'method': 'PATCH'
+            }
+        ]
     )
 ]
 

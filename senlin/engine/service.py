@@ -1696,7 +1696,7 @@ class EngineService(service.Service):
 
     @request_context
     def node_update(self, ctx, req):
-        """Update a node with new propertye values.
+        """Update a node with new property values.
 
         :param ctx: An instance of the request context.
         :param req: An instance of the NodeUpdateRequest object.
@@ -2301,6 +2301,26 @@ class EngineService(service.Service):
                                           reason=reason)
 
         LOG.info("Action '%s' is deleted.", req.identity)
+
+    @request_context
+    def action_update(self, ctx, req):
+        """Update the specified action object.
+
+        :param ctx: An instance of the request context.
+        :param req: An instance of the ActionUpdateRequest object.
+        :return: None if update was successful, or an exception of type
+                 `BadRequest`.
+        """
+        # Only allow cancellation of actions at this time.
+        if req.status == consts.ACTION_CANCELLED:
+            action = action_mod.Action.load(ctx, req.identity,
+                                            project_safe=False)
+            LOG.info("Signaling action '%s' to Cancel.", req.identity)
+            action.signal_cancel()
+        else:
+            msg = ("Unknown status %(status)s for action %(action)s" %
+                   {"status": req.status, "action": req.identity})
+            raise exception.BadRequest(msg=msg)
 
     @request_context
     def receiver_list(self, ctx, req):

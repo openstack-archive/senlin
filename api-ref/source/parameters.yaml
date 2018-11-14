@@ -357,6 +357,14 @@ action_status:
   description: |
     A string representation of the current status of the action.
 
+action_status_update:
+  type: object
+  in: body
+  required: True
+  description: |
+    A string representation of the action status to update CANCELLED is
+    the only valid status at this time.
+
 action_target:
   type: string
   in: body

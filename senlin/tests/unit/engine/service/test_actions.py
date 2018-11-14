@@ -205,3 +205,37 @@ class ActionTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
+
+    @mock.patch.object(ab.Action, 'load')
+    def test_action_update(self, mock_load):
+        x_obj = mock.Mock()
+        x_obj.id = 'FAKE_ID'
+        x_obj.signal_cancel = mock.Mock()
+        x_obj.SIG_CANCEL = 'CANCEL'
+        mock_load.return_value = x_obj
+
+        req = orao.ActionUpdateRequest(identity='ACTION_ID',
+                                       status='CANCELLED')
+
+        result = self.eng.action_update(self.ctx, req.obj_to_primitive())
+        self.assertIsNone(result)
+
+        mock_load.assert_called_with(self.ctx, 'ACTION_ID', project_safe=False)
+        x_obj.signal_cancel.assert_called_once_with()
+
+    @mock.patch.object(ab.Action, 'load')
+    def test_action_update_unknown_action(self, mock_load):
+        x_obj = mock.Mock()
+        x_obj.id = 'FAKE_ID'
+        x_obj.signal_cancel = mock.Mock()
+        mock_load.return_value = x_obj
+
+        req = orao.ActionUpdateRequest(identity='ACTION_ID',
+                                       status='FOO')
+        ex = self.assertRaises(rpc.ExpectedException, self.eng.action_update,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+
+        mock_load.assert_not_called()
+        x_obj.signal_cancel.assert_not_called()

@@ -44,6 +44,8 @@ OWNER_ID = 'c7114713-ee68-409d-ba5d-0560a72a386c'
 ACTION_ID = '4c2cead2-fd74-418a-9d12-bd2d9bd7a812'
 USER_ID = '3c4d64baadcd437d8dd49054899e73dd'
 PROJECT_ID = 'cf7a6ae28dde4f46aa8fe55d318a608f'
+CHILD_IDS = ['8500ae8f-e632-4e8b-8206-552873cc2c3a',
+             '67c0eba9-514f-4659-9deb-99868873dfd6']
 
 
 class DummyAction(ab.Action):
@@ -361,30 +363,6 @@ class ActionBaseTest(base.SenlinTestCase):
     @mock.patch.object(ab.Action, 'store')
     @mock.patch.object(ao.Action, 'get_all_active_by_target')
     @mock.patch.object(cl.ClusterLock, 'is_locked')
-    def test_action_create_delete_conflict(self, mock_lock, mock_active,
-                                           mock_store):
-        mock_store.return_value = 'FAKE_ID'
-        uuid1 = 'ce982cd5-26da-4e2c-84e5-be8f720b7478'
-        uuid2 = 'ce982cd5-26da-4e2c-84e5-be8f720b7479'
-        mock_active.return_value = [
-            ao.Action(id=uuid1, action='CLUSTER_DELETE'),
-            ao.Action(id=uuid2, action='NODE_DELETE')
-        ]
-        mock_lock.return_value = True
-
-        error_message = (
-            'The CLUSTER_DELETE action for target {} conflicts with the '
-            'following action\(s\): {}').format(OBJID, uuid1)
-        with self.assertRaisesRegexp(exception.ActionConflict,
-                                     error_message):
-            ab.Action.create(self.ctx, OBJID, 'CLUSTER_DELETE', name='test')
-
-        mock_store.assert_not_called()
-        mock_active.assert_called_once_with(mock.ANY, OBJID)
-
-    @mock.patch.object(ab.Action, 'store')
-    @mock.patch.object(ao.Action, 'get_all_active_by_target')
-    @mock.patch.object(cl.ClusterLock, 'is_locked')
     def test_action_create_delete_no_conflict(self, mock_lock, mock_active,
                                               mock_store):
         mock_store.return_value = 'FAKE_ID'
@@ -531,6 +509,102 @@ class ActionBaseTest(base.SenlinTestCase):
             self.assertIsNone(result)
             self.assertEqual(0, mock_call.call_count)
             mock_call.reset_mock()
+
+    @mock.patch.object(ao.Action, 'signal')
+    @mock.patch.object(dobj.Dependency, 'get_depended')
+    def test_signal_cancel(self, mock_dobj, mock_signal):
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id=ACTION_ID)
+        action.load = mock.Mock()
+        action.set_status = mock.Mock()
+        mock_dobj.return_value = None
+
+        action.status = action.RUNNING
+        action.signal_cancel()
+
+        action.load.assert_not_called()
+        action.set_status.assert_not_called()
+        mock_dobj.assert_called_once_with(action.context, action.id)
+        mock_signal.assert_called_once_with(action.context, action.id,
+                                            action.SIG_CANCEL)
+
+    @mock.patch.object(ao.Action, 'signal')
+    @mock.patch.object(dobj.Dependency, 'get_depended')
+    def test_signal_cancel_children(self, mock_dobj, mock_signal):
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id=ACTION_ID)
+        child_status_mock = mock.Mock()
+        children = []
+        for child_id in CHILD_IDS:
+            child = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id=child_id)
+            child.status = child.READY
+            child.set_status = child_status_mock
+            children.append(child)
+        mock_dobj.return_value = CHILD_IDS
+        action.load = mock.Mock()
+        action.load.side_effect = children
+
+        action.status = action.RUNNING
+        action.signal_cancel()
+
+        mock_dobj.assert_called_once_with(action.context, action.id)
+        child_status_mock.assert_not_called()
+        self.assertEqual(3, mock_signal.call_count)
+        self.assertEqual(2, action.load.call_count)
+
+    @mock.patch.object(ao.Action, 'signal')
+    @mock.patch.object(dobj.Dependency, 'get_depended')
+    def test_signal_cancel_children_lifecycle(self, mock_dobj, mock_signal):
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id=ACTION_ID)
+        child_status_mock = mock.Mock()
+        children = []
+        for child_id in CHILD_IDS:
+            child = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id=child_id)
+            child.status = child.WAITING_LIFECYCLE_COMPLETION
+            child.set_status = child_status_mock
+            children.append(child)
+        mock_dobj.return_value = CHILD_IDS
+        action.load = mock.Mock()
+        action.load.side_effect = children
+
+        action.status = action.RUNNING
+        action.signal_cancel()
+
+        mock_dobj.assert_called_once_with(action.context, action.id)
+        self.assertEqual(2, child_status_mock.call_count)
+        self.assertEqual(3, mock_signal.call_count)
+        self.assertEqual(2, action.load.call_count)
+
+    @mock.patch.object(ao.Action, 'signal')
+    @mock.patch.object(dobj.Dependency, 'get_depended')
+    def test_signal_cancel_lifecycle(self, mock_dobj, mock_signal):
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id=ACTION_ID)
+        action.load = mock.Mock()
+        action.set_status = mock.Mock()
+        mock_dobj.return_value = None
+
+        action.status = action.WAITING_LIFECYCLE_COMPLETION
+        action.signal_cancel()
+
+        action.load.assert_not_called()
+        action.set_status.assert_called_once_with(action.RES_CANCEL,
+                                                  'Action execution cancelled')
+        mock_dobj.assert_called_once_with(action.context, action.id)
+        mock_signal.assert_called_once_with(action.context, action.id,
+                                            action.SIG_CANCEL)
+
+    @mock.patch.object(ao.Action, 'signal')
+    @mock.patch.object(dobj.Dependency, 'get_depended')
+    def test_signal_cancel_immutable(self, mock_dobj, mock_signal):
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id=ACTION_ID)
+        action.load = mock.Mock()
+        action.set_status = mock.Mock()
+        mock_dobj.return_value = None
+
+        action.status = action.FAILED
+        self.assertRaises(exception.ActionImmutable, action.signal_cancel)
+
+        action.load.assert_not_called()
+        action.set_status.assert_not_called()
+        mock_signal.aseert_not_called()
 
     def test_execute_default(self):
         action = ab.Action.__new__(DummyAction, OBJID, 'BOOM', self.ctx)
@@ -1019,6 +1093,8 @@ class ActionProcTest(base.SenlinTestCase):
     def test_action_proc_successful(self, mock_mark, mock_load,
                                     mock_event_info):
         action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
+        action.is_cancelled = mock.Mock()
+        action.is_cancelled.return_value = False
         mock_obj = mock.Mock()
         action.entity = mock_obj
         self.patchobject(action, 'execute',
@@ -1039,6 +1115,8 @@ class ActionProcTest(base.SenlinTestCase):
     @mock.patch.object(ao.Action, 'mark_failed')
     def test_action_proc_failed_error(self, mock_mark, mock_load, mock_info):
         action = ab.Action(OBJID, 'CLUSTER_ACTION', self.ctx, id=ACTION_ID)
+        action.is_cancelled = mock.Mock()
+        action.is_cancelled.return_value = False
         action.entity = mock.Mock(id=CLUSTER_ID, name='fake-cluster')
 
         self.patchobject(action, 'execute', side_effect=Exception('Boom!'))
@@ -1052,3 +1130,26 @@ class ActionProcTest(base.SenlinTestCase):
                                           project_safe=False)
         mock_info.assert_called_once_with(action, 'start', 'ACTION')
         mock_status.assert_called_once_with(action.RES_ERROR, 'Boom!')
+
+    @mock.patch.object(EVENT, 'info')
+    @mock.patch.object(ab.Action, 'load')
+    @mock.patch.object(ao.Action, 'mark_failed')
+    def test_action_proc_is_cancelled(self, mock_mark, mock_load, mock_info):
+        action = ab.Action(OBJID, 'CLUSTER_ACTION', self.ctx, id=ACTION_ID)
+        action.is_cancelled = mock.Mock()
+        action.is_cancelled.return_value = True
+        action.entity = mock.Mock(id=CLUSTER_ID, name='fake-cluster')
+
+        mock_status = self.patchobject(action, 'set_status')
+        mock_load.return_value = action
+
+        res = ab.ActionProc(self.ctx, 'ACTION')
+        self.assertIs(True, res)
+
+        mock_load.assert_called_once_with(self.ctx, action_id='ACTION',
+                                          project_safe=False)
+
+        mock_info.assert_not_called()
+        mock_status.assert_called_once_with(
+            action.RES_CANCEL,
+            'CLUSTER_ACTION [%s] cancelled' % ACTION_ID[:8])

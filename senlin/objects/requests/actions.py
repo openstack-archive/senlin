@@ -17,6 +17,7 @@ from senlin.objects import fields
 
 @base.SenlinObjectRegistry.register
 class ActionCreateRequestBody(base.SenlinObject):
+
     fields = {
         'name': fields.NameField(),
         'cluster_id': fields.StringField(),
@@ -66,4 +67,13 @@ class ActionDeleteRequest(base.SenlinObject):
 
     fields = {
         'identity': fields.StringField()
+    }
+
+
+@base.SenlinObjectRegistry.register
+class ActionUpdateRequest(base.SenlinObject):
+
+    fields = {
+        'identity': fields.StringField(),
+        'status': fields.StringField()
     }
