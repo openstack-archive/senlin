@@ -73,6 +73,7 @@ Proposed Changes
    container profile, which can be used to determine the placement of
    containers. Since Senlin supports scaling, some rules should be obeyed
    to cooperate host_node and host_cluster usage.
+
    * Only container type profile can contain 'host_node' and 'host_cluster'
      properties.
    * Container type profile must contain both 'host_node' and 'host_cluster'
