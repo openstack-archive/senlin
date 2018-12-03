@@ -40,11 +40,12 @@ from senlin.rpc import client as rpc_client
 LOG = logging.getLogger(__name__)
 
 
-def _chase_up(start_time, interval):
+def _chase_up(start_time, interval, name='Poller'):
     """Utility function to check if there are missed intervals.
 
     :param start_time: A time object representing the starting time.
     :param interval: An integer specifying the time interval in seconds.
+    :param name: Name of the caller for identification in logs.
     :returns: Number of seconds to sleep before next round.
     """
     end_time = timeutils.utcnow(True)
@@ -52,7 +53,7 @@ def _chase_up(start_time, interval):
     # check if we have missed any intervals?
     missed = int((elapsed - 0.0000001) / interval)
     if missed >= 1:
-        LOG.warning("Poller missed %s intervals for checking", missed)
+        LOG.warning("%s missed %s intervals for checking", name, missed)
     return (missed + 1) * interval - elapsed
 
 
@@ -418,17 +419,20 @@ class HealthManager(service.Service):
         }
         self.health_check_types = defaultdict(lambda: [])
 
-    def _dummy_task(self):
-        """A Dummy task that is queued on the health manager thread group.
+    def task(self):
+        """Task that is queued on the health manager thread group.
 
         The task is here so that the service always has something to wait()
         on, or else the process will exit.
         """
+        start_time = timeutils.utcnow(True)
 
         try:
             self._load_runtime_registry()
         except Exception as ex:
             LOG.error("Failed when running '_load_runtime_registry': %s", ex)
+        return _chase_up(start_time, cfg.CONF.periodic_interval,
+                         name='Health manager task')
 
     def _add_listener(self, cluster_id, recover_action):
         """Routine to be executed for adding cluster listener.
@@ -670,8 +674,9 @@ class HealthManager(service.Service):
             LOG.info("Loading cluster %(c)s enabled=%(e)s for "
                      "health monitoring",
                      {'c': r.cluster_id, 'e': r.enabled})
-
             if r.enabled:
+                # Stop any running checks for entry before starting.
+                self._stop_check(entry)
                 entry = self._start_check(entry)
             if entry:
                 self.rt['registries'].append(entry)
@@ -688,7 +693,7 @@ class HealthManager(service.Service):
         server = rpc.get_rpc_server(self.target, self)
         server.start()
 
-        self.TG.add_timer(cfg.CONF.periodic_interval, self._dummy_task)
+        self.TG.add_dynamic_timer(self.task, None, cfg.CONF.periodic_interval)
 
     def stop(self):
         self.TG.stop_timers()

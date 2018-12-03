@@ -973,13 +973,14 @@ class TestHealthManager(base.SenlinTestCase):
         self.assertEqual(0, len(self.hm.rt['registries']))
 
     @mock.patch.object(hm.HealthManager, "_load_runtime_registry")
-    def test_dummy_task(self, mock_load):
-        self.hm._dummy_task()
+    def test_task(self, mock_load):
+        self.hm.task()
         mock_load.assert_called_once_with()
 
+    @mock.patch.object(hm.HealthManager, "_stop_check")
     @mock.patch.object(hm.HealthManager, "_start_check")
     @mock.patch.object(hr.HealthRegistry, 'claim')
-    def test_load_runtime_registry(self, mock_claim, mock_check):
+    def test_load_runtime_registry(self, mock_claim, mock_check, mock_stop):
         fake_claims = [
             {
                 'cluster_id': 'CID1',
@@ -1012,6 +1013,7 @@ class TestHealthManager(base.SenlinTestCase):
                 mock.call(fake_claims[0])
             ]
         )
+        mock_stop.assert_called_once_with(fake_claims[0])
 
     @mock.patch.object(obj_profile.Profile, 'get')
     @mock.patch.object(obj_cluster.Cluster, 'get')
@@ -1787,7 +1789,7 @@ class TestHealthManager(base.SenlinTestCase):
         mock_get_rpc = self.patchobject(messaging, 'get_rpc_server',
                                         return_value=x_rpc_server)
         x_timer = mock.Mock()
-        mock_add_timer = self.patchobject(self.hm.TG, 'add_timer',
+        mock_add_timer = self.patchobject(self.hm.TG, 'add_dynamic_timer',
                                           return_value=x_timer)
 
         # do it
@@ -1800,7 +1802,7 @@ class TestHealthManager(base.SenlinTestCase):
         mock_get_rpc.assert_called_once_with(target, self.hm)
         x_rpc_server.start.assert_called_once_with()
         mock_add_timer.assert_called_once_with(
-            cfg.CONF.periodic_interval, self.hm._dummy_task)
+            self.hm.task, None, cfg.CONF.periodic_interval)
 
     @mock.patch.object(hr.HealthRegistry, 'create')
     @mock.patch.object(hm.HealthManager, '_start_check')
