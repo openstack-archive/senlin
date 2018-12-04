@@ -441,10 +441,10 @@ class TestProfileBase(base.SenlinTestCase):
             side_effect=exception.InternalError(code=400, message='BAD'))
         obj = mock_load
 
-        res = profile.check_object(self.ctx, obj)
+        self.assertRaises(exception.InternalError, profile.check_object,
+                          self.ctx, obj)
 
         profile.load(self.ctx).do_check.assert_called_once_with(obj)
-        self.assertFalse(res)
 
     @mock.patch.object(pb.Profile, 'load')
     def test_update_object_with_profile(self, mock_load):

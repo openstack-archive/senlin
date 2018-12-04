@@ -21,6 +21,7 @@ from oslo_utils import timeutils as tu
 
 from senlin.common import consts
 from senlin.common import context
+from senlin.common import exception as exc
 from senlin.common import messaging
 from senlin.common import utils
 from senlin.engine import health_manager as hm
@@ -618,7 +619,27 @@ class TestNodePollStatusHealthCheck(base.SenlinTestCase):
     @mock.patch.object(tu, 'is_older_than')
     def test_run_health_check_healthy(self, mock_tu, mock_node_obj):
         x_entity = mock.Mock()
-        x_entity.do_check.return_value = True
+        x_entity.do_healthcheck.return_value = True
+        mock_node_obj.return_value = x_entity
+
+        ctx = mock.Mock()
+        node = mock.Mock(id='FAKE_NODE1', status="ERROR",
+                         updated_at='2018-08-13 18:00:00',
+                         init_at='2018-08-13 17:00:00')
+
+        # do it
+        res = self.hc.run_health_check(ctx, node)
+
+        self.assertTrue(res)
+        mock_tu.assert_not_called()
+
+    @mock.patch.object(node_mod.Node, '_from_object')
+    @mock.patch.object(tu, 'is_older_than')
+    def test_run_health_check_healthy_internal_error(
+            self, mock_tu, mock_node_obj):
+        x_entity = mock.Mock()
+        x_entity.do_healthcheck.side_effect = exc.InternalError(
+            message='error')
         mock_node_obj.return_value = x_entity
 
         ctx = mock.Mock()
@@ -636,7 +657,7 @@ class TestNodePollStatusHealthCheck(base.SenlinTestCase):
     @mock.patch.object(tu, 'is_older_than')
     def test_run_health_check_unhealthy(self, mock_tu, mock_node_obj):
         x_entity = mock.Mock()
-        x_entity.do_check.return_value = False
+        x_entity.do_healthcheck.return_value = False
         mock_node_obj.return_value = x_entity
 
         mock_tu.return_value = True
@@ -657,7 +678,7 @@ class TestNodePollStatusHealthCheck(base.SenlinTestCase):
     def test_run_health_check_unhealthy_within_timeout(
             self, mock_tu, mock_node_obj):
         x_entity = mock.Mock()
-        x_entity.do_check.return_value = False
+        x_entity.do_healthcheck.return_value = False
         mock_node_obj.return_value = x_entity
 
         mock_tu.return_value = False
@@ -793,8 +814,7 @@ class TestNodePollUrlHealthCheck(base.SenlinTestCase):
         res = self.hc.run_health_check(ctx, node)
 
         self.assertTrue(res)
-        mock_url_fetch.assert_called_once_with('FAKE_EXPANDED_URL', timeout=1,
-                                               verify=True)
+        mock_url_fetch.assert_not_called()
 
     @mock.patch.object(tu, "is_older_than")
     @mock.patch.object(hm.NodePollUrlHealthCheck, "_expand_url_template")
@@ -814,8 +834,8 @@ class TestNodePollUrlHealthCheck(base.SenlinTestCase):
         res = self.hc.run_health_check(ctx, node)
 
         self.assertTrue(res)
-        mock_url_fetch.assert_called_once_with('FAKE_EXPANDED_URL', timeout=1,
-                                               verify=True)
+        mock_url_fetch.assert_has_calls(
+            [mock.call('FAKE_EXPANDED_URL', timeout=1, verify=True)])
 
     @mock.patch.object(tu, "is_older_than")
     @mock.patch.object(hm.NodePollUrlHealthCheck, "_expand_url_template")
@@ -836,17 +856,14 @@ class TestNodePollUrlHealthCheck(base.SenlinTestCase):
         res = self.hc.run_health_check(ctx, node)
 
         self.assertTrue(res)
-        mock_url_fetch.assert_called_once_with('FAKE_EXPANDED_URL', timeout=1,
-                                               verify=True)
+        mock_url_fetch.assert_has_calls(
+            [mock.call('FAKE_EXPANDED_URL', timeout=1, verify=True)])
 
-    @mock.patch.object(time, "sleep")
     @mock.patch.object(tu, "is_older_than")
     @mock.patch.object(hm.NodePollUrlHealthCheck, "_expand_url_template")
     @mock.patch.object(utils, 'url_fetch')
-    def test_run_health_check_unhealthy(self,
-                                        mock_url_fetch,
-                                        mock_expand_url, mock_time,
-                                        mock_sleep):
+    def test_run_health_check_unhealthy(self, mock_url_fetch, mock_expand_url,
+                                        mock_time):
         ctx = mock.Mock()
         node = mock.Mock()
         node.status = consts.NS_ACTIVE
@@ -865,16 +882,13 @@ class TestNodePollUrlHealthCheck(base.SenlinTestCase):
                 mock.call('FAKE_EXPANDED_URL', timeout=1, verify=True)
             ]
         )
-        mock_sleep.assert_has_calls([mock.call(1), mock.call(1)])
 
-    @mock.patch.object(time, "sleep")
     @mock.patch.object(tu, "is_older_than")
     @mock.patch.object(hm.NodePollUrlHealthCheck, "_expand_url_template")
     @mock.patch.object(utils, 'url_fetch')
     def test_run_health_check_conn_error(self,
                                          mock_url_fetch,
-                                         mock_expand_url, mock_time,
-                                         mock_sleep):
+                                         mock_expand_url, mock_time):
         ctx = mock.Mock()
         node = mock.Mock()
         node.status = consts.NS_ACTIVE
@@ -893,15 +907,31 @@ class TestNodePollUrlHealthCheck(base.SenlinTestCase):
                 mock.call('FAKE_EXPANDED_URL', timeout=1, verify=True)
             ]
         )
-        mock_sleep.assert_has_calls([mock.call(1), mock.call(1)])
 
-    @mock.patch.object(time, "sleep")
+    @mock.patch.object(tu, "is_older_than")
+    @mock.patch.object(hm.NodePollUrlHealthCheck, "_expand_url_template")
+    @mock.patch.object(utils, 'url_fetch')
+    def test_run_health_check_conn_other_error(self,
+                                               mock_url_fetch,
+                                               mock_expand_url, mock_time):
+        ctx = mock.Mock()
+        node = mock.Mock()
+        node.status = consts.NS_ACTIVE
+        node.id = 'FAKE_ID'
+        mock_time.return_value = True
+        mock_expand_url.side_effect = Exception('blah')
+
+        # do it
+        res = self.hc.run_health_check(ctx, node)
+
+        self.assertTrue(res)
+        mock_url_fetch.assert_not_called()
+
     @mock.patch.object(tu, "is_older_than")
     @mock.patch.object(hm.NodePollUrlHealthCheck, "_expand_url_template")
     @mock.patch.object(utils, 'url_fetch')
     def test_run_health_check_conn_error_noop(
-            self, mock_url_fetch, mock_expand_url, mock_time,
-            mock_sleep):
+            self, mock_url_fetch, mock_expand_url, mock_time):
         ctx = mock.Mock()
         node = mock.Mock()
         node.status = consts.NS_ACTIVE
@@ -921,7 +951,6 @@ class TestNodePollUrlHealthCheck(base.SenlinTestCase):
                 mock.call('FAKE_EXPANDED_URL', timeout=1, verify=True),
             ]
         )
-        mock_sleep.assert_not_called()
 
 
 class TestHealthManager(base.SenlinTestCase):
