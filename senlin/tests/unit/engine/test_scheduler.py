@@ -70,7 +70,8 @@ class SchedulerTest(base.SenlinTestCase):
         tgm = scheduler.ThreadGroupManager()
         mock_group.add_timer.assert_called_once_with(
             cfg.CONF.periodic_interval,
-            tgm._service_task)
+            tgm._service_task,
+            None)
 
     def test_start(self):
         def f():
