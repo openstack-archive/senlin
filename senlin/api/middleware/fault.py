@@ -45,6 +45,7 @@ class FaultWrapper(wsgi.Middleware):
         'ActionConflict': webob.exc.HTTPConflict,
         'ActionCooldown': webob.exc.HTTPConflict,
         'ActionInProgress': webob.exc.HTTPConflict,
+        'ActionImmutable': webob.exc.HTTPConflict,
         'BadRequest': webob.exc.HTTPBadRequest,
         'FeatureNotSupported': webob.exc.HTTPConflict,
         'Forbidden': webob.exc.HTTPForbidden,

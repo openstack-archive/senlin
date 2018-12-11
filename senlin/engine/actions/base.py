@@ -271,8 +271,8 @@ class Action(object):
 
     @staticmethod
     def _check_action_lock(target, action):
-        if action == consts.CLUSTER_DELETE:
-            # CLUSTER_DELETE actions do not care about cluster locks
+        if action == consts.CLUSTER_DELETE or action == consts.NODE_DELETE:
+            # DELETE actions do not care about locks
             return
         elif (action in list(consts.CLUSTER_ACTION_NAMES) and
                 cl.ClusterLock.is_locked(target)):
@@ -286,14 +286,11 @@ class Action(object):
     @staticmethod
     def _check_conflicting_actions(ctx, target, action):
         conflict_actions = ao.Action.get_all_active_by_target(ctx, target)
-        if conflict_actions and action == consts.CLUSTER_DELETE:
-            delete_ids = [a['id'] for a in conflict_actions
-                          if a['action'] == consts.CLUSTER_DELETE]
-            if delete_ids:
-                raise exception.ActionConflict(
-                    type=action, target=target, actions=",".join(
-                        delete_ids))
-        elif conflict_actions:
+        # Ignore conflicting actions on deletes.
+        if not conflict_actions or action in (consts.CLUSTER_DELETE,
+                                              consts.NODE_DELETE):
+            return
+        else:
             action_ids = [a['id'] for a in conflict_actions]
             raise exception.ActionConflict(
                 type=action, target=target, actions=",".join(action_ids))
@@ -318,20 +315,58 @@ class Action(object):
             return
 
         if cmd == self.SIG_CANCEL:
-            expected = (self.INIT, self.WAITING, self.READY, self.RUNNING)
+            expected = (self.INIT, self.WAITING, self.READY, self.RUNNING,
+                        self.WAITING_LIFECYCLE_COMPLETION)
         elif cmd == self.SIG_SUSPEND:
             expected = (self.RUNNING)
         else:  # SIG_RESUME
             expected = (self.SUSPENDED)
 
         if self.status not in expected:
-            LOG.error("Action (%(id)s) is in status (%(actual)s) while "
-                      "expected status must be one of (%(expected)s).",
-                      dict(id=self.id[:8], expected=expected,
-                           actual=self.status))
+            LOG.info("Action (%(id)s) is in status (%(actual)s) while "
+                     "expected status must be one of (%(expected)s).",
+                     dict(id=self.id[:8], expected=expected,
+                          actual=self.status))
             return
 
         ao.Action.signal(self.context, self.id, cmd)
+
+    def signal_cancel(self):
+        """Signal the action and any depended actions to cancel.
+
+        If the action or any depended actions are in status
+        'WAITING_LIFECYCLE_COMPLETION' or 'INIT' update the status to cancelled
+         directly.
+
+        :raises: `ActionImmutable` if the action is in an unchangeable state
+        """
+        expected = (self.INIT, self.WAITING, self.READY, self.RUNNING,
+                    self.WAITING_LIFECYCLE_COMPLETION)
+
+        if self.status not in expected:
+            raise exception.ActionImmutable(id=self.id[:8], expected=expected,
+                                            actual=self.status)
+
+        ao.Action.signal(self.context, self.id, self.SIG_CANCEL)
+
+        if self.status in (self.WAITING_LIFECYCLE_COMPLETION, self.INIT):
+            self.set_status(self.RES_CANCEL, 'Action execution cancelled')
+
+        depended = dobj.Dependency.get_depended(self.context, self.id)
+        if not depended:
+            return
+
+        for child in depended:
+            # Try to cancel all dependant actions
+            action = self.load(self.context, action_id=child)
+            if not action.is_cancelled():
+                ao.Action.signal(self.context, child, self.SIG_CANCEL)
+            # If the action is in WAITING_LIFECYCLE_COMPLETION or INIT update
+            # the status to CANCELLED immediately.
+            if action.status in (action.WAITING_LIFECYCLE_COMPLETION,
+                                 action.INIT):
+                action.set_status(action.RES_CANCEL,
+                                  'Action execution cancelled')
 
     def execute(self, **kwargs):
         """Execute the action.
@@ -409,6 +444,8 @@ class Action(object):
     def is_timeout(self, timeout=None):
         if timeout is None:
             timeout = self.timeout
+        if self.start_time is None:
+            return False
         time_elapse = wallclock() - self.start_time
         return time_elapse > timeout
 
@@ -592,6 +629,13 @@ def ActionProc(ctx, action_id):
     if action is None:
         LOG.error('Action "%s" could not be found.', action_id)
         return False
+
+    if action.is_cancelled():
+        reason = '%(action)s [%(id)s] cancelled' % {
+            'action': action.action, 'id': action.id[:8]}
+        action.set_status(action.RES_CANCEL, reason)
+        LOG.info(reason)
+        return True
 
     EVENT.info(action, consts.PHASE_START, action_id[:8])
 

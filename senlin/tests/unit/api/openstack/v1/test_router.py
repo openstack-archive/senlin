@@ -375,6 +375,16 @@ class RoutesTest(base.SenlinTestCase):
                 'action_id': 'bbbb'
             })
 
+        self.assertRoute(
+            self.m,
+            '/actions/bbbb',
+            'PATCH',
+            'update',
+            'ActionController',
+            {
+                'action_id': 'bbbb'
+            })
+
     def test_receiver_collection(self):
         self.assertRoute(
             self.m,

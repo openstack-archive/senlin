@@ -255,6 +255,10 @@ class API(wsgi.Router):
                                "/actions/{action_id}",
                                action="get",
                                conditions={'method': 'GET'})
+            sub_mapper.connect("action_update",
+                               "/actions/{action_id}",
+                               action="update",
+                               conditions={'method': 'PATCH'})
 
         # Receivers
         res = wsgi.Resource(receivers.ReceiverController(conf))

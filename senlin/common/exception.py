@@ -200,6 +200,11 @@ class ActionCooldown(SenlinException):
                 "progress")
 
 
+class ActionImmutable(SenlinException):
+    msg_fmt = _("Action (%(id)s) is in status (%(actual)s) while expected "
+                "status must be one of (%(expected)s).")
+
+
 class NodeNotOrphan(SenlinException):
     msg_fmt = _("%(message)s")
 

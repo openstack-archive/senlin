@@ -142,3 +142,46 @@ Response Example
 
 .. literalinclude:: samples/action-get-response.json
    :language: javascript
+
+Update action
+=============
+
+.. rest_method::  PATCH /v1/actions/{action_id}
+
+    min_version: 1.12
+
+Update status of an action.
+
+This API is only available since API microversion 1.12.
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - OpenStack-API-Version: microversion
+  - action_id: action_id_url
+  - action: action
+  - status: action_status_update
+
+Request Example
+---------------
+
+.. literalinclude:: samples/action-get-request.json
+   :language: javascript
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 409
+   - 503

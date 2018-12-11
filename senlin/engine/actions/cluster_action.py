@@ -68,23 +68,33 @@ class ClusterAction(base.Action):
         status = self.get_status()
         while status != self.READY:
             if status == self.FAILED:
-                reason = ('%(action)s [%(id)s] failed') % {
-                    'action': self.action, 'id': self.id[:8]}
+                reason = ('%(action)s [%(id)s] failed' % {
+                    'action': self.action, 'id': self.id[:8]})
                 LOG.debug(reason)
                 return self.RES_ERROR, reason
 
             if self.is_cancelled():
                 # During this period, if cancel request comes, cancel this
-                # operation immediately, then release the cluster lock
-                reason = ('%(action)s [%(id)s] cancelled') % {
-                    'action': self.action, 'id': self.id[:8]}
+                # operation immediately after signaling children to cancel,
+                # then release the cluster lock
+                reason = ('%(action)s [%(id)s] cancelled' % {
+                    'action': self.action, 'id': self.id[:8]})
                 LOG.debug(reason)
                 return self.RES_CANCEL, reason
 
+            # When a child action is cancelled the parent action will update
+            # its status to cancelled as well this allows it to exit.
+            if status == self.CANCELLED:
+                if self.check_children_complete():
+                    reason = ('%(action)s [%(id)s] cancelled' % {
+                        'action': self.action, 'id': self.id[:8]})
+                    LOG.debug(reason)
+                    return self.RES_CANCEL, reason
+
             if self.is_timeout():
                 # Action timeout, return
-                reason = ('%(action)s [%(id)s] timeout') % {
-                    'action': self.action, 'id': self.id[:8]}
+                reason = ('%(action)s [%(id)s] timeout' % {
+                    'action': self.action, 'id': self.id[:8]})
                 LOG.debug(reason)
                 return self.RES_TIMEOUT, reason
 
@@ -100,8 +110,22 @@ class ClusterAction(base.Action):
             # Continue waiting (with reschedule)
             scheduler.reschedule(self.id, 3)
             status = self.get_status()
+            dispatcher.start_action()
 
         return self.RES_OK, 'All dependents ended with success'
+
+    def check_children_complete(self):
+        depended = dobj.Dependency.get_depended(self.context, self.id)
+        if not depended:
+            return True
+
+        for child in depended:
+            # Try to cancel all dependant actions
+            action = base.Action.load(self.context, action_id=child)
+            if action.get_status() not in (action.CANCELLED, action.SUCCEEDED,
+                                           action.FAILED):
+                return False
+        return True
 
     def _create_nodes(self, count):
         """Utility method for node creation.

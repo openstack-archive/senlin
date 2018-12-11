@@ -99,3 +99,17 @@ class ActionController(wsgi.Controller):
         action = self.rpc_client.call(req.context, 'action_get', obj)
 
         return {'action': action}
+
+    @wsgi.Controller.api_version('1.12')
+    @util.policy_enforce
+    def update(self, req, action_id, body):
+        data = body.get('action')
+        if data is None:
+            raise exc.HTTPBadRequest(_("Malformed request data, missing "
+                                       "'action' key in request body."))
+        data['identity'] = action_id
+
+        obj = util.parse_request('ActionUpdateRequest', req, data)
+        self.rpc_client.call(req.context, 'action_update', obj)
+
+        raise exc.HTTPAccepted

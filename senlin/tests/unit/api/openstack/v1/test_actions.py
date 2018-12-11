@@ -14,6 +14,8 @@ import mock
 import six
 from webob import exc
 
+from oslo_serialization import jsonutils
+
 from senlin.api.common import util
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import actions
@@ -309,3 +311,51 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', six.text_type(resp))
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_action_update_cancel(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        aid = 'xxxx-yyyy-zzzz'
+        body = {
+            'action': {
+                'status': 'CANCELLED'
+            }
+        }
+
+        req = self._patch('/actions/%(action_id)s' % {'action_id': aid},
+                          jsonutils.dumps(body), version='1.12')
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        self.assertRaises(exc.HTTPAccepted,
+                          self.controller.update, req,
+                          action_id=aid, body=body)
+
+        mock_parse.assert_called_once_with(
+            'ActionUpdateRequest', req,
+            {
+                'identity': aid,
+                'status': 'CANCELLED'
+            })
+        mock_call.assert_called_once_with(req.context, 'action_update', obj)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_action_update_invalid(self, mock_call, mock_parse, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        aid = 'xxxx-yyyy-zzzz'
+        body = {'status': 'FOO'}
+
+        req = self._patch('/actions/%(action_id)s' % {'action_id': aid},
+                          jsonutils.dumps(body), version='1.12')
+
+        ex = self.assertRaises(exc.HTTPBadRequest,
+                               self.controller.update, req,
+                               action_id=aid, body=body)
+
+        self.assertEqual("Malformed request data, missing 'action' key "
+                         "in request body.", six.text_type(ex))
+
+        self.assertFalse(mock_parse.called)
+        self.assertFalse(mock_call.called)

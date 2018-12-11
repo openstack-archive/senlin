@@ -117,3 +117,8 @@ it can be used by both users and developers.
   response code 409 when a scaling action conflicts with one already
   being processed or a cooldown for a scaling action is encountered.
 
+1.12
+----
+- Added ``action_update`` API. This API enables users to update the status of
+  an action (only CANCELLED is supported). An action that spawns dependent
+  actions will attempt to cancel all dependent actions.

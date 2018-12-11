@@ -140,3 +140,16 @@ class TestActionDelete(test_base.SenlinTestCase):
     def test_action_get_request(self):
         sot = actions.ActionDeleteRequest(**self.body)
         self.assertEqual('test-action', sot.identity)
+
+
+class TestActionUpdate(test_base.SenlinTestCase):
+
+    body = {
+        'identity': 'test-action',
+        'status': 'CANCELLED'
+    }
+
+    def test_action_update_request(self):
+        sot = actions.ActionUpdateRequest(**self.body)
+        self.assertEqual('test-action', sot.identity)
+        self.assertEqual('CANCELLED', sot.status)

@@ -1272,7 +1272,7 @@ def _mark_cancelled(session, action_id, timestamp, reason=None):
         'owner': None,
         'status': consts.ACTION_CANCELLED,
         'status_reason': (six.text_type(reason) if reason else
-                          'Action execution failed'),
+                          'Action execution cancelled'),
         'end_time': timestamp,
     }
     query.update(values, synchronize_session=False)
