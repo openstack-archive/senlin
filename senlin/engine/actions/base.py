@@ -368,6 +368,38 @@ class Action(object):
                 action.set_status(action.RES_CANCEL,
                                   'Action execution cancelled')
 
+    def force_cancel(self):
+        """Force the action and any depended actions to cancel.
+
+        If the action or any depended actions are in status 'INIT', 'WAITING',
+        'READY', 'RUNNING', or 'WAITING_LIFECYCLE_COMPLETION' immediately
+        update their status to cancelled. This should only be used if an action
+        is stuck/dead and has no expectation of ever completing.
+
+        :raises: `ActionImmutable` if the action is in an unchangeable state
+        """
+        expected = (self.INIT, self.WAITING, self.READY, self.RUNNING,
+                    self.WAITING_LIFECYCLE_COMPLETION)
+        if self.status not in expected:
+            raise exception.ActionImmutable(id=self.id[:8], expected=expected,
+                                            actual=self.status)
+        LOG.debug('Forcing action %s to cancel.', self.id)
+        self.set_status(self.RES_CANCEL, 'Action execution force cancelled')
+
+        depended = dobj.Dependency.get_depended(self.context, self.id)
+        if not depended:
+            return
+
+        for child in depended:
+            # Force cancel all dependant actions
+            action = self.load(self.context, action_id=child)
+            if action.status in (action.INIT, action.WAITING, action.READY,
+                                 action.RUNNING,
+                                 action.WAITING_LIFECYCLE_COMPLETION):
+                LOG.debug('Forcing action %s to cancel.', action.id)
+                action.set_status(action.RES_CANCEL,
+                                  'Action execution force cancelled')
+
     def execute(self, **kwargs):
         """Execute the action.
 

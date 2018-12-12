@@ -85,9 +85,13 @@ class ControllerTest(object):
         return self._simple_request(path, params=params, method='DELETE')
 
     def _data_request(self, path, data, content_type='application/json',
-                      method='POST', version=None):
+                      method='POST', version=None, params=None):
         environ = self._environ(path)
         environ['REQUEST_METHOD'] = method
+
+        if params:
+            qs = "&".join(["=".join([k, str(params[k])]) for k in params])
+            environ['QUERY_STRING'] = qs
 
         req = wsgi.Request(environ)
         req.context = utils.dummy_context('api_test_user', self.project)
@@ -104,10 +108,10 @@ class ControllerTest(object):
         return self._data_request(path, data, content_type, method='PUT',
                                   version=version)
 
-    def _patch(self, path, data, content_type='application/json',
+    def _patch(self, path, data, params=None, content_type='application/json',
                version=None):
         return self._data_request(path, data, content_type, method='PATCH',
-                                  version=version)
+                                  version=version, params=params)
 
     def tearDown(self):
         # Common tearDown to assert that policy enforcement happens for all

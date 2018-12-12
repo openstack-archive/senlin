@@ -163,6 +163,7 @@ Request Parameters
   - action_id: action_id_url
   - action: action
   - status: action_status_update
+  - force: action_update_force_query
 
 Request Example
 ---------------

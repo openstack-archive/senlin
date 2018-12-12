@@ -2315,8 +2315,11 @@ class EngineService(service.Service):
         if req.status == consts.ACTION_CANCELLED:
             action = action_mod.Action.load(ctx, req.identity,
                                             project_safe=False)
-            LOG.info("Signaling action '%s' to Cancel.", req.identity)
-            action.signal_cancel()
+            if req.force:
+                action.force_cancel()
+            else:
+                LOG.info("Signaling action '%s' to Cancel.", req.identity)
+                action.signal_cancel()
         else:
             msg = ("Unknown status %(status)s for action %(action)s" %
                    {"status": req.status, "action": req.identity})
