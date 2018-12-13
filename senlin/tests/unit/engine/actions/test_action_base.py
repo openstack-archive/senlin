@@ -604,7 +604,7 @@ class ActionBaseTest(base.SenlinTestCase):
 
         action.load.assert_not_called()
         action.set_status.assert_not_called()
-        mock_signal.aseert_not_called()
+        mock_signal.assert_not_called()
 
     def test_execute_default(self):
         action = ab.Action.__new__(DummyAction, OBJID, 'BOOM', self.ctx)
