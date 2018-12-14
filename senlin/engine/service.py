@@ -2537,6 +2537,8 @@ class EngineService(service.Service):
             raise exception.BadRequest(msg=msg)
 
         data = copy.deepcopy(receiver.params)
+        if data is None:
+            data = {}
         if params:
             data.update(params)
 
