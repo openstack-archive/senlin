@@ -1238,31 +1238,31 @@ def action_mark_ready(context, action_id, timestamp):
 
 
 @retry_on_deadlock
-def _mark_failed(session, action_id, timestamp, reason=None):
+def _mark_failed(action_id, timestamp, reason=None):
     # mark myself as failed
-    query = session.query(models.Action).filter_by(id=action_id)
-    values = {
-        'owner': None,
-        'status': consts.ACTION_FAILED,
-        'status_reason': (six.text_type(reason) if reason else
-                          'Action execution failed'),
-        'end_time': timestamp,
-    }
-    query.update(values, synchronize_session=False)
+    with session_for_write() as session:
+        query = session.query(models.Action).filter_by(id=action_id)
+        values = {
+            'owner': None,
+            'status': consts.ACTION_FAILED,
+            'status_reason': (six.text_type(reason) if reason else
+                              'Action execution failed'),
+            'end_time': timestamp,
+        }
+        query.update(values, synchronize_session=False)
 
-    query = session.query(models.ActionDependency)
-    query = query.filter_by(depended=action_id)
-    dependents = [d.dependent for d in query.all()]
-    query.delete(synchronize_session=False)
+        query = session.query(models.ActionDependency)
+        query = query.filter_by(depended=action_id)
+        dependents = [d.dependent for d in query.all()]
+        query.delete(synchronize_session=False)
 
     for d in dependents:
-        _mark_failed(session, d, timestamp)
+        _mark_failed(d, timestamp)
 
 
 @retry_on_deadlock
 def action_mark_failed(context, action_id, timestamp, reason=None):
-    with session_for_write() as session:
-        _mark_failed(session, action_id, timestamp, reason)
+    _mark_failed(action_id, timestamp, reason)
 
 
 @retry_on_deadlock
@@ -1608,7 +1608,7 @@ def gc_by_engine(engine_id):
                     _release_cluster_lock(session, cl, a.id, 1)
 
             # mark action failed and release lock
-            _mark_failed(session, a.id, timestamp, reason="Engine failure")
+            _mark_failed(a.id, timestamp, reason="Engine failure")
 
 
 # HealthRegistry
