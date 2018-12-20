@@ -122,6 +122,28 @@ class UrlFetchTest(base.SenlinTestCase):
                                       utils.url_fetch, url)
         self.assertIn("Data exceeds", six.text_type(exception))
 
+    @mock.patch.object(requests, 'get')
+    def test_string_response(self, mock_get):
+        url = 'http://example.com/somedata'
+        data = '{ "foo": "bar" }'
+
+        mock_resp = mock.Mock()
+        mock_resp.iter_content.return_value = [data]
+        mock_get.return_value = mock_resp
+
+        self.assertEqual(data, utils.url_fetch(url))
+
+    @mock.patch.object(requests, 'get')
+    def test_byte_response(self, mock_get):
+        url = 'http://example.com/somedata'
+        data = b'{ "foo": "bar" }'
+
+        mock_resp = mock.Mock()
+        mock_resp.iter_content.return_value = [data]
+        mock_get.return_value = mock_resp
+
+        self.assertEqual('{ "foo": "bar" }', utils.url_fetch(url))
+
 
 class TestRandomName(base.SenlinTestCase):
 

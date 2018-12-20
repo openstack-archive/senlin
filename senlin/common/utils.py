@@ -122,6 +122,11 @@ def url_fetch(url, timeout=1, allowed_schemes=('http', 'https'), verify=True):
         reader = resp.iter_content(chunk_size=1000)
         result = ""
         for chunk in reader:
+            if six.PY3 and isinstance(chunk, bytes):
+                # in python 2.7, bytes were implicitly converted to strings
+                # in python 3.5 this is no longer the case so we need this
+                # code to manually convert it
+                chunk = chunk.decode('utf-8')
             result += chunk
             if len(result) > cfg.CONF.max_response_size:
                 raise URLFetchError("Data exceeds maximum allowed size (%s"
