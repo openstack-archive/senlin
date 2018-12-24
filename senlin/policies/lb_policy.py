@@ -571,7 +571,7 @@ class LoadBalancingPolicy(base.Policy):
         # lb_member is None, need to add to lb pool
         if not lb_member:
             values['data'] = data
-            no.Node.update(action.context, values)
+            no.Node.update(action.context, node.id, values)
             return candidates
 
         # was a member of lb pool, check whether has been recreated
@@ -580,7 +580,7 @@ class LoadBalancingPolicy(base.Policy):
                                 handle_err=False)
             data.pop('lb_member', None)
             values['data'] = data
-            no.Node.update(action.context, values)
+            no.Node.update(action.context, node.id, values)
             return candidates
 
         return None

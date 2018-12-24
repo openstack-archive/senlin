@@ -1133,7 +1133,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         res = policy._process_recovery(['NODE'], cp, self.lb_driver, action)
 
         self.assertEqual(['NODE'], res)
-        m_update.assert_called_once_with(action.context, {'data': {}})
+        m_update.assert_called_once_with(action.context, 'NODE', {'data': {}})
 
     @mock.patch.object(no.Node, 'update')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
@@ -1172,4 +1172,4 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         self.assertEqual(['NODE'], res)
         m_remove.assert_called_once_with(action.context, ['NODE'], cp,
                                          self.lb_driver, handle_err=False)
-        m_update.assert_called_once_with(action.context, {'data': {}})
+        m_update.assert_called_once_with(action.context, 'NODE', {'data': {}})
