@@ -40,7 +40,7 @@ class TestChaseUp(base.SenlinTestCase):
         # we assume that the delay before next line is < 5 seconds
         res = hm._chase_up(start, 5)
 
-        self.assertTrue(res <= 5)
+        self.assertLessEqual(res, 5)
 
     def test_more_than_one_interval(self):
         start = tu.utcnow(True)
@@ -49,7 +49,7 @@ class TestChaseUp(base.SenlinTestCase):
         # we assume that the delay before next line is < 5 seconds
         res = hm._chase_up(start, 1)
 
-        self.assertTrue(res <= 1)
+        self.assertLessEqual(res, 1)
 
 
 @mock.patch('oslo_messaging.NotificationFilter')
