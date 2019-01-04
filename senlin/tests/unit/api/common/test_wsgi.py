@@ -245,11 +245,11 @@ class ResourceExceptionHandlingTest(base.SenlinTestCase):
 
     def test_resource_client_exceptions_dont_log_error(self):
         class Controller(object):
-            def __init__(self, excpetion_to_raise):
-                self.excpetion_to_raise = excpetion_to_raise
+            def __init__(self, exception_to_raise):
+                self.exception_to_raise = exception_to_raise
 
             def raise_exception(self, req, body):
-                raise self.excpetion_to_raise()
+                raise self.exception_to_raise()
         actions = {'action': 'raise_exception', 'body': 'data'}
         env = {'wsgiorg.routing_args': [None, actions]}
         request = wsgi.Request.blank('/tests/123', environ=env)
