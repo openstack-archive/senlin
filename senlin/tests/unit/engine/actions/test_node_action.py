@@ -805,7 +805,11 @@ class NodeActionTest(base.SenlinTestCase):
         mock_acquire_node.assert_called_once_with(self.ctx, 'NODE_ID',
                                                   'ACTION_ID', None, False)
         mock_release_node.assert_called_once_with('NODE_ID', 'ACTION_ID')
-        mock_check.assert_called_once_with('FAKE_CLUSTER', 'BEFORE')
+        check_calls = [
+            mock.call('FAKE_CLUSTER', 'BEFORE'),
+            mock.call('FAKE_CLUSTER', 'AFTER')
+        ]
+        mock_check.assert_has_calls(check_calls)
 
     @mock.patch.object(lock, 'cluster_lock_acquire')
     @mock.patch.object(lock, 'cluster_lock_release')
