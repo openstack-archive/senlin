@@ -326,8 +326,11 @@ class ClusterAction(base.Action):
         for action_id, node_id in child:
             status = ao.Action.check_status(self.context, action_id, 0)
             if (status == consts.ACTION_WAITING_LIFECYCLE_COMPLETION):
+                # update action status and reset owner back to None
+                # so that the action will get picked up by dispatcher
                 ao.Action.update(self.context, action_id,
-                                 {'status': base.Action.READY})
+                                 {'status': base.Action.READY,
+                                  'owner': None})
 
     def _remove_nodes_with_hook(self, action_name, node_ids, lifecycle_hook,
                                 inputs=None):
@@ -368,6 +371,7 @@ class ClusterAction(base.Action):
             for action_id, node_id in child:
                 # wait lifecycle complete if node exists and is active
                 node = no.Node.get(self.context, node_id)
+                owner = None
                 if not node:
                     LOG.warning('Node %s is not found. '
                                 'Skipping wait for lifecycle completion.',
@@ -382,9 +386,14 @@ class ClusterAction(base.Action):
                     child.remove((action_id, node_id))
                 else:
                     status = base.Action.WAITING_LIFECYCLE_COMPLETION
+                    # set owner for actions in waiting for lifecycle completion
+                    # so that they will get cleaned up by dead engine gc
+                    # if the engine dies
+                    owner = self.owner
 
                 ao.Action.update(self.context, action_id,
-                                 {'status': status})
+                                 {'status': status,
+                                  'owner': owner})
                 if status == base.Action.WAITING_LIFECYCLE_COMPLETION:
                     notifier.post_lifecycle_hook_message(
                         action_id, node_id, node.physical_id,
@@ -1203,7 +1212,12 @@ def CompleteLifecycleProc(context, action_id):
         raise exception.ResourceNotFound(type='action', id=action_id)
 
     if action.get_status() == consts.ACTION_WAITING_LIFECYCLE_COMPLETION:
-        action.set_status(base.Action.RES_LIFECYCLE_COMPLETE)
+        # update action status and reset owner back to None
+        # so that the action will get picked up by dispatcher
+        ao.Action.update(context, action_id,
+                         {'status': consts.ACTION_READY,
+                          'status_reason': 'Lifecycle complete.',
+                          'owner': None})
         dispatcher.start_action()
     else:
         LOG.debug('Action %s status is not WAITING_LIFECYCLE.  '
