@@ -432,9 +432,10 @@ class Node(object):
 
         try:
             profile = self.rt['profile']
-            method = getattr(profile, 'handle_' + op)
+            method = getattr(profile, 'handle_%s' % op)
             method(self, **params)
         except exc.EResourceOperation as ex:
+            LOG.error('Node operation %s failed: %s.', op, ex)
             self.set_status(context, consts.NS_ERROR, reason=six.text_type(ex))
             return False
 
