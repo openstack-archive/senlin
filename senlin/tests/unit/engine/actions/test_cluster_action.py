@@ -19,6 +19,7 @@ from senlin.engine.actions import cluster_action as ca
 from senlin.engine import cluster as cm
 from senlin.engine import dispatcher
 from senlin.engine import senlin_lock
+from senlin.objects import action as ao
 from senlin.policies import base as pb
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
@@ -200,7 +201,8 @@ class CompleteLifecycleProcTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ab.Action, 'load')
-    def test_complete_lifecycle_proc_successful(self, mock_load,
+    @mock.patch.object(ao.Action, 'update')
+    def test_complete_lifecycle_proc_successful(self, mock_update, mock_load,
                                                 mock_dispatcher_start):
         action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
         mock_obj = mock.Mock()
@@ -208,7 +210,6 @@ class CompleteLifecycleProcTest(base.SenlinTestCase):
         mock_get_status = self.patchobject(action, 'get_status')
         mock_get_status.return_value = \
             consts.ACTION_WAITING_LIFECYCLE_COMPLETION
-        mock_set_status = self.patchobject(action, 'set_status')
         mock_load.return_value = action
 
         res = ca.CompleteLifecycleProc(self.ctx, 'ACTION_ID')
@@ -217,7 +218,12 @@ class CompleteLifecycleProcTest(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.ctx, action_id='ACTION_ID',
                                           project_safe=False)
         mock_get_status.assert_called_once_with()
-        mock_set_status.assert_called_once_with(action.RES_LIFECYCLE_COMPLETE)
+        mock_update.assert_called_once_with(
+            self.ctx, 'ACTION_ID',
+            {'status': consts.ACTION_READY,
+             'status_reason': 'Lifecycle complete.',
+             'owner': None}
+        )
         mock_dispatcher_start.assert_called_once_with()
 
     @mock.patch.object(ab.Action, 'load')
@@ -230,14 +236,14 @@ class CompleteLifecycleProcTest(base.SenlinTestCase):
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(ab.Action, 'load')
-    def test_complete_lifecycle_proc_warning(self, mock_load,
+    @mock.patch.object(ao.Action, 'update')
+    def test_complete_lifecycle_proc_warning(self, mock_update, mock_load,
                                              mock_dispatcher_start):
         action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx)
         mock_obj = mock.Mock()
         action.entity = mock_obj
         mock_get_status = self.patchobject(action, 'get_status')
         mock_get_status.return_value = consts.ACTION_SUCCEEDED
-        mock_set_status = self.patchobject(action, 'set_status')
         mock_load.return_value = action
 
         res = ca.CompleteLifecycleProc(self.ctx, 'ACTION_ID')
@@ -246,5 +252,5 @@ class CompleteLifecycleProcTest(base.SenlinTestCase):
         mock_load.assert_called_once_with(self.ctx, action_id='ACTION_ID',
                                           project_safe=False)
         mock_get_status.assert_called_once_with()
-        mock_set_status.assert_not_called()
+        mock_update.assert_not_called()
         mock_dispatcher_start.assert_not_called()

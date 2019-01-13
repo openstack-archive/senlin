@@ -229,6 +229,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
                 }
             }
         }
+        action.owner = 'OWNER_ID'
         mock_wait.return_value = (action.RES_OK, 'All dependents completed')
         mock_action.return_value = 'NODE_ACTION_ID'
         mock_node_get.return_value = mock.Mock(
@@ -248,7 +249,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
             inputs={})
         update_calls = [
             mock.call(action.context, 'NODE_ACTION_ID',
-                      {'status': 'WAITING_LIFECYCLE_COMPLETION'}),
+                      {'status': 'WAITING_LIFECYCLE_COMPLETION',
+                       'owner': 'OWNER_ID'}),
         ]
         mock_update.assert_has_calls(update_calls)
         mock_post.assert_called_once_with('NODE_ACTION_ID', 'NODE_ID',
@@ -304,6 +306,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
                 }
             }
         }
+        action.owner = None
         mock_wait.return_value = (action.RES_OK, 'All dependents completed')
         mock_action.return_value = 'NODE_ACTION_ID'
         mock_node_get.return_value = mock_node_obj
@@ -320,7 +323,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
             cause='Derived Action with Lifecycle Hook', inputs={})
         update_calls = [
             mock.call(action.context, 'NODE_ACTION_ID',
-                      {'status': 'READY'}),
+                      {'status': 'READY',
+                       'owner': None}),
         ]
         mock_update.assert_has_calls(update_calls)
         mock_post.assert_not_called()
@@ -358,6 +362,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
                 }
             }
         }
+        action.owner = 'OWNER_ID'
         mock_wait.side_effect = [
             (action.RES_LIFECYCLE_HOOK_TIMEOUT, 'Timeout'),
             (action.RES_OK, 'All dependents completed')
@@ -379,9 +384,11 @@ class ClusterDeleteTest(base.SenlinTestCase):
             cause='Derived Action with Lifecycle Hook', inputs={})
         update_calls = [
             mock.call(action.context, 'NODE_ACTION_ID',
-                      {'status': 'WAITING_LIFECYCLE_COMPLETION'}),
+                      {'status': 'WAITING_LIFECYCLE_COMPLETION',
+                       'owner': 'OWNER_ID'}),
             mock.call(action.context, 'NODE_ACTION_ID',
-                      {'status': 'READY'}),
+                      {'status': 'READY',
+                       'owner': None}),
         ]
         mock_update.assert_has_calls(update_calls)
         mock_post.assert_called_once_with('NODE_ACTION_ID', 'NODE_ID',
@@ -828,6 +835,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
                 }
             }
         }
+        action.owner = 'OWNER_ID'
         mock_wait.return_value = (action.RES_OK, 'All dependents completed')
         mock_action.return_value = 'NODE_ACTION_ID'
         mock_node_get.return_value = mock.Mock(
@@ -846,7 +854,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
             cause='Derived Action with Lifecycle Hook', inputs={})
         update_calls = [
             mock.call(action.context, 'NODE_ACTION_ID',
-                      {'status': 'WAITING_LIFECYCLE_COMPLETION'}),
+                      {'status': 'WAITING_LIFECYCLE_COMPLETION',
+                       'owner': 'OWNER_ID'}),
         ]
         mock_update.assert_has_calls(update_calls)
         mock_post.assert_called_once_with('NODE_ACTION_ID', 'NODE_ID',
@@ -945,6 +954,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
                 }
             }
         }
+        action.owner = 'OWNER_ID'
         mock_action.side_effect = ['NODE_ACTION_1', 'NODE_ACTION_2']
         mock_wait.return_value = (action.RES_OK, 'All dependents completed')
         node1 = mock.Mock(status=consts.NS_ACTIVE, id='NODE_1',
@@ -961,8 +971,10 @@ class ClusterDeleteTest(base.SenlinTestCase):
         self.assertEqual('All dependents completed', res_msg)
         update_calls = [
             mock.call(action.context, 'NODE_ACTION_1',
-                      {'status': 'WAITING_LIFECYCLE_COMPLETION'}),
-            mock.call(action.context, 'NODE_ACTION_2', {'status': 'READY'})
+                      {'status': 'WAITING_LIFECYCLE_COMPLETION',
+                       'owner': 'OWNER_ID'}),
+            mock.call(action.context, 'NODE_ACTION_2', {'status': 'READY',
+                                                        'owner': None})
         ]
         mock_update.assert_has_calls(update_calls)
         create_actions = [
