@@ -606,6 +606,55 @@ class ActionBaseTest(base.SenlinTestCase):
         action.set_status.assert_not_called()
         mock_signal.assert_not_called()
 
+    @mock.patch.object(dobj.Dependency, 'get_depended')
+    def test_force_cancel(self, mock_dobj):
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id=ACTION_ID)
+        action.load = mock.Mock()
+        action.set_status = mock.Mock()
+        mock_dobj.return_value = None
+
+        action.status = action.RUNNING
+        action.force_cancel()
+
+        action.load.assert_not_called()
+        action.set_status.assert_called_once_with(
+            action.RES_CANCEL, 'Action execution force cancelled')
+
+    @mock.patch.object(dobj.Dependency, 'get_depended')
+    def test_force_cancel_children(self, mock_dobj):
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id=ACTION_ID)
+        child_status_mock = mock.Mock()
+        children = []
+        for child_id in CHILD_IDS:
+            child = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id=child_id)
+            child.status = child.WAITING_LIFECYCLE_COMPLETION
+            child.set_status = child_status_mock
+            children.append(child)
+        mock_dobj.return_value = CHILD_IDS
+        action.set_status = mock.Mock()
+        action.load = mock.Mock()
+        action.load.side_effect = children
+
+        action.status = action.RUNNING
+        action.force_cancel()
+
+        mock_dobj.assert_called_once_with(action.context, action.id)
+        self.assertEqual(2, child_status_mock.call_count)
+        self.assertEqual(2, action.load.call_count)
+
+    @mock.patch.object(dobj.Dependency, 'get_depended')
+    def test_force_cancel_immutable(self, mock_dobj):
+        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id=ACTION_ID)
+        action.load = mock.Mock()
+        action.set_status = mock.Mock()
+        mock_dobj.return_value = None
+
+        action.status = action.FAILED
+        self.assertRaises(exception.ActionImmutable, action.force_cancel)
+
+        action.load.assert_not_called()
+        action.set_status.assert_not_called()
+
     def test_execute_default(self):
         action = ab.Action.__new__(DummyAction, OBJID, 'BOOM', self.ctx)
         self.assertRaises(NotImplementedError,

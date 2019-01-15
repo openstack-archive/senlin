@@ -107,6 +107,15 @@ class ActionController(wsgi.Controller):
         if data is None:
             raise exc.HTTPBadRequest(_("Malformed request data, missing "
                                        "'action' key in request body."))
+        force_update = req.params.get('force')
+
+        if force_update is not None:
+            force = util.parse_bool_param(consts.ACTION_UPDATE_FORCE,
+                                          force_update)
+        else:
+            force = False
+
+        data['force'] = force
         data['identity'] = action_id
 
         obj = util.parse_request('ActionUpdateRequest', req, data)

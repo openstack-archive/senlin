@@ -75,5 +75,6 @@ class ActionUpdateRequest(base.SenlinObject):
 
     fields = {
         'identity': fields.StringField(),
-        'status': fields.StringField()
+        'status': fields.StringField(),
+        'force': fields.BooleanField(default=False)
     }

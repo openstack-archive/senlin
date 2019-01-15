@@ -215,7 +215,7 @@ class ActionTest(base.SenlinTestCase):
         mock_load.return_value = x_obj
 
         req = orao.ActionUpdateRequest(identity='ACTION_ID',
-                                       status='CANCELLED')
+                                       status='CANCELLED', force=False)
 
         result = self.eng.action_update(self.ctx, req.obj_to_primitive())
         self.assertIsNone(result)

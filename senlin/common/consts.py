@@ -268,6 +268,12 @@ ACTION_STATUSES = (
     'SUSPENDED',
 )
 
+ACTION_PARAMS = (
+    ACTION_UPDATE_FORCE,
+) = (
+    'force',
+)
+
 EVENT_LEVELS = {
     'CRITICAL': logging.CRITICAL,
     'ERROR': logging.ERROR,

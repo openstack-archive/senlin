@@ -131,6 +131,12 @@ action_status_query:
   description: |
     Filters the results by the ``status`` property of an action object.
 
+action_update_force_query:
+  type: boolean
+  in: query
+  description: |
+    A boolean indicating if the action update request should be forced.
+
 cluster_identity_query:
   type: string
   in: query
@@ -358,11 +364,11 @@ action_status:
     A string representation of the current status of the action.
 
 action_status_update:
-  type: object
+  type: string
   in: body
   required: True
   description: |
-    A string representation of the action status to update CANCELLED is
+    A string representation of the action status to update. CANCELLED is
     the only valid status at this time.
 
 action_target:

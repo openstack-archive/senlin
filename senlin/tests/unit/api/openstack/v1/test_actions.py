@@ -336,7 +336,41 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'ActionUpdateRequest', req,
             {
                 'identity': aid,
+                'status': 'CANCELLED',
+                'force': False
+            })
+        mock_call.assert_called_once_with(req.context, 'action_update', obj)
+
+    @mock.patch.object(util, 'parse_bool_param')
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_action_update_force_cancel(self, mock_call, mock_parse,
+                                        mock_parse_bool, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        aid = 'xxxx-yyyy-zzzz'
+        body = {
+            'action': {
                 'status': 'CANCELLED'
+            }
+        }
+        params = {'force': 'True'}
+        req = self._patch(
+            '/actions/%(action_id)s' % {'action_id': aid},
+            jsonutils.dumps(body), version='1.12', params=params)
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_parse_bool.return_value = True
+
+        self.assertRaises(exc.HTTPAccepted,
+                          self.controller.update, req,
+                          action_id=aid, body=body)
+
+        mock_parse.assert_called_once_with(
+            'ActionUpdateRequest', req,
+            {
+                'identity': aid,
+                'status': 'CANCELLED',
+                'force': True
             })
         mock_call.assert_called_once_with(req.context, 'action_update', obj)
 
