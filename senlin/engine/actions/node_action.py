@@ -257,13 +257,16 @@ class NodeAction(base.Action):
                 if not res:
                     return self.RES_RETRY, 'Failed in locking cluster'
 
-                self.policy_check(self.entity.cluster_id, 'BEFORE')
-                if self.data['status'] != pb.CHECK_OK:
-                    # Don't emit message since policy_check should have done it
-                    senlin_lock.cluster_lock_release(saved_cluster_id, self.id,
-                                                     senlin_lock.NODE_SCOPE)
-                    return self.RES_ERROR, ('Policy check: ' +
-                                            self.data['reason'])
+                try:
+                    self.policy_check(self.entity.cluster_id, 'BEFORE')
+                finally:
+                    if self.data['status'] != pb.CHECK_OK:
+                        # Don't emit message since policy_check should have
+                        # done it
+                        senlin_lock.cluster_lock_release(
+                            saved_cluster_id, self.id, senlin_lock.NODE_SCOPE)
+                        return self.RES_ERROR, ('Policy check: ' +
+                                                self.data['reason'])
             elif self.cause == consts.CAUSE_DERIVED_LCH:
                 self.policy_check(self.entity.cluster_id, 'BEFORE')
 
