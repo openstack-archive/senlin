@@ -25,7 +25,7 @@ There are Senlin resource types in Heat which make deployment of a full-featured
 auto-scaling solution easily attainable. This document is to provide a tutorial for
 users who want to use heat to create a senlin cluster.
 
-It is often requried by real deployment practices to make the cluster load-balanced
+It is often required by real deployment practices to make the cluster load-balanced
 and auto-scaled. We also want the scaling action triggered based on business data
 instead of infrastructure metrics. When existing cluster is not enough to afford the
 throughput/workload, the cluster will be scaled-out; when low throughput or workload,
