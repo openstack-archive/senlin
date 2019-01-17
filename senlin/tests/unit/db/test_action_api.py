@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
 import six
 import time
 
@@ -724,3 +725,30 @@ class DBAPIActionTest(base.SenlinTestCase):
                          after_abandon.status_reason)
         self.assertEqual(consts.ACTION_READY, after_abandon.status)
         self.assertEqual({'retries': 1}, after_abandon.data)
+
+    def test_action_purge(self):
+        old_timestamp = tu.utcnow(True) - datetime.timedelta(days=6)
+        spec = {
+            "owner": "test_owner",
+            "created_at": old_timestamp
+        }
+        _create_action(self.ctx, **spec)
+        _create_action(self.ctx, **spec)
+        _create_action(self.ctx, **spec)
+
+        new_timestamp = tu.utcnow(True)
+        spec = {
+            "owner": "test_owner",
+            "created_at": new_timestamp
+        }
+        _create_action(self.ctx, **spec)
+        _create_action(self.ctx, **spec)
+        _create_action(self.ctx, **spec)
+
+        actions = db_api.action_get_all(self.ctx)
+        self.assertEqual(6, len(actions))
+
+        db_api.action_purge(project=None, granularity='days', age=5)
+
+        actions = db_api.action_get_all(self.ctx)
+        self.assertEqual(3, len(actions))

@@ -1,0 +1,4 @@
+---
+features:
+  - A action_purge subcommand is added to senlin-manage tool for purging actions
+    from the actions table.
