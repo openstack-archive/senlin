@@ -455,9 +455,11 @@ class ClusterAction(base.Action):
         lifecycle_hook = self.data.get('hooks')
         if lifecycle_hook:
             if stop_node_before_delete:
+                # set update_parent_status to False so that a failure in stop
+                # operation is ignored and the parent status is not changed
                 res, reason = self._remove_nodes_with_hook(
                     consts.NODE_OPERATION, node_ids, lifecycle_hook,
-                    {'operation': 'stop'})
+                    {'operation': 'stop', 'update_parent_status': False})
                 if res != self.RES_OK:
                     LOG.warning('Failure while stopping nodes. '
                                 'Proceed to delete nodes.')
@@ -468,8 +470,11 @@ class ClusterAction(base.Action):
                     action_name, node_ids, lifecycle_hook)
         else:
             if stop_node_before_delete:
+                # set update_parent_status to False so that a failure in stop
+                # operation is ignored and the parent status is not changed
                 res, reason = self._remove_nodes_normally(
-                    consts.NODE_OPERATION, node_ids, {'operation': 'stop'})
+                    consts.NODE_OPERATION, node_ids,
+                    {'operation': 'stop', 'update_parent_status': False})
                 if res != self.RES_OK:
                     LOG.warning('Failure while stopping nodes. '
                                 'Proceed to delete nodes.')

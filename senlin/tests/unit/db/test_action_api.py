@@ -412,7 +412,8 @@ class DBAPIActionTest(base.SenlinTestCase):
         specs = [
             {'name': 'A01', 'status': 'INIT', 'target': 'cluster_001'},
             {'name': 'A02', 'status': 'INIT', 'target': 'node_001'},
-            {'name': 'A03', 'status': 'INIT', 'target': 'node_002'},
+            {'name': 'A03', 'status': 'INIT', 'target': 'node_002',
+             'inputs': {'update_parent_status': False}},
             {'name': 'A04', 'status': 'INIT', 'target': 'node_003'},
             {'name': 'A05', 'status': 'INIT', 'target': 'cluster_002'},
             {'name': 'A06', 'status': 'INIT', 'target': 'cluster_003'},
@@ -424,10 +425,12 @@ class DBAPIActionTest(base.SenlinTestCase):
             action = _create_action(self.ctx, **spec)
             id_of[spec['name']] = action.id
 
+        # A01 has dependents A02, A03, A04
         db_api.dependency_add(self.ctx,
                               [id_of['A02'], id_of['A03'], id_of['A04']],
                               id_of['A01'])
 
+        # A05, A06, A07 each has dependent A01
         db_api.dependency_add(self.ctx,
                               id_of['A01'],
                               [id_of['A05'], id_of['A06'], id_of['A07']])
@@ -517,7 +520,7 @@ class DBAPIActionTest(base.SenlinTestCase):
         result = db_api.dependency_get_dependents(self.ctx, id_of['A02'])
         self.assertEqual(0, len(result))
 
-    def test_action_mark_failed(self):
+    def test_action(self):
         timestamp = time.time()
         id_of = self._prepare_action_mark_failed_cancel()
         db_api.action_mark_failed(self.ctx, id_of['A01'], timestamp)
@@ -529,6 +532,30 @@ class DBAPIActionTest(base.SenlinTestCase):
 
         result = db_api.dependency_get_dependents(self.ctx, id_of['A01'])
         self.assertEqual(0, len(result))
+
+    def test_action_mark_failed_parent_status_update_needed(self):
+        timestamp = time.time()
+        id_of = self._prepare_action_mark_failed_cancel()
+        db_api.action_mark_failed(self.ctx, id_of['A04'], timestamp)
+
+        action = db_api.action_get(self.ctx, id_of['A01'])
+        self.assertEqual(consts.ACTION_FAILED, action.status)
+        self.assertEqual(round(timestamp, 6), float(action.end_time))
+
+        result = db_api.dependency_get_dependents(self.ctx, id_of['A01'])
+        self.assertEqual(0, len(result))
+
+    def test_action_mark_failed_parent_status_update_not_needed(self):
+        timestamp = time.time()
+        id_of = self._prepare_action_mark_failed_cancel()
+        db_api.action_mark_failed(self.ctx, id_of['A03'], timestamp)
+
+        action = db_api.action_get(self.ctx, id_of['A01'])
+        self.assertEqual(consts.ACTION_WAITING, action.status)
+        self.assertIsNone(action.end_time)
+
+        result = db_api.dependency_get_dependents(self.ctx, id_of['A01'])
+        self.assertEqual(3, len(result))
 
     def test_action_mark_cancelled(self):
         timestamp = time.time()
@@ -542,6 +569,30 @@ class DBAPIActionTest(base.SenlinTestCase):
 
         result = db_api.dependency_get_dependents(self.ctx, id_of['A01'])
         self.assertEqual(0, len(result))
+
+    def test_action_mark_cancelled_parent_status_update_needed(self):
+        timestamp = time.time()
+        id_of = self._prepare_action_mark_failed_cancel()
+        db_api.action_mark_cancelled(self.ctx, id_of['A04'], timestamp)
+
+        action = db_api.action_get(self.ctx, id_of['A01'])
+        self.assertEqual(consts.ACTION_CANCELLED, action.status)
+        self.assertEqual(round(timestamp, 6), float(action.end_time))
+
+        result = db_api.dependency_get_dependents(self.ctx, id_of['A01'])
+        self.assertEqual(0, len(result))
+
+    def test_action_mark_cancelled_parent_status_update_not_needed(self):
+        timestamp = time.time()
+        id_of = self._prepare_action_mark_failed_cancel()
+        db_api.action_mark_cancelled(self.ctx, id_of['A03'], timestamp)
+
+        action = db_api.action_get(self.ctx, id_of['A01'])
+        self.assertEqual(consts.ACTION_WAITING, action.status)
+        self.assertIsNone(action.end_time)
+
+        result = db_api.dependency_get_dependents(self.ctx, id_of['A01'])
+        self.assertEqual(3, len(result))
 
     def test_action_mark_ready(self):
         timestamp = time.time()
