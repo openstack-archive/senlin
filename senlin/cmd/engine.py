@@ -17,12 +17,14 @@ Senlin Engine Server.
 """
 from oslo_config import cfg
 from oslo_log import log as logging
+from oslo_reports import guru_meditation_report as gmr
 from oslo_service import service
 
 from senlin.common import consts
 from senlin.common import messaging
 from senlin.common import profiler
 from senlin import objects
+from senlin import version
 
 
 def main():
@@ -30,6 +32,7 @@ def main():
     cfg.CONF(project='senlin', prog='senlin-engine')
     logging.setup(cfg.CONF, 'senlin-engine')
     logging.set_defaults()
+    gmr.TextGuruMeditation.setup_autorun(version)
     objects.register_all()
     messaging.setup()
 
