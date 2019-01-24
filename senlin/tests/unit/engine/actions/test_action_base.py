@@ -705,12 +705,6 @@ class ActionBaseTest(base.SenlinTestCase):
                                             mock.ANY)
 
         mark_fail.reset_mock()
-        action.set_status(action.RES_LIFECYCLE_COMPLETE, 'LIFECYCLE COMPLETE')
-        self.assertEqual(action.SUCCEEDED, action.status)
-        self.assertEqual('LIFECYCLE COMPLETE', action.status_reason)
-        mark_ready.assert_called_once_with(action.context, 'FAKE_ID', mock.ANY)
-
-        mark_fail.reset_mock()
         action.set_status(action.RES_RETRY, 'BUSY')
         self.assertEqual(action.READY, action.status)
         self.assertEqual('BUSY', action.status_reason)

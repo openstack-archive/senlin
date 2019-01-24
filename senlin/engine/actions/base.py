@@ -433,10 +433,6 @@ class Action(object):
             status = self.CANCELLED
             ao.Action.mark_cancelled(self.context, self.id, timestamp)
 
-        elif result == self.RES_LIFECYCLE_COMPLETE:
-            status = self.SUCCEEDED
-            ao.Action.mark_ready(self.context, self.id, timestamp)
-
         else:  # result == self.RES_RETRY:
             retries = self.data.get('retries', 0)
             # Action failed at the moment, but can be retried

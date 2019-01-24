@@ -136,9 +136,9 @@ def node_lock_acquire(context, node_id, action_id, engine=None,
         ao.Action.mark_failed(context, action.id, time.time(), reason)
         return True
 
-    LOG.error('Node is already locked by action %(old)s, '
-              'action %(new)s failed grabbing the lock',
-              {'old': owner, 'new': action_id})
+    LOG.warning('Node is already locked by action %(old)s, '
+                'action %(new)s failed grabbing the lock',
+                {'old': owner, 'new': action_id})
 
     return False
 
