@@ -69,6 +69,20 @@ You can use command purge three days ago data.
    senlin-manage event_purge -p e127900ee5d94ff5aff30173aa607765 -g days 3
 
 
+Senlin Action Manage
+--------------------
+
+``senlin-manage action_purge -p [<project1;project2...>] -g {days,hours,minutes,seconds} age``
+
+Purge the specified action records in senlin's database.
+
+You can use this command to purge actions that are older than 3 days.
+
+::
+
+   senlin-manage action_purge -p e127900ee5d94ff5aff30173aa607765 -g days 3
+
+
 FILES
 ~~~~~
 

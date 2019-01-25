@@ -529,3 +529,8 @@ def db_version(engine):
 def event_purge(engine, project, granularity, age):
     """Purge the event records in database."""
     return IMPL.event_purge(project, granularity, age)
+
+
+def action_purge(engine, project, granularity, age):
+    """Purge the action records in database."""
+    return IMPL.action_purge(project, granularity, age)

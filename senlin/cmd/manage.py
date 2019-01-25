@@ -45,12 +45,36 @@ def do_db_sync():
 def do_event_purge():
     """Purge the specified event records in senlin's database."""
     if CONF.command.age < 0:
-        print(_("age must be a positive integer."))
+        print(_("Age must be a positive integer."))
         return
     api.event_purge(api.get_engine(),
                     CONF.command.project_id,
                     CONF.command.granularity,
                     CONF.command.age)
+
+
+def do_action_purge():
+    """Purge the specified action records in senlin's database."""
+    age = CONF.command.age
+
+    if age < 0:
+        print(_("Age must be a positive integer."))
+        return
+
+    if CONF.command.granularity == 'days':
+        age = age * 86400
+    elif CONF.command.granularity == 'hours':
+        age = age * 3600
+    elif CONF.command.granularity == 'minutes':
+        age = age * 60
+
+    if age < CONF.default_action_timeout:
+        print(_("Age must be greater than the default action timeout."))
+        return
+    api.action_purge(api.get_engine(),
+                     CONF.command.project_id,
+                     CONF.command.granularity,
+                     CONF.command.age)
 
 
 class ServiceManageCommand(object):
@@ -156,6 +180,35 @@ def add_command_parsers(subparsers):
                                "granularity=hours and age=2 means purging "
                                "events created two hours ago. Defaults to "
                                "30."))
+
+    parser = subparsers.add_parser('action_purge')
+    parser.set_defaults(func=do_action_purge)
+    parser.add_argument('-p',
+                        '--project-id',
+                        nargs='?',
+                        metavar='<project1;project2...>',
+                        help=_("Purge action records with specified project. "
+                               "This can be specified multiple times, or once "
+                               "with parameters separated by semicolon."),
+                        action='append')
+    parser.add_argument('-g',
+                        '--granularity',
+                        default='days',
+                        choices=['days', 'hours', 'minutes', 'seconds'],
+                        help=_("Purge action records which were created in "
+                               "the specified time period. The time is "
+                               "specified by age and granularity, whose value "
+                               "must be one of 'days', 'hours', 'minutes' or "
+                               "'seconds' (default)."))
+    parser.add_argument('age',
+                        type=int,
+                        default=30,
+                        help=_("Purge action records which were created in "
+                               "the specified time period. The time is "
+                               "specified by age and granularity. For "
+                               "example, granularity=hours and age=2 means "
+                               "purging actions created two hours ago. "
+                               "Defaults to 30."))
 
 
 command_opt = cfg.SubCommandOpt('command',
