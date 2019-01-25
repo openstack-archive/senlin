@@ -860,6 +860,7 @@ class ServerProfile(base.Profile):
             kwargs['user_data'] = encodeutils.safe_decode(base64.b64encode(ud))
 
         networks = self.properties[self.NETWORKS]
+        ports = None
         if networks is not None:
             ports = self._create_ports_from_properties(
                 obj, networks, 'create')
@@ -892,6 +893,8 @@ class ServerProfile(base.Profile):
         except exc.InternalError as ex:
             if server and server.id:
                 resource_id = server.id
+            if ports:
+                self._delete_ports(obj, ports)
             raise exc.EResourceCreation(type='server',
                                         message=six.text_type(ex),
                                         resource_id=resource_id)
@@ -907,39 +910,29 @@ class ServerProfile(base.Profile):
         :raises: `EResourceDeletion` if interaction with compute service fails.
         """
         server_id = obj.physical_id
-        if not server_id:
-            return True
-
         ignore_missing = params.get('ignore_missing', True)
         internal_ports = obj.data.get('internal_ports', [])
         force = params.get('force', False)
         timeout = params.get('timeout', None)
-        delete_ports_on_failure = params.get('delete_ports_on_failure', False)
 
         try:
-            driver = self.compute(obj)
-            if force:
-                driver.server_force_delete(server_id, ignore_missing)
-            else:
-                driver.server_delete(server_id, ignore_missing)
+            if server_id:
+                driver = self.compute(obj)
+                if force:
+                    driver.server_force_delete(server_id, ignore_missing)
+                else:
+                    driver.server_delete(server_id, ignore_missing)
+
+                driver.wait_for_server_delete(server_id, timeout)
         except exc.InternalError as ex:
             raise exc.EResourceDeletion(type='server', id=server_id,
                                         message=six.text_type(ex))
-
-        try:
-            driver.wait_for_server_delete(server_id, timeout)
-        except exc.InternalError as ex:
-            if delete_ports_on_failure and internal_ports:
-                del_ports_ex = self._delete_ports(obj, internal_ports)
-                if del_ports_ex:
-                    raise del_ports_ex
-            raise exc.EResourceDeletion(type='server', id=server_id,
-                                        message=six.text_type(ex))
-
-        if internal_ports:
-            ex = self._delete_ports(obj, internal_ports)
-            if ex:
-                raise ex
+        finally:
+            if internal_ports:
+                ex = self._delete_ports(obj, internal_ports)
+                if ex:
+                    raise exc.EResourceDeletion(type='server', d=server_id,
+                                                message=six.text_type(ex))
         return True
 
     def _check_server_name(self, obj, profile):

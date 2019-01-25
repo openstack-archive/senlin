@@ -855,8 +855,7 @@ class TestProfileBase(base.SenlinTestCase):
 
         self.assertTrue(res)
         profile.do_delete.assert_called_once_with(obj, force=True,
-                                                  timeout=None,
-                                                  delete_ports_on_failure=None)
+                                                  timeout=None)
         profile.do_create.assert_called_once_with(obj)
 
     def test_do_recover_with_delete_timeout(self):
@@ -869,8 +868,7 @@ class TestProfileBase(base.SenlinTestCase):
 
         self.assertTrue(res)
         profile.do_delete.assert_called_once_with(obj, force=False,
-                                                  timeout=5,
-                                                  delete_ports_on_failure=None)
+                                                  timeout=5)
         profile.do_create.assert_called_once_with(obj)
 
     def test_do_recover_with_force_recreate(self):
@@ -883,8 +881,7 @@ class TestProfileBase(base.SenlinTestCase):
 
         self.assertTrue(res)
         profile.do_delete.assert_called_once_with(obj, force=False,
-                                                  timeout=None,
-                                                  delete_ports_on_failure=True)
+                                                  timeout=None)
         profile.do_create.assert_called_once_with(obj)
 
     def test_do_recover_with_force_recreate_failed_delete(self):
@@ -898,8 +895,7 @@ class TestProfileBase(base.SenlinTestCase):
         res = profile.do_recover(obj, ignore_missing=True, force_recreate=True)
         self.assertTrue(res)
         profile.do_delete.assert_called_once_with(obj, force=False,
-                                                  timeout=None,
-                                                  delete_ports_on_failure=True)
+                                                  timeout=None)
         profile.do_create.assert_called_once_with(obj)
 
     def test_do_recover_with_false_force_recreate_failed_delete(self):

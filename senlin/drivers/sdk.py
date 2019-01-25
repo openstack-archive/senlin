@@ -39,7 +39,7 @@ def parse_exception(ex):
     """Parse exception code and yield useful information."""
     code = 500
 
-    LOG.exception(ex)
+    LOG.error(six.text_type(ex))
     if isinstance(ex, sdk_exc.HttpException):
         # some exceptions don't contain status_code
         if hasattr(ex, "status_code") and ex.status_code is not None:
@@ -98,7 +98,6 @@ def translate_exception(func):
         try:
             return func(driver, *args, **kwargs)
         except Exception as ex:
-            LOG.exception(ex)
             raise parse_exception(ex)
 
     return invoke_with_catch

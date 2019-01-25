@@ -537,8 +537,7 @@ class Profile(object):
         extra_params = options.get('params', {})
         fence_compute = extra_params.get('fence_compute', False)
         try:
-            self.do_delete(obj, force=fence_compute, timeout=delete_timeout,
-                           delete_ports_on_failure=force_recreate)
+            self.do_delete(obj, force=fence_compute, timeout=delete_timeout)
         except exc.EResourceDeletion as ex:
             if force_recreate:
                 # log error and continue on to creating the node
