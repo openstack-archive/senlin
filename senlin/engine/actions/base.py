@@ -271,8 +271,7 @@ class Action(object):
 
     @staticmethod
     def _check_action_lock(target, action):
-        if action == consts.CLUSTER_DELETE or action == consts.NODE_DELETE:
-            # DELETE actions do not care about locks
+        if action in consts.LOCK_BYPASS_ACTIONS:
             return
         elif (action in list(consts.CLUSTER_ACTION_NAMES) and
                 cl.ClusterLock.is_locked(target)):
@@ -287,8 +286,7 @@ class Action(object):
     def _check_conflicting_actions(ctx, target, action):
         conflict_actions = ao.Action.get_all_active_by_target(ctx, target)
         # Ignore conflicting actions on deletes.
-        if not conflict_actions or action in (consts.CLUSTER_DELETE,
-                                              consts.NODE_DELETE):
+        if not conflict_actions or action in consts.CONFLICT_BYPASS_ACTIONS:
             return
         else:
             action_ids = [a['id'] for a in conflict_actions]
