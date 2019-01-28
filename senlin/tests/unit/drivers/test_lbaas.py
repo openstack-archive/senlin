@@ -445,6 +445,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         port = '80'
         subnet = 'subnet'
         subnet_obj = mock.Mock(id='SUBNET_ID', network_id='NETWORK_ID')
+        subnet_obj.ip_version = '4'
         subnet_obj.name = 'subnet'
         network_obj = mock.Mock(id='NETWORK_ID')
         network_obj.name = 'network1'
@@ -452,8 +453,9 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         node_detail = {
             'name': 'node-01',
             'addresses': {
-                'network1': [{'addr': 'ipaddr_net1'}],
-                'network2': [{'addr': 'ipaddr_net2'}]
+                'network1': [{'addr': 'ipaddr1_net1', 'version': '6'},
+                             {'addr': 'ipaddr2_net1', 'version': '4'}],
+                'network2': [{'addr': 'ipaddr_net2', 'version': '4'}]
             }
         }
         mock_load.return_value = node
@@ -469,8 +471,9 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         self.assertEqual('MEMBER_ID', res)
         self.nc.subnet_get.assert_called_once_with(subnet)
         self.nc.network_get.assert_called_once_with('NETWORK_ID')
+        # Make sure the ip matches with subnet ip_version
         self.oc.pool_member_create.assert_called_once_with(
-            pool_id, 'ipaddr_net1', port, 'SUBNET_ID')
+            pool_id, 'ipaddr2_net1', port, 'SUBNET_ID')
         self.lb_driver._wait_for_lb_ready.assert_has_calls(
             [mock.call('LB_ID'), mock.call('LB_ID')])
         mock_load.assert_called_once_with(fake_context, db_node=node)
@@ -505,13 +508,14 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         node = mock.Mock()
         subnet_obj = mock.Mock(id='SUBNET_ID', network_id='NETWORK_ID')
         subnet_obj.name = 'subnet'
+        subnet_obj.ip_version = '4'
         network_obj = mock.Mock(id='NETWORK_ID')
         network_obj.name = 'network1'
         node_detail = {
             'name': 'node-01',
             'addresses': {
-                'network1': [{'addr': 'ipaddr_net1'}],
-                'network2': [{'addr': 'ipaddr_net2'}]
+                'network1': [{'addr': 'ipaddr_net1', 'version': '4'}],
+                'network2': [{'addr': 'ipaddr_net2', 'version': '4'}]
             }
         }
         mock_load.return_value = node
@@ -536,13 +540,14 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         node = mock.Mock()
         subnet_obj = mock.Mock(id='SUBNET_ID', network_id='NETWORK_ID')
         subnet_obj.name = 'subnet'
+        subnet_obj.ip_version = '4'
         network_obj = mock.Mock(id='NETWORK_ID')
         network_obj.name = 'network1'
         node_detail = {
             'name': 'node-01',
             'addresses': {
-                'network1': [{'addr': 'ipaddr_net1'}],
-                'network2': [{'addr': 'ipaddr_net2'}]
+                'network1': [{'addr': 'ipaddr_net1', 'version': '4'}],
+                'network2': [{'addr': 'ipaddr_net2', 'version': '4'}]
             }
         }
         mock_load.return_value = node
@@ -561,17 +566,48 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
 
     @mock.patch.object(nodem.Node, 'load')
     @mock.patch.object(oslo_context, 'get_current')
-    def test_member_add_wait_for_lb_timeout(self, mock_get_current, mock_load):
+    def test_member_add_ip_version_match_failed(self, mock_get_current,
+                                                mock_load):
         node = mock.Mock()
         subnet_obj = mock.Mock(id='SUBNET_ID', network_id='NETWORK_ID')
         subnet_obj.name = 'subnet'
+        subnet_obj.ip_version = '4'
         network_obj = mock.Mock(id='NETWORK_ID')
         network_obj.name = 'network1'
         node_detail = {
             'name': 'node-01',
             'addresses': {
-                'network1': [{'addr': 'ipaddr_net1'}],
-                'network2': [{'addr': 'ipaddr_net2'}]
+                'network1': [{'addr': 'ipaddr_net1', 'version': '6'}],
+                'network2': [{'addr': 'ipaddr_net2', 'version': '6'}]
+            }
+        }
+        mock_load.return_value = node
+        node.get_details.return_value = node_detail
+
+        # Node does not match with subnet ip_version
+        self.lb_driver._wait_for_lb_ready = mock.Mock()
+        self.lb_driver._wait_for_lb_ready.return_value = True
+        self.nc.subnet_get.return_value = subnet_obj
+        self.nc.network_get.return_value = network_obj
+        self.oc.pool_member_create = mock.Mock(id='MEMBER_ID')
+        res = self.lb_driver.member_add(node, 'LB_ID', 'POOL_ID', 80,
+                                        'subnet')
+        self.assertIsNone(res)
+
+    @mock.patch.object(nodem.Node, 'load')
+    @mock.patch.object(oslo_context, 'get_current')
+    def test_member_add_wait_for_lb_timeout(self, mock_get_current, mock_load):
+        node = mock.Mock()
+        subnet_obj = mock.Mock(id='SUBNET_ID', network_id='NETWORK_ID')
+        subnet_obj.name = 'subnet'
+        subnet_obj.ip_version = '4'
+        network_obj = mock.Mock(id='NETWORK_ID')
+        network_obj.name = 'network1'
+        node_detail = {
+            'name': 'node-01',
+            'addresses': {
+                'network1': [{'addr': 'ipaddr_net1', 'version': '4'}],
+                'network2': [{'addr': 'ipaddr_net2', 'version': '4'}]
             }
         }
         mock_load.return_value = node
