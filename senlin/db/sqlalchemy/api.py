@@ -177,6 +177,7 @@ def cluster_get_all(context, limit=None, marker=None, sort=None, filters=None,
                                    marker=marker, sort_dirs=dirs).all()
 
 
+@retry_on_deadlock
 def cluster_next_index(context, cluster_id):
     with session_for_write() as session:
         cluster = session.query(models.Cluster).with_for_update().get(
@@ -766,6 +767,7 @@ def cluster_policy_update(context, cluster_id, policy_id, values):
         return binding
 
 
+@retry_on_deadlock
 def cluster_add_dependents(context, cluster_id, profile_id):
     """Add profile ID of container node to host cluster's 'dependents' property
 
@@ -785,6 +787,7 @@ def cluster_add_dependents(context, cluster_id, profile_id):
         cluster.save(session)
 
 
+@retry_on_deadlock
 def cluster_remove_dependents(context, cluster_id, profile_id):
     """Remove profile ID from host cluster's 'dependents' property
 
@@ -1364,6 +1367,7 @@ def action_abandon(context, action_id, values=None):
         return action
 
 
+@retry_on_deadlock
 def action_lock_check(context, action_id, owner=None):
     action = model_query(context, models.Action).get(action_id)
     if not action:
@@ -1375,6 +1379,7 @@ def action_lock_check(context, action_id, owner=None):
         return action.owner if action.owner else None
 
 
+@retry_on_deadlock
 def action_signal(context, action_id, value):
     with session_for_write() as session:
         action = session.query(models.Action).get(action_id)
@@ -1566,6 +1571,7 @@ def service_get_all():
         return session.query(models.Service).all()
 
 
+@retry_on_deadlock
 def _mark_engine_failed(session, action_id, timestamp, reason=None):
     query = session.query(models.ActionDependency)
     # process cluster actions
