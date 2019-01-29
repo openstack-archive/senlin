@@ -637,6 +637,11 @@ class LoadBalancingPolicy(base.Policy):
         :returns: Nothing.
         """
 
+        # skip post op if action did not complete successfully
+        action_result = action.inputs.get('action_result', 'OK')
+        if action_result != 'OK':
+            return
+
         # TODO(Yanyanhu): Need special handling for cross-az scenario
         # which is supported by Neutron lbaas.
         candidates = self._get_post_candidates(action)

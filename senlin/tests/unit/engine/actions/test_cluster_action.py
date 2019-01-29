@@ -57,6 +57,26 @@ class ClusterActionTest(base.SenlinTestCase):
             mock.call('FAKE_CLUSTER', 'AFTER')])
 
     @mock.patch.object(ab.Action, 'policy_check')
+    def test_execute_failed_action(self, mock_check, mock_load):
+        cluster = mock.Mock()
+        cluster.id = 'FAKE_CLUSTER'
+        mock_load.return_value = cluster
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_FLY', self.ctx)
+        action.do_fly = mock.Mock(return_value=(action.RES_ERROR, 'Good!'))
+        action.data = {
+            'status': pb.CHECK_OK,
+            'reason': 'Policy checking passed'
+        }
+
+        res_code, res_msg = action._execute()
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual('Good!', res_msg)
+        mock_check.assert_has_calls([
+            mock.call('FAKE_CLUSTER', 'BEFORE'),
+            mock.call('FAKE_CLUSTER', 'AFTER')])
+
+    @mock.patch.object(ab.Action, 'policy_check')
     def test_execute_failed_policy_check(self, mock_check, mock_load):
         cluster = mock.Mock()
         cluster.id = 'FAKE_CLUSTER'

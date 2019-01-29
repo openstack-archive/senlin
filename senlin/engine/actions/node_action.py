@@ -278,14 +278,11 @@ class NodeAction(base.Action):
                 reason = 'Failed in locking node'
             else:
                 res, reason = self._execute()
-                if (res == self.RES_OK and saved_cluster_id and
-                        self.cause == consts.CAUSE_RPC):
+                if saved_cluster_id and self.cause == consts.CAUSE_RPC:
                     self.policy_check(saved_cluster_id, 'AFTER')
                     if self.data['status'] != pb.CHECK_OK:
                         res = self.RES_ERROR
                         reason = 'Policy check: ' + self.data['reason']
-                    else:
-                        res = self.RES_OK
         finally:
             senlin_lock.node_lock_release(self.entity.id, self.id)
             if saved_cluster_id and self.cause == consts.CAUSE_RPC:

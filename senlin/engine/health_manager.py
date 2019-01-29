@@ -643,8 +643,12 @@ class HealthManager(service.Service):
             # stop timer
             timer.stop()
 
-            # tell threadgroup to remove timer
-            self.TG.timer_done(timer)
+            try:
+                # tell threadgroup to remove timer
+                self.TG.timer_done(timer)
+            except ValueError:
+                pass
+
             if entry['cluster_id'] in self.health_check_types:
                 self.health_check_types.pop(entry['cluster_id'])
             return

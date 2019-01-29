@@ -1161,11 +1161,11 @@ class ClusterAction(base.Action):
         result, reason = method()
 
         # do post-action policy checking
-        if result == self.RES_OK:
-            self.policy_check(self.entity.id, 'AFTER')
-            if self.data['status'] != policy_mod.CHECK_OK:
-                reason = 'Policy check failure: %s' % self.data['reason']
-                return self.RES_ERROR, reason
+        self.inputs['action_result'] = result
+        self.policy_check(self.entity.id, 'AFTER')
+        if self.data['status'] != policy_mod.CHECK_OK:
+            reason = 'Policy check failure: %s' % self.data['reason']
+            return self.RES_ERROR, reason
 
         return result, reason
 

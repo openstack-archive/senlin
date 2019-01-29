@@ -808,7 +808,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         cid = 'CLUSTER_ID'
         cluster = mock.Mock(user='user1', project='project1')
         action = mock.Mock(data={}, context=ctx, action=consts.NODE_CREATE,
-                           node=mock.Mock(id='NODE_ID'))
+                           node=mock.Mock(id='NODE_ID'),
+                           inputs={'action_result': 'OK'})
         action.entity = cluster
         cp = mock.Mock()
         m_load.return_value = cp
@@ -840,7 +841,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
                                'creation': {
                                    'nodes': ['NODE1_ID', 'NODE2_ID']
                                }
-                           })
+                           },
+                           inputs={'action_result': 'OK'})
         action.entity = cluster
         candidates = ['NODE1_ID', 'NODE2_ID']
         m_get.return_value = candidates
@@ -870,7 +872,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         action = mock.Mock(context='action_context',
                            action=consts.NODE_RECOVER,
                            data={},
-                           outputs={})
+                           outputs={},
+                           inputs={'action_result': 'OK'})
         action.entity = node
         m_recovery.return_value = ['NODE1']
         m_get.return_value = ['NODE1']
@@ -899,7 +902,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         cluster_id = 'CLUSTER_ID'
         action = mock.Mock(data={'creation': {'nodes': ['NODE1_ID']}},
                            context='action_context',
-                           action=consts.CLUSTER_RESIZE)
+                           action=consts.CLUSTER_RESIZE,
+                           inputs={'action_result': 'OK'})
 
         cp = mock.Mock()
         m_load.return_value = cp
