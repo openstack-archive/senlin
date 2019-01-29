@@ -15,6 +15,7 @@ import random
 import time
 
 from oslo_config import cfg
+from oslo_db import exception
 from oslo_log import log as logging
 
 from senlin.common.i18n import _
@@ -56,9 +57,14 @@ def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
     # Step 1: try lock the cluster - if the returned owner_id is the
     #         action id, it was a success
     for retries in range(3):
-        owners = cl_obj.ClusterLock.acquire(cluster_id, action_id, scope)
-        if action_id in owners:
-            return True
+        try:
+            owners = cl_obj.ClusterLock.acquire(cluster_id, action_id, scope)
+            if action_id in owners:
+                return True
+        except exception.DBDuplicateEntry:
+            LOG.info('Duplicate entry in cluster_lock table for %(c)s.  '
+                     'Retrying cluster lock.',
+                     {'c': cluster_id})
         eventlet.sleep(random.randrange(1, 3))
 
     # Step 2: Last resort is 'forced locking', only needed when retry failed
