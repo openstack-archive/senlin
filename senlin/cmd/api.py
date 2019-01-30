@@ -19,6 +19,7 @@ import sys
 
 from oslo_config import cfg
 from oslo_log import log as logging
+from oslo_reports import guru_meditation_report as gmr
 from oslo_service import systemd
 import six
 
@@ -39,6 +40,7 @@ def main():
                  version=version.version_info.version_string())
         config.set_config_defaults()
         logging.setup(cfg.CONF, 'senlin-api')
+        gmr.TextGuruMeditation.setup_autorun(version)
         objects.register_all()
         messaging.setup()
 
