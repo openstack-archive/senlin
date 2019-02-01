@@ -243,6 +243,9 @@ class NovaClient(base.DriverBase):
     def server_delete(self, server, ignore_missing=True):
         return
 
+    def server_stop(self, server):
+        return
+
     def server_force_delete(self, server, ignore_missing=True):
         return
 

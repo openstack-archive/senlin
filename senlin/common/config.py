@@ -110,6 +110,9 @@ engine_opts = [
     cfg.IntOpt('scheduler_thread_pool_size',
                default=1000,
                help=_('Maximum number of threads to use for scheduler.')),
+    cfg.IntOpt('health_manager_thread_pool_size',
+               default=1000,
+               help=_('Maximum number of threads to use for health manager.')),
 ]
 cfg.CONF.register_opts(engine_opts)
 

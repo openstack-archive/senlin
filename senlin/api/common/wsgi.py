@@ -652,7 +652,7 @@ class Resource(object):
         except exception.SenlinException as err:
             raise translate_exception(err, request.best_match_language())
         except Exception as err:
-            log_exception(err, sys.exc_info())
+            log_exception(err)
             raise translate_exception(err, request.best_match_language())
 
         try:
@@ -830,9 +830,8 @@ class Controller(object):
         raise exc.HTTPNotFound()
 
 
-def log_exception(err, exc_info):
-    args = {'exc_info': exc_info}
-    LOG.error("Unexpected error occurred serving API: %s", err, **args)
+def log_exception(err):
+    LOG.error("Unexpected error occurred serving API: %s", err)
 
 
 def translate_exception(ex, locale):

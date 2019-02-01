@@ -10,13 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import copy
 import re
 import time
 
 import mock
 from oslo_config import cfg
-from oslo_service import threadgroup
 from oslo_utils import timeutils as tu
 
 from senlin.common import consts
@@ -953,324 +951,62 @@ class TestNodePollUrlHealthCheck(base.SenlinTestCase):
         )
 
 
-class TestHealthManager(base.SenlinTestCase):
+class TestHealthCheck(base.SenlinTestCase):
 
     def setUp(self):
-        super(TestHealthManager, self).setUp()
-
-        mock_eng = mock.Mock()
-        mock_eng.engine_id = 'ENGINE_ID'
-        topic = consts.HEALTH_MANAGER_TOPIC
-        version = consts.RPC_API_VERSION
-        self.hm = hm.HealthManager(mock_eng, topic, version)
-
-    def test_init(self):
-        self.assertEqual('ENGINE_ID', self.hm.engine_id)
-        self.assertIsNotNone(self.hm.TG)
-        self.assertIsNotNone(self.hm.rpc_client)
-        self.assertEqual(consts.HEALTH_MANAGER_TOPIC, self.hm.topic)
-        self.assertEqual(consts.RPC_API_VERSION, self.hm.version)
-        self.assertEqual(0, len(self.hm.rt['registries']))
-
-    @mock.patch.object(hm.HealthManager, "_load_runtime_registry")
-    def test_task(self, mock_load):
-        self.hm.task()
-        mock_load.assert_called_once_with()
-
-    @mock.patch.object(hm.HealthManager, "_stop_check")
-    @mock.patch.object(hm.HealthManager, "_start_check")
-    @mock.patch.object(hr.HealthRegistry, 'claim')
-    def test_load_runtime_registry(self, mock_claim, mock_check, mock_stop):
-        fake_claims = [
-            {
-                'cluster_id': 'CID1',
-                'check_type': consts.NODE_STATUS_POLLING,
-                'interval': 12,
-                'params': {'k1': 'v1'},
-                'enabled': True,
-            },
-            {
-                'cluster_id': 'CID2',
-                'check_type': consts.NODE_STATUS_POLLING,
-                'interval': 34,
-                'params': {'k2': 'v2'},
-                'enabled': False,
-            },
-        ]
-        mock_claim.return_value = [
-            mock.Mock(**fake_claims[0]),
-            mock.Mock(**fake_claims[1]),
-        ]
-        mock_check.return_value = fake_claims
-
-        # do it
-        self.hm._load_runtime_registry()
-
-        # assertions
-        mock_claim.assert_called_once_with(self.hm.ctx, self.hm.engine_id)
-        mock_check.assert_has_calls(
-            [
-                mock.call(fake_claims[0])
-            ]
-        )
-        mock_stop.assert_called_once_with(fake_claims[0])
-
-    @mock.patch.object(obj_profile.Profile, 'get')
-    @mock.patch.object(obj_cluster.Cluster, 'get')
-    def test_add_listener_nova(self, mock_cluster, mock_profile):
-        cfg.CONF.set_override('nova_control_exchange', 'FAKE_NOVA_EXCHANGE',
-                              group='health_manager')
-        x_listener = mock.Mock()
-        mock_add_thread = self.patchobject(self.hm.TG, 'add_thread',
-                                           return_value=x_listener)
-        x_cluster = mock.Mock(project='PROJECT_ID', profile_id='PROFILE_ID')
-        mock_cluster.return_value = x_cluster
-        x_profile = mock.Mock(type='os.nova.server-1.0')
-        mock_profile.return_value = x_profile
-
-        recover_action = {'operation': 'REBUILD'}
-        # do it
-        res = self.hm._add_listener('CLUSTER_ID', recover_action)
-
-        # assertions
-        self.assertEqual(x_listener, res)
-        mock_cluster.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
-                                             project_safe=False)
-        mock_profile.assert_called_once_with(self.hm.ctx, 'PROFILE_ID',
-                                             project_safe=False)
-        mock_add_thread.assert_called_once_with(
-            hm.ListenerProc, 'FAKE_NOVA_EXCHANGE', 'PROJECT_ID', 'CLUSTER_ID',
-            recover_action)
-
-    @mock.patch.object(obj_profile.Profile, 'get')
-    @mock.patch.object(obj_cluster.Cluster, 'get')
-    def test_add_listener_heat(self, mock_cluster, mock_profile):
-        cfg.CONF.set_override('heat_control_exchange', 'FAKE_HEAT_EXCHANGE',
-                              group='health_manager')
-        x_listener = mock.Mock()
-        mock_add_thread = self.patchobject(self.hm.TG, 'add_thread',
-                                           return_value=x_listener)
-        x_cluster = mock.Mock(project='PROJECT_ID', profile_id='PROFILE_ID')
-        mock_cluster.return_value = x_cluster
-        x_profile = mock.Mock(type='os.heat.stack-1.0')
-        mock_profile.return_value = x_profile
-
-        recover_action = {'operation': 'REBUILD'}
-        # do it
-        res = self.hm._add_listener('CLUSTER_ID', recover_action)
-
-        # assertions
-        self.assertEqual(x_listener, res)
-        mock_cluster.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
-                                             project_safe=False)
-        mock_profile.assert_called_once_with(self.hm.ctx, 'PROFILE_ID',
-                                             project_safe=False)
-        mock_add_thread.assert_called_once_with(
-            hm.ListenerProc, 'FAKE_HEAT_EXCHANGE', 'PROJECT_ID', 'CLUSTER_ID',
-            recover_action)
-
-    @mock.patch.object(obj_profile.Profile, 'get')
-    @mock.patch.object(obj_cluster.Cluster, 'get')
-    def test_add_listener_other_types(self, mock_cluster, mock_profile):
-        mock_add_thread = self.patchobject(self.hm.TG, 'add_thread')
-        x_cluster = mock.Mock(project='PROJECT_ID', profile_id='PROFILE_ID')
-        mock_cluster.return_value = x_cluster
-        x_profile = mock.Mock(type='other.types-1.0')
-        mock_profile.return_value = x_profile
-
-        recover_action = {'operation': 'REBUILD'}
-        # do it
-        res = self.hm._add_listener('CLUSTER_ID', recover_action)
-
-        # assertions
-        self.assertIsNone(res)
-        mock_cluster.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
-                                             project_safe=False)
-        mock_profile.assert_called_once_with(self.hm.ctx, 'PROFILE_ID',
-                                             project_safe=False)
-        self.assertFalse(mock_add_thread.called)
-
-    @mock.patch.object(obj_cluster.Cluster, 'get')
-    def test_add_listener_cluster_not_found(self, mock_get):
-        mock_get.return_value = None
-        mock_add_thread = self.patchobject(self.hm.TG, 'add_thread')
-
-        recover_action = {'operation': 'REBUILD'}
-        # do it
-        res = self.hm._add_listener('CLUSTER_ID', recover_action)
-
-        # assertions
-        self.assertIsNone(res)
-        mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
-                                         project_safe=False)
-        self.assertEqual(0, mock_add_thread.call_count)
-
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    @mock.patch('senlin.objects.NodeRecoverRequest', autospec=True)
-    def test_recover_node(self, mock_req, mock_rpc):
+        super(TestHealthCheck, self).setUp()
         ctx = mock.Mock()
-        node_id = 'FAKE_NODE'
-        recover_action = {'operation': 'REBUILD'}
+        self.fake_rpc = mock.Mock()
+        with mock.patch.object(rpc_client, 'EngineClient',
+                               return_value=self.fake_rpc):
+            self.hc = hm.HealthCheck(
+                ctx=ctx,
+                engine_id='ENGINE_ID',
+                cluster_id='CID',
+                check_type=consts.NODE_STATUS_POLLING,
+                interval=60,
+                node_update_timeout=60,
+                params={
+                    'node_update_timeout': 60,
+                    'detection_modes': [
+                        {'type': consts.NODE_STATUS_POLLING}
+                    ],
+                    'recovery_conditional': consts.ANY_FAILED
+                },
+                enabled=True)
 
-        x_req = mock.Mock
-        mock_req.return_value = x_req
+    def test_get_health_check_types_polling(self):
+        self.hc.get_health_check_types()
+        self.assertEqual(consts.POLLING, self.hc.type)
 
-        x_action = {'action': 'RECOVER_ID1'}
-        mock_rpc.return_value = x_action
+    def test_get_health_check_types_events(self):
+        self.hc.check_type = consts.LIFECYCLE_EVENTS
+        self.hc.get_health_check_types()
+        self.assertEqual(consts.EVENTS, self.hc.type)
 
-        # do it
-        res = self.hm._recover_node(node_id, ctx, recover_action)
-
-        self.assertEqual(x_action, res)
-        mock_req.assert_called_once_with(
-            identity=node_id, params=recover_action)
-        mock_rpc.assert_called_once_with(ctx, 'node_recover', x_req)
-
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    @mock.patch('senlin.objects.NodeRecoverRequest', autospec=True)
-    def test_recover_node_failed(self, mock_req, mock_rpc):
-        ctx = mock.Mock()
-        node_id = 'FAKE_NODE'
-        recover_action = {'operation': 'REBUILD'}
-
-        x_req = mock.Mock
-        mock_req.return_value = x_req
-
-        mock_rpc.side_effect = Exception('boom')
-
-        # do it
-        res = self.hm._recover_node(node_id, ctx, recover_action)
-
-        self.assertIsNone(res)
-        mock_req.assert_called_once_with(
-            identity=node_id, params=recover_action)
-        mock_rpc.assert_called_once_with(ctx, 'node_recover', x_req)
-
-    @mock.patch('senlin.objects.ActionGetRequest')
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_wait_for_action(self, mock_rpc, mock_action_req):
-        x_req = mock.Mock()
-        mock_action_req.return_value = x_req
-
-        x_action = {'status': consts.ACTION_SUCCEEDED}
-        mock_rpc.return_value = x_action
-
-        ctx = mock.Mock()
-        action_id = 'FAKE_ACTION_ID'
-        timeout = 5
-
-        # do it
-        res, err = self.hm._wait_for_action(ctx, action_id, timeout)
-
-        self.assertTrue(res)
-        self.assertEqual(err, '')
-        mock_rpc.assert_called_with(ctx, 'action_get', x_req)
-
-    @mock.patch('senlin.objects.ActionGetRequest')
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_wait_for_action_success_before_timeout(
-            self, mock_rpc, mock_action_req):
-        x_req = mock.Mock()
-        mock_action_req.return_value = x_req
-
-        x_action1 = {'status': consts.ACTION_RUNNING}
-        x_action2 = {'status': consts.ACTION_SUCCEEDED}
-        mock_rpc.side_effect = [x_action1, x_action2]
-
-        ctx = mock.Mock()
-        action_id = 'FAKE_ACTION_ID'
-        timeout = 5
-
-        # do it
-        res, err = self.hm._wait_for_action(ctx, action_id, timeout)
-
-        self.assertTrue(res)
-        self.assertEqual(err, '')
-        mock_rpc.assert_has_calls(
-            [
-                mock.call(ctx, 'action_get', x_req),
-                mock.call(ctx, 'action_get', x_req)
-            ]
-        )
-
-    @mock.patch('senlin.objects.ActionGetRequest')
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_wait_for_action_timeout(self, mock_rpc, mock_action_req):
-        x_req = mock.Mock()
-        mock_action_req.return_value = x_req
-
-        x_action = {'status': consts.ACTION_RUNNING}
-        mock_rpc.return_value = x_action
-
-        ctx = mock.Mock()
-        action_id = 'FAKE_ACTION_ID'
-        timeout = 5
-
-        # do it
-        res, err = self.hm._wait_for_action(ctx, action_id, timeout)
-
-        self.assertFalse(res)
-        self.assertTrue(re.search('timeout', err, re.IGNORECASE))
-        mock_rpc.assert_has_calls(
-            [
-                mock.call(ctx, 'action_get', x_req)
-            ]
-        )
-
-    @mock.patch('senlin.objects.ActionGetRequest')
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_wait_for_action_failed(self, mock_rpc, mock_action_req):
-        x_req = mock.Mock()
-        mock_action_req.return_value = x_req
-
-        x_action = {'status': consts.ACTION_FAILED}
-        mock_rpc.return_value = x_action
-
-        ctx = mock.Mock()
-        action_id = 'FAKE_ACTION_ID'
-        timeout = 5
-
-        # do it
-        res, err = self.hm._wait_for_action(ctx, action_id, timeout)
-
-        self.assertFalse(res)
-        self.assertEqual(err, 'Cluster check action failed or cancelled')
-        mock_rpc.assert_called_with(ctx, 'action_get', x_req)
-
-    @mock.patch('senlin.objects.ActionGetRequest')
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_wait_for_action_cancelled(self, mock_rpc, mock_action_req):
-        x_req = mock.Mock()
-        mock_action_req.return_value = x_req
-
-        x_action = {'status': consts.ACTION_CANCELLED}
-        mock_rpc.return_value = x_action
-
-        ctx = mock.Mock()
-        action_id = 'FAKE_ACTION_ID'
-        timeout = 5
-
-        # do it
-        res, err = self.hm._wait_for_action(ctx, action_id, timeout)
-
-        self.assertFalse(res)
-        self.assertEqual(err, 'Cluster check action failed or cancelled')
-        mock_rpc.assert_called_with(ctx, 'action_get', x_req)
+    def test_get_recover_actions(self):
+        self.hc.params = {
+            'node_delete_timeout': 60,
+            'node_force_recreate': True,
+            'recover_action': [{'name': 'FAKE_RECOVER_ACTION'}]
+        }
+        self.hc.get_recover_actions()
+        self.assertEqual(self.hc.params['node_delete_timeout'],
+                         self.hc.recover_action['delete_timeout'])
+        self.assertEqual(self.hc.params['node_force_recreate'],
+                         self.hc.recover_action['force_recreate'])
+        self.assertEqual(self.hc.params['recover_action'][0]['name'],
+                         self.hc.recover_action['operation'])
 
     @mock.patch.object(obj_node.Node, 'get_all_by_cluster')
-    @mock.patch.object(hm.HealthManager, "_recover_node")
-    @mock.patch.object(hm.HealthManager, "_wait_for_action")
+    @mock.patch.object(hm.HealthCheck, "_recover_node")
+    @mock.patch.object(hm.HealthCheck, "_wait_for_action")
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(context, 'get_service_context')
     def test_execute_health_check_any_mode_healthy(
             self, mock_ctx, mock_get, mock_wait, mock_recover, mock_nodes):
-        cluster_id = 'CLUSTER_ID'
-        interval = 1
-        recovery_cond = consts.ANY_FAILED
-        node_update_timeout = 1
-        recovery_action = {'operation': 'REBUILD'}
-
-        x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
+        x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID',
+                              id='CID')
         mock_get.return_value = x_cluster
 
         ctx = mock.Mock()
@@ -1292,12 +1028,8 @@ class TestHealthManager(base.SenlinTestCase):
             ],
         ]
 
-        self.hm.cluster_id = cluster_id
-
         for hc_mocks in hc_test_values:
-            self.hm.health_check_types = {
-                cluster_id: hc_mocks
-            }
+            self.hc.health_check_types = hc_mocks
 
             mock_get.reset_mock()
             mock_ctx.reset_mock()
@@ -1305,11 +1037,9 @@ class TestHealthManager(base.SenlinTestCase):
             mock_wait.reset_mock()
 
             # do it
-            self.hm._execute_health_check(interval, cluster_id,
-                                          recovery_action,
-                                          recovery_cond, node_update_timeout)
+            self.hc.execute_health_check()
 
-            mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
+            mock_get.assert_called_once_with(self.hc.ctx, 'CID',
                                              project_safe=False)
             mock_ctx.assert_called_once_with(user_id=x_cluster.user,
                                              project_id=x_cluster.project)
@@ -1326,187 +1056,20 @@ class TestHealthManager(base.SenlinTestCase):
             mock_wait.assert_not_called()
 
     @mock.patch.object(obj_node.Node, 'get_all_by_cluster')
-    @mock.patch.object(hm.HealthManager, "_recover_node")
-    @mock.patch.object(hm.HealthManager, "_wait_for_action")
-    @mock.patch.object(obj_cluster.Cluster, 'get')
-    @mock.patch.object(context, 'get_service_context')
-    def test_execute_health_check_any_mode_unhealthy(
-            self, mock_ctx, mock_get, mock_wait, mock_recover, mock_nodes):
-        cluster_id = 'CLUSTER_ID'
-        interval = 1
-        recovery_cond = consts.ANY_FAILED
-        node_update_timeout = 1
-        recovery_action = {'operation': 'REBUILD'}
-
-        x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
-        mock_get.return_value = x_cluster
-
-        ctx = mock.Mock()
-        mock_ctx.return_value = ctx
-
-        mock_wait.return_value = (True, "")
-
-        x_node = mock.Mock(id='FAKE_NODE', status="ERROR")
-        mock_nodes.return_value = [x_node]
-
-        mock_recover.return_value = {'action': 'FAKE_ACTION_ID'}
-
-        hc_true = {'run_health_check.return_value': True}
-        hc_false = {'run_health_check.return_value': False}
-
-        hc_test_values = [
-            [
-                mock.Mock(**hc_false),
-                mock.Mock(**hc_true),
-                mock.Mock(**hc_true),
-            ],
-            [
-                mock.Mock(**hc_true),
-                mock.Mock(**hc_false),
-                mock.Mock(**hc_true),
-            ],
-            [
-                mock.Mock(**hc_true),
-                mock.Mock(**hc_true),
-                mock.Mock(**hc_false),
-            ]
-        ]
-
-        for hc_mocks in hc_test_values:
-            self.hm.health_check_types = {
-                cluster_id: hc_mocks
-            }
-
-            mock_get.reset_mock()
-            mock_ctx.reset_mock()
-            mock_recover.reset_mock()
-            mock_wait.reset_mock()
-
-            # do it
-            self.hm._execute_health_check(interval, cluster_id,
-                                          recovery_action,
-                                          recovery_cond, node_update_timeout)
-
-            mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
-                                             project_safe=False)
-            mock_ctx.assert_called_once_with(user_id=x_cluster.user,
-                                             project_id=x_cluster.project)
-
-            # health checks should be called until one of them returns false
-            previous_hc_returned_false = False
-            for mock_hc in hc_mocks:
-                if not previous_hc_returned_false:
-                    mock_hc.run_health_check.assert_called_once_with(
-                        ctx, x_node)
-                else:
-                    mock_hc.assert_not_called()
-                if not mock_hc.run_health_check.return_value:
-                    previous_hc_returned_false = True
-
-            mock_recover.assert_called_once_with('FAKE_NODE', ctx, mock.ANY)
-            mock_wait.assert_called_once_with(
-                ctx, 'FAKE_ACTION_ID', node_update_timeout)
-
-    @mock.patch.object(obj_node.Node, 'get_all_by_cluster')
-    @mock.patch.object(hm.HealthManager, "_recover_node")
-    @mock.patch.object(hm.HealthManager, "_wait_for_action")
-    @mock.patch.object(obj_cluster.Cluster, 'get')
-    @mock.patch.object(context, 'get_service_context')
-    def test_execute_health_check_all_mode_healthy(
-            self, mock_ctx, mock_get, mock_wait, mock_recover, mock_nodes):
-        cluster_id = 'CLUSTER_ID'
-        interval = 1
-        recovery_cond = consts.ALL_FAILED
-        node_update_timeout = 1
-        recovery_action = {'operation': 'REBUILD'}
-
-        x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
-        mock_get.return_value = x_cluster
-
-        ctx = mock.Mock()
-        mock_ctx.return_value = ctx
-
-        mock_wait.return_value = (True, "")
-
-        x_node = mock.Mock(id='FAKE_NODE1', status="ERROR")
-        mock_nodes.return_value = [x_node]
-
-        hc_true = {'run_health_check.return_value': True}
-        hc_false = {'run_health_check.return_value': False}
-
-        hc_test_values = [
-            [
-                mock.Mock(**hc_true),
-                mock.Mock(**hc_true),
-                mock.Mock(**hc_true),
-            ],
-            [
-                mock.Mock(**hc_false),
-                mock.Mock(**hc_true),
-                mock.Mock(**hc_true),
-            ],
-            [
-                mock.Mock(**hc_true),
-                mock.Mock(**hc_false),
-                mock.Mock(**hc_true),
-            ],
-            [
-                mock.Mock(**hc_true),
-                mock.Mock(**hc_true),
-                mock.Mock(**hc_false),
-            ],
-        ]
-
-        self.hm.cluster_id = cluster_id
-
-        for hc_mocks in hc_test_values:
-            self.hm.health_check_types = {
-                cluster_id: hc_mocks
-            }
-
-            mock_get.reset_mock()
-            mock_ctx.reset_mock()
-            mock_recover.reset_mock()
-            mock_wait.reset_mock()
-
-            # do it
-            self.hm._execute_health_check(interval, cluster_id,
-                                          recovery_action,
-                                          recovery_cond, node_update_timeout)
-
-            mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
-                                             project_safe=False)
-            mock_ctx.assert_called_once_with(user_id=x_cluster.user,
-                                             project_id=x_cluster.project)
-
-            # health checks should be called until one of them returns true
-            previous_hc_returned_true = False
-            for mock_hc in hc_mocks:
-                if not previous_hc_returned_true:
-                    mock_hc.run_health_check.assert_called_once_with(
-                        ctx, x_node)
-                else:
-                    mock_hc.assert_not_called()
-                if mock_hc.run_health_check.return_value:
-                    previous_hc_returned_true = True
-
-            mock_recover.assert_not_called()
-            mock_wait.assert_not_called()
-
-    @mock.patch.object(obj_node.Node, 'get_all_by_cluster')
-    @mock.patch.object(hm.HealthManager, "_recover_node")
-    @mock.patch.object(hm.HealthManager, "_wait_for_action")
+    @mock.patch.object(hm.HealthCheck, "_recover_node")
+    @mock.patch.object(hm.HealthCheck, "_wait_for_action")
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(context, 'get_service_context')
     def test_execute_health_check_all_mode_unhealthy(
             self, mock_ctx, mock_get, mock_wait, mock_recover, mock_nodes):
-        cluster_id = 'CLUSTER_ID'
-        interval = 1
-        recovery_cond = consts.ALL_FAILED
-        node_update_timeout = 1
-        recovery_action = {'operation': 'REBUILD'}
+        self.hc.cluster_id = 'CLUSTER_ID'
+        self.hc.interval = 1
+        self.hc.recovery_cond = consts.ALL_FAILED
+        self.hc.node_update_timeout = 1
+        self.hc.recovery_action = {'operation': 'REBUILD'}
 
-        x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID')
+        x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID',
+                              id='CLUSTER_ID')
         mock_get.return_value = x_cluster
 
         ctx = mock.Mock()
@@ -1524,18 +1087,11 @@ class TestHealthManager(base.SenlinTestCase):
         hc_test_values = [
             [
                 mock.Mock(**hc_false),
-                mock.Mock(**hc_false),
-                mock.Mock(**hc_false),
             ]
         ]
 
-        self.hm.cluster_id = cluster_id
-        self.hm.node_update_timeout = 1
-
         for hc_mocks in hc_test_values:
-            self.hm.health_check_types = {
-                cluster_id: hc_mocks
-            }
+            self.hc.health_check_types = hc_mocks
 
             mock_get.reset_mock()
             mock_ctx.reset_mock()
@@ -1543,242 +1099,652 @@ class TestHealthManager(base.SenlinTestCase):
             mock_wait.reset_mock()
 
             # do it
-            self.hm._execute_health_check(interval, cluster_id,
-                                          recovery_action,
-                                          recovery_cond, node_update_timeout)
+            self.hc.execute_health_check()
 
-            mock_get.assert_called_once_with(self.hm.ctx, 'CLUSTER_ID',
+            mock_get.assert_called_once_with(self.hc.ctx, 'CLUSTER_ID',
                                              project_safe=False)
             mock_ctx.assert_called_once_with(user_id=x_cluster.user,
                                              project_id=x_cluster.project)
 
-            # all health checks should be called
             for mock_hc in hc_mocks:
-                mock_hc.run_health_check.assert_called_once_with(ctx, x_node)
+                mock_hc.run_health_check.assert_has_calls(
+                    [
+                        mock.call(ctx, x_node)
+                    ]
+                )
 
-            mock_recover.assert_called_once_with('FAKE_NODE', ctx, mock.ANY)
+            mock_recover.assert_called_once_with(ctx, 'FAKE_NODE')
             mock_wait.assert_called_once_with(
-                ctx, 'FAKE_ACTION_ID', self.hm.node_update_timeout)
+                ctx, 'FAKE_ACTION_ID', self.hc.node_update_timeout)
 
     @mock.patch.object(obj_cluster.Cluster, 'get')
     @mock.patch.object(context, 'get_service_context')
     def test_execute_health_check_cluster_not_found(self, mock_ctx, mock_get):
-        cluster_id = 'CLUSTER_ID'
-        interval = 1
-        recovery_cond = consts.ANY_FAILED
-        node_update_timeout = 1
-        recovery_action = {'operation': 'REBUILD'}
-
         mock_get.return_value = None
 
-        # do it
-        self.hm._execute_health_check(interval, cluster_id,
-                                      recovery_action, recovery_cond,
-                                      node_update_timeout)
+        self.hc.execute_health_check()
 
         mock_ctx.assert_not_called()
 
-    def test_start_check_invalid_type(self):
-        entry = {
-            'cluster_id': 'CCID',
-            'interval': 12,
-            'check_type': 'blah',
-            'params': {
-                'recover_action': [{'name': 'REBUILD'}]
-            },
-        }
+    @mock.patch.object(hm.HealthCheck, "_recover_node")
+    def test_check_node_health_any_failed(self, mock_recover):
+        x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID',
+                              id='CLUSTER_ID')
+        x_node = mock.Mock(id='FAKE_NODE', status="ERROR")
+        ctx = mock.Mock()
 
-        res = self.hm._start_check(entry)
+        self.hc.params['recovery_conditional'] = consts.ANY_FAILED
+        mock_hc_1 = mock.Mock()
+        mock_hc_1.run_health_check.return_value = True
+        mock_hc_2 = mock.Mock()
+        mock_hc_2.run_health_check.return_value = False
 
-        self.assertIsNone(res)
+        self.hc.health_check_types = [mock_hc_1, mock_hc_2]
 
-    @mock.patch.object(threadgroup.ThreadGroup, 'add_dynamic_timer')
-    @mock.patch.object(hm.HealthManager, '_add_health_check')
-    @mock.patch.object(hm.HealthCheckType, 'factory')
-    def test_start_check_for_polling(self, mock_hc_factory, mock_add_hc,
-                                     mock_add_timer):
-        x_timer = mock.Mock()
-        mock_add_timer.return_value = x_timer
+        self.hc._check_node_health(ctx, x_node, x_cluster)
 
-        entry = {
-            'cluster_id': 'CCID',
-            'interval': 12,
-            'check_type': consts.NODE_STATUS_POLLING,
-            'params': {
-                'recover_action': [{'name': 'REBUILD'}],
-                'recovery_conditional': 'ANY_FAILED',
-                'node_update_timeout': 1,
-            },
-        }
+        mock_hc_1.run_health_check.assert_called_once_with(ctx, x_node)
+        mock_hc_2.run_health_check.assert_called_once_with(ctx, x_node)
+        mock_recover.assert_called_once_with(ctx, x_node.id)
 
-        res = self.hm._start_check(entry)
+    @mock.patch.object(hm.HealthCheck, "_recover_node")
+    def test_check_node_health_all_failed(self, mock_recover):
+        x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID',
+                              id='CLUSTER_ID')
+        x_node = mock.Mock(id='FAKE_NODE', status="ERROR")
+        ctx = mock.Mock()
 
-        expected = copy.deepcopy(entry)
-        expected['timer'] = x_timer
-        self.assertEqual(expected, res)
-        mock_add_timer.assert_called_once_with(
-            self.hm._execute_health_check, None, None, 12, 'CCID',
-            {'operation': 'REBUILD'}, 'ANY_FAILED', 1)
-        mock_add_hc.assert_called_once_with('CCID', mock.ANY)
-        mock_hc_factory.assert_called_once_with(
-            consts.NODE_STATUS_POLLING, 'CCID', 12, entry['params'])
+        self.hc.params['recovery_conditional'] = consts.ALL_FAILED
+        mock_hc_1 = mock.Mock()
+        mock_hc_1.run_health_check.return_value = False
+        mock_hc_2 = mock.Mock()
+        mock_hc_2.run_health_check.return_value = False
 
-    @mock.patch.object(threadgroup.ThreadGroup, 'add_dynamic_timer')
-    @mock.patch.object(hm.HealthManager, '_add_health_check')
-    @mock.patch.object(hm.HealthCheckType, 'factory')
-    def test_start_check_for_poll_url(self, mock_hc_factory, mock_add_hc,
-                                      mock_add_timer):
-        x_timer = mock.Mock()
-        mock_add_timer.return_value = x_timer
+        self.hc.health_check_types = [mock_hc_1, mock_hc_2]
 
-        entry = {
-            'cluster_id': 'CCID',
-            'interval': 12,
-            'check_type': consts.NODE_STATUS_POLL_URL,
-            'params': {
-                'recover_action': [{'name': 'REBUILD'}],
-                'recovery_conditional': 'ANY_FAILED',
-                'node_update_timeout': 1,
-            },
-        }
+        self.hc._check_node_health(ctx, x_node, x_cluster)
 
-        res = self.hm._start_check(entry)
+        mock_hc_1.run_health_check.assert_called_once_with(ctx, x_node)
+        mock_hc_2.run_health_check.assert_called_once_with(ctx, x_node)
+        mock_recover.assert_called_once_with(ctx, x_node.id)
 
-        expected = copy.deepcopy(entry)
-        expected['timer'] = x_timer
-        self.assertEqual(expected, res)
-        mock_add_timer.assert_called_once_with(
-            self.hm._execute_health_check, None, None, 12, 'CCID',
-            {'operation': 'REBUILD'}, 'ANY_FAILED', 1)
-        mock_add_hc.assert_called_once_with('CCID', mock.ANY)
-        mock_hc_factory.assert_called_once_with(
-            consts.NODE_STATUS_POLL_URL,
-            'CCID', 12, entry['params'])
+    @mock.patch.object(hm.HealthCheck, "_recover_node")
+    def test_check_node_health_all_failed_negative(self, mock_recover):
+        x_cluster = mock.Mock(user='USER_ID', project='PROJECT_ID',
+                              id='CLUSTER_ID')
+        x_node = mock.Mock(id='FAKE_NODE', status="ERROR")
+        ctx = mock.Mock()
 
-    @mock.patch.object(threadgroup.ThreadGroup, 'add_dynamic_timer')
-    @mock.patch.object(hm.HealthManager, '_add_health_check')
-    @mock.patch.object(hm.HealthCheckType, 'factory')
-    def test_start_check_poll_url_and_polling(self, mock_hc_factory,
-                                              mock_add_hc, mock_add_timer):
-        x_timer = mock.Mock()
-        mock_add_timer.return_value = x_timer
+        self.hc.params['recovery_conditional'] = consts.ALL_FAILED
+        mock_hc_1 = mock.Mock()
+        mock_hc_1.run_health_check.return_value = False
+        mock_hc_2 = mock.Mock()
+        mock_hc_2.run_health_check.return_value = True
 
-        check_type = ','.join(
-            [consts.NODE_STATUS_POLL_URL, consts.NODE_STATUS_POLLING])
-        entry = {
-            'cluster_id': 'CCID',
-            'interval': 12,
-            'check_type': check_type,
-            'params': {
-                'recover_action': [{'name': 'REBUILD'}],
-                'recovery_conditional': 'ALL_FAILED',
-                'node_update_timeout': 1,
-            },
-        }
+        self.hc.health_check_types = [mock_hc_1, mock_hc_2]
 
-        res = self.hm._start_check(entry)
+        self.hc._check_node_health(ctx, x_node, x_cluster)
 
-        expected = copy.deepcopy(entry)
-        expected['timer'] = x_timer
-        self.assertEqual(expected, res)
-        mock_add_timer.assert_called_once_with(
-            self.hm._execute_health_check, None, None, 12, 'CCID',
-            {'operation': 'REBUILD'}, 'ALL_FAILED', 1)
-        mock_add_hc.assert_has_calls(
+        mock_hc_1.run_health_check.assert_called_once_with(ctx, x_node)
+        mock_hc_2.run_health_check.assert_called_once_with(ctx, x_node)
+        mock_recover.assert_not_called()
+
+    @mock.patch('senlin.objects.ActionGetRequest')
+    def test_wait_for_action(self, mock_action_req):
+        x_req = mock.Mock()
+        mock_action_req.return_value = x_req
+
+        x_action = {'status': consts.ACTION_SUCCEEDED}
+        self.fake_rpc.call.return_value = x_action
+
+        ctx = mock.Mock()
+        action_id = 'FAKE_ACTION_ID'
+        timeout = 5
+
+        # do it
+        res, err = self.hc._wait_for_action(ctx, action_id, timeout)
+
+        self.assertTrue(res)
+        self.assertEqual(err, '')
+        self.fake_rpc.call.assert_called_with(ctx, 'action_get', x_req)
+
+    @mock.patch('senlin.objects.ActionGetRequest')
+    def test_wait_for_action_success_before_timeout(self, mock_action_req):
+        x_req = mock.Mock()
+        mock_action_req.return_value = x_req
+
+        x_action1 = {'status': consts.ACTION_RUNNING}
+        x_action2 = {'status': consts.ACTION_SUCCEEDED}
+        self.fake_rpc.call.side_effect = [x_action1, x_action2]
+
+        ctx = mock.Mock()
+        action_id = 'FAKE_ACTION_ID'
+        timeout = 5
+
+        # do it
+        res, err = self.hc._wait_for_action(ctx, action_id, timeout)
+
+        self.assertTrue(res)
+        self.assertEqual(err, '')
+        self.fake_rpc.call.assert_has_calls(
             [
-                mock.call('CCID', mock.ANY),
-                mock.call('CCID', mock.ANY)
-            ]
-        )
-        mock_hc_factory.assert_has_calls(
-            [
-                mock.call(
-                    consts.NODE_STATUS_POLL_URL, 'CCID', 12, entry['params']
-                ),
-                mock.call(
-                    consts.NODE_STATUS_POLLING, 'CCID', 12, entry['params']
-                ),
+                mock.call(ctx, 'action_get', x_req),
+                mock.call(ctx, 'action_get', x_req)
             ]
         )
 
-    def test_start_check_for_listening(self):
-        x_listener = mock.Mock()
-        mock_add_listener = self.patchobject(self.hm, '_add_listener',
-                                             return_value=x_listener)
+    @mock.patch('senlin.objects.ActionGetRequest')
+    def test_wait_for_action_timeout(self, mock_action_req):
+        x_req = mock.Mock()
+        mock_action_req.return_value = x_req
 
-        entry = {
-            'cluster_id': 'CCID',
-            'check_type': consts.LIFECYCLE_EVENTS,
-            'params': {'recover_action': [{'name': 'REBUILD'}]},
-        }
-        recover_action = {'operation': 'REBUILD'}
-        res = self.hm._start_check(entry)
+        x_action = {'status': consts.ACTION_RUNNING}
+        self.fake_rpc.call.return_value = x_action
 
-        expected = copy.deepcopy(entry)
-        expected['listener'] = x_listener
-        self.assertEqual(expected, res)
-        mock_add_listener.assert_called_once_with('CCID', recover_action)
-
-    def test_start_check_for_listening_failed(self):
-        mock_add_listener = self.patchobject(self.hm, '_add_listener',
-                                             return_value=None)
-
-        entry = {
-            'cluster_id': 'CCID',
-            'check_type': consts.LIFECYCLE_EVENTS,
-            'params': {'recover_action': [{'name': 'REBUILD'}]},
-        }
-        recover_action = {'operation': 'REBUILD'}
-        res = self.hm._start_check(entry)
-
-        self.assertIsNone(res)
-        mock_add_listener.assert_called_once_with('CCID', recover_action)
-
-    def test_start_check_other_types(self):
-        entry = {
-            'cluster_id': 'CCID',
-            'check_type': 'BOGUS TYPE',
-            'params': {'recover_action': [{'name': 'REBUILD'}]},
-        }
-        res = self.hm._start_check(entry)
-
-        self.assertIsNone(res)
-
-    def test_stop_check_with_timer(self):
-        x_timer = mock.Mock()
-        entry = {'timer': x_timer, 'cluster_id': 'CLUSTER_ID'}
-        mock_timer_done = self.patchobject(self.hm.TG, 'timer_done')
-
-        x_hc_types = mock.MagicMock()
-        x_hc_types.__contains__.return_value = True
-        x_hc_types.__iter__.return_value = ['CLUSTER_ID']
-        self.hm.health_check_types = x_hc_types
+        ctx = mock.Mock()
+        action_id = 'FAKE_ACTION_ID'
+        timeout = 5
 
         # do it
-        res = self.hm._stop_check(entry)
+        res, err = self.hc._wait_for_action(ctx, action_id, timeout)
 
-        self.assertIsNone(res)
-        x_timer.stop.assert_called_once_with()
-        mock_timer_done.assert_called_once_with(x_timer)
-        x_hc_types.pop.assert_called_once_with('CLUSTER_ID')
+        self.assertFalse(res)
+        self.assertTrue(re.search('timeout', err, re.IGNORECASE))
+        self.fake_rpc.call.assert_has_calls(
+            [
+                mock.call(ctx, 'action_get', x_req)
+            ]
+        )
 
-    def test_stop_check_with_listener(self):
-        x_thread = mock.Mock()
-        entry = {'listener': x_thread, 'cluster_id': 'CLUSTER_ID'}
-        mock_thread_done = self.patchobject(self.hm.TG, 'thread_done')
+    @mock.patch('senlin.objects.ActionGetRequest')
+    def test_wait_for_action_failed(self, mock_action_req):
+        x_req = mock.Mock()
+        mock_action_req.return_value = x_req
 
-        x_hc_types = mock.MagicMock()
-        x_hc_types.__contains__.return_value = False
-        x_hc_types.__iter__.return_value = ['CLUSTER_ID']
-        self.hm.health_check_types = x_hc_types
+        x_action = {'status': consts.ACTION_FAILED}
+        self.fake_rpc.call.return_value = x_action
+
+        ctx = mock.Mock()
+        action_id = 'FAKE_ACTION_ID'
+        timeout = 5
 
         # do it
-        res = self.hm._stop_check(entry)
+        res, err = self.hc._wait_for_action(ctx, action_id, timeout)
+
+        self.assertFalse(res)
+        self.assertEqual(err, 'Cluster check action failed or cancelled')
+        self.fake_rpc.call.assert_called_with(ctx, 'action_get', x_req)
+
+    @mock.patch('senlin.objects.ActionGetRequest')
+    def test_wait_for_action_cancelled(self, mock_action_req):
+        x_req = mock.Mock()
+        mock_action_req.return_value = x_req
+
+        x_action = {'status': consts.ACTION_CANCELLED}
+        self.fake_rpc.call.return_value = x_action
+
+        ctx = mock.Mock()
+        action_id = 'FAKE_ACTION_ID'
+        timeout = 5
+
+        # do it
+        res, err = self.hc._wait_for_action(ctx, action_id, timeout)
+
+        self.assertFalse(res)
+        self.assertEqual(err, 'Cluster check action failed or cancelled')
+        self.fake_rpc.call.assert_called_with(ctx, 'action_get', x_req)
+
+    @mock.patch('senlin.objects.NodeRecoverRequest', autospec=True)
+    def test_recover_node(self, mock_req):
+        ctx = mock.Mock()
+        node_id = 'FAKE_NODE'
+        self.hc.recover_action = {'operation': 'REBUILD'}
+
+        x_req = mock.Mock
+        mock_req.return_value = x_req
+
+        x_action = {'action': 'RECOVER_ID1'}
+        self.fake_rpc.call.return_value = x_action
+
+        # do it
+        res = self.hc._recover_node(ctx, node_id)
+
+        self.assertEqual(x_action, res)
+        mock_req.assert_called_once_with(
+            identity=node_id, params=self.hc.recover_action)
+        self.fake_rpc.call.assert_called_once_with(ctx, 'node_recover', x_req)
+
+    @mock.patch('senlin.objects.NodeRecoverRequest', autospec=True)
+    def test_recover_node_failed(self, mock_req):
+        ctx = mock.Mock()
+        node_id = 'FAKE_NODE'
+        self.hc.recover_action = {'operation': 'REBUILD'}
+
+        x_req = mock.Mock
+        mock_req.return_value = x_req
+
+        self.fake_rpc.call.side_effect = Exception('boom')
+
+        # do it
+        res = self.hc._recover_node(ctx, node_id)
 
         self.assertIsNone(res)
-        x_thread.stop.assert_called_once_with()
-        mock_thread_done.assert_called_once_with(x_thread)
-        x_hc_types.pop.assert_not_called()
+        mock_req.assert_called_once_with(
+            identity=node_id, params=self.hc.recover_action)
+        self.fake_rpc.call.assert_called_once_with(ctx, 'node_recover', x_req)
+
+    @mock.patch('senlin.objects.HealthRegistry', autospec=True)
+    def test_db_create(self, mock_hrdb):
+        self.hc.db_create()
+        mock_hrdb.create.assert_called_once_with(
+            self.hc.ctx, self.hc.cluster_id, self.hc.check_type,
+            self.hc.interval, self.hc.params, self.hc.engine_id,
+            self.hc.enabled)
+
+    @mock.patch('senlin.objects.HealthRegistry', autospec=True)
+    def test_db_delete(self, mock_hrdb):
+        self.hc.db_delete()
+        mock_hrdb.delete.assert_called_once_with(self.hc.ctx,
+                                                 self.hc.cluster_id)
+
+    @mock.patch('senlin.objects.HealthRegistry', autospec=True)
+    def test_enable(self, mock_hrdb):
+        self.hc.enable()
+        mock_hrdb.update.assert_called_once_with(
+            self.hc.ctx, self.hc.cluster_id, {'enabled': True})
+
+    @mock.patch('senlin.objects.HealthRegistry', autospec=True)
+    def test_disable(self, mock_hrdb):
+        self.hc.disable()
+        mock_hrdb.update.assert_called_once_with(
+            self.hc.ctx, self.hc.cluster_id, {'enabled': False})
+
+
+class TestRuntimeHealthRegistry(base.SenlinTestCase):
+
+    def setUp(self):
+        super(TestRuntimeHealthRegistry, self).setUp()
+
+        mock_ctx = mock.Mock()
+        self.mock_tg = mock.Mock()
+        self.rhr = hm.RuntimeHealthRegistry(mock_ctx, 'ENGINE_ID',
+                                            self.mock_tg)
+
+    def create_mock_entry(self, ctx=None, engine_id='ENGINE_ID',
+                          cluster_id='CID',
+                          check_type=None,
+                          interval=60, node_update_timeout=60, params=None,
+                          enabled=True, timer=None, listener=None,
+                          type=consts.POLLING):
+        mock_entry = mock.Mock(
+            ctx=ctx,
+            engine_id=engine_id,
+            cluster_id=cluster_id,
+            check_type=check_type,
+            interval=interval,
+            node_update_timeout=node_update_timeout,
+            params=params,
+            enabled=enabled,
+            timer=timer,
+            listener=listener,
+            execute_health_check=mock.Mock(),
+            type=type)
+        return mock_entry
+
+    @mock.patch.object(hm, 'HealthCheck')
+    def test_register_cluster(self, mock_hc):
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.NODE_STATUS_POLLING])
+        mock_entry.db_create = mock.Mock()
+        mock_hc.return_value = mock_entry
+
+        self.rhr.register_cluster('CID', 60, 60, {})
+
+        self.assertEqual(mock_entry, self.rhr.registries['CID'])
+        self.mock_tg.add_dynamic_timer.assert_called_once_with(
+            mock_entry.execute_health_check, None, None)
+        self.mock_tg.add_thread.assert_not_called()
+        mock_entry.db_create.assert_called_once_with()
+
+    @mock.patch.object(hm, 'HealthCheck')
+    def test_register_cluster_failed(self, mock_hc):
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.NODE_STATUS_POLLING])
+        mock_entry.db_create = mock.Mock()
+        mock_entry.db_delete = mock.Mock()
+
+        mock_hc.return_value = mock_entry
+        self.rhr.add_health_check = mock.Mock()
+        self.rhr.add_health_check.side_effect = Exception
+
+        self.rhr.register_cluster('CID', 60, 60, {})
+
+        self.assertEqual(mock_entry, self.rhr.registries['CID'])
+        self.mock_tg.add_dynamic_timer.assert_not_called()
+        self.mock_tg.add_thread.assert_not_called()
+        mock_entry.db_create.assert_called_once_with()
+        mock_entry.db_delete.assert_called_once_with()
+
+    def test_unregister_cluster_with_timer(self):
+        timer = mock.Mock()
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.NODE_STATUS_POLLING],
+            timer=timer)
+        self.rhr.registries['CID'] = mock_entry
+        mock_entry.db_delete = mock.Mock()
+
+        self.rhr.unregister_cluster('CID')
+
+        mock_entry.db_delete.assert_called_once_with()
+        timer.stop.assert_called_once_with()
+        self.mock_tg.timer_done.assert_called_once_with(timer)
+        self.assertIsNone(mock_entry.timer)
+
+    def test_unregister_cluster_with_listener(self):
+        listener = mock.Mock()
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.NODE_STATUS_POLLING],
+            listener=listener)
+        self.rhr.registries['CID'] = mock_entry
+        mock_entry.db_delete = mock.Mock()
+
+        self.rhr.unregister_cluster('CID')
+
+        mock_entry.db_delete.assert_called_once_with()
+        listener.stop.assert_called_once_with()
+        self.mock_tg.thread_done.assert_called_once_with(listener)
+        self.assertIsNone(mock_entry.listener)
+
+    def test_unregister_cluster_failed(self):
+        listener = mock.Mock()
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.NODE_STATUS_POLLING],
+            listener=listener)
+        self.rhr.registries['CID'] = mock_entry
+        mock_entry.db_delete.side_effect = Exception
+
+        self.rhr.unregister_cluster('CID')
+
+        listener.stop.assert_called_once_with()
+        self.mock_tg.thread_done.assert_called_once_with(listener)
+        self.assertIsNone(mock_entry.listener)
+
+    def test_enable_cluster(self):
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.NODE_STATUS_POLLING],
+            enabled=False)
+
+        def mock_enable():
+            mock_entry.enabled = True
+            return True
+
+        mock_entry.enable = mock_enable
+
+        self.rhr.registries['CID'] = mock_entry
+
+        self.rhr.enable_cluster('CID')
+
+        self.assertTrue(mock_entry.enabled)
+        self.mock_tg.add_dynamic_timer.assert_called_once_with(
+            mock_entry.execute_health_check, None, None)
+        self.mock_tg.add_thread.assert_not_called()
+
+    def test_enable_cluster_failed(self):
+        timer = mock.Mock()
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.NODE_STATUS_POLLING],
+            enabled=False, timer=timer)
+        mock_entry.enable = mock.Mock()
+        mock_entry.enable.side_effect = Exception
+
+        self.rhr.registries['CID'] = mock_entry
+
+        self.rhr.enable_cluster('CID')
+
+        self.mock_tg.add_dynamic_timer.assert_not_called()
+        self.mock_tg.add_thread.assert_not_called()
+        timer.stop.assert_called_once_with()
+        self.mock_tg.timer_done.assert_called_once_with(timer)
+
+    def test_disable_cluster(self):
+        timer = mock.Mock()
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.NODE_STATUS_POLLING],
+            enabled=True, timer=timer)
+
+        def mock_disable():
+            mock_entry.enabled = False
+
+        mock_entry.disable = mock_disable
+
+        self.rhr.registries['CID'] = mock_entry
+
+        self.rhr.disable_cluster('CID')
+
+        self.assertEqual(False, mock_entry.enabled)
+
+        self.mock_tg.add_dynamic_timer.assert_not_called()
+        self.mock_tg.add_thread.assert_not_called()
+        timer.stop.assert_called_once_with()
+        self.mock_tg.timer_done.assert_called_once_with(timer)
+
+    def test_disable_cluster_failed(self):
+        timer = mock.Mock()
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.NODE_STATUS_POLLING],
+            enabled=True, timer=timer)
+
+        mock_entry.enable.side_effect = Exception
+
+        self.rhr.registries['CID'] = mock_entry
+
+        self.rhr.disable_cluster('CID')
+
+        self.mock_tg.add_dynamic_timer.assert_not_called()
+        self.mock_tg.add_thread.assert_not_called()
+        timer.stop.assert_called_once_with()
+        self.mock_tg.timer_done.assert_called_once_with(timer)
+
+    def test_add_timer(self):
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.NODE_STATUS_POLLING])
+        self.rhr.registries['CID'] = mock_entry
+        fake_timer = mock.Mock()
+        self.mock_tg.add_dynamic_timer = mock.Mock()
+        self.mock_tg.add_dynamic_timer.return_value = fake_timer
+
+        self.rhr._add_timer('CID')
+
+        self.assertEqual(fake_timer, mock_entry.timer)
+        self.mock_tg.add_dynamic_timer.assert_called_once_with(
+            mock_entry.execute_health_check, None, None)
+
+    def test_add_timer_failed(self):
+        fake_timer = mock.Mock()
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.NODE_STATUS_POLLING], timer=fake_timer)
+        self.rhr.registries['CID'] = mock_entry
+        self.mock_tg.add_dynamic_timer = mock.Mock()
+
+        self.rhr._add_timer('CID')
+
+        self.assertEqual(fake_timer, mock_entry.timer)
+        self.mock_tg.add_dynamic_timer.assert_not_called()
+
+    @mock.patch.object(obj_profile.Profile, 'get')
+    @mock.patch.object(obj_cluster.Cluster, 'get')
+    def test_add_listener_nova(self, mock_cluster, mock_profile):
+        cfg.CONF.set_override('nova_control_exchange', 'FAKE_NOVA_EXCHANGE',
+                              group='health_manager')
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.LIFECYCLE_EVENTS])
+        self.rhr.registries['CID'] = mock_entry
+        fake_listener = mock.Mock()
+        x_cluster = mock.Mock(project='PROJECT_ID', profile_id='PROFILE_ID')
+        mock_cluster.return_value = x_cluster
+        x_profile = mock.Mock(type='os.nova.server-1.0')
+        mock_profile.return_value = x_profile
+        self.mock_tg.add_thread = mock.Mock()
+        self.mock_tg.add_thread.return_value = fake_listener
+
+        self.rhr._add_listener('CID')
+
+        mock_cluster.assert_called_once_with(self.rhr.ctx, 'CID',
+                                             project_safe=False)
+        mock_profile.assert_called_once_with(self.rhr.ctx, 'PROFILE_ID',
+                                             project_safe=False)
+        self.mock_tg.add_thread.assert_called_once_with(
+            hm.ListenerProc, 'FAKE_NOVA_EXCHANGE', 'PROJECT_ID', 'CID',
+            mock_entry.recover_action)
+
+    @mock.patch.object(obj_profile.Profile, 'get')
+    @mock.patch.object(obj_cluster.Cluster, 'get')
+    def test_add_listener_heat(self, mock_cluster, mock_profile):
+        cfg.CONF.set_override('heat_control_exchange', 'FAKE_HEAT_EXCHANGE',
+                              group='health_manager')
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.LIFECYCLE_EVENTS])
+        self.rhr.registries['CID'] = mock_entry
+        fake_listener = mock.Mock()
+        x_cluster = mock.Mock(project='PROJECT_ID', profile_id='PROFILE_ID')
+        mock_cluster.return_value = x_cluster
+        x_profile = mock.Mock(type='os.heat.stack-1.0')
+        mock_profile.return_value = x_profile
+        self.mock_tg.add_thread = mock.Mock()
+        self.mock_tg.add_thread.return_value = fake_listener
+
+        self.rhr._add_listener('CID')
+
+        mock_cluster.assert_called_once_with(self.rhr.ctx, 'CID',
+                                             project_safe=False)
+        mock_profile.assert_called_once_with(self.rhr.ctx, 'PROFILE_ID',
+                                             project_safe=False)
+        self.mock_tg.add_thread.assert_called_once_with(
+            hm.ListenerProc, 'FAKE_HEAT_EXCHANGE', 'PROJECT_ID', 'CID',
+            mock_entry.recover_action)
+
+    @mock.patch.object(obj_profile.Profile, 'get')
+    @mock.patch.object(obj_cluster.Cluster, 'get')
+    def test_add_listener_failed(self, mock_cluster, mock_profile):
+        cfg.CONF.set_override('heat_control_exchange', 'FAKE_HEAT_EXCHANGE',
+                              group='health_manager')
+        fake_listener = mock.Mock()
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.LIFECYCLE_EVENTS], listener=fake_listener)
+        self.rhr.registries['CID'] = mock_entry
+
+        x_cluster = mock.Mock(project='PROJECT_ID', profile_id='PROFILE_ID')
+        mock_cluster.return_value = x_cluster
+        x_profile = mock.Mock(type='os.heat.stack-1.0')
+        mock_profile.return_value = x_profile
+        self.mock_tg.add_thread = mock.Mock()
+
+        self.rhr._add_listener('CID')
+
+        mock_cluster.assert_not_called()
+        mock_profile.assert_not_called()
+
+        self.mock_tg.add_thread.assert_not_called()
+
+    def test_add_health_check_polling(self):
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.NODE_STATUS_POLLING])
+        self.rhr.registries['CID'] = mock_entry
+        self.rhr._add_timer = mock.Mock()
+        self.rhr._add_listener = mock.Mock()
+
+        self.rhr.add_health_check(mock_entry)
+
+        self.rhr._add_timer.assert_called_once_with('CID')
+        self.rhr._add_listener.assert_not_called()
+
+    def test_add_health_check_events(self):
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.LIFECYCLE_EVENTS], type=consts.EVENTS)
+        self.rhr.registries['CID'] = mock_entry
+        self.rhr._add_timer = mock.Mock()
+        self.rhr._add_listener = mock.Mock()
+
+        self.rhr.add_health_check(mock_entry)
+
+        self.rhr._add_timer.assert_not_called()
+        self.rhr._add_listener.assert_called_once_with('CID')
+
+    def test_add_health_check_disabled(self):
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.NODE_STATUS_POLLING], enabled=False)
+        self.rhr.registries['CID'] = mock_entry
+        self.rhr._add_timer = mock.Mock()
+        self.rhr._add_listener = mock.Mock()
+
+        self.rhr.add_health_check(mock_entry)
+
+        self.rhr._add_timer.assert_not_called()
+        self.rhr._add_listener.assert_not_called()
+
+    def test_add_health_check_timer_exists(self):
+        fake_timer = mock.Mock()
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.NODE_STATUS_POLLING], timer=fake_timer)
+        self.rhr.registries['CID'] = mock_entry
+        self.rhr._add_timer = mock.Mock()
+        self.rhr._add_listener = mock.Mock()
+
+        self.rhr.add_health_check(mock_entry)
+
+        self.rhr._add_timer.assert_not_called()
+        self.rhr._add_listener.assert_not_called()
+
+    def test_remove_health_check_timer(self):
+        fake_timer = mock.Mock()
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.NODE_STATUS_POLLING], timer=fake_timer)
+        self.rhr.registries['CID'] = mock_entry
+
+        self.rhr.remove_health_check(mock_entry)
+
+        fake_timer.stop.assert_called_once_with()
+        self.mock_tg.timer_done.assert_called_once_with(fake_timer)
+        self.mock_tg.thread_done.asset_not_called()
+        self.assertIsNone(mock_entry.timer)
+
+    def test_remove_health_check_listener(self):
+        fake_listener = mock.Mock()
+        mock_entry = self.create_mock_entry(
+            check_type=[consts.NODE_STATUS_POLLING], listener=fake_listener)
+        self.rhr.registries['CID'] = mock_entry
+
+        self.rhr.remove_health_check(mock_entry)
+
+        fake_listener.stop.assert_called_once_with()
+        self.mock_tg.timer_done.asset_not_called()
+        self.mock_tg.thread_done.assert_called_once_with(fake_listener)
+        self.assertIsNone(mock_entry.listener)
+
+
+class TestHealthManager(base.SenlinTestCase):
+
+    def setUp(self):
+        super(TestHealthManager, self).setUp()
+
+        mock_eng = mock.Mock()
+        mock_eng.engine_id = 'ENGINE_ID'
+        topic = consts.HEALTH_MANAGER_TOPIC
+        version = consts.RPC_API_VERSION
+        self.hm = hm.HealthManager(mock_eng, topic, version)
+
+    def test_init(self):
+        self.assertEqual('ENGINE_ID', self.hm.engine_id)
+        self.assertIsNotNone(self.hm.TG)
+        self.assertIsNotNone(self.hm.rpc_client)
+        self.assertEqual(consts.HEALTH_MANAGER_TOPIC, self.hm.topic)
+        self.assertEqual(consts.RPC_API_VERSION, self.hm.version)
+        self.assertEqual(0, len(self.hm.registries))
+
+    def test_task(self):
+        self.hm.health_registry = mock.Mock()
+        self.hm.task()
+        self.hm.health_registry.load_runtime_registry.assert_called_once_with()
 
     @mock.patch('oslo_messaging.Target')
     def test_start(self, mock_target):
@@ -1804,144 +1770,28 @@ class TestHealthManager(base.SenlinTestCase):
         mock_add_timer.assert_called_once_with(
             self.hm.task, None, cfg.CONF.periodic_interval)
 
-    @mock.patch.object(hr.HealthRegistry, 'create')
-    @mock.patch.object(hm.HealthManager, '_start_check')
-    def test_register_cluster(self, mock_check, mock_reg_create):
-        entry = {
-            'cluster_id': 'CLUSTER_ID',
-            'check_type': consts.NODE_STATUS_POLLING,
-            'interval': 50,
-            'params': {
-                'blah': '123',
-                'detection_modes': [
-                    {
-                        'type': consts.NODE_STATUS_POLLING,
-                        'poll_url': '',
-                        'poll_url_ssl_verify': True,
-                        'poll_url_conn_error_as_unhealthy': True,
-                        'poll_url_healthy_response': '',
-                        'poll_url_retry_limit': '',
-                        'poll_url_retry_interval': '',
-                    }
-                ],
-            },
-            'enabled': True
-        }
+    def test_stop(self):
+        self.hm.TG = mock.Mock()
+        self.hm.stop()
+        self.hm.TG.stop_timers.assert_called_once_with()
 
+    def test_register_cluster(self):
+        self.hm.health_registry = mock.Mock()
         ctx = mock.Mock()
+        self.hm.register_cluster(ctx, 'CID', 60, 160, {}, True)
+        self.hm.health_registry.register_cluster.assert_called_once_with(
+            cluster_id='CID',
+            enabled=True,
+            interval=60,
+            node_update_timeout=160,
+            params={})
 
-        x_reg = mock.Mock(cluster_id=entry['cluster_id'],
-                          check_type=entry['check_type'],
-                          interval=entry['interval'], params=entry['params'],
-                          enabled=entry['enabled'])
-        mock_reg_create.return_value = x_reg
-
-        self.hm.register_cluster(
-            ctx, cluster_id=entry['cluster_id'], interval=entry['interval'],
-            node_update_timeout=1, params=entry['params'],
-            enabled=entry['enabled'])
-
-        mock_reg_create.assert_called_once_with(
-            ctx, entry['cluster_id'], consts.NODE_STATUS_POLLING,
-            entry['interval'], entry['params'], 'ENGINE_ID',
-            enabled=entry['enabled'])
-        mock_check.assert_called_once_with(entry)
-        self.assertEqual(1, len(self.hm.registries))
-
-    @mock.patch.object(hr.HealthRegistry, 'create')
-    @mock.patch.object(hm.HealthManager, '_start_check')
-    def test_register_cluster_not_enabled(self, mock_check, mock_reg_create):
-        entry = {
-            'cluster_id': 'CLUSTER_ID',
-            'check_type': consts.NODE_STATUS_POLLING,
-            'interval': 50,
-            'params': {
-                'blah': '123',
-                'detection_modes': [
-                    {
-                        'type': consts.NODE_STATUS_POLLING,
-                        'poll_url': '',
-                        'poll_url_ssl_verify': True,
-                        'poll_url_conn_error_as_unhealthy': True,
-                        'poll_url_healthy_response': '',
-                        'poll_url_retry_limit': '',
-                        'poll_url_retry_interval': '',
-                    }
-                ],
-            },
-            'enabled': False
-        }
-
+    def test_unregister_cluster(self):
+        self.hm.health_registry = mock.Mock()
         ctx = mock.Mock()
-
-        x_reg = mock.Mock(cluster_id=entry['cluster_id'],
-                          check_type=entry['check_type'],
-                          interval=entry['interval'], params=entry['params'],
-                          enabled=entry['enabled'])
-        mock_reg_create.return_value = x_reg
-
-        self.hm.register_cluster(
-            ctx, cluster_id=entry['cluster_id'], interval=entry['interval'],
-            node_update_timeout=1, params=entry['params'],
-            enabled=entry['enabled'])
-
-        mock_reg_create.assert_called_once_with(
-            ctx, entry['cluster_id'], consts.NODE_STATUS_POLLING,
-            entry['interval'], entry['params'], 'ENGINE_ID',
-            enabled=entry['enabled'])
-        mock_check.assert_not_called()
-        self.assertEqual(1, len(self.hm.registries))
-
-    @mock.patch.object(hm.HealthManager, '_stop_check')
-    @mock.patch.object(hr.HealthRegistry, 'delete')
-    def test_unregister_cluster(self, mock_delete, mock_stop):
-        ctx = mock.Mock()
-        timer = mock.Mock()
-        registry = {
-            'cluster_id': 'CLUSTER_ID',
-            'check_type': 'NODE_STATUS_POLLING',
-            'interval': 50,
-            'params': {},
-            'timer': timer,
-            'enabled': True,
-        }
-        self.hm.rt['registries'] = [registry]
-
-        self.hm.unregister_cluster(ctx, cluster_id='CLUSTER_ID')
-
-        self.assertEqual(0, len(self.hm.registries))
-        mock_stop.assert_called_once_with(registry)
-        mock_delete.assert_called_once_with(ctx, 'CLUSTER_ID')
-
-    @mock.patch.object(hr.HealthRegistry, 'update')
-    @mock.patch.object(hm.HealthManager, '_start_check')
-    def test_enable_cluster(self, mock_start, mock_update):
-        ctx = mock.Mock()
-        entry1 = {'cluster_id': 'FAKE_ID', 'enabled': False}
-        entry2 = {'cluster_id': 'ANOTHER_CLUSTER', 'enabled': False}
-        self.hm.rt['registries'] = [entry1, entry2]
-
-        self.hm.enable_cluster(ctx, 'FAKE_ID')
-
-        mock_start.assert_called_once_with(entry1)
-        self.assertIn({'cluster_id': 'FAKE_ID', 'enabled': True},
-                      self.hm.rt['registries'])
-        mock_update.assert_called_once_with(ctx, 'FAKE_ID', {'enabled': True})
-
-    @mock.patch.object(hr.HealthRegistry, 'update')
-    @mock.patch.object(hm.HealthManager, '_stop_check')
-    def test_disable_cluster(self, mock_stop, mock_update):
-        ctx = mock.Mock()
-        entry1 = {'cluster_id': 'FAKE_ID', 'enabled': True}
-        entry2 = {'cluster_id': 'ANOTHER_CLUSTER', 'enabled': True}
-        self.hm.rt['registries'] = [entry1, entry2]
-
-        self.hm.disable_cluster(ctx, 'FAKE_ID')
-
-        mock_stop.assert_called_once_with(entry1)
-        self.assertIn({'cluster_id': 'FAKE_ID', 'enabled': False},
-                      self.hm.rt['registries'])
-        mock_update.assert_called_once_with(ctx, 'FAKE_ID', {'enabled': False})
+        self.hm.unregister_cluster(ctx, 'CID')
+        self.hm.health_registry.unregister_cluster.assert_called_once_with(
+            'CID')
 
     @mock.patch.object(context, 'get_admin_context')
     @mock.patch.object(hr.HealthRegistry, 'get')
