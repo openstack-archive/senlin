@@ -247,6 +247,7 @@ class NodeAction(base.Action):
         """
         # Since node.cluster_id could be reset to '' during action execution,
         # we record it here for policy check and cluster lock release.
+        forced = (self.action in [consts.NODE_DELETE, consts.NODE_OPERATION])
         saved_cluster_id = self.entity.cluster_id
         if saved_cluster_id:
             if self.cause == consts.CAUSE_RPC:
@@ -268,11 +269,11 @@ class NodeAction(base.Action):
                         return self.RES_ERROR, ('Policy check: ' +
                                                 self.data['reason'])
             elif self.cause == consts.CAUSE_DERIVED_LCH:
-                self.policy_check(self.entity.cluster_id, 'BEFORE')
+                self.policy_check(saved_cluster_id, 'BEFORE')
 
         try:
             res = senlin_lock.node_lock_acquire(self.context, self.entity.id,
-                                                self.id, self.owner, False)
+                                                self.id, self.owner, forced)
             if not res:
                 res = self.RES_RETRY
                 reason = 'Failed in locking node'

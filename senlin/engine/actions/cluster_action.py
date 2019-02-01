@@ -1179,7 +1179,7 @@ class ClusterAction(base.Action):
                  was a success and why if it wasn't a success.
         """
         # Try to lock cluster before do real operation
-        forced = True if self.action == consts.CLUSTER_DELETE else False
+        forced = (self.action == consts.CLUSTER_DELETE)
         res = senlin_lock.cluster_lock_acquire(self.context, self.target,
                                                self.id, self.owner,
                                                senlin_lock.CLUSTER_SCOPE,
