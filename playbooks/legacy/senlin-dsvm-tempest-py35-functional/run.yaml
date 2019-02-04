@@ -1,5 +1,5 @@
 - hosts: all
-  name: gate-senlin-dsvm-tempest-py35-functional-nv
+  name: gate-senlin-dsvm-tempest-py35-functional
   tasks:
 
     - name: Ensure legacy workspace directory
