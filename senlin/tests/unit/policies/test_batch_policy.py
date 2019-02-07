@@ -45,39 +45,35 @@ class TestBatchPolicy(base.SenlinTestCase):
     def test_get_batch_size(self):
         policy = bp.BatchPolicy('test-batch', self.spec)
 
-        size, number = policy._get_batch_size(5)
+        size = policy._get_batch_size(5)
 
         self.assertEqual(2, size)
-        self.assertEqual(3, number)
 
     def test_get_batch_size_less_than_max(self):
         spec = copy.deepcopy(self.spec)
         spec['properties']['max_batch_size'] = 3
         policy = bp.BatchPolicy('test-batch', spec)
 
-        size, number = policy._get_batch_size(3)
+        size = policy._get_batch_size(3)
 
         self.assertEqual(2, size)
-        self.assertEqual(2, number)
 
     def test_get_batch_size_less_than_min(self):
         spec = copy.deepcopy(self.spec)
         spec['properties']['min_in_service'] = 2
         policy = bp.BatchPolicy('test-batch', spec)
 
-        size, number = policy._get_batch_size(1)
+        size = policy._get_batch_size(1)
 
         self.assertEqual(1, size)
-        self.assertEqual(1, number)
 
     def test_get_batch_size_with_default_max(self):
         spec = copy.deepcopy(self.spec)
         spec['properties']['max_batch_size'] = -1
         policy = bp.BatchPolicy('test-batch', spec)
 
-        size, number = policy._get_batch_size(5)
+        size = policy._get_batch_size(5)
         self.assertEqual(4, size)
-        self.assertEqual(2, number)
 
     def test_pick_nodes_all_active(self):
         node1 = mock.Mock(id='1', status='ACTIVE')
@@ -86,7 +82,7 @@ class TestBatchPolicy(base.SenlinTestCase):
         nodes = [node1, node2, node3]
         policy = bp.BatchPolicy('test-batch', self.spec)
 
-        nodes = policy._pick_nodes(nodes, 2, 2)
+        nodes = policy._pick_nodes(nodes, 2)
 
         self.assertEqual(2, len(nodes))
         self.assertIn(node1.id, nodes[0])
@@ -101,7 +97,7 @@ class TestBatchPolicy(base.SenlinTestCase):
 
         policy = bp.BatchPolicy('test-batch', self.spec)
 
-        nodes = policy._pick_nodes(nodes, 2, 2)
+        nodes = policy._pick_nodes(nodes, 2)
 
         self.assertEqual(2, len(nodes))
         self.assertIn(node3.id, nodes[0])
@@ -117,7 +113,7 @@ class TestBatchPolicy(base.SenlinTestCase):
         cluster.nodes = [node1, node2, node3]
         action.entity = cluster
 
-        mock_cal.return_value = (2, 2)
+        mock_cal.return_value = 2
         mock_pick.return_value = [{'1', '2'}, {'3'}]
         policy = bp.BatchPolicy('test-batch', self.spec)
 
@@ -130,7 +126,7 @@ class TestBatchPolicy(base.SenlinTestCase):
         }
         self.assertEqual(excepted_plan, plan)
         mock_cal.assert_called_once_with(3)
-        mock_pick.assert_called_once_with([node1, node2, node3], 2, 2)
+        mock_pick.assert_called_once_with([node1, node2, node3], 2)
 
     def test_create_plan_for_update_no_node(self):
         action = mock.Mock(context=self.context, action='CLUSTER_UPDATE')
