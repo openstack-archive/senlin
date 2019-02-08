@@ -198,4 +198,5 @@ class TestKeystoneV3(base.SenlinTestCase):
 
         self.assertEqual('http://web.com:1234/v1', res)
         self.conn.session.get_endpoint.assert_called_once_with(
-            service_type='clustering', interface='public', region='RegionN')
+            service_type='clustering', interface='public',
+            region_name='RegionN')
