@@ -98,7 +98,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
             mock.call(action.context, 'NODE_ID', 'NODE_OPERATION',
                       name='node_delete_NODE_ID',
                       cause='Derived Action',
-                      inputs={'operation': 'stop'}),
+                      inputs={'operation': 'stop',
+                              'update_parent_status': False}),
             mock.call(action.context, 'NODE_ID', 'NODE_DELETE',
                       name='node_delete_NODE_ID',
                       cause='Derived Action', inputs={})
@@ -481,7 +482,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual({}, action.data)
         remove_calls = [
-            mock.call('NODE_OPERATION', ['NODE_ID'], {'operation': 'stop'}),
+            mock.call('NODE_OPERATION', ['NODE_ID'],
+                      {'operation': 'stop', 'update_parent_status': False}),
             mock.call('NODE_DELETE', ['NODE_ID']),
         ]
         mock_remove.assert_has_calls(remove_calls)
@@ -518,7 +520,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
         self.assertEqual(action.RES_OK, res_code)
         mock_remove_hook.assert_called_once_with(
             'NODE_OPERATION', ['NODE_ID'], lifecycle_hook,
-            {'operation': 'stop'})
+            {'operation': 'stop', 'update_parent_status': False})
         mock_remove_normally.assert_called_once_with('NODE_DELETE',
                                                      ['NODE_ID'])
 

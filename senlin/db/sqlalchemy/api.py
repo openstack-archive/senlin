@@ -1253,14 +1253,16 @@ def _mark_failed(action_id, timestamp, reason=None):
             'end_time': timestamp,
         }
         query.update(values, synchronize_session=False)
+        action = query.all()
 
         query = session.query(models.ActionDependency)
         query = query.filter_by(depended=action_id)
         dependents = [d.dependent for d in query.all()]
         query.delete(synchronize_session=False)
 
-    for d in dependents:
-        _mark_failed(d, timestamp)
+    if parent_status_update_needed(action):
+        for d in dependents:
+            _mark_failed(d, timestamp)
 
 
 @retry_on_deadlock
@@ -1279,14 +1281,16 @@ def _mark_cancelled(session, action_id, timestamp, reason=None):
         'end_time': timestamp,
     }
     query.update(values, synchronize_session=False)
+    action = query.all()
 
     query = session.query(models.ActionDependency)
     query = query.filter_by(depended=action_id)
     dependents = [d.dependent for d in query.all()]
     query.delete(synchronize_session=False)
 
-    for d in dependents:
-        _mark_cancelled(session, d, timestamp)
+    if parent_status_update_needed(action):
+        for d in dependents:
+            _mark_cancelled(session, d, timestamp)
 
 
 @retry_on_deadlock
@@ -1714,3 +1718,12 @@ def db_sync(engine, version=None):
 def db_version(engine):
     """Display the current database version."""
     return migration.db_version(engine)
+
+
+def parent_status_update_needed(action):
+    """Return if the status of the parent action needs to be updated
+
+    Return value for update_parent_status key in action inputs
+    """
+    return (len(action) > 0 and hasattr(action[0], 'inputs') and
+            action[0].inputs.get('update_parent_status', True))
