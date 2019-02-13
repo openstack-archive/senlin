@@ -368,12 +368,11 @@ class Node(object):
         """
         options = action.inputs
 
-        operations = options.get('operation', [{'name': ''}])
-        reboot_ops = [op for op in operations
-                      if op.get('name') == consts.RECOVER_REBOOT]
-        rebuild_ops = [op for op in operations
-                       if op.get('name') == consts.RECOVER_REBUILD]
-        if not self.physical_id and (reboot_ops or rebuild_ops):
+        operation = options.get('operation', None)
+
+        if (not self.physical_id and operation and
+                (operation.upper() == consts.RECOVER_REBOOT or
+                 operation.upper() == consts.RECOVER_REBUILD)):
             # physical id is required for REBOOT or REBUILD operations
             LOG.warning('Recovery failed because node has no physical id'
                         ' was provided for reboot or rebuild operation.')

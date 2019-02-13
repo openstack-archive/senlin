@@ -1521,7 +1521,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile = server.ServerProfile('t', self.spec)
         node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        res = profile.do_recover(node_obj, operation=[{'name': 'REBUILD'}])
+        res = profile.do_recover(node_obj, operation='REBUILD')
 
         self.assertEqual(mock_rebuild.return_value, res)
         mock_rebuild.assert_called_once_with(node_obj)
@@ -1531,7 +1531,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile = server.ServerProfile('t', self.spec)
         node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        res = profile.do_recover(node_obj, operation=[{'name': 'REBUILD'}])
+        res = profile.do_recover(node_obj, operation='REBUILD')
 
         self.assertEqual(mock_rebuild.return_value, res)
         mock_rebuild.assert_called_once_with(node_obj)
@@ -1541,7 +1541,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile = server.ServerProfile('t', self.spec)
         node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        res = profile.do_recover(node_obj, operation=[{'name': 'REBOOT'}])
+        res = profile.do_recover(node_obj, operation='REBOOT')
 
         self.assertTrue(res)
         self.assertEqual(mock_reboot.return_value, res)
@@ -1553,7 +1553,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         node_obj = mock.Mock(physical_id='FAKE_ID')
 
         res, status = profile.do_recover(node_obj,
-                                         operation=[{'name': 'BLAHBLAH'}])
+                                         operation='BLAHBLAH')
 
         self.assertFalse(status)
 
@@ -1562,11 +1562,11 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile = server.ServerProfile('t', self.spec)
         node_obj = mock.Mock(physical_id='FAKE_ID')
 
-        res = profile.do_recover(node_obj, operation=[{'name': 'RECREATE'}])
+        res = profile.do_recover(node_obj, operation='RECREATE')
 
         self.assertEqual(mock_base_recover.return_value, res)
         mock_base_recover.assert_called_once_with(
-            node_obj, operation=[{'name': 'RECREATE'}])
+            node_obj, operation='RECREATE')
 
     def test_handle_reboot(self):
         obj = mock.Mock(physical_id='FAKE_ID')

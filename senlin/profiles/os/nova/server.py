@@ -248,8 +248,6 @@ class ServerProfile(base.Profile):
         'rescue', 'unrescue', 'evacuate', 'migrate',
     )
 
-    REBOOT_TYPE = 'type'
-    REBOOT_TYPES = (REBOOT_SOFT, REBOOT_HARD) = ('SOFT', 'HARD')
     ADMIN_PASSWORD = 'admin_pass'
     RESCUE_IMAGE = 'image_ref'
     EVACUATE_OPTIONS = (
@@ -262,11 +260,11 @@ class ServerProfile(base.Profile):
         OP_REBOOT: schema.Operation(
             _("Reboot the nova server."),
             schema={
-                REBOOT_TYPE: schema.StringParam(
+                consts.REBOOT_TYPE: schema.StringParam(
                     _("Type of reboot which can be 'SOFT' or 'HARD'."),
-                    default=REBOOT_SOFT,
+                    default=consts.REBOOT_SOFT,
                     constraints=[
-                        constraints.AllowedValues(REBOOT_TYPES),
+                        constraints.AllowedValues(consts.REBOOT_TYPES),
                     ]
                 )
             }
@@ -1604,29 +1602,32 @@ class ServerProfile(base.Profile):
         :return status: True indicates successful recovery, False indicates
             failure.
         """
-        operation = options.get('operation', None)
 
-        if operation and not isinstance(operation, six.string_types):
-            operation = operation[0]
+        # default is recreate if not specified
+        if 'operation' not in options or not options['operation']:
+            options['operation'] = consts.RECOVER_RECREATE
 
-        if operation is not None and 'name' in operation:
-            op_name = operation['name']
-            if op_name.upper() != consts.RECOVER_RECREATE:
-                op_params = operation.get('params', {})
-                # nova recover operation always use hard reboot
-                # vm in error or stop status soft reboot can't succeed
-                if op_name.upper() == consts.RECOVER_REBOOT:
-                    if self.REBOOT_TYPE not in op_params:
-                        op_params[self.REBOOT_TYPE] = self.REBOOT_HARD
-                if op_name.lower() not in self.OP_NAMES:
-                    LOG.error("The operation '%s' is not supported",
-                              op_name)
-                    return obj.physical_id, False
+        operation = options.get('operation')
 
-                method = getattr(self, "handle_" + op_name.lower())
-                return method(obj, **op_params)
+        if operation.upper() not in consts.RECOVERY_ACTIONS:
+            LOG.error("The operation '%s' is not supported",
+                      operation)
+            return obj.physical_id, False
 
-        return super(ServerProfile, self).do_recover(obj, **options)
+        op_params = options.get('operation_params', {})
+        if operation.upper() == consts.RECOVER_REBOOT:
+            # default to hard reboot if operation_params was not specified
+            if not isinstance(op_params, dict):
+                op_params = {}
+            if consts.REBOOT_TYPE not in op_params.keys():
+                op_params[consts.REBOOT_TYPE] = consts.REBOOT_HARD
+
+        if operation.upper() == consts.RECOVER_RECREATE:
+            # recreate is implemented in base class
+            return super(ServerProfile, self).do_recover(obj, **options)
+        else:
+            method = getattr(self, "handle_" + operation.lower())
+            return method(obj, **op_params)
 
     def handle_reboot(self, obj, **options):
         """Handler for the reboot operation."""
@@ -1634,9 +1635,9 @@ class ServerProfile(base.Profile):
             return None, False
 
         server_id = obj.physical_id
-        reboot_type = options.get(self.REBOOT_TYPE, self.REBOOT_SOFT)
+        reboot_type = options.get(consts.REBOOT_TYPE, consts.REBOOT_SOFT)
         if (not isinstance(reboot_type, six.string_types) or
-                reboot_type not in self.REBOOT_TYPES):
+                reboot_type.upper() not in consts.REBOOT_TYPES):
             return server_id, False
 
         nova_driver = self.compute(obj)
