@@ -96,7 +96,7 @@ class BatchPolicy(base.Policy):
         """Get batch size for update operation.
 
         :param total: Total number of nodes.
-        :returns: Size of each batch and number of batches.
+        :returns: Size of each batch.
         """
 
         # if the number of nodes less than min_in_service,
@@ -111,16 +111,13 @@ class BatchPolicy(base.Policy):
         else:
             batch_size = self.max_batch_size
 
-        batch_num = int(math.ceil(float(total) / float(batch_size)))
+        return batch_size
 
-        return batch_size, batch_num
-
-    def _pick_nodes(self, nodes, batch_size, batch_num):
+    def _pick_nodes(self, nodes, batch_size):
         """Select nodes based on size and number of batches.
 
         :param nodes: list of node objects.
         :param batch_size: the number of nodes of each batch.
-        :param batch_num: the number of batches.
         :returns: a list of sets containing the nodes' IDs we
                   selected based on the input params.
         """
@@ -146,8 +143,8 @@ class BatchPolicy(base.Policy):
             plan['plan'] = []
             return True, plan
 
-        batch_size, batch_num = self._get_batch_size(len(nodes))
-        plan['plan'] = self._pick_nodes(nodes, batch_size, batch_num)
+        batch_size = self._get_batch_size(len(nodes))
+        plan['plan'] = self._pick_nodes(nodes, batch_size)
 
         return True, plan
 
