@@ -1512,6 +1512,74 @@ class ClusterTest(base.SenlinTestCase):
         )
         notify.assert_called_once_with()
 
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(co.Cluster, 'find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_recover_rebuild(self, notify, mock_find, mock_action):
+        x_cluster = mock.Mock(id='CID')
+        mock_find.return_value = x_cluster
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterRecoverRequest(identity='C1',
+                                         params={'operation': 'REBUILD'})
+
+        result = self.eng.cluster_recover(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'C1')
+        mock_action.assert_called_once_with(
+            self.ctx, 'CID', consts.CLUSTER_RECOVER,
+            name='cluster_recover_CID',
+            cause=consts.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={'operation': 'REBUILD'},
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(co.Cluster, 'find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_recover_reboot(self, notify, mock_find, mock_action):
+        x_cluster = mock.Mock(id='CID')
+        mock_find.return_value = x_cluster
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterRecoverRequest(identity='C1',
+                                         params={'operation': 'REBOOT'})
+
+        result = self.eng.cluster_recover(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'C1')
+        mock_action.assert_called_once_with(
+            self.ctx, 'CID', consts.CLUSTER_RECOVER,
+            name='cluster_recover_CID',
+            cause=consts.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={'operation': 'REBOOT'},
+        )
+        notify.assert_called_once_with()
+
+    @mock.patch.object(am.Action, 'create')
+    @mock.patch.object(co.Cluster, 'find')
+    @mock.patch.object(dispatcher, 'start_action')
+    def test_cluster_recover_default(self, notify, mock_find, mock_action):
+        x_cluster = mock.Mock(id='CID')
+        mock_find.return_value = x_cluster
+        mock_action.return_value = 'ACTION_ID'
+        req = orco.ClusterRecoverRequest(identity='C1')
+
+        result = self.eng.cluster_recover(self.ctx, req.obj_to_primitive())
+
+        self.assertEqual({'action': 'ACTION_ID'}, result)
+        mock_find.assert_called_once_with(self.ctx, 'C1')
+        mock_action.assert_called_once_with(
+            self.ctx, 'CID', consts.CLUSTER_RECOVER,
+            name='cluster_recover_CID',
+            cause=consts.CAUSE_RPC,
+            status=am.Action.READY,
+            inputs={}
+        )
+        notify.assert_called_once_with()
+
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_recover_cluster_not_found(self, mock_find):
         mock_find.side_effect = exc.ResourceNotFound(type='cluster',
@@ -1541,6 +1609,46 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Action parameter ['bad'] is not recognizable.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(co.Cluster, 'find')
+    def test_cluster_recover_invalid_operation(self, mock_find):
+        x_cluster = mock.Mock(id='CID')
+        mock_find.return_value = x_cluster
+
+        req = orco.ClusterRecoverRequest(identity='Bogus',
+                                         params={'operation': 'fake'})
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_recover,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("Operation value 'fake' has to be one of the "
+                         "following: REBOOT, REBUILD, RECREATE.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+
+    @mock.patch.object(co.Cluster, 'find')
+    def test_cluster_recover_invalid_operation_params(self, mock_find):
+        x_cluster = mock.Mock(id='CID')
+        mock_find.return_value = x_cluster
+
+        req = orco.ClusterRecoverRequest(
+            identity='Bogus',
+            params={'operation': 'reboot',
+                    'operation_params': {'type': 'blah'}
+                    }
+        )
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.cluster_recover,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("Type field 'blah' in operation_params has to be one "
+                         "of the following: SOFT, HARD.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 

@@ -16,6 +16,7 @@ import mock
 from oslo_context import context as oslo_ctx
 import six
 
+from senlin.common import consts
 from senlin.common import context as senlin_ctx
 from senlin.common import exception
 from senlin.common import schema
@@ -837,11 +838,12 @@ class TestProfileBase(base.SenlinTestCase):
         self.patchobject(profile, 'do_create', return_value=True)
         self.patchobject(profile, 'do_delete', return_value=True)
 
-        res, status = profile.do_recover(mock.Mock())
+        res, status = profile.do_recover(mock.Mock(),
+                                         operation=consts.RECOVER_RECREATE)
         self.assertTrue(status)
 
         res, status = profile.do_recover(
-            mock.Mock(), operation=[{'name': 'bar'}])
+            mock.Mock(), operation='bar')
         self.assertFalse(status)
 
     def test_do_recover_with_fencing(self):
@@ -851,10 +853,11 @@ class TestProfileBase(base.SenlinTestCase):
         obj = mock.Mock()
 
         res = profile.do_recover(obj, ignore_missing=True,
-                                 params={"fence_compute": True})
+                                 params={"fence_compute": True},
+                                 operation=consts.RECOVER_RECREATE)
 
         self.assertTrue(res)
-        profile.do_delete.assert_called_once_with(obj, force=True,
+        profile.do_delete.assert_called_once_with(obj, force=False,
                                                   timeout=None)
         profile.do_create.assert_called_once_with(obj)
 
@@ -864,7 +867,8 @@ class TestProfileBase(base.SenlinTestCase):
         self.patchobject(profile, 'do_delete', return_value=True)
         obj = mock.Mock()
 
-        res = profile.do_recover(obj, ignore_missing=True, delete_timeout=5)
+        res = profile.do_recover(obj, ignore_missing=True, delete_timeout=5,
+                                 operation=consts.RECOVER_RECREATE)
 
         self.assertTrue(res)
         profile.do_delete.assert_called_once_with(obj, force=False,
@@ -877,7 +881,8 @@ class TestProfileBase(base.SenlinTestCase):
         self.patchobject(profile, 'do_delete', return_value=True)
         obj = mock.Mock()
 
-        res = profile.do_recover(obj, ignore_missing=True, force_recreate=True)
+        res = profile.do_recover(obj, ignore_missing=True, force_recreate=True,
+                                 operation=consts.RECOVER_RECREATE)
 
         self.assertTrue(res)
         profile.do_delete.assert_called_once_with(obj, force=False,
@@ -892,7 +897,8 @@ class TestProfileBase(base.SenlinTestCase):
         self.patchobject(profile, 'do_delete', side_effect=err)
         obj = mock.Mock()
 
-        res = profile.do_recover(obj, ignore_missing=True, force_recreate=True)
+        res = profile.do_recover(obj, ignore_missing=True, force_recreate=True,
+                                 operation=consts.RECOVER_RECREATE)
         self.assertTrue(res)
         profile.do_delete.assert_called_once_with(obj, force=False,
                                                   timeout=None)
@@ -903,7 +909,7 @@ class TestProfileBase(base.SenlinTestCase):
         err = exception.EResourceDeletion(type='STACK', id='ID',
                                           message='BANG')
         self.patchobject(profile, 'do_delete', side_effect=err)
-        operation = [{"name": "RECREATE"}]
+        operation = "RECREATE"
 
         ex = self.assertRaises(exception.EResourceOperation,
                                profile.do_recover,
@@ -917,7 +923,7 @@ class TestProfileBase(base.SenlinTestCase):
         profile = self._create_profile('test-profile')
         self.patchobject(profile, 'do_delete', return_value=True)
         self.patchobject(profile, 'do_create', return_value=True)
-        operation = [{"name": "RECREATE"}]
+        operation = "RECREATE"
         res = profile.do_recover(mock.Mock(), operation=operation)
 
         self.assertTrue(res)
@@ -927,7 +933,7 @@ class TestProfileBase(base.SenlinTestCase):
         err = exception.EResourceDeletion(type='STACK', id='ID',
                                           message='BANG')
         self.patchobject(profile, 'do_delete', side_effect=err)
-        operation = [{"name": "RECREATE"}]
+        operation = "RECREATE"
 
         ex = self.assertRaises(exception.EResourceOperation,
                                profile.do_recover,
@@ -941,7 +947,7 @@ class TestProfileBase(base.SenlinTestCase):
         self.patchobject(profile, 'do_delete', return_value=True)
         err = exception.EResourceCreation(type='STACK', message='BANNG')
         self.patchobject(profile, 'do_create', side_effect=err)
-        operation = [{"name": "RECREATE"}]
+        operation = "RECREATE"
 
         ex = self.assertRaises(exception.EResourceOperation,
                                profile.do_recover,

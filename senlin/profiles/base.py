@@ -522,20 +522,19 @@ class Profile(object):
         :return status: True indicates successful recovery, False indicates
             failure.
         """
-        operation = options.pop('operation', None)
-        force_recreate = options.pop('force_recreate', None)
-        delete_timeout = options.pop('delete_timeout', None)
+        operation = options.get('operation', None)
+        force_recreate = options.get('force_recreate', None)
+        delete_timeout = options.get('delete_timeout', None)
 
-        # The operation is a list of action names with optional parameters
-        if operation and not isinstance(operation, six.string_types):
-            operation = operation[0]
-
-        if operation and operation['name'] != consts.RECOVER_RECREATE:
+        if operation.upper() != consts.RECOVER_RECREATE:
             LOG.error("Recover operation not supported: %s", operation)
             return None, False
 
-        extra_params = options.get('params', {})
-        fence_compute = extra_params.get('fence_compute', False)
+        extra_params = options.get('operation_params', None)
+        fence_compute = False
+        if extra_params:
+            fence_compute = extra_params.get('fence_compute', False)
+
         try:
             self.do_delete(obj, force=fence_compute, timeout=delete_timeout)
         except exc.EResourceDeletion as ex:

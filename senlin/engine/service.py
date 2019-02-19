@@ -1423,6 +1423,43 @@ class EngineService(service.Service):
 
         return {'action': action_id}
 
+    def _get_operation_params(self, params):
+        inputs = {}
+
+        if 'operation' in params:
+            op_name = params.pop('operation')
+            if not isinstance(op_name, six.string_types):
+                raise exception.BadRequest(
+                    msg="operation has to be a string")
+            if op_name.upper() not in consts.RECOVERY_ACTIONS:
+                msg = ("Operation value '{}' has to be one of the "
+                       "following: {}."
+                       ).format(op_name,
+                                ', '.join(consts.RECOVERY_ACTIONS))
+                raise exception.BadRequest(msg=msg)
+            inputs['operation'] = op_name
+
+            if 'operation_params' in params:
+                op_params = params.pop('operation_params')
+
+                if (op_name.upper() == consts.RECOVER_REBOOT):
+                    if not isinstance(op_params, dict):
+                        raise exception.BadRequest(
+                            msg="operation_params must be a map")
+
+                    if (consts.REBOOT_TYPE in op_params.keys() and
+                            op_params[consts.REBOOT_TYPE].upper()
+                            not in consts.REBOOT_TYPES):
+                        msg = ("Type field '{}' in operation_params has to be "
+                               "one of the following: {}.").format(
+                            op_params[consts.REBOOT_TYPE],
+                            ', '.join(consts.REBOOT_TYPES))
+                        raise exception.BadRequest(msg=msg)
+
+                inputs['operation_params'] = op_params
+
+        return inputs
+
     @request_context
     def cluster_recover(self, ctx, req):
         """Recover a cluster to a healthy status.
@@ -1441,8 +1478,7 @@ class EngineService(service.Service):
 
         inputs = {}
         if req.obj_attr_is_set('params') and req.params:
-            if 'operation' in req.params:
-                inputs['operation'] = req.params.pop('operation')
+            inputs = self._get_operation_params(req.params)
 
             if 'check' in req.params:
                 inputs['check'] = req.params.pop('check')
@@ -1455,9 +1491,6 @@ class EngineService(service.Service):
                 msg = _("Action parameter %s is not recognizable.") % keys
                 raise exception.BadRequest(msg=msg)
 
-        # TODO(anyone): should check if the 'params' attribute, if set,
-        # contains valid fields. This can be done by modeling the 'params'
-        # attribute into a separate object.
         params = {
             'name': 'cluster_recover_%s' % db_cluster.id[:8],
             'cause': consts.CAUSE_RPC,
@@ -1953,12 +1986,10 @@ class EngineService(service.Service):
             'inputs': {}
         }
         if req.obj_attr_is_set('params') and req.params:
+            kwargs['inputs'] = self._get_operation_params(req.params)
+
             if 'check' in req.params:
                 kwargs['inputs']['check'] = req.params.pop('check')
-
-            if 'operation' in req.params:
-                op_name = req.params.pop('operation')
-                kwargs['inputs']['operation'] = [{'name': op_name}]
 
             if 'delete_timeout' in req.params:
                 kwargs['inputs']['delete_timeout'] = req.params.pop(

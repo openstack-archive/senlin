@@ -1,6 +1,9 @@
 {
     "recover": {
-        "operation": "rebuild",
+        "operation": "reboot",
+        "operation_params": {
+            "type": "soft"
+        },
         "check": false
     }
 }

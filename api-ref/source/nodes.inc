@@ -562,6 +562,9 @@ include:
 - ``operation``: A string specifying the action to be performed for node
   recovery.
 
+- ``operation_params``: An optional dictionary specifying the key-value
+  arguments for the specific node recovery action.
+
 - ``check``: A boolean specifying whether the engine should check the node's
   actual status before performing the recovery action. This parameter is added
   since microversion 1.6.

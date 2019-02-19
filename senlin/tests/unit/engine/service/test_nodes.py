@@ -934,7 +934,7 @@ class NodeTest(base.SenlinTestCase):
         mock_find.return_value = mock.Mock(id='12345678AB')
         mock_action.return_value = 'ACTION_ID'
 
-        params = {'operation': 'some_action'}
+        params = {'operation': 'REBOOT'}
         req = orno.NodeRecoverRequest(identity='FAKE_NODE', params=params)
         result = self.eng.node_recover(self.ctx, req.obj_to_primitive())
 
@@ -945,7 +945,7 @@ class NodeTest(base.SenlinTestCase):
             name='node_recover_12345678',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
-            inputs={'operation': [{'name': 'some_action'}]})
+            inputs={'operation': 'REBOOT'})
         mock_start.assert_called_once_with()
 
     @mock.patch.object(dispatcher, 'start_action')
@@ -955,7 +955,7 @@ class NodeTest(base.SenlinTestCase):
         mock_find.return_value = mock.Mock(id='12345678AB')
         mock_action.return_value = 'ACTION_ID'
 
-        params = {'check': True, 'operation': 'some_action'}
+        params = {'check': True, 'operation': 'REBUILD'}
         req = orno.NodeRecoverRequest(identity='FAKE_NODE', params=params)
         result = self.eng.node_recover(self.ctx, req.obj_to_primitive())
 
@@ -966,7 +966,7 @@ class NodeTest(base.SenlinTestCase):
             name='node_recover_12345678',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
-            inputs={'check': True, 'operation': [{'name': 'some_action'}]})
+            inputs={'check': True, 'operation': 'REBUILD'})
         mock_start.assert_called_once_with()
 
     @mock.patch.object(dispatcher, 'start_action')
@@ -977,7 +977,7 @@ class NodeTest(base.SenlinTestCase):
         mock_find.return_value = mock.Mock(id='12345678AB')
         mock_action.return_value = 'ACTION_ID'
 
-        params = {'delete_timeout': 20, 'operation': 'some_action'}
+        params = {'delete_timeout': 20, 'operation': 'RECREATE'}
         req = orno.NodeRecoverRequest(identity='FAKE_NODE', params=params)
         result = self.eng.node_recover(self.ctx, req.obj_to_primitive())
 
@@ -989,7 +989,7 @@ class NodeTest(base.SenlinTestCase):
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'delete_timeout': 20,
-                    'operation': [{'name': 'some_action'}]})
+                    'operation': 'RECREATE'})
         mock_start.assert_called_once_with()
 
     @mock.patch.object(dispatcher, 'start_action')
@@ -1000,7 +1000,8 @@ class NodeTest(base.SenlinTestCase):
         mock_find.return_value = mock.Mock(id='12345678AB')
         mock_action.return_value = 'ACTION_ID'
 
-        params = {'force_recreate': True, 'operation': 'some_action'}
+        params = {'force_recreate': True, 'operation': 'reboot',
+                  'operation_params': {'type': 'soft'}}
         req = orno.NodeRecoverRequest(identity='FAKE_NODE', params=params)
         result = self.eng.node_recover(self.ctx, req.obj_to_primitive())
 
@@ -1012,7 +1013,8 @@ class NodeTest(base.SenlinTestCase):
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'force_recreate': True,
-                    'operation': [{'name': 'some_action'}]})
+                    'operation': 'reboot',
+                    'operation_params': {'type': 'soft'}})
         mock_start.assert_called_once_with()
 
     @mock.patch.object(no.Node, 'find')
@@ -1031,7 +1033,7 @@ class NodeTest(base.SenlinTestCase):
 
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(no.Node, 'find')
-    def test_node_recover_invalid_operation(self, mock_find, mock_action):
+    def test_node_recover_unknown_operation(self, mock_find, mock_action):
         mock_find.return_value = mock.Mock(id='12345678AB')
         mock_action.return_value = 'ACTION_ID'
         params = {'bogus': 'illegal'}
@@ -1043,6 +1045,47 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Action parameter ['bogus'] is not recognizable.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
+        self.assertEqual(0, mock_action.call_count)
+
+    @mock.patch.object(action_mod.Action, 'create')
+    @mock.patch.object(no.Node, 'find')
+    def test_node_recover_invalid_operation(self, mock_find, mock_action):
+        mock_find.return_value = mock.Mock(id='12345678AB')
+        mock_action.return_value = 'ACTION_ID'
+        params = {'force_recreate': True, 'operation': 'blah',
+                  'operation_params': {'type': 'soft'}}
+        req = orno.NodeRecoverRequest(identity='FAKE_NODE', params=params)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_recover,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("Operation value 'blah' has to be one of the "
+                         "following: REBOOT, REBUILD, RECREATE.",
+                         six.text_type(ex.exc_info[1]))
+        mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
+        self.assertEqual(0, mock_action.call_count)
+
+    @mock.patch.object(action_mod.Action, 'create')
+    @mock.patch.object(no.Node, 'find')
+    def test_node_recover_invalid_operation_params(self, mock_find,
+                                                   mock_action):
+        mock_find.return_value = mock.Mock(id='12345678AB')
+        mock_action.return_value = 'ACTION_ID'
+        params = {'force_recreate': True, 'operation': 'REBOOT',
+                  'operation_params': {'type': 'blah'}}
+        req = orno.NodeRecoverRequest(identity='FAKE_NODE', params=params)
+
+        ex = self.assertRaises(rpc.ExpectedException,
+                               self.eng.node_recover,
+                               self.ctx, req.obj_to_primitive())
+
+        self.assertEqual(exc.BadRequest, ex.exc_info[0])
+        self.assertEqual("Type field 'blah' in operation_params has to be one "
+                         "of the following: SOFT, HARD.",
                          six.text_type(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
         self.assertEqual(0, mock_action.call_count)

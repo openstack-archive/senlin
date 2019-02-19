@@ -833,22 +833,11 @@ class ClusterAction(base.Action):
         """
         self.entity.do_recover(self.context)
 
-        # process data from health_policy
-        pd = self.data.get('health', None)
         inputs = {}
-        if pd:
-            check = self.data.get('check', False)
-            recover_action = pd.get('recover_action', None)
-            fencing = pd.get('fencing', None)
-            if recover_action is not None:
-                inputs['operation'] = recover_action
-            if fencing is not None and 'COMPUTE' in fencing:
-                inputs['params'] = {'fence_compute': True}
-        else:
-            check = self.inputs.get('check', False)
-            recover_action = self.inputs.get('operation', None)
-            if recover_action is not None:
-                inputs['operation'] = recover_action
+
+        check = self.inputs.get('check', False)
+        inputs['operation'] = self.inputs.get('operation', None)
+        inputs['operation_params'] = self.inputs.get('operation_params', None)
 
         children = []
         for node in self.entity.nodes:
