@@ -18,6 +18,9 @@ from oslo_config import cfg
 from oslo_upgradecheck import upgradecheck
 
 from senlin.common.i18n import _
+from senlin.db import api
+
+from sqlalchemy import MetaData, Table, select, column
 
 
 class Checks(upgradecheck.UpgradeCommands):
@@ -28,10 +31,35 @@ class Checks(upgradecheck.UpgradeCommands):
     and added to _upgrade_checks tuple.
     """
 
-    def _check_placeholder(self):
-        # This is just a placeholder for upgrade checks, it should be
-        # removed when the actual checks are added
-        return upgradecheck.Result(upgradecheck.Code.SUCCESS)
+    def _check_healthpolicy(self):
+        """Check if version 1.0 health policies exists
+
+        Stein introduces health policy version 1.1 which is incompatible with
+        health policy version 1.0.  Users are required to delete version 1.0
+        health policies before upgrade and recreate them in version 1.1 format
+        after upgrading.
+        """
+
+        engine = api.get_engine()
+        metadata = MetaData(bind=engine)
+        policy = Table('policy', metadata, autoload=True)
+
+        healthpolicy_select = (
+            select([column('name')])
+            .select_from(policy)
+            .where(column('type') == 'senlin.policy.health-1.0')
+        )
+        healthpolicy_rows = engine.execute(healthpolicy_select).fetchall()
+
+        if not healthpolicy_rows:
+            return upgradecheck.Result(upgradecheck.Code.SUCCESS)
+
+        healthpolicy_names = [row[0] for row in healthpolicy_rows]
+        error_msg = _('The following version 1.0 health policies must be '
+                      'deleted before upgrade: \'{}\'. After upgrading, the '
+                      'health policies can be recreated in version 1.1 '
+                      'format.').format(', '.join(healthpolicy_names))
+        return upgradecheck.Result(upgradecheck.Code.FAILURE, error_msg)
 
     # The format of the check functions is to return an
     # oslo_upgradecheck.upgradecheck.Result
@@ -42,7 +70,7 @@ class Checks(upgradecheck.UpgradeCommands):
     # summary will be rolled up at the end of the check() method.
     _upgrade_checks = (
         # In the future there should be some real checks added here
-        (_('Placeholder'), _check_placeholder),
+        (_('HealthPolicy'), _check_healthpolicy),
     )
 
 
