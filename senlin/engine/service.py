@@ -2026,6 +2026,7 @@ class EngineService(service.Service):
 
         db_node = node_obj.Node.find(ctx, req.identity)
         node = node_mod.Node.load(ctx, db_node=db_node)
+
         profile = node.rt['profile']
         if req.operation not in profile.OPERATIONS:
             msg = _("The requested operation '%(o)s' is not supported by the "

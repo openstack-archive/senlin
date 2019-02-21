@@ -721,6 +721,52 @@ class NodeActionTest(base.SenlinTestCase):
     @mock.patch.object(base_action.Action, 'policy_check')
     @mock.patch.object(lock, 'node_lock_acquire')
     @mock.patch.object(lock, 'node_lock_release')
+    def test_execute_success_stealing_node_lock(self, mock_release_node,
+                                                mock_acquire_node, mock_check,
+                                                mock_release, mock_acquire,
+                                                mock_load):
+        node = mock.Mock()
+        node.cluster_id = 'FAKE_CLUSTER'
+        node.id = 'NODE_ID'
+        mock_load.return_value = node
+
+        action = node_action.NodeAction('NODE_ID', 'NODE_OPERATION', self.ctx,
+                                        cause='RPC Request')
+        action.id = 'ACTION_ID'
+        action.data = {
+            'status': policy_mod.CHECK_OK,
+            'reason': 'Policy checking passed'
+        }
+        action.inputs = {'operation': 'stop', 'params': {}}
+
+        mock_acquire.return_value = 'ACTION_ID'
+        mock_acquire_node.return_value = True
+
+        res_code, res_msg = action.execute()
+
+        reason = "Node operation 'stop' succeeded."
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual(reason, res_msg)
+        mock_load.assert_called_once_with(action.context, node_id='NODE_ID')
+        mock_acquire.assert_called_once_with(self.ctx, 'FAKE_CLUSTER',
+                                             'ACTION_ID', None,
+                                             lock.NODE_SCOPE, False)
+        policy_calls = [
+            mock.call('FAKE_CLUSTER', 'BEFORE'),
+            mock.call('FAKE_CLUSTER', 'AFTER')
+        ]
+        mock_release.assert_called_once_with('FAKE_CLUSTER', 'ACTION_ID',
+                                             lock.NODE_SCOPE)
+        mock_check.assert_has_calls(policy_calls)
+        mock_acquire_node.assert_called_once_with(self.ctx, 'NODE_ID',
+                                                  'ACTION_ID', None, True)
+        mock_release_node.assert_called_once_with('NODE_ID', 'ACTION_ID')
+
+    @mock.patch.object(lock, 'cluster_lock_acquire')
+    @mock.patch.object(lock, 'cluster_lock_release')
+    @mock.patch.object(base_action.Action, 'policy_check')
+    @mock.patch.object(lock, 'node_lock_acquire')
+    @mock.patch.object(lock, 'node_lock_release')
     def test_execute_success(self, mock_release_node, mock_acquire_node,
                              mock_check, mock_release, mock_acquire,
                              mock_load):
