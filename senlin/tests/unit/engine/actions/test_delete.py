@@ -960,9 +960,9 @@ class ClusterDeleteTest(base.SenlinTestCase):
         mock_action.side_effect = ['NODE_ACTION_1', 'NODE_ACTION_2']
         mock_wait.return_value = (action.RES_OK, 'All dependents completed')
         node1 = mock.Mock(status=consts.NS_ACTIVE, id='NODE_1',
-                          physical_id="nova-server-1")
-        node2 = mock.Mock(status=consts.NS_ACTIVE, id='NODE_2',
                           physical_id=None)
+        node2 = mock.Mock(status=consts.NS_ACTIVE, id='NODE_2',
+                          physical_id="nova-server-1")
         mock_node_get.side_effect = [node1, node2]
         # do it
         res_code, res_msg = action._remove_nodes_with_hook(
@@ -972,11 +972,11 @@ class ClusterDeleteTest(base.SenlinTestCase):
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('All dependents completed', res_msg)
         update_calls = [
-            mock.call(action.context, 'NODE_ACTION_1',
+            mock.call(action.context, 'NODE_ACTION_1', {'status': 'READY',
+                                                        'owner': None}),
+            mock.call(action.context, 'NODE_ACTION_2',
                       {'status': 'WAITING_LIFECYCLE_COMPLETION',
-                       'owner': 'OWNER_ID'}),
-            mock.call(action.context, 'NODE_ACTION_2', {'status': 'READY',
-                                                        'owner': None})
+                       'owner': 'OWNER_ID'})
         ]
         mock_update.assert_has_calls(update_calls)
         create_actions = [
@@ -989,8 +989,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
         ]
         mock_action.assert_has_calls(create_actions)
 
-        mock_post.assert_called_once_with('NODE_ACTION_1', 'NODE_1',
-                                          node1.physical_id,
+        mock_post.assert_called_once_with('NODE_ACTION_2', 'NODE_2',
+                                          node2.physical_id,
                                           consts.LIFECYCLE_NODE_TERMINATION)
         mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with(action.data['hooks']['timeout'])

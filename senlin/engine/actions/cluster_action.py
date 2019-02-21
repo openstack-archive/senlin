@@ -368,7 +368,8 @@ class ClusterAction(base.Action):
 
             notifier = msg.Message(lifecycle_hook_target, **kwargs)
 
-            for action_id, node_id in child:
+            child_copy = list(child)
+            for action_id, node_id in child_copy:
                 # wait lifecycle complete if node exists and is active
                 node = no.Node.get(self.context, node_id)
                 owner = None
