@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    [`bug 1817379 <https://bugs.launchpad.net/senlin/+bug/1817379>`_]
+    Delete ports before recovering a node.

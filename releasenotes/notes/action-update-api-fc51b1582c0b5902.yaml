@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    [`blueprint action-update <https://blueprints.launchpad.net/senlin/+spec/action-update>`_]
+    A new action update API is added to allow the action status to be updated.
+    The only valid status value for update is CANCELLED.
+

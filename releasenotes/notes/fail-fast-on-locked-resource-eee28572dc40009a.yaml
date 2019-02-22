@@ -1,0 +1,15 @@
+---
+prelude: >
+    This release alters the behavior of cluster and node APIs which create, update or
+    delete either resource.  In the previous release those API calls would be
+    accepted even if the target resource was already locked by another action.
+    The old implementation would wait until the other action released the lock
+    and then continue to execute the desired action.  With the new implementation
+    any API calls for cluster or node that modify said resource will be rejected
+    with 409 conflict.
+features:
+  - |
+    [`blueprint fail-fast-locked-resource <https://blueprints.launchpad.net/senlin/+spec/fail-fast-locked-resource>`_]
+    POST, PATCH or DELETE API calls for clusters or nodes that require a lock are
+    rejected with 409 resource conflict if another action is already holding a
+    lock on the target resource.

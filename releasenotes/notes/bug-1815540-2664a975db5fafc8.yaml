@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    [`bug 1815540 <https://bugs.launchpad.net/senlin/+bug/1815540>`_]
+    Cluster recovery and node recovery API request bodies are changed to only accept a
+    single operation.  Optional parameters for this operation are set in operation_params.

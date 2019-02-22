@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    [`bug 1811294 <https://bugs.launchpad.net/senlin/+bug/1811294>`_]
+    Set owner field for actions created to wait for lifecycle completion.  This
+    allows these actions to be cleaned up when the engine is restarted.
