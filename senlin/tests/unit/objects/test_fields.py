@@ -749,3 +749,19 @@ class TestReceiverType(TestField):
             },
             self.field.get_schema()
         )
+
+
+class TestCustomField(TestField):
+    def setUp(self):
+        super(TestCustomField, self).setUp()
+        self.field = senlin_fields.CustomListField(attr_name='dependant')
+        dep = mock.Mock()
+        dep.dependant = '123'
+        self.coerce_good_values = [([dep], ['123']), ([dep], ['123'])]
+        self.coerce_bad_values = ['BOGUS']
+
+        self.to_primitive_values = [([dep], [dep])]
+        self.from_primitive_values = [([dep], [dep])]
+
+    def test_stringify(self):
+        self.assertEqual('[abc,def]', self.field.stringify(['abc', 'def']))

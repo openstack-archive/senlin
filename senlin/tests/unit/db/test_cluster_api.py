@@ -100,6 +100,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
         self.assertIsNone(db_api.cluster_get_by_name(self.ctx, cluster.name))
 
     def test_cluster_get_by_name_diff_project(self):
+        self.ctx.project_id = UUID2
         cluster1 = shared.create_cluster(self.ctx, self.profile,
                                          name='cluster_A',
                                          project=UUID2)
@@ -109,6 +110,7 @@ class DBAPIClusterTest(base.SenlinTestCase):
         shared.create_cluster(self.ctx, self.profile, name='cluster_B',
                               project=UUID2)
 
+        self.ctx.project_id = UUID1
         res = db_api.cluster_get_by_name(self.ctx, 'cluster_A')
         self.assertIsNone(res)
 

@@ -29,7 +29,6 @@ class Node(base.SenlinObject, base.VersionedObjectDictCompat):
         'id': fields.UUIDField(),
         'name': fields.StringField(),
         'profile_id': fields.UUIDField(),
-        # This field is treated as string because we may store '' into it
         'cluster_id': fields.StringField(),
         'physical_id': fields.StringField(nullable=True),
         'index': fields.IntegerField(),

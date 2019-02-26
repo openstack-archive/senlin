@@ -50,6 +50,7 @@ class TestClusterPolicy(base.SenlinTestCase):
         self.assertEqual('', cp.policy_name)
 
     def test_cluster_policy_store(self):
+        utils.create_profile(self.context, PROFILE_ID)
         cluster = utils.create_cluster(self.context, CLUSTER_ID, PROFILE_ID)
         policy = utils.create_policy(self.context, POLICY_ID)
         values = {
@@ -96,6 +97,7 @@ class TestClusterPolicy(base.SenlinTestCase):
                          "specified cluster 'some-cluster'.",
                          six.text_type(ex))
 
+        utils.create_profile(self.context, PROFILE_ID)
         cluster = utils.create_cluster(self.context, CLUSTER_ID, PROFILE_ID)
         policy = utils.create_policy(self.context, POLICY_ID)
 

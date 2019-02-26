@@ -519,3 +519,17 @@ class ReceiverTypeField(fields.AutoTypedField):
 class NodeReplaceMapField(fields.AutoTypedField):
 
     AUTO_TYPE = UniqueDict(fields.String())
+
+
+class CustomListField(ListField):
+
+    def __init__(self, attr_name, **kwargs):
+        self.attr_name = attr_name
+        super(CustomListField, self).__init__(**kwargs)
+
+    def coerce(self, obj, attr, value):
+        objs = super(CustomListField, self).coerce(obj, attr, value)
+        custom_list = []
+        for i in objs:
+            custom_list.append(getattr(i, self.attr_name))
+        return custom_list

@@ -15,9 +15,11 @@ from oslo_config import cfg
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
 
+import six
+
 from senlin.common import exception as exc
-from senlin.db import api as db_api
 from senlin.objects import cluster as co
+from senlin.objects import cluster_policy as cpo
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -96,11 +98,17 @@ class TestCluster(base.SenlinTestCase):
         mock_get_short_id.assert_called_once_with(self.ctx, 'bogus',
                                                   project_safe=True)
 
-    @mock.patch.object(db_api, 'cluster_policy_ids_by_cluster')
-    @mock.patch.object(db_api, 'node_ids_by_cluster')
-    @mock.patch.object(db_api, 'profile_get')
-    def test_to_dict(self, mock_profile, mock_nodes, mock_bindings):
+    def test_to_dict(self):
         PROFILE_ID = '96f4df4b-889e-4184-ba8d-b5ca122f95bb'
+        POLICY1_ID = '2c5139a6-24ba-4a6f-bd53-a268f61536de'
+        POLICY2_ID = '2c5139a6-24ba-4a6f-bd53-a268f61536d3'
+        NODE1_ID = '26f4df4b-889e-4184-ba8d-b5ca122f9566'
+        NODE2_ID = '26f4df4b-889e-4184-ba8d-b5ca122f9567'
+
+        utils.create_profile(self.ctx, PROFILE_ID)
+        policy_1 = utils.create_policy(self.ctx, POLICY1_ID, 'P1')
+        policy_2 = utils.create_policy(self.ctx, POLICY2_ID, 'P2')
+
         values = {
             'profile_id': PROFILE_ID,
             'name': 'test-cluster',
@@ -114,11 +122,21 @@ class TestCluster(base.SenlinTestCase):
             'project': self.ctx.project_id,
         }
         cluster = co.Cluster.create(self.ctx, values)
-        fake_profile = mock.Mock()
-        fake_profile.name = 'PROFILEABC'
-        mock_profile.return_value = fake_profile
-        mock_nodes.return_value = ['N1', 'N2']
-        mock_bindings.return_value = ['P1', 'P2']
+        p1 = cpo.ClusterPolicy(cluster_id=cluster.id, policy_id=policy_1.id,
+                               enabled=True, id=uuidutils.generate_uuid(),
+                               last_op=None)
+        p2 = cpo.ClusterPolicy(cluster_id=cluster.id, policy_id=policy_2.id,
+                               enabled=True, id=uuidutils.generate_uuid(),
+                               last_op=None)
+        values = {
+            'priority': 12,
+            'enabled': True,
+        }
+        p1.create(self.ctx, cluster.id, POLICY1_ID, values)
+        p2.create(self.ctx, cluster.id, POLICY2_ID, values)
+        utils.create_node(self.ctx, NODE1_ID, PROFILE_ID, cluster.id)
+        utils.create_node(self.ctx, NODE2_ID, PROFILE_ID, cluster.id)
+        cluster = co.Cluster.get(self.ctx, cluster.id)
         expected = {
             'id': cluster.id,
             'name': cluster.name,
@@ -133,15 +151,18 @@ class TestCluster(base.SenlinTestCase):
             'max_size': -1,
             'desired_capacity': 1,
             'timeout': cfg.CONF.default_action_timeout,
-            'status': 'INIT',
+            'status': six.text_type('INIT'),
             'status_reason': None,
             'metadata': {},
             'data': {},
             'dependents': {},
             'config': {},
-            'nodes': ['N1', 'N2'],
-            'policies': ['P1', 'P2'],
-            'profile_name': 'PROFILEABC',
+            'nodes': [mock.ANY, mock.ANY],
+            'policies': [mock.ANY, mock.ANY],
+            'profile_name': six.text_type('test-profile'),
         }
+        cluster_dict = cluster.to_dict()
 
-        self.assertEqual(expected, cluster.to_dict())
+        self.assertEqual(expected, cluster_dict)
+        self.assertEqual(2, len(cluster_dict['nodes']))
+        self.assertEqual(2, len(cluster_dict['policies']))

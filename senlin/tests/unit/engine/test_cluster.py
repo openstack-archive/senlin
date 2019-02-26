@@ -134,6 +134,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual([], rt['policies'])
 
     def test_store_for_create(self):
+        utils.create_profile(self.context, PROFILE_ID)
         cluster = cm.Cluster('test-cluster', 0, PROFILE_ID,
                              user=self.context.user_id,
                              project=self.context.project_id)
@@ -168,6 +169,7 @@ class TestCluster(base.SenlinTestCase):
         self.assertEqual({}, result.metadata)
 
     def test_store_for_update(self):
+        utils.create_profile(self.context, PROFILE_ID)
         cluster = cm.Cluster('test-cluster', 0, PROFILE_ID,
                              user=self.context.user_id,
                              project=self.context.project_id)
