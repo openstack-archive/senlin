@@ -351,7 +351,7 @@ class LoadBalancerDriver(base.DriverBase):
             LOG.exception('Failed in removing member %(m)s from pool %(p)s: '
                           '%(ex)s', {'m': member_id, 'p': pool_id, 'ex': ex})
             return None
-        res = self._wait_for_lb_ready(lb_id)
+        res = self._wait_for_lb_ready(lb_id, ignore_not_found=True)
         if res is False:
             LOG.error('Failed in deleting pool member (%s).', member_id)
             return None

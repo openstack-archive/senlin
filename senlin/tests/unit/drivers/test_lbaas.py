@@ -661,7 +661,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         self.assertTrue(res)
         self.oc.pool_member_delete.assert_called_once_with(pool_id, member_id)
         self.lb_driver._wait_for_lb_ready.assert_has_calls(
-            [mock.call(lb_id), mock.call(lb_id)])
+            [mock.call(lb_id), mock.call(lb_id, ignore_not_found=True)])
 
     def test_member_remove_lb_unready_for_member_delete(self):
         self.lb_driver._wait_for_lb_ready = mock.Mock()
@@ -690,4 +690,4 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         res = self.lb_driver.member_remove('LB_ID', 'POOL_ID', 'MEMBER_ID')
         self.assertIsNone(res)
         self.lb_driver._wait_for_lb_ready.assert_has_calls(
-            [mock.call('LB_ID'), mock.call('LB_ID')])
+            [mock.call('LB_ID'), mock.call('LB_ID', ignore_not_found=True)])
