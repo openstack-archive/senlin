@@ -9,6 +9,7 @@ prelude: >
     scaling action cannot be processed due to cooldown.
 features:
   - |
+    [`blueprint scaling-action-acceptance <https://blueprints.launchpad.net/senlin/+spec/scaling-action-acceptance>`_]
     Scaling actions (IN or OUT) now validate that there is no conflicting
     action already being processed and will return an error via the API
     informing the end user if a conflict is detected. A conflicting action is
@@ -16,6 +17,6 @@ features:
     `CLUSTER_SCALE_OUT` is attempted while there is already cluster scaling
     action in the action table in a pending status (READY, RUNNING, WAITING,
     ACTION_WAITING_LIFECYCLE_COMPLETION).
-    Additinally the cooldown will be checked and enforced when a scaling
+    Additionally the cooldown will be checked and enforced when a scaling
     action is requested. If the cooldown is being observed the requester will
     be informed of this when submitting the action via an error.

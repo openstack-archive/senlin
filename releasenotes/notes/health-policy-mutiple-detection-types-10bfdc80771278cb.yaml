@@ -1,0 +1,17 @@
+---
+prelude: >
+    Health policy v1.1 implements multiple detection modes.  This implementation
+    is incompatible with health policy v1.0.
+features:
+  - |
+    [`blueprint multiple-detection-modes <https://blueprints.launchpad.net/senlin/+spec/multiple-detection-modes>`_]
+    Health policy v1.1 now supports multiple detection types.  The user can
+    combine node status poll and node poll url types in the health policy in
+    order to have both checked before a node is considered unhealthy.
+upgrade:
+  - |
+    This release makes changes to the health policy properties that are
+    incompatible with health policy v1.0.  Any existing policies of type
+    health policy v1.0 must be removed before upgrading to this release.
+    After upgrading, the health policies conforming to v1.0 must be recreated
+    following health policy v1.1 format.

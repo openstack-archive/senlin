@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    [`bug 1813089 <https://bugs.launchpad.net/senlin/+bug/1813089>`_]
+    This change picks the address when adding a node to a load balancer based on
+    the subnet ip version.  This fix adds supports for nodes with
+    dual stack network.

@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    [`bug 1811161 <https://bugs.launchpad.net/senlin/+bug/1811161>`_]
+    Perform policy post-op even if action failed.  This allows the health policy
+    to reenable health checks even if an action that failed.

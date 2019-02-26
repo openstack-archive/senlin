@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    [`bug 1789488 <https://bugs.launchpad.net/senlin/+bug/1789488>`_]
+    Perform deep validation of profile and policy schemas so that errors in
+    spec properties are detected.
