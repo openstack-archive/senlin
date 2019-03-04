@@ -1137,7 +1137,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("The 'number' must be positive integer for "
+        self.assertEqual("The 'number' must be non-negative integer for "
                          "adjustment type 'EXACT_CAPACITY'.",
                          six.text_type(ex.exc_info[1]))
 

@@ -1213,9 +1213,9 @@ class EngineService(service.Service):
                 raise exception.BadRequest(msg=msg)
 
             if (req.adjustment_type == consts.EXACT_CAPACITY and
-                    req.number <= 0):
-                msg = _("The 'number' must be positive integer for adjustment "
-                        "type '%s'.") % adj_type
+                    req.number < 0):
+                msg = _("The 'number' must be non-negative integer "
+                        "for adjustment type '%s'.") % adj_type
                 raise exception.BadRequest(msg=msg)
 
             if adj_type == consts.CHANGE_IN_PERCENTAGE:
