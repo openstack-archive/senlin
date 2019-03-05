@@ -1,0 +1,9 @@
+---
+fixes:
+  - |
+    [`bug 1817604 <https://bugs.launchpad.net/senlin/+bug/1817604>`_]
+    Fixes major performance bugs within senlin by improving database
+    interaction. This was completed by updating the database models to
+    properly take advantage of relationships. Additionally removes
+    unnecessary database calls and prefers joins instead to retrieve
+    object data.

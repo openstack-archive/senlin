@@ -95,6 +95,8 @@ class Cluster(BASE, TimestampMixin, models.ModelBase):
     dependents = Column(types.Dict)
     config = Column(types.Dict)
 
+    profile = relationship(Profile)
+
 
 class Node(BASE, TimestampMixin, models.ModelBase):
     """Node objects."""
@@ -121,6 +123,9 @@ class Node(BASE, TimestampMixin, models.ModelBase):
     data = Column(types.Dict)
     dependents = Column(types.Dict)
     profile = relationship(Profile, backref=backref('nodes'))
+    cluster = relationship(Cluster, backref=backref('nodes'),
+                           foreign_keys=[cluster_id],
+                           primaryjoin='Cluster.id == Node.cluster_id')
 
 
 class ClusterLock(BASE, models.ModelBase):
@@ -240,6 +245,13 @@ class Action(BASE, TimestampMixin, models.ModelBase):
     user = Column(String(32))
     project = Column(String(32))
     domain = Column(String(32))
+
+    dep_on = relationship(
+        ActionDependency,
+        primaryjoin="Action.id == ActionDependency.dependent")
+    dep_by = relationship(
+        ActionDependency,
+        primaryjoin="Action.id == ActionDependency.depended")
 
 
 class Event(BASE, models.ModelBase):

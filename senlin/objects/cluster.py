@@ -15,7 +15,6 @@
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
 
-from senlin.common import context as senlin_context
 from senlin.common import exception as exc
 from senlin.common import utils
 from senlin.db import api as db_api
@@ -49,14 +48,34 @@ class Cluster(base.SenlinObject, base.VersionedObjectDictCompat):
         'domain': fields.StringField(nullable=True),
         'dependents': fields.JsonField(nullable=True),
         'config': fields.JsonField(nullable=True),
+        'profile_name': fields.StringField(),
+        'nodes': fields.CustomListField(attr_name='id', nullable=True),
+        'policies': fields.CustomListField(attr_name='id', nullable=True),
     }
+
+    @staticmethod
+    def _from_db_object(context, obj, db_obj):
+        if db_obj is None:
+            return None
+        for field in obj.fields:
+            if field == 'metadata':
+                obj['metadata'] = db_obj['meta_data']
+            elif field == 'profile_name':
+                obj['profile_name'] = db_obj['profile'].name
+            else:
+                obj[field] = db_obj[field]
+
+        obj._context = context
+        obj.obj_reset_changes()
+
+        return obj
 
     @classmethod
     def create(cls, context, values):
         values = cls._transpose_metadata(values)
         values['init_at'] = timeutils.utcnow(True)
         obj = db_api.cluster_create(context, values)
-        return cls._from_db_object(context, cls(context), obj)
+        return cls._from_db_object(context, cls(), obj)
 
     @classmethod
     def find(cls, context, identity, project_safe=True):
@@ -118,9 +137,6 @@ class Cluster(base.SenlinObject, base.VersionedObjectDictCompat):
         db_api.cluster_delete(context, obj_id)
 
     def to_dict(self):
-        context = senlin_context.get_admin_context()
-        profile = db_api.profile_get(context, self.profile_id,
-                                     project_safe=False)
         return {
             'id': self.id,
             'name': self.name,
@@ -141,7 +157,7 @@ class Cluster(base.SenlinObject, base.VersionedObjectDictCompat):
             'data': self.data or {},
             'dependents': self.dependents or {},
             'config': self.config or {},
-            'profile_name': profile.name,
-            'nodes': db_api.node_ids_by_cluster(context, self.id),
-            'policies': db_api.cluster_policy_ids_by_cluster(context, self.id)
+            'profile_name': self.profile_name,
+            'nodes': self.nodes,
+            'policies': self.policies
         }

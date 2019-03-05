@@ -18,7 +18,6 @@ from senlin.common import exception
 from senlin.common import utils
 from senlin.db import api as db_api
 from senlin.objects import base
-from senlin.objects import dependency as dobj
 from senlin.objects import fields
 
 
@@ -49,6 +48,8 @@ class Action(base.SenlinObject, base.VersionedObjectDictCompat):
         'user': fields.StringField(),
         'project': fields.StringField(),
         'domain': fields.StringField(nullable=True),
+        'dep_on': fields.CustomListField(attr_name='depended', nullable=True),
+        'dep_by': fields.CustomListField(attr_name='dependent', nullable=True),
     }
 
     @classmethod
@@ -187,12 +188,6 @@ class Action(base.SenlinObject, base.VersionedObjectDictCompat):
                                               status=status)
 
     def to_dict(self):
-        if self.id:
-            dep_on = dobj.Dependency.get_depended(self.context, self.id)
-            dep_by = dobj.Dependency.get_dependents(self.context, self.id)
-        else:
-            dep_on = []
-            dep_by = []
         action_dict = {
             'id': self.id,
             'name': self.name,
@@ -208,8 +203,8 @@ class Action(base.SenlinObject, base.VersionedObjectDictCompat):
             'status_reason': self.status_reason,
             'inputs': self.inputs,
             'outputs': self.outputs,
-            'depends_on': dep_on,
-            'depended_by': dep_by,
+            'depends_on': self.dep_on,
+            'depended_by': self.dep_by,
             'created_at': utils.isotime(self.created_at),
             'updated_at': utils.isotime(self.updated_at),
             'data': self.data,
