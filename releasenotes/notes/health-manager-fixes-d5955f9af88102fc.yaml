@@ -1,0 +1,9 @@
+---
+fixes:
+  - |
+    Fixes the logic within the health manager to prevent duplicate health checks
+    from running on the same cluster.
+other:
+  - |
+    Adds a configuration option to the health manager to control the maximum
+    amount of threads that can be created by the health manager.
