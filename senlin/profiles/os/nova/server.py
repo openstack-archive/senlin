@@ -1339,8 +1339,9 @@ class ServerProfile(base.Profile):
         # process security groups
         sgroups = []
         if 'security_groups' in server_data:
-            for sg in server_data['security_groups']:
-                sgroups.append(sg['name'])
+            if server_data['security_groups'] is not None:
+                for sg in server_data['security_groups']:
+                    sgroups.append(sg['name'])
         # when we have multiple nics the info will include the
         # security groups N times where N == number of nics. Be nice
         # and only display it once.
