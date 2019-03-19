@@ -558,7 +558,8 @@ class Profile(object):
             res = self.do_create(obj)
         except exc.EResourceCreation as ex:
             raise exc.EResourceOperation(op='recovering', type='node',
-                                         id=obj.id, message=six.text_type(ex))
+                                         id=obj.id, message=six.text_type(ex),
+                                         resource_id=ex.resource_id)
         return res, True
 
     def do_validate(self, obj):

@@ -274,6 +274,10 @@ class EResourceOperation(InternalError):
     The message here can be message from class 'ResourceNotFound',
     'ResourceInUse' and so on, or developer can specified message.
     """
+    def __init__(self, **kwargs):
+        self.resource_id = kwargs.pop('resource_id', None)
+        super(EResourceOperation, self).__init__(
+            resource_id=self.resource_id, **kwargs)
     # Used when operating resources from other services
     msg_fmt = _("Failed in %(op)s %(type)s '%(id)s': %(message)s.")
 

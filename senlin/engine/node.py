@@ -397,7 +397,9 @@ class Node(object):
             physical_id, status = pb.Profile.recover_object(context,
                                                             self, **options)
         except exc.EResourceOperation as ex:
-            self.set_status(context, consts.NS_ERROR, reason=six.text_type(ex))
+            physical_id = ex.resource_id
+            self.set_status(context, consts.NS_ERROR, reason=six.text_type(ex),
+                            physical_id=physical_id)
             return False
 
         if not status:
