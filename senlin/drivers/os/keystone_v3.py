@@ -68,8 +68,10 @@ class KeystoneClient(base.DriverBase):
         :param impersonation: Whether the trustee is allowed to impersonate
                               the trustor.
         """
-
-        if roles:
+        # inherit the role of the trustor, unless CONF.trust_roles is set
+        if CONF.trust_roles:
+            role_list = [{'name': role} for role in CONF.trust_roles]
+        elif roles:
             role_list = [{'name': role} for role in roles]
         else:
             role_list = []

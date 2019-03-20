@@ -113,6 +113,10 @@ engine_opts = [
     cfg.IntOpt('health_manager_thread_pool_size',
                default=1000,
                help=_('Maximum number of threads to use for health manager.')),
+    cfg.ListOpt('trust_roles',
+                default=[],
+                help=_('The roles which are delegated to the trustee by the '
+                       'trustor when a cluster is created.')),
 ]
 cfg.CONF.register_opts(engine_opts)
 
