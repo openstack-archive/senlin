@@ -291,8 +291,17 @@ class LoadBalancerDriver(base.DriverBase):
             LOG.error('Node is not in subnet %(subnet)s', {'subnet': subnet})
             return None
 
-        # Use the first IP address if more than one are found in target network
-        address = addresses[net_name][0]['addr']
+        # Use the first IP address that match with the subnet ip_version
+        # if more than one are found in target network
+        address = None
+        for ip in addresses[net_name]:
+            if ip['version'] == subnet_obj.ip_version:
+                address = ip['addr']
+                break
+        if not address:
+            LOG.error("Node does not match with subnet's (%s) ip version (%s)"
+                      % (subnet, subnet_obj.ip_version))
+            return None
         try:
             # FIXME(Yanyan Hu): Currently, Neutron lbaasv2 service can not
             # handle concurrent lb member operations well: new member creation
