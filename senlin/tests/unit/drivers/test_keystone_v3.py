@@ -116,6 +116,45 @@ class TestKeystoneV3(base.SenlinTestCase):
             allow_redelegation=True, roles=[])
         self.conn.reset_mock()
 
+    def test_trust_create_conf_roles(self, mock_create):
+        cfg.CONF.set_override('trust_roles', ['r1', 'r2'])
+        self.conn.identity.create_trust.return_value = 'new_trust'
+        mock_create.return_value = self.conn
+        kc = kv3.KeystoneClient({'k': 'v'})
+
+        res = kc.trust_create('ID_JOHN', 'ID_DOE', 'PROJECT_ID', [
+            'r1', 'r2', 'r3'])
+
+        self.assertEqual('new_trust', res)
+        self.conn.identity.create_trust.assert_called_once_with(
+            trustor_user_id='ID_JOHN', trustee_user_id='ID_DOE',
+            project_id='PROJECT_ID', impersonation=True,
+            allow_redelegation=True, roles=[{'name': 'r1'}, {'name': 'r2'}])
+        self.conn.reset_mock()
+
+        cfg.CONF.set_override('trust_roles', [])
+        res = kc.trust_create('ID_JOHN', 'ID_DOE', 'PROJECT_ID',
+                              ['r1', 'r2'])
+
+        self.assertEqual('new_trust', res)
+        self.conn.identity.create_trust.assert_called_once_with(
+            trustor_user_id='ID_JOHN', trustee_user_id='ID_DOE',
+            project_id='PROJECT_ID', impersonation=True,
+            allow_redelegation=True,
+            roles=[{'name': 'r1'}, {'name': 'r2'}])
+        self.conn.reset_mock()
+
+        # impersonation
+        res = kc.trust_create('ID_JOHN', 'ID_DOE', 'PROJECT_ID',
+                              impersonation=False)
+
+        self.assertEqual('new_trust', res)
+        self.conn.identity.create_trust.assert_called_once_with(
+            trustor_user_id='ID_JOHN', trustee_user_id='ID_DOE',
+            project_id='PROJECT_ID', impersonation=False,
+            allow_redelegation=True, roles=[])
+        self.conn.reset_mock()
+
     @mock.patch.object(sdk, 'authenticate')
     def test_get_token(self, mock_auth, mock_create):
         access_info = {'token': '123', 'user_id': 'abc', 'project_id': 'xyz'}
