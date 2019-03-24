@@ -17,7 +17,7 @@
               dest: devstack-gate
           EOF
           /usr/zuul-env/bin/zuul-cloner -m clonemap.yaml --cache-dir /opt/git \
-              git://git.openstack.org \
+              https://git.openstack.org \
               openstack-infra/devstack-gate
         executable: /bin/bash
         chdir: '{{ ansible_user_dir }}/workspace'
@@ -55,7 +55,7 @@
           export DEVSTACK_LOCAL_CONFIG="enable_plugin senlin https://git.openstack.org/openstack/senlin"
 
           export PROJECTS="openstack/heat $PROJECTS"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin heat git://git.openstack.org/openstack/heat"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin heat https://git.openstack.org/openstack/heat"
 
           # Enable LBaaS V2 plugin
           services+=,q-lbaasv2
@@ -66,7 +66,7 @@
           export PROJECTS="openstack/zaqar $PROJECTS"
           export PROJECTS="openstack/python-zaqarclient $PROJECTS"
           export PROJECTS="openstack/zaqar-ui $PROJECTS"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin zaqar git://git.openstack.org/openstack/zaqar"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin zaqar https://git.openstack.org/openstack/zaqar"
           export PROJECTS="openstack/zaqar-tempest-plugin $PROJECTS"
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"TEMPEST_PLUGINS+=' /opt/stack/new/zaqar-tempest-plugin'"
 
