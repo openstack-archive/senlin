@@ -25,7 +25,7 @@ Senlin Basics
 
   .. code-block:: console
 
-    $ git clone git://git.openstack.org/openstack/senlin.git
+    $ git clone https://git.openstack.org/openstack/senlin.git
 
 Follow the `Installation Guide`_ to install the senlin service.
 
