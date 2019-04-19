@@ -13,12 +13,12 @@
           set -x
           cat > clonemap.yaml << EOF
           clonemap:
-            - name: openstack-infra/devstack-gate
+            - name: openstack/devstack-gate
               dest: devstack-gate
           EOF
           /usr/zuul-env/bin/zuul-cloner -m clonemap.yaml --cache-dir /opt/git \
-              https://git.openstack.org \
-              openstack-infra/devstack-gate
+              https://opendev.org \
+              openstack/devstack-gate
         executable: /bin/bash
         chdir: '{{ ansible_user_dir }}/workspace'
       environment: '{{ zuul | zuul_legacy_vars }}'
@@ -52,21 +52,21 @@
           services+=,q-svc,q-dhcp,q-meta,q-agt,q-l3
 
           export PROJECTS="openstack/senlin $PROJECTS"
-          export DEVSTACK_LOCAL_CONFIG="enable_plugin senlin https://git.openstack.org/openstack/senlin"
+          export DEVSTACK_LOCAL_CONFIG="enable_plugin senlin https://opendev.org/openstack/senlin"
 
           export PROJECTS="openstack/heat $PROJECTS"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin heat https://git.openstack.org/openstack/heat"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin heat https://opendev.org/openstack/heat"
 
           # Enable LBaaS V2 plugin
           services+=,q-lbaasv2
           export PROJECTS="openstack/neutron-lbaas $PROJECTS"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin neutron-lbaas https://git.openstack.org/openstack/neutron-lbaas"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin neutron-lbaas https://opendev.org/openstack/neutron-lbaas"
 
           # Enable Zaqar
           export PROJECTS="openstack/zaqar $PROJECTS"
           export PROJECTS="openstack/python-zaqarclient $PROJECTS"
           export PROJECTS="openstack/zaqar-ui $PROJECTS"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin zaqar https://git.openstack.org/openstack/zaqar"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin zaqar https://opendev.org/openstack/zaqar"
           export PROJECTS="openstack/zaqar-tempest-plugin $PROJECTS"
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"TEMPEST_PLUGINS+=' /opt/stack/new/zaqar-tempest-plugin'"
 
