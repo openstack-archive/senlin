@@ -23,7 +23,7 @@ Working on APIs
 If you are proposing new APIs or fixes to existing APIs, please spend some
 time reading the guidelines published by the API WorkGroup:
 
-https://git.openstack.org/cgit/openstack/api-wg/tree/guidelines
+https://opendev.org/openstack/api-sig/src/branch/master/guidelines
 
 Any work on improving Senlin's APIs to conform to the guidelines are welcomed.
 

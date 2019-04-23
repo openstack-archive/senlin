@@ -56,10 +56,10 @@ Launchpad Projects
 
 Code Repository
 ---------------
-- Server: https://git.openstack.org/cgit/openstack/senlin
-- Client: https://git.openstack.org/cgit/openstack/python-senlinclient
-- Dashboard: https://git.openstack.org/cgit/openstack/senlin-dashboard
-- Tempest Plugin: https://git.openstack.org/cgit/openstack/senlin-tempest-plugin
+- Server: https://opendev.org/openstack/senlin
+- Client: https://opendev.org/openstack/python-senlinclient
+- Dashboard: https://opendev.org/openstack/senlin-dashboard
+- Tempest Plugin: https://opendev.org/openstack/senlin-tempest-plugin
 
 Blueprints
 ----------
