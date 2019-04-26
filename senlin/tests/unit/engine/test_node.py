@@ -811,6 +811,74 @@ class TestNode(base.SenlinTestCase):
             mock.call(self.context, consts.NS_ERROR,
                       reason='Recovery failed')])
 
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(pb.Profile, 'recover_object')
+    def test_node_recover_failed_recover_with_old_physical_id(self,
+                                                              mock_recover,
+                                                              mock_status):
+        node = nodem.Node('node1', PROFILE_ID, None)
+        node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
+
+        action = mock.Mock(
+            inputs={'operation': consts.RECOVER_RECREATE, 'check': True})
+        mock_recover.side_effect = exception.EResourceOperation(
+            op=consts.RECOVER_RECREATE,
+            type='server',
+            id=node.physical_id,
+            resource_id=node.physical_id,
+            reason='Recovery failed',
+        )
+        res = node.do_recover(self.context, action)
+
+        self.assertFalse(res)
+        mock_recover.assert_called_once_with(
+            self.context, node, **action.inputs)
+        reason = ("Failed in RECREATE server 'd94d6333-82e6-4f87-b7ab-b786776d"
+                  "f9d1': Internal error happened.")
+        mock_status.assert_has_calls([
+            mock.call(self.context, 'RECOVERING',
+                      reason='Recovery in progress'),
+            mock.call(self.context, consts.NS_ERROR,
+                      reason=six.text_type(reason),
+                      physical_id=node.physical_id)])
+
+    @mock.patch.object(nodem.Node, 'set_status')
+    @mock.patch.object(pb.Profile, 'recover_object')
+    def test_node_recover_failed_recover_with_new_physical_id(self,
+                                                              mock_recover,
+                                                              mock_status):
+        def set_status(*args, **kwargs):
+            if args[1] == consts.NS_ERROR:
+                node.physical_id = new_id
+
+        node = nodem.Node('node1', PROFILE_ID, None)
+        node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
+        new_id = '166db83b-b4a4-49ef-96a8-6c0fdd882d1a'
+
+        mock_status.side_effect = set_status
+        action = mock.Mock(inputs={'operation': consts.RECOVER_RECREATE,
+                                   'check': True})
+        mock_recover.side_effect = exception.EResourceOperation(
+            op=consts.RECOVER_RECREATE,
+            type='server',
+            id=node.physical_id,
+            resource_id=new_id,
+            reason='Recovery failed',
+        )
+        res = node.do_recover(self.context, action)
+
+        self.assertFalse(res)
+        mock_recover.assert_called_once_with(
+            self.context, node, **action.inputs)
+        reason = ("Failed in RECREATE server 'd94d6333-82e6-4f87-b7ab-b786776d"
+                  "f9d1': Internal error happened.")
+        mock_status.assert_has_calls([
+            mock.call(self.context, 'RECOVERING',
+                      reason='Recovery in progress'),
+            mock.call(self.context, consts.NS_ERROR,
+                      reason=six.text_type(reason),
+                      physical_id=new_id)])
+
     def test_node_recover_no_physical_id_reboot_op(self):
         node = nodem.Node('node1', PROFILE_ID, None)
         action = mock.Mock(inputs={'operation': 'REBOOT'})
