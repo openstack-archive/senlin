@@ -62,8 +62,7 @@ class LoadBalancerDriver(base.DriverBase):
         """Keep waiting until loadbalancer is ready
 
         This method will keep waiting until loadbalancer resource specified
-        by lb_id becomes ready, i.e. its provisioning_status is ACTIVE and
-        its operating_status is ONLINE.
+        by lb_id becomes ready, i.e. its provisioning_status is ACTIVE.
 
         :param lb_id: ID of the load-balancer to check.
         :param ignore_not_found: if set to True, nonexistent loadbalancer
@@ -79,9 +78,7 @@ class LoadBalancerDriver(base.DriverBase):
             if lb is None:
                 lb_ready = ignore_not_found
             else:
-                lb_ready = ((lb.provisioning_status == 'ACTIVE') and
-                            (lb.operating_status == 'ONLINE'))
-
+                lb_ready = lb.provisioning_status == 'ACTIVE'
             if lb_ready is True:
                 return True
 
