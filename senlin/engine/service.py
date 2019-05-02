@@ -1179,7 +1179,7 @@ class EngineService(service.Service):
             'name': 'cluster_replace_nodes_%s' % db_cluster.id[:8],
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
-            'inputs': nodes,
+            'inputs': {'candidates': nodes},
         }
         action_id = action_mod.Action.create(ctx, db_cluster.id,
                                              consts.CLUSTER_REPLACE_NODES,

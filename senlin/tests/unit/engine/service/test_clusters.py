@@ -1891,7 +1891,7 @@ class ClusterTest(base.SenlinTestCase):
             name='cluster_replace_nodes_CID',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
-            inputs={'ORIGINAL': 'REPLACE'})
+            inputs={'candidates': {'ORIGINAL': 'REPLACE'}})
         notify.assert_called_once_with()
 
     @mock.patch.object(service.EngineService, '_validate_replace_nodes')

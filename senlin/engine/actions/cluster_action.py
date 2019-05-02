@@ -684,7 +684,12 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
-        node_dict = self.inputs
+        node_dict = self.inputs.get('candidates')
+        if not node_dict:
+            return (
+                self.RES_ERROR,
+                'Candidates must be a non-empty dict.'
+                ' Instead got {}'.format(node_dict))
 
         errors = []
         original_nodes = []
