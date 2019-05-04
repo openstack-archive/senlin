@@ -11,6 +11,7 @@
 # under the License.
 
 import mock
+from openstack import exceptions as sdk_exc
 from oslo_config import cfg
 
 from senlin.drivers.os import nova_v2
@@ -435,16 +436,42 @@ class TestNovaV2(base.SenlinTestCase):
         server = mock.Mock()
         res_server = mock.Mock()
         res_server.metadata = {
-            'k1': 'v1'
+            'k1': 'v1',
+            'k2': 'v2'
         }
         self.compute.get_server_metadata.return_value = res_server
 
         d = nova_v2.NovaClient(self.conn_params)
-        d.server_metadata_update(server, {'k2': 'v2'})
-        self.compute.delete_server_metadata.assert_called_once_with(
-            server, ['k1'])
-        self.compute.set_server_metadata.assert_called_once_with(
-            server, k2='v2')
+        d.server_metadata_update(server, {'k3': 'v3', 'k4': 'v4'})
+        self.compute.set_server_metadata.assert_has_calls(
+            [mock.call(server, k3='v3'), mock.call(server, k4='v4')],
+            any_order=True)
+        self.compute.delete_server_metadata.assert_has_calls(
+            [mock.call(server, ['k1']), mock.call(server, ['k2'])],
+            any_order=True)
+
+    def test_server_metadata_update_forbidden(self):
+        server = mock.Mock()
+        res_server = mock.Mock()
+        res_server.metadata = {
+            'k1': 'v1',
+            'forbidden_key': 'forbidden_data',
+            'k2': 'v2'
+        }
+        self.compute.get_server_metadata.return_value = res_server
+        self.compute.delete_server_metadata.side_effect = [
+            None, sdk_exc.HttpException(http_status=403), None]
+        self.compute.set_server_metadata.side_effect = [
+            None, sdk_exc.HttpException(http_status=403), None]
+
+        d = nova_v2.NovaClient(self.conn_params)
+        d.server_metadata_update(server, {'k3': 'v3', 'k4': 'v4', 'k5': 'v5'})
+        self.compute.set_server_metadata.assert_has_calls(
+            [mock.call(server, k3='v3'), mock.call(server, k4='v4'),
+             mock.call(server, k5='v5')], any_order=True)
+        self.compute.delete_server_metadata.assert_has_calls(
+            [mock.call(server, ['k1']), mock.call(server, ['forbidden_key']),
+             mock.call(server, ['k2'])], any_order=True)
 
     def test_server_metadata_delete(self):
         server = mock.Mock()

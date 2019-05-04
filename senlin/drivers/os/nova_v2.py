@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from openstack import exceptions as sdk_exc
 from oslo_config import cfg
 from oslo_log import log
 
@@ -195,17 +196,26 @@ class NovaClient(base.DriverBase):
         res = self.conn.compute.get_server_metadata(server)
         return res.metadata
 
+    def _ignore_forbidden_call(self, func, *args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except sdk_exc.HttpException as exc:
+            if exc.status_code != 403:
+                raise
+
     @sdk.translate_exception
     def server_metadata_update(self, server, metadata):
         # Clean all existing metadata first
         res = self.conn.compute.get_server_metadata(server)
         if res.metadata:
-            self.conn.compute.delete_server_metadata(
-                server, list(res.metadata.keys()))
-
-        # Then reset metadata to given value if it is not {}
+            for key in res.metadata:
+                self._ignore_forbidden_call(
+                    self.conn.compute.delete_server_metadata, server, [key])
         if metadata:
-            return self.conn.compute.set_server_metadata(server, **metadata)
+            for key, value in metadata.items():
+                self._ignore_forbidden_call(
+                    self.conn.compute.set_server_metadata,
+                    server, **{key: value})
 
     @sdk.translate_exception
     def server_metadata_delete(self, server, keys):

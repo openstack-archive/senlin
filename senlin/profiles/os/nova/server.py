@@ -1496,7 +1496,7 @@ class ServerProfile(base.Profile):
 
         driver = self.compute(obj)
         try:
-            metadata = driver.server_metadata_get(obj.physical_id) or {}
+            metadata = {}
             metadata['cluster_id'] = cluster_id
             metadata['cluster_node_index'] = six.text_type(obj.index)
             driver.server_metadata_update(obj.physical_id, metadata)
