@@ -21,7 +21,7 @@ from senlin.common.i18n import _
 from senlin.drivers import base
 from senlin.drivers.os import neutron_v2 as neutronclient
 from senlin.drivers.os import octavia_v2 as octaviaclient
-from senlin.engine import node as nodem
+from senlin.profiles import base as pb
 
 LOG = logging.getLogger(__name__)
 
@@ -281,8 +281,10 @@ class LoadBalancerDriver(base.DriverBase):
         net_name = net.name
 
         ctx = oslo_context.get_current()
-        node_obj = nodem.Node.load(ctx, db_node=node)
-        node_detail = node_obj.get_details(ctx)
+        prof = pb.Profile.load(ctx,
+                               profile_id=node.profile_id,
+                               project_safe=False)
+        node_detail = prof.do_get_details(node)
         addresses = node_detail.get('addresses')
         if net_name not in addresses:
             LOG.error('Node is not in subnet %(subnet)s', {'subnet': subnet})
