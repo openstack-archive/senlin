@@ -45,7 +45,7 @@ class ClusterReplaceNodesTest(base.SenlinTestCase):
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
-        action.inputs = {'O_NODE_1': 'R_NODE_1'}
+        action.inputs = {'candidates': {'O_NODE_1': 'R_NODE_1'}, 'foo': 'bar'}
         action.outputs = {}
 
         origin_node = mock.Mock(id='O_NODE_1', cluster_id='CLUSTER_ID',
@@ -106,7 +106,7 @@ class ClusterReplaceNodesTest(base.SenlinTestCase):
     def test_do_replace_nodes_original_not_found(self, mock_get_node,
                                                  mock_load):
         action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {'ORIGIN_NODE': 'REPLACE_NODE'}
+        action.inputs = {'candidates': {'ORIGIN_NODE': 'REPLACE_NODE'}}
         origin_node = None
         replace_node = mock.Mock(id='REPLACE_NODE', cluster_id='',
                                  ACTIVE='ACTIVE', status='ACTIVE')
@@ -119,11 +119,21 @@ class ClusterReplaceNodesTest(base.SenlinTestCase):
         self.assertEqual('Original node ORIGIN_NODE not found.',
                          res_msg)
 
+    def test_do_replace_nodes_empty_candidates(self, mock_load):
+        action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
+        action.inputs = {'candidates': {}}
+        res_code, res_msg = action.do_replace_nodes()
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual(
+            'Candidates must be a non-empty dict. Instead got {}',
+            res_msg)
+
     @mock.patch.object(no.Node, 'get')
     def test_do_replace_nodes_replacement_not_found(self, mock_get_node,
                                                     mock_load):
         action = ca.ClusterAction('ID', 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {'ORIGIN_NODE': 'REPLACE_NODE'}
+        action.inputs = {'candidates': {'ORIGIN_NODE': 'REPLACE_NODE'}}
         origin_node = mock.Mock(id='ORIGIN_NODE', cluster_id='CLUSTER_ID',
                                 ACTIVE='ACTIVE', status='ACTIVE')
         replace_node = None
@@ -143,7 +153,7 @@ class ClusterReplaceNodesTest(base.SenlinTestCase):
         mock_load.return_value = cluster
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {'ORIGIN_NODE': 'REPLACE_NODE'}
+        action.inputs = {'candidates': {'ORIGIN_NODE': 'REPLACE_NODE'}}
 
         origin_node = mock.Mock(id='ORIGIN_NODE', cluster_id='')
         mock_get_node.return_value = origin_node
@@ -162,7 +172,7 @@ class ClusterReplaceNodesTest(base.SenlinTestCase):
         mock_load.return_value = cluster
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
-        action.inputs = {'ORIGIN_NODE': 'REPLACE_NODE'}
+        action.inputs = {'candidates': {'ORIGIN_NODE': 'REPLACE_NODE'}}
 
         replace_node = mock.Mock(id='REPLACE_NODE',
                                  cluster_id='FAKE_CLUSTER')
@@ -184,7 +194,7 @@ class ClusterReplaceNodesTest(base.SenlinTestCase):
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
-        action.inputs = {'ORIGIN_NODE': 'REPLACE_NODE'}
+        action.inputs = {'candidates': {'ORIGIN_NODE': 'REPLACE_NODE'}}
         action.outputs = {}
 
         origin_node = mock.Mock(id='ORIGIN_NODE', cluster_id='CLUSTER_ID',
@@ -208,7 +218,7 @@ class ClusterReplaceNodesTest(base.SenlinTestCase):
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
-        action.inputs = {'ORIGIN_NODE': 'REPLACE_NODE'}
+        action.inputs = {'candidates': {'ORIGIN_NODE': 'REPLACE_NODE'}}
         action.outputs = {}
 
         origin_node = mock.Mock(id='ORIGIN_NODE', cluster_id='CLUSTER_ID',
@@ -238,7 +248,7 @@ class ClusterReplaceNodesTest(base.SenlinTestCase):
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
-        action.inputs = {'O_NODE_1': 'R_NODE_1'}
+        action.inputs = {'candidates': {'O_NODE_1': 'R_NODE_1'}}
         action.outputs = {}
 
         origin_node = mock.Mock(id='O_NODE_1', cluster_id='CLUSTER_ID',
