@@ -30,8 +30,10 @@ from senlin.engine import scheduler
 from senlin.engine import senlin_lock
 from senlin.objects import action as ao
 from senlin.objects import cluster as co
+from senlin.objects import cluster_policy as cp_obj
 from senlin.objects import dependency as dobj
 from senlin.objects import node as no
+from senlin.objects import receiver as receiver_obj
 from senlin.policies import base as policy_mod
 
 LOG = logging.getLogger(__name__)
@@ -496,6 +498,22 @@ class ClusterAction(base.Action):
 
         :returns: A tuple containing the result and the corresponding reason.
         """
+        # Detach policies before delete
+        policies = cp_obj.ClusterPolicy.get_all(self.context, self.entity.id)
+        for policy in policies:
+            res, reason = self.entity.detach_policy(self.context,
+                                                    policy.policy_id)
+            if res:
+                self.entity.store(self.context)
+            else:
+                return self.RES_ERROR, ("Unable to detach policy {} before "
+                                        "deletion.".format(policy.id))
+        # Delete receivers
+        receivers = receiver_obj.Receiver.get_all(
+            self.context, filters={'cluster_id': self.entity.id})
+        for receiver in receivers:
+            receiver_obj.Receiver.delete(self.context, receiver.id)
+
         reason = 'Deletion in progress.'
         self.entity.set_status(self.context, consts.CS_DELETING, reason)
         node_ids = [node.id for node in self.entity.nodes]

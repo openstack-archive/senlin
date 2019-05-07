@@ -322,10 +322,6 @@ Deletes a cluster.
 Response Codes
 --------------
 
-A cluster cannot be deleted if there are still policies attached to it.
-It cannot be deleted if there are still receivers associated with it. In both
-cases, a 409 error will be returned.
-
 .. rest_status_code:: success status.yaml
 
    - 202

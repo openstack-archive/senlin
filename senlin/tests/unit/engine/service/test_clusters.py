@@ -2042,16 +2042,11 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(0, x_node_2.get_details.call_count)
 
     @mock.patch.object(am.Action, 'create')
-    @mock.patch.object(ro.Receiver, 'get_all')
-    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(dispatcher, 'start_action')
-    def test_cluster_delete(self, notify, mock_find, mock_policies,
-                            mock_receivers, mock_action):
+    def test_cluster_delete(self, notify, mock_find, mock_action):
         x_obj = mock.Mock(id='12345678AB', status='ACTIVE', dependents={})
         mock_find.return_value = x_obj
-        mock_policies.return_value = []
-        mock_receivers.return_value = []
         mock_action.return_value = 'ACTION_ID'
         req = orco.ClusterDeleteRequest(identity='IDENTITY', force=False)
 
@@ -2059,13 +2054,11 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'IDENTITY')
-        mock_policies.assert_called_once_with(self.ctx, '12345678AB')
-        mock_receivers.assert_called_once_with(
-            self.ctx, filters={'cluster_id': '12345678AB'})
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', 'CLUSTER_DELETE',
             name='cluster_delete_12345678',
             cause=consts.CAUSE_RPC,
+            force=True,
             status=am.Action.READY)
 
         notify.assert_called_once_with()
@@ -2121,77 +2114,6 @@ class ClusterTest(base.SenlinTestCase):
                 "The cluster 'BUSY' is in status %s." % bad_status,
                 six.text_type(ex.exc_info[1]))
 
-    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
-    @mock.patch.object(co.Cluster, 'find')
-    def test_cluster_delete_policy_attached(self, mock_find, mock_policies):
-        x_obj = mock.Mock(id='12345678AB', dependents={})
-        mock_find.return_value = x_obj
-        mock_policies.return_value = [mock.Mock()]
-        req = orco.ClusterDeleteRequest(identity='IDENTITY',
-                                        force=False)
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_delete,
-                               self.ctx, req.obj_to_primitive())
-
-        self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
-        expected_msg = _("The cluster 'IDENTITY' cannot be deleted: "
-                         "there is still policy(s) attached to it.")
-        self.assertEqual(expected_msg, six.text_type(ex.exc_info[1]))
-        mock_find.assert_called_once_with(self.ctx, 'IDENTITY')
-        mock_policies.assert_called_once_with(self.ctx, '12345678AB')
-
-    @mock.patch.object(ro.Receiver, 'get_all')
-    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
-    @mock.patch.object(co.Cluster, 'find')
-    def test_cluster_delete_with_receiver(self, mock_find, mock_policies,
-                                          mock_receivers):
-        x_obj = mock.Mock(id='12345678AB', dependents={})
-        mock_find.return_value = x_obj
-        mock_policies.return_value = []
-        mock_receivers.return_value = [mock.Mock()]
-        req = orco.ClusterDeleteRequest(identity='IDENTITY',
-                                        force=False)
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_delete,
-                               self.ctx, req.obj_to_primitive())
-
-        self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
-        expected_msg = _("The cluster 'IDENTITY' cannot be deleted: "
-                         "there is still receiver(s) associated with it.")
-        self.assertEqual(expected_msg, six.text_type(ex.exc_info[1]))
-        mock_find.assert_called_once_with(self.ctx, 'IDENTITY')
-        mock_policies.assert_called_once_with(self.ctx, '12345678AB')
-        mock_receivers.assert_called_once_with(
-            self.ctx, filters={'cluster_id': '12345678AB'})
-
-    @mock.patch.object(ro.Receiver, 'get_all')
-    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
-    @mock.patch.object(co.Cluster, 'find')
-    def test_cluster_delete_mult_err(self, mock_find, mock_policies,
-                                     mock_receivers):
-        x_obj = mock.Mock(id='12345678AB', dependents={})
-        mock_find.return_value = x_obj
-        mock_policies.return_value = [mock.Mock()]
-        mock_receivers.return_value = [mock.Mock()]
-        req = orco.ClusterDeleteRequest(identity='IDENTITY',
-                                        force=False)
-
-        ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_delete,
-                               self.ctx, req.obj_to_primitive())
-
-        self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
-        self.assertIn('there is still policy(s) attached to it.',
-                      six.text_type(ex.exc_info[1]))
-        self.assertIn('there is still receiver(s) associated with it.',
-                      six.text_type(ex.exc_info[1]))
-        mock_find.assert_called_once_with(self.ctx, 'IDENTITY')
-        mock_policies.assert_called_once_with(self.ctx, '12345678AB')
-        mock_receivers.assert_called_once_with(
-            self.ctx, filters={'cluster_id': '12345678AB'})
-
     @mock.patch.object(am.Action, 'create')
     @mock.patch.object(ro.Receiver, 'get_all')
     @mock.patch.object(cpo.ClusterPolicy, 'get_all')
@@ -2213,13 +2135,13 @@ class ClusterTest(base.SenlinTestCase):
 
             self.assertEqual({'action': 'ACTION_ID'}, result)
             mock_find.assert_called_with(self.ctx, 'IDENTITY')
-            mock_policies.assert_called_with(self.ctx, '12345678AB')
-            mock_receivers.assert_called_with(
-                self.ctx, filters={'cluster_id': '12345678AB'})
+            mock_policies.assert_not_called()
+            mock_receivers.assert_not_called()
             mock_action.assert_called_with(
                 self.ctx, '12345678AB', 'CLUSTER_DELETE',
                 name='cluster_delete_12345678',
                 cause=consts.CAUSE_RPC,
+                force=True,
                 status=am.Action.READY)
 
             notify.assert_called_with()

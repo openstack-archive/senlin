@@ -240,18 +240,19 @@ class Action(object):
         return cls._from_object(db_action)
 
     @classmethod
-    def create(cls, ctx, target, action, **kwargs):
+    def create(cls, ctx, target, action, force=False, **kwargs):
         """Create an action object.
 
         :param ctx: The requesting context.
         :param target: The ID of the target cluster/node.
         :param action: Name of the action.
+        :param force: Skip checking locks/conflicts
         :param dict kwargs: Other keyword arguments for the action.
         :return: ID of the action created.
         """
-
-        cls._check_action_lock(target, action)
-        cls._check_conflicting_actions(ctx, target, action)
+        if not force:
+            cls._check_action_lock(target, action)
+            cls._check_conflicting_actions(ctx, target, action)
 
         params = {
             'user_id': ctx.user_id,
