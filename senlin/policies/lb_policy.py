@@ -60,10 +60,12 @@ class LoadBalancingPolicy(base.Policy):
         ('AFTER', consts.CLUSTER_RESIZE),
         ('AFTER', consts.NODE_RECOVER),
         ('AFTER', consts.NODE_CREATE),
+        ('AFTER', consts.CLUSTER_REPLACE_NODES),
         ('BEFORE', consts.CLUSTER_DEL_NODES),
         ('BEFORE', consts.CLUSTER_SCALE_IN),
         ('BEFORE', consts.CLUSTER_RESIZE),
         ('BEFORE', consts.NODE_DELETE),
+        ('BEFORE', consts.CLUSTER_REPLACE_NODES),
     ]
 
     PROFILE_TYPE = [
@@ -463,6 +465,9 @@ class LoadBalancingPolicy(base.Policy):
                     count = action.data['deletion']['count']
             else:  # action.action == consts.CLUSTER_SCALE_IN
                 count = 1
+        elif action.action == consts.CLUSTER_REPLACE_NODES:
+            candidates = list(action.inputs['candidates'].keys())
+            count = len(candidates)
         else:
             count = deletion.get('count', 0)
             candidates = deletion.get('candidates', None)
@@ -550,10 +555,11 @@ class LoadBalancingPolicy(base.Policy):
 
     def _get_post_candidates(self, action):
         # This method will parse action data passed from action layer
-
         if (action.action == consts.NODE_CREATE or
                 action.action == consts.NODE_RECOVER):
             candidates = [action.entity.id]
+        elif action.action == consts.CLUSTER_REPLACE_NODES:
+            candidates = list(action.inputs['candidates'].values())
         else:
             creation = action.data.get('creation', None)
             candidates = creation.get('nodes', []) if creation else []
@@ -645,7 +651,7 @@ class LoadBalancingPolicy(base.Policy):
         # TODO(Yanyanhu): Need special handling for cross-az scenario
         # which is supported by Neutron lbaas.
         candidates = self._get_post_candidates(action)
-        if len(candidates) == 0:
+        if not candidates:
             return
 
         obj = action.entity
@@ -666,5 +672,3 @@ class LoadBalancingPolicy(base.Policy):
             error = _('Failed in adding nodes into lb pool: %s') % failed_nodes
             action.data['status'] = base.CHECK_ERROR
             action.data['reason'] = error
-
-        return

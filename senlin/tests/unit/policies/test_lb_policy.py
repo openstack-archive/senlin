@@ -830,6 +830,66 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_add_member')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_get_delete_candidates')
+    def test_pre_op_node_replace(self, m_get, m_remove, m_add,
+                                 m_candidates, m_load):
+        ctx = mock.Mock()
+        cid = 'CLUSTER_ID'
+        cluster = mock.Mock(user='user1', project='project1')
+        action = mock.Mock(data={}, context=ctx,
+                           action=consts.CLUSTER_REPLACE_NODES,
+                           inputs={'candidates': {
+                               'OLD_NODE_ID': 'NEW_NODE_ID'}})
+        action.entity = cluster
+        cp = mock.Mock()
+        m_load.return_value = cp
+        m_add.return_value = []
+        m_get.return_value = ['OLD_NODE_ID']
+
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        policy._lbaasclient = self.lb_driver
+        # do it
+        res = policy.pre_op(cid, action)
+
+        # assertion
+        self.assertIsNone(res)
+        m_get.assert_called_once_with(cid, action)
+        m_load.assert_called_once_with(ctx, cid, policy.id)
+        m_remove.assert_called_once_with(ctx, ['OLD_NODE_ID'],
+                                         cp, self.lb_driver)
+
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_add_member')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_get_post_candidates')
+    def test_post_op_node_replace(self, m_get, m_remove, m_add,
+                                  m_candidates, m_load):
+        ctx = mock.Mock()
+        cid = 'CLUSTER_ID'
+        cluster = mock.Mock(user='user1', project='project1')
+        action = mock.Mock(data={}, context=ctx,
+                           action=consts.CLUSTER_REPLACE_NODES,
+                           inputs={'candidates': {
+                               'OLD_NODE_ID': 'NEW_NODE_ID'}})
+        action.entity = cluster
+        cp = mock.Mock()
+        m_load.return_value = cp
+        m_add.return_value = []
+        m_get.return_value = ['NEW_NODE_ID']
+
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        policy._lbaasclient = self.lb_driver
+        # do it
+        res = policy.post_op(cid, action)
+
+        # assertion
+        self.assertIsNone(res)
+        m_get.assert_called_once_with(action)
+        m_load.assert_called_once_with(ctx, cid, policy.id)
+        m_add.assert_called_once_with(ctx, ['NEW_NODE_ID'], cp, self.lb_driver)
+        self.assertFalse(m_remove.called)
+
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_add_member')
+    @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_get_post_candidates')
     def test_post_op_add_nodes(self, m_get, m_remove, m_add,
                                m_candidates, m_load):
