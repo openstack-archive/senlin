@@ -38,7 +38,7 @@ class TestWebhook(base.SenlinTestCase):
 
         expected = {
             'alarm_url': ('http://web.com:1234/v1/webhooks/%s/trigger'
-                          '?V=1' % UUID1)
+                          '?V=2' % UUID1)
         }
         self.assertEqual(expected, channel)
         self.assertEqual(expected, webhook.channel)
@@ -52,7 +52,7 @@ class TestWebhook(base.SenlinTestCase):
 
         expected = {
             'alarm_url': ('http://web.com:1234/v1/webhooks/%s/trigger'
-                          '?V=1' % UUID1)
+                          '?V=2' % UUID1)
         }
         self.assertEqual(expected, channel)
         self.assertEqual(expected, webhook.channel)
@@ -69,7 +69,7 @@ class TestWebhook(base.SenlinTestCase):
 
         expected = {
             'alarm_url': ('http://test-host:8778/v1/webhooks/%s/trigger'
-                          '?V=1' % UUID1)
+                          '?V=2' % UUID1)
         }
         self.assertEqual(expected, channel)
         self.assertEqual(expected, webhook.channel)
@@ -85,7 +85,7 @@ class TestWebhook(base.SenlinTestCase):
 
         expected = {
             'alarm_url': ('http://web.com:1234/v1/webhooks/%s/trigger'
-                          '?V=1&FOO=BAR&KEY=884' % UUID1)
+                          '?V=2&FOO=BAR&KEY=884' % UUID1)
         }
         self.assertEqual(expected, channel)
         self.assertEqual(expected, webhook.channel)

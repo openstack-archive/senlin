@@ -48,7 +48,7 @@ The output from the command will be something like this:
   |            |   "trust_id": "1bc958f5780b4ad38fb6583701a9f39b"                        |
   |            | }                                                                       |
   | channel    | {                                                                       |
-  |            |   "alarm_url": "http://node1:8778/v1/webhooks/5dacde18-.../trigger?V=1" |
+  |            |   "alarm_url": "http://node1:8778/v1/webhooks/5dacde18-.../trigger?V=2" |
   |            | }                                                                       |
   | cluster_id | 7fb3d988-3bc1-4539-bd5d-3f72e8d6e0c7                                    |
   | created_at | 2016-05-23T01:36:39                                                     |
@@ -79,7 +79,7 @@ action using tools like ``curl``.
 
 .. code-block:: console
 
-  $ curl -X POST http://node1:8778/v1/webhooks/5dacde18-661e-4db4-b7a8-f2a6e3466f98/trigger?V=1
+  $ curl -X POST http://node1:8778/v1/webhooks/5dacde18-661e-4db4-b7a8-f2a6e3466f98/trigger?V=2
 
 After a while, you can check that the cluster has been shrunk by 1 node.
 

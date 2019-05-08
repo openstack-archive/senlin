@@ -1,0 +1,12 @@
+---
+fixes:
+  - |
+    Fixes bug where the webhook rejected additional parameters in the body for
+    mircoversion less than 1.10.  Now with new webhook version 2, additional
+    parameters in the body will always be accepted regardless of the
+    microversion API passed in.
+other:
+  - |
+    Introduces webhook version 2 that is returned when creating new webhook
+    receivers.  Webhook version 1 receivers are still valid and will
+    continue to be accepted.

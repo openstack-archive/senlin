@@ -101,8 +101,10 @@ class ControllerTest(object):
         req.body = encodeutils.safe_encode(data) if data else None
         return req
 
-    def _post(self, path, data, content_type='application/json', version=None):
-        return self._data_request(path, data, content_type, version=version)
+    def _post(self, path, data, content_type='application/json', version=None,
+              params=None):
+        return self._data_request(path, data, content_type, version=version,
+                                  params=params)
 
     def _put(self, path, data, content_type='application/json', version=None):
         return self._data_request(path, data, content_type, method='PUT',
