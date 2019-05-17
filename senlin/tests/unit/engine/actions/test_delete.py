@@ -19,8 +19,10 @@ from senlin.engine import cluster as cm
 from senlin.engine import dispatcher
 from senlin.engine.notifications import message as msg
 from senlin.objects import action as ao
+from senlin.objects import cluster_policy as cpo
 from senlin.objects import dependency as dobj
 from senlin.objects import node as no
+from senlin.objects import receiver as ro
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -554,6 +556,106 @@ class ClusterDeleteTest(base.SenlinTestCase):
             action.context, 'FAKE_CLUSTER',
             action_excluded=['CLUSTER_DELETE'],
             status=['SUCCEEDED', 'FAILED'])
+
+    @mock.patch.object(ro.Receiver, 'get_all')
+    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
+    @mock.patch.object(ao.Action, 'delete_by_target')
+    def test_do_delete_with_policies(self, mock_action, mock_policies,
+                                     mock_receivers, mock_load):
+        mock_policy1 = mock.Mock()
+        mock_policy1.policy_id = 'POLICY_ID1'
+        mock_policy2 = mock.Mock()
+        mock_policy2.policy_id = 'POLICY_ID2'
+
+        mock_policies.return_value = [mock_policy1, mock_policy2]
+        mock_receivers.return_value = []
+
+        node1 = mock.Mock(id='NODE_1')
+        node2 = mock.Mock(id='NODE_2')
+        cluster = mock.Mock(id='FAKE_CLUSTER', nodes=[node1, node2],
+                            DELETING='DELETING')
+        cluster.do_delete.return_value = True
+        mock_load.return_value = cluster
+
+        cluster.detach_policy = mock.Mock()
+        cluster.detach_policy.return_value = (True, 'OK')
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
+        action.data = {}
+
+        mock_delete = self.patchobject(action, '_delete_nodes',
+                                       return_value=(action.RES_OK, 'Good'))
+
+        # do it
+        res_code, res_msg = action.do_delete()
+
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Good', res_msg)
+        self.assertEqual({'deletion': {'destroy_after_deletion': True}},
+                         action.data)
+        cluster.set_status.assert_called_once_with(action.context, 'DELETING',
+                                                   'Deletion in progress.')
+        mock_delete.assert_called_once_with(['NODE_1', 'NODE_2'])
+        cluster.do_delete.assert_called_once_with(action.context)
+        mock_action.assert_called_once_with(
+            action.context, 'FAKE_CLUSTER',
+            action_excluded=['CLUSTER_DELETE'],
+            status=['SUCCEEDED', 'FAILED'])
+        detach_calls = [mock.call(action.context, 'POLICY_ID1'),
+                        mock.call(action.context, 'POLICY_ID2')]
+        cluster.detach_policy.assert_has_calls(detach_calls)
+
+    @mock.patch.object(ro.Receiver, 'delete')
+    @mock.patch.object(ro.Receiver, 'get_all')
+    @mock.patch.object(cpo.ClusterPolicy, 'get_all')
+    @mock.patch.object(ao.Action, 'delete_by_target')
+    def test_do_delete_with_receivers(self, mock_action, mock_policies,
+                                      mock_receivers, mock_rec_delete,
+                                      mock_load):
+        mock_receiver1 = mock.Mock()
+        mock_receiver1.id = 'RECEIVER_ID1'
+        mock_receiver2 = mock.Mock()
+        mock_receiver2.id = 'RECEIVER_ID2'
+
+        mock_policies.return_value = []
+        mock_receivers.return_value = [mock_receiver1, mock_receiver2]
+
+        node1 = mock.Mock(id='NODE_1')
+        node2 = mock.Mock(id='NODE_2')
+        cluster = mock.Mock(id='FAKE_CLUSTER', nodes=[node1, node2],
+                            DELETING='DELETING')
+        cluster.do_delete.return_value = True
+        mock_load.return_value = cluster
+
+        cluster.detach_policy = mock.Mock()
+        cluster.detach_policy.return_value = (True, 'OK')
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_DELETE', self.ctx)
+        action.data = {}
+
+        mock_delete = self.patchobject(action, '_delete_nodes',
+                                       return_value=(action.RES_OK, 'Good'))
+
+        # do it
+        res_code, res_msg = action.do_delete()
+
+        self.assertEqual(action.RES_OK, res_code)
+        self.assertEqual('Good', res_msg)
+        self.assertEqual({'deletion': {'destroy_after_deletion': True}},
+                         action.data)
+        cluster.set_status.assert_called_once_with(action.context, 'DELETING',
+                                                   'Deletion in progress.')
+        mock_delete.assert_called_once_with(['NODE_1', 'NODE_2'])
+        cluster.do_delete.assert_called_once_with(action.context)
+        mock_action.assert_called_once_with(
+            action.context, 'FAKE_CLUSTER',
+            action_excluded=['CLUSTER_DELETE'],
+            status=['SUCCEEDED', 'FAILED'])
+
+        cluster.detach_policy.assert_not_called()
+        rec_delete_calls = [mock.call(action.context, 'RECEIVER_ID1'),
+                            mock.call(action.context, 'RECEIVER_ID2')]
+        mock_rec_delete.assert_has_calls(rec_delete_calls)
 
     def test_do_delete_failed_delete_nodes_timeout(self, mock_load):
         node = mock.Mock(id='NODE_1')

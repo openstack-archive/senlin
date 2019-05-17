@@ -57,6 +57,7 @@
             clustering:
               min_microversion: 1.12
               max_microversion: 1.12
+              delete_with_dependency: True
 
 - job:
     name: senlin-dsvm-tempest-py27-api

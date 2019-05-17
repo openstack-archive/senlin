@@ -904,21 +904,6 @@ class EngineService(service.Service):
             LOG.error(err)
             msg.append(err)
 
-        policies = cp_obj.ClusterPolicy.get_all(ctx, cluster.id)
-        if len(policies) > 0:
-            err = _('Cluster %(id)s cannot be deleted without having all '
-                    'policies detached.') % {'id': req.identity}
-            LOG.error(err)
-            msg.append(_("there is still policy(s) attached to it."))
-
-        receivers = receiver_obj.Receiver.get_all(
-            ctx, filters={'cluster_id': cluster.id})
-        if len(receivers) > 0:
-            err = _('Cluster %(id)s cannot be deleted without having all '
-                    'receivers deleted.') % {'id': req.identity}
-            LOG.error(err)
-            msg.append(_("there is still receiver(s) associated with it."))
-
         if msg:
             raise exception.ResourceInUse(type='cluster', id=req.identity,
                                           reason='\n'.join(msg))
@@ -929,7 +914,8 @@ class EngineService(service.Service):
             'status': action_mod.Action.READY,
         }
         action_id = action_mod.Action.create(ctx, cluster.id,
-                                             consts.CLUSTER_DELETE, **params)
+                                             consts.CLUSTER_DELETE,
+                                             force=True, **params)
         dispatcher.start_action()
         LOG.info("Cluster delete action queued: %s", action_id)
 
