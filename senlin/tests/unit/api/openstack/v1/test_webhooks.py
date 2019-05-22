@@ -16,7 +16,6 @@ from webob import exc
 
 from oslo_serialization import jsonutils
 
-from senlin.api.common import util
 from senlin.api.openstack.v1 import webhooks
 from senlin.common import policy
 from senlin.rpc import client as rpc_client
@@ -25,9 +24,12 @@ from senlin.tests.unit.common import base
 
 
 @mock.patch.object(policy, 'enforce')
-class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
+class WebhookControllerBaseTest(shared.ControllerTest, base.SenlinTestCase):
+    WEBHOOK_VERSION = '1'
+    WEBHOOK_API_MICROVERSION = '1.0'
+
     def setUp(self):
-        super(WebhookControllerTest, self).setUp()
+        super(WebhookControllerBaseTest, self).setUp()
 
         class DummyConfig(object):
             bind_port = 8778
@@ -35,9 +37,8 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         cfgopts = DummyConfig()
         self.controller = webhooks.WebhookController(options=cfgopts)
 
-    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_webhook_trigger(self, mock_call, mock_parse, mock_enforce):
+    def test_webhook_trigger(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'trigger', True)
         body = None
         webhook_id = 'test_webhook_id'
@@ -48,23 +49,18 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }
 
         req = self._post('/webhooks/test_webhook_id/trigger',
-                         jsonutils.dumps(body), version='1.10')
+                         jsonutils.dumps(body),
+                         version=self.WEBHOOK_API_MICROVERSION,
+                         params={'V': self.WEBHOOK_VERSION})
         mock_call.return_value = engine_response
-        obj = mock.Mock()
-        mock_parse.return_value = obj
 
         resp = self.controller.trigger(req, webhook_id=webhook_id, body=None)
 
         self.assertEqual(action_id, resp['action'])
         self.assertEqual('/actions/test_action_id', resp['location'])
-        mock_parse.assert_called_once_with(
-            'WebhookTriggerRequestParamsInBody', req, mock.ANY)
-        mock_call.assert_called_once_with(req.context, 'webhook_trigger', obj)
 
-    @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_webhook_trigger_with_params(self, mock_call, mock_parse,
-                                         mock_enforce):
+    def test_webhook_trigger_with_params(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'trigger', True)
         body = {'params': {'key': 'value'}}
         webhook_id = 'test_webhook_id'
@@ -72,50 +68,106 @@ class WebhookControllerTest(shared.ControllerTest, base.SenlinTestCase):
         engine_response = {'action': 'FAKE_ACTION'}
 
         req = self._post('/webhooks/test_webhook_id/trigger',
-                         jsonutils.dumps(body), version='1.10')
+                         jsonutils.dumps(body),
+                         version=self.WEBHOOK_API_MICROVERSION,
+                         params={'V': self.WEBHOOK_VERSION})
         mock_call.return_value = engine_response
-        obj = mock.Mock()
-        mock_parse.return_value = obj
 
         resp = self.controller.trigger(req, webhook_id=webhook_id, body=body)
 
         self.assertEqual('FAKE_ACTION', resp['action'])
         self.assertEqual('/actions/FAKE_ACTION', resp['location'])
-        mock_parse.assert_called_once_with(
-            'WebhookTriggerRequestParamsInBody', req, mock.ANY)
-        mock_call.assert_called_once_with(req.context, 'webhook_trigger', obj)
 
-    @mock.patch.object(util, 'parse_request')
+
+class WebhookV1ControllerInvalidParamsTest(WebhookControllerBaseTest):
+    WEBHOOK_VERSION = '1'
+    WEBHOOK_API_MICROVERSION = '1.0'
+
+    @mock.patch.object(policy, 'enforce')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_webhook_trigger_invalid_params(self, mock_call, mock_parse,
-                                            mock_enforce):
+    def test_webhook_trigger_invalid_params(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'trigger', True)
         webhook_id = 'fake'
         body = {"bad": "boo"}
-        req = self._patch('/webhooks/%s/trigger' % webhook_id,
-                          jsonutils.dumps(body))
+        req = self._patch('/webhooks/{}/trigger'.format(webhook_id),
+                          jsonutils.dumps(body),
+                          version=self.WEBHOOK_API_MICROVERSION,
+                          params={'V': self.WEBHOOK_VERSION})
 
-        mock_parse.side_effect = exc.HTTPBadRequest("bad param")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.trigger,
                                req, webhook_id=webhook_id, body=body)
 
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual(
+            "Additional properties are not allowed ('bad' was unexpected)",
+            six.text_type(ex))
         self.assertFalse(mock_call.called)
 
-    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(policy, 'enforce')
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_webhook_trigger_invalid_json(self, mock_call, mock_parse,
-                                          mock_enforce):
+    def test_webhook_trigger_invalid_json(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'trigger', True)
         webhook_id = 'fake'
         body = {"params": "boo"}
-        req = self._patch('/webhooks/%s/trigger' % webhook_id,
-                          jsonutils.dumps(body))
+        req = self._patch('/webhooks/{}/trigger'.format(webhook_id),
+                          jsonutils.dumps(body),
+                          version=self.WEBHOOK_API_MICROVERSION,
+                          params={'V': self.WEBHOOK_VERSION})
 
-        mock_parse.side_effect = exc.HTTPBadRequest("invalid param")
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.trigger,
                                req, webhook_id=webhook_id, body=body)
-        self.assertEqual("invalid param", six.text_type(ex))
+        self.assertEqual("The value (boo) is not a valid JSON.",
+                         six.text_type(ex))
         self.assertFalse(mock_call.called)
+
+
+class WebhookV1ControllerValidParamsTest(WebhookControllerBaseTest):
+    WEBHOOK_VERSION = '1'
+    WEBHOOK_API_MICROVERSION = '1.10'
+
+    @mock.patch.object(policy, 'enforce')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_webhook_trigger_extra_params(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'trigger', True)
+        webhook_id = 'fake'
+        body = {"bad": "boo"}
+        engine_response = {'action': 'FAKE_ACTION'}
+        mock_call.return_value = engine_response
+        req = self._patch('/webhooks/{}/trigger'.format(webhook_id),
+                          jsonutils.dumps(body),
+                          version=self.WEBHOOK_API_MICROVERSION,
+                          params={'V': self.WEBHOOK_VERSION})
+
+        resp = self.controller.trigger(req, webhook_id=webhook_id, body=body)
+
+        self.assertEqual('FAKE_ACTION', resp['action'])
+        self.assertEqual('/actions/FAKE_ACTION', resp['location'])
+
+    @mock.patch.object(policy, 'enforce')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_webhook_trigger_non_json_params(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'trigger', True)
+        webhook_id = 'fake'
+        body = {"params": "boo"}
+        engine_response = {'action': 'FAKE_ACTION'}
+        mock_call.return_value = engine_response
+        req = self._patch('/webhooks/{}/trigger'.format(webhook_id),
+                          jsonutils.dumps(body),
+                          version=self.WEBHOOK_API_MICROVERSION,
+                          params={'V': self.WEBHOOK_VERSION})
+
+        resp = self.controller.trigger(req, webhook_id=webhook_id, body=body)
+
+        self.assertEqual('FAKE_ACTION', resp['action'])
+        self.assertEqual('/actions/FAKE_ACTION', resp['location'])
+
+
+class WebhookV2ControllerTest(WebhookV1ControllerValidParamsTest):
+    WEBHOOK_VERSION = '2'
+    WEBHOOK_API_MICROVERSION = '1.0'
+
+
+class WebhookV2_110_ControllerTest(WebhookV1ControllerValidParamsTest):
+    WEBHOOK_VERSION = '2'
+    WEBHOOK_API_MICROVERSION = '1.10'

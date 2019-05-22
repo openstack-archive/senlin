@@ -39,7 +39,7 @@ class TestWebhookMiddleware(base.SenlinTestCase):
             '01_webhook_str': '/webhooks/',
             '02_webhook_id': 'WEBHOOK_ID',
             '03_trigger_str': '/trigger?',
-            '04_version': 'V=1',
+            '04_version': 'V=2',
             '05_params': '&key=TEST_KEY',
         }
         self.credential = {

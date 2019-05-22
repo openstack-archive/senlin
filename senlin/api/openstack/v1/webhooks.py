@@ -30,11 +30,18 @@ class WebhookController(wsgi.Controller):
         if body is None:
             body = {'params': None}
 
-        body = obj_base.SenlinObject.normalize_req(
-            'WebhookTriggerRequestBody', body)
-        obj = util.parse_request(
-            'WebhookTriggerRequest', req, {'identity': webhook_id,
-                                           'body': body})
+        webhook_version = req.params.getall('V')
+        if webhook_version == ['1']:
+            body = obj_base.SenlinObject.normalize_req(
+                'WebhookTriggerRequestBody', body)
+            obj = util.parse_request(
+                'WebhookTriggerRequest', req, {'identity': webhook_id,
+                                               'body': body})
+        else:
+            # webhook version 2 and greater accept parameters other than param
+            obj = util.parse_request(
+                'WebhookTriggerRequestParamsInBody', req,
+                {'identity': webhook_id, 'body': body})
 
         res = self.rpc_client.call(req.context, 'webhook_trigger', obj)
         location = {'location': '/actions/%s' % res['action']}

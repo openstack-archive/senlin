@@ -25,6 +25,7 @@ CONF = cfg.CONF
 
 class Webhook(base.Receiver):
     """Webhook flavor of receivers."""
+    WEBHOOK_VERSION = 2
 
     def initialize_channel(self, context):
         host = CONF.receiver.host
@@ -52,9 +53,11 @@ class Webhook(base.Receiver):
         if self.params:
             normalized = sorted(self.params.items(), key=lambda d: d[0])
             qstr = parse.urlencode(normalized)
-            url = "".join([base, webhook, '?V=1&', qstr])
+            url = "".join(
+                [base, webhook, '?V={}&'.format(self.WEBHOOK_VERSION), qstr])
         else:
-            url = "".join([base, webhook, '?V=1'])
+            url = "".join(
+                [base, webhook, '?V={}'.format(self.WEBHOOK_VERSION)])
 
         self.channel = {
             'alarm_url': url

@@ -78,9 +78,9 @@ When the Senlin API service receives the request, it does three things:
   a cluster action. For the ``webhook`` receiver, this is a URL stored in
   the ``alarm_url`` field and it looks like::
 
-    http://{host:port}/v1/webhooks/{webhook_id}/trigger?V=1
+    http://{host:port}/v1/webhooks/{webhook_id}/trigger?V=2
 
-  **NOTE**: The ``V=1`` above is used to encode the current webhook triggering
+  **NOTE**: The ``V=2`` above is used to encode the current webhook triggering
   protocol. When the protocol changes in future, the value will be changed
   accordingly.
 
