@@ -21,6 +21,7 @@ from senlin.drivers.os import lbaas
 from senlin.drivers.os import neutron_v2
 from senlin.drivers.os import octavia_v2
 from senlin.engine import node as nodem
+from senlin.profiles import base as pb
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -434,9 +435,9 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         self.lb_driver._wait_for_lb_ready.assert_called_once_with(
             'LB_ID', ignore_not_found=True)
 
-    @mock.patch.object(nodem.Node, 'load')
+    @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(oslo_context, 'get_current')
-    def test_member_add_succeeded(self, mock_get_current, mock_load):
+    def test_member_add_succeeded(self, mock_get_current, mock_pb_load):
         fake_context = mock.Mock()
         mock_get_current.return_value = fake_context
         node = mock.Mock()
@@ -458,8 +459,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
                 'network2': [{'addr': 'ipaddr_net2', 'version': '4'}]
             }
         }
-        mock_load.return_value = node
-        node.get_details.return_value = node_detail
+        mock_pb_load.return_value.do_get_details.return_value = node_detail
 
         self.nc.subnet_get.return_value = subnet_obj
         self.nc.network_get.return_value = network_obj
@@ -476,7 +476,6 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
             pool_id, 'ipaddr2_net1', port, 'SUBNET_ID')
         self.lb_driver._wait_for_lb_ready.assert_has_calls(
             [mock.call('LB_ID'), mock.call('LB_ID')])
-        mock_load.assert_called_once_with(fake_context, db_node=node)
 
     @mock.patch.object(oslo_context, 'get_current')
     def test_member_add_subnet_get_failed(self, mock_get_current):
@@ -501,10 +500,11 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
                                         'subnet')
         self.assertIsNone(res)
 
+    @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(nodem.Node, 'load')
     @mock.patch.object(oslo_context, 'get_current')
     def test_member_add_lb_unready_for_member_create(self, mock_get_current,
-                                                     mock_load):
+                                                     mock_load, mock_pb_load):
         node = mock.Mock()
         subnet_obj = mock.Mock(id='SUBNET_ID', network_id='NETWORK_ID')
         subnet_obj.name = 'subnet'
@@ -519,7 +519,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
             }
         }
         mock_load.return_value = node
-        node.get_details.return_value = node_detail
+        mock_pb_load.return_value.do_get_details.return_value = node_detail
 
         # Exception happens in pool_member_create
         self.lb_driver._wait_for_lb_ready = mock.Mock()
@@ -533,10 +533,11 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         self.assertIsNone(res)
         self.lb_driver._wait_for_lb_ready.assert_called_once_with('LB_ID')
 
+    @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(nodem.Node, 'load')
     @mock.patch.object(oslo_context, 'get_current')
     def test_member_add_member_create_failed(self, mock_get_current,
-                                             mock_load):
+                                             mock_load, mock_pb_load):
         node = mock.Mock()
         subnet_obj = mock.Mock(id='SUBNET_ID', network_id='NETWORK_ID')
         subnet_obj.name = 'subnet'
@@ -551,7 +552,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
             }
         }
         mock_load.return_value = node
-        node.get_details.return_value = node_detail
+        mock_pb_load.return_value.do_get_details.return_value = node_detail
 
         # Exception happens in pool_member_create
         self.lb_driver._wait_for_lb_ready = mock.Mock()
@@ -564,10 +565,11 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
                                         'subnet')
         self.assertIsNone(res)
 
+    @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(nodem.Node, 'load')
     @mock.patch.object(oslo_context, 'get_current')
     def test_member_add_ip_version_match_failed(self, mock_get_current,
-                                                mock_load):
+                                                mock_load, mock_pb_load):
         node = mock.Mock()
         subnet_obj = mock.Mock(id='SUBNET_ID', network_id='NETWORK_ID')
         subnet_obj.name = 'subnet'
@@ -582,7 +584,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
             }
         }
         mock_load.return_value = node
-        node.get_details.return_value = node_detail
+        mock_pb_load.return_value.do_get_details.return_value = node_detail
 
         # Node does not match with subnet ip_version
         self.lb_driver._wait_for_lb_ready = mock.Mock()
@@ -594,9 +596,11 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
                                         'subnet')
         self.assertIsNone(res)
 
+    @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(nodem.Node, 'load')
     @mock.patch.object(oslo_context, 'get_current')
-    def test_member_add_wait_for_lb_timeout(self, mock_get_current, mock_load):
+    def test_member_add_wait_for_lb_timeout(self, mock_get_current, mock_load,
+                                            mock_pb_load):
         node = mock.Mock()
         subnet_obj = mock.Mock(id='SUBNET_ID', network_id='NETWORK_ID')
         subnet_obj.name = 'subnet'
@@ -611,7 +615,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
             }
         }
         mock_load.return_value = node
-        node.get_details.return_value = node_detail
+        mock_pb_load.return_value.do_get_details.return_value = node_detail
 
         # Wait for lb ready timeout after creating member
         self.lb_driver._wait_for_lb_ready = mock.Mock()
@@ -622,9 +626,11 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
                                         'subnet')
         self.assertIsNone(res)
 
+    @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(nodem.Node, 'load')
     @mock.patch.object(oslo_context, 'get_current')
-    def test_member_add_node_not_in_subnet(self, mock_get_current, mock_load):
+    def test_member_add_node_not_in_subnet(self, mock_get_current, mock_load,
+                                           mock_pb_load):
         node = mock.Mock()
         lb_id = 'LB_ID'
         pool_id = 'POOL_ID'
@@ -640,7 +646,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
             }
         }
         mock_load.return_value = node
-        node.get_details.return_value = node_detail
+        mock_pb_load.return_value.do_get_details.return_value = node_detail
 
         self.nc.network_get.return_value = network_obj
         self.lb_driver._wait_for_lb_ready = mock.Mock()
