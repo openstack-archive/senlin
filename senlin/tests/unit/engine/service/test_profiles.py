@@ -213,11 +213,13 @@ class ProfileTest(base.SenlinTestCase):
         mock_find.return_value = x_obj
         x_obj.to_dict.return_value = {'foo': 'bar'}
         req = vorp.ProfileGetRequest(identity='FAKE_PROFILE')
+        project_safe = not self.ctx.is_admin
 
         result = self.eng.profile_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar'}, result)
-        mock_find.assert_called_once_with(self.ctx, 'FAKE_PROFILE')
+        mock_find.assert_called_once_with(
+            self.ctx, 'FAKE_PROFILE', project_safe=project_safe)
 
     @mock.patch.object(po.Profile, 'find')
     def test_profile_get_not_found(self, mock_find):
@@ -227,11 +229,13 @@ class ProfileTest(base.SenlinTestCase):
         ex = self.assertRaises(rpc.ExpectedException,
                                self.eng.profile_get, self.ctx,
                                req.obj_to_primitive())
+        project_safe = not self.ctx.is_admin
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The profile 'Bogus' could not be found.",
                          six.text_type(ex.exc_info[1]))
-        mock_find.assert_called_once_with(self.ctx, 'Bogus')
+        mock_find.assert_called_once_with(
+            self.ctx, 'Bogus', project_safe=project_safe)
 
     @mock.patch.object(pb.Profile, 'load')
     @mock.patch.object(po.Profile, 'find')

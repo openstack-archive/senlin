@@ -429,7 +429,8 @@ class EngineService(service.Service):
         :return: A dictionary containing the profile details, or an exception
                  of type `ResourceNotFound` if no matching object is found.
         """
-        profile = profile_obj.Profile.find(ctx, req.identity)
+        kwargs = {"project_safe": not ctx.is_admin}
+        profile = profile_obj.Profile.find(ctx, req.identity, **kwargs)
         return profile.to_dict()
 
     @request_context
@@ -709,7 +710,9 @@ class EngineService(service.Service):
         :param req: An instance of the ClusterGetRequest.
         :return: A dictionary containing the details about a cluster.
         """
-        cluster = co.Cluster.find(context, req.identity)
+        kwargs = {"project_safe": not context.is_admin}
+
+        cluster = co.Cluster.find(context, req.identity, **kwargs)
         return cluster.to_dict()
 
     def check_cluster_quota(self, context):
