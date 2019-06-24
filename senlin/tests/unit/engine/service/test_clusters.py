@@ -823,7 +823,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_node.assert_called_once_with(self.ctx, 'NODE1')
-        mock_check.asset_called_once_with(x_cluster, 1, strict=True)
+        mock_check.assert_called_once_with(x_cluster, 1, strict=True)
         mock_action.assert_called_once_with(
             self.ctx, '1234', consts.CLUSTER_DEL_NODES,
             name='cluster_del_nodes_1234',

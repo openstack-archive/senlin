@@ -1705,7 +1705,7 @@ class TestRuntimeHealthRegistry(base.SenlinTestCase):
 
         fake_timer.stop.assert_called_once_with()
         self.mock_tg.timer_done.assert_called_once_with(fake_timer)
-        self.mock_tg.thread_done.asset_not_called()
+        self.mock_tg.thread_done.assert_not_called()
         self.assertIsNone(mock_entry.timer)
 
     def test_remove_health_check_listener(self):
@@ -1717,7 +1717,7 @@ class TestRuntimeHealthRegistry(base.SenlinTestCase):
         self.rhr.remove_health_check(mock_entry)
 
         fake_listener.stop.assert_called_once_with()
-        self.mock_tg.timer_done.asset_not_called()
+        self.mock_tg.timer_done.assert_not_called()
         self.mock_tg.thread_done.assert_called_once_with(fake_listener)
         self.assertIsNone(mock_entry.listener)
 
