@@ -1,0 +1,2 @@
+graphviz [!platform:gentoo]
+media-gfx/graphviz [platform:gentoo]
