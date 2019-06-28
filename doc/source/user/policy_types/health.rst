@@ -41,24 +41,37 @@ A typical spec for a health policy looks like the following example:
 .. literalinclude :: /../../examples/policies/health_policy_poll.yaml
   :language: yaml
 
-There are two groups of properties (``detection`` and ``recovery``),  each of
+There are two groups of properties (``detection`` and ``recovery``), each of
 which provides information related to the failure detection and the failure
 recovery aspect respectively.
 
-For failure detection, you can specify one of the following two values:
+For failure detection, you can specify a detection mode that can be one of the
+following two values:
 
 - ``NODE_STATUS_POLLING``: Senlin engine (more specifically, the health
   manager service) is expected to poll each and every nodes periodically to
   find out if they are "alive" or not.
 
+- ``NODE_STATUS_POLL_URL``: Senlin engine (more specifically, the health
+  manager service) is expected to poll the specified URL periodically to
+  find out if a node is considered healthy or not.
+
 - ``LIFECYCLE_EVENTS``: Many services can emit notification messages on the
   message queue when configured. Senlin engine is expected to listen to these
   events and react to them appropriately.
 
-Both detection types can carry an optional map of ``options``. When the
-detection type is set to "``NODE_STATUS_POLLING``", for example, you can
-specify a value for ``interval`` property to customize the frequency at which
-your cluster nodes are polled.
+It is possible to combine ``NODE_STATUS_POLLING`` and ``NODE_STATUS_POLL_URL``
+detections by specifying multiple detection modes. In the case of multiple
+detection modes, Senlin engine tries each detection type in the order
+specified. The behavior of a failed health check in the case of multiple
+detection modes is specified using ``recovery_conditional``.
+
+``LIFECYCLE_EVENTS`` cannot be combined with any other detection type.
+
+All detection types can carry an optional map of ``options``. When the
+detection type is set to "``NODE_STATUS_POLL_URL``", for example, you can
+specify a value for ``poll_url`` property to specify the URL to be used for
+health checking.
 
 As the policy type implementation stabilizes, more options may be added later.
 
@@ -106,3 +119,10 @@ Snapshots
 There have been some requirements to take snapshots of a node before recovery
 so that the recovered node(s) will resume from where they failed. This feature
 is also on the TODO list for the development team.
+
+
+References
+~~~~~~~~~~
+
+For more detailed information on how the health policy work, please check
+:doc:`Health Policy V1.1 <../../contributor/policies/health_v1>`

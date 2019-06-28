@@ -13,7 +13,7 @@
 
 
 ==================
-Health Policy V1.0
+Health Policy V1.1
 ==================
 
 The health policy is designed to automate the failure detection and recovery
@@ -74,7 +74,10 @@ The current vision is that the health policy will support following types
 of failure detection:
 
 * ``NODE_STATUS_POLLING``: the *health manager* periodically polls a cluster
-  and check if there are nodes inactive.
+  and checks if there are nodes inactive.
+
+* ``NODE_STATUS_POLL_URL``: the *health manager* periodically polls a URL
+  and checks if a node is considered healthy based on the response.
 
 * ``LIFECYCLE_EVENTS``: the *health manager* listens to event notifications
   sent by the backend service (e.g. nova-compute).
@@ -104,33 +107,73 @@ periodically check the resource status by querying the backend service and see
 if the resource is active.  Below is a sample configuration::
 
   type: senlin.policy.health
-  version: 1.0
+  version: 1.1
   properties:
     detection:
-      type: NODE_STATUS_POLLING
-      options:
-        internal: 120
-
+      interval: 120
+      detection_modes:
+        - type: NODE_STATUS_POLLING
     ...
-
-**NOTE**: The current polling logic is only about checking with the backend
-service whether a resource is in "ACTIVE" status. However, in future, this may
-get extended to having the *health manager* ping the IP address of a nova
-server or posting a "GET" request to a specific URL. We believe such
-extensions can better reveal whether a specific node is operating.
 
 Once such a policy object is attached to a cluster, Senlin registers the
 cluster to the *health manager* engine for failure detection, i.e., node
-health checking. A thread is created to issue a ``CLUSTER_CHECK`` RPC request
-to the ``senlin-engine`` periodically at the specified interval. The
-``CLUSTER_CHECK`` action only refreshes the status of each and every node in
-the cluster.
+health checking. A thread is created to periodically call Nova to check the
+status of the node. If the server status is ERROR, SHUTOFF or DELETED, the node
+is considered unhealthy.
 
 When one of the ``senlin-engine`` services is restarted, a new *health manager*
 engine will be launched. This new engine will check the database and see if
 there are clusters which have health policies attached and thus having its
 health status maintained by a *health manager* that is no longer alive. The
 new *health manager* will pick up these clusters for health management.
+
+
+Polling Node URL
+----------------
+
+The health check for a node can also be configured to periodically query a
+URL with the ``NODE_STATUS_POLL_URL`` detection type. The URL can optionally
+contain expansion parameters.  Expansion parameters are strings enclosed in {}
+that will be substituted with the node specific value by Senlin prior to
+querying the URL. The only valid expansion parameter at this point is
+``{nodename}``. This expansion parameter will be replaced with the name of the
+Senlin node. Below is a sample configuration::
+
+
+  type: senlin.policy.health
+  version: 1.1
+  properties:
+    detection:
+      interval: 120
+      detection_modes:
+        - type: NODE_STATUS_POLL_URL
+          options:
+              poll_url: "http://{nodename}/healthstatus"
+              poll_url_healthy_response: "passing"
+              poll_url_conn_error_as_unhealty: true
+              poll_url_retry_limit: 3
+              poll_url_retry_interval: 2
+    ...
+
+
+.. note::
+    ``{nodename}`` can be used to query a URL implemented by an
+    application running on each node.  This requires that the OpenStack cloud
+    is setup to automatically register the name of new server instances with
+    the DNS service. In the future support for a new expansion parameter for
+    node IP addresses may be added.
+
+Once such a policy object is attached to a cluster, Senlin registers the
+cluster to the *health manager* engine for failure detection, i.e., node
+health checking. A thread is created to periodically make a GET request on the
+specified URL. ``poll_url_conn_error_as_unheathy`` specifies the behavior if
+the URL is unreachable. A node is considered healthy if the response to the GET
+request includes the string specified by ``poll_url_healthy_response``.  If it
+does not, Senlin will retry the URL health check for the number of times
+specified by ``poll_url_retry_limit`` while waiting the number of seconds in
+``poll_url_retry_interval`` between each retry.  If the URL response still does
+not contain the expected string after the retries, the node is considered
+healthy.
 
 
 Listening to Event Notifications
@@ -151,7 +194,7 @@ to listen to event notifications, users can attach their cluster(s) a health
 policy which looks like the following example::
 
   type: senlin.policy.health
-  version: 1.0
+  version: 1.1
   properties:
     detection:
       type: LIFECYCLE_EVENTS
