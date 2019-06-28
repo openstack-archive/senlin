@@ -67,12 +67,15 @@ The most common options to be customized include:
   connection = mysql+pymysql://senlin:<MYSQL_SENLIN_PW>@127.0.0.1/senlin?charset=utf8
 
   [keystone_authtoken]
-  www_authenticate_uri = http://<HOST>:5000/v3
-  auth_version = 3
-  identity_uri = http://<HOST>:5000
-  admin_user = senlin
-  admin_password = <SENLIN PASSWORD>
-  admin_tenant_name = service
+  service_token_roles_required = True
+  auth_type = password
+  user_domain_name = Default
+  project_domain_name = Default
+  project_name = service
+  username = senlin
+  password = <SENLIN_PASSWORD>
+  www_authenticate_uri = http://<HOST>/identity/v3
+  auth_url = http://<HOST>/identity
 
   [authentication]
   auth_url = http://<HOST>:5000/v3
