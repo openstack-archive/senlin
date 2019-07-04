@@ -44,6 +44,7 @@ class DBAPIActionTest(base.SenlinTestCase):
 
         self.assertIsNotNone(action)
         self.assertEqual(data['name'], action.name)
+        self.assertEqual(data['cluster_id'], action.cluster_id)
         self.assertEqual(data['target'], action.target)
         self.assertEqual(data['action'], action.action)
         self.assertEqual(data['cause'], action.cause)

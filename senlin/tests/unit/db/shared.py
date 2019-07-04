@@ -36,6 +36,7 @@ sample_action = """
   target: cluster_001
   action: create
   cause: User Initiate
+  cluster_id: cluster_001_id
   timeout: 60
   control: READY
   status: INIT

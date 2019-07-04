@@ -14,6 +14,7 @@
 from webob import exc
 
 from senlin.api.common import util
+from senlin.api.common import version_request as vr
 from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
@@ -54,10 +55,20 @@ class ActionController(wsgi.Controller):
     # (must match what is in policy file and policies in code.)
     REQUEST_SCOPE = 'actions'
 
+    def _remove_cluster_id(self, req, obj):
+        if req.version_request > vr.APIVersionRequest("1.13"):
+            return obj
+
+        if 'cluster_id' in obj:
+            obj.pop('cluster_id')
+
+        return obj
+
     @util.policy_enforce
     def index(self, req):
         whitelist = {
             consts.ACTION_NAME: 'mixed',
+            consts.ACTION_CLUSTER_ID: 'mixed',
             consts.ACTION_TARGET: 'mixed',
             consts.ACTION_ACTION: 'mixed',
             consts.ACTION_STATUS: 'mixed',
@@ -79,6 +90,7 @@ class ActionController(wsgi.Controller):
         obj = util.parse_request('ActionListRequest', req, params)
         actions = self.rpc_client.call(req.context, "action_list", obj)
 
+        actions = [self._remove_cluster_id(req, a) for a in actions]
         return {'actions': actions}
 
     @util.policy_enforce
@@ -90,7 +102,7 @@ class ActionController(wsgi.Controller):
                                                data.action(),
                                                data.params())
 
-        return result
+        return self._remove_cluster_id(req, result)
 
     @util.policy_enforce
     def get(self, req, action_id):
@@ -98,6 +110,7 @@ class ActionController(wsgi.Controller):
         obj = util.parse_request('ActionGetRequest', req, params)
         action = self.rpc_client.call(req.context, 'action_get', obj)
 
+        action = self._remove_cluster_id(req, action)
         return {'action': action}
 
     @wsgi.Controller.api_version('1.12')

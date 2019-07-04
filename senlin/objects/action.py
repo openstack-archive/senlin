@@ -30,6 +30,7 @@ class Action(base.SenlinObject, base.VersionedObjectDictCompat):
         'created_at': fields.DateTimeField(),
         'updated_at': fields.DateTimeField(nullable=True),
         'name': fields.StringField(),
+        'cluster_id': fields.StringField(),
         'context': fields.JsonField(),
         'target': fields.UUIDField(),
         'action': fields.StringField(),
@@ -191,6 +192,7 @@ class Action(base.SenlinObject, base.VersionedObjectDictCompat):
         action_dict = {
             'id': self.id,
             'name': self.name,
+            'cluster_id': self.cluster_id,
             'action': self.action,
             'target': self.target,
             'cause': self.cause,

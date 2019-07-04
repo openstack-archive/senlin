@@ -79,10 +79,11 @@ class ClusterCreateTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(action.context, 'NODE_ID',
                                             'NODE_CREATE',
                                             name='node_create_NODE_ID',
+                                            cluster_id='CLUSTER_ID',
                                             cause='Derived Action')
         mock_dep.assert_called_once_with(action.context, ['NODE_ACTION_ID'],
                                          'CLUSTER_ACTION_ID')
-        mock_update.assert_called_once_with(
+        mock_update.assert_called_with(
             action.context, 'NODE_ACTION_ID',
             {'status': ab.Action.READY})
         mock_start.assert_called_once_with()

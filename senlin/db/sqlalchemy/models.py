@@ -228,6 +228,7 @@ class Action(BASE, TimestampMixin, models.ModelBase):
 
     id = Column('id', String(36), primary_key=True, default=lambda: UUID4())
     name = Column(String(63))
+    cluster_id = Column(String(36))
     context = Column(types.Dict)
     target = Column(String(36))
     action = Column(Text)

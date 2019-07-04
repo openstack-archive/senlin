@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
 import mock
 import six
 from webob import exc
@@ -50,6 +51,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
             {
                 'action': 'NODE_CREATE',
                 'cause': 'RPC_Request',
+                'cluster_id': 'CLUSTER_FAKE_ID',
                 'depended_by': [],
                 'depends_on': [],
                 'end_time': 1425555000.0,
@@ -81,11 +83,98 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_action_index_without_cluster_id(self, mock_call, mock_parse,
+                                             mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        req = self._get('/actions', version='1.13')
+
+        engine_resp = [
+            {
+                'action': 'NODE_CREATE',
+                'cause': 'RPC_Request',
+                'cluster_id': 'CLUSTER_FAKE_ID',
+                'depended_by': [],
+                'depends_on': [],
+                'end_time': 1425555000.0,
+                'id': '2366d400-c7e3-4961-09254-6d1c3f7ac167',
+                'inputs': {},
+                'interval': -1,
+                'name': 'node_create_0df0931b',
+                'outputs': {},
+                'owner': None,
+                'start_time': 1425550000.0,
+                'status': 'SUCCEEDED',
+                'status_reason': 'Action completed successfully.',
+                'target': '0df0931b-e251-4f2e-8719-4effda3627ba',
+                'timeout': 3600
+            }
+        ]
+
+        mock_call.return_value = copy.deepcopy(engine_resp)
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        result = self.controller.index(req)
+
+        # list call for version < 1.14 should have cluster_id field removed
+        # remove cluster_id field from expected response
+        engine_resp[0].pop('cluster_id')
+
+        self.assertEqual(engine_resp, result['actions'])
+        mock_parse.assert_called_once_with(
+            'ActionListRequest', req, {'project_safe': True})
+        mock_call.assert_called_once_with(
+            req.context, 'action_list', obj)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_action_index_with_cluster_id(self, mock_call, mock_parse,
+                                          mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        req = self._get('/actions', version='1.14')
+
+        engine_resp = [
+            {
+                'action': 'NODE_CREATE',
+                'cause': 'RPC_Request',
+                'cluster_id': 'CLUSTER_FAKE_ID',
+                'depended_by': [],
+                'depends_on': [],
+                'end_time': 1425555000.0,
+                'id': '2366d400-c7e3-4961-09254-6d1c3f7ac167',
+                'inputs': {},
+                'interval': -1,
+                'name': 'node_create_0df0931b',
+                'outputs': {},
+                'owner': None,
+                'start_time': 1425550000.0,
+                'status': 'SUCCEEDED',
+                'status_reason': 'Action completed successfully.',
+                'target': '0df0931b-e251-4f2e-8719-4effda3627ba',
+                'timeout': 3600
+            }
+        ]
+
+        mock_call.return_value = copy.deepcopy(engine_resp)
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+
+        result = self.controller.index(req)
+
+        self.assertEqual(engine_resp, result['actions'])
+        mock_parse.assert_called_once_with(
+            'ActionListRequest', req, {'project_safe': True})
+        mock_call.assert_called_once_with(
+            req.context, 'action_list', obj)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_action_index_whitelists_params(self, mock_call,
                                             mock_parse, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         marker_uuid = '8216a86c-1bdc-442e-b493-329385d37cbc'
         params = {
+            'cluster_id': 'CLUSTER_FAKE_ID',
             'name': 'NODE_CREATE',
             'status': 'SUCCEEDED',
             'limit': 10,
@@ -105,6 +194,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ActionListRequest', req,
             {
+                'cluster_id': ['CLUSTER_FAKE_ID'],
                 'status': ['SUCCEEDED'],
                 'sort': 'status',
                 'name': ['NODE_CREATE'],
@@ -247,6 +337,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         engine_resp = {
             'action': 'NODE_CREATE',
             'cause': 'RPC_Request',
+            'cluster_id': 'CLUSTER_FAKE_ID',
             'depended_by': [],
             'depends_on': [],
             'end_time': 1425555000.0,

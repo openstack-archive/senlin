@@ -194,6 +194,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678abcd', consts.CLUSTER_ATTACH_POLICY,
             name='attach_policy_12345678',
+            cluster_id='12345678abcd',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'policy_id': '87654321abcd', 'enabled': True},
@@ -258,6 +259,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678abcd', consts.CLUSTER_DETACH_POLICY,
             name='detach_policy_12345678',
+            cluster_id='12345678abcd',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'policy_id': '87654321abcd'},
@@ -345,6 +347,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678abcd', consts.CLUSTER_UPDATE_POLICY,
             name='update_policy_12345678',
+            cluster_id='12345678abcd',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'policy_id': '87654321abcd', 'enabled': False},

@@ -72,9 +72,11 @@ class ClusterReplaceNodesTest(base.SenlinTestCase):
         mock_action.assert_has_calls([
             mock.call(action.context, 'O_NODE_1', 'NODE_LEAVE',
                       name='node_leave_O_NODE_1',
+                      cluster_id='CLUSTER_ID',
                       cause='Derived Action'),
             mock.call(action.context, 'R_NODE_1', 'NODE_JOIN',
                       name='node_join_R_NODE_1',
+                      cluster_id='CLUSTER_ID',
                       cause='Derived Action',
                       inputs={'cluster_id': 'CLUSTER_ID'})])
 
@@ -266,9 +268,11 @@ class ClusterReplaceNodesTest(base.SenlinTestCase):
         mock_action.assert_has_calls([
             mock.call(action.context, 'O_NODE_1', 'NODE_LEAVE',
                       name='node_leave_O_NODE_1',
+                      cluster_id='CLUSTER_ID',
                       cause='Derived Action'),
             mock.call(action.context, 'R_NODE_1', 'NODE_JOIN',
                       name='node_join_R_NODE_1',
+                      cluster_id='CLUSTER_ID',
                       cause='Derived Action',
                       inputs={'cluster_id': 'CLUSTER_ID'})])
 

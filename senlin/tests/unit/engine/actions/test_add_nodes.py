@@ -68,7 +68,8 @@ class ClusterAddNodesTest(base.SenlinTestCase):
         mock_count.assert_called_once_with(action.context, 'CLUSTER_ID')
         mock_action.assert_called_once_with(
             action.context, 'NODE_1', 'NODE_JOIN',
-            name='node_join_NODE_1', cause='Derived Action',
+            name='node_join_NODE_1',
+            cluster_id='CLUSTER_ID', cause='Derived Action',
             inputs={'cluster_id': 'CLUSTER_ID'})
         mock_dep.assert_called_once_with(action.context, ['NODE_ACTION_ID'],
                                          'CLUSTER_ACTION_ID')
@@ -130,9 +131,11 @@ class ClusterAddNodesTest(base.SenlinTestCase):
         mock_action.assert_has_calls([
             mock.call(action.context, 'NODE_1', 'NODE_JOIN',
                       name='node_join_NODE_1', cause='Derived Action',
+                      cluster_id='CLUSTER_ID',
                       inputs={'cluster_id': 'CLUSTER_ID'}),
             mock.call(action.context, 'NODE_2', 'NODE_JOIN',
                       name='node_join_NODE_2', cause='Derived Action',
+                      cluster_id='CLUSTER_ID',
                       inputs={'cluster_id': 'CLUSTER_ID'})])
 
         mock_dep.assert_called_once_with(
@@ -277,7 +280,8 @@ class ClusterAddNodesTest(base.SenlinTestCase):
         mock_count.assert_called_once_with(action.context, 'CLUSTER_ID')
         mock_action.assert_called_once_with(
             action.context, 'NODE_1', 'NODE_JOIN',
-            name='node_join_NODE_1', cause='Derived Action',
+            name='node_join_NODE_1', cluster_id='CLUSTER_ID',
+            cause='Derived Action',
             inputs={'cluster_id': 'CLUSTER_ID'})
         mock_dep.assert_called_once_with(action.context, ['NODE_ACTION_ID'],
                                          'CLUSTER_ACTION_ID')

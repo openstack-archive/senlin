@@ -152,6 +152,7 @@ class ClusterTest(base.SenlinTestCase):
             self.ctx,
             '12345678ABC', 'CLUSTER_CREATE',
             name='cluster_create_12345678',
+            cluster_id='12345678ABC',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
         )
@@ -196,6 +197,7 @@ class ClusterTest(base.SenlinTestCase):
             self.ctx,
             '12345678ABC', 'CLUSTER_CREATE',
             name='cluster_create_12345678',
+            cluster_id='12345678ABC',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
         )
@@ -330,6 +332,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', 'CLUSTER_UPDATE',
             name='cluster_update_12345678',
+            cluster_id='12345678AB',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={
@@ -449,6 +452,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', 'CLUSTER_UPDATE',
             name='cluster_update_12345678',
+            cluster_id='12345678AB',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={
@@ -479,6 +483,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', 'CLUSTER_UPDATE',
             name='cluster_update_12345678',
+            cluster_id='12345678AB',
             status=am.Action.READY,
             cause=consts.CAUSE_RPC,
             inputs={
@@ -510,6 +515,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', 'CLUSTER_UPDATE',
             name='cluster_update_12345678',
+            cluster_id='12345678AB',
             status=am.Action.READY,
             cause=consts.CAUSE_RPC,
             inputs={
@@ -541,6 +547,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', 'CLUSTER_UPDATE',
             name='cluster_update_12345678',
+            cluster_id='12345678AB',
             status=am.Action.READY,
             cause=consts.CAUSE_RPC,
             inputs={
@@ -632,6 +639,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.CLUSTER_ADD_NODES,
             name='cluster_add_nodes_12345678',
+            cluster_id='12345678AB',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={'nodes': ['NODE1', 'NODE2']},
@@ -830,6 +838,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '1234', consts.CLUSTER_DEL_NODES,
             name='cluster_del_nodes_1234',
+            cluster_id='1234',
             status=am.Action.READY,
             cause=consts.CAUSE_RPC,
             inputs={
@@ -999,6 +1008,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678ABCDEFGH', consts.CLUSTER_RESIZE,
             name='cluster_resize_12345678',
+            cluster_id='12345678ABCDEFGH',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={
@@ -1043,6 +1053,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678ABCDEFGH', consts.CLUSTER_RESIZE,
             name='cluster_resize_12345678',
+            cluster_id='12345678ABCDEFGH',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={
@@ -1087,6 +1098,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678ABCDEFGH', consts.CLUSTER_RESIZE,
             name='cluster_resize_12345678',
+            cluster_id='12345678ABCDEFGH',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={
@@ -1210,6 +1222,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678ABCDEFGH', consts.CLUSTER_SCALE_OUT,
             name='cluster_scale_out_12345678',
+            cluster_id='12345678ABCDEFGH',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={'count': 1},
@@ -1248,6 +1261,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678ABCDEFGH', consts.CLUSTER_SCALE_OUT,
             name='cluster_scale_out_12345678',
+            cluster_id='12345678ABCDEFGH',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={},
@@ -1305,6 +1319,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678ABCD', consts.CLUSTER_SCALE_IN,
             name='cluster_scale_in_12345678',
+            cluster_id='12345678ABCD',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={'count': 2},
@@ -1342,6 +1357,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'FOO', consts.CLUSTER_SCALE_IN,
             name='cluster_scale_in_FOO',
+            cluster_id='FOO',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={},
@@ -1395,6 +1411,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'CID', consts.CLUSTER_CHECK,
             name='cluster_check_CID',
+            cluster_id='CID',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={'foo': 'bar'},
@@ -1424,6 +1441,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'CID', consts.CLUSTER_CHECK,
             name='cluster_check_CID',
+            cluster_id='CID',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={'delete_check_action': True},
@@ -1447,6 +1465,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'CID', consts.CLUSTER_CHECK,
             name='cluster_check_CID',
+            cluster_id='CID',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={},
@@ -1471,6 +1490,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'CID', consts.CLUSTER_CHECK,
             name='cluster_check_CID',
+            cluster_id='CID',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={},
@@ -1509,6 +1529,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'CID', consts.CLUSTER_RECOVER,
             name='cluster_recover_CID',
+            cluster_id='CID',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={'operation': 'RECREATE'},
@@ -1532,6 +1553,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'CID', consts.CLUSTER_RECOVER,
             name='cluster_recover_CID',
+            cluster_id='CID',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={'operation': 'REBUILD'},
@@ -1555,6 +1577,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'CID', consts.CLUSTER_RECOVER,
             name='cluster_recover_CID',
+            cluster_id='CID',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={'operation': 'REBOOT'},
@@ -1577,6 +1600,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'CID', consts.CLUSTER_RECOVER,
             name='cluster_recover_CID',
+            cluster_id='CID',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={}
@@ -1673,6 +1697,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'CID', consts.CLUSTER_RECOVER,
             name='cluster_recover_CID',
+            cluster_id='CID',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={},
@@ -1892,6 +1917,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'CID', consts.CLUSTER_REPLACE_NODES,
             name='cluster_replace_nodes_CID',
+            cluster_id='CID',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={'candidates': {'ORIGINAL': 'REPLACE'}})
@@ -2060,6 +2086,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', 'CLUSTER_DELETE',
             name='cluster_delete_12345678',
+            cluster_id='12345678AB',
             cause=consts.CAUSE_RPC,
             force=True,
             status=am.Action.READY)
@@ -2143,6 +2170,7 @@ class ClusterTest(base.SenlinTestCase):
             mock_action.assert_called_with(
                 self.ctx, '12345678AB', 'CLUSTER_DELETE',
                 name='cluster_delete_12345678',
+                cluster_id='12345678AB',
                 cause=consts.CAUSE_RPC,
                 force=True,
                 status=am.Action.READY)

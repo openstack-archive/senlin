@@ -168,6 +168,7 @@ class ClusterAction(base.Action):
 
             kwargs = {
                 'name': 'node_create_%s' % node.id[:8],
+                'cluster_id': self.entity.id,
                 'cause': consts.CAUSE_DERIVED,
             }
             action_id = base.Action.create(self.context, node.id,
@@ -243,6 +244,7 @@ class ClusterAction(base.Action):
             for node in nodes:
                 kwargs = {
                     'name': 'node_update_%s' % node[:8],
+                    'cluster_id': self.entity.id,
                     'cause': consts.CAUSE_DERIVED,
                     'inputs': {
                         'new_profile_id': profile_id,
@@ -349,6 +351,7 @@ class ClusterAction(base.Action):
         for node_id in node_ids:
             kwargs = {
                 'name': 'node_delete_%s' % node_id[:8],
+                'cluster_id': self.entity.id,
                 'cause': consts.CAUSE_DERIVED_LCH,
                 'inputs': inputs or {},
             }
@@ -421,6 +424,7 @@ class ClusterAction(base.Action):
         for node_id in node_ids:
             kwargs = {
                 'name': 'node_delete_%s' % node_id[:8],
+                'cluster_id': self.entity.id,
                 'cause': consts.CAUSE_DERIVED,
                 'inputs': inputs or {},
             }
@@ -594,6 +598,7 @@ class ClusterAction(base.Action):
             nid = node.id
             kwargs = {
                 'name': 'node_join_%s' % nid[:8],
+                'cluster_id': self.entity.id,
                 'cause': consts.CAUSE_DERIVED,
                 'inputs': {'cluster_id': self.target},
             }
@@ -748,6 +753,7 @@ class ClusterAction(base.Action):
         children = []
         for (original, replacement) in node_dict.items():
             kwargs = {
+                'cluster_id': self.entity.id,
                 'cause': consts.CAUSE_DERIVED,
             }
 
