@@ -8,7 +8,7 @@
                     "rel": "self"
                 },
                 {
-                    "href": "https://developer.openstack.org/api-ref/clustering",
+                    "href": "https://docs.openstack.org/api-ref/clustering",
                     "rel": "help"
                 }
             ],

@@ -56,7 +56,7 @@ class VersionController(object):
                 "href": "/v1",
                 "rel": "self"}, {
                 "rel": "help",
-                "href": "https://developer.openstack.org/api-ref/clustering"
+                "href": "https://docs.openstack.org/api-ref/clustering"
             }],
             "min_version": cls._MIN_API_VERSION,
             "max_version": cls._MAX_API_VERSION,

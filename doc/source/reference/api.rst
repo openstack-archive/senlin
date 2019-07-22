@@ -21,4 +21,4 @@ Follow the link below for the Senlin API V1 specification:
 
 
 
-.. _`OpenStack API Complete Reference - Clustering`: https://developer.openstack.org/api-ref/clustering/
+.. _`OpenStack API Complete Reference - Clustering`: https://docs.openstack.org/api-ref/clustering/
