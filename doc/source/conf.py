@@ -68,18 +68,6 @@ master_doc = 'index'
 project = u'senlin'
 copyright = u'2015, OpenStack Foundation'
 
-# The version info for the project you're documenting, acts as replacement for
-# |version| and |release|, also used in various other places throughout the
-# built documents
-#
-# "version" and "release" are used by the "log-a-bug" feature
-#
-# The short X.Y version.
-# The full version, including alpha/beta/rc tags.
-release = senlin_version.version_string_with_vcs()
-# The short X.Y version.
-version = senlin_version.canonical_version_string()
-
 # If true, '()' will be appended to :func: etc. cross-reference text.
 add_function_parentheses = True
 
@@ -103,8 +91,6 @@ html_theme = 'openstackdocs'
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = '%sdoc' % project
-
-html_last_updated_fmt = '%Y-%m-%d %H:%M'
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass
