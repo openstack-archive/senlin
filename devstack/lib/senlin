@@ -41,7 +41,7 @@ set +o xtrace
 SENLIN_AUTH_CACHE_DIR=${SENLIN_AUTH_CACHE_DIR:-/var/cache/senlin}
 SENLIN_CONF_DIR=/etc/senlin
 SENLIN_CONF=$SENLIN_CONF_DIR/senlin.conf
-SENLIN_API_HOST=${SENLIN_API_HOST:-$HOST_IP}
+SENLIN_API_HOST=${SENLIN_API_HOST:-$SERVICE_HOST}
 SENLIN_API_PORT=${SENLIN_API_PORT:-8778}
 
 SENLIN_DIR=$DEST/senlin
@@ -110,6 +110,7 @@ function configure_senlin {
     iniset_rpc_backend senlin $SENLIN_CONF
 
     # OpenStack API
+    iniset $SENLIN_CONF senlin_api bind_host $(ipv6_unquote $SENLIN_API_HOST)
     iniset $SENLIN_CONF senlin_api bind_port $SENLIN_API_PORT
 
     # Database connection
