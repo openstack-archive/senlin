@@ -1556,6 +1556,9 @@ class ServerProfile(base.Profile):
                                    consts.VS_DELETED]
 
         if not obj.physical_id:
+            if obj.status == 'BUILD' or obj.status == 'CREATING':
+                return True
+
             LOG.info('%s for %s: server has no physical ID.',
                      consts.POLL_STATUS_FAIL, obj.name)
             return False
