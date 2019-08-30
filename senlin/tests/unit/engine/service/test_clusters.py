@@ -276,12 +276,15 @@ class ClusterTest(base.SenlinTestCase):
         x_cluster = mock.Mock()
         x_cluster.to_dict.return_value = {'foo': 'bar'}
         mock_find.return_value = x_cluster
+        project_safe = not self.ctx.is_admin
+
         req = orco.ClusterGetRequest(identity='C1')
 
         result = self.eng.cluster_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar'}, result)
-        mock_find.assert_called_once_with(self.ctx, 'C1')
+        mock_find.assert_called_once_with(
+            self.ctx, 'C1', project_safe=project_safe)
 
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_get_not_found(self, mock_find):
