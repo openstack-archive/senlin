@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed get node detail when creating VM is failed
+

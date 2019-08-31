@@ -1,0 +1,5 @@
+---
+other:
+  - |
+    All the integration testing has been moved to Bionic now and py3.5 is not
+    tested runtime for Train or stable/stein.

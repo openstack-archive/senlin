@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Updates should still be allowed in a DEGRADED state lest LB policy becomes
+    unable to operate on any partially operational cluster.
+
+

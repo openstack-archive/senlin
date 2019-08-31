@@ -1,0 +1,10 @@
+---
+fixes:
+  - |
+    Various fixes to the user doc, developer doc and API documentation.
+    Fixed api-ref and docs building.
+    Fixed keystone_authtoken config in docs.
+    Updated docs and examples for health policy v1.1.
+    Updated api-ref location.
+    Updated Cirros Example file.
+

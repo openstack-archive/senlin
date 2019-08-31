@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed when cluster doing resize/scale create nodes, and physcical id of this
+    nodes not found, the cluster will still can do health check.

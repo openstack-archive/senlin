@@ -1,0 +1,12 @@
+---
+features:
+  - |
+    Added webhook v2 support:Previously webhook API introduced microversion 1.10
+    to allow callers to pass arbritary data in the body along with the webhook
+    call.  This was done so that webhooks would work with aodh again.
+    However, aodh and most webhook callers cannot pass in the header necessary
+    to specify the microversion. Thus, we introduce webhook v2 so that webhooks
+    behave like    in microversion 1.10 but without the need to specify that
+    microversion header.
+
+

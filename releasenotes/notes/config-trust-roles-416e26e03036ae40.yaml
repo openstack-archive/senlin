@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Added a new list config option to allow trust roles to be overridden.
+

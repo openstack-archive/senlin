@@ -1,0 +1,8 @@
+---
+prelude: >
+    Updated tests to work with updated cluster delete.
+features:
+  - |
+    Allows the cluster delete actions to detach policies and delete receivers
+    for the cluster being deleted. This simplifies deleting clusters by not
+    having to detach or delete all dependancies from it beforehand.

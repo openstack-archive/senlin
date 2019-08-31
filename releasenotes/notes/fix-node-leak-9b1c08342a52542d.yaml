@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed node leak when creating node failed.
+

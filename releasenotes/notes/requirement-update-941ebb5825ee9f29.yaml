@@ -1,0 +1,6 @@
+---
+other:
+  - |
+    Updated sphinx dependency with global requirements. It caps python 2 since
+    sphinx 2.0 no longer supports Python 2.7.
+    Updated hacking version to latest.
