@@ -341,10 +341,11 @@ class LoadBalancerDriver(base.DriverBase):
             # loadbalancer status will be checked before deleting lb member
             # request is sent out. If loadbalancer keeps unready till waiting
             # timeout, exception will be raised to fail member_remove.
-            res = self._wait_for_lb_ready(lb_id)
-            if not res:
-                msg = 'Loadbalancer %s is not ready.' % lb_id
-                raise exception.Error(msg)
+            res = self._wait_for_lb_ready(lb_id, ignore_not_found=True)
+            # res = self._wait_for_lb_ready(lb_id)
+            # if not res:
+            #     msg = 'Loadbalancer %s is not ready.' % lb_id
+            #     raise exception.Error(msg)
             self.oc().pool_member_delete(pool_id, member_id)
         except (exception.InternalError, exception.Error) as ex:
             LOG.exception('Failed in removing member %(m)s from pool %(p)s: '
