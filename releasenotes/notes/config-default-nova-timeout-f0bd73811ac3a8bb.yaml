@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Added a new config option to specify the timeout for Nova API calls.

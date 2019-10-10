@@ -13,6 +13,7 @@
 import base64
 import copy
 
+from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import encodeutils
 import six
@@ -883,7 +884,8 @@ class ServerProfile(base.Profile):
         resource_id = None
         try:
             server = self.compute(obj).server_create(**kwargs)
-            self.compute(obj).wait_for_server(server.id)
+            self.compute(obj).wait_for_server(server.id,
+                                              cfg.CONF.default_nova_timeout)
             server = self.compute(obj).server_get(server.id)
             # Update zone placement info if available
             self._update_zone_info(obj, server)
@@ -891,7 +893,16 @@ class ServerProfile(base.Profile):
         except exc.InternalError as ex:
             if server and server.id:
                 resource_id = server.id
-            if ports:
+                LOG.debug('Deleting server %s that is ERROR state after'
+                          ' create.', server.id)
+
+                try:
+                    obj.physical_id = server.id
+                    self.do_delete(obj, internal_ports=ports)
+                except Exception:
+                    LOG.error('Failed to delete server %s', server.id)
+                    pass
+            elif ports:
                 self._delete_ports(obj, ports)
             raise exc.EResourceCreation(type='server',
                                         message=six.text_type(ex),
@@ -911,7 +922,7 @@ class ServerProfile(base.Profile):
         ignore_missing = params.get('ignore_missing', True)
         internal_ports = obj.data.get('internal_ports', [])
         force = params.get('force', False)
-        timeout = params.get('timeout', None)
+        timeout = params.get('timeout', cfg.CONF.default_nova_timeout)
 
         try:
             if server_id:

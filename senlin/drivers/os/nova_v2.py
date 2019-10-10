@@ -157,7 +157,7 @@ class NovaClient(base.DriverBase):
         if failures is None:
             failures = [consts.VS_ERROR]
         if timeout is None:
-            timeout = cfg.CONF.default_action_timeout
+            timeout = cfg.CONF.default_nova_timeout
 
         server_obj = self.conn.compute.find_server(server, False)
         self.conn.compute.wait_for_server(server_obj, status=status,
@@ -170,7 +170,7 @@ class NovaClient(base.DriverBase):
     def wait_for_server_delete(self, server, timeout=None):
         """Wait for server deleting complete"""
         if timeout is None:
-            timeout = cfg.CONF.default_action_timeout
+            timeout = cfg.CONF.default_nova_timeout
 
         server_obj = self.conn.compute.find_server(server, True)
         if server_obj:

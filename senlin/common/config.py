@@ -70,6 +70,9 @@ engine_opts = [
     cfg.IntOpt('default_action_timeout',
                default=3600,
                help=_('Timeout in seconds for actions.')),
+    cfg.IntOpt('default_nova_timeout',
+               default=600,
+               help=_('Timeout in seconds for nova API calls.')),
     cfg.IntOpt('max_actions_per_batch',
                default=0,
                help=_('Maximum number of node actions that each engine worker '
