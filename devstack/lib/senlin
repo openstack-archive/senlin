@@ -42,10 +42,15 @@ SENLIN_AUTH_CACHE_DIR=${SENLIN_AUTH_CACHE_DIR:-/var/cache/senlin}
 SENLIN_CONF_DIR=/etc/senlin
 SENLIN_CONF=$SENLIN_CONF_DIR/senlin.conf
 SENLIN_API_HOST=${SENLIN_API_HOST:-$SERVICE_HOST}
-SENLIN_API_PORT=${SENLIN_API_PORT:-8778}
+SENLIN_WSGI_MODE=${SENLIN_WSGI_MODE:-"uwsgi"}
 
 SENLIN_DIR=$DEST/senlin
-SENLIN_BIN_DIR=$(get_python_exec_prefix)
+if [[ ${USE_VENV} = True ]]; then
+    PROJECT_VENV["senlin"]=${SENLIN_DIR}.venv
+    SENLIN_BIN_DIR=${PROJECT_VENV["senlin"]}/bin
+else
+    SENLIN_BIN_DIR=$(get_python_exec_prefix)
+fi
 SENLIN_REPO=${SENLIN_REPO:-${GIT_BASE}/openstack/senlin.git}
 SENLIN_BRANCH=${SENLIN_BRANCH:-master}
 
@@ -57,9 +62,12 @@ SENLIN_DASHBOARD_DIR=$DEST/senlin-dashboard
 SENLIN_DASHBOARD_REPO=${SENLIN_DASHBOARD_REPO:-${GIT_BASE}/openstack/senlin-dashboard.git}
 SENLIN_DASHBOARD_BRANCH=${SENLIN_DASHBOARD_BRANCH:-master}
 
-# Toggle for deploying senlin-api under Apache(mod_wsgi)
-SENLIN_USE_MOD_WSGI=${SENLIN_USE_MOD_WSGI:-False}
+SENLIN_UWSGI=$SENLIN_BIN_DIR/senlin-wsgi-api
+SENLIN_UWSGI_CONF=$SENLIN_CONF_DIR/senlin-api-uwsgi.ini
 
+if is_service_enabled tls-proxy; then
+    SENLIN_SERVICE_PROTOCOL="https"
+fi
 
 # Functions
 # ---------
@@ -73,21 +81,22 @@ function is_senlin_enabled {
 # cleanup_senlin() - Remove residual data files, anything left over from previous
 # runs that a clean run would need to clean up
 function cleanup_senlin {
-    _cleanup_senlin_apache_wsgi
+    sudo rm -f $(apache_site_config_for senlin-api)
+    remove_uwsgi_config "$SENLIN_UWSGI_CONF" "$SENLIN_UWSGI"
     sudo rm -rf $SENLIN_AUTH_CACHE_DIR
     sudo rm -rf $SENLIN_CONF_DIR
 }
 
 # configure_senlin() - Set config files, create data dirs, etc
 function configure_senlin {
-
     if [[ ! -d $SENLIN_CONF_DIR ]]; then
         sudo mkdir -p $SENLIN_CONF_DIR
     fi
+
+    sudo chown $STACK_USER $SENLIN_CONF_DIR
+
     sudo install -d -o $STACK_USER $SENLIN_CONF_DIR
 
-    SENLIN_ENGINE_HOST=${SENLIN_ENGINE_HOST:-$SERVICE_HOST}
-    SENLIN_ENGINE_PORT=${SENLIN_ENGINE_PORT:-8778}
     SENLIN_API_PASTE_FILE=$SENLIN_CONF_DIR/api-paste.ini
 
     cp $SENLIN_DIR/etc/senlin/api-paste.ini $SENLIN_API_PASTE_FILE
@@ -101,17 +110,13 @@ function configure_senlin {
         setup_systemd_logging $SENLIN_CONF
     fi
 
-    if [ "$LOG_COLOR" == "True" ] && [ "$USE_SYSTEMD" == "False" ] && [ "$SENLIN_USE_MOD_WSGI" == "False" ]; then
+    if [ "$LOG_COLOR" == "True" ] && [ "$USE_SYSTEMD" == "False" ]; then
         # Add color to logging output
         setup_colorized_logging $SENLIN_CONF DEFAULT
     fi
 
     # rpc
     iniset_rpc_backend senlin $SENLIN_CONF
-
-    # OpenStack API
-    iniset $SENLIN_CONF senlin_api bind_host $(ipv6_unquote $SENLIN_API_HOST)
-    iniset $SENLIN_CONF senlin_api bind_port $SENLIN_API_PORT
 
     # Database connection
     iniset $SENLIN_CONF database connection `database_connection_url senlin`
@@ -144,34 +149,37 @@ function configure_senlin {
     iniset $SENLIN_CONF zaqar user_domain_name Default
     iniset $SENLIN_CONF zaqar project_domain_name Default
 
-    if [ "$SENLIN_USE_MOD_WSGI" == "True" ]; then
+    if [[ "$SENLIN_WSGI_MODE" == "uwsgi" ]]; then
+        write_uwsgi_config "$SENLIN_UWSGI_CONF" "$SENLIN_UWSGI" "/cluster"
+    else
         _config_senlin_apache_wsgi
-    fi
-}
-
-# _cleanup_senlin_apache_wsgi() - Remove WSGI files, disable and remove Apache vhost file
-function _cleanup_senlin_apache_wsgi {
-    if [ "$SENLIN_USE_MOD_WSGI" == "True" ]; then
-        sudo rm -f $(apache_site_config_for senlin-api)
     fi
 }
 
 # _config_senlin_apache_wsgi() - Configure mod_wsgi
 function _config_senlin_apache_wsgi {
-
-    local senlin_apache_conf
-    senlin_apache_conf=$(apache_site_config_for senlin-api)
-    local senlin_api_port=$SENLIN_API_PORT
+    local senlin_api_apache_conf
     local venv_path=""
+    local senlin_bin_dir=""
+    senlin_bin_dir=$(get_python_exec_prefix)
+    senlin_api_apache_conf=$(apache_site_config_for senlin-api)
 
-    sudo cp $SENLIN_DIR/devstack/apache-senlin.template $senlin_apache_conf
+    if [[ ${USE_VENV} = True ]]; then
+        venv_path="python-path=${PROJECT_VENV["senlin"]}/lib/$(python_version)/site-packages"
+        senlin_bin_dir=${PROJECT_VENV["senlin"]}/bin
+    fi
+
+    sudo cp $SENLIN_DIR/devstack/files/apache-senlin-api.template $senlin_api_apache_conf
     sudo sed -e "
-        s|%PORT%|$senlin_api_port|g;
         s|%APACHE_NAME%|$APACHE_NAME|g;
         s|%SENLIN_BIN_DIR%|$SENLIN_BIN_DIR|g;
+        s|%SSLENGINE%|$senlin_ssl|g;
+        s|%SSLCERTFILE%|$senlin_certfile|g;
+        s|%SSLKEYFILE%|$senlin_keyfile|g;
         s|%USER%|$STACK_USER|g;
-        s|%VIRTUALENV%|$venv_path|g
-    " -i $senlin_apache_conf
+        s|%VIRTUALENV%|$venv_path|g;
+        s|%APIWORKERS%|$API_WORKERS|g;
+    " -i $senlin_api_apache_conf
 }
 
 # init_senlin() - Initialize database
@@ -235,25 +243,31 @@ function cleanup_senlin_dashboard {
 
 # install_senlin() - Collect source and prepare
 function install_senlin {
-    git_clone $SENLIN_REPO $SENLIN_DIR $SENLIN_BRANCH
-    setup_develop $SENLIN_DIR
-    if [ "$SENLIN_USE_MOD_WSGI" == "True" ]; then
+    if [[ "$SENLIN_WSGI_MODE" == "uwsgi" ]]; then
+        install_apache_uwsgi
+    else
         install_apache_wsgi
     fi
+
+    git_clone $SENLIN_REPO $SENLIN_DIR $SENLIN_BRANCH
+    setup_develop $SENLIN_DIR
 }
 
 # start_senlin() - Start running processes, including screen
 function start_senlin {
     run_process sl-eng "$SENLIN_BIN_DIR/senlin-engine --config-file=$SENLIN_CONF"
 
-    local enabled_site_file
-    enabled_site_file=$(apache_site_config_for senlin-api)
-    if [ -f ${enabled_site_file} ] && [ "$SENLIN_USE_MOD_WSGI" == "True" ]; then
+    if [[ "$SENLIN_WSGI_MODE" == "uwsgi" ]]; then
+        run_process sl-api "$SENLIN_BIN_DIR/uwsgi --procname-prefix senlin-api --ini $SENLIN_UWSGI_CONF"
+    else
         enable_apache_site senlin-api
         restart_apache_server
         tail_log senlin-api /var/log/$APACHE_NAME/senlin-api.log
-    else
-        run_process sl-api "$SENLIN_BIN_DIR/senlin-api --config-file=$SENLIN_CONF"
+    fi
+
+    echo "Waiting for senlin-api to start..."
+    if ! wait_for_service $SERVICE_TIMEOUT $SENLIN_SERVICE_PROTOCOL://$SENLIN_API_HOST/cluster; then
+        die $LINENO "senlin-api did not start"
     fi
 }
 
@@ -262,28 +276,22 @@ function stop_senlin {
     # Kill the screen windows
     stop_process sl-eng
 
-    if [ "$SENLIN_USE_MOD_WSGI" == "True" ]; then
+    if [[ "$SENLIN_WSGI_MODE" == "uwsgi" ]]; then
+        stop_process sl-api
+    else
         disable_apache_site senlin-api
         restart_apache_server
-    else
-        stop_process sl-api
     fi
 }
 
 # create_senlin_accounts() - Set up common required senlin accounts
 function create_senlin_accounts {
+    create_service_user "senlin"
 
-    create_service_user "senlin" "admin"
+    local senlin_api_url="$SENLIN_SERVICE_PROTOCOL://$SENLIN_API_HOST/cluster"
 
-    local senlin_service=$(get_or_create_service "senlin" \
-        "clustering" "Senlin Clustering Service")
-    if [ "$SENLIN_USE_MOD_WSGI" == "True" ]; then
-        senlin_api_url="$SERVICE_PROTOCOL://$SENLIN_API_HOST/cluster"
-    else
-        senlin_api_url="$SERVICE_PROTOCOL://$SENLIN_API_HOST:$SENLIN_API_PORT"
-    fi
-
-    get_or_create_endpoint $senlin_service \
+    get_or_create_service "senlin" "clustering" "Senlin Clustering Service"
+    get_or_create_endpoint "clustering" \
         "$REGION_NAME" \
         "$senlin_api_url" \
         "$senlin_api_url" \

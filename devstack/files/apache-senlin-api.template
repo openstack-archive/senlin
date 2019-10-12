@@ -1,0 +1,28 @@
+<Directory %SENLIN_BIN_DIR%>
+    Require all granted
+</Directory>
+
+<VirtualHost *:8778>
+    WSGIDaemonProcess senlin-api processes=%APIWORKERS% threads=1 user=%USER% display-name=%{GROUP} %VIRTUALENV%
+    WSGIProcessGroup senlin-api
+    WSGIScriptAlias / %SENLIN_BIN_DIR%/senlin-wsgi-api
+    WSGIApplicationGroup %{GLOBAL}
+    WSGIPassAuthorization On
+    AllowEncodedSlashes on
+    <IfVersion >= 2.4>
+      ErrorLogFormat "%M"
+    </IfVersion>
+    ErrorLog /var/log/%APACHE_NAME%/senlin-api.log
+    %SSLENGINE%
+    %SSLCERTFILE%
+    %SSLKEYFILE%
+</VirtualHost>
+
+Alias /cluster %SENLIN_BIN_DIR%/senlin-wsgi-api
+<Location /cluster>
+    SetHandler wsgi-script
+    Options +ExecCGI
+    WSGIProcessGroup senlin-api
+    WSGIApplicationGroup %{GLOBAL}
+    WSGIPassAuthorization On
+</Location>
