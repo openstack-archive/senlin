@@ -13,318 +13,33 @@
 """
 Routines for configuring Senlin
 """
-import socket
-
-from keystoneauth1 import loading as ks_loading
-from oslo_config import cfg
+from oslo_log import log
 from oslo_middleware import cors
-from osprofiler import opts as profiler
+from oslo_utils import importutils
 
-from senlin.api.common import wsgi
-from senlin.common.i18n import _
+import senlin.conf
+from senlin import version
 
+profiler = importutils.try_import('osprofiler.opts')
 
-# DEFAULT, service
-service_opts = [
-    cfg.StrOpt('default_region_name',
-               help=_('Default region name used to get services endpoints.')),
-    cfg.IntOpt('max_response_size',
-               default=524288,
-               help=_('Maximum raw byte size of data from web response.'))
-]
-
-cfg.CONF.register_opts(service_opts)
-
-# DEFAULT, engine
-default_engine_opts = [
-    cfg.IntOpt('periodic_interval',
-               default=60,
-               help=_('Seconds between running periodic tasks.')),
-    cfg.IntOpt('periodic_interval_max',
-               default=120,
-               help=_('Maximum seconds between periodic tasks to be called.')),
-    cfg.IntOpt('check_interval_max',
-               default=3600,
-               help=_('Maximum seconds between cluster check to be called.')),
-    cfg.IntOpt('health_check_interval_min',
-               default=60,
-               help=_('Minimum seconds between health check to be called.')),
-    cfg.IntOpt('periodic_fuzzy_delay',
-               default=10,
-               help=_('Range of seconds to randomly delay when starting the '
-                      'periodic task scheduler to reduce stampeding. '
-                      '(Disable by setting to 0)')),
-    cfg.StrOpt('environment_dir',
-               default='/etc/senlin/environments',
-               help=_('The directory to search for environment files.')),
-    cfg.IntOpt('max_nodes_per_cluster',
-               default=1000,
-               help=_('Maximum nodes allowed per top-level cluster.')),
-    cfg.IntOpt('max_clusters_per_project',
-               default=100,
-               help=_('Maximum number of clusters any one project may have'
-                      ' active at one time.')),
-    cfg.IntOpt('default_action_timeout',
-               default=3600,
-               help=_('Timeout in seconds for actions.')),
-    cfg.IntOpt('default_nova_timeout',
-               default=600,
-               help=_('Timeout in seconds for nova API calls.')),
-    cfg.IntOpt('max_actions_per_batch',
-               default=0,
-               help=_('Maximum number of node actions that each engine worker '
-                      'can schedule consecutively per batch. 0 means no '
-                      'limit.')),
-    cfg.IntOpt('batch_interval',
-               default=3,
-               help=_('Seconds to pause between scheduling two consecutive '
-                      'batches of node actions.')),
-    cfg.IntOpt('lock_retry_times',
-               default=3,
-               help=_('Number of times trying to grab a lock.')),
-    cfg.IntOpt('lock_retry_interval',
-               default=10,
-               help=_('Number of seconds between lock retries.')),
-    cfg.IntOpt('database_retry_limit',
-               default=10,
-               help=_('Number of times retrying a failed operation on the '
-                      'database.')),
-    cfg.IntOpt('database_retry_interval',
-               default=0.3,
-               help=_('Initial number of seconds between database retries.')),
-    cfg.IntOpt('database_max_retry_interval',
-               default=2,
-               help=_('Maximum number of seconds between database retries.')),
-    cfg.IntOpt('engine_life_check_timeout',
-               default=2,
-               help=_('RPC timeout for the engine liveness check that is used'
-                      ' for cluster locking.')),
-    cfg.BoolOpt('name_unique',
-                default=False,
-                help=_('Flag to indicate whether to enforce unique names for '
-                       'Senlin objects belonging to the same project.')),
-    cfg.IntOpt('service_down_time',
-               default=60,
-               help=_('Maximum time since last check-in for a service to be '
-                      'considered up.')),
-    cfg.ListOpt('trust_roles',
-                default=[],
-                help=_('The roles which are delegated to the trustee by the '
-                       'trustor when a cluster is created.')),
-]
-cfg.CONF.register_opts(default_engine_opts)
-
-# DEFAULT, host
-rpc_opts = [
-    cfg.HostAddressOpt('host',
-                       default=socket.gethostname(),
-                       help=_('Name of the engine node. This can be an opaque '
-                              'identifier. It is not necessarily a hostname, '
-                              'FQDN or IP address.'))
-]
-cfg.CONF.register_opts(rpc_opts)
-
-# DEFAULT, cloud_backend
-cloud_backend_opts = [
-    cfg.StrOpt('cloud_backend', default='openstack',
-               choices=("openstack", "openstack_test"),
-               help=_('Default cloud backend to use.'))]
-cfg.CONF.register_opts(cloud_backend_opts)
-
-# DEFAULT, event dispatchers
-event_opts = [
-    cfg.MultiStrOpt("event_dispatchers", default=['database'],
-                    help=_("Event dispatchers to enable."))]
-cfg.CONF.register_opts(event_opts)
-
-# Dispatcher section
-dispatcher_group = cfg.OptGroup('dispatchers')
-dispatcher_opts = [
-    cfg.StrOpt('priority', default='info',
-               choices=("critical", "error", "warning", "info", "debug"),
-               help=_("Lowest event priorities to be dispatched.")),
-    cfg.BoolOpt("exclude_derived_actions", default=True,
-                help=_("Exclude derived actions from events dumping.")),
-]
-
-cfg.CONF.register_group(dispatcher_group)
-cfg.CONF.register_opts(dispatcher_opts, group=dispatcher_group)
-
-# Authentication section
-authentication_group = cfg.OptGroup('authentication')
-authentication_opts = [
-    cfg.StrOpt('auth_url', default='',
-               help=_('Complete public identity V3 API endpoint.')),
-    cfg.StrOpt('service_username', default='senlin',
-               help=_('Senlin service user name.')),
-    cfg.StrOpt('service_password', default='', secret=True,
-               help=_('Password specified for the Senlin service user.')),
-    cfg.StrOpt('service_project_name', default='service',
-               help=_('Name of the service project.')),
-    cfg.StrOpt('service_user_domain', default='Default',
-               help=_('Name of the domain for the service user.')),
-    cfg.StrOpt('service_project_domain', default='Default',
-               help=_('Name of the domain for the service project.')),
-]
-cfg.CONF.register_group(authentication_group)
-cfg.CONF.register_opts(authentication_opts, group=authentication_group)
-
-# Conductor group
-conductor_group = cfg.OptGroup('conductor')
-conductor_opts = [
-    cfg.IntOpt('workers',
-               default=1,
-               help=_('Number of senlin-conductor processes.')),
-    cfg.IntOpt('threads',
-               default=1000,
-               help=_('Number of senlin-conductor threads.')),
-]
-cfg.CONF.register_group(conductor_group)
-cfg.CONF.register_opts(conductor_opts, group=conductor_group)
-
-# Engine group
-engine_group = cfg.OptGroup('engine')
-engine_opts = [
-    cfg.IntOpt('workers',
-               default=1,
-               deprecated_name='num_engine_workers',
-               deprecated_group="DEFAULT",
-               help=_('Number of senlin-engine processes.')),
-    cfg.IntOpt('threads',
-               default=1000,
-               deprecated_name='scheduler_thread_pool_size',
-               deprecated_group="DEFAULT",
-               help=_('Number of senlin-engine threads.')),
-]
-cfg.CONF.register_group(engine_group)
-cfg.CONF.register_opts(engine_opts, group=engine_group)
-
-# Health Manager Group
-healthmgr_group = cfg.OptGroup('health_manager')
-healthmgr_opts = [
-    cfg.StrOpt('nova_control_exchange', default='nova',
-               help=_("Exchange name for nova notifications.")),
-    cfg.StrOpt('nova_notification_topic', default='versioned_notifications',
-               help=_("Topic name for nova notifications.")),
-    cfg.StrOpt('heat_control_exchange', default='heat',
-               help=_("Exchange name for heat notifications.")),
-    cfg.StrOpt('heat_notification_topic', default='notifications',
-               help=_("Topic name for heat notifications.")),
-    cfg.MultiStrOpt("enabled_endpoints", default=['nova', 'heat'],
-                    help=_("Notification endpoints to enable.")),
-    cfg.IntOpt('workers',
-               default=1,
-               help=_('Number of senlin-health-manager processes.')),
-    cfg.IntOpt('threads',
-               default=1000,
-               deprecated_name='health_manager_thread_pool_size',
-               deprecated_group="DEFAULT",
-               help=_('Number of senlin-health-manager threads.')),
-]
-cfg.CONF.register_group(healthmgr_group)
-cfg.CONF.register_opts(healthmgr_opts, group=healthmgr_group)
-
-# Revision group
-revision_group = cfg.OptGroup('revision')
-revision_opts = [
-    cfg.StrOpt('senlin_api_revision', default='1.0',
-               help=_('Senlin API revision.')),
-    cfg.StrOpt('senlin_engine_revision', default='1.0',
-               help=_('Senlin engine revision.'))
-]
-cfg.CONF.register_group(revision_group)
-cfg.CONF.register_opts(revision_opts, group=revision_group)
-
-# Receiver group
-receiver_group = cfg.OptGroup('receiver')
-receiver_opts = [
-    cfg.StrOpt('host', deprecated_group='webhook',
-               help=_('The address for notifying and triggering receivers. '
-                      'It is useful for case Senlin API service is running '
-                      'behind a proxy.')),
-    cfg.PortOpt('port', default=8778, deprecated_group='webhook',
-                help=_('The port for notifying and triggering receivers. '
-                       'It is useful for case Senlin API service is running '
-                       'behind a proxy.')),
-    cfg.IntOpt('max_message_size', default=65535,
-               help=_('The max size(bytes) of message can be posted to '
-                      'receiver queue.'))
-]
-cfg.CONF.register_group(receiver_group)
-cfg.CONF.register_opts(receiver_opts, group=receiver_group)
-
-# Notification group
-notification_group = cfg.OptGroup('notification')
-notification_opts = [
-    cfg.IntOpt('max_message_size', default=65535,
-               help=_('The max size(bytes) of message can be posted to '
-                      'notification queue.')),
-    cfg.IntOpt('ttl', default=300,
-               help=_('The ttl in seconds of a message posted to '
-                      'notification queue.'))
-]
-cfg.CONF.register_group(notification_group)
-cfg.CONF.register_opts(notification_opts, group=notification_group)
-
-# Notification topic
-notification_topic_opts = [
-    cfg.ListOpt('notification_topics',
-                default=['versioned_notifications'],
-                help=_('Default notification topic.'))]
-cfg.CONF.register_opts(notification_topic_opts)
-
-# Zaqar group
-zaqar_group = cfg.OptGroup(
-    'zaqar', title='Zaqar Options',
-    help=_('Configuration options for zaqar trustee.'))
-
-zaqar_opts = (
-    ks_loading.get_auth_common_conf_options() +
-    ks_loading.get_auth_plugin_conf_options('password'))
-
-cfg.CONF.register_group(zaqar_group)
-ks_loading.register_session_conf_options(cfg.CONF, 'zaqar')
-ks_loading.register_auth_conf_options(cfg.CONF, 'zaqar')
-
-# OSProfiler
-group, opts = profiler.list_opts()[0]
-cfg.CONF.register_opts(opts, group=group)
+CONF = senlin.conf.CONF
 
 
-def list_opts():
-    """Return a list of oslo.config options available.
+def parse_args(argv, name, default_config_files=None):
+    log.register_options(CONF)
 
-    The purpose of this function is to allow tools like the Oslo sample config
-    file generator to discover the options exposed to users by this service.
-    The returned list includes all oslo.config options which may be registered
-    at runtime by the service api/engine.
+    if profiler:
+        profiler.set_defaults(CONF)
 
-    Each element of the list is a tuple. The first element is the name of the
-    group under which the list of elements in the second element will be
-    registered. A group name of None corresponds to the [DEFAULT] group in
-    config files.
+    set_config_defaults()
 
-    This function is also discoverable via the 'senlin.config' entry point
-    under the 'oslo.config.opts' namespace.
-
-    :returns: a list of (group_name, opts) tuples
-    """
-    for g, o in wsgi.wsgi_opts():
-        yield g, o
-    yield 'DEFAULT', cloud_backend_opts
-    yield 'DEFAULT', rpc_opts
-    yield 'DEFAULT', default_engine_opts
-    yield 'DEFAULT', service_opts
-    yield 'DEFAULT', event_opts
-    yield authentication_group.name, authentication_opts
-    yield conductor_group.name, conductor_opts
-    yield dispatcher_group.name, dispatcher_opts
-    yield engine_group.name, engine_opts
-    yield healthmgr_group.name, healthmgr_opts
-    yield revision_group.name, revision_opts
-    yield receiver_group.name, receiver_opts
-    yield zaqar_group.name, zaqar_opts
-    yield profiler.list_opts()[0]
+    CONF(
+        argv[1:],
+        project='senlin',
+        prog=name,
+        version=version.version_info.version_string(),
+        default_config_files=default_config_files,
+    )
 
 
 def set_config_defaults():

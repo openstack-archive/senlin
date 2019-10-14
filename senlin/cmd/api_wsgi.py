@@ -16,7 +16,7 @@
 
 Use this file for deploying senlin-api under Apache2(mode-wsgi).
 """
-
+import sys
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -26,15 +26,11 @@ from senlin.common import config
 from senlin.common import messaging
 from senlin.common import profiler
 from senlin import objects
-from senlin import version
 
 
 def init_app():
-    logging.register_options(cfg.CONF)
-    cfg.CONF(project='senlin', prog='senlin-api',
-             version=version.version_info.version_string())
+    config.parse_args(sys.argv, 'senlin-api')
     logging.setup(cfg.CONF, 'senlin-api')
-    config.set_config_defaults()
     objects.register_all()
     messaging.setup()
 

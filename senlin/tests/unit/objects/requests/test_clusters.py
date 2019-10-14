@@ -19,8 +19,8 @@ from senlin.objects.requests import clusters
 from senlin.tests.unit.common import base as test_base
 
 CONF = cfg.CONF
-CONF.import_opt('default_action_timeout', 'senlin.common.config')
-CONF.import_opt('max_nodes_per_cluster', 'senlin.common.config')
+CONF.import_opt('default_action_timeout', 'senlin.conf')
+CONF.import_opt('max_nodes_per_cluster', 'senlin.conf')
 
 
 class TestClusterCreate(test_base.SenlinTestCase):

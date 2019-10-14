@@ -169,7 +169,7 @@ class Environment(object):
     def read_global_environment(self):
         """Read and parse global environment files."""
 
-        cfg.CONF.import_opt('environment_dir', 'senlin.common.config')
+        cfg.CONF.import_opt('environment_dir', 'senlin.conf')
         env_dir = cfg.CONF.environment_dir
 
         try:

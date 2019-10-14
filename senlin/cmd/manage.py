@@ -20,11 +20,11 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import timeutils
 
+from senlin.common import config
 from senlin.common import context
 from senlin.common.i18n import _
 from senlin.db import api
 from senlin.objects import service as service_obj
-from senlin import version
 
 CONF = cfg.CONF
 
@@ -86,7 +86,7 @@ class ServiceManageCommand(object):
             return
 
         status = 'up'
-        CONF.import_opt('periodic_interval', 'senlin.common.config')
+        CONF.import_opt('periodic_interval', 'senlin.conf')
         max_interval = 2 * CONF.periodic_interval
         if timeutils.is_older_than(service.updated_at, max_interval):
             status = 'down'
@@ -218,15 +218,11 @@ command_opt = cfg.SubCommandOpt('command',
 
 
 def main():
-    logging.register_options(CONF)
-    logging.setup(CONF, 'senlin-manage')
-    CONF.register_cli_opt(command_opt)
-
     try:
-        default_config_files = cfg.find_config_files('senlin', 'senlin-engine')
-        CONF(sys.argv[1:], project='senlin', prog='senlin-manage',
-             version=version.version_info.version_string(),
-             default_config_files=default_config_files)
+        CONF.register_cli_opt(command_opt)
+        default_config_files = cfg.find_config_files('senlin', 'senlin-manage')
+        config.parse_args(sys.argv, 'senlin-manage', default_config_files)
+        logging.setup(CONF, 'senlin-manage')
     except RuntimeError as e:
         sys.exit("ERROR: %s" % e)
 

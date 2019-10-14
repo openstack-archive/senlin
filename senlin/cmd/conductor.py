@@ -15,22 +15,26 @@
 """
 Senlin Conductor.
 """
-from oslo_config import cfg
+import sys
+
 from oslo_log import log as logging
 from oslo_reports import guru_meditation_report as gmr
 from oslo_service import service
 
+from senlin.common import config
 from senlin.common import consts
 from senlin.common import messaging
 from senlin.common import profiler
+import senlin.conf
 from senlin import objects
 from senlin import version
 
+CONF = senlin.conf.CONF
+
 
 def main():
-    logging.register_options(cfg.CONF)
-    cfg.CONF(project='senlin', prog='senlin-conductor')
-    logging.setup(cfg.CONF, 'senlin-conductor')
+    config.parse_args(sys.argv, 'senlin-conductor')
+    logging.setup(CONF, 'senlin-conductor')
     logging.set_defaults()
     gmr.TextGuruMeditation.setup_autorun(version)
     objects.register_all()
@@ -38,10 +42,10 @@ def main():
 
     from senlin.conductor import service as conductor
 
-    profiler.setup('senlin-conductor', cfg.CONF.host)
-    srv = conductor.ConductorService(cfg.CONF.host, consts.CONDUCTOR_TOPIC)
-    launcher = service.launch(cfg.CONF, srv,
-                              workers=cfg.CONF.conductor.workers,
+    profiler.setup('senlin-conductor', CONF.host)
+    srv = conductor.ConductorService(CONF.host, consts.CONDUCTOR_TOPIC)
+    launcher = service.launch(CONF, srv,
+                              workers=CONF.conductor.workers,
                               restart_method='mutate')
     # the following periodic tasks are intended serve as HA checking
     # srv.create_periodic_tasks()

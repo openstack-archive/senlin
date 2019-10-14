@@ -198,7 +198,7 @@ class Capacity(fields.Integer):
 
     def __init__(self, minimum=0, maximum=None):
         super(Capacity, self).__init__()
-        CONF.import_opt("max_nodes_per_cluster", "senlin.common.config")
+        CONF.import_opt("max_nodes_per_cluster", "senlin.conf")
 
         if minimum > CONF.max_nodes_per_cluster:
             err = _("The value of 'minimum' cannot be greater than the global "

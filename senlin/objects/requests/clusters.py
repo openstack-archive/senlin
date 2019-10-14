@@ -18,7 +18,7 @@ from senlin.objects import base
 from senlin.objects import fields
 
 CONF = cfg.CONF
-CONF.import_opt('default_action_timeout', 'senlin.common.config')
+CONF.import_opt('default_action_timeout', 'senlin.conf')
 
 
 @base.SenlinObjectRegistry.register

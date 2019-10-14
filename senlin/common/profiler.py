@@ -20,7 +20,7 @@ import osprofiler.web
 from senlin.common import context
 from senlin.common import messaging
 
-cfg.CONF.import_opt('enabled', 'senlin.common.config', group='profiler')
+cfg.CONF.import_opt('enabled', 'senlin.conf', group='profiler')
 
 LOG = logging.getLogger(__name__)
 

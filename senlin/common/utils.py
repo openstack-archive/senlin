@@ -32,8 +32,8 @@ from senlin.common import exception
 from senlin.common.i18n import _
 from senlin.objects import service as service_obj
 
-cfg.CONF.import_opt('max_response_size', 'senlin.common.config')
-cfg.CONF.import_opt('periodic_interval', 'senlin.common.config')
+cfg.CONF.import_opt('max_response_size', 'senlin.conf')
+cfg.CONF.import_opt('periodic_interval', 'senlin.conf')
 
 LOG = logging.getLogger(__name__)
 _ISO8601_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'

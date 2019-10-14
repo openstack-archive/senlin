@@ -15,22 +15,26 @@
 """
 Senlin Health-Manager.
 """
-from oslo_config import cfg
+import sys
+
 from oslo_log import log as logging
 from oslo_reports import guru_meditation_report as gmr
 from oslo_service import service
 
+from senlin.common import config
 from senlin.common import consts
 from senlin.common import messaging
 from senlin.common import profiler
+import senlin.conf
 from senlin import objects
 from senlin import version
 
+CONF = senlin.conf.CONF
+
 
 def main():
-    logging.register_options(cfg.CONF)
-    cfg.CONF(project='senlin', prog='senlin-health-manager')
-    logging.setup(cfg.CONF, 'senlin-health-manager')
+    config.parse_args(sys.argv, 'senlin-health-manager')
+    logging.setup(CONF, 'senlin-health-manager')
     logging.set_defaults()
     gmr.TextGuruMeditation.setup_autorun(version)
     objects.register_all()
@@ -38,10 +42,10 @@ def main():
 
     from senlin.health_manager import service as health_manager
 
-    profiler.setup('senlin-health-manager', cfg.CONF.host)
-    srv = health_manager.HealthManagerService(cfg.CONF.host,
+    profiler.setup('senlin-health-manager', CONF.host)
+    srv = health_manager.HealthManagerService(CONF.host,
                                               consts.HEALTH_MANAGER_TOPIC)
-    launcher = service.launch(cfg.CONF, srv,
-                              workers=cfg.CONF.health_manager.workers,
+    launcher = service.launch(CONF, srv,
+                              workers=CONF.health_manager.workers,
                               restart_method='mutate')
     launcher.wait()

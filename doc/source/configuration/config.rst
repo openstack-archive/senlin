@@ -20,11 +20,11 @@ Senlin uses `oslo.config` to define and manage configuration options to
 allow the deployer to control many aspects of the service API and the service
 engine.
 
-.. show-options:: senlin.config
+.. show-options:: senlin.conf
 
 Options
 =======
 
-.. currentmodule:: senlin.common.config
+.. currentmodule:: senlin.conf.opts
 
 .. autofunction:: list_opts
