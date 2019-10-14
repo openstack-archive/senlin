@@ -884,8 +884,8 @@ class ServerProfile(base.Profile):
         resource_id = None
         try:
             server = self.compute(obj).server_create(**kwargs)
-            self.compute(obj).wait_for_server(server.id,
-                                              cfg.CONF.default_nova_timeout)
+            self.compute(obj).wait_for_server(
+                server.id, timeout=cfg.CONF.default_nova_timeout)
             server = self.compute(obj).server_get(server.id)
             # Update zone placement info if available
             self._update_zone_info(obj, server)
@@ -932,7 +932,7 @@ class ServerProfile(base.Profile):
                 else:
                     driver.server_delete(server_id, ignore_missing)
 
-                driver.wait_for_server_delete(server_id, timeout)
+                driver.wait_for_server_delete(server_id, timeout=timeout)
         except exc.InternalError as ex:
             raise exc.EResourceDeletion(type='server', id=server_id,
                                         message=six.text_type(ex))
