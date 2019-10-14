@@ -58,7 +58,7 @@ class ControllerTest(object):
         return {
             'SERVER_NAME': 'server.test',
             'SERVER_PORT': 8004,
-            'SCRIPT_NAME': '/v1',
+            'SCRIPT_NAME': '',
             'PATH_INFO': '/%s' % self.project + path,
             'wsgi.url_scheme': 'http',
         }

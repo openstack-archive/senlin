@@ -9,7 +9,6 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 import webob.dec
@@ -41,7 +40,7 @@ class VersionController(object):
         return response
 
     @classmethod
-    def version_info(cls):
+    def version_info(cls, req):
         return {
             "id": "1.0",
             "status": "CURRENT",
@@ -53,7 +52,7 @@ class VersionController(object):
                 }
             ],
             "links": [{
-                "href": "/v1",
+                "href": req.application_url.rstrip('/') + '/v1',
                 "rel": "self"}, {
                 "rel": "help",
                 "href": "https://docs.openstack.org/api-ref/clustering"
@@ -63,7 +62,7 @@ class VersionController(object):
         }
 
     def version(self, req):
-        return {"version": self.version_info()}
+        return {"version": self.version_info(req)}
 
     @classmethod
     def min_api_version(cls):

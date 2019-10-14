@@ -69,18 +69,19 @@ class WebhookMiddleware(wsgi.Middleware):
     def _parse_url(self, url):
         """Extract receiver ID from the request URL.
 
-        Parse a URL of format: http://host:port/webhooks/id/trigger?V=1&k=v
+        Parse a URL of format: http://host:port/v1/webhooks/id/trigger?V=1&k=v
         :param url: The URL from which the request is received.
         """
         parts = urlparse.urlparse(url)
         p = parts.path.split('/')
 
-        # check if URL is a webhook trigger request
-        # expected: ['', 'v1', 'webhooks', 'webhook-id', 'trigger']
-        if len(p) != 5:
-            return None
+        try:
+            index = p.index('v1')
+            p = p[(index + 1):]
+        except ValueError:
+            pass
 
-        if any((p[0] != '', p[2] != 'webhooks', p[4] != 'trigger')):
+        if len(p) != 3 or p[0] != 'webhooks' or p[2] != 'trigger':
             return None
 
         # at this point it has been determined that the URL is a webhook
@@ -94,7 +95,7 @@ class WebhookMiddleware(wsgi.Middleware):
                               'trigger URL'))
 
         params = dict((k, v[0]) for k, v in qs.items())
-        return p[3], params
+        return p[1], params
 
     def _get_token(self, **kwargs):
         """Get a valid token based on the credential provided.

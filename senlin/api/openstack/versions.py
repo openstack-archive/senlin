@@ -39,7 +39,7 @@ class Controller(object):
 
         versions = []
         for ver, vc in self.Controllers.items():
-            versions.append(vc.version_info())
+            versions.append(vc.version_info(req))
 
         body = jsonutils.dumps(dict(versions=versions))
 

@@ -13,6 +13,7 @@
 import mock
 
 from oslo_config import cfg
+from oslo_utils import uuidutils
 import six
 import webob
 
@@ -153,7 +154,8 @@ class TestWebhookMiddleware(base.SenlinTestCase):
 
         req = mock.Mock()
         req.method = 'POST'
-        req.url = 'http://url1'
+        req.url = 'http://url1/v1'
+        req.script_name = '/v1'
         req.params = {'key': 'FAKE_KEY'}
         req.headers = {}
         req.version_request = vr.APIVersionRequest('1.0')
@@ -181,7 +183,7 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         self.assertIsNone(res)
 
         self.assertEqual('FAKE_TOKEN', req.headers['X-Auth-Token'])
-        mock_extract.assert_called_once_with('http://url1')
+        mock_extract.assert_called_once_with('http://url1/v1')
         mock_token.assert_called_once_with(
             auth_url='AUTH_URL', password='PASSWORD', username='USERNAME',
             user_domain_name='DOMAIN', foo='bar')
@@ -202,7 +204,8 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         # no webhook_id extracted
         req = mock.Mock()
         req.method = 'POST'
-        req.url = 'http://url1'
+        req.url = 'http://url1/v1'
+        req.script_name = '/v1'
         mock_extract = self.patchobject(self.middleware, '_parse_url',
                                         return_value=None)
 
@@ -210,3 +213,50 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         self.assertIsNone(res)
         mock_extract.assert_called_once_with(req.url)
         self.assertNotIn('X-Auth-Token', req.headers)
+
+    def test_parse_url_valid(self):
+        uid = uuidutils.generate_uuid()
+
+        result = self.middleware._parse_url(
+            'https://url1/cluster/v1/webhooks/%s/trigger?V=2&k=v' % uid
+        )
+
+        self.assertEqual(
+            (uid, {'k': 'v'}), result
+        )
+
+    def test_parse_url_valid_with_port(self):
+        uid = uuidutils.generate_uuid()
+
+        result = self.middleware._parse_url(
+            'http://url1:5000/v1/webhooks/%s/trigger?V=2&k=v' % uid
+        )
+
+        self.assertEqual(
+            (uid, {'k': 'v'}), result
+        )
+
+    def test_parse_url_invalid(self):
+        result = self.middleware._parse_url(
+            'http://url1'
+        )
+
+        self.assertIsNone(result)
+
+    def test_parse_url_missing_version(self):
+        uid = uuidutils.generate_uuid()
+
+        result = self.middleware._parse_url(
+            'https://url1/cluster/webhooks/%s/trigger?V=2&k=v' % uid
+        )
+
+        self.assertIsNone(result)
+
+    def test_parse_url_missing_webhooks(self):
+        uid = uuidutils.generate_uuid()
+
+        result = self.middleware._parse_url(
+            'https://url1/cluster/v1/%s/trigger?V=2&k=v' % uid
+        )
+
+        self.assertIsNone(result)

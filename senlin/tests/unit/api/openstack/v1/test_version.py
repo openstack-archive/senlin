@@ -51,7 +51,7 @@ class VersionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         }]
         self.assertEqual(expected, response['media-types'])
         expected = [{
-            'href': '/v1',
+            'href': 'http://server.test:8004/v1',
             'rel': 'self'}, {
             'href': 'https://docs.openstack.org/api-ref/clustering',
             'rel': 'help',

@@ -46,11 +46,14 @@ class VersionNegotiationFilter(wsgi.Middleware):
         If there is a version identifier in the URI, simply return the correct
         API controller, otherwise, if we find an Accept: header, process it
         """
-        LOG.debug("Processing request: %(m)s %(p)s Accept: %(a)s",
-                  {'m': req.method, 'p': req.path, 'a': req.accept})
+        LOG.debug(
+            "Processing request: %(method)s %(path)s Accept: %(accept)s",
+            {'method': req.method, 'path': req.path, 'accept': req.accept}
+        )
 
         # If the request is for /versions, just return the versions container
-        if req.path_info_peek() in ("versions", ""):
+        path_info_peak = req.path_info_peek()
+        if path_info_peak in ('versions', ''):
             return self.versions_app
 
         accept = str(req.accept)
@@ -69,11 +72,7 @@ class VersionNegotiationFilter(wsgi.Middleware):
             if path is None or path == '/':
                 return controller(self.conf)
             return None
-        else:
-            LOG.debug("Unknown version in URI")
-
-        # Try another path
-        if accept.startswith('application/vnd.openstack.clustering-'):
+        elif accept.startswith('application/vnd.openstack.clustering-'):
             token_loc = len('application/vnd.openstack.clustering-')
             accept_version = accept[token_loc:]
             controller = self._get_controller(accept_version, req)
@@ -88,10 +87,10 @@ class VersionNegotiationFilter(wsgi.Middleware):
                 if path is None or path == '/':
                     return controller(self.conf)
                 return None
-            else:
-                LOG.debug("Unknown version in request header")
+        else:
+            LOG.debug("Unknown version in request")
 
-        if accept not in ('*/*', ''):
+        if accept not in ('*/*', '') and path_info_peak is not None:
             LOG.debug("Returning HTTP 404 due to unknown Accept header: %s ",
                       accept)
             return webob.exc.HTTPNotFound()
