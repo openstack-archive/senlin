@@ -1,25 +1,24 @@
-=============
-senlin-engine
-=============
+================
+senlin-conductor
+================
 
-.. program:: senlin-engine
+.. program:: senlin-conductor
 
 SYNOPSIS
 ~~~~~~~~
 
-``senlin-engine [options]``
+``senlin-conductor [options]``
 
 DESCRIPTION
 ~~~~~~~~~~~
 
-senlin-engine is the server that perform operations on objects such as
-nodes, policies and profiles.
+senlin-conductor provides an internal RPC interface for the senlin-api to
+invoke.
 
 INVENTORY
 ~~~~~~~~~
 
-The senlin-engine provides services to the callers so that requests on
-various objects can be met by background operations.
+The senlin-conductor provides an internal RPC interface.
 
 OPTIONS
 ~~~~~~~

@@ -115,13 +115,15 @@ update this script with the <DB PASSWORD> entered in step4.
   $ cd /opt/stack/senlin/tools
   $ ./senlin-db-recreate
 
-6. Start senlin engine and api service.
+6. Start the senlin api, conductor, engine and health-manager services.
 
-You may need two consoles for the services i.e., one for each service.
+You may need multiple consoles for the services i.e., one for each service.
 
 ::
 
+  $ senlin-conductor --config-file /etc/senlin/senlin.conf
   $ senlin-engine --config-file /etc/senlin/senlin.conf
+  $ senlin-health-manager --config-file /etc/senlin/senlin.conf
   $ senlin-api --config-file /etc/senlin/senlin.conf
 
 Install Senlin Client

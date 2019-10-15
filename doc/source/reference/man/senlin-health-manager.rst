@@ -1,25 +1,25 @@
-=============
-senlin-engine
-=============
+=====================
+senlin-health-manager
+=====================
 
-.. program:: senlin-engine
+.. program:: senlin-health-manager
 
 SYNOPSIS
 ~~~~~~~~
 
-``senlin-engine [options]``
+``senlin-health-manager [options]``
 
 DESCRIPTION
 ~~~~~~~~~~~
 
-senlin-engine is the server that perform operations on objects such as
-nodes, policies and profiles.
+senlin-health-manager is the server that is responsible for cluster health
+related operations.
 
 INVENTORY
 ~~~~~~~~~
 
-The senlin-engine provides services to the callers so that requests on
-various objects can be met by background operations.
+The senlin-health-manager provides services to the callers so that various
+cluster health related operations can be performed in the background.
 
 OPTIONS
 ~~~~~~~

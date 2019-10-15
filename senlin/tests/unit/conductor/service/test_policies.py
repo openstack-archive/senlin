@@ -19,8 +19,8 @@ import six
 
 from senlin.common import exception as exc
 from senlin.common.i18n import _
+from senlin.conductor import service
 from senlin.engine import environment
-from senlin.engine import service
 from senlin.objects import policy as po
 from senlin.objects.requests import policies as orpo
 from senlin.policies import base as pb
@@ -30,11 +30,10 @@ from senlin.tests.unit import fakes
 
 
 class PolicyTest(base.SenlinTestCase):
-
     def setUp(self):
         super(PolicyTest, self).setUp()
         self.ctx = utils.dummy_context(project='policy_test_project')
-        self.eng = service.EngineService('host-a', 'topic-a')
+        self.svc = service.ConductorService('host-a', 'topic-a')
 
     def _setup_fakes(self):
         """Set up fake policy for the purpose of testing.
@@ -61,7 +60,7 @@ class PolicyTest(base.SenlinTestCase):
         mock_get.return_value = [x_obj_1, x_obj_2]
         req = orpo.PolicyListRequest(project_safe=True)
 
-        result = self.eng.policy_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.policy_list(self.ctx, req.obj_to_primitive())
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
         mock_get.assert_called_once_with(self.ctx, project_safe=True)
 
@@ -79,7 +78,7 @@ class PolicyTest(base.SenlinTestCase):
         }
         req = orpo.PolicyListRequest(**params)
 
-        result = self.eng.policy_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.policy_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([], result)
         mock_get.assert_called_once_with(
@@ -92,7 +91,7 @@ class PolicyTest(base.SenlinTestCase):
         self._setup_fakes()
         req = orpo.PolicyCreateRequestBody(name='Fake', spec=self.spec)
 
-        result = self.eng.policy_create(self.ctx, req.obj_to_primitive())
+        result = self.svc.policy_create(self.ctx, req.obj_to_primitive())
 
         self.assertEqual('Fake', result['name'])
         self.assertEqual('TestPolicy-1.0', result['type'])
@@ -115,7 +114,7 @@ class PolicyTest(base.SenlinTestCase):
 
         req = orpo.PolicyCreateRequestBody(name='FAKE_NAME', spec=spec)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_create,
+                               self.svc.policy_create,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("A policy named 'FAKE_NAME' already exists.",
@@ -134,7 +133,7 @@ class PolicyTest(base.SenlinTestCase):
 
         req = orpo.PolicyCreateRequestBody(name='Fake', spec=spec)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_create,
+                               self.svc.policy_create,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -151,7 +150,7 @@ class PolicyTest(base.SenlinTestCase):
 
         req = orpo.PolicyCreateRequestBody(name='Fake', spec=spec)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_create,
+                               self.svc.policy_create,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.ESchema, ex.exc_info[0])
         self.assertEqual("Required spec item 'KEY2' not provided",
@@ -168,7 +167,7 @@ class PolicyTest(base.SenlinTestCase):
 
         req = orpo.PolicyCreateRequestBody(name='Fake', spec=spec)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_create,
+                               self.svc.policy_create,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
         self.assertEqual("The specified KEY2 'value3' could not be "
@@ -182,7 +181,7 @@ class PolicyTest(base.SenlinTestCase):
 
         req = orpo.PolicyCreateRequestBody(name='Fake', spec=self.spec)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_create,
+                               self.svc.policy_create,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
         self.assertEqual('BOOM', six.text_type(ex.exc_info[1]))
@@ -211,7 +210,7 @@ class PolicyTest(base.SenlinTestCase):
 
         body = orpo.PolicyValidateRequestBody(spec=self.spec)
 
-        resp = self.eng.policy_validate(self.ctx, body.obj_to_primitive())
+        resp = self.svc.policy_validate(self.ctx, body.obj_to_primitive())
         self.assertEqual(expected_resp, resp)
 
     def test_policy_validate_failed(self):
@@ -222,7 +221,7 @@ class PolicyTest(base.SenlinTestCase):
         body = orpo.PolicyValidateRequestBody(spec=self.spec)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_validate,
+                               self.svc.policy_validate,
                                self.ctx, body.obj_to_primitive())
         self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
         self.assertEqual('BOOM',
@@ -235,7 +234,7 @@ class PolicyTest(base.SenlinTestCase):
         x_obj.to_dict.return_value = {'foo': 'bar'}
         req = orpo.PolicyGetRequest(identity='FAKE_POLICY')
 
-        result = self.eng.policy_get(self.ctx, req.obj_to_primitive())
+        result = self.svc.policy_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_POLICY')
@@ -247,7 +246,7 @@ class PolicyTest(base.SenlinTestCase):
         req = orpo.PolicyGetRequest(identity='POLICY')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_get,
+                               self.svc.policy_get,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -269,7 +268,7 @@ class PolicyTest(base.SenlinTestCase):
 
         req = orpo.PolicyUpdateRequest(**request)
 
-        result = self.eng.policy_update(self.ctx, req.obj_to_primitive())
+        result = self.svc.policy_update(self.ctx, req.obj_to_primitive())
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE')
         mock_load.assert_called_once_with(self.ctx, db_policy=x_obj)
@@ -287,7 +286,7 @@ class PolicyTest(base.SenlinTestCase):
         req = orpo.PolicyUpdateRequest(**request)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_update,
+                               self.svc.policy_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -313,7 +312,7 @@ class PolicyTest(base.SenlinTestCase):
         req = orpo.PolicyUpdateRequest(**request)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_update,
+                               self.svc.policy_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -332,7 +331,7 @@ class PolicyTest(base.SenlinTestCase):
         mock_delete.return_value = None
 
         req = orpo.PolicyDeleteRequest(identity='POLICY_ID')
-        result = self.eng.policy_delete(self.ctx, req.obj_to_primitive())
+        result = self.svc.policy_delete(self.ctx, req.obj_to_primitive())
 
         self.assertIsNone(result)
         self.assertEqual('POLICY_ID', req.identity)
@@ -346,7 +345,7 @@ class PolicyTest(base.SenlinTestCase):
         req = orpo.PolicyDeleteRequest(identity='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_delete, self.ctx,
+                               self.svc.policy_delete, self.ctx,
                                req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -365,7 +364,7 @@ class PolicyTest(base.SenlinTestCase):
         req = orpo.PolicyDeleteRequest(identity='POLICY_ID')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_delete, self.ctx,
+                               self.svc.policy_delete, self.ctx,
                                req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])

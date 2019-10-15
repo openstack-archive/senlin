@@ -16,9 +16,9 @@ import six
 
 from senlin.common import consts
 from senlin.common import exception
+from senlin.conductor import service
 from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
-from senlin.engine import service
 from senlin.objects import cluster as co
 from senlin.objects import receiver as ro
 from senlin.objects.requests import webhooks as vorw
@@ -27,11 +27,10 @@ from senlin.tests.unit.common import utils
 
 
 class WebhookTest(base.SenlinTestCase):
-
     def setUp(self):
         super(WebhookTest, self).setUp()
         self.ctx = utils.dummy_context(project='webhook_test_project')
-        self.eng = service.EngineService('host-a', 'topic-a')
+        self.svc = service.ConductorService('host-a', 'topic-a')
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')
@@ -49,7 +48,7 @@ class WebhookTest(base.SenlinTestCase):
         body = {'kee': 'vee'}
         req = vorw.WebhookTriggerRequestParamsInBody(identity='FAKE_RECEIVER',
                                                      body=body)
-        res = self.eng.webhook_trigger(self.ctx, req.obj_to_primitive())
+        res = self.svc.webhook_trigger(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, res)
 
@@ -81,7 +80,7 @@ class WebhookTest(base.SenlinTestCase):
         body = {}
         req = vorw.WebhookTriggerRequestParamsInBody(identity='FAKE_RECEIVER',
                                                      body=body)
-        res = self.eng.webhook_trigger(self.ctx, req.obj_to_primitive())
+        res = self.svc.webhook_trigger(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, res)
 
@@ -105,7 +104,7 @@ class WebhookTest(base.SenlinTestCase):
         body = None
         req = vorw.WebhookTriggerRequestParamsInBody(identity='RRR', body=body)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.webhook_trigger, self.ctx,
+                               self.svc.webhook_trigger, self.ctx,
                                req.obj_to_primitive())
 
         self.assertEqual(exception.ResourceNotFound, ex.exc_info[0])
@@ -125,7 +124,7 @@ class WebhookTest(base.SenlinTestCase):
         body = None
         req = vorw.WebhookTriggerRequestParamsInBody(identity='RRR', body=body)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.webhook_trigger, self.ctx,
+                               self.svc.webhook_trigger, self.ctx,
                                req.obj_to_primitive())
 
         self.assertEqual(exception.BadRequest, ex.exc_info[0])
@@ -150,7 +149,7 @@ class WebhookTest(base.SenlinTestCase):
         body = vorw.WebhookTriggerRequestBody(params={'kee': 'vee'})
         req = vorw.WebhookTriggerRequest(identity='FAKE_RECEIVER',
                                          body=body)
-        res = self.eng.webhook_trigger(self.ctx, req.obj_to_primitive())
+        res = self.svc.webhook_trigger(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, res)
 
@@ -182,7 +181,7 @@ class WebhookTest(base.SenlinTestCase):
         body = vorw.WebhookTriggerRequestBody(params={})
         req = vorw.WebhookTriggerRequest(identity='FAKE_RECEIVER',
                                          body=body)
-        res = self.eng.webhook_trigger(self.ctx, req.obj_to_primitive())
+        res = self.svc.webhook_trigger(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, res)
 
@@ -205,7 +204,7 @@ class WebhookTest(base.SenlinTestCase):
         body = vorw.WebhookTriggerRequestBody(params=None)
         req = vorw.WebhookTriggerRequest(identity='RRR', body=body)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.webhook_trigger, self.ctx,
+                               self.svc.webhook_trigger, self.ctx,
                                req.obj_to_primitive())
 
         self.assertEqual(exception.ResourceNotFound, ex.exc_info[0])
@@ -224,7 +223,7 @@ class WebhookTest(base.SenlinTestCase):
         body = vorw.WebhookTriggerRequestBody(params=None)
         req = vorw.WebhookTriggerRequest(identity='RRR', body=body)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.webhook_trigger, self.ctx,
+                               self.svc.webhook_trigger, self.ctx,
                                req.obj_to_primitive())
 
         self.assertEqual(exception.BadRequest, ex.exc_info[0])

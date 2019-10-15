@@ -106,6 +106,7 @@ function configure_senlin {
     iniset $SENLIN_CONF DEFAULT auth_encryption_key $(generate_hex_string 16)
     iniset $SENLIN_CONF DEFAULT default_region_name "$REGION_NAME"
 
+
     if [ "$USE_SYSTEMD" != "False" ]; then
         setup_systemd_logging $SENLIN_CONF
     fi
@@ -256,6 +257,8 @@ function install_senlin {
 # start_senlin() - Start running processes, including screen
 function start_senlin {
     run_process sl-eng "$SENLIN_BIN_DIR/senlin-engine --config-file=$SENLIN_CONF"
+    run_process sl-conductor "$SENLIN_BIN_DIR/senlin-conductor --config-file=$SENLIN_CONF"
+    run_process sl-health-manager "$SENLIN_BIN_DIR/senlin-health-manager --config-file=$SENLIN_CONF"
 
     if [[ "$SENLIN_WSGI_MODE" == "uwsgi" ]]; then
         run_process sl-api "$SENLIN_BIN_DIR/uwsgi --procname-prefix senlin-api --ini $SENLIN_UWSGI_CONF"
@@ -275,6 +278,8 @@ function start_senlin {
 function stop_senlin {
     # Kill the screen windows
     stop_process sl-eng
+    stop_process sl-conductor
+    stop_process sl-health-manager
 
     if [[ "$SENLIN_WSGI_MODE" == "uwsgi" ]]; then
         stop_process sl-api

@@ -23,7 +23,7 @@ import testscenarios
 import testtools
 
 from senlin.common import messaging
-from senlin.engine import scheduler
+from senlin.engine import service
 from senlin.tests.unit.common import utils
 
 
@@ -63,13 +63,13 @@ class SenlinTestCase(testscenarios.WithScenarios,
     def setUp(self):
         super(SenlinTestCase, self).setUp()
         self.setup_logging()
-        scheduler.ENABLE_SLEEP = False
+        service.ENABLE_SLEEP = False
         self.useFixture(fixtures.MonkeyPatch(
             'senlin.common.exception._FATAL_EXCEPTION_FORMAT_ERRORS',
             True))
 
         def enable_sleep():
-            scheduler.ENABLE_SLEEP = True
+            service.ENABLE_SLEEP = True
 
         self.addCleanup(enable_sleep)
         self.addCleanup(cfg.CONF.reset)
@@ -88,8 +88,8 @@ class SenlinTestCase(testscenarios.WithScenarios,
             self._wallclock += self.TIME_STEP
             return self._wallclock
 
-        self.m.StubOutWithMock(scheduler, 'wallclock')
-        scheduler.wallclock = fake_wallclock
+        self.m.StubOutWithMock(service, 'wallclock')
+        service.wallclock = fake_wallclock
 
     def patchobject(self, obj, attr, **kwargs):
         mockfixture = self.useFixture(fixtures.MockPatchObject(obj, attr,

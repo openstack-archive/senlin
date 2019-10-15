@@ -112,7 +112,8 @@ engine_opts = [
                       'considered up.')),
     cfg.IntOpt('scheduler_thread_pool_size',
                default=1000,
-               help=_('Maximum number of threads to use for scheduler.')),
+               help=_('Maximum number of threads to use for the '
+                      'conductor and engine.')),
     cfg.IntOpt('health_manager_thread_pool_size',
                default=1000,
                help=_('Maximum number of threads to use for health manager.')),
@@ -153,7 +154,8 @@ dispatcher_opts = [
                choices=("critical", "error", "warning", "info", "debug"),
                help=_("Lowest event priorities to be dispatched.")),
     cfg.BoolOpt("exclude_derived_actions", default=True,
-                help=_("Exclude derived actions from events dumping."))]
+                help=_("Exclude derived actions from events dumping.")),
+]
 
 cfg.CONF.register_group(dispatcher_group)
 cfg.CONF.register_opts(dispatcher_opts, group=dispatcher_group)
@@ -177,6 +179,16 @@ authentication_opts = [
 cfg.CONF.register_group(authentication_group)
 cfg.CONF.register_opts(authentication_opts, group=authentication_group)
 
+# Conductor group
+conductor_group = cfg.OptGroup('conductor')
+conductor_opts = [
+    cfg.IntOpt('workers',
+               default=1,
+               help=_('Number of senlin-conductor processes.')),
+]
+cfg.CONF.register_group(conductor_group)
+cfg.CONF.register_opts(conductor_opts, group=conductor_group)
+
 # Health Manager Group
 healthmgr_group = cfg.OptGroup('health_manager')
 healthmgr_opts = [
@@ -186,6 +198,9 @@ healthmgr_opts = [
                help=_("Exchange name for heat notifications.")),
     cfg.MultiStrOpt("enabled_endpoints", default=['nova', 'heat'],
                     help=_("Notification endpoints to enable.")),
+    cfg.IntOpt('workers',
+               default=1,
+               help=_('Number of senlin-health-manager processes.')),
 ]
 cfg.CONF.register_group(healthmgr_group)
 cfg.CONF.register_opts(healthmgr_opts, group=healthmgr_group)
@@ -283,6 +298,7 @@ def list_opts():
     yield 'DEFAULT', service_opts
     yield 'DEFAULT', event_opts
     yield authentication_group.name, authentication_opts
+    yield conductor_group.name, conductor_opts
     yield dispatcher_group.name, dispatcher_opts
     yield healthmgr_group.name, healthmgr_opts
     yield revision_group.name, revision_opts

@@ -15,19 +15,18 @@ from oslo_messaging.rpc import dispatcher as rpc
 import six
 
 from senlin.common import exception as exc
+from senlin.conductor import service
 from senlin.engine import environment
-from senlin.engine import service
 from senlin.objects.requests import policy_type as orpt
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
 
 class PolicyTypeTest(base.SenlinTestCase):
-
     def setUp(self):
         super(PolicyTypeTest, self).setUp()
         self.ctx = utils.dummy_context(project='policy_type_test_project')
-        self.eng = service.EngineService('host-a', 'topic-a')
+        self.svc = service.ConductorService('host-a', 'topic-a')
 
     @mock.patch.object(environment, 'global_env')
     def test_policy_type_list(self, mock_env):
@@ -36,7 +35,7 @@ class PolicyTypeTest(base.SenlinTestCase):
         mock_env.return_value = x_env
 
         req = orpt.PolicyTypeListRequest()
-        types = self.eng.policy_type_list(self.ctx, req.obj_to_primitive())
+        types = self.svc.policy_type_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([{'foo': 'bar'}], types)
         mock_env.assert_called_once_with()
@@ -53,7 +52,7 @@ class PolicyTypeTest(base.SenlinTestCase):
         mock_env.return_value = x_env
 
         req = orpt.PolicyTypeGetRequest(type_name='FAKE_TYPE')
-        result = self.eng.policy_type_get(self.ctx, req.obj_to_primitive())
+        result = self.svc.policy_type_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual(
             {
@@ -76,7 +75,7 @@ class PolicyTypeTest(base.SenlinTestCase):
 
         req = orpt.PolicyTypeGetRequest(type_name='FAKE_TYPE')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.policy_type_get,
+                               self.svc.policy_type_get,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])

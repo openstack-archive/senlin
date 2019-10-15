@@ -17,8 +17,8 @@ import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
+from senlin.conductor import service
 from senlin.engine.receivers import base as rb
-from senlin.engine import service
 from senlin.objects import cluster as co
 from senlin.objects import receiver as ro
 from senlin.objects.requests import receivers as orro
@@ -27,11 +27,10 @@ from senlin.tests.unit.common import utils
 
 
 class ReceiverTest(base.SenlinTestCase):
-
     def setUp(self):
         super(ReceiverTest, self).setUp()
         self.ctx = utils.dummy_context(project='receiver_test_project')
-        self.eng = service.EngineService('host-a', 'topic-a')
+        self.svc = service.ConductorService('host-a', 'topic-a')
 
     @mock.patch.object(ro.Receiver, 'get_all')
     def test_receiver_list(self, mock_get):
@@ -40,7 +39,7 @@ class ReceiverTest(base.SenlinTestCase):
         mock_get.return_value = [fake_obj]
 
         req = orro.ReceiverListRequest()
-        result = self.eng.receiver_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.receiver_list(self.ctx, req.obj_to_primitive())
 
         self.assertIsInstance(result, list)
         self.assertEqual([{'FOO': 'BAR'}], result)
@@ -58,7 +57,7 @@ class ReceiverTest(base.SenlinTestCase):
                                        action=['CLUSTER_RESIZE'],
                                        cluster_id=['123abc'],
                                        user=['user123'])
-        result = self.eng.receiver_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.receiver_list(self.ctx, req.obj_to_primitive())
 
         self.assertIsInstance(result, list)
         self.assertEqual([{'FOO': 'BAR'}], result)
@@ -76,19 +75,19 @@ class ReceiverTest(base.SenlinTestCase):
 
         req = orro.ReceiverListRequest(project_safe=False)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_list,
+                               self.svc.receiver_list,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.Forbidden, ex.exc_info[0])
 
         self.ctx.is_admin = True
 
-        result = self.eng.receiver_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.receiver_list(self.ctx, req.obj_to_primitive())
         self.assertEqual([], result)
         mock_get.assert_called_once_with(self.ctx, project_safe=False)
         mock_get.reset_mock()
 
         req = orro.ReceiverListRequest(project_safe=True)
-        result = self.eng.receiver_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.receiver_list(self.ctx, req.obj_to_primitive())
         self.assertEqual([], result)
         mock_get.assert_called_once_with(self.ctx, project_safe=True)
         mock_get.reset_mock()
@@ -110,7 +109,7 @@ class ReceiverTest(base.SenlinTestCase):
             name='r1', type=consts.RECEIVER_WEBHOOK, cluster_id='C1',
             action=consts.CLUSTER_RESIZE)
 
-        result = self.eng.receiver_create(self.ctx, req.obj_to_primitive())
+        result = self.svc.receiver_create(self.ctx, req.obj_to_primitive())
 
         self.assertIsInstance(result, dict)
         self.assertEqual('FAKE_RECEIVER', result['id'])
@@ -126,7 +125,7 @@ class ReceiverTest(base.SenlinTestCase):
             name='r1', type=consts.RECEIVER_WEBHOOK, cluster_id='C1',
             action=consts.CLUSTER_RESIZE, params={'FOO': 'BAR'})
 
-        self.eng.receiver_create(self.ctx, req.obj_to_primitive())
+        self.svc.receiver_create(self.ctx, req.obj_to_primitive())
         mock_create.assert_called_once_with(
             self.ctx, 'webhook', fake_cluster, consts.CLUSTER_RESIZE,
             name='r1', user=self.ctx.user_id, project=self.ctx.project_id,
@@ -141,7 +140,7 @@ class ReceiverTest(base.SenlinTestCase):
             name='r1', type=consts.RECEIVER_MESSAGE)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_create,
+                               self.svc.receiver_create,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -156,7 +155,7 @@ class ReceiverTest(base.SenlinTestCase):
             action=consts.CLUSTER_RESIZE)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_create,
+                               self.svc.receiver_create,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -173,7 +172,7 @@ class ReceiverTest(base.SenlinTestCase):
             action=consts.CLUSTER_CREATE)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_create,
+                               self.svc.receiver_create,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -191,7 +190,7 @@ class ReceiverTest(base.SenlinTestCase):
             action=consts.CLUSTER_RESIZE)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_create,
+                               self.svc.receiver_create,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.Forbidden, ex.exc_info[0])
 
@@ -204,7 +203,7 @@ class ReceiverTest(base.SenlinTestCase):
 
         # an admin can do this
         self.ctx.is_admin = True
-        result = self.eng.receiver_create(self.ctx, req.obj_to_primitive())
+        result = self.svc.receiver_create(self.ctx, req.obj_to_primitive())
         self.assertIsInstance(result, dict)
 
     @mock.patch.object(co.Cluster, 'find')
@@ -220,7 +219,7 @@ class ReceiverTest(base.SenlinTestCase):
 
         for req in [req1, req2]:
             ex = self.assertRaises(rpc.ExpectedException,
-                                   self.eng.receiver_create,
+                                   self.svc.receiver_create,
                                    self.ctx, req.obj_to_primitive())
             self.assertEqual(exc.BadRequest, ex.exc_info[0])
             self.assertEqual("Cluster identity is required for creating "
@@ -239,7 +238,7 @@ class ReceiverTest(base.SenlinTestCase):
 
         for req in [req1, req2]:
             ex = self.assertRaises(rpc.ExpectedException,
-                                   self.eng.receiver_create,
+                                   self.svc.receiver_create,
                                    self.ctx, req.obj_to_primitive())
             self.assertEqual(exc.BadRequest, ex.exc_info[0])
             self.assertEqual("Action name is required for creating webhook "
@@ -255,7 +254,7 @@ class ReceiverTest(base.SenlinTestCase):
         mock_create.return_value = fake_receiver
 
         req = orro.ReceiverCreateRequestBody(name='r1', type='message')
-        result = self.eng.receiver_create(self.ctx, req.obj_to_primitive())
+        result = self.svc.receiver_create(self.ctx, req.obj_to_primitive())
 
         self.assertIsInstance(result, dict)
         self.assertEqual('FAKE_RECEIVER', result['id'])
@@ -270,7 +269,7 @@ class ReceiverTest(base.SenlinTestCase):
         fake_obj.to_dict.return_value = {'FOO': 'BAR'}
 
         req = orro.ReceiverGetRequest(identity='FAKE_ID')
-        res = self.eng.receiver_get(self.ctx, req.obj_to_primitive())
+        res = self.svc.receiver_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'FOO': 'BAR'}, res)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_ID')
@@ -281,7 +280,7 @@ class ReceiverTest(base.SenlinTestCase):
 
         req = orro.ReceiverGetRequest(identity='Bogus')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_get, self.ctx,
+                               self.svc.receiver_get, self.ctx,
                                req.obj_to_primitive())
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
 
@@ -301,7 +300,7 @@ class ReceiverTest(base.SenlinTestCase):
 
         req = orro.ReceiverUpdateRequest(**params)
 
-        result = self.eng.receiver_update(self.ctx, req.obj_to_primitive())
+        result = self.svc.receiver_update(self.ctx, req.obj_to_primitive())
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'PID')
         mock_load.assert_called_once_with(self.ctx, receiver_obj=x_obj)
@@ -318,7 +317,7 @@ class ReceiverTest(base.SenlinTestCase):
         kwargs = {'identity': 'Bogus', 'name': 'NEW_NAME'}
         req = orro.ReceiverUpdateRequest(**kwargs)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_update,
+                               self.svc.receiver_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -339,7 +338,7 @@ class ReceiverTest(base.SenlinTestCase):
         kwargs = {'name': 'OLD_NAME', 'identity': 'PID'}
         req = orro.ReceiverUpdateRequest(**kwargs)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_update,
+                               self.svc.receiver_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -358,7 +357,7 @@ class ReceiverTest(base.SenlinTestCase):
         mock_find.return_value = fake_obj
         req = orro.ReceiverDeleteRequest(identity='FAKE_RECEIVER')
 
-        result = self.eng.receiver_delete(self.ctx, req.obj_to_primitive())
+        result = self.svc.receiver_delete(self.ctx, req.obj_to_primitive())
 
         self.assertIsNone(result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_RECEIVER')
@@ -370,7 +369,7 @@ class ReceiverTest(base.SenlinTestCase):
 
         req = orro.ReceiverDeleteRequest(identity='Bogus')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_delete, self.ctx,
+                               self.svc.receiver_delete, self.ctx,
                                req.obj_to_primitive())
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
 
@@ -386,7 +385,7 @@ class ReceiverTest(base.SenlinTestCase):
         mock_load.return_value = fake_receiver
 
         req = orro.ReceiverNotifyRequest(identity='FAKE_RECEIVER')
-        result = self.eng.receiver_notify(self.ctx, req.obj_to_primitive())
+        result = self.svc.receiver_notify(self.ctx, req.obj_to_primitive())
 
         self.assertIsNone(result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_RECEIVER')
@@ -400,7 +399,7 @@ class ReceiverTest(base.SenlinTestCase):
 
         req = orro.ReceiverNotifyRequest(identity='Bogus')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_notify, self.ctx,
+                               self.svc.receiver_notify, self.ctx,
                                req.obj_to_primitive())
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
 
@@ -413,7 +412,7 @@ class ReceiverTest(base.SenlinTestCase):
 
         req = orro.ReceiverNotifyRequest(identity='FAKE_RECEIVER')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_notify, self.ctx,
+                               self.svc.receiver_notify, self.ctx,
                                req.obj_to_primitive())
         self.assertEqual(exc.Forbidden, ex.exc_info[0])
 
@@ -427,6 +426,6 @@ class ReceiverTest(base.SenlinTestCase):
 
         req = orro.ReceiverNotifyRequest(identity='FAKE_RECEIVER')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.receiver_notify, self.ctx,
+                               self.svc.receiver_notify, self.ctx,
                                req.obj_to_primitive())
         self.assertEqual(exc.BadRequest, ex.exc_info[0])

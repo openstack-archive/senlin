@@ -19,8 +19,8 @@ from oslo_utils import uuidutils
 import six
 
 from senlin.common import exception as exc
+from senlin.conductor import service
 from senlin.engine import environment
-from senlin.engine import service
 from senlin.objects import profile as po
 from senlin.objects.requests import profiles as vorp
 from senlin.profiles import base as pb
@@ -30,11 +30,10 @@ from senlin.tests.unit import fakes
 
 
 class ProfileTest(base.SenlinTestCase):
-
     def setUp(self):
         super(ProfileTest, self).setUp()
         self.ctx = utils.dummy_context(project='profile_test_project')
-        self.eng = service.EngineService('host-a', 'topic-a')
+        self.svc = service.ConductorService('host-a', 'topic-a')
 
     def _setup_fakes(self):
         """Set up fake profile for the purpose of testing.
@@ -64,7 +63,7 @@ class ProfileTest(base.SenlinTestCase):
         mock_get.return_value = [x_obj_1, x_obj_2]
         req = vorp.ProfileListRequest(project_safe=True)
 
-        result = self.eng.profile_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.profile_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
         mock_get.assert_called_once_with(self.ctx, project_safe=True)
@@ -83,7 +82,7 @@ class ProfileTest(base.SenlinTestCase):
         }
         req = vorp.ProfileListRequest(**params)
 
-        result = self.eng.profile_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.profile_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([], result)
         mock_get.assert_called_once_with(self.ctx, limit=10, marker=marker,
@@ -102,7 +101,7 @@ class ProfileTest(base.SenlinTestCase):
                                              metadata={'foo': 'bar'})
         req = vorp.ProfileCreateRequest(profile=body)
 
-        result = self.eng.profile_create(self.ctx, req.obj_to_primitive())
+        result = self.svc.profile_create(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar'}, result)
 
@@ -123,7 +122,7 @@ class ProfileTest(base.SenlinTestCase):
         body = vorp.ProfileCreateRequestBody(name='FAKE_NAME', spec=spec)
         req = vorp.ProfileCreateRequest(profile=body)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_create,
+                               self.svc.profile_create,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("A profile named 'FAKE_NAME' already exists.",
@@ -139,7 +138,7 @@ class ProfileTest(base.SenlinTestCase):
         req = vorp.ProfileCreateRequest(profile=body)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_create,
+                               self.svc.profile_create,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -153,7 +152,7 @@ class ProfileTest(base.SenlinTestCase):
         body = vorp.ProfileCreateRequestBody(name='foo', spec=self.spec)
         req = vorp.ProfileCreateRequest(profile=body)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_create,
+                               self.svc.profile_create,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
@@ -187,7 +186,7 @@ class ProfileTest(base.SenlinTestCase):
         body = vorp.ProfileValidateRequestBody(spec=self.spec)
         request = vorp.ProfileValidateRequest(profile=body)
 
-        resp = self.eng.profile_validate(self.ctx, request.obj_to_primitive())
+        resp = self.svc.profile_validate(self.ctx, request.obj_to_primitive())
 
         self.assertEqual(expected_resp, resp)
 
@@ -201,7 +200,7 @@ class ProfileTest(base.SenlinTestCase):
         request = vorp.ProfileValidateRequest(profile=body)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_validate,
+                               self.svc.profile_validate,
                                self.ctx, request.obj_to_primitive())
         self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
         self.assertEqual('BOOM',
@@ -215,7 +214,7 @@ class ProfileTest(base.SenlinTestCase):
         req = vorp.ProfileGetRequest(identity='FAKE_PROFILE')
         project_safe = not self.ctx.is_admin
 
-        result = self.eng.profile_get(self.ctx, req.obj_to_primitive())
+        result = self.svc.profile_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(
@@ -227,7 +226,7 @@ class ProfileTest(base.SenlinTestCase):
                                                      id='Bogus')
         req = vorp.ProfileGetRequest(identity='Bogus')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_get, self.ctx,
+                               self.svc.profile_get, self.ctx,
                                req.obj_to_primitive())
         project_safe = not self.ctx.is_admin
 
@@ -252,7 +251,7 @@ class ProfileTest(base.SenlinTestCase):
         req_body = vorp.ProfileUpdateRequestBody(**params)
         req = vorp.ProfileUpdateRequest(identity='PID', profile=req_body)
 
-        result = self.eng.profile_update(self.ctx, req.obj_to_primitive())
+        result = self.svc.profile_update(self.ctx, req.obj_to_primitive())
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'PID')
         mock_load.assert_called_once_with(self.ctx, profile=x_obj)
@@ -274,7 +273,7 @@ class ProfileTest(base.SenlinTestCase):
         req_body = vorp.ProfileUpdateRequestBody(**params)
         req = vorp.ProfileUpdateRequest(identity='PID', profile=req_body)
 
-        result = self.eng.profile_update(self.ctx, req.obj_to_primitive())
+        result = self.svc.profile_update(self.ctx, req.obj_to_primitive())
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'PID')
         mock_load.assert_called_once_with(self.ctx, profile=x_obj)
@@ -292,7 +291,7 @@ class ProfileTest(base.SenlinTestCase):
         req = vorp.ProfileUpdateRequest(identity='Bogus', profile=req_body)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_update,
+                               self.svc.profile_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -314,7 +313,7 @@ class ProfileTest(base.SenlinTestCase):
         req = vorp.ProfileUpdateRequest(identity='PID', profile=req_body)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_update,
+                               self.svc.profile_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -334,7 +333,7 @@ class ProfileTest(base.SenlinTestCase):
         mock_delete.return_value = None
 
         req = vorp.ProfileDeleteRequest(identity='PROFILE_ID')
-        result = self.eng.profile_delete(self.ctx, req.obj_to_primitive())
+        result = self.svc.profile_delete(self.ctx, req.obj_to_primitive())
 
         self.assertIsNone(result)
         mock_find.assert_called_once_with(self.ctx, 'PROFILE_ID')
@@ -347,7 +346,7 @@ class ProfileTest(base.SenlinTestCase):
 
         req = vorp.ProfileDeleteRequest(identity='Bogus')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_delete, self.ctx,
+                               self.svc.profile_delete, self.ctx,
                                req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -366,7 +365,7 @@ class ProfileTest(base.SenlinTestCase):
 
         req = vorp.ProfileDeleteRequest(identity='PROFILE_ID')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_delete,
+                               self.svc.profile_delete,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])

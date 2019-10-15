@@ -234,7 +234,10 @@ Finalize installation
 ::
 
      # systemctl enable openstack-senlin-api.service \
-       openstack-senlin-engine.service
+        openstack-senlin-conductor.service \
+        openstack-senlin-engine.service \
+        openstack-senlin-health-manager.service
      # systemctl start openstack-senlin-api.service \
-       openstack-senlin-engine.service
-
+        openstack-senlin-conductor.service \
+        openstack-senlin-engine.service \
+        openstack-senlin-health-manager.service

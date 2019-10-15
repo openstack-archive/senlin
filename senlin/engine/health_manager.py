@@ -16,15 +16,12 @@ Health Manager is responsible for monitoring the health of the clusters and
 trigger corresponding actions to recover the clusters based on the pre-defined
 health policies.
 """
-
 from collections import defaultdict
 from collections import namedtuple
 import eventlet
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging as messaging
-from oslo_service import service
-from oslo_service import threadgroup
 from oslo_utils import timeutils
 import re
 import tenacity
@@ -40,7 +37,7 @@ from senlin.rpc import client as rpc_client
 LOG = logging.getLogger(__name__)
 
 
-def _chase_up(start_time, interval, name='Poller'):
+def chase_up(start_time, interval, name='Poller'):
     """Utility function to check if there are missed intervals.
 
     :param start_time: A time object representing the starting time.
@@ -463,13 +460,13 @@ class HealthCheck(object):
             if not self.health_check_types:
                 LOG.error("No health check types found for cluster: %s",
                           self.cluster_id)
-                return _chase_up(start_time, self.interval)
+                return chase_up(start_time, self.interval)
 
             cluster = objects.Cluster.get(self.ctx, self.cluster_id,
                                           project_safe=False)
             if not cluster:
                 LOG.warning("Cluster (%s) is not found.", self.cluster_id)
-                return _chase_up(start_time, self.interval)
+                return chase_up(start_time, self.interval)
 
             ctx = context.get_service_context(user_id=cluster.user,
                                               project_id=cluster.project)
@@ -500,7 +497,7 @@ class HealthCheck(object):
             LOG.warning("Error while performing health check: %s", ex)
 
         finally:
-            return _chase_up(start_time, self.interval)
+            return chase_up(start_time, self.interval)
 
     def _check_node_health(self, ctx, node, cluster):
         node_is_healthy = True
@@ -613,12 +610,11 @@ class HealthCheck(object):
 
 
 class RuntimeHealthRegistry(object):
-
     def __init__(self, ctx, engine_id, thread_group):
         self.ctx = ctx
         self.engine_id = engine_id
         self.rt = {}
-        self.TG = thread_group
+        self.tg = thread_group
         self.health_check_types = defaultdict(lambda: [])
 
     @property
@@ -736,7 +732,7 @@ class RuntimeHealthRegistry(object):
         if entry.timer:
             LOG.error("Health check for cluster %s already exists", cluster_id)
             return None
-        timer = self.TG.add_dynamic_timer(entry.execute_health_check, None,
+        timer = self.tg.add_dynamic_timer(entry.execute_health_check, None,
                                           None)
         if timer:
             entry.timer = timer
@@ -764,7 +760,7 @@ class RuntimeHealthRegistry(object):
             return
 
         project = cluster.project
-        listener = self.TG.add_thread(ListenerProc, exchange, project,
+        listener = self.tg.add_thread(ListenerProc, exchange, project,
                                       cluster_id, entry.recover_action)
         if listener:
             entry.listener = listener
@@ -817,7 +813,7 @@ class RuntimeHealthRegistry(object):
 
             try:
                 # tell threadgroup to remove timer
-                self.TG.timer_done(entry.timer)
+                self.tg.timer_done(entry.timer)
             except ValueError:
                 pass
             finally:
@@ -825,7 +821,7 @@ class RuntimeHealthRegistry(object):
 
         if entry.listener:
             try:
-                self.TG.thread_done(entry.listener)
+                self.tg.thread_done(entry.listener)
                 entry.listener.stop()
             except ValueError:
                 pass
@@ -860,101 +856,6 @@ class RuntimeHealthRegistry(object):
             self.registries[registry.cluster_id] = entry
             if registry.enabled:
                 self.add_health_check(self.registries[registry.cluster_id])
-
-
-class HealthManager(service.Service):
-
-    def __init__(self, engine_service, topic, version):
-        super(HealthManager, self).__init__()
-
-        self.TG = threadgroup.ThreadGroup(
-            thread_pool_size=cfg.CONF.health_manager_thread_pool_size)
-        self.engine_id = engine_service.engine_id
-        self.topic = topic
-        self.version = version
-        self.ctx = context.get_admin_context()
-        self.rpc_client = rpc_client.EngineClient()
-        self.health_registry = RuntimeHealthRegistry(
-            ctx=self.ctx, engine_id=self.engine_id, thread_group=self.TG)
-
-    def task(self):
-        """Task that is queued on the health manager thread group.
-
-        The task is here so that the service always has something to wait()
-        on, or else the process will exit.
-        """
-        start_time = timeutils.utcnow(True)
-
-        try:
-            self.health_registry.load_runtime_registry()
-        except Exception as ex:
-            LOG.error("Failed when loading runtime for health manager: %s", ex)
-        return _chase_up(start_time, cfg.CONF.periodic_interval,
-                         name='Health manager task')
-
-    def start(self):
-        """Start the health manager RPC server.
-
-        Note that the health manager server uses JSON serializer for parameter
-        passing. We should be careful when changing this interface.
-        """
-        super(HealthManager, self).start()
-        self.target = messaging.Target(server=self.engine_id, topic=self.topic,
-                                       version=self.version)
-        server = rpc.get_rpc_server(self.target, self)
-        server.start()
-
-        self.TG.add_dynamic_timer(self.task, None, cfg.CONF.periodic_interval)
-
-    def stop(self):
-        self.TG.stop_timers()
-        super(HealthManager, self).stop()
-
-    @property
-    def registries(self):
-        return self.health_registry.registries
-
-    def listening(self, ctx):
-        """Respond to confirm that the rpc service is still alive."""
-        return True
-
-    def register_cluster(self, ctx, cluster_id, interval=None,
-                         node_update_timeout=None, params=None,
-                         enabled=True):
-        """Register a cluster for health checking.
-
-        :param ctx: The context of notify request.
-        :param cluster_id: The ID of the cluster to be unregistered.
-        :param interval: Interval of the health check.
-        :param node_update_timeout: Time to wait before declairing a node
-        unhealthy.
-        :param params: Params to be passed to health check.
-        :param enabled: Set's if the health check is enabled or disabled.
-        :return: None
-        """
-        LOG.info("Registering health check for cluster %s.", cluster_id)
-        self.health_registry.register_cluster(
-            cluster_id=cluster_id,
-            interval=interval,
-            node_update_timeout=node_update_timeout,
-            params=params,
-            enabled=enabled)
-
-    def unregister_cluster(self, ctx, cluster_id):
-        """Unregister a cluster from health checking.
-
-        :param ctx: The context of notify request.
-        :param cluster_id: The ID of the cluster to be unregistered.
-        :return: None
-        """
-        LOG.info("Unregistering health check for cluster %s.", cluster_id)
-        self.health_registry.unregister_cluster(cluster_id)
-
-    def enable_cluster(self, ctx, cluster_id, params=None):
-        self.health_registry.enable_cluster(cluster_id)
-
-    def disable_cluster(self, ctx, cluster_id, params=None):
-        self.health_registry.disable_cluster(cluster_id)
 
 
 def notify(engine_id, method, **kwargs):
