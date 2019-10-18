@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Add tainted field to nodes.  A node with tainted set to True will be
+    selected first for scale-in operations.

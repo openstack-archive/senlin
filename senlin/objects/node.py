@@ -46,6 +46,7 @@ class Node(base.SenlinObject, base.VersionedObjectDictCompat):
         'dependents': fields.JsonField(nullable=True),
         'profile_name': fields.StringField(nullable=True),
         'profile_created_at': fields.StringField(nullable=True),
+        'tainted': fields.BooleanField(),
     }
 
     @staticmethod
@@ -61,6 +62,9 @@ class Node(base.SenlinObject, base.VersionedObjectDictCompat):
             elif field == 'profile_created_at':
                 p = db_obj['profile']
                 obj['profile_created_at'] = p.created_at if p else None
+            elif field == 'tainted':
+                p = db_obj[field]
+                obj[field] = p if p else False
             else:
                 obj[field] = db_obj[field]
 
@@ -181,4 +185,5 @@ class Node(base.SenlinObject, base.VersionedObjectDictCompat):
             'metadata': self.metadata,
             'dependents': self.dependents,
             'profile_name': self.profile_name,
+            'tainted': self.tainted,
         }

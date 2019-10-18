@@ -107,6 +107,7 @@ def create_node(ctx, cluster, profile, **kwargs):
         'meta_data': jsonutils.loads('{"foo": "123"}'),
         'data': jsonutils.loads('{"key1": "value1"}'),
         'dependents': {},
+        'tainted': False,
     }
     values.update(kwargs)
     return db_api.node_create(ctx, values)

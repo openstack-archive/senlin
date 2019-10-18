@@ -55,7 +55,8 @@ The valid values for the "``criteria`` property include:
 .. NOTE::
 
   There is an implicit rule (criteria) when electing victim nodes. Senlin
-  engine always rank those nodes which are not in ACTIVE state before others.
+  engine always rank those nodes which are not in ACTIVE state or which are
+  marked as tainted before others.
 
 There are more several actions that can trigger a deletion policy. Some of
 them may already carry a list of candidates to remove, e.g.

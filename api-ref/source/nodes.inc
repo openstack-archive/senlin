@@ -67,6 +67,7 @@ Response Parameters
   - role: role
   - status: node_status
   - status_reason: status_reason
+  - tainted: tainted
   - updated_at: updated_at
   - user: user
 
@@ -142,6 +143,7 @@ Response Parameters
   - role: role
   - status: node_status
   - status_reason: status_reason
+  - tainted: tainted
   - updated_at: updated_at
   - user: user
 
@@ -220,6 +222,7 @@ Response Parameters
   - role: role
   - status: node_status
   - status_reason: status_reason
+  - tainted: tainted
   - updated_at: updated_at
   - user: user
 
@@ -346,6 +349,7 @@ Response Parameters
   - role: role
   - status: node_status
   - status_reason: status_reason
+  - tainted: tainted
   - updated_at: updated_at
   - user: user
 
@@ -390,6 +394,7 @@ Request Parameters
   - profile_id: profile_identity
   - role: role_req
   - metadata: metadata_req
+  - tainted: tainted_req
 
 Request Example
 ---------------
@@ -422,6 +427,7 @@ Response Parameters
   - role: role
   - status: node_status
   - status_reason: status_reason
+  - tainted: tainted
   - updated_at: updated_at
   - user: user
 

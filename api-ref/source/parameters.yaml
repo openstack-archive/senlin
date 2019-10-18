@@ -1425,6 +1425,24 @@ status_reason:
     The string representation of the reason why the object has transited to
     its current status.
 
+tainted:
+  type: bool
+  in: body
+  required: True
+  description: |
+    A boolean indicating whether a node is considered tainted. Tainted nodes
+    are selected first during scale-in operations.  This field is only
+    returned starting with API microversion 1.13 or greater.
+
+tainted_req:
+  type: bool
+  in: body
+  required: False
+  description: |
+    A boolean indicating whether a node is considered tainted. Tainted nodes
+    are selected first during scale-in operations.  This parameter is only
+    accepted starting with API microversion 1.13 or greater.
+
 timeout:
   type: integer
   in: body

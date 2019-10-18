@@ -63,6 +63,7 @@ class Node(object):
         self.data = kwargs.get('data', {})
         self.metadata = kwargs.get('metadata', {})
         self.dependents = kwargs.get('dependents', {})
+        self.tainted = False
         self.rt = {}
 
         if context is not None:
@@ -111,6 +112,7 @@ class Node(object):
             'meta_data': self.metadata,
             'data': self.data,
             'dependents': self.dependents,
+            'tainted': self.tainted,
         }
 
         if self.id:
@@ -148,6 +150,7 @@ class Node(object):
             'data': obj.data,
             'metadata': obj.metadata,
             'dependents': obj.dependents,
+            'tainted': obj.tainted,
         }
 
         return cls(obj.name, obj.profile_id, obj.cluster_id,
@@ -268,7 +271,7 @@ class Node(object):
             return False
 
         props = dict([(k, v) for k, v in params.items()
-                      if k in ('name', 'role', 'metadata')])
+                      if k in ('name', 'role', 'metadata', 'tainted')])
         if new_profile_id:
             props['profile_id'] = new_profile_id
             self.rt['profile'] = pb.Profile.load(context,

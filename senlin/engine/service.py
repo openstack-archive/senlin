@@ -1756,6 +1756,9 @@ class EngineService(service.Service):
         if req.obj_attr_is_set('metadata'):
             if req.metadata != node.metadata:
                 inputs['metadata'] = req.metadata
+        if req.obj_attr_is_set('tainted'):
+            if req.tainted != node.tainted:
+                inputs['tainted'] = req.tainted
 
         if not inputs:
             msg = _("No property needs an update.")

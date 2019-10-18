@@ -122,3 +122,7 @@ it can be used by both users and developers.
 - Added ``action_update`` API. This API enables users to update the status of
   an action (only CANCELLED is supported). An action that spawns dependent
   actions will attempt to cancel all dependent actions.
+
+1.13
+----
+- Added ``tainted`` to responses returned by node APIs.
