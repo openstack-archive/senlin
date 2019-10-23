@@ -10,6 +10,7 @@
       jobs:
         - senlin-dsvm-tempest-py27-api
         - senlin-dsvm-tempest-py3-api
+        - senlin-tempest-api-ipv6-only
         - senlin-dsvm-tempest-py27-functional
         - senlin-dsvm-tempest-py3-functional
         - senlin-dsvm-tempest-py27-integration:
@@ -23,6 +24,7 @@
       jobs:
         - senlin-dsvm-tempest-py27-api
         - senlin-dsvm-tempest-py35-api
+        - senlin-tempest-api-ipv6-only
         - senlin-dsvm-tempest-py27-functional
         - senlin-dsvm-tempest-py35-functional
     experimental:
@@ -34,15 +36,15 @@
     parent: devstack-tempest
     description: Senlin Devstack tempest base job
     timeout: 7800
-    required-projects:
+    required-projects: &base_required_projects
       - openstack/senlin
       - openstack/senlin-tempest-plugin
-    irrelevant-files:
+    irrelevant-files: &base_irrelevant_files
       - ^.*\.rst$
       - ^api-ref/.*$
       - ^doc/.*$
       - ^releasenotes/.*$
-    vars:
+    vars: &base_vars
       tox_envlist: all
       devstack_services:
         tempest: true
@@ -159,6 +161,23 @@
       - openstack/zaqar
       - openstack/zaqar-ui
       - openstack/zaqar-tempest-plugin
+
+- job:
+    name: senlin-tempest-api-ipv6-only
+    parent: devstack-tempest-ipv6
+    description: |
+      Senlin devstack tempest tests job for IPv6-only deployment
+    irrelevant-files: *base_irrelevant_files
+    required-projects: *base_required_projects
+    timeout: 7800
+    vars:
+      <<: *base_vars
+      tempest_test_regex: senlin_tempest_plugin.tests.api
+      devstack_local_conf:
+        post-config:
+          $SENLIN_CONF:
+             DEFAULT:
+               cloud_backend: openstack_test
 
 - job:
     name: rally-dsvm-senlin-senlin
