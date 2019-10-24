@@ -66,13 +66,27 @@ class NodeGetRequest(base.SenlinObject):
 @base.SenlinObjectRegistry.register
 class NodeUpdateRequest(base.SenlinObject):
 
+    VERSION = '1.1'
+    VERSION_MAP = {
+        '1.13': '1.1'
+    }
+
     fields = {
         'identity': fields.StringField(),
         'metadata': fields.JsonField(nullable=True),
         'name': fields.NameField(nullable=True),
         'profile_id': fields.StringField(nullable=True),
-        'role': fields.StringField(nullable=True)
+        'role': fields.StringField(nullable=True),
+        'tainted': fields.BooleanField(nullable=True)
     }
+
+    def obj_make_compatible(self, primitive, target_version):
+        super(NodeUpdateRequest, self).obj_make_compatible(
+            primitive, target_version)
+        target_version = versionutils.convert_version_to_tuple(target_version)
+        if target_version < (1, 13):
+            if 'tainted' in primitive['senlin_object.data']:
+                del primitive['senlin_object.data']['tainted']
 
 
 @base.SenlinObjectRegistry.register

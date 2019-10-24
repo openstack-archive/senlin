@@ -129,6 +129,7 @@ class TestNode(base.SenlinTestCase):
             'metadata': node.metadata,
             'dependents': node.dependents,
             'profile_name': node.profile_name,
+            'tainted': False,
         }
 
         result = no.Node.get(self.ctx, node.id)

@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
 import mock
 import six
 from webob import exc
@@ -67,6 +68,90 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         obj = mock.Mock()
         mock_parse.return_value = obj
         mock_call.return_value = engine_resp
+
+        result = self.controller.index(req)
+
+        self.assertEqual(engine_resp, result['nodes'])
+        mock_parse.assert_called_once_with(
+            'NodeListRequest', req, {'project_safe': True})
+        mock_call.assert_called_once_with(
+            req.context, 'node_list', obj)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_node_index_without_tainted(self, mock_call, mock_parse,
+                                        mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        req = self._get('/nodes', version='1.12')
+
+        engine_resp = [
+            {
+                u'id': u'aaaa-bbbb-cccc',
+                u'name': u'node-1',
+                u'cluster_id': None,
+                u'physical_id': None,
+                u'profile_id': u'pppp-rrrr-oooo-ffff',
+                u'profile_name': u'my_stack_profile',
+                u'index': 1,
+                u'role': None,
+                u'init_time': u'2015-01-23T13:06:00Z',
+                u'created_time': u'2015-01-23T13:07:22Z',
+                u'updated_time': None,
+                u'status': u'ACTIVE',
+                u'status_reason': u'Node successfully created',
+                u'data': {},
+                u'metadata': {},
+                u'tainted': False,
+            }
+        ]
+
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.return_value = copy.deepcopy(engine_resp)
+
+        result = self.controller.index(req)
+
+        # list call for version 1.12 should have tainted field removed
+        # remove tainted field from expected response
+        engine_resp[0].pop('tainted')
+
+        self.assertEqual(engine_resp, result['nodes'])
+        mock_parse.assert_called_once_with(
+            'NodeListRequest', req, {'project_safe': True})
+        mock_call.assert_called_once_with(
+            req.context, 'node_list', obj)
+
+    @mock.patch.object(util, 'parse_request')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_node_index_with_tainted(self, mock_call, mock_parse,
+                                     mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        req = self._get('/nodes', version='1.13')
+
+        engine_resp = [
+            {
+                u'id': u'aaaa-bbbb-cccc',
+                u'name': u'node-1',
+                u'cluster_id': None,
+                u'physical_id': None,
+                u'profile_id': u'pppp-rrrr-oooo-ffff',
+                u'profile_name': u'my_stack_profile',
+                u'index': 1,
+                u'role': None,
+                u'init_time': u'2015-01-23T13:06:00Z',
+                u'created_time': u'2015-01-23T13:07:22Z',
+                u'updated_time': None,
+                u'status': u'ACTIVE',
+                u'status_reason': u'Node successfully created',
+                u'data': {},
+                u'metadata': {},
+                u'tainted': False,
+            }
+        ]
+
+        obj = mock.Mock()
+        mock_parse.return_value = obj
+        mock_call.return_value = copy.deepcopy(engine_resp)
 
         result = self.controller.index(req)
 

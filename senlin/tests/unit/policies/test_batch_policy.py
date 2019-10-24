@@ -90,9 +90,9 @@ class TestBatchPolicy(base.SenlinTestCase):
         self.assertIn(node3.id, nodes[1])
 
     def test_pick_nodes_with_error_nodes(self):
-        node1 = mock.Mock(id='1', status='ACTIVE')
-        node2 = mock.Mock(id='2', status='ACTIVE')
-        node3 = mock.Mock(id='3', status='ERROR')
+        node1 = mock.Mock(id='1', status='ACTIVE', tainted=False)
+        node2 = mock.Mock(id='2', status='ACTIVE', tainted=False)
+        node3 = mock.Mock(id='3', status='ERROR', tainted=False)
         nodes = [node1, node2, node3]
 
         policy = bp.BatchPolicy('test-batch', self.spec)

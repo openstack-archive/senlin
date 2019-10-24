@@ -16,6 +16,7 @@ Node endpoint for Senlin v1 REST API.
 from webob import exc
 
 from senlin.api.common import util
+from senlin.api.common import version_request as vr
 from senlin.api.common import wsgi
 from senlin.common import consts
 from senlin.common.i18n import _
@@ -31,6 +32,15 @@ class NodeController(wsgi.Controller):
     ) = (
         'check', 'recover'
     )
+
+    def _remove_tainted(self, req, obj):
+        if req.version_request > vr.APIVersionRequest("1.12"):
+            return obj
+
+        if 'tainted' in obj:
+            obj.pop('tainted')
+
+        return obj
 
     @util.policy_enforce
     def index(self, req):
@@ -55,6 +65,8 @@ class NodeController(wsgi.Controller):
 
         obj = util.parse_request('NodeListRequest', req, params)
         nodes = self.rpc_client.call(req.context, 'node_list', obj)
+
+        nodes = [self._remove_tainted(req, n) for n in nodes]
         return {'nodes': nodes}
 
     @util.policy_enforce
@@ -63,6 +75,9 @@ class NodeController(wsgi.Controller):
         obj = util.parse_request('NodeCreateRequest', req, body, 'node')
         node = self.rpc_client.call(req.context, 'node_create',
                                     obj.node)
+
+        node = self._remove_tainted(req, node)
+
         action_id = node.pop('action')
         result = {
             'node': node,
@@ -76,6 +91,8 @@ class NodeController(wsgi.Controller):
         """Adopt a node for management."""
         obj = util.parse_request('NodeAdoptRequest', req, body)
         node = self.rpc_client.call(req.context, 'node_adopt', obj)
+
+        node = self._remove_tainted(req, node)
         return {'node': node}
 
     @wsgi.Controller.api_version('1.7')
@@ -97,6 +114,8 @@ class NodeController(wsgi.Controller):
 
         obj = util.parse_request('NodeGetRequest', req, params)
         node = self.rpc_client.call(req.context, 'node_get', obj)
+
+        node = self._remove_tainted(req, node)
         return {'node': node}
 
     @util.policy_enforce
@@ -110,6 +129,8 @@ class NodeController(wsgi.Controller):
 
         obj = util.parse_request('NodeUpdateRequest', req, params)
         node = self.rpc_client.call(req.context, 'node_update', obj)
+
+        node = self._remove_tainted(req, node)
 
         action_id = node.pop('action')
         result = {

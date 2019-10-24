@@ -117,6 +117,7 @@ class Node(BASE, TimestampMixin, models.ModelBase):
 
     init_at = Column(types.TZAwareDateTime)
 
+    tainted = Column(Boolean)
     status = Column(String(255))
     status_reason = Column(Text)
     meta_data = Column(types.Dict)

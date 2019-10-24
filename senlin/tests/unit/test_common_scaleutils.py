@@ -195,20 +195,24 @@ class ScaleUtilsTest(base.SenlinTestCase):
 
     def test_filter_error_nodes(self):
         nodes = [
-            mock.Mock(id='N1', status='ACTIVE'),
-            mock.Mock(id='N2', status='ACTIVE'),
-            mock.Mock(id='N3', status='ERROR'),
-            mock.Mock(id='N4', status='ACTIVE'),
-            mock.Mock(id='N5', status='WARNING'),
-            mock.Mock(id='N6', status='ERROR'),
-            mock.Mock(id='N7', created_at=None)
+            mock.Mock(id='N1', status='ACTIVE', tainted=None),
+            mock.Mock(id='N2', tainted=None),
+            mock.Mock(id='N3', status='ACTIVE', tainted=None),
+            mock.Mock(id='N4', status='ERROR'),
+            mock.Mock(id='N5', status='ACTIVE', tainted=None),
+            mock.Mock(id='N6', status='WARNING'),
+            mock.Mock(id='N7', tainted=True),
+            mock.Mock(id='N8', status='ERROR'),
+            mock.Mock(id='N9', created_at=None),
+            mock.Mock(id='N10', tainted=False),
         ]
         res = su.filter_error_nodes(nodes)
-        self.assertIn('N3', res[0])
-        self.assertIn('N5', res[0])
+        self.assertIn('N4', res[0])
         self.assertIn('N6', res[0])
         self.assertIn('N7', res[0])
-        self.assertEqual(3, len(res[1]))
+        self.assertIn('N8', res[0])
+        self.assertIn('N9', res[0])
+        self.assertEqual(5, len(res[1]))
 
     @mock.patch.object(su, 'filter_error_nodes')
     def test_nodes_by_random(self, mock_filter):
