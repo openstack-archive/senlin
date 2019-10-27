@@ -19,8 +19,8 @@ LOG = logging.getLogger(__name__)
 
 class Endpoints(object):
 
-    def __init__(self, project_id, engine_id, recover_action):
-        self.engine_id = engine_id
+    def __init__(self, project_id, cluster_id, recover_action):
+        self.cluster_id = cluster_id
         self.project_id = project_id
         self.recover_action = recover_action
 

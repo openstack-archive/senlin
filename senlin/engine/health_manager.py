@@ -31,6 +31,8 @@ from senlin.common import context
 from senlin.common import messaging as rpc
 from senlin.common import utils
 from senlin.engine import node as node_mod
+from senlin.engine.notifications import heat_endpoint
+from senlin.engine.notifications import nova_endpoint
 from senlin import objects
 from senlin.rpc import client as rpc_client
 
@@ -54,115 +56,6 @@ def chase_up(start_time, interval, name='Poller'):
     return (missed + 1) * interval - elapsed
 
 
-class NovaNotificationEndpoint(object):
-
-    VM_FAILURE_EVENTS = {
-        'compute.instance.pause.end': 'PAUSE',
-        'compute.instance.power_off.end': 'POWER_OFF',
-        'compute.instance.rebuild.error': 'REBUILD',
-        'compute.instance.shutdown.end': 'SHUTDOWN',
-        'compute.instance.soft_delete.end': 'SOFT_DELETE',
-    }
-
-    def __init__(self, project_id, cluster_id, recover_action):
-        self.filter_rule = messaging.NotificationFilter(
-            publisher_id='^compute.*',
-            event_type='^compute\.instance\..*',
-            context={'project_id': '^%s$' % project_id})
-        self.project_id = project_id
-        self.cluster_id = cluster_id
-        self.rpc = rpc_client.EngineClient()
-        self.recover_action = recover_action
-
-    def info(self, ctxt, publisher_id, event_type, payload, metadata):
-        meta = payload['metadata']
-        if meta.get('cluster_id') == self.cluster_id:
-            if event_type not in self.VM_FAILURE_EVENTS:
-                return
-            params = {
-                'event': self.VM_FAILURE_EVENTS[event_type],
-                'state': payload.get('state', 'Unknown'),
-                'instance_id': payload.get('instance_id', 'Unknown'),
-                'timestamp': metadata['timestamp'],
-                'publisher': publisher_id,
-                'operation': self.recover_action['operation'],
-            }
-            node_id = meta.get('cluster_node_id')
-            if node_id:
-                LOG.info("Requesting node recovery: %s", node_id)
-                ctx = context.get_service_context(project_id=self.project_id,
-                                                  user_id=payload['user_id'])
-                req = objects.NodeRecoverRequest(identity=node_id,
-                                                 params=params)
-                self.rpc.call(ctx, 'node_recover', req)
-
-    def warn(self, ctxt, publisher_id, event_type, payload, metadata):
-        meta = payload.get('metadata', {})
-        if meta.get('cluster_id') == self.cluster_id:
-            LOG.warning("publisher=%s", publisher_id)
-            LOG.warning("event_type=%s", event_type)
-
-    def debug(self, ctxt, publisher_id, event_type, payload, metadata):
-        meta = payload.get('metadata', {})
-        if meta.get('cluster_id') == self.cluster_id:
-            LOG.debug("publisher=%s", publisher_id)
-            LOG.debug("event_type=%s", event_type)
-
-
-class HeatNotificationEndpoint(object):
-
-    STACK_FAILURE_EVENTS = {
-        'orchestration.stack.delete.end': 'DELETE',
-    }
-
-    def __init__(self, project_id, cluster_id, recover_action):
-        self.filter_rule = messaging.NotificationFilter(
-            publisher_id='^orchestration.*',
-            event_type='^orchestration\.stack\..*',
-            context={'project_id': '^%s$' % project_id})
-        self.project_id = project_id
-        self.cluster_id = cluster_id
-        self.rpc = rpc_client.EngineClient()
-        self.recover_action = recover_action
-
-    def info(self, ctxt, publisher_id, event_type, payload, metadata):
-        if event_type not in self.STACK_FAILURE_EVENTS:
-            return
-
-        tags = payload['tags']
-        if tags is None or tags == []:
-            return
-
-        cluster_id = None
-        node_id = None
-        for tag in tags:
-            if cluster_id is None:
-                start = tag.find('cluster_id')
-                if start == 0 and tag[11:] == self.cluster_id:
-                    cluster_id = tag[11:]
-            if node_id is None:
-                start = tag.find('cluster_node_id')
-                if start == 0:
-                    node_id = tag[16:]
-
-        if cluster_id is None or node_id is None:
-            return
-
-        params = {
-            'event': self.STACK_FAILURE_EVENTS[event_type],
-            'state': payload.get('state', 'Unknown'),
-            'stack_id': payload.get('stack_identity', 'Unknown'),
-            'timestamp': metadata['timestamp'],
-            'publisher': publisher_id,
-            'operation': self.recover_action['operation'],
-        }
-        LOG.info("Requesting stack recovery: %s", node_id)
-        ctx = context.get_service_context(project_id=self.project_id,
-                                          user_id=payload['user_identity'])
-        req = objects.NodeRecoverRequest(identity=node_id, params=params)
-        self.rpc.call(ctx, 'node_recover', req)
-
-
 def ListenerProc(exchange, project_id, cluster_id, recover_action):
     """Thread procedure for running an event listener.
 
@@ -179,14 +72,18 @@ def ListenerProc(exchange, project_id, cluster_id, recover_action):
                              exchange=exchange),
         ]
         endpoints = [
-            NovaNotificationEndpoint(project_id, cluster_id, recover_action),
+            nova_endpoint.NovaNotificationEndpoint(
+                project_id, cluster_id, recover_action
+            ),
         ]
     else:  # heat notification
         targets = [
             messaging.Target(topic='notifications', exchange=exchange),
         ]
         endpoints = [
-            HeatNotificationEndpoint(project_id, cluster_id, recover_action),
+            heat_endpoint.HeatNotificationEndpoint(
+                project_id, cluster_id, recover_action
+            ),
         ]
 
     listener = messaging.get_notification_listener(

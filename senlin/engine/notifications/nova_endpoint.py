@@ -32,15 +32,15 @@ class NovaNotificationEndpoint(base.Endpoints):
         'compute.instance.soft_delete.end': 'SOFT_DELETE',
     }
 
-    def __init__(self, project_id, engine_id, recover_action):
+    def __init__(self, project_id, cluster_id, recover_action):
+        super(NovaNotificationEndpoint, self).__init__(
+            project_id, cluster_id, recover_action
+        )
         self.filter_rule = messaging.NotificationFilter(
             publisher_id='^compute.*',
             event_type='^compute\.instance\..*',
             context={'project_id': '^%s$' % project_id})
-        self.project_id = project_id
-        self.engine_id = engine_id
         self.rpc = rpc_client.EngineClient()
-        self.recover_action = recover_action
         self.exchange = cfg.CONF.health_manager.nova_control_exchange
         self.target = messaging.Target(topic='versioned_notifications',
                                        exchange=self.exchange)
@@ -51,13 +51,10 @@ class NovaNotificationEndpoint(base.Endpoints):
         if not cluster_id:
             return
 
-        if event_type not in self.VM_FAILURE_EVENTS:
+        if self.cluster_id != cluster_id:
             return
 
-        ctx = context.get_service_context(project=self.project_id,
-                                          user=payload['user_id'])
-        enabled = self._check_registry_status(ctx, self.engine_id, cluster_id)
-        if enabled is False:
+        if event_type not in self.VM_FAILURE_EVENTS:
             return
 
         params = {
@@ -71,6 +68,8 @@ class NovaNotificationEndpoint(base.Endpoints):
         node_id = meta.get('cluster_node_id')
         if node_id:
             LOG.info("Requesting node recovery: %s", node_id)
+            ctx = context.get_service_context(project_id=self.project_id,
+                                              user_id=payload['user_id'])
             req = objects.NodeRecoverRequest(identity=node_id,
                                              params=params)
             self.rpc.call(ctx, 'node_recover', req)

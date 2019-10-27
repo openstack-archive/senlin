@@ -28,15 +28,15 @@ class HeatNotificationEndpoint(base.Endpoints):
         'orchestration.stack.delete.end': 'DELETE',
     }
 
-    def __init__(self, project_id, engine_id, recover_action):
+    def __init__(self, project_id, cluster_id, recover_action):
+        super(HeatNotificationEndpoint, self).__init__(
+            project_id, cluster_id, recover_action
+        )
         self.filter_rule = messaging.NotificationFilter(
             publisher_id='^orchestration.*',
             event_type='^orchestration\.stack\..*',
             context={'project_id': '^%s$' % project_id})
-        self.project_id = project_id
-        self.engine_id = engine_id
         self.rpc = rpc_client.EngineClient()
-        self.recover_action = recover_action
         self.exchange = cfg.CONF.health_manager.heat_control_exchange
         self.target = messaging.Target(topic='notifications',
                                        exchange=self.exchange)
@@ -54,7 +54,7 @@ class HeatNotificationEndpoint(base.Endpoints):
         for tag in tags:
             if cluster_id is None:
                 start = tag.find('cluster_id')
-                if start == 0 and tag[11:]:
+                if start == 0 and tag[11:] == self.cluster_id:
                     cluster_id = tag[11:]
             if node_id is None:
                 start = tag.find('cluster_node_id')
@@ -62,12 +62,6 @@ class HeatNotificationEndpoint(base.Endpoints):
                     node_id = tag[16:]
 
         if cluster_id is None or node_id is None:
-            return
-
-        ctx = context.get_service_context(project=self.project_id,
-                                          user=payload['user_identity'])
-        enabled = self._check_registry_status(ctx, self.engine_id, cluster_id)
-        if enabled is False:
             return
 
         params = {
@@ -79,5 +73,7 @@ class HeatNotificationEndpoint(base.Endpoints):
             'operation': self.recover_action['operation'],
         }
         LOG.info("Requesting stack recovery: %s", node_id)
+        ctx = context.get_service_context(project_id=self.project_id,
+                                          user_id=payload['user_identity'])
         req = objects.NodeRecoverRequest(identity=node_id, params=params)
         self.rpc.call(ctx, 'node_recover', req)

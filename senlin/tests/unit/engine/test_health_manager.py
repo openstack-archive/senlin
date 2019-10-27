@@ -23,6 +23,7 @@ from senlin.common import exception as exc
 from senlin.common import utils
 from senlin.engine import health_manager as hm
 from senlin.engine import node as node_mod
+from senlin.engine.notifications import nova_endpoint
 from senlin import objects
 from senlin.objects import cluster as obj_cluster
 from senlin.objects import node as obj_node
@@ -64,28 +65,31 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
             'compute.instance.soft_delete.end': 'SOFT_DELETE',
         }
         recover_action = {'operation': 'REBUILD'}
-        obj = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER', recover_action)
+        endpoint = nova_endpoint.NovaNotificationEndpoint(
+            'PROJECT', 'CLUSTER_ID', recover_action
+        )
 
         mock_filter.assert_called_once_with(
             publisher_id='^compute.*',
             event_type='^compute\.instance\..*',
             context={'project_id': '^PROJECT$'})
         mock_rpc.assert_called_once_with()
-        self.assertEqual(x_filter, obj.filter_rule)
-        self.assertEqual(mock_rpc.return_value, obj.rpc)
+        self.assertEqual(x_filter, endpoint.filter_rule)
+        self.assertEqual(mock_rpc.return_value, endpoint.rpc)
         for e in event_map:
-            self.assertIn(e, obj.VM_FAILURE_EVENTS)
-            self.assertEqual(event_map[e], obj.VM_FAILURE_EVENTS[e])
-        self.assertEqual('PROJECT', obj.project_id)
-        self.assertEqual('CLUSTER', obj.cluster_id)
+            self.assertIn(e, endpoint.VM_FAILURE_EVENTS)
+            self.assertEqual(event_map[e], endpoint.VM_FAILURE_EVENTS[e])
+        self.assertEqual('PROJECT', endpoint.project_id)
+        self.assertEqual('CLUSTER_ID', endpoint.cluster_id)
 
     @mock.patch.object(context.RequestContext, 'from_dict')
     @mock.patch('senlin.rpc.client.EngineClient')
     def test_info(self, mock_rpc, mock_context, mock_filter):
         x_rpc = mock_rpc.return_value
         recover_action = {'operation': 'REBUILD'}
-        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID',
-                                               recover_action)
+        endpoint = nova_endpoint.NovaNotificationEndpoint(
+            'PROJECT', 'CLUSTER_ID', recover_action
+        )
         ctx = mock.Mock()
         payload = {
             'metadata': {
@@ -123,8 +127,9 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
     def test_info_no_metadata(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
         recover_action = {'operation': 'REBUILD'}
-        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID',
-                                               recover_action)
+        endpoint = nova_endpoint.NovaNotificationEndpoint(
+            'PROJECT', 'CLUSTER_ID', recover_action
+        )
         ctx = mock.Mock()
         payload = {'metadata': {}}
         metadata = {'timestamp': 'TIMESTAMP'}
@@ -139,8 +144,9 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
     def test_info_no_cluster_in_metadata(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
         recover_action = {'operation': 'REBUILD'}
-        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID',
-                                               recover_action)
+        endpoint = nova_endpoint.NovaNotificationEndpoint(
+            'PROJECT', 'CLUSTER_ID', recover_action
+        )
         ctx = mock.Mock()
         payload = {'metadata': {'foo': 'bar'}}
         metadata = {'timestamp': 'TIMESTAMP'}
@@ -155,8 +161,9 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
     def test_info_cluster_id_not_match(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
         recover_action = {'operation': 'REBUILD'}
-        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID',
-                                               recover_action)
+        endpoint = nova_endpoint.NovaNotificationEndpoint(
+            'PROJECT', 'CLUSTER_ID', recover_action
+        )
         ctx = mock.Mock()
         payload = {'metadata': {'cluster_id': 'FOOBAR'}}
         metadata = {'timestamp': 'TIMESTAMP'}
@@ -171,8 +178,9 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
     def test_info_event_type_not_interested(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
         recover_action = {'operation': 'REBUILD'}
-        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID',
-                                               recover_action)
+        endpoint = nova_endpoint.NovaNotificationEndpoint(
+            'PROJECT', 'CLUSTER_ID', recover_action
+        )
         ctx = mock.Mock()
         payload = {'metadata': {'cluster_id': 'CLUSTER_ID'}}
         metadata = {'timestamp': 'TIMESTAMP'}
@@ -187,8 +195,9 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
     def test_info_no_node_id(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
         recover_action = {'operation': 'REBUILD'}
-        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID',
-                                               recover_action)
+        endpoint = nova_endpoint.NovaNotificationEndpoint(
+            'PROJECT', 'CLUSTER_ID', recover_action
+        )
         ctx = mock.Mock()
         payload = {'metadata': {'cluster_id': 'CLUSTER_ID'}}
         metadata = {'timestamp': 'TIMESTAMP'}
@@ -204,8 +213,9 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
     def test_info_default_values(self, mock_rpc, mock_context, mock_filter):
         x_rpc = mock_rpc.return_value
         recover_action = {'operation': 'REBUILD'}
-        endpoint = hm.NovaNotificationEndpoint('PROJECT', 'CLUSTER_ID',
-                                               recover_action)
+        endpoint = nova_endpoint.NovaNotificationEndpoint(
+            'PROJECT', 'CLUSTER_ID', recover_action
+        )
         ctx = mock.Mock()
         payload = {
             'metadata': {
@@ -237,208 +247,10 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
         self.assertEqual(expected_params, req.params)
 
 
-@mock.patch('oslo_messaging.NotificationFilter')
-class TestHeatNotificationEndpoint(base.SenlinTestCase):
-
-    @mock.patch('senlin.rpc.client.EngineClient')
-    def test_init(self, mock_rpc, mock_filter):
-        x_filter = mock_filter.return_value
-        event_map = {
-            'orchestration.stack.delete.end': 'DELETE',
-        }
-        recover_action = {'operation': 'REBUILD'}
-        obj = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER', recover_action)
-
-        mock_filter.assert_called_once_with(
-            publisher_id='^orchestration.*',
-            event_type='^orchestration\.stack\..*',
-            context={'project_id': '^PROJECT$'})
-        mock_rpc.assert_called_once_with()
-        self.assertEqual(x_filter, obj.filter_rule)
-        self.assertEqual(mock_rpc.return_value, obj.rpc)
-        for e in event_map:
-            self.assertIn(e, obj.STACK_FAILURE_EVENTS)
-            self.assertEqual(event_map[e], obj.STACK_FAILURE_EVENTS[e])
-        self.assertEqual('PROJECT', obj.project_id)
-        self.assertEqual('CLUSTER', obj.cluster_id)
-
-    @mock.patch.object(context.RequestContext, 'from_dict')
-    @mock.patch('senlin.rpc.client.EngineClient')
-    def test_info(self, mock_rpc, mock_context, mock_filter):
-        x_rpc = mock_rpc.return_value
-        recover_action = {'operation': 'REBUILD'}
-        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID',
-                                               recover_action)
-        ctx = mock.Mock()
-        payload = {
-            'tags': {
-                'cluster_id=CLUSTER_ID',
-                'cluster_node_id=FAKE_NODE',
-                'cluster_node_index=123',
-            },
-            'stack_identity': 'PHYSICAL_ID',
-            'user_identity': 'USER',
-            'state': 'DELETE_COMPLETE',
-        }
-        metadata = {'timestamp': 'TIMESTAMP'}
-        call_ctx = mock.Mock()
-        mock_context.return_value = call_ctx
-
-        res = endpoint.info(ctx, 'PUBLISHER', 'orchestration.stack.delete.end',
-                            payload, metadata)
-
-        self.assertIsNone(res)
-        x_rpc.call.assert_called_once_with(call_ctx, 'node_recover', mock.ANY)
-        req = x_rpc.call.call_args[0][2]
-        self.assertIsInstance(req, objects.NodeRecoverRequest)
-        self.assertEqual('FAKE_NODE', req.identity)
-        expected_params = {
-            'event': 'DELETE',
-            'state': 'DELETE_COMPLETE',
-            'stack_id': 'PHYSICAL_ID',
-            'timestamp': 'TIMESTAMP',
-            'publisher': 'PUBLISHER',
-            'operation': 'REBUILD',
-        }
-        self.assertEqual(expected_params, req.params)
-
-    @mock.patch('senlin.rpc.client.EngineClient')
-    def test_info_event_type_not_interested(self, mock_rpc, mock_filter):
-        x_rpc = mock_rpc.return_value
-        recover_action = {'operation': 'REBUILD'}
-        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID',
-                                               recover_action)
-        ctx = mock.Mock()
-        payload = {'tags': {'cluster_id': 'CLUSTER_ID'}}
-        metadata = {'timestamp': 'TIMESTAMP'}
-
-        res = endpoint.info(ctx, 'PUBLISHER',
-                            'orchestration.stack.create.start',
-                            payload, metadata)
-
-        self.assertIsNone(res)
-        self.assertEqual(0, x_rpc.node_recover.call_count)
-
-    @mock.patch('senlin.rpc.client.EngineClient')
-    def test_info_no_tag(self, mock_rpc, mock_filter):
-        x_rpc = mock_rpc.return_value
-        recover_action = {'operation': 'REBUILD'}
-        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID',
-                                               recover_action)
-        ctx = mock.Mock()
-        payload = {'tags': None}
-        metadata = {'timestamp': 'TIMESTAMP'}
-
-        res = endpoint.info(ctx, 'PUBLISHER', 'orchestration.stack.delete.end',
-                            payload, metadata)
-
-        self.assertIsNone(res)
-        self.assertEqual(0, x_rpc.node_recover.call_count)
-
-    @mock.patch('senlin.rpc.client.EngineClient')
-    def test_info_empty_tag(self, mock_rpc, mock_filter):
-        x_rpc = mock_rpc.return_value
-        recover_action = {'operation': 'REBUILD'}
-        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID',
-                                               recover_action)
-        ctx = mock.Mock()
-        payload = {'tags': []}
-        metadata = {'timestamp': 'TIMESTAMP'}
-
-        res = endpoint.info(ctx, 'PUBLISHER', 'orchestration.stack.delete.end',
-                            payload, metadata)
-
-        self.assertIsNone(res)
-        self.assertEqual(0, x_rpc.node_recover.call_count)
-
-    @mock.patch('senlin.rpc.client.EngineClient')
-    def test_info_no_cluster_in_tag(self, mock_rpc, mock_filter):
-        x_rpc = mock_rpc.return_value
-        recover_action = {'operation': 'REBUILD'}
-        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID',
-                                               recover_action)
-        ctx = mock.Mock()
-        payload = {'tags': ['foo', 'bar']}
-        metadata = {'timestamp': 'TIMESTAMP'}
-
-        res = endpoint.info(ctx, 'PUBLISHER', 'orchestration.stack.delete.end',
-                            payload, metadata)
-
-        self.assertIsNone(res)
-        self.assertEqual(0, x_rpc.node_recover.call_count)
-
-    @mock.patch('senlin.rpc.client.EngineClient')
-    def test_info_no_node_in_tag(self, mock_rpc, mock_filter):
-        x_rpc = mock_rpc.return_value
-        recover_action = {'operation': 'REBUILD'}
-        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID',
-                                               recover_action)
-        ctx = mock.Mock()
-        payload = {'tags': ['cluster_id=C1ID']}
-        metadata = {'timestamp': 'TIMESTAMP'}
-
-        res = endpoint.info(ctx, 'PUBLISHER', 'orchestration.stack.delete.end',
-                            payload, metadata)
-
-        self.assertIsNone(res)
-        self.assertEqual(0, x_rpc.node_recover.call_count)
-
-    @mock.patch('senlin.rpc.client.EngineClient')
-    def test_info_cluster_id_not_match(self, mock_rpc, mock_filter):
-        x_rpc = mock_rpc.return_value
-        recover_action = {'operation': 'REBUILD'}
-        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID',
-                                               recover_action)
-        ctx = mock.Mock()
-        payload = {'tags': ['cluster_id=FOOBAR', 'cluster_node_id=N2']}
-        metadata = {'timestamp': 'TIMESTAMP'}
-
-        res = endpoint.info(ctx, 'PUBLISHER', 'orchestration.stack.delete.end',
-                            payload, metadata)
-
-        self.assertIsNone(res)
-        self.assertEqual(0, x_rpc.node_recover.call_count)
-
-    @mock.patch.object(context.RequestContext, 'from_dict')
-    @mock.patch('senlin.rpc.client.EngineClient')
-    def test_info_default_values(self, mock_rpc, mock_context, mock_filter):
-        x_rpc = mock_rpc.return_value
-        recover_action = {'operation': 'REBUILD'}
-        endpoint = hm.HeatNotificationEndpoint('PROJECT', 'CLUSTER_ID',
-                                               recover_action)
-        ctx = mock.Mock()
-        payload = {
-            'tags': [
-                'cluster_id=CLUSTER_ID',
-                'cluster_node_id=NODE_ID'
-            ],
-            'user_identity': 'USER',
-        }
-        metadata = {'timestamp': 'TIMESTAMP'}
-        call_ctx = mock.Mock()
-        mock_context.return_value = call_ctx
-
-        res = endpoint.info(ctx, 'PUBLISHER', 'orchestration.stack.delete.end',
-                            payload, metadata)
-
-        self.assertIsNone(res)
-        x_rpc.call.assert_called_once_with(call_ctx, 'node_recover', mock.ANY)
-        req = x_rpc.call.call_args[0][2]
-        self.assertIsInstance(req, objects.NodeRecoverRequest)
-        self.assertEqual('NODE_ID', req.identity)
-        expected_params = {
-            'event': 'DELETE',
-            'state': 'Unknown',
-            'stack_id': 'Unknown',
-            'timestamp': 'TIMESTAMP',
-            'publisher': 'PUBLISHER',
-            'operation': 'REBUILD',
-        }
-        self.assertEqual(expected_params, req.params)
-
-
-@mock.patch('senlin.engine.health_manager.HeatNotificationEndpoint')
-@mock.patch('senlin.engine.health_manager.NovaNotificationEndpoint')
+@mock.patch(
+    'senlin.engine.notifications.heat_endpoint.HeatNotificationEndpoint')
+@mock.patch(
+    'senlin.engine.notifications.nova_endpoint.NovaNotificationEndpoint')
 @mock.patch('oslo_messaging.Target')
 @mock.patch('oslo_messaging.get_notification_transport')
 @mock.patch('oslo_messaging.get_notification_listener')
