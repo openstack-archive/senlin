@@ -80,6 +80,10 @@ class Forbidden(SenlinException):
     msg_fmt = _("You are not authorized to complete this operation.")
 
 
+class OverQuota(SenlinException):
+    msg_fmt = _("Quota exceeded for resources.")
+
+
 class BadRequest(SenlinException):
     msg_fmt = _("%(msg)s.")
 

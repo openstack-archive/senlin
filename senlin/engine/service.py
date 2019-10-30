@@ -725,7 +725,7 @@ class EngineService(service.Service):
         existing = co.Cluster.count_all(context)
         maximum = CONF.max_clusters_per_project
         if existing >= maximum:
-            raise exception.Forbidden()
+            raise exception.OverQuota()
 
     @request_context
     def cluster_create(self, ctx, req):

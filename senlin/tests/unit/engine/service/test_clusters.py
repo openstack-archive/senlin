@@ -61,10 +61,9 @@ class ClusterTest(base.SenlinTestCase):
         mock_count.return_value = 11
         cfg.CONF.set_override('max_clusters_per_project', 11)
 
-        ex = self.assertRaises(exc.Forbidden,
+        ex = self.assertRaises(exc.OverQuota,
                                self.eng.check_cluster_quota, self.ctx)
-        self.assertEqual("You are not authorized to complete this "
-                         "operation.",
+        self.assertEqual("Quota exceeded for resources.",
                          six.text_type(ex))
 
     def _prepare_request(self, req):
@@ -203,7 +202,7 @@ class ClusterTest(base.SenlinTestCase):
 
     @mock.patch.object(service.EngineService, 'check_cluster_quota')
     def test_cluster_create_exceeding_quota(self, mock_quota):
-        mock_quota.side_effect = exc.Forbidden()
+        mock_quota.side_effect = exc.OverQuota()
         req = {'profile_id': 'PROFILE', 'name': 'CLUSTER'}
         self._prepare_request(req)
 
@@ -211,9 +210,8 @@ class ClusterTest(base.SenlinTestCase):
                                self.eng.cluster_create,
                                self.ctx, req)
 
-        self.assertEqual(exc.Forbidden, ex.exc_info[0])
-        self.assertEqual("You are not authorized to complete this "
-                         "operation.",
+        self.assertEqual(exc.OverQuota, ex.exc_info[0])
+        self.assertEqual("Quota exceeded for resources.",
                          six.text_type(ex.exc_info[1]))
         mock_quota.assert_called_once_with(self.ctx)
 
