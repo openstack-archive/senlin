@@ -788,6 +788,7 @@ class EngineService(service.Service):
         # Build an Action for cluster creation
         kwargs = {
             'name': 'cluster_create_%s' % cluster.id[:8],
+            'cluster_id': cluster.id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
         }
@@ -861,6 +862,7 @@ class EngineService(service.Service):
 
         kwargs = {
             'name': 'cluster_update_%s' % cluster.id[:8],
+            'cluster_id': cluster.id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': inputs,
@@ -913,6 +915,7 @@ class EngineService(service.Service):
 
         params = {
             'name': 'cluster_delete_%s' % cluster.id[:8],
+            'cluster_id': cluster.id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
         }
@@ -991,6 +994,7 @@ class EngineService(service.Service):
 
         params = {
             'name': 'cluster_add_nodes_%s' % db_cluster.id[:8],
+            'cluster_id': db_cluster.id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': {'nodes': found},
@@ -1058,6 +1062,7 @@ class EngineService(service.Service):
 
         params = {
             'name': 'cluster_del_nodes_%s' % db_cluster.id[:8],
+            'cluster_id': db_cluster.id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': {
@@ -1166,6 +1171,7 @@ class EngineService(service.Service):
         nodes = self._validate_replace_nodes(ctx, db_cluster, req.nodes)
         kwargs = {
             'name': 'cluster_replace_nodes_%s' % db_cluster.id[:8],
+            'cluster_id': db_cluster.id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': {'candidates': nodes},
@@ -1251,6 +1257,7 @@ class EngineService(service.Service):
 
         params = {
             'name': 'cluster_resize_%s' % db_cluster.id[:8],
+            'cluster_id': db_cluster.id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': {
@@ -1297,6 +1304,7 @@ class EngineService(service.Service):
 
         params = {
             'name': 'cluster_scale_out_%s' % db_cluster.id[:8],
+            'cluster_id': db_cluster.id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': inputs,
@@ -1337,6 +1345,7 @@ class EngineService(service.Service):
 
         params = {
             'name': 'cluster_scale_in_%s' % db_cluster.id[:8],
+            'cluster_id': db_cluster.id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': inputs,
@@ -1393,6 +1402,7 @@ class EngineService(service.Service):
 
         kwargs = {
             'name': 'cluster_check_%s' % db_cluster.id[:8],
+            'cluster_id': db_cluster.id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': req.params if req.obj_attr_is_set('params') else {}
@@ -1482,6 +1492,7 @@ class EngineService(service.Service):
 
         params = {
             'name': 'cluster_recover_%s' % db_cluster.id[:8],
+            'cluster_id': db_cluster.id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': inputs
@@ -1557,6 +1568,7 @@ class EngineService(service.Service):
 
         kwargs = {
             'name': 'cluster_%s_%s' % (req.operation, cluster.id[:8]),
+            'cluster_id': db_cluster.id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': {
@@ -1686,6 +1698,7 @@ class EngineService(service.Service):
 
         params = {
             'name': 'node_create_%s' % node.id[:8],
+            'cluster_id': cluster_id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
         }
@@ -1766,6 +1779,7 @@ class EngineService(service.Service):
 
         params = {
             'name': 'node_update_%s' % node.id[:8],
+            'cluster_id': node.cluster_id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': inputs,
@@ -1813,6 +1827,7 @@ class EngineService(service.Service):
 
         params = {
             'name': 'node_delete_%s' % node.id[:8],
+            'cluster_id': node.cluster_id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
         }
@@ -1946,6 +1961,7 @@ class EngineService(service.Service):
 
         kwargs = {
             'name': 'node_check_%s' % db_node.id[:8],
+            'cluster_id': db_node.cluster_id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY
         }
@@ -1973,6 +1989,7 @@ class EngineService(service.Service):
 
         kwargs = {
             'name': 'node_recover_%s' % db_node.id[:8],
+            'cluster_id': db_node.cluster_id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': {}
@@ -2036,6 +2053,7 @@ class EngineService(service.Service):
 
         kwargs = {
             'name': 'node_%s_%s' % (req.operation, db_node.id[:8]),
+            'cluster_id': db_node.cluster_id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': {
@@ -2120,6 +2138,7 @@ class EngineService(service.Service):
 
         params = {
             'name': 'attach_policy_%s' % db_cluster.id[:8],
+            'cluster_id': db_cluster.id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': {
@@ -2165,6 +2184,7 @@ class EngineService(service.Service):
 
         params = {
             'name': 'detach_policy_%s' % db_cluster.id[:8],
+            'cluster_id': db_cluster.id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': {'policy_id': db_policy.id},
@@ -2210,6 +2230,7 @@ class EngineService(service.Service):
 
         params = {
             'name': 'update_policy_%s' % db_cluster.id[:8],
+            'cluster_id': db_cluster.id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': inputs
@@ -2246,6 +2267,17 @@ class EngineService(service.Service):
         filters = {}
         if req.obj_attr_is_set('name'):
             filters['name'] = req.name
+        # add filter with cluster_id
+        if req.obj_attr_is_set('cluster_id'):
+            cluster_ids = []
+            for cid in req.cluster_id:
+                try:
+                    cluster = co.Cluster.find(ctx, cid)
+                    cluster_ids.append(cluster.id)
+                except exception.ResourceNotFound:
+                    return []
+            if len(cluster_ids) > 0:
+                filters['cluster_id'] = cluster_ids
         if req.obj_attr_is_set('action'):
             filters['action'] = req.action
         if req.obj_attr_is_set('target'):
@@ -2280,6 +2312,7 @@ class EngineService(service.Service):
         # Create an action instance
         params = {
             'name': req.name,
+            'cluster_id': target.id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': req.inputs or {},
@@ -2572,6 +2605,7 @@ class EngineService(service.Service):
 
         kwargs = {
             'name': 'webhook_%s' % receiver.id[:8],
+            'cluster_id': db_cluster.id,
             'cause': consts.CAUSE_RPC,
             'status': action_mod.Action.READY,
             'inputs': data

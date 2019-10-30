@@ -118,6 +118,7 @@ class ActionTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'FAKE_CLUSTER', 'CLUSTER_CREATE',
             name='a1',
+            cluster_id='FAKE_CLUSTER',
             cause=consts.CAUSE_RPC,
             status=ab.Action.READY,
             inputs={})

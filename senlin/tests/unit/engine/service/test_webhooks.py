@@ -58,6 +58,7 @@ class WebhookTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'FAKE_CLUSTER', 'DANCE',
             name='webhook_01234567',
+            cluster_id='FAKE_CLUSTER',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'kee': 'vee', 'foo': 'bar'},
@@ -89,6 +90,7 @@ class WebhookTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'FAKE_CLUSTER', 'DANCE',
             name='webhook_01234567',
+            cluster_id='FAKE_CLUSTER',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'foo': 'bar'},
@@ -157,6 +159,7 @@ class WebhookTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'FAKE_CLUSTER', 'DANCE',
             name='webhook_01234567',
+            cluster_id='FAKE_CLUSTER',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'kee': 'vee', 'foo': 'bar'},
@@ -188,6 +191,7 @@ class WebhookTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'FAKE_CLUSTER', 'DANCE',
             name='webhook_01234567',
+            cluster_id='FAKE_CLUSTER',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'foo': 'bar'},

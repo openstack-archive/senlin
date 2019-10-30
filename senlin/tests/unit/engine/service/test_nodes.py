@@ -180,6 +180,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'NODE_ID', consts.NODE_CREATE,
             name='node_create_NODE_ID',
+            cluster_id='',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY)
         notify.assert_called_once_with()
@@ -237,6 +238,7 @@ class NodeTest(base.SenlinTestCase):
             })
         mock_action.assert_called_once_with(
             self.ctx, 'NODE_ID', consts.NODE_CREATE,
+            cluster_id='CLUSTER_ID',
             name='node_create_NODE_ID',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY)
@@ -301,6 +303,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'NODE_ID', consts.NODE_CREATE,
             name='node_create_NODE_ID',
+            cluster_id='CLUSTER_ID',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY)
         notify.assert_called_once_with()
@@ -447,6 +450,7 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(no.Node, 'find')
     def test_node_update(self, mock_find, mock_action, mock_start):
         x_obj = mock.Mock(id='FAKE_NODE_ID', name='NODE1', role='ROLE1',
+                          cluster_id='FAKE_CLUSTER_ID',
                           metadata={'KEY': 'VALUE'})
         x_obj.to_dict.return_value = {'foo': 'bar'}
         mock_find.return_value = x_obj
@@ -465,6 +469,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'FAKE_NODE_ID', consts.NODE_UPDATE,
             name='node_update_FAKE_NOD',
+            cluster_id='FAKE_CLUSTER_ID',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={
@@ -480,9 +485,11 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(po.Profile, 'find')
     @mock.patch.object(no.Node, 'find')
+    # @mock.patch.object(co.Cluster, 'find')
     def test_node_update_new_profile(self, mock_find, mock_profile,
                                      mock_action, mock_start):
         x_obj = mock.Mock(id='FAKE_NODE_ID', role='ROLE1',
+                          cluster_id='FAKE_CLUSTER_ID',
                           metadata={'KEY': 'VALUE'},
                           profile_id='OLD_PROFILE_ID')
         x_obj.name = 'NODE1'
@@ -494,7 +501,6 @@ class NodeTest(base.SenlinTestCase):
             mock.Mock(id='OLD_PROFILE_ID', type='PROFILE_TYPE'),
         ]
         mock_action.return_value = 'ACTION_ID'
-
         # all properties are filtered out except for profile_id
         req = orno.NodeUpdateRequest(identity='FAKE_NODE',
                                      name='NODE1',
@@ -512,6 +518,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, 'FAKE_NODE_ID', consts.NODE_UPDATE,
             name='node_update_FAKE_NOD',
+            cluster_id='FAKE_CLUSTER_ID',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={
@@ -623,6 +630,7 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(no.Node, 'find')
     def test_node_delete(self, mock_find, mock_action, mock_start):
         mock_find.return_value = mock.Mock(id='12345678AB', status='ACTIVE',
+                                           cluster_id='',
                                            dependents={})
         mock_action.return_value = 'ACTION_ID'
 
@@ -634,6 +642,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.NODE_DELETE,
             name='node_delete_12345678',
+            cluster_id='',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY)
         mock_start.assert_called_once_with()
@@ -691,7 +700,8 @@ class NodeTest(base.SenlinTestCase):
 
             mock_find.return_value = mock.Mock(id='12345678AB',
                                                status=bad_status,
-                                               dependents={})
+                                               dependents={},
+                                               cluster_id='',)
             mock_action.return_value = 'ACTION_ID'
 
             req = orno.NodeDeleteRequest(identity='FAKE_NODE', force=True)
@@ -702,6 +712,7 @@ class NodeTest(base.SenlinTestCase):
             mock_action.assert_called_with(
                 self.ctx, '12345678AB', consts.NODE_DELETE,
                 name='node_delete_12345678',
+                cluster_id='',
                 cause=consts.CAUSE_RPC,
                 status=action_mod.Action.READY)
             mock_start.assert_called_with()
@@ -821,6 +832,7 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(service.EngineService, '_node_adopt_preview')
     def test_node_adopt(self, mock_preview, mock_create):
         class FakeProfile(object):
+
             @classmethod
             def create(cls, ctx, name, spec):
                 obj = mock.Mock(spec=spec, id='PROFILE_ID')
@@ -896,7 +908,8 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(no.Node, 'find')
     def test_node_check(self, mock_find, mock_action, mock_start):
-        mock_find.return_value = mock.Mock(id='12345678AB')
+        mock_find.return_value = mock.Mock(id='12345678AB',
+                                           cluster_id='FAKE_CLUSTER_ID')
         mock_action.return_value = 'ACTION_ID'
 
         params = {'k1': 'v1'}
@@ -908,6 +921,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.NODE_CHECK,
             name='node_check_12345678',
+            cluster_id='FAKE_CLUSTER_ID',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'k1': 'v1'})
@@ -931,7 +945,8 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(no.Node, 'find')
     def test_node_recover(self, mock_find, mock_action, mock_start):
-        mock_find.return_value = mock.Mock(id='12345678AB')
+        mock_find.return_value = mock.Mock(
+            id='12345678AB', cluster_id='FAKE_CLUSTER_ID')
         mock_action.return_value = 'ACTION_ID'
 
         params = {'operation': 'REBOOT'}
@@ -943,6 +958,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.NODE_RECOVER,
             name='node_recover_12345678',
+            cluster_id='FAKE_CLUSTER_ID',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'operation': 'REBOOT'})
@@ -952,7 +968,7 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(no.Node, 'find')
     def test_node_recover_with_check(self, mock_find, mock_action, mock_start):
-        mock_find.return_value = mock.Mock(id='12345678AB')
+        mock_find.return_value = mock.Mock(id='12345678AB', cluster_id='')
         mock_action.return_value = 'ACTION_ID'
 
         params = {'check': True, 'operation': 'REBUILD'}
@@ -964,6 +980,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.NODE_RECOVER,
             name='node_recover_12345678',
+            cluster_id='',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'check': True, 'operation': 'REBUILD'})
@@ -974,7 +991,7 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(no.Node, 'find')
     def test_node_recover_with_delete_timeout(self, mock_find, mock_action,
                                               mock_start):
-        mock_find.return_value = mock.Mock(id='12345678AB')
+        mock_find.return_value = mock.Mock(id='12345678AB', cluster_id='',)
         mock_action.return_value = 'ACTION_ID'
 
         params = {'delete_timeout': 20, 'operation': 'RECREATE'}
@@ -986,6 +1003,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.NODE_RECOVER,
             name='node_recover_12345678',
+            cluster_id='',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'delete_timeout': 20,
@@ -997,7 +1015,8 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(no.Node, 'find')
     def test_node_recover_with_force_recreate(self, mock_find, mock_action,
                                               mock_start):
-        mock_find.return_value = mock.Mock(id='12345678AB')
+        mock_find.return_value = mock.Mock(
+            id='12345678AB', cluster_id='FAKE_CLUSTER_ID')
         mock_action.return_value = 'ACTION_ID'
 
         params = {'force_recreate': True, 'operation': 'reboot',
@@ -1010,6 +1029,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.NODE_RECOVER,
             name='node_recover_12345678',
+            cluster_id='FAKE_CLUSTER_ID',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'force_recreate': True,
@@ -1095,7 +1115,7 @@ class NodeTest(base.SenlinTestCase):
     @mock.patch.object(node_mod.Node, 'load')
     @mock.patch.object(no.Node, 'find')
     def test_node_op(self, mock_find, mock_node, mock_action, mock_start):
-        x_db_node = mock.Mock(id='12345678AB')
+        x_db_node = mock.Mock(id='12345678AB', cluster_id='FAKE_CLUSTER_ID')
         mock_find.return_value = x_db_node
         x_schema = mock.Mock()
         x_profile = mock.Mock(OPERATIONS={'dance': x_schema})
@@ -1117,6 +1137,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.NODE_OPERATION,
             name='node_dance_12345678',
+            cluster_id='FAKE_CLUSTER_ID',
             cause=consts.CAUSE_RPC,
             status=action_mod.Action.READY,
             inputs={'operation': 'dance', 'params': {'style': 'tango'}})

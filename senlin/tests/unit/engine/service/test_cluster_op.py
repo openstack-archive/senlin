@@ -42,7 +42,7 @@ class ClusterOpTest(base.SenlinTestCase):
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_op(self, mock_find, mock_cluster, mock_nodes, mock_action,
                         mock_start):
-        x_db_cluster = mock.Mock()
+        x_db_cluster = mock.Mock(id='12345678AB')
         mock_find.return_value = x_db_cluster
         x_schema = mock.Mock()
         x_profile = mock.Mock(OPERATIONS={'dance': x_schema})
@@ -69,6 +69,7 @@ class ClusterOpTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.CLUSTER_OPERATION,
             name='cluster_dance_12345678',
+            cluster_id='12345678AB',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={
@@ -147,7 +148,7 @@ class ClusterOpTest(base.SenlinTestCase):
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_op_no_parameters(self, mock_find, mock_cluster,
                                       mock_nodes, mock_action, mock_start):
-        x_db_cluster = mock.Mock()
+        x_db_cluster = mock.Mock(id='12345678AB')
         mock_find.return_value = x_db_cluster
         x_schema = mock.Mock()
         x_profile = mock.Mock(OPERATIONS={'dance': x_schema})
@@ -172,6 +173,7 @@ class ClusterOpTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.CLUSTER_OPERATION,
             name='cluster_dance_12345678',
+            cluster_id='12345678AB',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={
@@ -189,7 +191,7 @@ class ClusterOpTest(base.SenlinTestCase):
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_op_no_filters(self, mock_find, mock_cluster,
                                    mock_nodes, mock_action, mock_start):
-        x_db_cluster = mock.Mock()
+        x_db_cluster = mock.Mock(id='12345678AB')
         mock_find.return_value = x_db_cluster
         x_schema = mock.Mock()
         x_profile = mock.Mock(OPERATIONS={'dance': x_schema})
@@ -211,6 +213,7 @@ class ClusterOpTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             self.ctx, '12345678AB', consts.CLUSTER_OPERATION,
             name='cluster_dance_12345678',
+            cluster_id='12345678AB',
             cause=consts.CAUSE_RPC,
             status=am.Action.READY,
             inputs={

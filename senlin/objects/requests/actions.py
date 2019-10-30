@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_utils import versionutils
+
 from senlin.common import consts
 from senlin.objects import base
 from senlin.objects import fields
@@ -39,8 +41,14 @@ class ActionListRequest(base.SenlinObject):
     action_name_list = list(consts.CLUSTER_ACTION_NAMES)
     action_name_list.extend(list(consts.NODE_ACTION_NAMES))
 
+    VERSION = '1.1'
+    VERSION_MAP = {
+        '1.14': '1.1'
+    }
+
     fields = {
         'name': fields.ListOfStringsField(nullable=True),
+        'cluster_id': fields.ListOfStringsField(nullable=True),
         'action': fields.ListOfEnumField(
             valid_values=action_name_list, nullable=True),
         'target': fields.ListOfStringsField(nullable=True),
@@ -52,6 +60,14 @@ class ActionListRequest(base.SenlinObject):
             valid_keys=list(consts.ACTION_SORT_KEYS), nullable=True),
         'project_safe': fields.FlexibleBooleanField(default=True)
     }
+
+    def obj_make_compatible(self, primitive, target_version):
+        super(ActionListRequest, self).obj_make_compatible(
+            primitive, target_version)
+        target_version = versionutils.convert_version_to_tuple(target_version)
+        if target_version < (1, 14):
+            if 'cluster_id' in primitive['senlin_object.data']:
+                del primitive['senlin_object.data']['cluster_id']
 
 
 @base.SenlinObjectRegistry.register

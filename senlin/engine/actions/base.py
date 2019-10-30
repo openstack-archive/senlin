@@ -92,6 +92,7 @@ class Action(object):
 
         self.id = kwargs.get('id', None)
         self.name = kwargs.get('name', '')
+        self.cluster_id = kwargs.get('cluster_id', '')
 
         self.context = ctx
         self.user = ctx.user_id
@@ -150,6 +151,7 @@ class Action(object):
 
         values = {
             'name': self.name,
+            'cluster_id': self.cluster_id,
             'context': self.context.to_dict(),
             'target': self.target,
             'action': self.action,
@@ -194,6 +196,7 @@ class Action(object):
         kwargs = {
             'id': obj.id,
             'name': obj.name,
+            'cluster_id': obj.cluster_id,
             'cause': obj.cause,
             'owner': obj.owner,
             'interval': obj.interval,
@@ -625,6 +628,7 @@ class Action(object):
         action_dict = {
             'id': self.id,
             'name': self.name,
+            'cluster_id': self.cluster_id,
             'action': self.action,
             'target': self.target,
             'cause': self.cause,

@@ -62,6 +62,7 @@ class ActionBaseTest(base.SenlinTestCase):
         self.ctx = utils.dummy_context(project=PROJECT_ID, user_id=USER_ID)
         self.action_values = {
             'name': 'FAKE_NAME',
+            'cluster_id': 'FAKE_CLUSTER_ID',
             'cause': 'FAKE_CAUSE',
             'owner': OWNER_ID,
             'interval': 60,
@@ -80,6 +81,7 @@ class ActionBaseTest(base.SenlinTestCase):
     def _verify_new_action(self, obj, target, action):
         self.assertIsNone(obj.id)
         self.assertEqual('', obj.name)
+        self.assertEqual('', obj.cluster_id)
         self.assertEqual(target, obj.target)
         self.assertEqual(action, obj.action)
         self.assertEqual('', obj.cause)
@@ -123,6 +125,7 @@ class ActionBaseTest(base.SenlinTestCase):
 
         self.assertEqual('FAKE_ID', obj.id)
         self.assertEqual('FAKE_NAME', obj.name)
+        self.assertEqual('FAKE_CLUSTER_ID', obj.cluster_id)
         self.assertEqual(OBJID, obj.target)
         self.assertEqual('FAKE_CAUSE', obj.cause)
         self.assertEqual(OWNER_ID, obj.owner)
@@ -180,6 +183,7 @@ class ActionBaseTest(base.SenlinTestCase):
         action_obj = ab.Action._from_object(record)
         self.assertIsInstance(action_obj, ab.Action)
         self.assertEqual(obj.id, action_obj.id)
+        self.assertEqual(obj.cluster_id, action_obj.cluster_id)
         self.assertEqual(obj.action, action_obj.action)
         self.assertEqual(obj.name, action_obj.name)
         self.assertEqual(obj.target, action_obj.target)
@@ -931,6 +935,7 @@ class ActionBaseTest(base.SenlinTestCase):
         expected = {
             'id': 'FAKE_ID',
             'name': 'FAKE_NAME',
+            'cluster_id': 'FAKE_CLUSTER_ID',
             'action': 'OBJECT_ACTION',
             'target': OBJID,
             'cause': 'FAKE_CAUSE',

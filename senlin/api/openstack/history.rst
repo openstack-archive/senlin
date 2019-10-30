@@ -126,3 +126,7 @@ it can be used by both users and developers.
 1.13
 ----
 - Added ``tainted`` to responses returned by node APIs.
+
+1.14
+----
+- Added ``cluster_id`` to filters result returned action APIs.

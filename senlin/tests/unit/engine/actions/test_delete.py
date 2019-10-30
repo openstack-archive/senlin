@@ -49,6 +49,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
         action.id = 'CLUSTER_ACTION_ID'
         action.inputs = {'destroy_after_deletion': False}
+        action.context = self.ctx
         mock_wait.return_value = (action.RES_OK, 'All dependents completed')
         mock_action.return_value = 'NODE_ACTION_ID'
 
@@ -60,11 +61,13 @@ class ClusterDeleteTest(base.SenlinTestCase):
         self.assertEqual('All dependents completed', res_msg)
         mock_action.assert_called_once_with(
             action.context, 'NODE_ID', 'NODE_DELETE',
-            name='node_delete_NODE_ID', cause='Derived Action', inputs={})
+            name='node_delete_NODE_ID', cause='Derived Action',
+            cluster_id='FAKE_CLUSTER', inputs={})
         mock_dep.assert_called_once_with(action.context, ['NODE_ACTION_ID'],
                                          'CLUSTER_ACTION_ID')
-        mock_update.assert_called_once_with(action.context, 'NODE_ACTION_ID',
-                                            {'status': 'READY'})
+        mock_update.assert_called_with(action.context,
+                                       'NODE_ACTION_ID',
+                                       {'status': 'READY'})
         mock_start.assert_called_once_with()
         mock_wait.assert_called_once_with()
         self.assertEqual(['NODE_ID'], action.outputs['nodes_removed'])
@@ -100,10 +103,12 @@ class ClusterDeleteTest(base.SenlinTestCase):
             mock.call(action.context, 'NODE_ID', 'NODE_OPERATION',
                       name='node_delete_NODE_ID',
                       cause='Derived Action',
+                      cluster_id='FAKE_CLUSTER',
                       inputs={'operation': 'stop',
                               'update_parent_status': False}),
             mock.call(action.context, 'NODE_ID', 'NODE_DELETE',
                       name='node_delete_NODE_ID',
+                      cluster_id='FAKE_CLUSTER',
                       cause='Derived Action', inputs={})
         ]
         mock_action.assert_has_calls(create_actions)
@@ -203,7 +208,8 @@ class ClusterDeleteTest(base.SenlinTestCase):
         self.assertEqual('All dependents completed', res_msg)
         mock_action.assert_called_once_with(
             action.context, 'NODE_ID', 'NODE_LEAVE',
-            name='node_delete_NODE_ID', cause='Derived Action', inputs={})
+            name='node_delete_NODE_ID', cluster_id='CLUSTER_ID',
+            cause='Derived Action', inputs={})
 
     @mock.patch.object(ao.Action, 'update')
     @mock.patch.object(ab.Action, 'create')
@@ -249,6 +255,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
             action.context, 'NODE_ID', 'NODE_DELETE',
             name='node_delete_NODE_ID',
             cause='Derived Action with Lifecycle Hook',
+            cluster_id='CLUSTER_ID',
             inputs={})
         update_calls = [
             mock.call(action.context, 'NODE_ACTION_ID',
@@ -323,6 +330,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             action.context, 'NODE_ID', 'NODE_DELETE',
             name='node_delete_NODE_ID',
+            cluster_id='CLUSTER_ID',
             cause='Derived Action with Lifecycle Hook', inputs={})
         update_calls = [
             mock.call(action.context, 'NODE_ACTION_ID',
@@ -384,6 +392,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
         mock_action.assert_called_once_with(
             action.context, 'NODE_ID', 'NODE_DELETE',
             name='node_delete_NODE_ID',
+            cluster_id='CLUSTER_ID',
             cause='Derived Action with Lifecycle Hook', inputs={})
         update_calls = [
             mock.call(action.context, 'NODE_ACTION_ID',
@@ -954,7 +963,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
         self.assertEqual(1, mock_dep.call_count)
         mock_action.assert_called_once_with(
             action.context, 'NODE_ID', 'NODE_DELETE',
-            name='node_delete_NODE_ID',
+            name='node_delete_NODE_ID', cluster_id='CLUSTER_ID',
             cause='Derived Action with Lifecycle Hook', inputs={})
         update_calls = [
             mock.call(action.context, 'NODE_ACTION_ID',
@@ -1084,9 +1093,11 @@ class ClusterDeleteTest(base.SenlinTestCase):
         create_actions = [
             mock.call(action.context, 'NODE_1', 'NODE_DELETE',
                       name='node_delete_NODE_1',
+                      cluster_id='CLUSTER_ID',
                       cause='Derived Action with Lifecycle Hook', inputs={}),
             mock.call(action.context, 'NODE_2', 'NODE_DELETE',
                       name='node_delete_NODE_2',
+                      cluster_id='CLUSTER_ID',
                       cause='Derived Action with Lifecycle Hook', inputs={})
         ]
         mock_action.assert_has_calls(create_actions)
