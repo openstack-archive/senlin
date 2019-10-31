@@ -69,6 +69,8 @@ if is_service_enabled tls-proxy; then
     SENLIN_SERVICE_PROTOCOL="https"
 fi
 
+SENLIN_SERVICE_PROTOCOL=${SENLIN_SERVICE_PROTOCOL:-$SERVICE_PROTOCOL}
+
 # Functions
 # ---------
 
