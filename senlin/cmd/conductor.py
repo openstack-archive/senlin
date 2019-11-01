@@ -39,7 +39,7 @@ def main():
     from senlin.conductor import service as conductor
 
     profiler.setup('senlin-conductor', cfg.CONF.host)
-    srv = conductor.ConductorService(cfg.CONF.host, consts.ENGINE_TOPIC)
+    srv = conductor.ConductorService(cfg.CONF.host, consts.CONDUCTOR_TOPIC)
     launcher = service.launch(cfg.CONF, srv,
                               workers=cfg.CONF.conductor.workers,
                               restart_method='mutate')

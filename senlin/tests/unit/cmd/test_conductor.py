@@ -50,7 +50,7 @@ class TestConductor(base.SenlinTestCase):
         mock_profiler_setup.assert_called_once()
 
         mock_service.assert_called_once_with(
-            'hostname', consts.ENGINE_TOPIC
+            'hostname', consts.CONDUCTOR_TOPIC
         )
 
         mock_launch.assert_called_once_with(

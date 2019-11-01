@@ -65,7 +65,7 @@ class TestEngine(base.SenlinTestCase):
 
         self.service_id = '4db0a14c-dc10-4131-8ed6-7573987ce9b0'
         self.tg = mock.Mock()
-        self.topic = consts.DISPATCHER_TOPIC
+        self.topic = consts.ENGINE_TOPIC
 
         self.tg = mock.Mock()
         self.svc = service.EngineService('HOST', self.topic)
@@ -160,7 +160,7 @@ class TestEngine(base.SenlinTestCase):
 
         dispatcher.notify('METHOD')
 
-        mock_rpc.assert_called_once_with(consts.DISPATCHER_TOPIC, 'HOSTNAME')
+        mock_rpc.assert_called_once_with(consts.ENGINE_TOPIC, 'HOSTNAME')
         mock_client = mock_rpc.return_value
         mock_client.prepare.assert_called_once_with(fanout=True)
 
@@ -178,7 +178,7 @@ class TestEngine(base.SenlinTestCase):
         result = dispatcher.notify('METHOD', 'FAKE_ENGINE')
 
         self.assertTrue(result)
-        mock_rpc.assert_called_once_with(consts.DISPATCHER_TOPIC, 'HOSTNAME')
+        mock_rpc.assert_called_once_with(consts.ENGINE_TOPIC, 'HOSTNAME')
         mock_client = mock_rpc.return_value
         mock_client.prepare.assert_called_once_with(server='FAKE_ENGINE')
 
@@ -196,7 +196,7 @@ class TestEngine(base.SenlinTestCase):
         result = dispatcher.notify('METHOD')
 
         self.assertFalse(result)
-        mock_rpc.assert_called_once_with(consts.DISPATCHER_TOPIC, 'HOSTNAME')
+        mock_rpc.assert_called_once_with(consts.ENGINE_TOPIC, 'HOSTNAME')
         mock_client.prepare.assert_called_once_with(fanout=True)
 
         mock_context.cast.assert_called_once_with(mock.ANY, 'METHOD')

@@ -50,7 +50,7 @@ class TestEngine(base.SenlinTestCase):
         mock_profiler_setup.assert_called_once()
 
         mock_service.assert_called_once_with(
-            'hostname', consts.DISPATCHER_TOPIC
+            'hostname', consts.ENGINE_TOPIC
         )
 
         mock_launch.assert_called_once_with(

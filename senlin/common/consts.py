@@ -13,15 +13,15 @@
 from oslo_log import log as logging
 
 RPC_ATTRS = (
+    CONDUCTOR_TOPIC,
     ENGINE_TOPIC,
-    DISPATCHER_TOPIC,
     HEALTH_MANAGER_TOPIC,
     RPC_API_VERSION_BASE,
     RPC_API_VERSION,
 ) = (
+    'senlin-conductor',
     'senlin-engine',
-    'engine-dispatcher',
-    'engine-health-mgr',
+    'senlin-health-manager',
     '1.0',
     '1.1',
 )
