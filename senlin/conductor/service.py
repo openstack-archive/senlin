@@ -85,7 +85,7 @@ class ConductorService(service.Service):
     def __init__(self, host, topic):
         super(ConductorService, self).__init__(
             self.service_name, host, topic,
-            threads=cfg.CONF.scheduler_thread_pool_size
+            threads=CONF.conductor.threads
         )
         self.dispatcher_topic = consts.DISPATCHER_TOPIC
         self.health_mgr_topic = consts.HEALTH_MANAGER_TOPIC

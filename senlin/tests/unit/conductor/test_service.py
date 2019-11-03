@@ -40,6 +40,20 @@ class ConductorTest(base.SenlinTestCase):
         self.svc.service_id = self.service_id
         self.svc.tg = self.tg
 
+    @mock.patch('oslo_service.service.Service.__init__')
+    def test_service_thread_numbers(self, mock_service_init):
+        service.ConductorService('HOST', self.topic)
+
+        mock_service_init.assert_called_once_with(1000)
+
+    @mock.patch('oslo_service.service.Service.__init__')
+    def test_service_thread_numbers_override(self, mock_service_init):
+        cfg.CONF.set_override('threads', 100, group='conductor')
+
+        service.ConductorService('HOST', self.topic)
+
+        mock_service_init.assert_called_once_with(100)
+
     def test_init(self):
         self.assertEqual(self.service_id, self.svc.service_id)
         self.assertEqual(self.tg, self.svc.tg)
