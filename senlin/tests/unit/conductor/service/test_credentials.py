@@ -12,7 +12,7 @@
 
 import mock
 
-from senlin.engine import service
+from senlin.conductor import service
 from senlin.objects import credential as co
 from senlin.objects.requests import credentials as vorc
 from senlin.tests.unit.common import base
@@ -20,12 +20,11 @@ from senlin.tests.unit.common import utils
 
 
 class CredentialTest(base.SenlinTestCase):
-
     def setUp(self):
         super(CredentialTest, self).setUp()
         self.ctx = utils.dummy_context(user_id='fake_user_id',
                                        project='fake_project_id')
-        self.eng = service.EngineService('host-a', 'topic-a')
+        self.svc = service.ConductorService('host-a', 'topic-a')
 
     @mock.patch.object(co.Credential, 'update_or_create')
     def test_credential_create(self, mock_create):
@@ -34,7 +33,7 @@ class CredentialTest(base.SenlinTestCase):
         req = vorc.CredentialCreateRequest(cred=cred,
                                            attrs={'k1': 'v1'})
 
-        result = self.eng.credential_create(self.ctx, req.obj_to_primitive())
+        result = self.svc.credential_create(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'cred': cred}, result)
         mock_create.assert_called_once_with(
@@ -59,7 +58,7 @@ class CredentialTest(base.SenlinTestCase):
                                         project=self.ctx.project_id,
                                         query={'k1': 'v1'})
 
-        result = self.eng.credential_get(self.ctx, req.obj_to_primitive())
+        result = self.svc.credential_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar'}, result)
         mock_get.assert_called_once_with(
@@ -71,7 +70,7 @@ class CredentialTest(base.SenlinTestCase):
         req = vorc.CredentialGetRequest(user=self.ctx.user_id,
                                         project=self.ctx.project_id)
 
-        result = self.eng.credential_get(self.ctx, req.obj_to_primitive())
+        result = self.svc.credential_get(self.ctx, req.obj_to_primitive())
 
         self.assertIsNone(result)
         mock_get.assert_called_once_with(
@@ -84,7 +83,7 @@ class CredentialTest(base.SenlinTestCase):
         req = vorc.CredentialGetRequest(user=self.ctx.user_id,
                                         project=self.ctx.project_id)
 
-        result = self.eng.credential_get(self.ctx, req.obj_to_primitive())
+        result = self.svc.credential_get(self.ctx, req.obj_to_primitive())
 
         self.assertIsNone(result)
         mock_get.assert_called_once_with(
@@ -95,7 +94,7 @@ class CredentialTest(base.SenlinTestCase):
         x_cred = 'fake_credential'
         cred = {'openstack': {'trust': x_cred}}
         req = vorc.CredentialUpdateRequest(cred=cred)
-        result = self.eng.credential_update(self.ctx, req.obj_to_primitive())
+        result = self.svc.credential_update(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'cred': cred}, result)
         mock_update.assert_called_once_with(

@@ -15,19 +15,18 @@ from oslo_messaging.rpc import dispatcher as rpc
 import six
 
 from senlin.common import exception as exc
+from senlin.conductor import service
 from senlin.engine import environment
-from senlin.engine import service
 from senlin.objects.requests import profile_type as vorp
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
 
 class ProfileTypeTest(base.SenlinTestCase):
-
     def setUp(self):
         super(ProfileTypeTest, self).setUp()
         self.ctx = utils.dummy_context(project='profile_type_test_project')
-        self.eng = service.EngineService('host-a', 'topic-a')
+        self.svc = service.ConductorService('host-a', 'topic-a')
 
     @mock.patch.object(environment, 'global_env')
     def test_profile_type_list(self, mock_env):
@@ -36,7 +35,7 @@ class ProfileTypeTest(base.SenlinTestCase):
         mock_env.return_value = x_env
 
         req = vorp.ProfileTypeListRequest()
-        types = self.eng.profile_type_list(self.ctx, req.obj_to_primitive())
+        types = self.svc.profile_type_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([{'foo': 'bar'}], types)
         mock_env.assert_called_once_with()
@@ -53,7 +52,7 @@ class ProfileTypeTest(base.SenlinTestCase):
         mock_env.return_value = x_env
 
         req = vorp.ProfileTypeGetRequest(type_name='FAKE_TYPE')
-        result = self.eng.profile_type_get(self.ctx, req.obj_to_primitive())
+        result = self.svc.profile_type_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual(
             {
@@ -76,7 +75,7 @@ class ProfileTypeTest(base.SenlinTestCase):
 
         req = vorp.ProfileTypeGetRequest(type_name='FAKE_TYPE')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_type_get,
+                               self.svc.profile_type_get,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -94,7 +93,7 @@ class ProfileTypeTest(base.SenlinTestCase):
         mock_env.return_value = x_env
 
         req = vorp.ProfileTypeOpListRequest(type_name='FAKE_TYPE')
-        ops = self.eng.profile_type_ops(self.ctx, req.obj_to_primitive())
+        ops = self.svc.profile_type_ops(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'operations': {'foo': 'bar'}}, ops)
         mock_env.assert_called_once_with()
@@ -110,7 +109,7 @@ class ProfileTypeTest(base.SenlinTestCase):
         req = vorp.ProfileTypeOpListRequest(type_name='FAKE_TYPE')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.profile_type_ops,
+                               self.svc.profile_type_ops,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])

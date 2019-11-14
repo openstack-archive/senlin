@@ -20,13 +20,11 @@ from oslo_utils import timeutils as tu
 from senlin.common import consts
 from senlin.common import context
 from senlin.common import exception as exc
-from senlin.common import messaging
 from senlin.common import utils
 from senlin.engine import health_manager as hm
 from senlin.engine import node as node_mod
 from senlin import objects
 from senlin.objects import cluster as obj_cluster
-from senlin.objects import health_registry as hr
 from senlin.objects import node as obj_node
 from senlin.objects import profile as obj_profile
 from senlin.rpc import client as rpc_client
@@ -38,7 +36,7 @@ class TestChaseUp(base.SenlinTestCase):
     def test_less_than_one_interval(self):
         start = tu.utcnow(True)
         # we assume that the delay before next line is < 5 seconds
-        res = hm._chase_up(start, 5)
+        res = hm.chase_up(start, 5)
 
         self.assertLessEqual(res, 5)
 
@@ -47,7 +45,7 @@ class TestChaseUp(base.SenlinTestCase):
         time.sleep(2)
 
         # we assume that the delay before next line is < 5 seconds
-        res = hm._chase_up(start, 1)
+        res = hm.chase_up(start, 1)
 
         self.assertLessEqual(res, 1)
 
@@ -1720,106 +1718,3 @@ class TestRuntimeHealthRegistry(base.SenlinTestCase):
         self.mock_tg.timer_done.assert_not_called()
         self.mock_tg.thread_done.assert_called_once_with(fake_listener)
         self.assertIsNone(mock_entry.listener)
-
-
-class TestHealthManager(base.SenlinTestCase):
-
-    def setUp(self):
-        super(TestHealthManager, self).setUp()
-
-        mock_eng = mock.Mock()
-        mock_eng.engine_id = 'ENGINE_ID'
-        topic = consts.HEALTH_MANAGER_TOPIC
-        version = consts.RPC_API_VERSION
-        self.hm = hm.HealthManager(mock_eng, topic, version)
-
-    def test_init(self):
-        self.assertEqual('ENGINE_ID', self.hm.engine_id)
-        self.assertIsNotNone(self.hm.TG)
-        self.assertIsNotNone(self.hm.rpc_client)
-        self.assertEqual(consts.HEALTH_MANAGER_TOPIC, self.hm.topic)
-        self.assertEqual(consts.RPC_API_VERSION, self.hm.version)
-        self.assertEqual(0, len(self.hm.registries))
-
-    def test_task(self):
-        self.hm.health_registry = mock.Mock()
-        self.hm.task()
-        self.hm.health_registry.load_runtime_registry.assert_called_once_with()
-
-    @mock.patch('oslo_messaging.Target')
-    def test_start(self, mock_target):
-        self.hm.TG = mock.Mock()
-        target = mock.Mock()
-        mock_target.return_value = target
-        x_rpc_server = mock.Mock()
-        mock_get_rpc = self.patchobject(messaging, 'get_rpc_server',
-                                        return_value=x_rpc_server)
-        x_timer = mock.Mock()
-        mock_add_timer = self.patchobject(self.hm.TG, 'add_dynamic_timer',
-                                          return_value=x_timer)
-
-        # do it
-        self.hm.start()
-
-        # assert
-        mock_target.assert_called_once_with(server='ENGINE_ID',
-                                            topic='engine-health-mgr',
-                                            version=consts.RPC_API_VERSION)
-        mock_get_rpc.assert_called_once_with(target, self.hm)
-        x_rpc_server.start.assert_called_once_with()
-        mock_add_timer.assert_called_once_with(
-            self.hm.task, None, cfg.CONF.periodic_interval)
-
-    def test_stop(self):
-        self.hm.TG = mock.Mock()
-        self.hm.stop()
-        self.hm.TG.stop_timers.assert_called_once_with()
-
-    def test_register_cluster(self):
-        self.hm.health_registry = mock.Mock()
-        ctx = mock.Mock()
-        self.hm.register_cluster(ctx, 'CID', 60, 160, {}, True)
-        self.hm.health_registry.register_cluster.assert_called_once_with(
-            cluster_id='CID',
-            enabled=True,
-            interval=60,
-            node_update_timeout=160,
-            params={})
-
-    def test_unregister_cluster(self):
-        self.hm.health_registry = mock.Mock()
-        ctx = mock.Mock()
-        self.hm.unregister_cluster(ctx, 'CID')
-        self.hm.health_registry.unregister_cluster.assert_called_once_with(
-            'CID')
-
-    @mock.patch.object(context, 'get_admin_context')
-    @mock.patch.object(hr.HealthRegistry, 'get')
-    def test_get_manager_engine(self, mock_get, mock_ctx):
-        ctx = mock.Mock()
-        mock_ctx.return_value = ctx
-
-        registry = mock.Mock(engine_id='fake')
-        mock_get.return_value = registry
-
-        result = hm.get_manager_engine('CID')
-
-        self.assertEqual(result, 'fake')
-
-        mock_get.assert_called_once_with(ctx, 'CID')
-        self.assertTrue(mock_ctx.called)
-
-    @mock.patch.object(context, 'get_admin_context')
-    @mock.patch.object(hr.HealthRegistry, 'get')
-    def test_get_manager_engine_none(self, mock_get, mock_ctx):
-        ctx = mock.Mock()
-        mock_ctx.return_value = ctx
-
-        mock_get.return_value = None
-
-        result = hm.get_manager_engine('CID')
-
-        self.assertIsNone(result)
-
-        mock_get.assert_called_once_with(ctx, 'CID')
-        self.assertTrue(mock_ctx.called)

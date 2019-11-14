@@ -16,8 +16,8 @@ import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
+from senlin.conductor import service
 from senlin.engine.actions import base as ab
-from senlin.engine import service
 from senlin.objects import action as ao
 from senlin.objects import cluster as co
 from senlin.objects.requests import actions as orao
@@ -26,12 +26,10 @@ from senlin.tests.unit.common import utils
 
 
 class ActionTest(base.SenlinTestCase):
-
     def setUp(self):
         super(ActionTest, self).setUp()
         self.ctx = utils.dummy_context(project='action_test_project')
-        self.eng = service.EngineService('host-a', 'topic-a')
-        self.eng.init_tgm()
+        self.svc = service.ConductorService('host-a', 'topic-a')
 
     @mock.patch.object(ao.Action, 'get_all')
     def test_action_list(self, mock_get):
@@ -42,7 +40,7 @@ class ActionTest(base.SenlinTestCase):
         mock_get.return_value = [x_1, x_2]
 
         req = orao.ActionListRequest()
-        result = self.eng.action_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.action_list(self.ctx, req.obj_to_primitive())
         expected = [{'k': 'v1'}, {'k': 'v2'}]
         self.assertEqual(expected, result)
 
@@ -60,7 +58,7 @@ class ActionTest(base.SenlinTestCase):
                                      limit=100,
                                      sort='status',
                                      project_safe=True)
-        result = self.eng.action_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.action_list(self.ctx, req.obj_to_primitive())
         expected = [{'status': 'READY'}, {'status': 'SUCCESS'}]
         self.assertEqual(expected, result)
 
@@ -75,7 +73,7 @@ class ActionTest(base.SenlinTestCase):
     def test_action_list_with_bad_params(self):
         req = orao.ActionListRequest(project_safe=False)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.action_list,
+                               self.svc.action_list,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.Forbidden, ex.exc_info[0])
 
@@ -84,7 +82,7 @@ class ActionTest(base.SenlinTestCase):
         mock_get.return_value = []
 
         req = orao.ActionListRequest(project_safe=True)
-        result = self.eng.action_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.action_list(self.ctx, req.obj_to_primitive())
         self.assertEqual([], result)
         mock_get.assert_called_once_with(self.ctx, project_safe=True)
 
@@ -92,13 +90,13 @@ class ActionTest(base.SenlinTestCase):
 
         mock_get.reset_mock()
         req = orao.ActionListRequest(project_safe=True)
-        result = self.eng.action_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.action_list(self.ctx, req.obj_to_primitive())
         self.assertEqual([], result)
         mock_get.assert_called_once_with(self.ctx, project_safe=True)
 
         mock_get.reset_mock()
         req = orao.ActionListRequest(project_safe=False)
-        result = self.eng.action_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.action_list(self.ctx, req.obj_to_primitive())
         self.assertEqual([], result)
         mock_get.assert_called_once_with(self.ctx, project_safe=False)
 
@@ -111,7 +109,7 @@ class ActionTest(base.SenlinTestCase):
         req = orao.ActionCreateRequestBody(name='a1', cluster_id='C1',
                                            action='CLUSTER_CREATE')
 
-        result = self.eng.action_create(self.ctx, req.obj_to_primitive())
+        result = self.svc.action_create(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'C1')
@@ -130,7 +128,7 @@ class ActionTest(base.SenlinTestCase):
         req = orao.ActionCreateRequestBody(name='NODE1',
                                            cluster_id='C1')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.action_create,
+                               self.svc.action_create,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -145,7 +143,7 @@ class ActionTest(base.SenlinTestCase):
         x_obj.to_dict.return_value = {'k': 'v'}
 
         req = orao.ActionGetRequest(identity='ACTION_ID')
-        result = self.eng.action_get(self.ctx, req.obj_to_primitive())
+        result = self.svc.action_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'k': 'v'}, result)
         mock_find.assert_called_once_with(self.ctx, 'ACTION_ID')
@@ -156,7 +154,7 @@ class ActionTest(base.SenlinTestCase):
         req = orao.ActionGetRequest(identity='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.action_get,
+                               self.svc.action_get,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
@@ -170,7 +168,7 @@ class ActionTest(base.SenlinTestCase):
         mock_delete.return_value = None
 
         req = orao.ActionDeleteRequest(identity='ACTION_ID')
-        result = self.eng.action_delete(self.ctx, req.obj_to_primitive())
+        result = self.svc.action_delete(self.ctx, req.obj_to_primitive())
         self.assertIsNone(result)
         mock_find.assert_called_once_with(self.ctx, 'ACTION_ID')
         mock_delete.assert_called_once_with(self.ctx, 'FAKE_ID')
@@ -186,7 +184,7 @@ class ActionTest(base.SenlinTestCase):
 
         req = orao.ActionDeleteRequest(identity='ACTION_ID')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.action_delete,
+                               self.svc.action_delete,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
@@ -202,7 +200,7 @@ class ActionTest(base.SenlinTestCase):
 
         req = orao.ActionDeleteRequest(identity='ACTION_ID')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.action_delete,
+                               self.svc.action_delete,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -218,7 +216,7 @@ class ActionTest(base.SenlinTestCase):
         req = orao.ActionUpdateRequest(identity='ACTION_ID',
                                        status='CANCELLED', force=False)
 
-        result = self.eng.action_update(self.ctx, req.obj_to_primitive())
+        result = self.svc.action_update(self.ctx, req.obj_to_primitive())
         self.assertIsNone(result)
 
         mock_load.assert_called_with(self.ctx, 'ACTION_ID', project_safe=False)
@@ -233,7 +231,7 @@ class ActionTest(base.SenlinTestCase):
 
         req = orao.ActionUpdateRequest(identity='ACTION_ID',
                                        status='FOO')
-        ex = self.assertRaises(rpc.ExpectedException, self.eng.action_update,
+        ex = self.assertRaises(rpc.ExpectedException, self.svc.action_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])

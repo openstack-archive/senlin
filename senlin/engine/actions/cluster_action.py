@@ -26,7 +26,6 @@ from senlin.engine import cluster as cluster_mod
 from senlin.engine import dispatcher
 from senlin.engine import node as node_mod
 from senlin.engine.notifications import message as msg
-from senlin.engine import scheduler
 from senlin.engine import senlin_lock
 from senlin.objects import action as ao
 from senlin.objects import cluster as co
@@ -110,7 +109,8 @@ class ClusterAction(base.Action):
                 return self.RES_LIFECYCLE_HOOK_TIMEOUT, reason
 
             # Continue waiting (with reschedule)
-            scheduler.reschedule(self.id, 3)
+            LOG.debug('Action %s sleep for 3 seconds ', self.id)
+            self._sleep(3)
             status = self.get_status()
             dispatcher.start_action()
 

@@ -16,10 +16,10 @@ import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
+from senlin.conductor import service
 from senlin.engine.actions import base as am
 from senlin.engine import cluster as cm
 from senlin.engine import dispatcher
-from senlin.engine import service
 from senlin.objects import cluster as co
 from senlin.objects import node as no
 from senlin.objects.requests import clusters as orco
@@ -28,12 +28,11 @@ from senlin.tests.unit.common import utils
 
 
 class ClusterOpTest(base.SenlinTestCase):
-
     def setUp(self):
         super(ClusterOpTest, self).setUp()
 
         self.ctx = utils.dummy_context(project='cluster_op_test_project')
-        self.eng = service.EngineService('host-a', 'topic-a')
+        self.svc = service.ConductorService('host-a', 'topic-a')
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(am.Action, 'create')
@@ -58,7 +57,7 @@ class ClusterOpTest(base.SenlinTestCase):
                                            params=params,
                                            filters=filters)
 
-        result = self.eng.cluster_op(self.ctx, req.obj_to_primitive())
+        result = self.svc.cluster_op(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
@@ -86,7 +85,7 @@ class ClusterOpTest(base.SenlinTestCase):
             type='cluster', id='Bogus')
         req = orco.ClusterOperationRequest(identity='Bogus', operation='dance')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_op,
+                               self.svc.cluster_op,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -107,7 +106,7 @@ class ClusterOpTest(base.SenlinTestCase):
         req = orco.ClusterOperationRequest(identity='node1', operation='swim')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_op,
+                               self.svc.cluster_op,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -132,7 +131,7 @@ class ClusterOpTest(base.SenlinTestCase):
                                            params={'style': 'tango'})
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_op,
+                               self.svc.cluster_op,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -162,7 +161,7 @@ class ClusterOpTest(base.SenlinTestCase):
                                            operation='dance',
                                            filters=filters)
 
-        result = self.eng.cluster_op(self.ctx, req.obj_to_primitive())
+        result = self.svc.cluster_op(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
@@ -203,7 +202,7 @@ class ClusterOpTest(base.SenlinTestCase):
         req = orco.ClusterOperationRequest(identity='FAKE_CLUSTER',
                                            operation='dance')
 
-        result = self.eng.cluster_op(self.ctx, req.obj_to_primitive())
+        result = self.svc.cluster_op(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
@@ -245,7 +244,7 @@ class ClusterOpTest(base.SenlinTestCase):
                                            filters=filters)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_op,
+                               self.svc.cluster_op,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -277,7 +276,7 @@ class ClusterOpTest(base.SenlinTestCase):
                                            operation='dance', filters=filters)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_op,
+                               self.svc.cluster_op,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])

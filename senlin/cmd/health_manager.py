@@ -13,7 +13,7 @@
 #    under the License.
 
 """
-Senlin Engine.
+Senlin Health-Manager.
 """
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -29,19 +29,19 @@ from senlin import version
 
 def main():
     logging.register_options(cfg.CONF)
-    cfg.CONF(project='senlin', prog='senlin-engine')
-    logging.setup(cfg.CONF, 'senlin-engine')
+    cfg.CONF(project='senlin', prog='senlin-health-manager')
+    logging.setup(cfg.CONF, 'senlin-health-manager')
     logging.set_defaults()
     gmr.TextGuruMeditation.setup_autorun(version)
     objects.register_all()
     messaging.setup()
 
-    from senlin.engine import service as engine
+    from senlin.health_manager import service as health_manager
 
-    profiler.setup('senlin-engine', cfg.CONF.host)
-    srv = engine.EngineService(cfg.CONF.host,
-                               consts.DISPATCHER_TOPIC)
+    profiler.setup('senlin-health-manager', cfg.CONF.host)
+    srv = health_manager.HealthManagerService(cfg.CONF.host,
+                                              consts.HEALTH_MANAGER_TOPIC)
     launcher = service.launch(cfg.CONF, srv,
-                              workers=cfg.CONF.num_engine_workers,
+                              workers=cfg.CONF.health_manager.workers,
                               restart_method='mutate')
     launcher.wait()

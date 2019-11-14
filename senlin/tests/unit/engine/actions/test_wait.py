@@ -9,13 +9,12 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+import eventlet
 import mock
 
 from senlin.engine.actions import base as ab
 from senlin.engine.actions import cluster_action as ca
 from senlin.engine import cluster as cm
-from senlin.engine import scheduler
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -77,7 +76,7 @@ class ClusterActionWaitTest(base.SenlinTestCase):
         self.ctx = utils.dummy_context()
 
     @mock.patch.object(cm.Cluster, 'load')
-    @mock.patch.object(scheduler, 'reschedule')
+    @mock.patch.object(eventlet, 'sleep')
     def test_wait_dependents(self, mock_reschedule, mock_load):
         action = ca.ClusterAction('ID', 'ACTION', self.ctx)
         action.id = 'FAKE_ID'

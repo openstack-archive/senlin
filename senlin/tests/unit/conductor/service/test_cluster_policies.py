@@ -16,9 +16,9 @@ import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
+from senlin.conductor import service
 from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
-from senlin.engine import service
 from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
 from senlin.objects import policy as po
@@ -29,12 +29,10 @@ from senlin.tests.unit.common import utils
 
 
 class ClusterPolicyTest(base.SenlinTestCase):
-
     def setUp(self):
         super(ClusterPolicyTest, self).setUp()
         self.ctx = utils.dummy_context(project='cluster_policy_test_project')
-        self.eng = service.EngineService('host-a', 'topic-a')
-        self.eng.init_tgm()
+        self.svc = service.ConductorService('host-a', 'topic-a')
 
     @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(cpo.ClusterPolicy, 'get_all')
@@ -48,7 +46,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_get.return_value = [b1, b2]
 
         req = orcp.ClusterPolicyListRequest(identity='CLUSTER')
-        result = self.eng.cluster_policy_list(
+        result = self.svc.cluster_policy_list(
             self.ctx, req.obj_to_primitive())
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
@@ -72,7 +70,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
         req = orcp.ClusterPolicyListRequest(**params)
 
-        result = self.eng.cluster_policy_list(
+        result = self.svc.cluster_policy_list(
             self.ctx, req.obj_to_primitive())
         self.assertEqual([], result)
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
@@ -95,7 +93,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                                      id='Bogus')
         req = orcp.ClusterPolicyListRequest(identity='Bogus')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_list,
+                               self.svc.cluster_policy_list,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster 'Bogus' could not be found.",
@@ -114,7 +112,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
         req = orcp.ClusterPolicyGetRequest(identity='C1',
                                            policy_id='P1')
-        result = self.eng.cluster_policy_get(self.ctx,
+        result = self.svc.cluster_policy_get(self.ctx,
                                              req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar'}, result)
@@ -129,7 +127,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         req = orcp.ClusterPolicyGetRequest(identity='cid',
                                            policy_id='pid')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_get,
+                               self.svc.cluster_policy_get,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster 'cid' could not be found.",
@@ -145,7 +143,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         req = orcp.ClusterPolicyGetRequest(identity='cid',
                                            policy_id='pid')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_get,
+                               self.svc.cluster_policy_get,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -166,7 +164,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         req = orcp.ClusterPolicyGetRequest(identity='cid',
                                            policy_id='pid')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_get,
+                               self.svc.cluster_policy_get,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.PolicyBindingNotFound, ex.exc_info[0])
@@ -185,7 +183,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         req = orco.ClusterAttachPolicyRequest(identity='C1', policy_id='P1',
                                               enabled=True)
 
-        res = self.eng.cluster_policy_attach(self.ctx, req.obj_to_primitive())
+        res = self.svc.cluster_policy_attach(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, res)
         mock_cluster.assert_called_once_with(self.ctx, 'C1')
@@ -209,7 +207,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                               policy_id='POLICY_ID')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_attach,
+                               self.svc.cluster_policy_attach,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -227,7 +225,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                               policy_id='BOGUS')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_attach,
+                               self.svc.cluster_policy_attach,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -249,7 +247,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         mock_cp.return_value = mock.Mock()
         req = orco.ClusterDetachPolicyRequest(identity='C1', policy_id='P1')
 
-        res = self.eng.cluster_policy_detach(self.ctx, req.obj_to_primitive())
+        res = self.svc.cluster_policy_detach(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, res)
         mock_cluster.assert_called_once_with(self.ctx, 'C1')
@@ -274,7 +272,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                               policy_id='POLICY_ID')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_detach,
+                               self.svc.cluster_policy_detach,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -292,7 +290,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                               policy_id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_detach,
+                               self.svc.cluster_policy_detach,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -312,7 +310,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         req = orco.ClusterDetachPolicyRequest(identity='C1', policy_id='P1')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_detach,
+                               self.svc.cluster_policy_detach,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -337,7 +335,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         req = orco.ClusterUpdatePolicyRequest(identity='C1', policy_id='P1',
                                               enabled=False)
 
-        res = self.eng.cluster_policy_update(self.ctx, req.obj_to_primitive())
+        res = self.svc.cluster_policy_update(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, res)
         mock_cluster.assert_called_once_with(self.ctx, 'C1')
@@ -362,7 +360,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                               enabled=True)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_update,
+                               self.svc.cluster_policy_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -380,7 +378,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                               enabled=True)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_update,
+                               self.svc.cluster_policy_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -401,7 +399,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                               enabled=True)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.cluster_policy_update,
+                               self.svc.cluster_policy_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])

@@ -16,7 +16,7 @@ from oslo_messaging.rpc import dispatcher as rpc
 
 from senlin.common import consts
 from senlin.common import exception as exc
-from senlin.engine import service
+from senlin.conductor import service
 from senlin.objects import cluster as co
 from senlin.objects import event as eo
 from senlin.objects.requests import events as oreo
@@ -25,11 +25,10 @@ from senlin.tests.unit.common import utils
 
 
 class EventTest(base.SenlinTestCase):
-
     def setUp(self):
         super(EventTest, self).setUp()
         self.ctx = utils.dummy_context(project='event_test_project')
-        self.eng = service.EngineService('host-a', 'topic-a')
+        self.svc = service.ConductorService('host-a', 'topic-a')
 
     @mock.patch.object(eo.Event, 'get_all')
     def test_event_list(self, mock_load):
@@ -41,7 +40,7 @@ class EventTest(base.SenlinTestCase):
         mock_load.return_value = [obj_1, obj_2]
 
         req = oreo.EventListRequest()
-        result = self.eng.event_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.event_list(self.ctx, req.obj_to_primitive())
         expected = [{'level': 'DEBUG'}, {'level': 'INFO'}]
 
         self.assertEqual(expected, result)
@@ -62,7 +61,7 @@ class EventTest(base.SenlinTestCase):
                                     marker=marker_uuid,
                                     sort=consts.EVENT_TIMESTAMP,
                                     project_safe=True)
-        result = self.eng.event_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.event_list(self.ctx, req.obj_to_primitive())
         expected = [{'level': 'DEBUG'}, {'level': 'INFO'}]
         self.assertEqual(expected, result)
 
@@ -88,7 +87,7 @@ class EventTest(base.SenlinTestCase):
         req = oreo.EventListRequest(cluster_id=['CLUSTERA', 'CLUSTER2'],
                                     project_safe=True)
 
-        result = self.eng.event_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.event_list(self.ctx, req.obj_to_primitive())
 
         expected = [{'level': 'DEBUG'}, {'level': 'INFO'}]
         self.assertEqual(expected, result)
@@ -111,7 +110,7 @@ class EventTest(base.SenlinTestCase):
         req = oreo.EventListRequest(cluster_id=['CLUSTERA', 'CLUSTER2'],
                                     project_safe=True)
 
-        result = self.eng.event_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.event_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([], result)
         self.assertEqual(0, mock_load.call_count)
@@ -123,7 +122,7 @@ class EventTest(base.SenlinTestCase):
     def test_event_list_with_bad_params(self):
         req = oreo.EventListRequest(project_safe=False)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.event_list,
+                               self.svc.event_list,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.Forbidden, ex.exc_info[0])
 
@@ -132,7 +131,7 @@ class EventTest(base.SenlinTestCase):
         mock_load.return_value = []
 
         req = oreo.EventListRequest(project_safe=True)
-        result = self.eng.event_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.event_list(self.ctx, req.obj_to_primitive())
         self.assertEqual([], result)
         mock_load.assert_called_once_with(self.ctx, project_safe=True)
 
@@ -140,13 +139,13 @@ class EventTest(base.SenlinTestCase):
 
         mock_load.reset_mock()
         req = oreo.EventListRequest(project_safe=True)
-        result = self.eng.event_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.event_list(self.ctx, req.obj_to_primitive())
         self.assertEqual([], result)
         mock_load.assert_called_once_with(self.ctx, project_safe=True)
 
         mock_load.reset_mock()
         req = oreo.EventListRequest(project_safe=False)
-        result = self.eng.event_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.event_list(self.ctx, req.obj_to_primitive())
         self.assertEqual([], result)
         mock_load.assert_called_once_with(self.ctx, project_safe=False)
 
@@ -157,7 +156,7 @@ class EventTest(base.SenlinTestCase):
         mock_find.return_value = x_event
 
         req = oreo.EventGetRequest(identity='EVENT_ID')
-        result = self.eng.event_get(self.ctx, req.obj_to_primitive())
+        result = self.svc.event_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'level': 'DEBUG'}, result)
         mock_find.assert_called_once_with(self.ctx, 'EVENT_ID')
@@ -167,7 +166,7 @@ class EventTest(base.SenlinTestCase):
         mock_find.side_effect = exc.ResourceNotFound(type='event', id='BOGUS')
         req = oreo.EventGetRequest(identity='BOGUS')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.event_get,
+                               self.svc.event_get,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])

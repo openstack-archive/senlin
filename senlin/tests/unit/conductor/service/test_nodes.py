@@ -19,11 +19,11 @@ from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.common.i18n import _
 from senlin.common import utils as common_utils
+from senlin.conductor import service
 from senlin.engine.actions import base as action_mod
 from senlin.engine import dispatcher
 from senlin.engine import environment
 from senlin.engine import node as node_mod
-from senlin.engine import service
 from senlin.objects import cluster as co
 from senlin.objects import node as no
 from senlin.objects import profile as po
@@ -34,11 +34,10 @@ from senlin.tests.unit.common import utils
 
 
 class NodeTest(base.SenlinTestCase):
-
     def setUp(self):
         super(NodeTest, self).setUp()
         self.ctx = utils.dummy_context(project='node_test_project')
-        self.eng = service.EngineService('host-a', 'topic-a')
+        self.svc = service.ConductorService('host-a', 'topic-a')
 
     @mock.patch.object(no.Node, 'get_all')
     def test_node_list(self, mock_get):
@@ -49,7 +48,7 @@ class NodeTest(base.SenlinTestCase):
         mock_get.return_value = [obj_1, obj_2]
 
         req = orno.NodeListRequest()
-        result = self.eng.node_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
         mock_get.assert_called_once_with(self.ctx, project_safe=True)
@@ -66,7 +65,7 @@ class NodeTest(base.SenlinTestCase):
 
         req = orno.NodeListRequest(cluster_id='MY_CLUSTER_NAME',
                                    project_safe=True)
-        result = self.eng.node_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
         mock_find.assert_called_once_with(self.ctx, 'MY_CLUSTER_NAME')
@@ -85,7 +84,7 @@ class NodeTest(base.SenlinTestCase):
         req = orno.NodeListRequest(status=['ACTIVE'], sort='status',
                                    limit=123, marker=MARKER_UUID,
                                    project_safe=True)
-        result = self.eng.node_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([{'k': 'v1'}, {'k': 'v2'}], result)
         mock_get.assert_called_once_with(self.ctx, sort='status', limit=123,
@@ -100,7 +99,7 @@ class NodeTest(base.SenlinTestCase):
         req = orno.NodeListRequest(cluster_id='BOGUS', project_safe=True)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_list,
+                               self.svc.node_list,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -113,20 +112,20 @@ class NodeTest(base.SenlinTestCase):
         mock_get.return_value = []
 
         req = orno.NodeListRequest(project_safe=True)
-        result = self.eng.node_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_list(self.ctx, req.obj_to_primitive())
         self.assertEqual([], result)
         mock_get.assert_called_once_with(self.ctx, project_safe=True)
         mock_get.reset_mock()
 
         req = orno.NodeListRequest(project_safe=False)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_list,
+                               self.svc.node_list,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.Forbidden, ex.exc_info[0])
 
         self.ctx.is_admin = True
         req = orno.NodeListRequest(project_safe=False)
-        result = self.eng.node_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_list(self.ctx, req.obj_to_primitive())
         self.assertEqual([], result)
         mock_get.assert_called_once_with(self.ctx, project_safe=False)
         mock_get.reset_mock()
@@ -136,7 +135,7 @@ class NodeTest(base.SenlinTestCase):
         mock_get.return_value = []
 
         req = orno.NodeListRequest()
-        result = self.eng.node_list(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_list(self.ctx, req.obj_to_primitive())
 
         self.assertEqual([], result)
         mock_get.assert_called_once_with(self.ctx, project_safe=True)
@@ -154,7 +153,7 @@ class NodeTest(base.SenlinTestCase):
         req = orno.NodeCreateRequestBody(name='NODE1',
                                          profile_id='PROFILE_NAME')
 
-        result = self.eng.node_create(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_create(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar', 'action': 'ACTION_ID'}, result)
         mock_profile.assert_called_once_with(self.ctx, 'PROFILE_NAME')
@@ -211,7 +210,7 @@ class NodeTest(base.SenlinTestCase):
                                          profile_id='PROFILE_NAME',
                                          cluster_id='FAKE_CLUSTER')
 
-        result = self.eng.node_create(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_create(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar', 'action': 'ACTION_ID'}, result)
         mock_cluster.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
@@ -272,7 +271,7 @@ class NodeTest(base.SenlinTestCase):
                                          profile_id='PROFILE_NAME',
                                          cluster_id='FAKE_CLUSTER')
 
-        result = self.eng.node_create(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_create(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar', 'action': 'ACTION_ID'}, result)
         mock_cluster.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
@@ -317,7 +316,7 @@ class NodeTest(base.SenlinTestCase):
                                          profile_id='PROFILE_NAME')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_create,
+                               self.svc.node_create,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -332,7 +331,7 @@ class NodeTest(base.SenlinTestCase):
                                          profile_id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_create,
+                               self.svc.node_create,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The specified profile 'Bogus' could not be "
@@ -349,7 +348,7 @@ class NodeTest(base.SenlinTestCase):
                                          cluster_id='Bogus')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_create,
+                               self.svc.node_create,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -372,7 +371,7 @@ class NodeTest(base.SenlinTestCase):
                                          cluster_id='FAKE_CLUSTER')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_create,
+                               self.svc.node_create,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -392,7 +391,7 @@ class NodeTest(base.SenlinTestCase):
         mock_find.return_value = x_obj
         req = orno.NodeGetRequest(identity='NODE1', show_details=False)
 
-        result = self.eng.node_get(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'NODE1')
@@ -409,7 +408,7 @@ class NodeTest(base.SenlinTestCase):
         mock_load.return_value = x_node
 
         req = orno.NodeGetRequest(identity='NODE1', show_details=True)
-        result = self.eng.node_get(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar', 'details': {'info': 'blahblah'}},
                          result)
@@ -424,7 +423,7 @@ class NodeTest(base.SenlinTestCase):
         req = orno.NodeGetRequest(identity='Bogus', show_details=False)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_get,
+                               self.svc.node_get,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -439,7 +438,7 @@ class NodeTest(base.SenlinTestCase):
         mock_find.return_value = x_obj
         req = orno.NodeGetRequest(identity='NODE1', show_details=True)
 
-        result = self.eng.node_get(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_get(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar'}, result)
         mock_find.assert_called_once_with(self.ctx, 'NODE1')
@@ -462,7 +461,7 @@ class NodeTest(base.SenlinTestCase):
                                      metadata={'foo1': 'bar1'})
 
         # all properties changed except profile id
-        result = self.eng.node_update(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_update(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar', 'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
@@ -507,7 +506,7 @@ class NodeTest(base.SenlinTestCase):
                                      role='ROLE1',
                                      metadata={'KEY': 'VALUE'},
                                      profile_id='NEW_PROFILE')
-        result = self.eng.node_update(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_update(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'foo': 'bar', 'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
@@ -532,7 +531,7 @@ class NodeTest(base.SenlinTestCase):
 
         req = orno.NodeUpdateRequest(identity='Bogus')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_update, self.ctx,
+                               self.svc.node_update, self.ctx,
                                req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -550,7 +549,7 @@ class NodeTest(base.SenlinTestCase):
         req = orno.NodeUpdateRequest(identity='FAKE_NODE',
                                      profile_id='Bogus')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_update,
+                               self.svc.node_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -571,7 +570,7 @@ class NodeTest(base.SenlinTestCase):
         req = orno.NodeUpdateRequest(identity='FAKE_NODE',
                                      profile_id='NEW_PROFILE')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_update,
+                               self.svc.node_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -596,7 +595,7 @@ class NodeTest(base.SenlinTestCase):
         req = orno.NodeUpdateRequest(identity='FAKE_NODE',
                                      profile_id='OLD_PROFILE_ID')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_update,
+                               self.svc.node_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -617,7 +616,7 @@ class NodeTest(base.SenlinTestCase):
         # no property has been specified for update
         req = orno.NodeUpdateRequest(identity='FAKE_NODE')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_update,
+                               self.svc.node_update,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -635,7 +634,7 @@ class NodeTest(base.SenlinTestCase):
         mock_action.return_value = 'ACTION_ID'
 
         req = orno.NodeDeleteRequest(identity='FAKE_NODE', force=False)
-        result = self.eng.node_delete(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_delete(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
@@ -653,7 +652,7 @@ class NodeTest(base.SenlinTestCase):
 
         req = orno.NodeDeleteRequest(identity='Bogus', force=False)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_delete, self.ctx,
+                               self.svc.node_delete, self.ctx,
                                req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -669,7 +668,7 @@ class NodeTest(base.SenlinTestCase):
             mock_find.return_value = fake_node
             req = orno.NodeDeleteRequest(identity='BUSY', force=False)
             ex = self.assertRaises(rpc.ExpectedException,
-                                   self.eng.node_delete,
+                                   self.svc.node_delete,
                                    self.ctx, req.obj_to_primitive())
 
             self.assertEqual(exc.ActionInProgress, ex.exc_info[0])
@@ -684,7 +683,7 @@ class NodeTest(base.SenlinTestCase):
         mock_find.return_value = node
         req = orno.NodeDeleteRequest(identity='node1', force=False)
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_delete,
+                               self.svc.node_delete,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
         self.assertEqual("The node 'node1' cannot be deleted: still depended "
@@ -705,7 +704,7 @@ class NodeTest(base.SenlinTestCase):
             mock_action.return_value = 'ACTION_ID'
 
             req = orno.NodeDeleteRequest(identity='FAKE_NODE', force=True)
-            result = self.eng.node_delete(self.ctx, req.obj_to_primitive())
+            result = self.svc.node_delete(self.ctx, req.obj_to_primitive())
 
             self.assertEqual({'action': 'ACTION_ID'}, result)
             mock_find.assert_called_with(self.ctx, 'FAKE_NODE')
@@ -732,7 +731,7 @@ class NodeTest(base.SenlinTestCase):
         mock_adopt.return_value = {'prop': 'value'}
         mock_profile.return_value = FakeProfile
 
-        c, s = self.eng._node_adopt_preview(self.ctx, req)
+        c, s = self.svc._node_adopt_preview(self.ctx, req)
 
         req.obj_set_defaults.assert_called_once_with()
         mock_profile.assert_called_once_with("TestProfile-1.0")
@@ -762,7 +761,7 @@ class NodeTest(base.SenlinTestCase):
         )
 
         ex = self.assertRaises(exc.BadRequest,
-                               self.eng._node_adopt_preview,
+                               self.svc._node_adopt_preview,
                                self.ctx, req)
 
         req.obj_set_defaults.assert_called_once_with()
@@ -787,7 +786,7 @@ class NodeTest(base.SenlinTestCase):
         }
 
         ex = self.assertRaises(exc.ProfileOperationFailed,
-                               self.eng._node_adopt_preview,
+                               self.svc._node_adopt_preview,
                                self.ctx, req)
 
         req.obj_set_defaults.assert_called_once_with()
@@ -798,28 +797,28 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual('502: something is bad', six.text_type(ex))
 
-    @mock.patch.object(service.EngineService, '_node_adopt_preview')
+    @mock.patch.object(service.ConductorService, '_node_adopt_preview')
     def test_node_adopt_preview(self, mock_preview):
         spec = {'foo': 'bar'}
         mock_preview.return_value = mock.Mock(), spec
         req = orno.NodeAdoptPreviewRequest(identity='FAKE_ID',
                                            type='FAKE_TYPE')
 
-        res = self.eng.node_adopt_preview(self.ctx, req.obj_to_primitive())
+        res = self.svc.node_adopt_preview(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'node_preview': {'foo': 'bar'}}, res)
         mock_preview.assert_called_once_with(self.ctx, mock.ANY)
         self.assertIsInstance(mock_preview.call_args[0][1],
                               orno.NodeAdoptPreviewRequest)
 
-    @mock.patch.object(service.EngineService, '_node_adopt_preview')
+    @mock.patch.object(service.ConductorService, '_node_adopt_preview')
     def test_node_adopt_preview_with_exception(self, mock_preview):
         mock_preview.side_effect = exc.BadRequest(msg="boom")
         req = orno.NodeAdoptPreviewRequest(identity='FAKE_ID',
                                            type='FAKE_TYPE')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_adopt_preview,
+                               self.svc.node_adopt_preview,
                                self.ctx, req.obj_to_primitive())
 
         mock_preview.assert_called_once_with(self.ctx, mock.ANY)
@@ -829,7 +828,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual('boom.', six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(no.Node, 'create')
-    @mock.patch.object(service.EngineService, '_node_adopt_preview')
+    @mock.patch.object(service.ConductorService, '_node_adopt_preview')
     def test_node_adopt(self, mock_preview, mock_create):
         class FakeProfile(object):
 
@@ -845,7 +844,7 @@ class NodeTest(base.SenlinTestCase):
         fake_node.to_dict = mock.Mock(return_value={'attr': 'value'})
         mock_create.return_value = fake_node
 
-        res = self.eng.node_adopt(self.ctx, req.obj_to_primitive())
+        res = self.svc.node_adopt(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'attr': 'value'}, res)
         mock_preview.assert_called_once_with(self.ctx, mock.ANY)
@@ -880,7 +879,7 @@ class NodeTest(base.SenlinTestCase):
         mock_get.return_value = mock.Mock()
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_adopt,
+                               self.svc.node_adopt,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -888,13 +887,13 @@ class NodeTest(base.SenlinTestCase):
                          six.text_type(ex.exc_info[1]))
 
     @mock.patch.object(no.Node, 'create')
-    @mock.patch.object(service.EngineService, '_node_adopt_preview')
+    @mock.patch.object(service.ConductorService, '_node_adopt_preview')
     def test_node_adopt_failed_preview(self, mock_preview, mock_create):
         req = orno.NodeAdoptRequest(identity='FAKE_ID', type='FAKE_TYPE')
         mock_preview.side_effect = exc.BadRequest(msg='boom')
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_adopt,
+                               self.svc.node_adopt,
                                self.ctx, req.obj_to_primitive())
 
         mock_preview.assert_called_once_with(self.ctx, mock.ANY)
@@ -914,7 +913,7 @@ class NodeTest(base.SenlinTestCase):
 
         params = {'k1': 'v1'}
         req = orno.NodeCheckRequest(identity='FAKE_NODE', params=params)
-        result = self.eng.node_check(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_check(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
@@ -933,7 +932,7 @@ class NodeTest(base.SenlinTestCase):
 
         req = orno.NodeCheckRequest(identity='Bogus')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_check,
+                               self.svc.node_check,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -951,7 +950,7 @@ class NodeTest(base.SenlinTestCase):
 
         params = {'operation': 'REBOOT'}
         req = orno.NodeRecoverRequest(identity='FAKE_NODE', params=params)
-        result = self.eng.node_recover(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_recover(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
@@ -973,7 +972,7 @@ class NodeTest(base.SenlinTestCase):
 
         params = {'check': True, 'operation': 'REBUILD'}
         req = orno.NodeRecoverRequest(identity='FAKE_NODE', params=params)
-        result = self.eng.node_recover(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_recover(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
@@ -996,7 +995,7 @@ class NodeTest(base.SenlinTestCase):
 
         params = {'delete_timeout': 20, 'operation': 'RECREATE'}
         req = orno.NodeRecoverRequest(identity='FAKE_NODE', params=params)
-        result = self.eng.node_recover(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_recover(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
@@ -1022,7 +1021,7 @@ class NodeTest(base.SenlinTestCase):
         params = {'force_recreate': True, 'operation': 'reboot',
                   'operation_params': {'type': 'soft'}}
         req = orno.NodeRecoverRequest(identity='FAKE_NODE', params=params)
-        result = self.eng.node_recover(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_recover(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
@@ -1043,7 +1042,7 @@ class NodeTest(base.SenlinTestCase):
 
         req = orno.NodeRecoverRequest(identity='Bogus')
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_recover,
+                               self.svc.node_recover,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -1060,7 +1059,7 @@ class NodeTest(base.SenlinTestCase):
         req = orno.NodeRecoverRequest(identity='FAKE_NODE', params=params)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_recover,
+                               self.svc.node_recover,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -1079,7 +1078,7 @@ class NodeTest(base.SenlinTestCase):
         req = orno.NodeRecoverRequest(identity='FAKE_NODE', params=params)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_recover,
+                               self.svc.node_recover,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -1100,7 +1099,7 @@ class NodeTest(base.SenlinTestCase):
         req = orno.NodeRecoverRequest(identity='FAKE_NODE', params=params)
 
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_recover,
+                               self.svc.node_recover,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -1128,7 +1127,7 @@ class NodeTest(base.SenlinTestCase):
                                         operation='dance',
                                         params=params)
 
-        result = self.eng.node_op(self.ctx, req.obj_to_primitive())
+        result = self.svc.node_op(self.ctx, req.obj_to_primitive())
 
         self.assertEqual({'action': 'ACTION_ID'}, result)
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
@@ -1150,7 +1149,7 @@ class NodeTest(base.SenlinTestCase):
         req = orno.NodeOperationRequest(identity='Bogus', operation='dance',
                                         params={})
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_op,
+                               self.svc.node_op,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
@@ -1172,7 +1171,7 @@ class NodeTest(base.SenlinTestCase):
         req = orno.NodeOperationRequest(identity='node1', operation='swim',
                                         params={})
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_op,
+                               self.svc.node_op,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
@@ -1197,7 +1196,7 @@ class NodeTest(base.SenlinTestCase):
         req = orno.NodeOperationRequest(identity='node1', operation='dance',
                                         params={'style': 'tango'})
         ex = self.assertRaises(rpc.ExpectedException,
-                               self.eng.node_op,
+                               self.svc.node_op,
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])

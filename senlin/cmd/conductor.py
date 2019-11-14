@@ -13,7 +13,7 @@
 #    under the License.
 
 """
-Senlin Engine.
+Senlin Conductor.
 """
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -29,19 +29,20 @@ from senlin import version
 
 def main():
     logging.register_options(cfg.CONF)
-    cfg.CONF(project='senlin', prog='senlin-engine')
-    logging.setup(cfg.CONF, 'senlin-engine')
+    cfg.CONF(project='senlin', prog='senlin-conductor')
+    logging.setup(cfg.CONF, 'senlin-conductor')
     logging.set_defaults()
     gmr.TextGuruMeditation.setup_autorun(version)
     objects.register_all()
     messaging.setup()
 
-    from senlin.engine import service as engine
+    from senlin.conductor import service as conductor
 
-    profiler.setup('senlin-engine', cfg.CONF.host)
-    srv = engine.EngineService(cfg.CONF.host,
-                               consts.DISPATCHER_TOPIC)
+    profiler.setup('senlin-conductor', cfg.CONF.host)
+    srv = conductor.ConductorService(cfg.CONF.host, consts.ENGINE_TOPIC)
     launcher = service.launch(cfg.CONF, srv,
-                              workers=cfg.CONF.num_engine_workers,
+                              workers=cfg.CONF.conductor.workers,
                               restart_method='mutate')
+    # the following periodic tasks are intended serve as HA checking
+    # srv.create_periodic_tasks()
     launcher.wait()
