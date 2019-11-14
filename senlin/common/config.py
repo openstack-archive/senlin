@@ -36,7 +36,7 @@ service_opts = [
 cfg.CONF.register_opts(service_opts)
 
 # DEFAULT, engine
-engine_opts = [
+default_engine_opts = [
     cfg.IntOpt('periodic_interval',
                default=60,
                help=_('Seconds between running periodic tasks.')),
@@ -54,9 +54,6 @@ engine_opts = [
                help=_('Range of seconds to randomly delay when starting the '
                       'periodic task scheduler to reduce stampeding. '
                       '(Disable by setting to 0)')),
-    cfg.IntOpt('num_engine_workers',
-               default=1,
-               help=_('Number of senlin-engine processes to fork and run.')),
     cfg.StrOpt('environment_dir',
                default='/etc/senlin/environments',
                help=_('The directory to search for environment files.')),
@@ -110,19 +107,12 @@ engine_opts = [
                default=60,
                help=_('Maximum time since last check-in for a service to be '
                       'considered up.')),
-    cfg.IntOpt('scheduler_thread_pool_size',
-               default=1000,
-               help=_('Maximum number of threads to use for the '
-                      'conductor and engine.')),
-    cfg.IntOpt('health_manager_thread_pool_size',
-               default=1000,
-               help=_('Maximum number of threads to use for health manager.')),
     cfg.ListOpt('trust_roles',
                 default=[],
                 help=_('The roles which are delegated to the trustee by the '
                        'trustor when a cluster is created.')),
 ]
-cfg.CONF.register_opts(engine_opts)
+cfg.CONF.register_opts(default_engine_opts)
 
 # DEFAULT, host
 rpc_opts = [
@@ -185,9 +175,29 @@ conductor_opts = [
     cfg.IntOpt('workers',
                default=1,
                help=_('Number of senlin-conductor processes.')),
+    cfg.IntOpt('threads',
+               default=1000,
+               help=_('Number of senlin-conductor threads.')),
 ]
 cfg.CONF.register_group(conductor_group)
 cfg.CONF.register_opts(conductor_opts, group=conductor_group)
+
+# Engine group
+engine_group = cfg.OptGroup('engine')
+engine_opts = [
+    cfg.IntOpt('workers',
+               default=1,
+               deprecated_name='num_engine_workers',
+               deprecated_group="DEFAULT",
+               help=_('Number of senlin-engine processes.')),
+    cfg.IntOpt('threads',
+               default=1000,
+               deprecated_name='scheduler_thread_pool_size',
+               deprecated_group="DEFAULT",
+               help=_('Number of senlin-engine threads.')),
+]
+cfg.CONF.register_group(engine_group)
+cfg.CONF.register_opts(engine_opts, group=engine_group)
 
 # Health Manager Group
 healthmgr_group = cfg.OptGroup('health_manager')
@@ -201,6 +211,11 @@ healthmgr_opts = [
     cfg.IntOpt('workers',
                default=1,
                help=_('Number of senlin-health-manager processes.')),
+    cfg.IntOpt('threads',
+               default=1000,
+               deprecated_name='health_manager_thread_pool_size',
+               deprecated_group="DEFAULT",
+               help=_('Number of senlin-health-manager threads.')),
 ]
 cfg.CONF.register_group(healthmgr_group)
 cfg.CONF.register_opts(healthmgr_opts, group=healthmgr_group)
@@ -294,12 +309,13 @@ def list_opts():
         yield g, o
     yield 'DEFAULT', cloud_backend_opts
     yield 'DEFAULT', rpc_opts
-    yield 'DEFAULT', engine_opts
+    yield 'DEFAULT', default_engine_opts
     yield 'DEFAULT', service_opts
     yield 'DEFAULT', event_opts
     yield authentication_group.name, authentication_opts
     yield conductor_group.name, conductor_opts
     yield dispatcher_group.name, dispatcher_opts
+    yield engine_group.name, engine_opts
     yield healthmgr_group.name, healthmgr_opts
     yield revision_group.name, revision_opts
     yield receiver_group.name, receiver_opts

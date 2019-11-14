@@ -12,6 +12,7 @@
 
 import mock
 
+from oslo_config import cfg
 import oslo_messaging
 from oslo_utils import uuidutils
 
@@ -38,6 +39,28 @@ class TestHealthManager(base.SenlinTestCase):
         self.svc = service.HealthManagerService('HOST', self.topic)
         self.svc.service_id = self.service_id
         self.svc.tg = self.tg
+
+    @mock.patch('oslo_service.service.Service.__init__')
+    def test_service_thread_numbers(self, mock_service_init):
+        service.HealthManagerService('HOST', self.topic)
+
+        mock_service_init.assert_called_once_with(1000)
+
+    @mock.patch('oslo_service.service.Service.__init__')
+    def test_service_thread_numbers_override(self, mock_service_init):
+        cfg.CONF.set_override('threads', 100, group='health_manager')
+
+        service.HealthManagerService('HOST', self.topic)
+
+        mock_service_init.assert_called_once_with(100)
+
+    @mock.patch('oslo_service.service.Service.__init__')
+    def test_service_thread_numbers_override_legacy(self, mock_service_init):
+        cfg.CONF.set_override('health_manager_thread_pool_size', 101)
+
+        service.HealthManagerService('HOST', self.topic)
+
+        mock_service_init.assert_called_once_with(101)
 
     def test_init(self):
         self.assertEqual(self.service_id, self.svc.service_id)

@@ -42,6 +42,6 @@ def main():
     srv = engine.EngineService(cfg.CONF.host,
                                consts.DISPATCHER_TOPIC)
     launcher = service.launch(cfg.CONF, srv,
-                              workers=cfg.CONF.num_engine_workers,
+                              workers=cfg.CONF.engine.workers,
                               restart_method='mutate')
     launcher.wait()

@@ -38,7 +38,7 @@ class TestEngine(base.SenlinTestCase):
                   mock_messaging_setup, mock_launch,
                   mock_log_set_defaults, mock_log_setup,
                   mock_register_opts, mock_conf):
-        mock_conf.num_engine_workers = 1
+        mock_conf.engine.workers = 1
         mock_conf.host = 'hostname'
 
         engine.main()

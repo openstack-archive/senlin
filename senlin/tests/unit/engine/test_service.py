@@ -72,6 +72,28 @@ class TestEngine(base.SenlinTestCase):
         self.svc.service_id = self.service_id
         self.svc.tg = self.tg
 
+    @mock.patch('oslo_service.service.Service.__init__')
+    def test_service_thread_numbers(self, mock_service_init):
+        service.EngineService('HOST', self.topic)
+
+        mock_service_init.assert_called_once_with(1000)
+
+    @mock.patch('oslo_service.service.Service.__init__')
+    def test_service_thread_numbers_override(self, mock_service_init):
+        cfg.CONF.set_override('threads', 100, group='engine')
+
+        service.EngineService('HOST', self.topic)
+
+        mock_service_init.assert_called_once_with(100)
+
+    @mock.patch('oslo_service.service.Service.__init__')
+    def test_service_thread_numbers_override_legacy(self, mock_service_init):
+        cfg.CONF.set_override('scheduler_thread_pool_size', 101)
+
+        service.EngineService('HOST', self.topic)
+
+        mock_service_init.assert_called_once_with(101)
+
     def test_init(self):
         self.assertEqual(self.service_id, self.svc.service_id)
         self.assertEqual(self.tg, self.svc.tg)

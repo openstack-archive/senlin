@@ -33,7 +33,7 @@ class HealthManagerService(service.Service):
     def __init__(self, host, topic):
         super(HealthManagerService, self).__init__(
             self.service_name, host, topic,
-            threads=cfg.CONF.health_manager_thread_pool_size
+            threads=CONF.health_manager.threads
         )
         self.version = consts.RPC_API_VERSION
 

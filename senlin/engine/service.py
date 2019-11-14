@@ -45,7 +45,7 @@ class EngineService(service.Service):
     def __init__(self, host, topic):
         super(EngineService, self).__init__(
             self.service_name, host, topic,
-            threads=cfg.CONF.scheduler_thread_pool_size
+            threads=CONF.engine.threads
         )
         self.version = consts.RPC_API_VERSION
 
