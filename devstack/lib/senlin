@@ -143,6 +143,15 @@ function configure_senlin {
     iniset $SENLIN_CONF authentication service_password $SERVICE_PASSWORD
     iniset $SENLIN_CONF authentication service_project_name $SERVICE_TENANT_NAME
 
+    # Senlin Conductor options
+    iniset $SENLIN_CONF conductor workers $API_WORKERS
+
+    # Senlin Conductor options
+    iniset $SENLIN_CONF engine workers $API_WORKERS
+
+    # Senlin Health-Manager options
+    iniset $SENLIN_CONF health_manager workers $API_WORKERS
+
     # Zaqar options for message receiver
     iniset $SENLIN_CONF zaqar auth_type password
     iniset $SENLIN_CONF zaqar username zaqar
