@@ -67,28 +67,19 @@ def ListenerProc(exchange, project_id, cluster_id, recover_action):
     transport = messaging.get_notification_transport(cfg.CONF)
 
     if exchange == cfg.CONF.health_manager.nova_control_exchange:
-        targets = [
-            messaging.Target(topic='versioned_notifications',
-                             exchange=exchange),
-        ]
-        endpoints = [
-            nova_endpoint.NovaNotificationEndpoint(
-                project_id, cluster_id, recover_action
-            ),
-        ]
-    else:  # heat notification
-        targets = [
-            messaging.Target(topic='notifications', exchange=exchange),
-        ]
-        endpoints = [
-            heat_endpoint.HeatNotificationEndpoint(
-                project_id, cluster_id, recover_action
-            ),
-        ]
+        endpoint = nova_endpoint.NovaNotificationEndpoint(
+            project_id, cluster_id, recover_action
+        )
+
+    else:
+        endpoint = heat_endpoint.HeatNotificationEndpoint(
+            project_id, cluster_id, recover_action
+        )
 
     listener = messaging.get_notification_listener(
-        transport, targets, endpoints, executor='threading',
-        pool="senlin-listeners")
+        transport, [endpoint.target], [endpoint], executor='threading',
+        pool='senlin-listeners'
+    )
 
     listener.start()
 

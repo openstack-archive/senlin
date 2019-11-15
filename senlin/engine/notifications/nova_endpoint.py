@@ -41,9 +41,10 @@ class NovaNotificationEndpoint(base.Endpoints):
             event_type='^compute\.instance\..*',
             context={'project_id': '^%s$' % project_id})
         self.rpc = rpc_client.EngineClient()
-        self.exchange = cfg.CONF.health_manager.nova_control_exchange
-        self.target = messaging.Target(topic='versioned_notifications',
-                                       exchange=self.exchange)
+        self.target = messaging.Target(
+            topic=cfg.CONF.health_manager.nova_notification_topic,
+            exchange=cfg.CONF.health_manager.nova_control_exchange,
+        )
 
     def info(self, ctxt, publisher_id, event_type, payload, metadata):
         meta = payload['metadata']
