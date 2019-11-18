@@ -30,7 +30,7 @@ class TrustMiddleware(wsgi.Middleware):
         :param req: The WSGI request object.
         :return: ID of the trust or exception of InternalError.
         """
-        rpcc = rpc.EngineClient()
+        rpcc = rpc.get_engine_client()
 
         ctx = req.context
         params = {'user': ctx.user_id, 'project': ctx.project_id}

@@ -20,6 +20,15 @@ from senlin.common import consts
 from senlin.common import messaging
 from senlin.objects import base as object_base
 
+_CLIENT = None
+
+
+def get_engine_client():
+    global _CLIENT
+    if not _CLIENT:
+        _CLIENT = EngineClient()
+    return _CLIENT
+
 
 class EngineClient(object):
     """Client side of the senlin engine rpc API.

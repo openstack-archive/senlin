@@ -212,7 +212,7 @@ class ResourceTest(base.SenlinTestCase):
 
 class ControllerTest(base.SenlinTestCase):
 
-    @mock.patch('senlin.rpc.client.EngineClient')
+    @mock.patch('senlin.rpc.client.get_engine_client')
     def test_init(self, mock_client):
         x_client = mock.Mock()
         mock_client.return_value = x_client

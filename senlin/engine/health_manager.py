@@ -292,7 +292,7 @@ class HealthCheck(object):
 
     def __init__(self, ctx, engine_id, cluster_id, check_type, interval,
                  node_update_timeout, params, enabled):
-        self.rpc_client = rpc_client.EngineClient()
+        self.rpc_client = rpc_client.get_engine_client()
         self.ctx = ctx
         self.engine_id = engine_id
 

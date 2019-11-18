@@ -61,7 +61,7 @@ class TestHealthPolicy(base.SenlinTestCase):
         fake_cluster = mock.Mock(id='CLUSTER_ID', nodes=[fake_node],
                                  rt={'profile': fake_profile})
         self.cluster = fake_cluster
-        self.patch('senlin.rpc.client.EngineClient')
+        self.patch('senlin.rpc.client.get_engine_client')
         self.hp = health_policy.HealthPolicy('test-policy', self.spec)
 
     def test_policy_init(self):
