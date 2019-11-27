@@ -204,8 +204,12 @@ healthmgr_group = cfg.OptGroup('health_manager')
 healthmgr_opts = [
     cfg.StrOpt('nova_control_exchange', default='nova',
                help=_("Exchange name for nova notifications.")),
+    cfg.StrOpt('nova_notification_topic', default='versioned_notifications',
+               help=_("Topic name for nova notifications.")),
     cfg.StrOpt('heat_control_exchange', default='heat',
                help=_("Exchange name for heat notifications.")),
+    cfg.StrOpt('heat_notification_topic', default='notifications',
+               help=_("Topic name for heat notifications.")),
     cfg.MultiStrOpt("enabled_endpoints", default=['nova', 'heat'],
                     help=_("Notification endpoints to enable.")),
     cfg.IntOpt('workers',

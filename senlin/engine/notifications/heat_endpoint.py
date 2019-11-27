@@ -37,9 +37,10 @@ class HeatNotificationEndpoint(base.Endpoints):
             event_type='^orchestration\.stack\..*',
             context={'project_id': '^%s$' % project_id})
         self.rpc = rpc_client.EngineClient()
-        self.exchange = cfg.CONF.health_manager.heat_control_exchange
-        self.target = messaging.Target(topic='notifications',
-                                       exchange=self.exchange)
+        self.target = messaging.Target(
+            topic=cfg.CONF.health_manager.heat_notification_topic,
+            exchange=cfg.CONF.health_manager.heat_control_exchange,
+        )
 
     def info(self, ctxt, publisher_id, event_type, payload, metadata):
         if event_type not in self.STACK_FAILURE_EVENTS:
