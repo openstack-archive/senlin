@@ -87,7 +87,7 @@ class ConductorService(service.Service):
             self.service_name, host, topic,
             threads=CONF.conductor.threads
         )
-        self.dispatcher_topic = consts.DISPATCHER_TOPIC
+        self.dispatcher_topic = consts.ENGINE_TOPIC
         self.health_mgr_topic = consts.HEALTH_MANAGER_TOPIC
 
         # The following are initialized here and will be assigned in start()

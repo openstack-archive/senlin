@@ -49,7 +49,7 @@ class ControllerTest(object):
         super(ControllerTest, self).__init__(*args, **kwargs)
 
         cfg.CONF.set_default('host', 'server.test')
-        self.topic = consts.ENGINE_TOPIC
+        self.topic = consts.CONDUCTOR_TOPIC
         self.api_version = '1.0'
         self.project = 'PROJ'
         self.mock_enforce = None

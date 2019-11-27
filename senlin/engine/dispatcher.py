@@ -36,7 +36,7 @@ def notify(method, engine_id=None, **kwargs):
     :param method: remote method to call
     :param engine_id: dispatcher to notify; None implies broadcast
     """
-    client = messaging.get_rpc_client(consts.DISPATCHER_TOPIC, cfg.CONF.host)
+    client = messaging.get_rpc_client(consts.ENGINE_TOPIC, cfg.CONF.host)
 
     if engine_id:
         # Notify specific dispatcher identified by engine_id

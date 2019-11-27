@@ -40,7 +40,7 @@ def main():
 
     profiler.setup('senlin-engine', cfg.CONF.host)
     srv = engine.EngineService(cfg.CONF.host,
-                               consts.DISPATCHER_TOPIC)
+                               consts.ENGINE_TOPIC)
     launcher = service.launch(cfg.CONF, srv,
                               workers=cfg.CONF.engine.workers,
                               restart_method='mutate')
