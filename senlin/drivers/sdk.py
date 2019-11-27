@@ -39,7 +39,6 @@ def parse_exception(ex):
     """Parse exception code and yield useful information."""
     code = 500
 
-    LOG.error(six.text_type(ex))
     if isinstance(ex, sdk_exc.HttpException):
         # some exceptions don't contain status_code
         if hasattr(ex, "status_code") and ex.status_code is not None:
@@ -86,6 +85,11 @@ def parse_exception(ex):
     else:
         # This could be a generic exception or something we don't understand
         message = six.text_type(ex)
+
+    if code >= 500 or code in (400, 401, 403):
+        LOG.error(message)
+    else:
+        LOG.info(message)
 
     raise senlin_exc.InternalError(code=code, message=message)
 
