@@ -10,8 +10,7 @@
         - senlin-dsvm-tempest-py3-api
         - senlin-tempest-api-ipv6-only
         - senlin-dsvm-tempest-py3-functional
-        - senlin-dsvm-tempest-py3-integration:
-            voting: false
+        - senlin-dsvm-tempest-py3-integration
         - openstack-tox-cover:
             voting: false
     gate:
