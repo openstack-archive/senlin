@@ -1315,7 +1315,7 @@ class ServerProfile(base.Profile):
         details = {
             'image': image_id,
             'attached_volumes': attached_volumes,
-            'flavor': server_data['flavor']['id'],
+            'flavor': self._get_flavor_id(obj, server_data),
         }
         for key in known_keys:
             if key in server_data:
@@ -1354,6 +1354,20 @@ class ServerProfile(base.Profile):
             details['security_groups'] = sgroups
 
         return dict((k, details[k]) for k in sorted(details))
+
+    def _get_flavor_id(self, obj, server):
+        """Get flavor id.
+
+        :param obj: The node object.
+        :param dict server: The server object.
+        :return: The flavor_id for the server.
+        """
+        flavor = server['flavor']
+
+        if 'id' in flavor:
+            return flavor['id']
+
+        return self.compute(obj).flavor_find(flavor['original_name'], False).id
 
     def _get_image_id(self, obj, server, op):
         """Get image id.
