@@ -1084,6 +1084,51 @@ class TestNovaServerBasic(base.SenlinTestCase):
         self.assertEqual(expected, res)
         cc.server_get.assert_called_once_with('FAKE_ID')
 
+    def test_do_get_details_flavor_no_id_key(self):
+        cc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        node_obj = mock.Mock(physical_id='FAKE_ID')
+
+        # Test normal path
+        nova_server = mock.Mock()
+        nova_server.to_dict.return_value = {
+            'addresses': {
+                'private': [{
+                    'version': 4,
+                    'addr': '10.0.0.3',
+                }]
+            },
+            'flavor': {
+                'original_name': 'FAKE_FLAVOR',
+            },
+            'id': 'FAKE_ID',
+            'image': {},
+            'attached_volumes': [{
+                'id': 'FAKE_VOLUME',
+            }],
+            'security_groups': [{'name': 'default'}],
+        }
+        cc.server_get.return_value = nova_server
+        cc.flavor_find.return_value = mock.PropertyMock(id='FAKE_FLAVOR_ID')
+
+        res = profile.do_get_details(node_obj)
+        expected = {
+            'flavor': 'FAKE_FLAVOR_ID',
+            'id': 'FAKE_ID',
+            'image': {},
+            'attached_volumes': ['FAKE_VOLUME'],
+            'addresses': {
+                'private': [{
+                    'version': 4,
+                    'addr': '10.0.0.3',
+                }]
+            },
+            'security_groups': 'default',
+        }
+        self.assertEqual(expected, res)
+        cc.server_get.assert_called_once_with('FAKE_ID')
+
     def test_do_get_details_image_no_id_key(self):
         cc = mock.Mock()
         profile = server.ServerProfile('t', self.spec)
