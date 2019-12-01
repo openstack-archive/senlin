@@ -192,6 +192,76 @@ class TestNovaServerBasic(base.SenlinTestCase):
         mock_zone_info.assert_called_once_with(node_obj, fake_server)
         self.assertEqual('FAKE_ID', server_id)
 
+    @mock.patch.object(node_ob.Node, 'update')
+    def test_do_create_fail_create_instance_when_node_longer_exists(
+            self, mock_node_update):
+        mock_node_update.side_effect = [
+            None, exc.ResourceNotFound(type='Node', id='FAKE_NODE_ID')
+        ]
+
+        cc = mock.Mock()
+        nc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        profile._networkclient = nc
+        profile._rollback_ports = mock.Mock()
+        profile._rollback_instance = mock.Mock()
+        self._stubout_profile(profile, mock_image=True, mock_flavor=True,
+                              mock_keypair=True, mock_net=False)
+        node_obj = mock.Mock(id='FAKE_NODE_ID', index=123,
+                             availability_zone="AZ01",
+                             cluster_id='FAKE_CLUSTER_ID',
+                             data={
+                                'placement': {
+                                    'zone': 'AZ1',
+                                    'servergroup': 'SERVER_GROUP_1'
+                                }
+                             })
+        node_obj.name = 'TEST_SERVER'
+        fake_server = mock.Mock(id='FAKE_ID')
+        cc.server_create.return_value = fake_server
+        cc.server_get.return_value = fake_server
+
+        self.assertRaises(
+            exc.ResourceNotFound, profile.do_create, node_obj
+        )
+
+        profile._rollback_ports.assert_called_once()
+        profile._rollback_instance.assert_called_once()
+
+    @mock.patch.object(node_ob.Node, 'update')
+    def test_do_create_fail_create_port_when_node_longer_exists(
+            self, mock_node_update):
+        mock_node_update.side_effect = exc.ResourceNotFound(
+            type='Node', id='FAKE_NODE_ID'
+        )
+
+        cc = mock.Mock()
+        nc = mock.Mock()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        profile._networkclient = nc
+        profile._rollback_ports = mock.Mock()
+        profile._rollback_instance = mock.Mock()
+        self._stubout_profile(profile, mock_image=True, mock_flavor=True,
+                              mock_keypair=True, mock_net=False)
+        node_obj = mock.Mock(id='FAKE_NODE_ID', index=123,
+                             cluster_id='FAKE_CLUSTER_ID',
+                             data={
+                                'placement': {
+                                    'zone': 'AZ1',
+                                    'servergroup': 'SERVER_GROUP_1'
+                                }
+                             })
+        node_obj.name = 'TEST_SERVER'
+
+        self.assertRaises(
+            exc.ResourceNotFound, profile.do_create, node_obj
+        )
+
+        profile._rollback_ports.assert_called_once()
+        profile._rollback_instance.assert_not_called()
+
     def test_do_create_invalid_image(self):
         profile = server.ServerProfile('s2', self.spec)
         err = exc.EResourceCreation(type='server', message='boom')
@@ -674,6 +744,124 @@ class TestNovaServerBasic(base.SenlinTestCase):
                          six.text_type(ex))
         self.assertEqual(1, cc.wait_for_server.call_count)
         self.assertEqual(0, mock_zone_info.call_count)
+
+    def test_rollback_ports(self):
+        nc = mock.Mock()
+        nc.port_delete.return_value = None
+        nc.floatingip_delete.return_value = None
+        profile = server.ServerProfile('t', self.spec)
+        profile._networkclient = nc
+
+        ports = [
+            {
+                'id': 'FAKE_PORT_ID',
+                'remove': True
+            },
+            {
+                'floating': {
+                    'remove': True,
+                    'id': 'FAKE_FLOATING_ID',
+                },
+                'id': 'FAKE_PORT_ID',
+                'remove': True
+            },
+            {
+                'floating': {
+                    'remove': False,
+                    'id': 'FAKE_FLOATING_ID',
+                },
+                'id': 'FAKE_PORT_ID',
+                'remove': False
+            }
+        ]
+
+        node_obj = mock.Mock(id='NODE_ID', cluster_id='', index=-1, data={})
+
+        profile._rollback_ports(node_obj, ports)
+
+        nc.port_delete.assert_called()
+        nc.floatingip_delete.assert_called_once_with('FAKE_FLOATING_ID')
+
+    def test_rollback_with_no_ports(self):
+        nc = mock.Mock()
+        nc.port_delete.return_value = None
+        nc.floatingip_delete.return_value = None
+        profile = server.ServerProfile('t', self.spec)
+        profile._networkclient = nc
+
+        ports = []
+
+        node_obj = mock.Mock(id='NODE_ID', cluster_id='', index=-1, data={})
+
+        profile._rollback_ports(node_obj, ports)
+
+        nc.port_delete.assert_not_called()
+        nc.floatingip_delete.assert_not_called()
+
+    def test_rollback_ports_with_internal_error(self):
+        nc = mock.Mock()
+        nc.port_delete.return_value = None
+        nc.floatingip_delete.side_effect = exc.InternalError()
+        profile = server.ServerProfile('t', self.spec)
+        profile._networkclient = nc
+
+        ports = [{
+            'floating': {
+                'remove': True,
+                'id': 'FAKE_FLOATING_ID',
+            },
+            'id': 'FAKE_PORT_ID',
+            'remove': True
+        }]
+
+        node_obj = mock.Mock(id='NODE_ID', cluster_id='', index=-1, data={})
+
+        profile._rollback_ports(node_obj, ports)
+
+        nc.port_delete.assert_not_called()
+        nc.floatingip_delete.assert_called_once_with('FAKE_FLOATING_ID')
+
+    def test_rollback_instance(self):
+        cc = mock.Mock()
+        cc.port_delete.return_value = None
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+
+        server_obj = mock.Mock(id='SERVER_ID')
+
+        node_obj = mock.Mock(id='NODE_ID', cluster_id='', index=-1, data={})
+
+        profile._rollback_instance(node_obj, server_obj)
+
+        cc.server_force_delete.assert_called_once_with('SERVER_ID', True)
+
+    def test_rollback_with_no_instance(self):
+        cc = mock.Mock()
+        cc.port_delete.return_value = None
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+
+        server_obj = None
+
+        node_obj = mock.Mock(id='NODE_ID', cluster_id='', index=-1, data={})
+
+        profile._rollback_instance(node_obj, server_obj)
+
+        cc.server_force_delete.assert_not_called()
+
+    def test_rollback_instance_with_internal_error(self):
+        cc = mock.Mock()
+        cc.server_force_delete.side_effect = exc.InternalError()
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+
+        server_obj = mock.Mock(id='SERVER_ID')
+
+        node_obj = mock.Mock(id='NODE_ID', cluster_id='', index=-1, data={})
+
+        profile._rollback_instance(node_obj, server_obj)
+
+        cc.server_force_delete.assert_called_once_with('SERVER_ID', True)
 
     def test_do_delete_ok(self):
         profile = server.ServerProfile('t', self.spec)
