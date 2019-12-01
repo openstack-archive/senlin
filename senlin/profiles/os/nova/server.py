@@ -767,9 +767,13 @@ class ServerProfile(base.Profile):
                     port_attrs['floating'].update({'remove': True})
             internal_ports.append(port_attrs)
         if internal_ports:
-            node_data = obj.data
-            node_data.update(internal_ports=internal_ports)
-            node_obj.Node.update(self.context, obj.id, {'data': node_data})
+            try:
+                node_data = obj.data
+                node_data.update(internal_ports=internal_ports)
+                node_obj.Node.update(self.context, obj.id, {'data': node_data})
+            except exc.ResourceNotFound:
+                self._rollback_ports(obj, internal_ports)
+                raise
         return internal_ports
 
     def _build_metadata(self, obj, usermeta):
@@ -808,14 +812,7 @@ class ServerProfile(base.Profile):
 
         :param obj: The node object for which a server will be created.
         """
-        kwargs = {}
-        for key in self.KEYS:
-            # context is treated as connection parameters
-            if key == self.CONTEXT:
-                continue
-
-            if self.properties[key] is not None:
-                kwargs[key] = self.properties[key]
+        kwargs = self._generate_kwargs()
 
         admin_pass = self.properties[self.ADMIN_PASS]
         if admin_pass:
@@ -888,6 +885,10 @@ class ServerProfile(base.Profile):
             # Update zone placement info if available
             self._update_zone_info(obj, server)
             return server.id
+        except exc.ResourceNotFound:
+            self._rollback_ports(obj, ports)
+            self._rollback_instance(obj, server)
+            raise
         except exc.InternalError as ex:
             if server and server.id:
                 resource_id = server.id
@@ -896,6 +897,75 @@ class ServerProfile(base.Profile):
             raise exc.EResourceCreation(type='server',
                                         message=six.text_type(ex),
                                         resource_id=resource_id)
+
+    def _generate_kwargs(self):
+        """Generate the base kwargs for a server.
+
+        :return:
+        """
+        kwargs = {}
+        for key in self.KEYS:
+            # context is treated as connection parameters
+            if key == self.CONTEXT:
+                continue
+
+            if self.properties[key] is not None:
+                kwargs[key] = self.properties[key]
+        return kwargs
+
+    def _rollback_ports(self, obj, ports):
+        """Rollback any ports created after a ResourceNotFound exception.
+
+        :param obj: The node object.
+        :param ports: A list of ports which attached to this server.
+        :return:
+        """
+        if not ports:
+            return
+
+        LOG.warning(
+            'Rolling back ports for Node %s.',
+            obj.id
+        )
+
+        for port in ports:
+            if not port.get('remove', False):
+                continue
+            try:
+                if (port.get('floating') and
+                        port['floating'].get('remove', False)):
+                    self.network(obj).floatingip_delete(
+                        port['floating']['id']
+                    )
+                self.network(obj).port_delete(port['id'])
+            except exc.InternalError as ex:
+                LOG.debug(
+                    'Failed to delete port %s during rollback for Node %s: %s',
+                    port['id'], obj.id, ex
+                )
+
+    def _rollback_instance(self, obj, server):
+        """Rollback an instance created after a ResourceNotFound exception.
+
+        :param obj: The node object.
+        :param server: A server.
+        :return:
+        """
+        if not server or not server.id:
+            return
+
+        LOG.warning(
+            'Rolling back instance %s for Node %s.',
+            server.id, obj.id
+        )
+
+        try:
+            self.compute(obj).server_force_delete(server.id, True)
+        except exc.InternalError as ex:
+            LOG.debug(
+                'Failed to delete instance %s during rollback for Node %s: %s',
+                server.id, obj.id, ex
+            )
 
     def do_delete(self, obj, **params):
         """Delete the physical resource associated with the specified node.
