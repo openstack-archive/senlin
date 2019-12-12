@@ -78,7 +78,7 @@ def get_sort_params(value, default_key=None):
 
 def is_service_dead(service):
     """Check if a given service is dead."""
-    cfg.CONF.import_opt("periodic_interval", "senlin.common.config")
+    cfg.CONF.import_opt("periodic_interval", "senlin.conf")
     max_elapse = 2 * cfg.CONF.periodic_interval
 
     return timeutils.is_older_than(service.updated_at, max_elapse)

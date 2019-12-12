@@ -27,8 +27,8 @@ from senlin.objects import node_lock as nl_obj
 
 CONF = cfg.CONF
 
-CONF.import_opt('lock_retry_times', 'senlin.common.config')
-CONF.import_opt('lock_retry_interval', 'senlin.common.config')
+CONF.import_opt('lock_retry_times', 'senlin.conf')
+CONF.import_opt('lock_retry_interval', 'senlin.conf')
 
 LOG = logging.getLogger(__name__)
 

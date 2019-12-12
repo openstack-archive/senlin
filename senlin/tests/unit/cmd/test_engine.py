@@ -13,6 +13,7 @@ import mock
 from oslo_config import cfg
 
 from senlin.cmd import engine
+from senlin.common import config
 from senlin.common import consts
 from senlin.common import messaging
 from senlin.common import profiler
@@ -26,31 +27,26 @@ class TestEngine(base.SenlinTestCase):
     def setUp(self):
         super(TestEngine, self).setUp()
 
-    @mock.patch('oslo_config.cfg.CONF')
-    @mock.patch('oslo_log.log.register_options')
     @mock.patch('oslo_log.log.setup')
     @mock.patch('oslo_log.log.set_defaults')
     @mock.patch('oslo_service.service.launch')
+    @mock.patch.object(config, 'parse_args')
     @mock.patch.object(messaging, 'setup')
     @mock.patch.object(profiler, 'setup')
     @mock.patch.object(service, 'EngineService')
     def test_main(self, mock_service, mock_profiler_setup,
-                  mock_messaging_setup, mock_launch,
-                  mock_log_set_defaults, mock_log_setup,
-                  mock_register_opts, mock_conf):
-        mock_conf.engine.workers = 1
-        mock_conf.host = 'hostname'
-
+                  mock_messaging_setup, mock_parse_args, mock_launch,
+                  mock_log_set_defaults, mock_log_setup):
         engine.main()
 
-        mock_register_opts.assert_called_once()
+        mock_parse_args.assert_called_once()
         mock_log_setup.assert_called_once()
         mock_log_set_defaults.assert_called_once()
         mock_messaging_setup.assert_called_once()
         mock_profiler_setup.assert_called_once()
 
         mock_service.assert_called_once_with(
-            'hostname', consts.ENGINE_TOPIC
+            mock.ANY, consts.ENGINE_TOPIC
         )
 
         mock_launch.assert_called_once_with(

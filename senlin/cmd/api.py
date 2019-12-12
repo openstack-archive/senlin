@@ -17,7 +17,6 @@ Senlin API Server.
 """
 import sys
 
-from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_reports import guru_meditation_report as gmr
 from oslo_service import systemd
@@ -27,31 +26,30 @@ from senlin.api.common import wsgi
 from senlin.common import config
 from senlin.common import messaging
 from senlin.common import profiler
+import senlin.conf
 from senlin import objects
 from senlin import version
 
+CONF = senlin.conf.CONF
 LOG = logging.getLogger('senlin.api')
 
 
 def main():
     try:
-        logging.register_options(cfg.CONF)
-        cfg.CONF(project='senlin', prog='senlin-api',
-                 version=version.version_info.version_string())
-        config.set_config_defaults()
-        logging.setup(cfg.CONF, 'senlin-api')
+        config.parse_args(sys.argv, 'senlin-api')
+        logging.setup(CONF, 'senlin-api')
         gmr.TextGuruMeditation.setup_autorun(version)
         objects.register_all()
         messaging.setup()
 
         app = wsgi.load_paste_app()
 
-        host = cfg.CONF.senlin_api.bind_host
-        port = cfg.CONF.senlin_api.bind_port
+        host = CONF.senlin_api.bind_host
+        port = CONF.senlin_api.bind_port
         LOG.info('Starting Senlin API on %(host)s:%(port)s',
                  {'host': host, 'port': port})
         profiler.setup('senlin-api', host)
-        server = wsgi.Server('senlin-api', cfg.CONF.senlin_api)
+        server = wsgi.Server('senlin-api', CONF.senlin_api)
         server.start(app, default_port=port)
         systemd.notify_once()
         server.wait()

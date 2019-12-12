@@ -44,16 +44,16 @@ CONF = cfg.CONF
 _main_context_manager = None
 _CONTEXT = threading.local()
 
-cfg.CONF.import_opt('database_retry_limit', 'senlin.common.config')
-cfg.CONF.import_opt('database_retry_interval', 'senlin.common.config')
-cfg.CONF.import_opt('database_max_retry_interval', 'senlin.common.config')
+cfg.CONF.import_opt('database_retry_limit', 'senlin.conf')
+cfg.CONF.import_opt('database_retry_interval', 'senlin.conf')
+cfg.CONF.import_opt('database_max_retry_interval', 'senlin.conf')
 
 
 def _get_main_context_manager():
     global _main_context_manager
     if not _main_context_manager:
         _main_context_manager = enginefacade.transaction_context()
-        cfg.CONF.import_group('profiler', 'senlin.common.config')
+        cfg.CONF.import_group('profiler', 'senlin.conf')
         if cfg.CONF.profiler.enabled:
             if cfg.CONF.profiler.trace_sqlalchemy:
                 eng = _main_context_manager.writer.get_engine()
