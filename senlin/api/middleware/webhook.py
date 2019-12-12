@@ -50,7 +50,7 @@ class WebhookMiddleware(wsgi.Middleware):
 
         obj = util.parse_request(
             'ReceiverGetRequest', req, {'identity': receiver_id})
-        rpcc = rpc.EngineClient()
+        rpcc = rpc.get_engine_client()
         receiver = rpcc.call(ctx, 'receiver_get', obj)
 
         svc_ctx = context.get_service_credentials()

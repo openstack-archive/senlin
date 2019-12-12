@@ -36,7 +36,7 @@ class HeatNotificationEndpoint(base.Endpoints):
             publisher_id='^orchestration.*',
             event_type='^orchestration\.stack\..*',
             context={'project_id': '^%s$' % project_id})
-        self.rpc = rpc_client.EngineClient()
+        self.rpc = rpc_client.get_engine_client()
         self.target = messaging.Target(
             topic=cfg.CONF.health_manager.heat_notification_topic,
             exchange=cfg.CONF.health_manager.heat_control_exchange,

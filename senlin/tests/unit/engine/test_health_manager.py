@@ -54,7 +54,7 @@ class TestChaseUp(base.SenlinTestCase):
 @mock.patch('oslo_messaging.NotificationFilter')
 class TestNovaNotificationEndpoint(base.SenlinTestCase):
 
-    @mock.patch('senlin.rpc.client.EngineClient')
+    @mock.patch('senlin.rpc.client.get_engine_client')
     def test_init(self, mock_rpc, mock_filter):
         x_filter = mock_filter.return_value
         event_map = {
@@ -83,7 +83,7 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
         self.assertEqual('CLUSTER_ID', endpoint.cluster_id)
 
     @mock.patch.object(context.RequestContext, 'from_dict')
-    @mock.patch('senlin.rpc.client.EngineClient')
+    @mock.patch('senlin.rpc.client.get_engine_client')
     def test_info(self, mock_rpc, mock_context, mock_filter):
         x_rpc = mock_rpc.return_value
         recover_action = {'operation': 'REBUILD'}
@@ -123,7 +123,7 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
         }
         self.assertEqual(expected_params, req.params)
 
-    @mock.patch('senlin.rpc.client.EngineClient')
+    @mock.patch('senlin.rpc.client.get_engine_client')
     def test_info_no_metadata(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
         recover_action = {'operation': 'REBUILD'}
@@ -140,7 +140,7 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
         self.assertIsNone(res)
         self.assertEqual(0, x_rpc.node_recover.call_count)
 
-    @mock.patch('senlin.rpc.client.EngineClient')
+    @mock.patch('senlin.rpc.client.get_engine_client')
     def test_info_no_cluster_in_metadata(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
         recover_action = {'operation': 'REBUILD'}
@@ -157,7 +157,7 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
         self.assertIsNone(res)
         self.assertEqual(0, x_rpc.node_recover.call_count)
 
-    @mock.patch('senlin.rpc.client.EngineClient')
+    @mock.patch('senlin.rpc.client.get_engine_client')
     def test_info_cluster_id_not_match(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
         recover_action = {'operation': 'REBUILD'}
@@ -174,7 +174,7 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
         self.assertIsNone(res)
         self.assertEqual(0, x_rpc.node_recover.call_count)
 
-    @mock.patch('senlin.rpc.client.EngineClient')
+    @mock.patch('senlin.rpc.client.get_engine_client')
     def test_info_event_type_not_interested(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
         recover_action = {'operation': 'REBUILD'}
@@ -191,7 +191,7 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
         self.assertIsNone(res)
         self.assertEqual(0, x_rpc.node_recover.call_count)
 
-    @mock.patch('senlin.rpc.client.EngineClient')
+    @mock.patch('senlin.rpc.client.get_engine_client')
     def test_info_no_node_id(self, mock_rpc, mock_filter):
         x_rpc = mock_rpc.return_value
         recover_action = {'operation': 'REBUILD'}
@@ -209,7 +209,7 @@ class TestNovaNotificationEndpoint(base.SenlinTestCase):
         self.assertEqual(0, x_rpc.node_recover.call_count)
 
     @mock.patch.object(context.RequestContext, 'from_dict')
-    @mock.patch('senlin.rpc.client.EngineClient')
+    @mock.patch('senlin.rpc.client.get_engine_client')
     def test_info_default_values(self, mock_rpc, mock_context, mock_filter):
         x_rpc = mock_rpc.return_value
         recover_action = {'operation': 'REBUILD'}
@@ -756,7 +756,7 @@ class TestHealthCheck(base.SenlinTestCase):
         super(TestHealthCheck, self).setUp()
         ctx = mock.Mock()
         self.fake_rpc = mock.Mock()
-        with mock.patch.object(rpc_client, 'EngineClient',
+        with mock.patch.object(rpc_client, 'get_engine_client',
                                return_value=self.fake_rpc):
             self.hc = hm.HealthCheck(
                 ctx=ctx,

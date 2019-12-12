@@ -40,7 +40,7 @@ class NovaNotificationEndpoint(base.Endpoints):
             publisher_id='^compute.*',
             event_type='^compute\.instance\..*',
             context={'project_id': '^%s$' % project_id})
-        self.rpc = rpc_client.EngineClient()
+        self.rpc = rpc_client.get_engine_client()
         self.target = messaging.Target(
             topic=cfg.CONF.health_manager.nova_notification_topic,
             exchange=cfg.CONF.health_manager.nova_control_exchange,

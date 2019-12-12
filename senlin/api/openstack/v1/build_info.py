@@ -27,7 +27,7 @@ class BuildInfoController(wsgi.Controller):
 
     def __init__(self, options):
         self.options = options
-        self.rpc_client = rpc_client.EngineClient()
+        self.rpc_client = rpc_client.get_engine_client()
 
     @util.policy_enforce
     def build_info(self, req):

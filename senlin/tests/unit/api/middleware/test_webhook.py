@@ -142,7 +142,7 @@ class TestWebhookMiddleware(base.SenlinTestCase):
 
     @mock.patch.object(common_util, 'parse_request')
     @mock.patch.object(context, 'RequestContext')
-    @mock.patch.object(rpc, 'EngineClient')
+    @mock.patch.object(rpc, 'get_engine_client')
     def test_process_request(self, mock_client, mock_ctx, mock_parse):
         cfg.CONF.set_override('auth_url', 'AUTH_URL', group='authentication')
         cfg.CONF.set_override('service_username', 'USERNAME',
