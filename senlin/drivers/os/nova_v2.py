@@ -150,9 +150,11 @@ class NovaClient(base.DriverBase):
 
     @sdk.translate_exception
     def wait_for_server(self, server, status=consts.VS_ACTIVE,
-                        failures=[consts.VS_ERROR],
+                        failures=None,
                         interval=2, timeout=None):
         """Wait for server creation complete"""
+        if failures is None:
+            failures = [consts.VS_ERROR]
         if timeout is None:
             timeout = cfg.CONF.default_action_timeout
 
