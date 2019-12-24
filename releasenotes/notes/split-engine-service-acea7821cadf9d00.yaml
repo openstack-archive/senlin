@@ -10,7 +10,7 @@ upgrade:
     Two new services has been introduced that will need to be started
     after the upgrade, ``senlin-conductor`` and ``senlin-health-manager``.
 
-    With the introduction of these new services two new configuration options
+    With the introduction of these new services new configuration options
     were added to allow operators to change the number of proceses to spawn.
 
     .. code-block:: ini
@@ -21,10 +21,13 @@ upgrade:
     ..
     .. code-block:: ini
 
+      [engine]
+      workers = 1
+
+    ..
+    .. code-block:: ini
+
       [health_manager]
       workers = 1
 
     ..
-
-    The ``senlin-engine`` service still uses ``num_engine_workers`` to control
-    the number of processes to spawn.
