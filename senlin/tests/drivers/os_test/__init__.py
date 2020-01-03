@@ -11,16 +11,16 @@
 # under the License.
 
 
-from senlin.drivers.os_test import cinder_v2
-from senlin.drivers.os_test import glance_v2
-from senlin.drivers.os_test import heat_v1
-from senlin.drivers.os_test import keystone_v3
-from senlin.drivers.os_test import lbaas
-from senlin.drivers.os_test import mistral_v2
-from senlin.drivers.os_test import neutron_v2
-from senlin.drivers.os_test import nova_v2
-from senlin.drivers.os_test import octavia_v2
-from senlin.drivers.os_test import zaqar_v2
+from senlin.tests.drivers.os_test import cinder_v2
+from senlin.tests.drivers.os_test import glance_v2
+from senlin.tests.drivers.os_test import heat_v1
+from senlin.tests.drivers.os_test import keystone_v3
+from senlin.tests.drivers.os_test import lbaas
+from senlin.tests.drivers.os_test import mistral_v2
+from senlin.tests.drivers.os_test import neutron_v2
+from senlin.tests.drivers.os_test import nova_v2
+from senlin.tests.drivers.os_test import octavia_v2
+from senlin.tests.drivers.os_test import zaqar_v2
 
 
 block_storage = cinder_v2.CinderClient
