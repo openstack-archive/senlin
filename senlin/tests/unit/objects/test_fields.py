@@ -13,7 +13,6 @@
 import mock
 from oslo_config import cfg
 from oslo_versionedobjects import fields
-import six
 import testtools
 
 from senlin.common import consts
@@ -155,7 +154,7 @@ class TestUniqueDict(TestField):
                                None, 'attr', {'k1': 'v1', 'k2': 'v1'})
 
         self.assertEqual('Map contains duplicated values',
-                         six.text_type(ex))
+                         str(ex))
 
 
 class TestNotificationPriority(TestField):
@@ -266,7 +265,7 @@ class TestName(TestField):
                          "illegal characters. It must contain only "
                          "alphanumeric or \"_-.~\" characters and must start "
                          "with letter.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_get_schema(self):
         sot = senlin_fields.Name(2, 200)
@@ -334,20 +333,20 @@ class TestCapacity(TestField):
                                senlin_fields.Capacity,
                                minimum=101)
         self.assertEqual("The value of 'minimum' cannot be greater than the "
-                         "global constraint (100).", six.text_type(ex))
+                         "global constraint (100).", str(ex))
 
         ex = self.assertRaises(ValueError,
                                senlin_fields.Capacity,
                                maximum=101)
         self.assertEqual("The value of 'maximum' cannot be greater than the "
-                         "global constraint (100).", six.text_type(ex))
+                         "global constraint (100).", str(ex))
 
         ex = self.assertRaises(ValueError,
                                senlin_fields.Capacity,
                                minimum=60, maximum=40)
         self.assertEqual("The value of 'maximum' must be greater than or equal"
                          " to that of the 'minimum' specified.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_coerce(self):
         sot = senlin_fields.Capacity(minimum=2, maximum=200)
@@ -376,19 +375,19 @@ class TestCapacity(TestField):
                                sot.coerce,
                                obj, 'attr', 1)
         self.assertEqual("The value for the attr field must be greater than "
-                         "or equal to 2.", six.text_type(ex))
+                         "or equal to 2.", str(ex))
 
         ex = self.assertRaises(ValueError,
                                sot.coerce,
                                obj, 'attr', 201)
         self.assertEqual("The value for the attr field must be less than "
-                         "or equal to 200.", six.text_type(ex))
+                         "or equal to 200.", str(ex))
 
         ex = self.assertRaises(ValueError,
                                sot.coerce,
                                obj, 'attr', 'badvalue')
         self.assertEqual("The value for attr must be an integer: 'badvalue'.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_get_schema(self):
         sot = senlin_fields.Capacity(minimum=2, maximum=200)
@@ -458,19 +457,19 @@ class TestSort(TestField):
         ex = self.assertRaises(ValueError,
                                self.field.coerce,
                                obj, 'attr', ':asc')
-        self.assertEqual("Missing sort key for 'attr'.", six.text_type(ex))
+        self.assertEqual("Missing sort key for 'attr'.", str(ex))
 
         ex = self.assertRaises(ValueError,
                                self.field.coerce,
                                obj, 'attr', 'foo:asc')
         self.assertEqual("Unsupported sort key 'foo' for 'attr'.",
-                         six.text_type(ex))
+                         str(ex))
 
         ex = self.assertRaises(ValueError,
                                self.field.coerce,
                                obj, 'attr', 'key1:down')
         self.assertEqual("Unsupported sort dir 'down' for 'attr'.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_get_schema(self):
         self.assertEqual(
@@ -526,7 +525,7 @@ class TestIdentityList(TestField):
                                obj, 'attr', [])
 
         self.assertEqual("Value for 'attr' must have at least 2 item(s).",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_coerce_not_unique_bad(self):
         obj = mock.Mock()
@@ -537,7 +536,7 @@ class TestIdentityList(TestField):
                                obj, 'attr', ['abc', 'abc'])
 
         self.assertEqual("Items for 'attr' must be unique",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_get_schema(self):
         self.assertEqual(

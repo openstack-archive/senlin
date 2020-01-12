@@ -20,7 +20,6 @@ import sys
 from oslo_log import log as logging
 from oslo_reports import guru_meditation_report as gmr
 from oslo_service import systemd
-import six
 
 from senlin.api.common import wsgi
 from senlin.common import config
@@ -54,4 +53,4 @@ def main():
         systemd.notify_once()
         server.wait()
     except RuntimeError as ex:
-        sys.exit("ERROR: %s" % six.text_type(ex))
+        sys.exit("ERROR: %s" % str(ex))

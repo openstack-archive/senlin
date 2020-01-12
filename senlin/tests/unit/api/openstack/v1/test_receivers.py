@@ -11,7 +11,6 @@
 # under the License.
 
 import mock
-import six
 from webob import exc
 
 from oslo_serialization import jsonutils
@@ -130,7 +129,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
-        self.assertEqual("Invalid parameter balrog", six.text_type(ex))
+        self.assertEqual("Invalid parameter balrog", str(ex))
         self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
@@ -146,7 +145,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
         mock_parse.assert_called_once_with(
             'ReceiverListRequest', req,
             {
@@ -168,7 +167,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
         mock_parse.assert_called_once_with(
             'ReceiverListRequest', req,
             {
@@ -190,7 +189,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
         mock_parse.assert_called_once_with(
             'ReceiverListRequest', req,
             {
@@ -213,7 +212,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
         mock_parse.assert_called_once_with(
             'ReceiverListRequest', req,
             {
@@ -250,7 +249,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.index, req)
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -318,7 +317,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
         mock_parse.assert_called_once_with(
             'ReceiverCreateRequest', req, body, 'receiver')
         self.assertFalse(mock_call.called)
@@ -344,7 +343,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("miss type", six.text_type(ex))
+        self.assertEqual("miss type", str(ex))
         mock_parse.assert_called_once_with(
             'ReceiverCreateRequest', req, body, 'receiver')
         self.assertFalse(mock_call.called)
@@ -371,7 +370,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("bad type", six.text_type(ex))
+        self.assertEqual("bad type", str(ex))
         mock_parse.assert_called_once_with(
             'ReceiverCreateRequest', req, body, 'receiver')
         self.assertFalse(mock_call.called)
@@ -397,7 +396,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("bad action", six.text_type(ex))
+        self.assertEqual("bad action", str(ex))
         mock_parse.assert_called_once_with(
             'ReceiverCreateRequest', req, body, 'receiver')
         self.assertFalse(mock_call.called)
@@ -468,7 +467,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, receiver_id=wid)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -524,7 +523,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, receiver_id=wid, body=body)
 
         self.assertEqual("Malformed request data, missing 'receiver' key "
-                         "in request body.", six.text_type(ex))
+                         "in request body.", str(ex))
         self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
@@ -573,7 +572,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.update,
                                req, receiver_id=wid, body=body)
 
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
         mock_parse.assert_called_once_with(
             'ReceiverUpdateRequest', req, mock.ANY)
         self.assertFalse(mock_call.called)
@@ -619,7 +618,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               body=body)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -652,7 +651,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.delete, req,
                                receiver_id=wid)
-        self.assertEqual("bad identity", six.text_type(ex))
+        self.assertEqual("bad identity", str(ex))
         mock_parse.assert_called_once_with(
             'ReceiverDeleteRequest', req, {'identity': wid})
         self.assertFalse(mock_call.called)
@@ -685,7 +684,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, receiver_id=wid)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -719,7 +718,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.notify, req,
                                receiver_id=wid)
-        self.assertEqual("bad identity", six.text_type(ex))
+        self.assertEqual("bad identity", str(ex))
         mock_parse.assert_called_once_with(
             'ReceiverNotifyRequest', req, {'identity': wid})
         self.assertFalse(mock_call.called)

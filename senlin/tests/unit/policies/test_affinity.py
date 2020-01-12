@@ -13,7 +13,6 @@
 import copy
 
 import mock
-import six
 
 from senlin.common import consts
 from senlin.common import context
@@ -103,7 +102,7 @@ class TestAffinityPolicy(base.SenlinTestCase):
         mock_base_validate.assert_called_once_with(ctx, True)
         nc.validate_azs.assert_called_once_with(['NEWAZ'])
         self.assertEqual("The specified availability_zone 'NEWAZ' could not "
-                         "be found.", six.text_type(ex))
+                         "be found.", str(ex))
 
     def test_attach_using_profile_hints(self):
         x_profile = mock.Mock()

@@ -21,7 +21,6 @@ Senlin exception subclasses.
 import sys
 
 from oslo_log import log as logging
-import six
 
 from senlin.common.i18n import _
 
@@ -59,10 +58,7 @@ class SenlinException(Exception):
                 # raise exc_info[0], exc_info[1], exc_info[2]
 
     def __str__(self):
-        return six.text_type(self.message)
-
-    def __unicode__(self):
-        return six.text_type(self.message)
+        return str(self.message)
 
     def __deepcopy__(self, memo):
         return self.__class__(**self.kwargs)

@@ -12,8 +12,6 @@
 
 import inspect
 
-import six
-
 from senlin.common import messaging
 from senlin.objects import base
 from senlin.objects import fields
@@ -117,7 +115,7 @@ class ExceptionPayload(NotificationObject):
         module_name = module.__name__ if module else 'unknown'
         return cls(function=trace[3], module=module_name,
                    exception=exc.__class__.__name__,
-                   message=six.text_type(exc))
+                   message=str(exc))
 
 
 @base.SenlinObjectRegistry.register_notification

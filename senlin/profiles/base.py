@@ -19,7 +19,6 @@ from oslo_context import context as oslo_context
 from oslo_log import log as logging
 from oslo_utils import timeutils
 from osprofiler import profiler
-import six
 
 from senlin.common import consts
 from senlin.common import context
@@ -182,7 +181,7 @@ class Profile(object):
             profile.validate(True)
         except (exc.ResourceNotFound, exc.ESchema) as ex:
             error = _("Failed in creating profile %(name)s: %(error)s"
-                      ) % {"name": name, "error": six.text_type(ex)}
+                      ) % {"name": name, "error": str(ex)}
             raise exc.InvalidSpec(message=error)
 
         profile.store(ctx)
@@ -545,7 +544,7 @@ class Profile(object):
             else:
                 raise exc.EResourceOperation(op='recovering', type='node',
                                              id=obj.id,
-                                             message=six.text_type(ex))
+                                             message=str(ex))
 
         # pause to allow deleted resource to get reclaimed by nova
         # this is needed to avoid a problem when the compute resources are
@@ -558,7 +557,7 @@ class Profile(object):
             res = self.do_create(obj)
         except exc.EResourceCreation as ex:
             raise exc.EResourceOperation(op='recovering', type='node',
-                                         id=obj.id, message=six.text_type(ex),
+                                         id=obj.id, message=str(ex),
                                          resource_id=ex.resource_id)
         return res, True
 

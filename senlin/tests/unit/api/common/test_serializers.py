@@ -14,7 +14,6 @@ from oslo_config import cfg
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 from oslo_utils import timeutils as tu
-import six
 import webob
 
 from senlin.api.common import serializers
@@ -161,7 +160,7 @@ class JSONRequestDeserializerTest(base.SenlinTestCase):
         msg = ('Request limit exceeded: JSON body size '
                '(%s bytes) exceeds maximum allowed size (%s bytes).'
                ) % (len(body), cfg.CONF.senlin_api.max_json_body_size)
-        self.assertEqual(msg, six.text_type(error))
+        self.assertEqual(msg, str(error))
 
 
 class JSONResponseSerializerTest(base.SenlinTestCase):

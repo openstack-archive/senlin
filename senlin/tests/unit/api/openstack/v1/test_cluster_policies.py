@@ -11,7 +11,6 @@
 # under the License.
 
 import mock
-import six
 from webob import exc
 
 from senlin.api.common import util
@@ -114,7 +113,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest, self.controller.index,
                                req, cluster_id=cid)
         self.assertEqual('Invalid parameter balrog',
-                         six.text_type(ex))
+                         str(ex))
         self.assertEqual(0, mock_parse.call_count)
         self.assertEqual(0, mock_call.call_count)
 
@@ -134,7 +133,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest, self.controller.index,
                                req, cluster_id=cid)
 
-        self.assertEqual("bad sort", six.text_type(ex))
+        self.assertEqual("bad sort", str(ex))
         mock_parse.assert_called_once_with(
             'ClusterPolicyListRequest', req, mock.ANY)
         self.assertEqual(0, mock_call.call_count)
@@ -149,7 +148,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, cluster_id=cid)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -231,7 +230,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               policy_id=pid)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -247,7 +246,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest, self.controller.get,
                                req, cluster_id=cid, policy_id=pid)
 
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
         mock_parse.assert_called_once_with(
             'ClusterPolicyGetRequest', req,
             {

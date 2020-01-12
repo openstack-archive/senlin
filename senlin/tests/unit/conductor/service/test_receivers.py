@@ -13,7 +13,6 @@
 import mock
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
-import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
@@ -145,7 +144,7 @@ class ReceiverTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("A receiver named 'r1' already exists.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     @mock.patch.object(co.Cluster, 'find')
     def test_receiver_create_webhook_cluster_not_found(self, mock_find):
@@ -160,7 +159,7 @@ class ReceiverTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The referenced cluster 'C1' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     @mock.patch.object(co.Cluster, 'find')
     def test_receiver_create_webhook_invalid_action(self, mock_find):
@@ -177,7 +176,7 @@ class ReceiverTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Action name cannot be any of ['CLUSTER_CREATE'].",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     @mock.patch.object(co.Cluster, 'find')
     @mock.patch.object(rb.Receiver, 'create')
@@ -224,7 +223,7 @@ class ReceiverTest(base.SenlinTestCase):
             self.assertEqual(exc.BadRequest, ex.exc_info[0])
             self.assertEqual("Cluster identity is required for creating "
                              "webhook receiver.",
-                             six.text_type(ex.exc_info[1]))
+                             str(ex.exc_info[1]))
 
     @mock.patch.object(co.Cluster, 'find')
     def test_receiver_create_webhook_action_not_specified(self, mock_find):
@@ -242,7 +241,7 @@ class ReceiverTest(base.SenlinTestCase):
                                    self.ctx, req.obj_to_primitive())
             self.assertEqual(exc.BadRequest, ex.exc_info[0])
             self.assertEqual("Action name is required for creating webhook "
-                             "receiver.", six.text_type(ex.exc_info[1]))
+                             "receiver.", str(ex.exc_info[1]))
 
     @mock.patch.object(rb.Receiver, 'create')
     def test_receiver_create_message_succeed(self, mock_create):
@@ -322,7 +321,7 @@ class ReceiverTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The receiver 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(rb.Receiver, 'load')
@@ -343,7 +342,7 @@ class ReceiverTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual('No property needs an update.',
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'PID')
         mock_load.assert_called_once_with(self.ctx, receiver_obj=x_obj)
         self.assertEqual(0, x_receiver.store.call_count)

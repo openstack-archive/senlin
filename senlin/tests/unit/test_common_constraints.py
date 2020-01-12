@@ -11,7 +11,6 @@
 # under the License.
 
 
-import six
 import testtools
 
 from senlin.common import constraints
@@ -46,12 +45,12 @@ class TestConstraintsSchema(testtools.TestCase):
 
         err = self.assertRaises(exc.ESchema, s.validate, 3)
         self.assertEqual("'3' must be one of the allowed values: 1, 2, 4",
-                         six.text_type(err))
+                         str(err))
 
         self.assertIsNone(s.validate('1'))
         err = self.assertRaises(exc.ESchema, s.validate, '3')
         self.assertEqual("'3' must be one of the allowed values: 1, 2, 4",
-                         six.text_type(err))
+                         str(err))
 
         # Allowed values defined as integer strings
         s = schema.Integer(
@@ -61,12 +60,12 @@ class TestConstraintsSchema(testtools.TestCase):
         self.assertIsNone(s.validate(1))
         err = self.assertRaises(exc.ESchema, s.validate, 3)
         self.assertEqual("'3' must be one of the allowed values: 1, 2, 4",
-                         six.text_type(err))
+                         str(err))
 
         self.assertIsNone(s.validate('1'))
         err = self.assertRaises(exc.ESchema, s.validate, '3')
         self.assertEqual("'3' must be one of the allowed values: 1, 2, 4",
-                         six.text_type(err))
+                         str(err))
 
     def test_allowed_values_numeric_float(self):
         """Test AllowedValues constraint for numeric floating point values.
@@ -84,11 +83,11 @@ class TestConstraintsSchema(testtools.TestCase):
         self.assertIsNone(s.validate_constraints(1.1))
         err = self.assertRaises(exc.ESchema, s.validate_constraints, 3.3)
         self.assertEqual("'3.3' must be one of the allowed values: "
-                         "1.1, 2.2, 4.4", six.text_type(err))
+                         "1.1, 2.2, 4.4", str(err))
         self.assertIsNone(s.validate_constraints('1.1', s))
         err = self.assertRaises(exc.ESchema, s.validate_constraints, '3.3')
         self.assertEqual("'3.3' must be one of the allowed values: "
-                         "1.1, 2.2, 4.4", six.text_type(err))
+                         "1.1, 2.2, 4.4", str(err))
 
         # Allowed values defined as strings
         s = schema.Number(
@@ -98,11 +97,11 @@ class TestConstraintsSchema(testtools.TestCase):
         self.assertIsNone(s.validate_constraints(1.1, s))
         err = self.assertRaises(exc.ESchema, s.validate_constraints, 3.3, s)
         self.assertEqual("'3.3' must be one of the allowed values: "
-                         "1.1, 2.2, 4.4", six.text_type(err))
+                         "1.1, 2.2, 4.4", str(err))
         self.assertIsNone(s.validate_constraints('1.1', s))
         err = self.assertRaises(exc.ESchema, s.validate_constraints, '3.3', s)
         self.assertEqual("'3.3' must be one of the allowed values: "
-                         "1.1, 2.2, 4.4", six.text_type(err))
+                         "1.1, 2.2, 4.4", str(err))
 
     def test_schema_all(self):
         d = {
@@ -220,7 +219,7 @@ class TestConstraintsSchema(testtools.TestCase):
                           constraints=[c])
         err = self.assertRaises(exc.ESchema, s.validate, 'zoo')
         self.assertIn("'zoo' must be one of the allowed values: foo, bar",
-                      six.text_type(err))
+                      str(err))
 
     def test_schema_nested_validate_good(self):
         c = constraints.AllowedValues(['foo', 'bar'])
@@ -237,4 +236,4 @@ class TestConstraintsSchema(testtools.TestCase):
         err = self.assertRaises(exc.ESchema, s.validate, {'Foo': 'zoo'})
 
         self.assertIn("'zoo' must be one of the allowed values: foo, bar",
-                      six.text_type(err))
+                      str(err))

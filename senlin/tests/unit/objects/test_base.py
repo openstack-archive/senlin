@@ -13,7 +13,6 @@
 import mock
 from oslo_versionedobjects import base as ovo_base
 from oslo_versionedobjects import exception as exc
-import six
 
 from senlin.objects import base as obj_base
 from senlin.objects import fields as obj_fields
@@ -157,4 +156,4 @@ class TestBaseObject(base.SenlinTestCase):
                                obj_base.SenlinObject.normalize_req,
                                name, req, 'foo')
 
-        self.assertEqual("Request body missing 'foo' key.", six.text_type(ex))
+        self.assertEqual("Request body missing 'foo' key.", str(ex))

@@ -13,7 +13,6 @@
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import timeutils
-import six
 from stevedore import named
 
 from senlin.common import consts
@@ -76,7 +75,7 @@ def _dump(level, action, phase, reason, timestamp):
                                phase=phase, reason=reason, timestamp=timestamp)
     except Exception as ex:
         LOG.exception("Dispatcher failed to handle the event: %s",
-                      six.text_type(ex))
+                      str(ex))
 
 
 def critical(action, phase=None, reason=None, timestamp=None):

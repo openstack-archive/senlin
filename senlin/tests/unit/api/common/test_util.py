@@ -12,7 +12,6 @@
 
 import jsonschema
 import mock
-import six
 from webob import exc
 
 from senlin.api.common import util
@@ -150,7 +149,7 @@ class TestParseRequest(base.SenlinTestCase):
                                name, req, body)
 
         self.assertEqual('Unsupported object type BadClusterListRequest',
-                         six.text_type(ex))
+                         str(ex))
 
     def test_bad_request_body(self):
         name = 'ClusterCreateRequest'
@@ -162,7 +161,7 @@ class TestParseRequest(base.SenlinTestCase):
                                name, req, body, 'cluster')
 
         self.assertEqual("Request body missing 'cluster' key.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_bad_primitive(self):
         name = 'ClusterListRequest'
@@ -174,7 +173,7 @@ class TestParseRequest(base.SenlinTestCase):
                                name, req, body)
 
         self.assertEqual("Value must be >= 0 for field 'limit'.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_bad_schema(self):
         name = 'ClusterListRequest'
@@ -187,7 +186,7 @@ class TestParseRequest(base.SenlinTestCase):
                                name, req, body)
 
         self.assertEqual("Additional properties are not allowed ('bogus_key' "
-                         "was unexpected)", six.text_type(ex))
+                         "was unexpected)", str(ex))
 
     @mock.patch.object(jsonschema, 'validate')
     @mock.patch.object(FakeRequest, 'obj_from_primitive')

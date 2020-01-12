@@ -13,7 +13,6 @@
 import collections
 
 import mock
-import six
 
 from senlin.common import constraints
 from senlin.common import exception as exc
@@ -79,7 +78,7 @@ class TestSchemaBase(base.SenlinTestCase):
     def test_init_schema_invalid(self):
         ex = self.assertRaises(exc.ESchema, FakeSchema, schema=mock.Mock())
         self.assertEqual('Schema valid only for List or Map, not String',
-                         six.text_type(ex))
+                         str(ex))
 
     def test_get_default(self):
         sot = FakeSchema(default='DEFAULT')
@@ -116,7 +115,7 @@ class TestSchemaBase(base.SenlinTestCase):
                                fake_context)
 
         mock_validate.assert_called_once_with('DEFAULT', fake_context)
-        self.assertEqual('Invalid default DEFAULT: boom', six.text_type(ex))
+        self.assertEqual('Invalid default DEFAULT: boom', str(ex))
 
     def test_validate_constraints(self):
         c1 = mock.Mock()
@@ -141,7 +140,7 @@ class TestSchemaBase(base.SenlinTestCase):
                                'FOO', context=ctx)
 
         c1.validate.assert_called_once_with('FOO', schema=None, context=ctx)
-        self.assertEqual('BOOM', six.text_type(ex))
+        self.assertEqual('BOOM', str(ex))
 
     def test_validate_version(self):
         sot = FakeSchema(min_version='1.0', max_version='2.0')
@@ -161,14 +160,14 @@ class TestSchemaBase(base.SenlinTestCase):
                                'field', '0.9')
         self.assertEqual('field (min_version=1.0) is not supported by '
                          'spec version 0.9.',
-                         six.text_type(ex))
+                         str(ex))
 
         ex = self.assertRaises(exc.ESchema,
                                sot._validate_version,
                                'field', '2.1')
         self.assertEqual('field (max_version=2.0) is not supported by '
                          'spec version 2.1.',
-                         six.text_type(ex))
+                         str(ex))
 
     def test_validate_version_no_min_version(self):
         sot = FakeSchema(max_version='2.0')
@@ -184,7 +183,7 @@ class TestSchemaBase(base.SenlinTestCase):
                                'field', '2.1')
         self.assertEqual('field (max_version=2.0) is not supported by '
                          'spec version 2.1.',
-                         six.text_type(ex))
+                         str(ex))
 
     def test_validate_version_no_max_version(self):
         sot = FakeSchema(min_version='1.0')
@@ -200,7 +199,7 @@ class TestSchemaBase(base.SenlinTestCase):
                                'field', '0.5')
         self.assertEqual('field (min_version=1.0) is not supported by '
                          'spec version 0.5.',
-                         six.text_type(ex))
+                         str(ex))
 
     def test_validate_version_no_version_restriction(self):
         sot = FakeSchema()
@@ -317,7 +316,7 @@ class TestBoolean(base.SenlinTestCase):
 
         ex = self.assertRaises(exc.ESchema, sot.to_schema_type, 'bogus')
         self.assertEqual("The value 'bogus' is not a valid Boolean",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_resolve(self):
         sot = schema.Boolean()
@@ -342,7 +341,7 @@ class TestBoolean(base.SenlinTestCase):
 
         ex = self.assertRaises(exc.ESchema, sot.validate, 'bogus')
         self.assertEqual("The value 'bogus' is not a valid Boolean",
-                         six.text_type(ex))
+                         str(ex))
 
 
 class TestInteger(base.SenlinTestCase):
@@ -369,7 +368,7 @@ class TestInteger(base.SenlinTestCase):
 
         ex = self.assertRaises(exc.ESchema, sot.to_schema_type, '456L')
         self.assertEqual("The value '456L' is not a valid Integer",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_resolve(self):
         sot = schema.Integer()
@@ -387,7 +386,7 @@ class TestInteger(base.SenlinTestCase):
 
         ex = self.assertRaises(exc.ESchema, sot.resolve, '456L')
         self.assertEqual("The value '456L' is not a valid Integer",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_validate(self):
         sot = schema.Integer()
@@ -409,7 +408,7 @@ class TestInteger(base.SenlinTestCase):
         mock_constraints.assert_called_once_with(1, schema=sot, context=None)
         ex = self.assertRaises(exc.ESchema, sot.validate, 'bogus')
         self.assertEqual("The value 'bogus' is not a valid Integer",
-                         six.text_type(ex))
+                         str(ex))
 
 
 class TestString(base.SenlinTestCase):
@@ -512,7 +511,7 @@ class TestNumber(base.SenlinTestCase):
 
         ex = self.assertRaises(exc.ESchema, sot.validate, "bogus")
         self.assertEqual("The value 'bogus' is not a valid number.",
-                         six.text_type(ex))
+                         str(ex))
 
         mock_constraints = self.patchobject(sot, 'validate_constraints',
                                             return_value=None)
@@ -559,7 +558,7 @@ class TestList(base.SenlinTestCase):
         sot = schema.List(schema=schema.String())
 
         ex = self.assertRaises(exc.ESchema, sot.validate, None)
-        self.assertEqual("'None' is not a List", six.text_type(ex))
+        self.assertEqual("'None' is not a List", str(ex))
 
 
 class TestMap(base.SenlinTestCase):
@@ -587,7 +586,7 @@ class TestMap(base.SenlinTestCase):
 
         sot = schema.Map(default='bad', schema={'foo': schema.String()})
         ex = self.assertRaises(exc.ESchema, sot.get_default)
-        self.assertEqual("'bad' is not a Map", six.text_type(ex))
+        self.assertEqual("'bad' is not a Map", str(ex))
 
     def test_resolve(self):
         sot = schema.Map(schema={'foo': schema.String()})
@@ -599,7 +598,7 @@ class TestMap(base.SenlinTestCase):
         self.assertEqual({'foo': 'bar'}, res)
 
         ex = self.assertRaises(exc.ESchema, sot.resolve, 'plainstring')
-        self.assertEqual("'plainstring' is not a Map", six.text_type(ex))
+        self.assertEqual("'plainstring' is not a Map", str(ex))
 
     def test_validate(self):
         sot = schema.Map(schema={'foo': schema.String()})
@@ -612,10 +611,10 @@ class TestMap(base.SenlinTestCase):
         sot = schema.Map(schema={'foo': schema.String()})
 
         ex = self.assertRaises(exc.ESchema, sot.validate, None)
-        self.assertEqual("'None' is not a Map", six.text_type(ex))
+        self.assertEqual("'None' is not a Map", str(ex))
 
         ex = self.assertRaises(exc.ESchema, sot.validate, 'bogus')
-        self.assertEqual("'bogus' is not a Map", six.text_type(ex))
+        self.assertEqual("'bogus' is not a Map", str(ex))
 
 
 class TestStringParam(base.SenlinTestCase):
@@ -643,7 +642,7 @@ class TestStringParam(base.SenlinTestCase):
         ex = self.assertRaises(exc.ESchema, sot.validate, '123')
 
         self.assertEqual("'123' must be one of the allowed values: abc, def",
-                         six.text_type(ex))
+                         str(ex))
 
 
 class TestIntegerParam(base.SenlinTestCase):
@@ -671,7 +670,7 @@ class TestIntegerParam(base.SenlinTestCase):
         ex = self.assertRaises(exc.ESchema, sot.validate, 12)
 
         self.assertEqual("'12' must be one of the allowed values: 123, 124",
-                         six.text_type(ex))
+                         str(ex))
 
 
 class TestOperation(base.SenlinTestCase):
@@ -698,7 +697,7 @@ class TestOperation(base.SenlinTestCase):
         ex = self.assertRaises(exc.ESchema, sot.validate,
                                {'baar': 'baar'})
 
-        self.assertEqual("Unrecognizable parameter 'baar'", six.text_type(ex))
+        self.assertEqual("Unrecognizable parameter 'baar'", str(ex))
 
     def test_validate_failed_type(self):
         sot = schema.Operation('des', schema={'foo': schema.StringParam()})
@@ -707,7 +706,7 @@ class TestOperation(base.SenlinTestCase):
                                {'foo': ['baaar']})
 
         self.assertEqual("value is not a string",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_validate_failed_constraint(self):
         sot = schema.Operation(
@@ -722,7 +721,7 @@ class TestOperation(base.SenlinTestCase):
                                {'foo': 'baaar'})
 
         self.assertEqual("'baaar' must be one of the allowed values: bar",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_validate_failed_required(self):
         sot = schema.Operation(
@@ -737,7 +736,7 @@ class TestOperation(base.SenlinTestCase):
                                {'foo': 'baaar'})
 
         self.assertEqual("Required parameter 'bar' not provided",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_validate_failed_version(self):
         sot = schema.Operation(
@@ -751,7 +750,7 @@ class TestOperation(base.SenlinTestCase):
                                {'foo': 'baaar'}, '1.0')
 
         self.assertEqual("foo (min_version=2.0) is not supported by spec "
-                         "version 1.0.", six.text_type(ex))
+                         "version 1.0.", str(ex))
 
 
 class TestSpec(base.SenlinTestCase):
@@ -796,7 +795,7 @@ class TestSpec(base.SenlinTestCase):
         ex = self.assertRaises(exc.ESchema, sot.validate)
 
         self.assertIn("Unrecognizable spec item 'key2'",
-                      six.text_type(ex.message))
+                      str(ex.message))
 
     def test_validate_fail_value_type_incorrect(self):
         spec_schema = {
@@ -808,7 +807,7 @@ class TestSpec(base.SenlinTestCase):
         spec = schema.Spec(spec_schema, data, version='1.0')
         ex = self.assertRaises(exc.ESchema, spec.validate)
         self.assertIn("The value 'abc' is not a valid Integer",
-                      six.text_type(ex.message))
+                      str(ex.message))
 
     def test_validate_version_good(self):
         spec_schema = {
@@ -850,7 +849,7 @@ class TestSpec(base.SenlinTestCase):
         spec = schema.Spec(spec_schema, data, version='1.0')
         ex = self.assertRaises(exc.ESchema, spec.validate)
         msg = 'key1 (min_version=1.1) is not supported by spec version 1.0.'
-        self.assertIn(msg, six.text_type(ex.message))
+        self.assertIn(msg, str(ex.message))
 
     def test_validate_version_fail_version_over_max(self):
         spec_schema = {
@@ -870,7 +869,7 @@ class TestSpec(base.SenlinTestCase):
         spec = schema.Spec(spec_schema, data, version='3.0')
         ex = self.assertRaises(exc.ESchema, spec.validate)
         msg = 'key1 (max_version=2.0) is not supported by spec version 3.0.'
-        self.assertIn(msg, six.text_type(ex.message))
+        self.assertIn(msg, str(ex.message))
 
     def test_resolve_value(self):
         data = {'key2': 2}
@@ -883,7 +882,7 @@ class TestSpec(base.SenlinTestCase):
         self.assertEqual('value1', res)
 
         ex = self.assertRaises(exc.ESchema, sot.resolve_value, 'key3')
-        self.assertEqual("Invalid spec item: key3", six.text_type(ex))
+        self.assertEqual("Invalid spec item: key3", str(ex))
 
     def test_resolve_value_required_key_missing(self):
         data = {'key1': 'value1'}
@@ -891,7 +890,7 @@ class TestSpec(base.SenlinTestCase):
 
         ex = self.assertRaises(exc.ESchema, sot.resolve_value, 'key2')
         self.assertIn("Required spec item 'key2' not provided",
-                      six.text_type(ex.message))
+                      str(ex.message))
 
     def test__getitem__(self):
         data = {'key2': 2}
@@ -942,16 +941,16 @@ class TestSpecVersionChecking(base.SenlinTestCase):
         spec = 'a string'
         ex = self.assertRaises(exc.ESchema, schema.get_spec_version, spec)
         self.assertEqual('The provided spec is not a map.',
-                         six.text_type(ex))
+                         str(ex))
 
     def test_spec_version_no_type_key(self):
         spec = {'tpye': 'a string'}
         ex = self.assertRaises(exc.ESchema, schema.get_spec_version, spec)
         self.assertEqual("The 'type' key is missing from the provided "
-                         "spec map.", six.text_type(ex))
+                         "spec map.", str(ex))
 
     def test_spec_version_no_version_key(self):
         spec = {'type': 'a string', 'ver': '123'}
         ex = self.assertRaises(exc.ESchema, schema.get_spec_version, spec)
         self.assertEqual("The 'version' key is missing from the provided "
-                         "spec map.", six.text_type(ex))
+                         "spec map.", str(ex))

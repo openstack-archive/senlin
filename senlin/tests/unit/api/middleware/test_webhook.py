@@ -14,7 +14,6 @@ import mock
 
 from oslo_config import cfg
 from oslo_utils import uuidutils
-import six
 import webob
 
 from senlin.api.common import util as common_util
@@ -76,7 +75,7 @@ class TestWebhookMiddleware(base.SenlinTestCase):
                                self._generate_url())
 
         self.assertEqual("V query parameter is required in webhook trigger "
-                         "URL", six.text_type(ex))
+                         "URL", str(ex))
 
     def test_parse_url_no_version_provided_key_provided(self):
         # The structure /<webhook_id>/trigger?key=value should be invalid
@@ -90,7 +89,7 @@ class TestWebhookMiddleware(base.SenlinTestCase):
                                self._generate_url())
 
         self.assertEqual("V query parameter is required in webhook trigger "
-                         "URL", six.text_type(ex))
+                         "URL", str(ex))
 
     def test_parse_url_webhooks_not_found(self):
         # String 'webhooks' is not found in url

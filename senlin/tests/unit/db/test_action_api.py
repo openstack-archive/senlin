@@ -11,7 +11,6 @@
 # under the License.
 
 import datetime
-import six
 import time
 
 from oslo_utils import timeutils as tu
@@ -656,7 +655,7 @@ class DBAPIActionTest(base.SenlinTestCase):
                                    db_api.action_delete,
                                    self.ctx, action.id)
             self.assertEqual("The action '%s' is busy now." % action.id,
-                             six.text_type(ex))
+                             str(ex))
 
     def test_action_delete_by_target(self):
         for name in ['CLUSTER_CREATE', 'CLUSTER_RESIZE', 'CLUSTER_DELETE']:

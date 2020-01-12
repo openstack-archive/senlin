@@ -11,7 +11,6 @@
 # under the License.
 
 import mock
-import six
 from webob import exc
 
 from oslo_serialization import jsonutils
@@ -100,7 +99,7 @@ class WebhookV1ControllerInvalidParamsTest(WebhookControllerBaseTest):
 
         self.assertEqual(
             "Additional properties are not allowed ('bad' was unexpected)",
-            six.text_type(ex))
+            str(ex))
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(policy, 'enforce')
@@ -118,7 +117,7 @@ class WebhookV1ControllerInvalidParamsTest(WebhookControllerBaseTest):
                                self.controller.trigger,
                                req, webhook_id=webhook_id, body=body)
         self.assertEqual("The value (boo) is not a valid JSON.",
-                         six.text_type(ex))
+                         str(ex))
         self.assertFalse(mock_call.called)
 
 

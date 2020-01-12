@@ -11,7 +11,6 @@
 # under the License.
 
 import mock
-import six
 from webob import exc
 
 from senlin.api.common import util
@@ -130,7 +129,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
-        self.assertEqual("Invalid parameter balrog", six.text_type(ex))
+        self.assertEqual("Invalid parameter balrog", str(ex))
         self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
@@ -147,7 +146,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.index,
                                req)
 
-        self.assertEqual("invalid value", six.text_type(ex))
+        self.assertEqual("invalid value", str(ex))
         mock_parse.assert_called_once_with(
             'EventListRequest', req, mock.ANY)
         self.assertEqual(0, mock_call.call_count)
@@ -164,7 +163,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
-        self.assertEqual("not int", six.text_type(ex))
+        self.assertEqual("not int", str(ex))
         mock_parse.assert_called_once_with(
             'EventListRequest', req, mock.ANY)
         self.assertFalse(mock_call.called)
@@ -223,7 +222,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.index, req)
 
         self.assertEqual("Invalid value 'No' specified for 'global_project'",
-                         six.text_type(ex))
+                         str(ex))
         self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
@@ -235,7 +234,7 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               self.controller.index,
                                               req)
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -303,4 +302,4 @@ class EventControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, event_id=event_id)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))

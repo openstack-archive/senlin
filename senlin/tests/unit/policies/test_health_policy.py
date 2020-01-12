@@ -14,7 +14,6 @@ from collections import namedtuple
 import copy
 
 import mock
-import six
 
 from oslo_config import cfg
 
@@ -166,7 +165,7 @@ class TestHealthPolicy(base.SenlinTestCase):
                                self.context)
 
         self.assertEqual("Only one 'actions' is supported for now.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_validate_valid_interval(self):
         spec = copy.deepcopy(self.spec)
@@ -192,7 +191,7 @@ class TestHealthPolicy(base.SenlinTestCase):
                           "be larger than health_check_interval_min of "
                           "%(min_interval)d seconds set in configuration."
                           ) % {"interval": 10, "min_interval": 20}
-        self.assertEqual(expected_error, six.text_type(ex))
+        self.assertEqual(expected_error, str(ex))
 
     @mock.patch.object(health_manager, 'register')
     def test_attach(self, mock_hm_reg):

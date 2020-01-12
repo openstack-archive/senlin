@@ -11,7 +11,6 @@
 # under the License.
 
 import mock
-import six
 from webob import exc
 
 from oslo_serialization import jsonutils
@@ -126,7 +125,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.index,
                                req)
 
-        self.assertEqual("Invalid parameter balrog", six.text_type(ex))
+        self.assertEqual("Invalid parameter balrog", str(ex))
         self.assertEqual(0, mock_call.call_count)
         self.assertEqual(0, mock_parse.call_count)
 
@@ -145,7 +144,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.index,
                                req)
 
-        self.assertEqual(err, six.text_type(ex))
+        self.assertEqual(err, str(ex))
         self.assertEqual(0, mock_call.call_count)
         mock_parse.assert_called_once_with(
             'PolicyListRequest', req, {'limit': '10',
@@ -160,7 +159,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -220,7 +219,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
@@ -236,7 +235,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("bad spec", six.text_type(ex))
+        self.assertEqual("bad spec", str(ex))
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
@@ -289,7 +288,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               self.controller.create,
                                               req, body=body)
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -342,7 +341,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, policy_id=pid)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -402,7 +401,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.update,
                                req, policy_id=pid, body=body)
 
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
         mock_parse.assert_called_once_with(
             'PolicyUpdateRequest', req, {'identity': pid,
                                          'policy': mock.ANY})
@@ -423,7 +422,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, policy_id=pid, body=body)
 
         self.assertEqual("Malformed request data, missing 'policy' key in "
-                         "request body.", six.text_type(ex))
+                         "request body.", str(ex))
         self.assertFalse(mock_call.called)
         self.assertFalse(mock_parse.called)
 
@@ -447,7 +446,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.update,
                                req, policy_id=pid, body=body)
 
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
         mock_parse.assert_called_once_with(
             'PolicyUpdateRequest', req, {'identity': pid,
                                          'policy': mock.ANY})
@@ -493,7 +492,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, policy_id=pid, body=body)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -542,7 +541,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, policy_id=pid)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_policy_validate_version_mismatch(self, mock_call, mock_enforce):
@@ -558,7 +557,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_call.assert_not_called()
         self.assertEqual("API version '1.1' is not supported on this "
-                         "method.", six.text_type(ex))
+                         "method.", str(ex))
 
     def test_profile_validate_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', False)
@@ -586,7 +585,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, body=body)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -600,7 +599,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.validate,
                                req, body=body)
-        self.assertEqual("miss policy", six.text_type(ex))
+        self.assertEqual("miss policy", str(ex))
         mock_parse.assert_called_once_with(
             'PolicyValidateRequest', req, body, 'policy')
         self.assertFalse(mock_call.called)
@@ -620,7 +619,7 @@ class PolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.validate,
                                req, body=body)
-        self.assertEqual("miss policy", six.text_type(ex))
+        self.assertEqual("miss policy", str(ex))
         mock_parse.assert_called_once_with(
             'PolicyValidateRequest', req, body, 'policy')
         self.assertFalse(mock_call.called)

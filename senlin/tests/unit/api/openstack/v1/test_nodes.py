@@ -12,7 +12,6 @@
 
 import copy
 import mock
-import six
 from webob import exc
 
 from oslo_serialization import jsonutils
@@ -273,7 +272,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.index, req)
 
         self.assertEqual("Invalid value 'No' specified for 'global_project'",
-                         six.text_type(ex))
+                         str(ex))
         self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
@@ -289,7 +288,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
-        self.assertEqual("bad limit", six.text_type(ex))
+        self.assertEqual("bad limit", str(ex))
         mock_parse.assert_called_once_with(
             'NodeListRequest', req,
             {'limit': 'not-int', 'project_safe': True})
@@ -329,7 +328,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         resp = shared.request_with_middleware(fault.FaultWrapper,
                                               self.controller.index, req)
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -385,7 +384,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
         mock_parse.assert_called_once_with(
             'NodeCreateRequest', req, body, 'node')
         self.assertFalse(mock_call.called)
@@ -408,7 +407,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
                                req, body=body)
-        self.assertEqual("miss profile", six.text_type(ex))
+        self.assertEqual("miss profile", str(ex))
         mock_parse.assert_called_once_with(
             'NodeCreateRequest', req, body, 'node')
         self.assertFalse(mock_call.called)
@@ -430,7 +429,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.create,
                                req, body=body)
-        self.assertEqual("miss name", six.text_type(ex))
+        self.assertEqual("miss name", str(ex))
         mock_parse.assert_called_once_with(
             'NodeCreateRequest', req, body, 'node')
         self.assertFalse(mock_call.called)
@@ -612,7 +611,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, node_id=node_id)
 
         self.assertEqual("Invalid value 'Okay' specified for 'show_details'",
-                         six.text_type(ex))
+                         str(ex))
         self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
@@ -648,7 +647,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, node_id=node_id)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -709,7 +708,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.update, req,
                                node_id=nid, body=body)
         self.assertEqual("Malformed request data, missing 'node' key "
-                         "in request body.", six.text_type(ex))
+                         "in request body.", str(ex))
         self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
@@ -794,7 +793,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.update,
                                req, node_id=nid, body=body)
 
-        self.assertEqual("miss cluster", six.text_type(ex))
+        self.assertEqual("miss cluster", str(ex))
         mock_parse.assert_called_once_with(
             'NodeUpdateRequest', req, mock.ANY)
         self.assertFalse(mock_call.called)
@@ -818,7 +817,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, node_id=node_id, body=body)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -854,7 +853,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.delete, req,
                                node_id=nid)
-        self.assertEqual("bad node", six.text_type(ex))
+        self.assertEqual("bad node", str(ex))
         self.assertFalse(mock_call.called)
         mock_parse.assert_called_once_with(
             'NodeDeleteRequest', req, {'identity': nid, 'force': False})
@@ -870,7 +869,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, node_id=nid)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -1018,7 +1017,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.action,
                                req, node_id=node_id, body=body)
         self.assertEqual("The params provided is not a map.",
-                         six.text_type(ex))
+                         str(ex))
         self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
@@ -1039,7 +1038,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
         self.assertEqual(400, ex.code)
-        self.assertIn('No action specified.', six.text_type(ex))
+        self.assertIn('No action specified.', str(ex))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -1058,7 +1057,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
         self.assertEqual(400, ex.code)
-        self.assertIn('Multiple actions specified.', six.text_type(ex))
+        self.assertIn('Multiple actions specified.', str(ex))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -1078,7 +1077,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_call.called)
         self.assertEqual(400, ex.code)
         self.assertIn("Unrecognized action 'eat' specified",
-                      six.text_type(ex))
+                      str(ex))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -1120,7 +1119,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, node_id=node_id, body=body)
 
         self.assertEqual("API version '1.3' is not supported on this "
-                         "method.", six.text_type(ex))
+                         "method.", str(ex))
 
     def test_node_operation_missing_operation(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'operation', True)
@@ -1134,7 +1133,7 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                node_id=node_id, body=body)
 
         self.assertEqual(400, ex.code)
-        self.assertIn('No operation specified.', six.text_type(ex))
+        self.assertIn('No operation specified.', str(ex))
 
     def test_node_operation_multiple_operation(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'operation', True)
@@ -1148,4 +1147,4 @@ class NodeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, node_id=node_id, body=body)
 
         self.assertEqual(400, ex.code)
-        self.assertIn('Multiple operations specified.', six.text_type(ex))
+        self.assertIn('Multiple operations specified.', str(ex))

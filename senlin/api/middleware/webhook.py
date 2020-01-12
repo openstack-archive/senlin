@@ -11,7 +11,7 @@
 # under the License.
 
 from oslo_log import log as logging
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 import webob
 
 from senlin.api.common import util

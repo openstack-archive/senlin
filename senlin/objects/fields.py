@@ -16,7 +16,6 @@ from oslo_utils import strutils
 from oslo_utils import uuidutils
 from oslo_versionedobjects import fields
 import re
-import six
 
 from senlin.common import consts
 from senlin.common.i18n import _
@@ -109,7 +108,7 @@ class UUID(fields.FieldType):
 
 class Json(fields.FieldType):
     def coerce(self, obj, attr, value):
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             try:
                 return jsonutils.loads(value)
             except ValueError:
@@ -124,7 +123,7 @@ class Json(fields.FieldType):
         return jsonutils.dumps(value)
 
     def stringify(self, value):
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             try:
                 return jsonutils.loads(value)
             except ValueError:
@@ -319,7 +318,7 @@ class BaseEnum(fields.FieldType):
             raise ValueError(_("No list of valid values provided for enum."))
 
         for value in valid_values:
-            if not isinstance(value, six.string_types):
+            if not isinstance(value, str):
                 raise ValueError(_("Enum field only support string values."))
 
         self._valid_values = list(valid_values)
@@ -327,7 +326,7 @@ class BaseEnum(fields.FieldType):
         super(BaseEnum, self).__init__()
 
     def coerce(self, obj, attr, value):
-        value = six.text_type(value)
+        value = str(value)
         if value not in self._valid_values:
             raise ValueError(_("Value '%(value)s' is not acceptable for "
                                "field '%(attr)s'.") %

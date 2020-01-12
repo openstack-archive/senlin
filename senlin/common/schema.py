@@ -12,7 +12,6 @@
 
 import collections
 import numbers
-import six
 
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
@@ -31,7 +30,7 @@ class AnyIndexDict(collections.Mapping):
         self.value = value
 
     def __getitem__(self, key):
-        if key != '*' and not isinstance(key, six.integer_types):
+        if key != '*' and not isinstance(key, int):
             raise KeyError("Invalid key %s" % str(key))
 
         return self.value
@@ -105,7 +104,7 @@ class SchemaBase(collections.Mapping):
             for constraint in self.constraints:
                 constraint.validate(value, schema=schema, context=context)
         except ValueError as ex:
-            raise exc.ESchema(message=six.text_type(ex))
+            raise exc.ESchema(message=str(ex))
 
     def _validate_version(self, key, version):
         if self.min_version and self.min_version > version:
@@ -225,7 +224,7 @@ class Integer(PropertySchema):
         if value is None:
             return None
 
-        if isinstance(value, six.integer_types):
+        if isinstance(value, int):
             return value
 
         try:
@@ -240,7 +239,7 @@ class Integer(PropertySchema):
         return self.to_schema_type(value)
 
     def validate(self, value, context=None):
-        if not isinstance(value, six.integer_types):
+        if not isinstance(value, int):
             value = self.resolve(value)
 
         self.validate_constraints(value, schema=self, context=context)
@@ -255,7 +254,7 @@ class String(PropertySchema):
 
     def to_schema_type(self, value):
         try:
-            if isinstance(value, six.string_types):
+            if isinstance(value, str):
                 return value
             return str(value) if value is not None else None
         except Exception:
@@ -366,7 +365,7 @@ class Map(PropertySchema):
         return self.default
 
     def resolve(self, value, context=None):
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             try:
                 value = jsonutils.loads(value)
             except (TypeError, ValueError):
@@ -401,7 +400,7 @@ class StringParam(SchemaBase):
         return super(StringParam, self).__getitem__(key)
 
     def validate(self, value):
-        if not isinstance(value, six.string_types):
+        if not isinstance(value, str):
             raise TypeError("value is not a string")
 
         self.validate_constraints(value)
@@ -458,7 +457,7 @@ class Operation(SchemaBase):
                 if version:
                     s._validate_version(k, version)
             except (TypeError, ValueError) as ex:
-                raise exc.ESchema(message=six.text_type(ex))
+                raise exc.ESchema(message=str(ex))
 
 
 class Spec(collections.Mapping):
@@ -481,7 +480,7 @@ class Spec(collections.Mapping):
                 if self._version:
                     self._schema[k]._validate_version(k, self._version)
             except (TypeError, ValueError) as err:
-                raise exc.ESchema(message=six.text_type(err))
+                raise exc.ESchema(message=str(err))
 
         for key in self._data:
             if key not in self._schema:
@@ -534,4 +533,4 @@ def get_spec_version(spec):
         msg = _("The 'version' key is missing from the provided spec map.")
         raise exc.ESchema(message=msg)
 
-    return (spec['type'], six.text_type(spec['version']))
+    return spec['type'], str(spec['version'])

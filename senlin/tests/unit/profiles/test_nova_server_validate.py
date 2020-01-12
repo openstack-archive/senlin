@@ -11,7 +11,6 @@
 # under the License.
 
 import mock
-import six
 
 from senlin.common import exception as exc
 from senlin.profiles.os.nova import server
@@ -117,7 +116,7 @@ class TestAvailabilityZoneValidation(base.SenlinTestCase):
             ex = self.assertRaises(self.exception,
                                    self.profile._validate_az,
                                    node, 'FAKE_AZ', self.reason)
-            self.assertEqual(self.message, six.text_type(ex))
+            self.assertEqual(self.message, str(ex))
 
         self.cc.validate_azs.assert_called_once_with(['FAKE_AZ'])
 
@@ -233,7 +232,7 @@ class TestFlavorValidation(base.SenlinTestCase):
             ex = self.assertRaises(self.exception,
                                    self.profile._validate_flavor,
                                    node, flavor, self.reason)
-            self.assertEqual(self.message, six.text_type(ex))
+            self.assertEqual(self.message, str(ex))
 
         self.cc.flavor_find.assert_called_once_with(flavor, False)
 
@@ -328,7 +327,7 @@ class TestImageValidation(base.SenlinTestCase):
             ex = self.assertRaises(self.exception,
                                    self.profile._validate_image,
                                    node, image, self.reason)
-            self.assertEqual(self.message, six.text_type(ex))
+            self.assertEqual(self.message, str(ex))
 
         self.gc.image_find.assert_called_once_with(image, False)
 
@@ -428,7 +427,7 @@ class TestVolumeValidation(base.SenlinTestCase):
             ex = self.assertRaises(self.exception,
                                    self.profile._validate_volume,
                                    node, volume, self.reason)
-            self.assertEqual(self.message, six.text_type(ex))
+            self.assertEqual(self.message, str(ex))
 
         self.vc.volume_get.assert_called_once_with(volume)
 
@@ -521,7 +520,7 @@ class TestKeypairValidation(base.SenlinTestCase):
             ex = self.assertRaises(self.exception,
                                    self.profile._validate_keypair,
                                    node, key, self.reason)
-            self.assertEqual(self.message, six.text_type(ex))
+            self.assertEqual(self.message, str(ex))
 
         self.cc.keypair_find.assert_called_once_with(key, False)
 
@@ -896,7 +895,7 @@ class TestNetworkValidation(base.SenlinTestCase):
             ex = self.assertRaises(self.exception,
                                    self.profile._validate_network,
                                    obj, self.inputs, self.reason)
-            self.assertEqual(self.message, six.text_type(ex))
+            self.assertEqual(self.message, str(ex))
 
         if self.net_result:
             self.nc.network_get.assert_called_with('NET')

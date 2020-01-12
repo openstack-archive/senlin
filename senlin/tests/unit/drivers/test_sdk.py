@@ -16,7 +16,6 @@ import mock
 from openstack import connection
 from oslo_serialization import jsonutils
 from requests import exceptions as req_exc
-import six
 
 from senlin.common import exception as senlin_exc
 from senlin.drivers import sdk
@@ -43,7 +42,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
                                sdk.parse_exception, raw)
 
         self.assertEqual(404, ex.code)
-        self.assertEqual('Resource BAR is not found.', six.text_type(ex))
+        self.assertEqual('Resource BAR is not found.', str(ex))
         # key name is not 'error' case
         details = jsonutils.dumps({
             'forbidden': {
@@ -57,7 +56,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
                                sdk.parse_exception, raw)
 
         self.assertEqual(403, ex.code)
-        self.assertEqual('Quota exceeded for instances.', six.text_type(ex))
+        self.assertEqual('Quota exceeded for instances.', str(ex))
 
     def test_parse_exception_http_exception_no_details(self):
         resp = mock.Mock(headers={'x-openstack-request-id': 'FAKE_ID'})
@@ -70,7 +69,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
                                sdk.parse_exception, raw)
 
         self.assertEqual(404, ex.code)
-        self.assertEqual('Error', six.text_type(ex))
+        self.assertEqual('Error', str(ex))
 
     def test_parse_exception_http_exception_no_details_no_response(self):
         details = "An error message"
@@ -82,7 +81,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
         ex = self.assertRaises(senlin_exc.InternalError,
                                sdk.parse_exception, raw)
         self.assertEqual(404, ex.code)
-        self.assertEqual('A message.', six.text_type(ex))
+        self.assertEqual('A message.', str(ex))
 
     def test_parse_exception_http_exception_code_displaced(self):
         details = jsonutils.dumps({
@@ -98,7 +97,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
                                sdk.parse_exception, raw)
 
         self.assertEqual(400, ex.code)
-        self.assertEqual('Resource BAR is in error state.', six.text_type(ex))
+        self.assertEqual('Resource BAR is in error state.', str(ex))
 
     def test_parse_exception_sdk_exception(self):
         raw = sdk.exc.InvalidResponse('INVALID')
@@ -107,7 +106,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
                                sdk.parse_exception, raw)
 
         self.assertEqual(500, ex.code)
-        self.assertEqual('InvalidResponse', six.text_type(ex))
+        self.assertEqual('InvalidResponse', str(ex))
 
     def test_parse_exception_request_exception(self):
         raw = req_exc.HTTPError(401, 'ERROR')
@@ -125,7 +124,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
                                sdk.parse_exception, raw)
 
         self.assertEqual(500, ex.code)
-        self.assertEqual('Unknown Error', six.text_type(ex))
+        self.assertEqual('Unknown Error', str(ex))
 
     def test_translate_exception_wrapper(self):
 

@@ -11,11 +11,13 @@
 # under the License.
 
 import datetime
+import io
+import urllib
+
 import mock
 from oslo_log import log as logging
 from oslo_utils import timeutils
 import requests
-import six
 
 from oslo_config import cfg
 
@@ -59,19 +61,19 @@ class UrlFetchTest(base.SenlinTestCase):
         self.assertRaises(utils.URLFetchError,
                           utils.url_fetch, 'file:///etc/profile')
 
-    def test_file_scheme_supported(self):
+    @mock.patch('urllib.request.urlopen')
+    def test_file_scheme_supported(self, mock_urlopen):
         data = '{ "foo": "bar" }'
         url = 'file:///etc/profile'
+        mock_urlopen.return_value = io.StringIO(data)
 
-        self.patchobject(six.moves.urllib.request, 'urlopen',
-                         return_value=six.moves.cStringIO(data))
         actual = utils.url_fetch(url, allowed_schemes=['file'])
         self.assertEqual(data, actual)
 
-    def test_file_scheme_failure(self):
+    @mock.patch('urllib.request.urlopen')
+    def test_file_scheme_failure(self, mock_urlopen):
         url = 'file:///etc/profile'
-        self.patchobject(six.moves.urllib.request, 'urlopen',
-                         side_effect=six.moves.urllib.error.URLError('oops'))
+        mock_urlopen.side_effect = urllib.error.URLError('oops')
 
         self.assertRaises(utils.URLFetchError,
                           utils.url_fetch, url, allowed_schemes=['file'])
@@ -120,7 +122,7 @@ class UrlFetchTest(base.SenlinTestCase):
         self.patchobject(requests, 'get', return_value=Response(data))
         exception = self.assertRaises(utils.URLFetchError,
                                       utils.url_fetch, url)
-        self.assertIn("Data exceeds", six.text_type(exception))
+        self.assertIn("Data exceeds", str(exception))
 
     @mock.patch.object(requests, 'get')
     def test_string_response(self, mock_get):
@@ -252,7 +254,7 @@ class TestGetPathParser(base.SenlinTestCase):
                                 utils.get_path_parser,
                                 '^foo.bar')
         self.assertEqual("Invalid attribute path - Unexpected "
-                         "character: ^.", six.text_type(err))
+                         "character: ^.", str(err))
 
 
 class EngineDeathTest(base.SenlinTestCase):

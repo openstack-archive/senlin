@@ -11,7 +11,6 @@
 # under the License.
 
 import random
-import six
 
 from senlin.common import consts
 from senlin.common import context
@@ -306,7 +305,7 @@ class DockerProfile(base.Profile):
             dockerclient.start(container['Id'])
         except exc.InternalError as ex:
             raise exc.EResourceCreation(type='container',
-                                        message=six.text_type(ex))
+                                        message=str(ex))
 
         self.container_id = container['Id'][:36]
         return self.container_id
@@ -326,7 +325,7 @@ class DockerProfile(base.Profile):
         except exc.InternalError as ex:
             raise exc.EResourceDeletion(type='container',
                                         id=obj.physical_id,
-                                        message=six.text_type(ex))
+                                        message=str(ex))
         ctx = context.get_admin_context()
         db_api.node_remove_dependents(ctx, self.host.id, obj.id)
         return
@@ -376,7 +375,7 @@ class DockerProfile(base.Profile):
             self.docker(obj).rename(obj.physical_id, new_name)
         except exc.InternalError as ex:
             raise exc.EResourceUpdate(type='container', id=obj.physical_id,
-                                      message=six.text_type(ex))
+                                      message=str(ex))
 
     def handle_reboot(self, obj, **options):
         """Handler for a reboot operation.
@@ -397,7 +396,7 @@ class DockerProfile(base.Profile):
             raise exc.EResourceOperation(type='container',
                                          id=obj.physical_id[:8],
                                          op='rebooting',
-                                         message=six.text_type(ex))
+                                         message=str(ex))
         return
 
     def handle_pause(self, obj):
@@ -415,7 +414,7 @@ class DockerProfile(base.Profile):
             raise exc.EResourceOperation(type='container',
                                          id=obj.physical_id[:8],
                                          op='pausing',
-                                         message=six.text_type(ex))
+                                         message=str(ex))
         return
 
     def handle_unpause(self, obj):
@@ -433,7 +432,7 @@ class DockerProfile(base.Profile):
             raise exc.EResourceOperation(type='container',
                                          id=obj.physical_id[:8],
                                          op='unpausing',
-                                         message=six.text_type(ex))
+                                         message=str(ex))
         return
 
     def handle_stop(self, obj, **options):
@@ -449,4 +448,4 @@ class DockerProfile(base.Profile):
             raise exc.EResourceOperation(type='container',
                                          id=obj.physical_id[:8],
                                          op='stop',
-                                         message=six.text_type(ex))
+                                         message=str(ex))

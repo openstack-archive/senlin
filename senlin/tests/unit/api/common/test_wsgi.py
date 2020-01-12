@@ -16,7 +16,6 @@ import fixtures
 import mock
 from oslo_config import cfg
 from oslo_utils import encodeutils
-import six
 import webob
 
 from senlin.api.common import version_request as vr
@@ -189,7 +188,7 @@ class ResourceTest(base.SenlinTestCase):
 
         e = self.assertRaises(exception.HTTPExceptionDisguise,
                               resource, request)
-        self.assertEqual(message_es, six.text_type(e.exc))
+        self.assertEqual(message_es, str(e.exc))
 
     def test_resource_call_with_version_header(self):
         class Controller(object):
@@ -257,7 +256,7 @@ class ResourceExceptionHandlingTest(base.SenlinTestCase):
         resource = wsgi.Resource(Controller(self.exception))
         e = self.assertRaises(self.exception_catch, resource, request)
         e = e.exc if hasattr(e, 'exc') else e
-        self.assertNotIn(six.text_type(e), self.LOG.output)
+        self.assertNotIn(str(e), self.LOG.output)
 
 
 class GetSocketTestCase(base.SenlinTestCase):
@@ -361,7 +360,7 @@ class MicroversionTest(base.SenlinTestCase):
         ex = self.assertRaises(exception.MethodVersionNotFound,
                                c.index, request)
         self.assertEqual("API version '1.0' is not supported on "
-                         "this method.", six.text_type(ex))
+                         "this method.", str(ex))
 
         res = c.foo(request)
         self.assertEqual({'bar': 'zoo'}, res)
@@ -369,7 +368,7 @@ class MicroversionTest(base.SenlinTestCase):
         ex = self.assertRaises(exception.MethodVersionNotFound,
                                c.dance, request)
         self.assertEqual("API version '1.0' is not supported on "
-                         "this method.", six.text_type(ex))
+                         "this method.", str(ex))
 
     def test_versioned_request_lower(self):
         data = mock.Mock()
@@ -431,7 +430,7 @@ class MicroversionTest(base.SenlinTestCase):
         ex = self.assertRaises(exception.MethodVersionNotFound,
                                c.dance, request)
         self.assertEqual("API version '3.5' is not supported on "
-                         "this method.", six.text_type(ex))
+                         "this method.", str(ex))
 
     def test_versioned_request_inner_functions(self):
         data = mock.Mock()

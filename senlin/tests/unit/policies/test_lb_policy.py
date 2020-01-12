@@ -12,7 +12,6 @@
 
 import mock
 from oslo_context import context as oslo_context
-import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
@@ -186,7 +185,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         mock_validate.assert_called_with(ctx, True)
         self.net_driver.subnet_get.assert_called_once_with('internal-subnet')
         self.assertEqual("The specified subnet 'internal-subnet' could not "
-                         "be found.", six.text_type(ex))
+                         "be found.", str(ex))
 
     @mock.patch.object(policy_base.Policy, 'validate')
     def test_validate_vip_subnet_notfound(self, mock_validate):
@@ -208,7 +207,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
             mock.call('internal-subnet'), mock.call('external-subnet')
         ])
         self.assertEqual("The specified subnet 'external-subnet' could not "
-                         "be found.", six.text_type(ex))
+                         "be found.", str(ex))
 
     @mock.patch.object(policy_base.Policy, 'validate')
     def test_validate_loadbalancer_notfund(self, mock_validate):
@@ -225,7 +224,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         mock_validate.assert_called_with(ctx, True)
         self.octavia_driver.loadbalancer_get.assert_called_once_with('LB_ID')
         self.assertEqual("The specified loadbalancer 'LB_ID' could not "
-                         "be found.", six.text_type(ex))
+                         "be found.", str(ex))
 
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_build_policy_data')
     @mock.patch.object(policy_base.Policy, 'attach')

@@ -11,7 +11,6 @@
 # under the License.
 
 import copy
-import six
 
 from oslo_config import cfg
 
@@ -63,7 +62,7 @@ class TestReceiverCreate(test_base.SenlinTestCase):
         ex = self.assertRaises(ValueError, receivers.ReceiverCreateRequestBody,
                                **body)
         self.assertEqual("Value 'Bogus' is not acceptable for field 'type'.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_receiver_create_request_body_invalid_action(self):
         body = copy.deepcopy(self.body)
@@ -74,7 +73,7 @@ class TestReceiverCreate(test_base.SenlinTestCase):
         ex = self.assertRaises(ValueError, receivers.ReceiverCreateRequestBody,
                                **body)
         self.assertEqual("Value 'Foo' is not acceptable for field 'action'.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_receiver_create_request(self):
         body = receivers.ReceiverCreateRequestBody(**self.body)

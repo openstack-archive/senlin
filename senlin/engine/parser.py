@@ -13,8 +13,7 @@
 import os
 
 from oslo_serialization import jsonutils
-import six
-from six.moves import urllib
+import urllib
 import yaml
 
 from senlin.common.i18n import _
@@ -41,13 +40,13 @@ class YamlLoader(Loader):
                                     urllib.request.pathname2url(path))
 
     def include(self, node):
+        url = None
         try:
             url = self.normalise_file_path_to_url(self.construct_scalar(node))
             tmpl = urllib.request.urlopen(url).read()
             return yaml.safe_load(tmpl)
         except urllib.error.URLError as ex:
-            raise IOError('Failed retrieving file %s: %s' %
-                          (url, six.text_type(ex)))
+            raise IOError('Failed retrieving file %s: %s' % (url, ex))
 
     def process_unicode(self, node):
         # Override the default string handling function to always return
@@ -69,15 +68,12 @@ def simple_parse(in_str):
         try:
             out_dict = yaml.load(in_str, Loader=YamlLoader)
         except yaml.YAMLError as yea:
-            yea = six.text_type(yea)
-            msg = _('Error parsing input: %s') % yea
-            raise ValueError(msg)
+            raise ValueError(_('Error parsing input: %s') % yea)
         else:
             if out_dict is None:
                 out_dict = {}
 
     if not isinstance(out_dict, dict):
-        msg = _('The input is not a JSON object or YAML mapping.')
-        raise ValueError(msg)
+        raise ValueError(_('The input is not a JSON object or YAML mapping.'))
 
     return out_dict

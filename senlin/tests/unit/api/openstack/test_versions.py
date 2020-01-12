@@ -10,10 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import http.client as http_client
 import mock
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
-from six.moves import http_client
 import webob
 
 from senlin.api.common import wsgi

@@ -11,7 +11,6 @@
 # under the License.
 
 import mock
-import six
 import webob
 
 from senlin.api.common import version_request as vr
@@ -248,7 +247,7 @@ class VersionNegotiationTest(base.SenlinTestCase):
                                request, controller)
         self.assertEqual("API Version String '2.03' is of invalid format. It "
                          "must be of format 'major.minor'.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_check_version_request_invalid_version(self, mock_vc):
         controller = mock.Mock()
@@ -267,7 +266,7 @@ class VersionNegotiationTest(base.SenlinTestCase):
         expected = ("Version '2.3' is not supported by the API. Minimum is "
                     "'%(min_ver)s' and maximum is '%(max_ver)s'." %
                     {'min_ver': str(minv), 'max_ver': str(maxv)})
-        self.assertEqual(expected, six.text_type(ex))
+        self.assertEqual(expected, str(ex))
 
     def test_check_version_request_latest(self, mock_vc):
         controller = mock.Mock()

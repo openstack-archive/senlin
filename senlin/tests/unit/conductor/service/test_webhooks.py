@@ -12,7 +12,6 @@
 
 import mock
 from oslo_messaging.rpc import dispatcher as rpc
-import six
 
 from senlin.common import consts
 from senlin.common import exception
@@ -109,7 +108,7 @@ class WebhookTest(base.SenlinTestCase):
 
         self.assertEqual(exception.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The receiver 'RRR' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'RRR')
 
     @mock.patch.object(ro.Receiver, 'find')
@@ -129,7 +128,7 @@ class WebhookTest(base.SenlinTestCase):
 
         self.assertEqual(exception.BadRequest, ex.exc_info[0])
         self.assertEqual("The referenced cluster 'BOGUS' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'RRR')
         mock_cluster.assert_called_once_with(self.ctx, 'BOGUS')
 
@@ -209,7 +208,7 @@ class WebhookTest(base.SenlinTestCase):
 
         self.assertEqual(exception.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The receiver 'RRR' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'RRR')
 
     @mock.patch.object(ro.Receiver, 'find')
@@ -228,6 +227,6 @@ class WebhookTest(base.SenlinTestCase):
 
         self.assertEqual(exception.BadRequest, ex.exc_info[0])
         self.assertEqual("The referenced cluster 'BOGUS' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'RRR')
         mock_cluster.assert_called_once_with(self.ctx, 'BOGUS')

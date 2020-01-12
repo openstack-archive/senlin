@@ -11,7 +11,6 @@
 # under the License.
 
 import mock
-import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
@@ -107,7 +106,7 @@ class TestRegionPlacementPolicy(base.SenlinTestCase):
         mock_base_validate.assert_called_once_with(ctx, True)
         kc.validate_regions.assert_called_once_with(['R1', 'R2', 'R3', 'R4'])
         self.assertEqual("The specified regions '['R1', 'R3']' could not "
-                         "be found.", six.text_type(ex))
+                         "be found.", str(ex))
 
     def test_create_plan(self):
         policy = rp.RegionPlacementPolicy('p1', self.spec)

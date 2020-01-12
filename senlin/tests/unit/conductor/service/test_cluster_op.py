@@ -12,7 +12,6 @@
 
 import mock
 from oslo_messaging.rpc import dispatcher as rpc
-import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
@@ -90,7 +89,7 @@ class ClusterOpTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(cm.Cluster, 'load')
@@ -112,7 +111,7 @@ class ClusterOpTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The requested operation 'swim' is not supported "
                          "by the profile type 'cow'.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'node1')
         mock_cluster.assert_called_once_with(self.ctx, dbcluster=x_db_cluster)
 
@@ -135,7 +134,7 @@ class ClusterOpTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("Boom.", six.text_type(ex.exc_info[1]))
+        self.assertEqual("Boom.", str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'node1')
         mock_cluster.assert_called_once_with(self.ctx, dbcluster=x_db_cluster)
         x_schema.validate.assert_called_once_with({'style': 'tango'})
@@ -249,7 +248,7 @@ class ClusterOpTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Filter key 'shape' is unsupported.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
         mock_cluster.assert_called_once_with(self.ctx, dbcluster=x_db_cluster)
         self.assertEqual(0, x_schema.validate.call_count)
@@ -281,7 +280,7 @@ class ClusterOpTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("No node (matching the filter) could be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
         mock_cluster.assert_called_once_with(self.ctx, dbcluster=x_db_cluster)
         mock_nodes.assert_called_once_with(self.ctx, '12345678AB',

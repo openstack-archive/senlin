@@ -12,7 +12,6 @@
 
 
 import fixtures
-import six
 
 from senlin.common import exception
 from senlin.common.i18n import _
@@ -34,4 +33,4 @@ class TestSenlinException(base.SenlinTestCase):
     def test_format_string_error_message(self):
         message = "This format %(message)s should work"
         err = exception.Error(message)
-        self.assertEqual(message, six.text_type(err))
+        self.assertEqual(message, str(err))

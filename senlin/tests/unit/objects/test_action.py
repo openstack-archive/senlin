@@ -12,7 +12,6 @@
 
 import mock
 from oslo_utils import uuidutils
-import six
 import testtools
 
 from senlin.common import exception as exc
@@ -85,6 +84,6 @@ class TestAction(testtools.TestCase):
                                ao.Action.find,
                                self.ctx, 'BOGUS')
         self.assertEqual("The action 'BOGUS' could not be found.",
-                         six.text_type(ex))
+                         str(ex))
         mock_name.assert_called_once_with(self.ctx, 'BOGUS')
         mock_shortid.assert_called_once_with(self.ctx, 'BOGUS')

@@ -15,9 +15,9 @@
 Controller that returns information on the senlin API versions
 """
 
+import http.client as http_client
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
-from six.moves import http_client
 import webob.dec
 
 from senlin.api.openstack.v1 import version as v1_controller

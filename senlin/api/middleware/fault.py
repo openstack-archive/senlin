@@ -15,7 +15,6 @@ A middleware that turns exceptions into parsable string.
 """
 
 from oslo_utils import reflection
-import six
 import webob
 
 from senlin.api.common import serializers
@@ -85,7 +84,7 @@ class FaultWrapper(wsgi.Middleware):
         if is_remote:
             ex_type = ex_type[:-len('_Remote')]
 
-        full_message = six.text_type(ex)
+        full_message = str(ex)
         if '\n' in full_message and is_remote:
             message = full_message.split('\n', 1)[0]
         elif traceback_marker in full_message:

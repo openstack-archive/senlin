@@ -11,7 +11,6 @@
 # under the License.
 
 import eventlet
-import six
 import time
 
 from oslo_config import cfg
@@ -681,7 +680,7 @@ def ActionProc(ctx, action_id):
         # We catch exception here to make sure the following logics are
         # executed.
         result = action.RES_ERROR
-        reason = six.text_type(ex)
+        reason = str(ex)
         LOG.exception('Unexpected exception occurred during action '
                       '%(action)s (%(id)s) execution: %(reason)s',
                       {'action': action.action, 'id': action.id,

@@ -11,7 +11,6 @@
 # under the License.
 
 import mock
-import six
 
 from senlin.api.middleware import fault
 from senlin.api.openstack.v1 import build_info
@@ -75,4 +74,4 @@ class BuildInfoControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               self.controller.build_info,
                                               req)
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))

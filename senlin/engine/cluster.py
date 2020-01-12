@@ -13,7 +13,6 @@
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import timeutils
-import six
 
 from senlin.common import consts
 from senlin.common import exception
@@ -251,7 +250,7 @@ class Cluster(object):
         try:
             pfb.Profile.create_cluster_object(context, self)
         except exception.EResourceCreation as ex:
-            self.set_status(context, consts.CS_ERROR, six.text_type(ex))
+            self.set_status(context, consts.CS_ERROR, str(ex))
             return False
 
         return True
@@ -263,7 +262,7 @@ class Cluster(object):
         try:
             pfb.Profile.delete_cluster_object(context, self)
         except exception.EResourceDeletion as ex:
-            self.set_status(context, consts.CS_ERROR, six.text_type(ex))
+            self.set_status(context, consts.CS_ERROR, str(ex))
             return False
 
         co.Cluster.delete(context, self.id)

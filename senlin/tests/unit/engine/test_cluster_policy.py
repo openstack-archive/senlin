@@ -11,7 +11,6 @@
 # under the License.
 
 from oslo_utils import timeutils
-import six
 
 from senlin.common import exception
 from senlin.common import utils as common_utils
@@ -95,7 +94,7 @@ class TestClusterPolicy(base.SenlinTestCase):
                                self.context, 'some-cluster', 'any-policy')
         self.assertEqual("The policy 'any-policy' is not attached to the "
                          "specified cluster 'some-cluster'.",
-                         six.text_type(ex))
+                         str(ex))
 
         utils.create_profile(self.context, PROFILE_ID)
         cluster = utils.create_cluster(self.context, CLUSTER_ID, PROFILE_ID)

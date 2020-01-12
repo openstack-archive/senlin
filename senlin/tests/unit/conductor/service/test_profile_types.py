@@ -12,7 +12,6 @@
 
 import mock
 from oslo_messaging.rpc import dispatcher as rpc
-import six
 
 from senlin.common import exception as exc
 from senlin.conductor import service
@@ -80,7 +79,7 @@ class ProfileTypeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The profile_type 'FAKE_TYPE' could not be "
-                         "found.", six.text_type(ex.exc_info[1]))
+                         "found.", str(ex.exc_info[1]))
         mock_env.assert_called_once_with()
         x_env.get_profile.assert_called_once_with('FAKE_TYPE')
 
@@ -114,7 +113,7 @@ class ProfileTypeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The profile_type 'FAKE_TYPE' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
         mock_env.assert_called_once_with()
         x_env.get_profile.assert_called_once_with('FAKE_TYPE')

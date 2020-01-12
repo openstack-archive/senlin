@@ -19,7 +19,6 @@ import oslo_messaging
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
 from osprofiler import profiler
-import six
 
 from senlin.common import consts
 from senlin.common import context as senlin_context
@@ -263,7 +262,7 @@ class ConductorService(service.Service):
         try:
             pt = environment.global_env().get_profile(req.type_name)
         except exception.ResourceNotFound as ex:
-            raise exception.BadRequest(msg=six.text_type(ex))
+            raise exception.BadRequest(msg=str(ex))
 
         return {'operations': pt.get_ops()}
 
@@ -326,7 +325,7 @@ class ConductorService(service.Service):
         try:
             profile.validate(validate_props=validate_props)
         except exception.ESchema as ex:
-            msg = six.text_type(ex)
+            msg = str(ex)
             LOG.error("Failed in validating profile: %s", msg)
             raise exception.InvalidSpec(message=msg)
 
@@ -529,7 +528,7 @@ class ConductorService(service.Service):
         try:
             policy.validate(ctx, validate_props=validate_props)
         except exception.InvalidSpec as ex:
-            msg = six.text_type(ex)
+            msg = str(ex)
             LOG.error("Failed in validating policy: %s", msg)
             raise exception.InvalidSpec(message=msg)
 
@@ -1387,7 +1386,7 @@ class ConductorService(service.Service):
 
         if 'operation' in params:
             op_name = params.pop('operation')
-            if not isinstance(op_name, six.string_types):
+            if not isinstance(op_name, str):
                 raise exception.BadRequest(
                     msg="operation has to be a string")
             if op_name.upper() not in consts.RECOVERY_ACTIONS:
@@ -1505,7 +1504,7 @@ class ConductorService(service.Service):
             try:
                 profile.OPERATIONS[req.operation].validate(req.params)
             except exception.ESchema as ex:
-                raise exception.BadRequest(msg=six.text_type(ex))
+                raise exception.BadRequest(msg=str(ex))
         else:
             params = {}
 
@@ -1816,7 +1815,7 @@ class ConductorService(service.Service):
         try:
             profile_cls = environment.global_env().get_profile(req.type)
         except exception.ResourceNotFound as ex:
-            raise exception.BadRequest(msg=six.text_type(ex))
+            raise exception.BadRequest(msg=str(ex))
 
         # NOTE: passing in context to avoid loading runtime data
         temp_node = node_mod.Node('adopt', 'TBD', physical_id=req.identity,
@@ -2009,7 +2008,7 @@ class ConductorService(service.Service):
             try:
                 profile.OPERATIONS[req.operation].validate(req.params)
             except exception.ESchema as ex:
-                raise exception.BadRequest(msg=six.text_type(ex))
+                raise exception.BadRequest(msg=str(ex))
 
         kwargs = {
             'name': 'node_%s_%s' % (req.operation, db_node.id[:8]),

@@ -20,7 +20,6 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
-import six
 import webob
 
 from senlin.common import exception
@@ -66,7 +65,7 @@ class JSONRequestDeserializer(object):
                 raise exception.RequestLimitExceeded(message=msg)
             return jsonutils.loads(datastring)
         except ValueError as ex:
-            raise webob.exc.HTTPBadRequest(six.text_type(ex))
+            raise webob.exc.HTTPBadRequest(str(ex))
 
     def default(self, request):
         if self.has_body(request):
@@ -81,7 +80,7 @@ class JSONResponseSerializer(object):
         def sanitizer(obj):
             if isinstance(obj, datetime.datetime):
                 return obj.isoformat()
-            return six.text_type(obj)
+            return str(obj)
 
         response = jsonutils.dumps(data, default=sanitizer, sort_keys=True)
         LOG.debug("JSON response : %s", response)

@@ -24,8 +24,7 @@ from oslo_log import log as logging
 from oslo_utils import strutils
 from oslo_utils import timeutils
 import requests
-import six
-from six.moves import urllib
+import urllib
 
 from senlin.common import consts
 from senlin.common import exception
@@ -122,10 +121,7 @@ def url_fetch(url, timeout=1, allowed_schemes=('http', 'https'), verify=True):
         reader = resp.iter_content(chunk_size=1000)
         result = ""
         for chunk in reader:
-            if six.PY3 and isinstance(chunk, bytes):
-                # in python 2.7, bytes were implicitly converted to strings
-                # in python 3.5 this is no longer the case so we need this
-                # code to manually convert it
+            if isinstance(chunk, bytes):
                 chunk = chunk.decode('utf-8')
             result += chunk
             if len(result) > cfg.CONF.max_response_size:
@@ -215,7 +211,7 @@ def get_path_parser(path):
     try:
         expr = parse(path)
     except Exception as ex:
-        error_text = six.text_type(ex)
+        error_text = str(ex)
         error_msg = error_text.split(':', 1)[1]
         raise exception.BadRequest(
             msg=_("Invalid attribute path - %s") % error_msg.strip())

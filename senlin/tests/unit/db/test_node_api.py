@@ -14,7 +14,6 @@ import mock
 from oslo_db.sqlalchemy import utils as sa_utils
 from oslo_serialization import jsonutils
 from oslo_utils import timeutils as tu
-import six
 
 from senlin.common import consts
 from senlin.common import exception
@@ -555,7 +554,7 @@ class DBAPINodeTest(base.SenlinTestCase):
                                db_api.node_update,
                                self.ctx, 'BogusId', new_attributes)
         self.assertEqual("The node 'BogusId' could not be found.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_node_update_cluster_status_updated(self):
         cluster = db_api.cluster_get(self.ctx, self.cluster.id)

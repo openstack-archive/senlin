@@ -13,7 +13,6 @@
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import timeutils
-import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
@@ -223,7 +222,7 @@ class Node(object):
             physical_id = pb.Profile.create_object(context, self)
         except exc.EResourceCreation as ex:
             physical_id = ex.resource_id
-            self.set_status(context, consts.NS_ERROR, six.text_type(ex),
+            self.set_status(context, consts.NS_ERROR, str(ex),
                             physical_id=physical_id)
             return False, str(ex)
 
@@ -238,7 +237,7 @@ class Node(object):
             # is thrown
             pb.Profile.delete_object(context, self)
         except exc.EResourceDeletion as ex:
-            self.set_status(context, consts.NS_ERROR, six.text_type(ex))
+            self.set_status(context, consts.NS_ERROR, str(ex))
             return False
 
         no.Node.delete(context, self.id)
@@ -263,7 +262,7 @@ class Node(object):
                 res = pb.Profile.update_object(context, self, new_profile_id,
                                                **params)
             except exc.EResourceUpdate as ex:
-                self.set_status(context, consts.NS_ERROR, six.text_type(ex))
+                self.set_status(context, consts.NS_ERROR, str(ex))
                 return False
 
         # update was not successful
@@ -326,11 +325,11 @@ class Node(object):
         try:
             res = pb.Profile.check_object(context, self)
         except exc.EServerNotFound as ex:
-            self.set_status(context, consts.NS_ERROR, six.text_type(ex),
+            self.set_status(context, consts.NS_ERROR, str(ex),
                             physical_id=None)
             return True
         except exc.EResourceOperation as ex:
-            self.set_status(context, consts.NS_ERROR, six.text_type(ex))
+            self.set_status(context, consts.NS_ERROR, str(ex))
             return False
 
         # Physical object is ACTIVE but for some reason the node status in
@@ -401,7 +400,7 @@ class Node(object):
                                                             self, **options)
         except exc.EResourceOperation as ex:
             physical_id = ex.resource_id
-            self.set_status(context, consts.NS_ERROR, reason=six.text_type(ex),
+            self.set_status(context, consts.NS_ERROR, reason=str(ex),
                             physical_id=physical_id)
             return False
 
@@ -440,7 +439,7 @@ class Node(object):
             method(self, **params)
         except exc.EResourceOperation as ex:
             LOG.error('Node operation %s failed: %s.', op, ex)
-            self.set_status(context, consts.NS_ERROR, reason=six.text_type(ex))
+            self.set_status(context, consts.NS_ERROR, reason=str(ex))
             return False
 
         self.set_status(context, consts.NS_ACTIVE,
@@ -473,5 +472,5 @@ class Node(object):
         except exc.InternalError as ex:
             raise exc.EResourceOperation(op='executing', type='workflow',
                                          id=workflow_name,
-                                         message=six.text_type(ex))
+                                         message=str(ex))
         return True

@@ -21,7 +21,6 @@ import re
 
 import microversion_parse as mp
 from oslo_log import log as logging
-import six
 import webob
 
 from senlin.api.common import version_request as vr
@@ -137,13 +136,13 @@ class VersionNegotiationFilter(wsgi.Middleware):
         try:
             ver = vr.APIVersionRequest(api_version)
         except exception.InvalidAPIVersionString as e:
-            raise webob.exc.HTTPBadRequest(six.text_type(e))
+            raise webob.exc.HTTPBadRequest(str(e))
 
         if not ver.matches(controller.min_api_version(),
                            controller.max_api_version()):
             raise exception.InvalidGlobalAPIVersion(
                 req_ver=api_version,
-                min_ver=six.text_type(controller.min_api_version()),
-                max_ver=six.text_type(controller.max_api_version()))
+                min_ver=str(controller.min_api_version()),
+                max_ver=str(controller.max_api_version()))
 
         req.version_request = ver

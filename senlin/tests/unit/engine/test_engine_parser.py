@@ -10,9 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import mock
+import io
 import os
-import six
+import urllib
+
+import mock
 
 from senlin.engine import parser
 from senlin.tests.unit.common import base
@@ -62,7 +64,7 @@ class ParserTest(base.SenlinTestCase):
                                parser.simple_parse,
                                tmpl_str)
         self.assertEqual('The input is not a JSON object or YAML mapping.',
-                         six.text_type(ex))
+                         str(ex))
 
     def test_parse_list(self):
         tmpl_str = '["foo" , "bar"]'
@@ -70,7 +72,7 @@ class ParserTest(base.SenlinTestCase):
                                parser.simple_parse,
                                tmpl_str)
         self.assertEqual('The input is not a JSON object or YAML mapping.',
-                         six.text_type(ex))
+                         str(ex))
 
     def test_parse_invalid_yaml_and_json_template(self):
         tmpl_str = '{test'
@@ -78,7 +80,7 @@ class ParserTest(base.SenlinTestCase):
                                parser.simple_parse,
                                tmpl_str)
         self.assertIn('Error parsing input:',
-                      six.text_type(ex))
+                      str(ex))
 
 
 class ParseTemplateIncludeFiles(base.SenlinTestCase):
@@ -102,7 +104,7 @@ class ParseTemplateIncludeFiles(base.SenlinTestCase):
 
     ]
 
-    @mock.patch.object(six.moves.urllib.request, 'urlopen')
+    @mock.patch.object(urllib.request, 'urlopen')
     @mock.patch.object(os.path, 'abspath')
     def test_parse_template(self, mock_abspath, mock_urlopen):
         fetch_data = 'bar'
@@ -112,15 +114,16 @@ class ParseTemplateIncludeFiles(base.SenlinTestCase):
 
         mock_abspath.return_value = '/tmp/a.file'
         mock_urlopen.side_effect = [
-            six.moves.urllib.error.URLError('oops'),
-            six.moves.cStringIO(fetch_data)
+            urllib.error.URLError('oops'),
+            io.StringIO(fetch_data)
         ]
 
-        ex = self.assertRaises(IOError,
-                               parser.simple_parse,
-                               self.tmpl_str)
+        ex = self.assertRaises(
+            IOError,
+            parser.simple_parse, self.tmpl_str
+        )
         self.assertIn('Failed retrieving file %s:' % self.url_path,
-                      six.text_type(ex))
+                      str(ex))
         result = parser.simple_parse(self.tmpl_str)
         self.assertEqual(expect_result,
                          result)

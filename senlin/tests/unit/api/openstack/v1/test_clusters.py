@@ -15,7 +15,6 @@ import copy
 import mock
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
-import six
 from webob import exc
 
 from senlin.api.common import util
@@ -111,7 +110,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.index,
                                req)
 
-        self.assertEqual("Boom", six.text_type(ex))
+        self.assertEqual("Boom", str(ex))
         mock_parse.assert_called_once_with(
             "ClusterListRequest", req, {'project_safe': True})
         self.assertEqual(0, mock_call.call_count)
@@ -147,7 +146,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -201,7 +200,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("Boom", six.text_type(ex))
+        self.assertEqual("Boom", str(ex))
         self.assertEqual(0, mock_call.call_count)
 
     @mock.patch.object(util, 'parse_request')
@@ -241,7 +240,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, body=body)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -272,7 +271,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.get,
                                req, cluster_id=cid)
 
-        self.assertEqual("Boom", six.text_type(ex))
+        self.assertEqual("Boom", str(ex))
         mock_parse.assert_called_once_with(
             "ClusterGetRequest", req, {'identity': cid})
         self.assertEqual(0, mock_call.call_count)
@@ -306,7 +305,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, cluster_id=cid)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -345,7 +344,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, cluster_id=cid, body=body)
 
         self.assertIn("Malformed request data, missing 'cluster' key "
-                      "in request body.", six.text_type(ex))
+                      "in request body.", str(ex))
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
@@ -361,7 +360,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.update,
                                req, cluster_id=cid, body=body)
 
-        self.assertEqual("Boom", six.text_type(ex))
+        self.assertEqual("Boom", str(ex))
         mock_parse.assert_called_once_with(
             "ClusterUpdateRequest", req,
             {'identity': 'aaaa-bbbb-cccc', 'name': 'foo bar'})
@@ -403,7 +402,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, cluster_id=cid, body=body)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -439,7 +438,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller._do_add_nodes,
                                req, cid, data)
 
-        self.assertEqual("Boom", six.text_type(ex))
+        self.assertEqual("Boom", str(ex))
         mock_parse.assert_called_once_with(
             'ClusterAddNodesRequest',
             req,
@@ -466,7 +465,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req,
             {'identity': cid, 'nodes': data['nodes']}
         )
-        self.assertEqual("Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", str(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_add_nodes', obj)
 
@@ -503,7 +502,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller._do_del_nodes,
                                req, cid, data)
 
-        self.assertEqual("Boom", six.text_type(ex))
+        self.assertEqual("Boom", str(ex))
         mock_parse.assert_called_once_with(
             'ClusterDelNodesRequest', req, {'identity': cid,
                                             'nodes': data['nodes'],
@@ -528,7 +527,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             'ClusterDelNodesRequest', req, {'identity': cid,
                                             'nodes': data['nodes'],
                                             'destroy_after_deletion': False})
-        self.assertEqual("Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", str(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_del_nodes', obj)
 
@@ -563,7 +562,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller._do_replace_nodes,
                                req, cid, data)
 
-        self.assertEqual("The data provided is not a map", six.text_type(ex))
+        self.assertEqual("The data provided is not a map", str(ex))
         self.assertEqual(0, mock_parse.call_count)
         self.assertFalse(mock_call.called)
 
@@ -580,7 +579,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller._do_replace_nodes,
                                req, cid, data)
 
-        self.assertEqual("Boom", six.text_type(ex))
+        self.assertEqual("Boom", str(ex))
         mock_parse.assert_called_once_with(
             'ClusterReplaceNodesRequest',
             req,
@@ -608,7 +607,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req,
             {'identity': cid, 'nodes': data['nodes']}
         )
-        self.assertEqual("Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", str(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_replace_nodes', obj)
 
@@ -662,7 +661,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller._do_resize,
                                req, cid, data)
 
-        self.assertEqual("Boom", six.text_type(ex))
+        self.assertEqual("Boom", str(ex))
         mock_parse.assert_called_once_with(
             'ClusterResizeRequest', req,
             {
@@ -685,7 +684,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, cid, data)
 
         self.assertEqual('Missing number value for size adjustment.',
-                         six.text_type(ex))
+                         str(ex))
         self.assertEqual(0, mock_call.call_count)
 
     @mock.patch.object(util, 'parse_request')
@@ -702,7 +701,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, cid, data)
 
         self.assertEqual("Missing adjustment_type value for size adjustment.",
-                         six.text_type(ex))
+                         str(ex))
         self.assertEqual(0, mock_call.call_count)
 
     @mock.patch.object(util, 'parse_request')
@@ -719,7 +718,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, cid, data)
 
         self.assertEqual("The specified min_size (2) is greater than "
-                         "the specified max_size (1).", six.text_type(ex))
+                         "the specified max_size (1).", str(ex))
         self.assertEqual(0, mock_call.call_count)
 
     @mock.patch.object(util, 'parse_request')
@@ -734,7 +733,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, cid, data)
 
         self.assertEqual("Not enough parameters to do resize action.",
-                         six.text_type(ex))
+                         str(ex))
         self.assertEqual(0, mock_call.call_count)
 
     @mock.patch.object(util, 'parse_request')
@@ -753,7 +752,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_parse.assert_called_once_with(
             'ClusterResizeRequest', req, {'identity': cid, 'max_size': 200})
-        self.assertEqual("Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", str(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_resize', obj)
 
@@ -790,7 +789,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller._do_scale_out,
                                req, cid, data)
 
-        self.assertEqual("Boom", six.text_type(ex))
+        self.assertEqual("Boom", str(ex))
         mock_parse.assert_called_once_with(
             'ClusterScaleOutRequest',
             req,
@@ -817,7 +816,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req,
             {'identity': cid, 'count': data['count']}
         )
-        self.assertEqual("Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", str(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_scale_out', obj)
 
@@ -854,7 +853,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller._do_scale_in,
                                req, cid, data)
 
-        self.assertEqual("Boom", six.text_type(ex))
+        self.assertEqual("Boom", str(ex))
         mock_parse.assert_called_once_with(
             'ClusterScaleInRequest',
             req,
@@ -881,7 +880,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
             req,
             {'identity': cid, 'count': data['count']}
         )
-        self.assertEqual("Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", str(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_scale_in', obj)
 
@@ -916,7 +915,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller._do_policy_attach,
                                req, cid, data)
 
-        self.assertEqual("Boom", six.text_type(ex))
+        self.assertEqual("Boom", str(ex))
         mock_parse.assert_called_once_with(
             'ClusterAttachPolicyRequest', req,
             {'identity': cid, 'policy_id': 'xxxx-yyyy'})
@@ -939,7 +938,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ClusterAttachPolicyRequest', req,
             {'identity': cid, 'policy_id': 'xxxx-yyyy'})
-        self.assertEqual("Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", str(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_policy_attach', obj)
 
@@ -974,7 +973,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller._do_policy_detach,
                                req, cid, data)
 
-        self.assertEqual("Boom", six.text_type(ex))
+        self.assertEqual("Boom", str(ex))
         mock_parse.assert_called_once_with(
             'ClusterDetachPolicyRequest', req,
             {'identity': cid, 'policy_id': 'xxxx-yyyy'})
@@ -997,7 +996,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ClusterDetachPolicyRequest', req,
             {'identity': cid, 'policy_id': 'xxxx-yyyy'})
-        self.assertEqual("Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", str(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_policy_detach', obj)
 
@@ -1032,7 +1031,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller._do_policy_update,
                                req, cid, data)
 
-        self.assertEqual("Boom", six.text_type(ex))
+        self.assertEqual("Boom", str(ex))
         mock_parse.assert_called_once_with(
             'ClusterUpdatePolicyRequest', req,
             {'identity': cid, 'policy_id': 'xxxx-yyyy'})
@@ -1055,7 +1054,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         mock_parse.assert_called_once_with(
             'ClusterUpdatePolicyRequest', req,
             {'identity': cid, 'policy_id': 'xxxx-yyyy'})
-        self.assertEqual("Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", str(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_policy_update', obj)
 
@@ -1090,7 +1089,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller._do_check,
                                req, cid, data)
 
-        self.assertEqual("Boom", six.text_type(ex))
+        self.assertEqual("Boom", str(ex))
         mock_parse.assert_called_once_with(
             'ClusterCheckRequest', req, {'identity': cid, 'params': {}})
         self.assertFalse(mock_call.called)
@@ -1111,7 +1110,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_parse.assert_called_once_with(
             'ClusterCheckRequest', req, {'identity': cid, 'params': {}})
-        self.assertEqual("Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", str(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_check', obj)
 
@@ -1146,7 +1145,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller._do_recover,
                                req, cid, data)
 
-        self.assertEqual("Boom", six.text_type(ex))
+        self.assertEqual("Boom", str(ex))
         mock_parse.assert_called_once_with(
             'ClusterRecoverRequest', req, {'identity': cid, 'params': {}})
         self.assertFalse(mock_call.called)
@@ -1167,7 +1166,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_parse.assert_called_once_with(
             'ClusterRecoverRequest', req, {'identity': cid, 'params': {}})
-        self.assertEqual("Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", str(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_recover', obj)
 
@@ -1181,7 +1180,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
                                req, cluster_id=cid, body=body)
-        self.assertEqual('No action specified', six.text_type(ex))
+        self.assertEqual('No action specified', str(ex))
         self.assertFalse(mock_call.called)
 
     def test_cluster_action_multiple_actions(self, mock_enforce):
@@ -1194,7 +1193,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
                                req, cluster_id=cid, body=body)
-        self.assertEqual('Multiple actions specified', six.text_type(ex))
+        self.assertEqual('Multiple actions specified', str(ex))
         self.assertFalse(mock_call.called)
 
     def test_cluster_action_unsupported_action(self, mock_enforce):
@@ -1208,7 +1207,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.action,
                                req, cluster_id=cid, body=body)
         self.assertEqual("Unrecognized action 'fly' specified",
-                         six.text_type(ex))
+                         str(ex))
         self.assertFalse(mock_call.called)
 
     def test_cluster_action_err_denied_policy(self, mock_enforce):
@@ -1223,7 +1222,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, cluster_id=cid, body=body)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     def test_cluster_action_data_not_map(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -1236,7 +1235,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.action,
                                req, cluster_id=cid, body=body)
-        self.assertEqual('The data provided is not a map', six.text_type(ex))
+        self.assertEqual('The data provided is not a map', str(ex))
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(util, 'parse_request')
@@ -1271,7 +1270,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(0, mock_call.call_count)
         self.assertEqual("API version '1.1' is not supported on this method.",
-                         six.text_type(ex))
+                         str(ex))
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_collect_path_not_provided(self, mock_call, mock_enforce):
@@ -1287,7 +1286,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, cluster_id=cid, path=path)
 
         self.assertEqual('Required path attribute is missing.',
-                         six.text_type(ex))
+                         str(ex))
         self.assertEqual(0, mock_call.call_count)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -1304,7 +1303,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, cluster_id=cid, path=path)
 
         self.assertEqual('Required path attribute is missing.',
-                         six.text_type(ex))
+                         str(ex))
         self.assertEqual(0, mock_call.call_count)
 
     @mock.patch.object(util, 'parse_request')
@@ -1320,7 +1319,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.collect,
                                req, cluster_id=cid, path=path)
 
-        self.assertEqual("Boom", six.text_type(ex))
+        self.assertEqual("Boom", str(ex))
         mock_parse.assert_called_once_with(
             'ClusterCollectRequest', req, {'identity': cid, 'path': path})
         self.assertFalse(mock_call.called)
@@ -1342,7 +1341,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         mock_parse.assert_called_once_with(
             'ClusterCollectRequest', req, {'identity': cid, 'path': path})
-        self.assertEqual("Boom.", six.text_type(ex))
+        self.assertEqual("Boom.", str(ex))
         mock_call.assert_called_once_with(
             req.context, 'cluster_collect', obj)
 
@@ -1359,7 +1358,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, cluster_id=cid, path=path)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
         self.assertEqual(0, mock_call.call_count)
 
     @mock.patch.object(util, 'parse_request')
@@ -1402,7 +1401,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(0, mock_call.call_count)
         self.assertEqual("API version '1.1' is not supported on this method.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_operation_no_operations(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'operation', True)
@@ -1415,7 +1414,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.operation,
                                req, cluster_id=cid, body=body)
 
-        self.assertEqual("No operation specified", six.text_type(ex))
+        self.assertEqual("No operation specified", str(ex))
 
     def test_operation_multi_operations(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'operation', True)
@@ -1428,7 +1427,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.operation,
                                req, cluster_id=cid, body=body)
 
-        self.assertEqual("Multiple operations specified", six.text_type(ex))
+        self.assertEqual("Multiple operations specified", str(ex))
 
     def test_cluster_operation_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'operation', False)
@@ -1441,7 +1440,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, cluster_id='abc', body=body)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -1476,7 +1475,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.delete,
                                req, cluster_id=cid)
 
-        self.assertEqual("Boom", six.text_type(ex))
+        self.assertEqual("Boom", str(ex))
         mock_parse.assert_called_once_with(
             'ClusterDeleteRequest', req, {'identity': cid, 'force': False})
         self.assertFalse(mock_call.called)
@@ -1508,7 +1507,7 @@ class ClusterControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, cluster_id=cid)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')

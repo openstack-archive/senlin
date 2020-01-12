@@ -16,7 +16,6 @@ import mock
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
 from oslo_utils import uuidutils
-import six
 
 from senlin.common import exception as exc
 from senlin.conductor import service
@@ -126,7 +125,7 @@ class ProfileTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("A profile named 'FAKE_NAME' already exists.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_get.assert_called_once_with(self.ctx, 'FAKE_NAME')
 
     @mock.patch.object(pb.Profile, 'create')
@@ -143,7 +142,7 @@ class ProfileTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The profile_type 'Bogus-1.0' could not be "
-                         "found.", six.text_type(ex.exc_info[1]))
+                         "found.", str(ex.exc_info[1]))
 
     @mock.patch.object(pb.Profile, 'create')
     def test_profile_create_invalid_spec(self, mock_create):
@@ -156,7 +155,7 @@ class ProfileTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
-        self.assertEqual("badbad", six.text_type(ex.exc_info[1]))
+        self.assertEqual("badbad", str(ex.exc_info[1]))
 
     def test_profile_validate(self):
         self._setup_fakes()
@@ -204,7 +203,7 @@ class ProfileTest(base.SenlinTestCase):
                                self.ctx, request.obj_to_primitive())
         self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
         self.assertEqual('BOOM',
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     @mock.patch.object(po.Profile, 'find')
     def test_profile_get(self, mock_find):
@@ -232,7 +231,7 @@ class ProfileTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The profile 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(
             self.ctx, 'Bogus', project_safe=project_safe)
 
@@ -296,7 +295,7 @@ class ProfileTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The profile 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(pb.Profile, 'load')
@@ -318,7 +317,7 @@ class ProfileTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual('No property needs an update.',
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'PID')
         mock_load.assert_called_once_with(self.ctx, profile=x_obj)
         self.assertEqual(0, x_profile.store.call_count)
@@ -351,7 +350,7 @@ class ProfileTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The profile 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(pb.Profile, 'delete')
@@ -371,6 +370,6 @@ class ProfileTest(base.SenlinTestCase):
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
         self.assertEqual("The profile 'PROFILE_ID' cannot be deleted: "
                          "still referenced by some clusters and/or nodes.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'PROFILE_ID')
         mock_delete.assert_called_once_with(self.ctx, 'PROFILE_ID')

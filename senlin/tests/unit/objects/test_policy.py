@@ -12,7 +12,6 @@
 
 import mock
 from oslo_utils import uuidutils
-import six
 import testtools
 
 from senlin.common import exception as exc
@@ -89,5 +88,5 @@ class TestPolicy(testtools.TestCase):
                                self.ctx, 'Bogus')
 
         self.assertEqual("The policy 'Bogus' could not be found.",
-                         six.text_type(ex))
+                         str(ex))
         mock_get_name.assert_called_once_with(self.ctx, 'Bogus')

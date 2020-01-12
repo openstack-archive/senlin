@@ -12,7 +12,6 @@
 
 import mock
 from oslo_messaging.rpc import dispatcher as rpc
-import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
@@ -85,7 +84,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                orcp.ClusterPolicyListRequest,
                                **params)
         self.assertEqual("Unsupported sort key 'bad' for 'sort'.",
-                         six.text_type(ex))
+                         str(ex))
 
     @mock.patch.object(co.Cluster, 'find')
     def test_list2_cluster_not_found(self, mock_find):
@@ -97,7 +96,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(co.Cluster, 'find')
@@ -131,7 +130,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster 'cid' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'cid')
 
     @mock.patch.object(co.Cluster, 'find')
@@ -148,7 +147,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The policy 'pid' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'cid')
         mock_policy.assert_called_once_with(self.ctx, 'pid')
 
@@ -170,7 +169,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual(exc.PolicyBindingNotFound, ex.exc_info[0])
         self.assertEqual("The policy 'pid' is not found attached to "
                          "the specified cluster 'cid'.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     @mock.patch.object(action_mod.Action, 'create')
     @mock.patch.object(co.Cluster, 'find')
@@ -212,7 +211,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster 'BOGUS' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'BOGUS')
 
     @mock.patch.object(co.Cluster, 'find')
@@ -230,7 +229,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The specified policy 'BOGUS' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_policy.assert_called_once_with(self.ctx, 'BOGUS')
 
@@ -277,7 +276,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(co.Cluster, 'find')
@@ -295,7 +294,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The specified policy 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_policy.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -316,7 +315,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The policy 'P1' is not attached to "
                          "the specified cluster 'C1'.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'C1')
         mock_policy.assert_called_once_with(self.ctx, 'P1')
         mock_cp.assert_called_once_with(self.ctx, 'X_CLUSTER', 'X_POLICY')
@@ -365,7 +364,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(co.Cluster, 'find')
@@ -383,7 +382,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The specified policy 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'C1')
         mock_policy.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -405,7 +404,7 @@ class ClusterPolicyTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The policy 'P1' is not attached to the "
                          "specified cluster 'C1'.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
         mock_cluster.assert_called_once_with(self.ctx, 'C1')
         mock_policy.assert_called_once_with(self.ctx, 'P1')

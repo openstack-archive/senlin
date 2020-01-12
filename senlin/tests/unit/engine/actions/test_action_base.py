@@ -17,7 +17,6 @@ import mock
 from oslo_config import cfg
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
-import six
 
 from senlin.common import consts
 from senlin.common import exception
@@ -238,7 +237,7 @@ class ActionBaseTest(base.SenlinTestCase):
                                ab.Action.load,
                                self.ctx, 'non-existent', None)
         self.assertEqual("The action 'non-existent' could not be "
-                         "found.", six.text_type(ex))
+                         "found.", str(ex))
 
         # not found due to no object
         self.patchobject(ao.Action, 'get', return_value=None)
@@ -246,7 +245,7 @@ class ActionBaseTest(base.SenlinTestCase):
                                ab.Action.load,
                                self.ctx, 'whatever', None)
         self.assertEqual("The action 'whatever' could not be found.",
-                         six.text_type(ex))
+                         str(ex))
 
     @mock.patch.object(ab.Action, 'store')
     def test_action_create(self, mock_store):

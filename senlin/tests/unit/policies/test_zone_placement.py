@@ -11,7 +11,6 @@
 # under the License.
 
 import mock
-import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
@@ -91,7 +90,7 @@ class TestZonePlacementPolicy(base.SenlinTestCase):
         mock_base_validate.assert_called_once_with(ctx, True)
         nc.validate_azs.assert_called_once_with(['AZ1', 'AZ2', 'AZ3', 'AZ4'])
         self.assertEqual("The specified name '['AZ2', 'AZ3']' "
-                         "could not be found.", six.text_type(ex))
+                         "could not be found.", str(ex))
 
     def test_create_plan_default(self):
         self.spec['properties']['zones'] = [

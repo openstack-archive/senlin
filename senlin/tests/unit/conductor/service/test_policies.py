@@ -15,7 +15,6 @@ import mock
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
 from oslo_utils import uuidutils
-import six
 
 from senlin.common import exception as exc
 from senlin.common.i18n import _
@@ -118,7 +117,7 @@ class PolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("A policy named 'FAKE_NAME' already exists.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_get.assert_called_once_with(self.ctx, 'FAKE_NAME')
 
     def test_policy_create_type_not_found(self):
@@ -139,7 +138,7 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The policy_type 'FakePolicy-1.0' could "
                          "not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     def test_policy_create_invalid_spec(self):
         # This test is for the policy object constructor which may throw
@@ -154,7 +153,7 @@ class PolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.ESchema, ex.exc_info[0])
         self.assertEqual("Required spec item 'KEY2' not provided",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     def test_policy_create_invalid_value(self):
         self._setup_fakes()
@@ -171,7 +170,7 @@ class PolicyTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
         self.assertEqual("The specified KEY2 'value3' could not be "
-                         "found.", six.text_type(ex.exc_info[1]))
+                         "found.", str(ex.exc_info[1]))
 
     def test_policy_create_failed_validation(self):
         self._setup_fakes()
@@ -184,7 +183,7 @@ class PolicyTest(base.SenlinTestCase):
                                self.svc.policy_create,
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
-        self.assertEqual('BOOM', six.text_type(ex.exc_info[1]))
+        self.assertEqual('BOOM', str(ex.exc_info[1]))
 
     def test_policy_validate_pass(self):
         self._setup_fakes()
@@ -225,7 +224,7 @@ class PolicyTest(base.SenlinTestCase):
                                self.ctx, body.obj_to_primitive())
         self.assertEqual(exc.InvalidSpec, ex.exc_info[0])
         self.assertEqual('BOOM',
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     @mock.patch.object(po.Policy, 'find')
     def test_policy_get(self, mock_find):
@@ -317,7 +316,7 @@ class PolicyTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual('No property needs an update.',
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE')
         mock_load.assert_called_once_with(self.ctx, db_policy=x_obj)
         self.assertEqual(0, x_policy.store.call_count)
@@ -350,7 +349,7 @@ class PolicyTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The policy 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(pb.Policy, 'delete')
@@ -370,6 +369,6 @@ class PolicyTest(base.SenlinTestCase):
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
         self.assertEqual(_("The policy 'POLICY_ID' cannot be deleted: "
                          "still attached to some clusters."),
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'POLICY_ID')
         mock_delete.assert_called_once_with(self.ctx, 'POLICY_ID')

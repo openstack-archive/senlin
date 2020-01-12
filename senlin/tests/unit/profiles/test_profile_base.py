@@ -14,7 +14,6 @@ import copy
 
 import mock
 from oslo_context import context as oslo_ctx
-import six
 
 from senlin.common import consts
 from senlin.common import context as senlin_ctx
@@ -223,7 +222,7 @@ class TestProfileBase(base.SenlinTestCase):
         ex = self.assertRaises(exception.ESchema,
                                pb.Profile, 'test-profile', bad_spec)
         self.assertEqual("The 'version' key is missing from the provided "
-                         "spec map.", six.text_type(ex))
+                         "spec map.", str(ex))
 
     def test_from_object(self):
         obj = self._create_profile('test_profile_for_record')
@@ -302,7 +301,7 @@ class TestProfileBase(base.SenlinTestCase):
 
         self.assertEqual("Failed in creating profile my_profile: The "
                          "profile_type 'bogus-1.0' could not be found.",
-                         six.text_type(ex))
+                         str(ex))
 
     @mock.patch.object(pb.Profile, 'validate')
     @mock.patch.object(senlin_ctx, 'get_service_credentials')
@@ -315,7 +314,7 @@ class TestProfileBase(base.SenlinTestCase):
                                self.ctx, 'my_profile', self.spec)
 
         self.assertEqual("Failed in creating profile my_profile: "
-                         "Boom", six.text_type(ex))
+                         "Boom", str(ex))
 
     @mock.patch.object(po.Profile, 'delete')
     def test_delete(self, mock_delete):
@@ -917,7 +916,7 @@ class TestProfileBase(base.SenlinTestCase):
                                force_recreate=False)
         self.assertEqual("Failed in recovering node 'NODE_ID': "
                          "Failed in deleting STACK 'ID': BANG.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_do_recover_with_recreate_succeeded(self):
         profile = self._create_profile('test-profile')
@@ -940,7 +939,7 @@ class TestProfileBase(base.SenlinTestCase):
                                mock.Mock(id='NODE_ID'), operation=operation)
         self.assertEqual("Failed in recovering node 'NODE_ID': "
                          "Failed in deleting STACK 'ID': BANG.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_do_recover_with_recreate_failed_create(self):
         profile = self._create_profile('test-profile')
@@ -955,7 +954,7 @@ class TestProfileBase(base.SenlinTestCase):
 
         msg = ("Failed in recovering node 'NODE_ID': Failed in creating "
                "STACK: BANNG.")
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
 
     def test_to_dict(self):
         profile = self._create_profile('test-profile')

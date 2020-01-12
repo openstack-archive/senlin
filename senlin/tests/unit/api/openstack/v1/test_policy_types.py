@@ -11,7 +11,6 @@
 # under the License.
 
 import mock
-import six
 from webob import exc
 
 from senlin.api.common import util
@@ -124,7 +123,7 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -239,7 +238,7 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.get,
                                req, type_name=type_name)
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
         mock_parse.assert_called_once_with(
             'PolicyTypeGetRequest', req, {'type_name': type_name})
         self.assertEqual(0, mock_call.call_count)
@@ -253,4 +252,4 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               self.controller.get,
                                               req, type_name=type_name)
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))

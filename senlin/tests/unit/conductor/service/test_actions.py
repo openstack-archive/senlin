@@ -12,7 +12,6 @@
 
 import mock
 from oslo_messaging.rpc import dispatcher as rpc
-import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
@@ -133,7 +132,7 @@ class ActionTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Cannot find the given cluster: C1.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'C1')
 
     @mock.patch.object(ao.Action, 'find')
@@ -190,7 +189,7 @@ class ActionTest(base.SenlinTestCase):
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
         self.assertEqual("The action 'ACTION_ID' cannot be deleted: still "
                          "in one of WAITING, RUNNING or SUSPENDED state.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'ACTION_ID')
         mock_delete.assert_called_once_with(self.ctx, 'FAKE_ID')
 

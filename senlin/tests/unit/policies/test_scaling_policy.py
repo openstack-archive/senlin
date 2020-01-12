@@ -12,7 +12,6 @@
 
 import mock
 from oslo_utils import timeutils
-import six
 import time
 
 from senlin.common import consts
@@ -114,7 +113,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         ex = self.assertRaises(exc.InvalidSpec, policy.validate, self.context)
 
         self.assertEqual("the 'number' for 'adjustment' must be > 0",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_validate_bad_min_step(self):
         self.spec['properties']['adjustment'] = {"min_step": -1}
@@ -123,7 +122,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         ex = self.assertRaises(exc.InvalidSpec, policy.validate, self.context)
 
         self.assertEqual("the 'min_step' for 'adjustment' must be >= 0",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_validate_bad_cooldown(self):
         self.spec['properties']['adjustment'] = {"cooldown": -1}
@@ -132,7 +131,7 @@ class TestScalingPolicy(base.SenlinTestCase):
         ex = self.assertRaises(exc.InvalidSpec, policy.validate, self.context)
 
         self.assertEqual("the 'cooldown' for 'adjustment' must be >= 0",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_calculate_adjustment_count(self):
         adjustment = self.spec['properties']['adjustment']

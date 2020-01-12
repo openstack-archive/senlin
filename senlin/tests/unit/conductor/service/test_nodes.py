@@ -13,7 +13,6 @@
 import mock
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
-import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
@@ -104,7 +103,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual('Cannot find the given cluster: BOGUS.',
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'BOGUS')
 
     @mock.patch.object(no.Node, 'get_all')
@@ -321,7 +320,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual(_("The node named (NODE1) already exists."),
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     @mock.patch.object(po.Profile, 'find')
     def test_node_create_profile_not_found(self, mock_profile):
@@ -335,7 +334,7 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The specified profile 'Bogus' could not be "
-                         "found.", six.text_type(ex.exc_info[1]))
+                         "found.", str(ex.exc_info[1]))
         mock_profile.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(co.Cluster, 'find')
@@ -353,7 +352,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The specified cluster 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_cluster.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(co.Cluster, 'find')
@@ -377,7 +376,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Node and cluster have different profile "
                          "type, operation aborted.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_profile.assert_has_calls([
             mock.call(self.ctx, 'NODE_PROFILE'),
             mock.call(self.ctx, 'CLUSTER_PROFILE_ID'),
@@ -428,7 +427,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The node 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(no.Node, 'find')
@@ -536,7 +535,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The node 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(po.Profile, 'find')
@@ -554,7 +553,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The specified profile 'Bogus' could not be "
-                         "found.", six.text_type(ex.exc_info[1]))
+                         "found.", str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
         mock_profile.assert_called_once_with(self.ctx, 'Bogus')
 
@@ -576,7 +575,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Cannot update a node to a different "
                          "profile type, operation aborted.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
         mock_profile.assert_has_calls([
             mock.call(self.ctx, 'NEW_PROFILE'),
@@ -600,7 +599,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("No property needs an update.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
         mock_profile.assert_has_calls([
             mock.call(self.ctx, 'OLD_PROFILE_ID'),
@@ -621,7 +620,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("No property needs an update.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
 
     @mock.patch.object(dispatcher, 'start_action')
@@ -657,7 +656,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The node 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(no.Node, 'find')
@@ -673,7 +672,7 @@ class NodeTest(base.SenlinTestCase):
 
             self.assertEqual(exc.ActionInProgress, ex.exc_info[0])
             self.assertEqual("The node 'BUSY' is in status %s." % bad_status,
-                             six.text_type(ex.exc_info[1]))
+                             str(ex.exc_info[1]))
             # skipping assertion on mock_find
 
     @mock.patch.object(no.Node, 'find')
@@ -688,7 +687,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
         self.assertEqual("The node 'node1' cannot be deleted: still depended "
                          "by other clusters and/or nodes.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')
@@ -766,7 +765,7 @@ class NodeTest(base.SenlinTestCase):
 
         req.obj_set_defaults.assert_called_once_with()
         self.assertEqual("The profile_type 'TestProfile-1.0' could not be "
-                         "found.", six.text_type(ex))
+                         "found.", str(ex))
 
     @mock.patch.object(environment.Environment, 'get_profile')
     @mock.patch.object(pb.Profile, 'adopt_node')
@@ -795,7 +794,7 @@ class NodeTest(base.SenlinTestCase):
             self.ctx, mock.ANY, 'TestProfile-1.0',
             overrides="foo", snapshot=True)
 
-        self.assertEqual('502: something is bad', six.text_type(ex))
+        self.assertEqual('502: something is bad', str(ex))
 
     @mock.patch.object(service.ConductorService, '_node_adopt_preview')
     def test_node_adopt_preview(self, mock_preview):
@@ -825,7 +824,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertIsInstance(mock_preview.call_args[0][1],
                               orno.NodeAdoptPreviewRequest)
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual('boom.', six.text_type(ex.exc_info[1]))
+        self.assertEqual('boom.', str(ex.exc_info[1]))
 
     @mock.patch.object(no.Node, 'create')
     @mock.patch.object(service.ConductorService, '_node_adopt_preview')
@@ -884,7 +883,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The node named (FAKE_NAME) already exists.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     @mock.patch.object(no.Node, 'create')
     @mock.patch.object(service.ConductorService, '_node_adopt_preview')
@@ -901,7 +900,7 @@ class NodeTest(base.SenlinTestCase):
                               orno.NodeAdoptRequest)
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("boom.", six.text_type(ex.exc_info[1]))
+        self.assertEqual("boom.", str(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(action_mod.Action, 'create')
@@ -937,7 +936,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The node 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(dispatcher, 'start_action')
@@ -1047,7 +1046,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The node 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(action_mod.Action, 'create')
@@ -1064,7 +1063,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Action parameter ['bogus'] is not recognizable.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
         self.assertEqual(0, mock_action.call_count)
 
@@ -1084,7 +1083,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Operation value 'blah' has to be one of the "
                          "following: REBOOT, REBUILD, RECREATE.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
         self.assertEqual(0, mock_action.call_count)
 
@@ -1105,7 +1104,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Type field 'blah' in operation_params has to be one "
                          "of the following: SOFT, HARD.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_NODE')
         self.assertEqual(0, mock_action.call_count)
 
@@ -1154,7 +1153,7 @@ class NodeTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The node 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(node_mod.Node, 'load')
@@ -1177,7 +1176,7 @@ class NodeTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The requested operation 'swim' is not "
                          "supported by the profile type 'cow'.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'node1')
         mock_node.assert_called_once_with(self.ctx, db_node=x_db_node)
 
@@ -1200,7 +1199,7 @@ class NodeTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("Boom.", six.text_type(ex.exc_info[1]))
+        self.assertEqual("Boom.", str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'node1')
         mock_node.assert_called_once_with(self.ctx, db_node=x_db_node)
         x_schema.validate.assert_called_once_with({'style': 'tango'})

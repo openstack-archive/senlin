@@ -23,7 +23,6 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from requests import exceptions as req_exc
-import six
 
 from senlin.common import exception as senlin_exc
 from senlin import version
@@ -46,7 +45,7 @@ def parse_exception(ex):
         elif hasattr(ex, "http_status") and ex.http_status is not None:
             code = ex.http_status
 
-        message = six.text_type(ex)
+        message = str(ex)
         data = {}
         if ex.details is None and ex.response is not None:
             data = ex.response.json()
@@ -77,14 +76,14 @@ def parse_exception(ex):
     elif isinstance(ex, sdk_exc.SDKException):
         # Besides HttpException there are some other exceptions like
         # ResourceTimeout can be raised from SDK, handle them here.
-        message = six.text_type(ex)
+        message = str(ex)
     elif isinstance(ex, req_exc.RequestException):
         # Exceptions that are not captured by SDK
         code = ex.errno
-        message = six.text_type(ex)
+        message = str(ex)
     else:
         # This could be a generic exception or something we don't understand
-        message = six.text_type(ex)
+        message = str(ex)
 
     if code >= 500 or code in (400, 401, 403):
         LOG.error(message)

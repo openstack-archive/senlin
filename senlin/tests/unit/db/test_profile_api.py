@@ -13,7 +13,6 @@
 import mock
 from oslo_db.sqlalchemy import utils as sa_utils
 from oslo_utils import timeutils as tu
-import six
 
 from senlin.common import consts
 from senlin.common import exception
@@ -349,7 +348,7 @@ class DBAPIProfileTest(base.SenlinTestCase):
         ex = self.assertRaises(exception.EResourceBusy,
                                db_api.profile_delete, self.ctx, profile_id)
         self.assertEqual("The profile '%s' is busy now." % profile_id,
-                         six.text_type(ex))
+                         str(ex))
 
         db_api.cluster_delete(self.ctx, cluster.id)
         db_api.profile_delete(self.ctx, profile_id)
@@ -362,7 +361,7 @@ class DBAPIProfileTest(base.SenlinTestCase):
         ex = self.assertRaises(exception.EResourceBusy,
                                db_api.profile_delete, self.ctx, profile_id)
         self.assertEqual("The profile '%s' is busy now." % profile_id,
-                         six.text_type(ex))
+                         str(ex))
 
         db_api.node_delete(self.ctx, node.id)
         db_api.profile_delete(self.ctx, profile_id)

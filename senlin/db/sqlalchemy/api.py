@@ -15,7 +15,6 @@ Implementation of SQLAlchemy backend.
 """
 
 import datetime
-import six
 import sys
 import threading
 import time
@@ -466,12 +465,12 @@ def cluster_lock_acquire(cluster_id, action_id, scope):
         if lock is not None:
             if scope == 1 and lock.semaphore > 0:
                 if action_id not in lock.action_ids:
-                    lock.action_ids.append(six.text_type(action_id))
+                    lock.action_ids.append(str(action_id))
                     lock.semaphore += 1
                     lock.save(session)
         else:
             lock = models.ClusterLock(cluster_id=cluster_id,
-                                      action_ids=[six.text_type(action_id)],
+                                      action_ids=[str(action_id)],
                                       semaphore=scope)
             session.add(lock)
         return lock.action_ids
@@ -489,14 +488,14 @@ def cluster_is_locked(cluster_id):
 def _release_cluster_lock(session, lock, action_id, scope):
     success = False
     if (scope == -1 and lock.semaphore < 0) or lock.semaphore == 1:
-        if six.text_type(action_id) in lock.action_ids:
+        if str(action_id) in lock.action_ids:
             session.delete(lock)
             success = True
-    elif six.text_type(action_id) in lock.action_ids:
+    elif str(action_id) in lock.action_ids:
         if lock.semaphore == 1:
             session.delete(lock)
         else:
-            lock.action_ids.remove(six.text_type(action_id))
+            lock.action_ids.remove(str(action_id))
             lock.semaphore -= 1
             lock.save(session)
         success = True
@@ -1304,7 +1303,7 @@ def _mark_failed(action_id, timestamp, reason=None):
         values = {
             'owner': None,
             'status': consts.ACTION_FAILED,
-            'status_reason': (six.text_type(reason) if reason else
+            'status_reason': (str(reason) if reason else
                               'Action execution failed'),
             'end_time': timestamp,
         }
@@ -1332,7 +1331,7 @@ def _mark_cancelled(session, action_id, timestamp, reason=None):
     values = {
         'owner': None,
         'status': consts.ACTION_CANCELLED,
-        'status_reason': (six.text_type(reason) if reason else
+        'status_reason': (str(reason) if reason else
                           'Action execution cancelled'),
         'end_time': timestamp,
     }
@@ -1656,7 +1655,7 @@ def _mark_engine_failed(session, action_id, timestamp, reason=None):
     values = {
         'owner': None,
         'status': consts.ACTION_FAILED,
-        'status_reason': (six.text_type(reason) if reason else
+        'status_reason': (str(reason) if reason else
                           'Action execution failed'),
         'end_time': timestamp,
     }

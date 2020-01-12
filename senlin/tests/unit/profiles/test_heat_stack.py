@@ -13,7 +13,6 @@
 import copy
 
 import mock
-import six
 
 from senlin.common import exception as exc
 from senlin.profiles.os.heat import stack
@@ -90,7 +89,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         }
         oc.stack_create.assert_called_once_with(**call_args)
         self.assertEqual('Failed in validating template: Boom',
-                         six.text_type(ex))
+                         str(ex))
 
     def test_do_create(self):
         oc = mock.Mock()
@@ -220,7 +219,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
 
         # assertions
         self.assertEqual('Failed in creating stack: Too Bad.',
-                         six.text_type(ex))
+                         str(ex))
         call_args = {
             'stack_name': mock.ANY,
             'template': self.spec['properties']['template'],
@@ -258,7 +257,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
 
         # assertions
         self.assertEqual('Failed in creating stack: Timeout.',
-                         six.text_type(ex))
+                         str(ex))
         kwargs = {
             'stack_name': mock.ANY,
             'template': self.spec['properties']['template'],
@@ -333,7 +332,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
 
         # assertions
         self.assertEqual("Failed in deleting stack 'FAKE_ID': Boom.",
-                         six.text_type(ex))
+                         str(ex))
         oc.stack_delete.assert_called_once_with('FAKE_ID', True)
         self.assertEqual(0, oc.wait_for_stack_delete.call_count)
 
@@ -351,7 +350,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
 
         # assertions
         self.assertEqual("Failed in deleting stack 'FAKE_ID': Boom.",
-                         six.text_type(ex))
+                         str(ex))
         oc.stack_delete.assert_called_once_with('FAKE_ID', True)
         oc.wait_for_stack_delete.assert_called_once_with('FAKE_ID')
 
@@ -542,7 +541,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
             'FAKE_ID', environment={"new": "env1"})
         self.assertEqual(0, oc.wait_for_stack.call_count)
         self.assertEqual("Failed in updating stack 'FAKE_ID': "
-                         "Failed.", six.text_type(ex))
+                         "Failed.", str(ex))
 
     def test_do_update_timeout(self):
         profile = stack.StackProfile('t', self.spec)
@@ -564,7 +563,7 @@ class TestHeatStackProfile(base.SenlinTestCase):
         oc.wait_for_stack.assert_called_once_with(
             'FAKE_ID', 'UPDATE_COMPLETE', timeout=3600)
         self.assertEqual("Failed in updating stack 'FAKE_ID': "
-                         "Timeout.", six.text_type(ex))
+                         "Timeout.", str(ex))
 
     def test_do_check(self):
         node_obj = mock.Mock(physical_id='FAKE_ID')

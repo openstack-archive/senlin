@@ -13,7 +13,6 @@
 import mock
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
-import six
 
 from senlin.common import consts
 from senlin.common import exception
@@ -108,7 +107,7 @@ class TestNode(base.SenlinTestCase):
                                nodem.Node.load,
                                self.context, 'non-existent', None)
         self.assertEqual("The node 'non-existent' could not be found.",
-                         six.text_type(ex))
+                         str(ex))
 
         x_node_id = 'ee96c490-2dee-40c8-8919-4c64b89e326c'
         node = utils.create_node(self.context, x_node_id, PROFILE_ID,
@@ -145,7 +144,7 @@ class TestNode(base.SenlinTestCase):
                                nodem.Node.load,
                                new_ctx, x_node_id, None)
         self.assertEqual("The node '%s' could not be found." % x_node_id,
-                         six.text_type(ex))
+                         str(ex))
 
         res = nodem.Node.load(new_ctx, x_node_id, project_safe=False)
         self.assertIsNotNone(res)
@@ -839,7 +838,7 @@ class TestNode(base.SenlinTestCase):
             mock.call(self.context, 'RECOVERING',
                       reason='Recovery in progress'),
             mock.call(self.context, consts.NS_ERROR,
-                      reason=six.text_type(reason),
+                      reason=str(reason),
                       physical_id=node.physical_id)])
 
     @mock.patch.object(nodem.Node, 'set_status')
@@ -876,7 +875,7 @@ class TestNode(base.SenlinTestCase):
             mock.call(self.context, 'RECOVERING',
                       reason='Recovery in progress'),
             mock.call(self.context, consts.NS_ERROR,
-                      reason=six.text_type(reason),
+                      reason=str(reason),
                       physical_id=new_id)])
 
     def test_node_recover_no_physical_id_reboot_op(self):
@@ -1168,7 +1167,7 @@ class TestNode(base.SenlinTestCase):
                                **options)
 
         self.assertEqual("Failed in executing workflow 'foo': boom.",
-                         six.text_type(ex))
+                         str(ex))
         x_profile.workflow.assert_called_once_with(node)
         wfc.workflow_find.assert_called_once_with('foo')
         wfc.workflow_create.assert_called_once_with(
@@ -1202,7 +1201,7 @@ class TestNode(base.SenlinTestCase):
                                **options)
 
         self.assertEqual("Failed in executing workflow 'foo': boom.",
-                         six.text_type(ex))
+                         str(ex))
         x_profile.workflow.assert_called_once_with(node)
         wfc.workflow_find.assert_called_once_with('foo')
         wfc.workflow_create.assert_called_once_with(

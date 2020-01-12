@@ -14,7 +14,7 @@ import socket
 
 from oslo_config import cfg
 from oslo_log import log as logging
-from six.moves.urllib import parse
+from urllib import parse
 
 from senlin.engine.receivers import base
 

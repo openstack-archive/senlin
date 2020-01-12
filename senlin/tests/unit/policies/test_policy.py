@@ -13,7 +13,6 @@
 import mock
 from oslo_context import context as oslo_ctx
 from oslo_utils import timeutils
-import six
 
 from senlin.common import consts
 from senlin.common import context as senlin_ctx
@@ -215,13 +214,13 @@ class TestPolicyBase(base.SenlinTestCase):
                                pb.Policy.load,
                                self.ctx, 'fake-policy', None)
         self.assertEqual("The policy 'fake-policy' could not be found.",
-                         six.text_type(ex))
+                         str(ex))
 
         ex = self.assertRaises(exception.ResourceNotFound,
                                pb.Policy.load,
                                self.ctx, None, None)
         self.assertEqual("The policy 'None' could not be found.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_delete(self):
         policy = utils.create_policy(self.ctx, UUID1)
@@ -592,4 +591,4 @@ class TestPolicyBase(base.SenlinTestCase):
                                'user1', 'project1')
 
         msg = "The trust for trustor 'user1' could not be found."
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))

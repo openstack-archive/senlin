@@ -12,7 +12,6 @@
 
 import glob
 import mock
-import six
 
 from senlin.common import exception
 from senlin.engine import environment
@@ -109,7 +108,7 @@ class TestEnvironment(base.SenlinTestCase):
         env_str = "variables:\n  p1: v1"
         err = self.assertRaises(ValueError, env.parse, env_str)
         self.assertEqual('environment has unknown section "variables"',
-                         six.text_type(err))
+                         str(err))
 
         # omitted sections
         env_str = "parameters:\n  p1: v1"
@@ -157,18 +156,18 @@ class TestEnvironment(base.SenlinTestCase):
             ex = self.assertRaises(exception.InvalidPlugin,
                                    env._check_plugin_name, pt, '')
             self.assertEqual('%s type name not specified' % pt,
-                             six.text_type(ex))
+                             str(ex))
 
             ex = self.assertRaises(exception.InvalidPlugin,
                                    env._check_plugin_name, pt, None)
             self.assertEqual('%s type name not specified' % pt,
-                             six.text_type(ex))
+                             str(ex))
 
             for v in [123, {}, ['a'], ('b', 'c'), True]:
                 ex = self.assertRaises(exception.InvalidPlugin,
                                        env._check_plugin_name, pt, v)
             self.assertEqual('%s type name is not a string' % pt,
-                             six.text_type(ex))
+                             str(ex))
 
     def test_register_and_get_profile(self):
         plugin = mock.Mock()
@@ -177,7 +176,7 @@ class TestEnvironment(base.SenlinTestCase):
         ex = self.assertRaises(exception.ResourceNotFound,
                                env.get_profile, 'foo')
         self.assertEqual("The profile_type 'foo' could not be found.",
-                         six.text_type(ex))
+                         str(ex))
 
         env.register_profile('foo', plugin)
         self.assertEqual(plugin, env.get_profile('foo'))
@@ -204,7 +203,7 @@ class TestEnvironment(base.SenlinTestCase):
         ex = self.assertRaises(exception.ResourceNotFound,
                                env.get_policy, 'foo')
         self.assertEqual("The policy_type 'foo' could not be found.",
-                         six.text_type(ex))
+                         str(ex))
 
         env.register_policy('foo', plugin)
         self.assertEqual(plugin, env.get_policy('foo'))
@@ -231,7 +230,7 @@ class TestEnvironment(base.SenlinTestCase):
         ex = self.assertRaises(exception.InvalidPlugin,
                                env.get_driver, 'foo')
         self.assertEqual('Driver plugin foo is not found.',
-                         six.text_type(ex))
+                         str(ex))
 
         env.register_driver('foo', plugin)
         self.assertEqual(plugin, env.get_driver('foo'))
@@ -258,7 +257,7 @@ class TestEnvironment(base.SenlinTestCase):
         ex = self.assertRaises(exception.InvalidPlugin,
                                env.get_endpoint, 'foo')
         self.assertEqual('Endpoint plugin foo is not found.',
-                         six.text_type(ex))
+                         str(ex))
 
         env.register_endpoint('foo', plugin)
         self.assertEqual(plugin, env.get_endpoint('foo'))

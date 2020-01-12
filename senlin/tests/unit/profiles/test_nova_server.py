@@ -15,7 +15,6 @@ import base64
 import mock
 from oslo_config import cfg
 from oslo_utils import encodeutils
-import six
 
 from senlin.common import exception as exc
 from senlin.objects import node as node_ob
@@ -670,7 +669,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                node_obj)
         self.assertEqual('FAKE_ID', ex.resource_id)
         self.assertEqual('Failed in creating server: TIMEOUT.',
-                         six.text_type(ex))
+                         str(ex))
         mock_node_obj.assert_not_called()
         cc.wait_for_server.assert_called_once_with(
             'FAKE_ID', timeout=cfg.CONF.default_nova_timeout)
@@ -703,7 +702,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         mock_node_obj.assert_called_once_with(mock.ANY, node_obj.id,
                                               {'data': node_obj.data})
         self.assertEqual('Failed in creating server: creation failed.',
-                         six.text_type(ex))
+                         str(ex))
         self.assertIsNone(ex.resource_id)
         self.assertEqual(0, cc.wait_for_server.call_count)
         self.assertEqual(0, mock_zone_info.call_count)
@@ -741,7 +740,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         mock_profile_delete.assert_called_once_with(
             node_obj, internal_ports=[{'id': 'FAKE_PORT'}])
         self.assertEqual('Failed in creating server: creation failed.',
-                         six.text_type(ex))
+                         str(ex))
         self.assertEqual(1, cc.wait_for_server.call_count)
         self.assertEqual(0, mock_zone_info.call_count)
 
@@ -1005,7 +1004,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         mock_node_obj.assert_called_once_with(mock.ANY, obj.id,
                                               {'data': obj.data})
         self.assertEqual("Failed in deleting server 'FAKE_ID': "
-                         "Nova Error.", six.text_type(ex))
+                         "Nova Error.", str(ex))
         cc.server_delete.assert_called_once_with('FAKE_ID', True)
         self.assertEqual(0, cc.wait_for_server_delete.call_count)
         nc.port_delete.assert_called_once_with('FAKE_PORT_ID')
@@ -1029,7 +1028,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         mock_node_obj.assert_not_called()
         self.assertEqual("Failed in deleting server 'FAKE_ID': "
-                         "Nova Error.", six.text_type(ex))
+                         "Nova Error.", str(ex))
         cc.server_force_delete.assert_called_once_with('FAKE_ID', True)
         self.assertEqual(0, cc.wait_for_server_delete.call_count)
         nc.port_delete.assert_not_called()
@@ -1061,7 +1060,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         mock_node_obj.assert_called_once_with(mock.ANY, obj.id,
                                               {'data': obj.data})
         self.assertEqual("Failed in deleting server 'FAKE_ID': TIMEOUT.",
-                         six.text_type(ex))
+                         str(ex))
         cc.server_delete.assert_called_once_with('FAKE_ID', True)
         cc.wait_for_server_delete.assert_called_once_with('FAKE_ID',
                                                           timeout=20)
@@ -1097,7 +1096,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                profile.do_delete, test_server, timeout=20)
 
         self.assertEqual("Failed in deleting server 'FAKE_ID': TIMEOUT.",
-                         six.text_type(ex))
+                         str(ex))
         mock_node_obj.assert_called_once_with(
             mock.ANY, test_server.id, {'data': {'internal_ports': []}})
         cc.server_delete.assert_called_once_with('FAKE_ID', True)
@@ -1128,7 +1127,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                profile.do_delete, test_server, timeout=20)
 
         self.assertEqual("Failed in deleting server 'FAKE_ID': TIMEOUT.",
-                         six.text_type(ex))
+                         str(ex))
         mock_node_obj.assert_not_called()
         cc.server_delete.assert_called_once_with('FAKE_ID', True)
         cc.wait_for_server_delete.assert_called_once_with('FAKE_ID',
@@ -1704,7 +1703,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         self.assertEqual("Failed in found server 'FAKE_ID': "
                          "No Server found.",
-                         six.text_type(ex))
+                         str(ex))
         cc.server_get.assert_called_once_with('FAKE_ID')
 
     def test_do_healthcheck_active(self):
@@ -1968,7 +1967,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         self.assertEqual("Failed in rebuilding server 'FAKE_ID': "
                          "FAKE_ID not found.",
-                         six.text_type(ex))
+                         str(ex))
         cc.server_get.assert_called_once_with('FAKE_ID')
 
     def test_handle_rebuild_failed_rebuild(self):
@@ -1988,7 +1987,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         self.assertEqual("Failed in rebuilding server 'FAKE_ID': "
                          "cannot rebuild.",
-                         six.text_type(ex))
+                         str(ex))
         cc.server_get.assert_called_once_with('FAKE_ID')
         cc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
                                                   'FAKE_SERVER_NAME',
@@ -2011,7 +2010,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                node_obj)
 
         self.assertEqual("Failed in rebuilding server 'FAKE_ID': "
-                         "timeout.", six.text_type(ex))
+                         "timeout.", str(ex))
         cc.server_get.assert_called_once_with('FAKE_ID')
         cc.server_rebuild.assert_called_once_with('FAKE_ID', '123',
                                                   'FAKE_SERVER_NAME',
@@ -2063,7 +2062,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                node_obj)
 
         self.assertEqual("The value 'None' is not a valid string.",
-                         six.text_type(ex))
+                         str(ex))
         cc.server_get.assert_called_once_with('FAKE_ID')
         cc.server_rebuild.assert_not_called()
         self.assertEqual(0, cc.wait_for_server.call_count)
@@ -2144,7 +2143,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                node_obj)
 
         self.assertEqual("Failed in suspend server 'FAKE_ID': "
-                         "timeout.", six.text_type(ex))
+                         "timeout.", str(ex))
         cc.server_suspend.assert_called_once_with('FAKE_ID')
         cc.wait_for_server.assert_called_once_with('FAKE_ID', 'SUSPENDED')
 
@@ -2179,7 +2178,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                node_obj)
 
         self.assertEqual("Failed in resume server 'FAKE_ID': "
-                         "timeout.", six.text_type(ex))
+                         "timeout.", str(ex))
         cc.server_resume.assert_called_once_with('FAKE_ID')
         cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
 
@@ -2213,7 +2212,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                node_obj)
 
         self.assertEqual("Failed in start server 'FAKE_ID': "
-                         "timeout.", six.text_type(ex))
+                         "timeout.", str(ex))
         cc.server_start.assert_called_once_with('FAKE_ID')
         cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
 
@@ -2248,7 +2247,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                node_obj)
 
         self.assertEqual("Failed in stop server 'FAKE_ID': "
-                         "timeout.", six.text_type(ex))
+                         "timeout.", str(ex))
         cc.server_stop.assert_called_once_with('FAKE_ID')
         cc.wait_for_server.assert_called_once_with('FAKE_ID', 'SHUTOFF')
 
@@ -2317,7 +2316,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                node_obj)
 
         self.assertEqual("Failed in pause server 'FAKE_ID': "
-                         "timeout.", six.text_type(ex))
+                         "timeout.", str(ex))
         cc.server_pause.assert_called_once_with('FAKE_ID')
         cc.wait_for_server.assert_called_once_with('FAKE_ID', 'PAUSED')
 
@@ -2351,7 +2350,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                node_obj)
 
         self.assertEqual("Failed in unpause server 'FAKE_ID': "
-                         "timeout.", six.text_type(ex))
+                         "timeout.", str(ex))
         cc.server_unpause.assert_called_once_with('FAKE_ID')
         cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
 
@@ -2406,7 +2405,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                image='FAKE_IMAGE')
 
         self.assertEqual("Failed in rescue server 'FAKE_ID': "
-                         "timeout.", six.text_type(ex))
+                         "timeout.", str(ex))
         cc.server_rescue.assert_called_once_with('FAKE_ID',
                                                  admin_pass='new_pass',
                                                  image_ref='FAKE_IMAGE')
@@ -2443,7 +2442,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                node_obj)
 
         self.assertEqual("Failed in unrescue server 'FAKE_ID': "
-                         "timeout.", six.text_type(ex))
+                         "timeout.", str(ex))
         cc.server_unrescue.assert_called_once_with('FAKE_ID')
         cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
 
@@ -2477,7 +2476,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                node_obj)
 
         self.assertEqual("Failed in migrate server 'FAKE_ID': "
-                         "timeout.", six.text_type(ex))
+                         "timeout.", str(ex))
         cc.server_migrate.assert_called_once_with('FAKE_ID')
         cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
 
@@ -2511,7 +2510,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
                                node_obj)
 
         self.assertEqual("Failed in snapshot server 'FAKE_ID': "
-                         "timeout.", six.text_type(ex))
+                         "timeout.", str(ex))
         cc.wait_for_server.assert_called_once_with('FAKE_ID', 'ACTIVE')
 
     def test_handle_restore(self):

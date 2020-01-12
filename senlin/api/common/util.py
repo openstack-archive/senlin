@@ -15,7 +15,6 @@ import functools
 
 import jsonschema
 from oslo_utils import strutils
-import six
 from webob import exc
 
 from senlin.common.i18n import _
@@ -57,12 +56,12 @@ def parse_request(name, req, body, key=None):
     try:
         req_cls = obj_base.SenlinObject.obj_class_from_name(name)
     except Exception as ex:
-        raise exc.HTTPBadRequest(six.text_type(ex))
+        raise exc.HTTPBadRequest(str(ex))
 
     try:
         primitive = req_cls.normalize_req(name, body, key)
     except ValueError as ex:
-        raise exc.HTTPBadRequest(six.text_type(ex))
+        raise exc.HTTPBadRequest(str(ex))
 
     version = req_cls.find_version(req.context)
     obj = None
@@ -70,9 +69,9 @@ def parse_request(name, req, body, key=None):
         obj = req_cls.obj_from_primitive(primitive)
         jsonschema.validate(primitive, obj.to_json_schema())
     except ValueError as ex:
-        raise exc.HTTPBadRequest(six.text_type(ex))
+        raise exc.HTTPBadRequest(str(ex))
     except jsonschema.exceptions.ValidationError as ex:
-        raise exc.HTTPBadRequest(six.text_type(ex.message))
+        raise exc.HTTPBadRequest(str(ex.message))
 
     # Do version coversion if necessary
     if obj is not None and version != req_cls.VERSION:

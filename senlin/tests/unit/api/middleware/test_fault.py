@@ -12,7 +12,6 @@
 
 import inspect
 import re
-import six
 import webob
 
 from oslo_config import cfg
@@ -118,7 +117,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
             serialized, ["senlin.common.exception"])
         wrapper = fault.FaultWrapper(None)
         msg = wrapper._error(remote_error)
-        expected_message = six.text_type(remote_error).split('\n', 1)[0]
+        expected_message = str(remote_error).split('\n', 1)[0]
         expected = {
             'code': 404,
             'error': {
@@ -233,7 +232,7 @@ class FaultMiddlewareTest(base.SenlinTestCase):
 
         wrapper = fault.FaultWrapper(None)
         msg = wrapper._error(remote_error)
-        expected_message = six.text_type(remote_error).split('\n', 1)[0]
+        expected_message = str(remote_error).split('\n', 1)[0]
         expected = {
             'code': 404,
             'error': {

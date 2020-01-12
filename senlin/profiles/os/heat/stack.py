@@ -11,7 +11,6 @@
 # under the License.
 
 from oslo_log import log as logging
-import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
@@ -136,7 +135,7 @@ class StackProfile(base.Profile):
         try:
             self.orchestration(obj).stack_create(**kwargs)
         except exc.InternalError as ex:
-            msg = _('Failed in validating template: %s') % six.text_type(ex)
+            msg = _('Failed in validating template: %s') % str(ex)
             raise exc.InvalidSpec(message=msg)
 
         return True
@@ -177,7 +176,7 @@ class StackProfile(base.Profile):
             return stack.id
         except exc.InternalError as ex:
             raise exc.EResourceCreation(type='stack',
-                                        message=six.text_type(ex))
+                                        message=str(ex))
 
     def do_delete(self, obj, **params):
         """Delete the physical stack behind the node object.
@@ -199,7 +198,7 @@ class StackProfile(base.Profile):
             self.orchestration(obj).wait_for_stack_delete(stack_id)
         except exc.InternalError as ex:
             raise exc.EResourceDeletion(type='stack', id=stack_id,
-                                        message=six.text_type(ex))
+                                        message=str(ex))
         return True
 
     def do_update(self, obj, new_profile, **params):
@@ -257,7 +256,7 @@ class StackProfile(base.Profile):
                               timeout=timeout)
         except exc.InternalError as ex:
             raise exc.EResourceUpdate(type='stack', id=self.stack_id,
-                                      message=six.text_type(ex))
+                                      message=str(ex))
 
         return True
 
@@ -283,7 +282,7 @@ class StackProfile(base.Profile):
         except exc.InternalError as ex:
             raise exc.EResourceOperation(op='checking', type='stack',
                                          id=stack_id,
-                                         message=six.text_type(ex))
+                                         message=str(ex))
 
         return True
 
@@ -298,7 +297,7 @@ class StackProfile(base.Profile):
             return {
                 'Error': {
                     'code': ex.code,
-                    'message': six.text_type(ex)
+                    'message': str(ex)
                 }
             }
 
@@ -329,7 +328,7 @@ class StackProfile(base.Profile):
             env = driver.stack_get_environment(obj.physical_id)
             files = driver.stack_get_files(obj.physical_id)
         except exc.InternalError as ex:
-            return {'Error': {'code': ex.code, 'message': six.text_type(ex)}}
+            return {'Error': {'code': ex.code, 'message': str(ex)}}
 
         spec = {
             self.ENVIRONMENT: env.to_dict(),

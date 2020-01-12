@@ -32,7 +32,6 @@ from oslo_log import log as logging
 from oslo_utils import importutils
 from paste import deploy
 from routes import middleware
-import six
 import webob
 from webob import dec as webob_dec
 from webob import exc
@@ -687,8 +686,7 @@ class ControllerMetaclass(type):
                                                        cls_dict)
 
 
-@six.add_metaclass(ControllerMetaclass)
-class Controller(object):
+class Controller(object, metaclass=ControllerMetaclass):
     """Generic WSGI controller for resources."""
 
     def __init__(self, options):
@@ -787,7 +785,7 @@ def translate_exception(ex, locale):
     if isinstance(ex, exception.SenlinException):
         ex.message = oslo_i18n.translate(ex.message, locale)
     else:
-        ex.message = oslo_i18n.translate(six.text_type(ex), locale)
+        ex.message = oslo_i18n.translate(str(ex), locale)
 
     if isinstance(ex, exc.HTTPError):
         ex.explanation = oslo_i18n.translate(ex.explanation, locale)
@@ -795,8 +793,7 @@ def translate_exception(ex, locale):
     return ex
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BasePasteFactory(object):
+class BasePasteFactory(object, metaclass=abc.ABCMeta):
     """A base class for paste app and filter factories.
 
     Sub-classes must override the KEY class attribute and provide

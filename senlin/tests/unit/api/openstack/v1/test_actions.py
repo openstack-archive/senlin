@@ -12,7 +12,6 @@
 
 import copy
 import mock
-import six
 from webob import exc
 
 from oslo_serialization import jsonutils
@@ -236,7 +235,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.index,
                                req)
 
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
         mock_parse.assert_called_once_with(
             'ActionListRequest', req, mock.ANY)
         self.assertFalse(mock_call.called)
@@ -253,7 +252,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
-        self.assertEqual("bad limit", six.text_type(ex))
+        self.assertEqual("bad limit", str(ex))
         mock_parse.assert_called_once_with(
             'ActionListRequest', req, mock.ANY)
         self.assertFalse(mock_call.called)
@@ -313,7 +312,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.index, req)
 
         self.assertEqual("Invalid value 'No' specified for 'global_project'",
-                         six.text_type(ex))
+                         str(ex))
         self.assertFalse(mock_call.called)
         self.assertFalse(mock_parse.called)
 
@@ -325,7 +324,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               self.controller.index,
                                               req)
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -401,7 +400,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, action_id=action_id)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -480,7 +479,7 @@ class ActionControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                action_id=aid, body=body)
 
         self.assertEqual("Malformed request data, missing 'action' key "
-                         "in request body.", six.text_type(ex))
+                         "in request body.", str(ex))
 
         self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)

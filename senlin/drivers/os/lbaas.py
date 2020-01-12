@@ -11,7 +11,6 @@
 # under the License.
 
 import eventlet
-import six
 
 from oslo_context import context as oslo_context
 from oslo_log import log as logging
@@ -117,7 +116,7 @@ class LoadBalancerDriver(base.DriverBase):
                                                vip['admin_state_up'])
         except exception.InternalError as ex:
             msg = ('Failed in creating loadbalancer: %s.'
-                   % six.text_type(ex))
+                   % str(ex))
             LOG.exception(msg)
             return False, msg
         result['loadbalancer'] = lb.id
@@ -138,7 +137,7 @@ class LoadBalancerDriver(base.DriverBase):
                                                          None),
                                                  vip['admin_state_up'])
         except exception.InternalError as ex:
-            msg = 'Failed in creating lb listener: %s.' % six.text_type(ex)
+            msg = 'Failed in creating lb listener: %s.' % str(ex)
             LOG.exception(msg)
             return False, msg
         result['listener'] = listener.id
@@ -155,7 +154,7 @@ class LoadBalancerDriver(base.DriverBase):
                                          pool['protocol'],
                                          pool['admin_state_up'])
         except exception.InternalError as ex:
-            msg = 'Failed in creating lb pool: %s.' % six.text_type(ex)
+            msg = 'Failed in creating lb pool: %s.' % str(ex)
             LOG.exception(msg)
             return False, msg
         result['pool'] = pool.id
@@ -177,7 +176,7 @@ class LoadBalancerDriver(base.DriverBase):
                 hm['url_path'], hm['expected_codes'])
         except exception.InternalError as ex:
             msg = ('Failed in creating lb health monitor: %s.'
-                   % six.text_type(ex))
+                   % str(ex))
             LOG.exception(msg)
             return False, msg
         result['healthmonitor'] = health_monitor.id
@@ -214,7 +213,7 @@ class LoadBalancerDriver(base.DriverBase):
                 self.oc().healthmonitor_delete(healthmonitor_id)
             except exception.InternalError as ex:
                 msg = ('Failed in deleting healthmonitor: %s.'
-                       % six.text_type(ex))
+                       % str(ex))
                 LOG.exception(msg)
                 return False, msg
             res = self._wait_for_lb_ready(lb_id)
@@ -229,7 +228,7 @@ class LoadBalancerDriver(base.DriverBase):
                 self.oc().pool_delete(pool_id)
             except exception.InternalError as ex:
                 msg = ('Failed in deleting lb pool: %s.'
-                       % six.text_type(ex))
+                       % str(ex))
                 LOG.exception(msg)
                 return False, msg
             res = self._wait_for_lb_ready(lb_id)
@@ -243,7 +242,7 @@ class LoadBalancerDriver(base.DriverBase):
                 self.oc().listener_delete(listener_id)
             except exception.InternalError as ex:
                 msg = ('Failed in deleting listener: %s.'
-                       % six.text_type(ex))
+                       % str(ex))
                 LOG.exception(msg)
                 return False, msg
             res = self._wait_for_lb_ready(lb_id)

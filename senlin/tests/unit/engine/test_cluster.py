@@ -12,7 +12,6 @@
 
 import mock
 from oslo_config import cfg
-import six
 
 from senlin.common import consts
 from senlin.common import exception
@@ -240,7 +239,7 @@ class TestCluster(base.SenlinTestCase):
                                cm.Cluster.load,
                                self.context, cluster_id=CLUSTER_ID)
         self.assertEqual("The cluster '%s' could not be found." % CLUSTER_ID,
-                         six.text_type(ex))
+                         str(ex))
         mock_get.assert_called_once_with(self.context, CLUSTER_ID,
                                          project_safe=True)
 

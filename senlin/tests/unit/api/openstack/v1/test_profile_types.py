@@ -11,7 +11,6 @@
 # under the License.
 
 import mock
-import six
 from webob import exc
 
 from senlin.api.common import util
@@ -114,7 +113,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -215,7 +214,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.get,
                                req, type_name=type_name)
 
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
         mock_parse.assert_called_once_with(
             'ProfileTypeGetRequest', req, {'type_name': type_name})
         mock_call.assert_not_called()
@@ -252,7 +251,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               self.controller.get,
                                               req, type_name=type_name)
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -294,7 +293,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.ops,
                                req, type_name=type_name)
 
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
         mock_parse.assert_called_once_with(
             'ProfileTypeOpListRequest', req, {'type_name': type_name})
         mock_call.assert_not_called()
@@ -335,7 +334,7 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         self.assertEqual(0, mock_call.call_count)
         self.assertEqual("API version '1.1' is not supported on this method.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_profile_type_ops_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'ops', False)
@@ -347,4 +346,4 @@ class ProfileTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               self.controller.ops,
                                               req, type_name=type_name)
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))

@@ -12,7 +12,6 @@
 
 import glob
 import os.path
-import six
 from stevedore import extension
 
 from oslo_config import cfg
@@ -107,7 +106,7 @@ class Environment(object):
         if name is None or name == "":
             msg = _('%s type name not specified') % plugin_type
             raise exception.InvalidPlugin(message=msg)
-        elif not isinstance(name, six.string_types):
+        elif not isinstance(name, str):
             msg = _('%s type name is not a string') % plugin_type
             raise exception.InvalidPlugin(message=msg)
 
@@ -186,10 +185,10 @@ class Environment(object):
                     self.load(self.parse(f.read()))
             except ValueError as vex:
                 LOG.error('Failed to parse %s', fname)
-                LOG.exception(six.text_type(vex))
+                LOG.exception(str(vex))
             except IOError as ioex:
                 LOG.error('Failed to read %s', fname)
-                LOG.exception(six.text_type(ioex))
+                LOG.exception(str(ioex))
 
 
 def _get_mapping(namespace):

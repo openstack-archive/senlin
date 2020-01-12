@@ -11,7 +11,6 @@
 # under the License.
 
 import mock
-import six
 
 from senlin.api.middleware import trust
 from senlin.common import context
@@ -199,7 +198,7 @@ class TestTrustMiddleware(base.SenlinTestCase):
                                self.middleware._get_trust,
                                self.req)
 
-        self.assertEqual('Boom', six.text_type(ex))
+        self.assertEqual('Boom', str(ex))
         mock_rpc.assert_called_once_with()
         x_rpc.call.assert_called_once_with(self.context, 'credential_get',
                                            mock.ANY)

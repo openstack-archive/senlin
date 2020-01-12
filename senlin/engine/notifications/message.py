@@ -13,7 +13,6 @@
 from oslo_config import cfg
 from oslo_context import context as oslo_context
 from oslo_log import log as logging
-import six
 import tenacity
 
 from senlin.common import context as senlin_context
@@ -103,4 +102,4 @@ class Message(object):
         except exception.InternalError as ex:
             raise exception.EResourceCreation(
                 type='queue',
-                message=six.text_type(ex))
+                message=str(ex))

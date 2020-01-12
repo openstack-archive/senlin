@@ -11,7 +11,6 @@
 # under the License.
 
 import mock
-import six
 from webob import exc
 
 from oslo_serialization import jsonutils
@@ -118,7 +117,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
-        self.assertEqual("Invalid parameter balrog", six.text_type(ex))
+        self.assertEqual("Invalid parameter balrog", str(ex))
         self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
@@ -134,7 +133,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.index, req)
 
         self.assertEqual("Invalid value 'No' specified for 'global_project'",
-                         six.text_type(ex))
+                         str(ex))
         self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
@@ -151,7 +150,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.index, req)
 
-        self.assertEqual("bad limit", six.text_type(ex))
+        self.assertEqual("bad limit", str(ex))
         mock_parse.assert_called_once_with(
             'ProfileListRequest', req, mock.ANY)
         self.assertFalse(mock_call.called)
@@ -164,7 +163,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               self.controller.index,
                                               req)
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -228,7 +227,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("bad body", six.text_type(ex))
+        self.assertEqual("bad body", str(ex))
         mock_parse.assert_called_once_with(
             'ProfileCreateRequest', mock.ANY, body, 'profile')
         self.assertFalse(mock_call.called)
@@ -246,7 +245,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.create,
                                req, body=body)
 
-        self.assertEqual("miss spec", six.text_type(ex))
+        self.assertEqual("miss spec", str(ex))
         mock_parse.assert_called_once_with(
             'ProfileCreateRequest', mock.ANY, body, 'profile')
         self.assertFalse(mock_call.called)
@@ -340,7 +339,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               self.controller.create,
                                               req)
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -409,7 +408,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, profile_id=pid)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -466,7 +465,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                req, profile_id=pid, body=body)
 
         self.assertEqual("Malformed request data, missing 'profile' key "
-                         "in request body.", six.text_type(ex))
+                         "in request body.", str(ex))
         self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
 
@@ -516,7 +515,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.update,
                                req, profile_id=pid, body=body)
 
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
         mock_parse.assert_called_once_with(
             'ProfileUpdateRequest', req, mock.ANY)
         self.assertFalse(mock_call.called)
@@ -562,7 +561,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               body=body)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -636,7 +635,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, profile_id=pid)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -655,7 +654,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         self.assertFalse(mock_parse.called)
         self.assertFalse(mock_call.called)
         self.assertEqual("API version '1.1' is not supported on this "
-                         "method.", six.text_type(ex))
+                         "method.", str(ex))
 
     def test_profile_validate_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate', False)
@@ -683,7 +682,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                               req, body=body)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(util, 'parse_request')
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -698,7 +697,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.validate,
                                req, body=body)
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
 
         mock_parse.assert_called_once_with(
             'ProfileValidateRequest', req, body, 'profile')
@@ -719,7 +718,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.controller.validate,
                                req, body=body)
-        self.assertEqual("miss spec", six.text_type(ex))
+        self.assertEqual("miss spec", str(ex))
         mock_parse.assert_called_once_with(
             'ProfileValidateRequest', req, body, 'profile')
         self.assertFalse(mock_call.called)
@@ -743,7 +742,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
                                self.controller.validate,
                                req, body=body)
 
-        self.assertEqual("bad param", six.text_type(ex))
+        self.assertEqual("bad param", str(ex))
         mock_parse.assert_called_once_with(
             'ProfileValidateRequest', req, body, 'profile')
         self.assertFalse(mock_call.called)

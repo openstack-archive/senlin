@@ -12,7 +12,6 @@
 
 import mock
 from oslo_utils import uuidutils
-import six
 import testtools
 
 from senlin.common import exception as exc
@@ -69,5 +68,5 @@ class TestEvent(testtools.TestCase):
                                eo.Event.find,
                                self.ctx, 'BOGUS')
         self.assertEqual("The event 'BOGUS' could not be found.",
-                         six.text_type(ex))
+                         str(ex))
         mock_shortid.assert_called_once_with(self.ctx, 'BOGUS')

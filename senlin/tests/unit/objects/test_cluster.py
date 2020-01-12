@@ -15,8 +15,6 @@ from oslo_config import cfg
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
 
-import six
-
 from senlin.common import exception as exc
 from senlin.objects import cluster as co
 from senlin.objects import cluster_policy as cpo
@@ -151,7 +149,7 @@ class TestCluster(base.SenlinTestCase):
             'max_size': -1,
             'desired_capacity': 1,
             'timeout': cfg.CONF.default_action_timeout,
-            'status': six.text_type('INIT'),
+            'status': str('INIT'),
             'status_reason': None,
             'metadata': {},
             'data': {},
@@ -159,7 +157,7 @@ class TestCluster(base.SenlinTestCase):
             'config': {},
             'nodes': [mock.ANY, mock.ANY],
             'policies': [mock.ANY, mock.ANY],
-            'profile_name': six.text_type('test-profile'),
+            'profile_name': str('test-profile'),
         }
         cluster_dict = cluster.to_dict()
 

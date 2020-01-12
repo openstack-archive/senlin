@@ -11,7 +11,6 @@
 # under the License.
 
 import copy
-import six
 
 from senlin.objects.requests import cluster_policies as cp
 from senlin.tests.unit.common import base as test_base
@@ -44,7 +43,7 @@ class TestClusterPolicyList(test_base.SenlinTestCase):
                                **data)
         self.assertEqual("Unrecognized value 'bad', acceptable values are: "
                          "'0', '1', 'f', 'false', 'n', 'no', 'off', 'on', "
-                         "'t', 'true', 'y', 'yes'", six.text_type(ex))
+                         "'t', 'true', 'y', 'yes'", str(ex))
 
     def test_cluster_policy_list_primitive(self):
         data = self.params
@@ -96,4 +95,4 @@ class TestClusterPolicyGet(test_base.SenlinTestCase):
         ex = self.assertRaises(ValueError, cp.ClusterPolicyGetRequest,
                                identity='cid', policy_id=['bad'])
         self.assertEqual("A string is required in field policy_id, not a list",
-                         six.text_type(ex))
+                         str(ex))

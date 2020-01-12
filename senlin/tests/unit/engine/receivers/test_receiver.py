@@ -14,7 +14,6 @@ import mock
 from oslo_config import cfg
 from oslo_context import context as oslo_ctx
 from oslo_utils import timeutils
-import six
 
 from senlin.common import context
 from senlin.common import exception
@@ -223,7 +222,7 @@ class TestReceiver(base.SenlinTestCase):
                                rb.Receiver.load,
                                self.context, 'fake-receiver', None)
         self.assertEqual("The receiver 'fake-receiver' could not "
-                         "be found.", six.text_type(ex))
+                         "be found.", str(ex))
 
     def test_receiver_load_diff_project(self):
         receiver = self._create_receiver('receiver-1', UUID1)
@@ -233,7 +232,7 @@ class TestReceiver(base.SenlinTestCase):
                                rb.Receiver.load,
                                new_context, UUID1, None)
         self.assertEqual("The receiver '%s' could not be found." % UUID1,
-                         six.text_type(ex))
+                         str(ex))
 
         res = rb.Receiver.load(new_context, receiver.id, project_safe=False)
         self.assertIsNotNone(res)
@@ -402,4 +401,4 @@ class TestReceiver(base.SenlinTestCase):
         ex = self.assertRaises(exception.TrustNotFound,
                                receiver._build_conn_params, user, project)
         msg = "The trust for trustor 'user1' could not be found."
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))

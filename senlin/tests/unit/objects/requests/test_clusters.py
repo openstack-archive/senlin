@@ -12,7 +12,6 @@
 import copy
 
 from oslo_config import cfg
-import six
 
 from senlin.common import consts
 from senlin.objects.requests import clusters
@@ -124,7 +123,7 @@ class TestClusterCreate(test_base.SenlinTestCase):
 
         self.assertEqual("The value for the min_size field must be greater "
                          "than or equal to 0.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_init_body_err_min_size_too_high(self):
         body = copy.deepcopy(self.body)
@@ -136,7 +135,7 @@ class TestClusterCreate(test_base.SenlinTestCase):
 
         self.assertEqual("The value for the min_size field must be less than "
                          "or equal to %s." % CONF.max_nodes_per_cluster,
-                         six.text_type(ex))
+                         str(ex))
 
     def test_init_body_err_max_size_too_low(self):
         body = copy.deepcopy(self.body)
@@ -148,7 +147,7 @@ class TestClusterCreate(test_base.SenlinTestCase):
 
         self.assertEqual("The value for the max_size field must be greater "
                          "than or equal to -1.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_init_body_err_max_size_too_high(self):
         body = copy.deepcopy(self.body)
@@ -160,7 +159,7 @@ class TestClusterCreate(test_base.SenlinTestCase):
 
         self.assertEqual("The value for the max_size field must be less than "
                          "or equal to %s." % CONF.max_nodes_per_cluster,
-                         six.text_type(ex))
+                         str(ex))
 
     def test_init_body_err_desired_too_low(self):
         body = copy.deepcopy(self.body)
@@ -172,7 +171,7 @@ class TestClusterCreate(test_base.SenlinTestCase):
 
         self.assertEqual("The value for the desired_capacity field must be "
                          "greater than or equal to 0.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_init_body_err_desired_too_high(self):
         body = copy.deepcopy(self.body)
@@ -185,7 +184,7 @@ class TestClusterCreate(test_base.SenlinTestCase):
         self.assertEqual(("The value for the desired_capacity field must be "
                           "less than or equal to %s." %
                           CONF.max_nodes_per_cluster),
-                         six.text_type(ex))
+                         str(ex))
 
     def test_init_body_err_timeout_negative(self):
         body = copy.deepcopy(self.body)
@@ -196,7 +195,7 @@ class TestClusterCreate(test_base.SenlinTestCase):
                                **body)
 
         self.assertEqual("Value must be >= 0 for field 'timeout'.",
-                         six.text_type(ex))
+                         str(ex))
 
 
 class TestClusterList(test_base.SenlinTestCase):
@@ -292,7 +291,7 @@ class TestClusterAddNodes(test_base.SenlinTestCase):
                                clusters.ClusterAddNodesRequest,
                                identity='foo', nodes=[])
         self.assertEqual("Value for 'nodes' must have at least 1 item(s).",
-                         six.text_type(ex))
+                         str(ex))
 
 
 class TestClusterDelNodes(test_base.SenlinTestCase):
@@ -318,7 +317,7 @@ class TestClusterDelNodes(test_base.SenlinTestCase):
                                clusters.ClusterDelNodesRequest,
                                identity='foo', nodes=[])
         self.assertEqual("Value for 'nodes' must have at least 1 item(s).",
-                         six.text_type(ex))
+                         str(ex))
 
 
 class TestClusterResize(test_base.SenlinTestCase):
@@ -357,13 +356,13 @@ class TestClusterResize(test_base.SenlinTestCase):
                                identity='foo', adjustment_type='BOGUS')
         self.assertEqual("Value 'BOGUS' is not acceptable for field "
                          "'adjustment_type'.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_init_failed_number(self):
         ex = self.assertRaises(ValueError,
                                clusters.ClusterResizeRequest,
                                identity='foo', number='foo')
-        self.assertIn("could not convert string to float", six.text_type(ex))
+        self.assertIn("could not convert string to float", str(ex))
 
     def test_init_failed_min_size(self):
         ex = self.assertRaises(ValueError,
@@ -371,7 +370,7 @@ class TestClusterResize(test_base.SenlinTestCase):
                                identity='foo', min_size=-1)
         self.assertEqual("The value for the min_size field must be greater "
                          "than or equal to 0.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_init_failed_max_size(self):
         ex = self.assertRaises(ValueError,
@@ -379,20 +378,20 @@ class TestClusterResize(test_base.SenlinTestCase):
                                identity='foo', max_size=-2)
         self.assertEqual("The value for the max_size field must be greater "
                          "than or equal to -1.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_init_failed_min_step(self):
         ex = self.assertRaises(ValueError,
                                clusters.ClusterResizeRequest,
                                identity='foo', min_step=-3)
         self.assertEqual("Value must be >= 0 for field 'min_step'.",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_init_failed_strict(self):
         ex = self.assertRaises(ValueError,
                                clusters.ClusterResizeRequest,
                                identity='foo', strict='fake')
-        self.assertIn("Unrecognized value 'fake'", six.text_type(ex))
+        self.assertIn("Unrecognized value 'fake'", str(ex))
 
 
 class TestClusterScaleIn(test_base.SenlinTestCase):
@@ -408,7 +407,7 @@ class TestClusterScaleIn(test_base.SenlinTestCase):
                                clusters.ClusterScaleInRequest,
                                identity='foo', count=-1)
         self.assertEqual("Value must be >= 0 for field 'count'.",
-                         six.text_type(ex))
+                         str(ex))
 
 
 class TestClusterScaleOut(test_base.SenlinTestCase):
@@ -424,7 +423,7 @@ class TestClusterScaleOut(test_base.SenlinTestCase):
                                clusters.ClusterScaleOutRequest,
                                identity='foo', count=-1)
         self.assertEqual("Value must be >= 0 for field 'count'.",
-                         six.text_type(ex))
+                         str(ex))
 
 
 class TestClusterAttachPolicy(test_base.SenlinTestCase):
@@ -446,7 +445,7 @@ class TestClusterAttachPolicy(test_base.SenlinTestCase):
                                clusters.ClusterAttachPolicyRequest,
                                identity='foo', enabled='Bogus')
 
-        self.assertIn("Unrecognized value 'Bogus'", six.text_type(ex))
+        self.assertIn("Unrecognized value 'Bogus'", str(ex))
 
 
 class TestClusterUpdatePolicy(test_base.SenlinTestCase):
@@ -468,7 +467,7 @@ class TestClusterUpdatePolicy(test_base.SenlinTestCase):
                                clusters.ClusterUpdatePolicyRequest,
                                identity='foo', enabled='Bogus')
 
-        self.assertIn("Unrecognized value 'Bogus'", six.text_type(ex))
+        self.assertIn("Unrecognized value 'Bogus'", str(ex))
 
 
 class TestClusterDetachPolicy(test_base.SenlinTestCase):
@@ -524,7 +523,7 @@ class TestClusterReplaceNodes(test_base.SenlinTestCase):
                                nodes={'old1': None, 'old2': 'new2'})
 
         self.assertEqual("Field `nodes[old1]' cannot be None",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_init_duplicated_nodes(self):
         ex = self.assertRaises(ValueError,
@@ -533,7 +532,7 @@ class TestClusterReplaceNodes(test_base.SenlinTestCase):
                                nodes={'old1': 'new2', 'old2': 'new2'})
 
         self.assertEqual("Map contains duplicated values",
-                         six.text_type(ex))
+                         str(ex))
 
 
 class TestClusterCollect(test_base.SenlinTestCase):

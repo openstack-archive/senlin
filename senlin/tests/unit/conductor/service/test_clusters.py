@@ -14,7 +14,6 @@ import mock
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
 from oslo_utils import uuidutils
-import six
 
 from senlin.common import consts
 from senlin.common import exception as exc
@@ -63,7 +62,7 @@ class ClusterTest(base.SenlinTestCase):
         ex = self.assertRaises(exc.OverQuota,
                                self.svc.check_cluster_quota, self.ctx)
         self.assertEqual("Quota exceeded for resources.",
-                         six.text_type(ex))
+                         str(ex))
 
     def _prepare_request(self, req):
         mock_cls = self.patchobject(obj_base.SenlinObject,
@@ -213,7 +212,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.OverQuota, ex.exc_info[0])
         self.assertEqual("Quota exceeded for resources.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_quota.assert_called_once_with(self.ctx)
 
     @mock.patch.object(service.ConductorService, 'check_cluster_quota')
@@ -231,7 +230,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual(_("a cluster named 'CLUSTER' already exists."),
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_get.assert_called_once_with(self.ctx, 'CLUSTER')
 
     @mock.patch.object(service.ConductorService, 'check_cluster_quota')
@@ -248,7 +247,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The specified profile 'Bogus' could not "
-                         "be found.", six.text_type(ex.exc_info[1]))
+                         "be found.", str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(service.ConductorService, 'check_cluster_quota')
@@ -267,7 +266,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req)
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("INVALID.", six.text_type(ex.exc_info[1]))
+        self.assertEqual("INVALID.", str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'PROFILE')
 
     @mock.patch.object(co.Cluster, 'find')
@@ -370,7 +369,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.FeatureNotSupported, ex.exc_info[0])
         self.assertEqual('Updating a cluster in error state is not supported.',
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
 
     @mock.patch.object(po.Profile, 'find')
@@ -390,7 +389,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The specified profile 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_profile.assert_has_calls([
             mock.call(self.ctx, 'OLD_ID'),
@@ -571,7 +570,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual('', six.text_type(ex))
+        self.assertEqual('', str(ex))
 
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_update_no_property_updated(self, mock_find):
@@ -584,7 +583,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual('', six.text_type(ex))
+        self.assertEqual('', str(ex))
 
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_add_nodes_cluster_not_found(self, mock_find):
@@ -599,7 +598,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(su, 'check_size_params')
@@ -661,7 +660,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Nodes not found: ['NODE1'].",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_profile.assert_called_once_with(self.ctx, 'FAKE_ID',
                                              project_safe=True)
@@ -685,7 +684,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Nodes are not ACTIVE: ['NODE2'].",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         self.assertEqual(2, mock_profile.call_count)
@@ -710,7 +709,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Nodes ['NODE3'] already owned by some cluster.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         self.assertEqual(2, mock_profile.call_count)
@@ -739,7 +738,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Profile type of nodes ['NODE4'] does not "
                          "match that of the cluster.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_profile.assert_has_calls([
             mock.call(self.ctx, 'FAKE_ID', project_safe=True),
@@ -765,8 +764,8 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         msg1 = _("Nodes ['NODE2'] already owned by some cluster.")
         msg2 = _("Nodes are not ACTIVE: ['NODE2'].")
-        self.assertIn(msg1, six.text_type(ex.exc_info[1]))
-        self.assertIn(msg2, six.text_type(ex.exc_info[1]))
+        self.assertIn(msg1, str(ex.exc_info[1]))
+        self.assertIn(msg2, str(ex.exc_info[1]))
 
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         self.assertEqual(2, mock_profile.call_count)
@@ -797,7 +796,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Failed size checking.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
         mock_find.assert_called_once_with(self.ctx, 'C1')
         mock_profile.assert_has_calls([
@@ -857,7 +856,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(no.Node, 'find')
@@ -873,7 +872,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertIn("Nodes not found",
-                      six.text_type(ex.exc_info[1]))
+                      str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_node.assert_called_once_with(self.ctx, 'NODE1')
 
@@ -892,7 +891,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
         message = _("nodes ['NODE1'] are depended by other nodes, so can't be "
                     "deleted or become orphan nodes")
-        self.assertIn(message, six.text_type(ex.exc_info[1]))
+        self.assertIn(message, str(ex.exc_info[1]))
 
     @mock.patch.object(no.Node, 'find')
     @mock.patch.object(co.Cluster, 'find')
@@ -908,7 +907,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Nodes not members of specified cluster: ['NODE2'].",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_node.assert_called_once_with(self.ctx, 'NODE2')
 
@@ -928,8 +927,8 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         msg1 = _("Nodes not found:")
         msg2 = _("Nodes not members of specified cluster: ['NODE1'].")
-        self.assertIn(msg1, six.text_type(ex.exc_info[1]))
-        self.assertIn(msg2, six.text_type(ex.exc_info[1]))
+        self.assertIn(msg1, str(ex.exc_info[1]))
+        self.assertIn(msg2, str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         self.assertEqual(2, mock_node.call_count)
 
@@ -946,7 +945,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Nodes not members of specified cluster: ['NODE3'].",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_node.assert_called_once_with(self.ctx, 'NODE3')
@@ -969,7 +968,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Failed size checking.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_node.assert_called_once_with(self.ctx, 'NODE3')
@@ -1121,7 +1120,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Missing number value for size adjustment.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     def test_cluster_resize_number_without_type(self):
         req = orco.ClusterResizeRequest(
@@ -1135,7 +1134,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Missing adjustment_type "
                          "value for size adjustment.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     def test_cluster_resize_bad_number_for_exact_capacity(self):
         req = orco.ClusterResizeRequest(
@@ -1151,7 +1150,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("The 'number' must be non-negative integer for "
                          "adjustment type 'EXACT_CAPACITY'.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_resize_cluster_not_found(self, mock_find):
@@ -1170,7 +1169,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster 'CLUSTER' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
 
     @mock.patch.object(su, 'check_size_params')
@@ -1197,7 +1196,7 @@ class ClusterTest(base.SenlinTestCase):
         mock_check.assert_called_once_with(x_cluster, 5, None, None, True)
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("size check.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     @mock.patch.object(dispatcher, 'start_action')
     @mock.patch.object(am.Action, 'create')
@@ -1238,7 +1237,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(dispatcher, 'start_action')
@@ -1276,7 +1275,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Count for scale-out request cannot be 0.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(co.Cluster, 'find')
@@ -1292,7 +1291,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("size limit.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_check.assert_called_once_with(x_cluster, 6)
 
@@ -1335,7 +1334,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(dispatcher, 'start_action')
@@ -1372,7 +1371,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Count for scale-in request cannot be 0.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     @mock.patch.object(su, 'check_size_params')
     @mock.patch.object(co.Cluster, 'find')
@@ -1388,7 +1387,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("size limit.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'FAKE_CLUSTER')
         mock_check.assert_called_once_with(x_cluster, 2)
 
@@ -1506,7 +1505,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'C1')
 
     @mock.patch.object(am.Action, 'create')
@@ -1616,7 +1615,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(co.Cluster, 'find')
@@ -1633,7 +1632,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Action parameter ['bad'] is not recognizable.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(co.Cluster, 'find')
@@ -1651,7 +1650,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Operation value 'fake' has to be one of the "
                          "following: REBOOT, REBUILD, RECREATE.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(co.Cluster, 'find')
@@ -1673,7 +1672,7 @@ class ClusterTest(base.SenlinTestCase):
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
         self.assertEqual("Type field 'blah' in operation_params has to be one "
                          "of the following: SOFT, HARD.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'Bogus')
 
     @mock.patch.object(am.Action, 'create')
@@ -1738,7 +1737,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.svc._validate_replace_nodes,
                                self.ctx, c, {'OLD': 'NEW'})
 
-        self.assertIn("Original nodes not found: ['OLD']", six.text_type(ex))
+        self.assertIn("Original nodes not found: ['OLD']", str(ex))
         mock_node.assert_called_once_with(self.ctx, 'OLD')
 
     @mock.patch.object(no.Node, 'find')
@@ -1757,7 +1756,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, c, {'OLD': 'NEW'})
 
         self.assertIn("Replacement nodes not found: ['NEW']",
-                      six.text_type(ex))
+                      str(ex))
         mock_node.assert_has_calls([
             mock.call(self.ctx, 'OLD'),
             mock.call(self.ctx, 'NEW')
@@ -1779,7 +1778,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, c, {'OLD': 'NEW'})
 
         self.assertIn("The specified nodes ['OLD'] to be replaced are not "
-                      "members of the cluster CID.", six.text_type(ex))
+                      "members of the cluster CID.", str(ex))
         mock_node.assert_has_calls([
             mock.call(self.ctx, 'OLD'),
             mock.call(self.ctx, 'NEW')
@@ -1801,7 +1800,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, c, {'OLD': 'NEW'})
 
         self.assertIn("Nodes ['NEW'] already member of a cluster.",
-                      six.text_type(ex))
+                      str(ex))
         mock_node.assert_has_calls([
             mock.call(self.ctx, 'OLD'),
             mock.call(self.ctx, 'NEW')
@@ -1822,7 +1821,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.svc._validate_replace_nodes,
                                self.ctx, c, {'OLD': 'NEW'})
 
-        self.assertIn("Nodes are not ACTIVE: ['NEW'].", six.text_type(ex))
+        self.assertIn("Nodes are not ACTIVE: ['NEW'].", str(ex))
         mock_node.assert_has_calls([
             mock.call(self.ctx, 'OLD'),
             mock.call(self.ctx, 'NEW')
@@ -1845,8 +1844,8 @@ class ClusterTest(base.SenlinTestCase):
 
         msg1 = _("Nodes ['NEW1'] already member of a cluster.")
         msg2 = _("Nodes are not ACTIVE: ['NEW1'].")
-        self.assertIn(msg1, six.text_type(ex))
-        self.assertIn(msg2, six.text_type(ex))
+        self.assertIn(msg1, str(ex))
+        self.assertIn(msg2, str(ex))
         mock_node.assert_has_calls([
             mock.call(self.ctx, 'OLD1'),
             mock.call(self.ctx, 'NEW1'),
@@ -1873,7 +1872,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, c, {'OLD': 'NEW'})
 
         self.assertIn("Profile type of nodes ['NEW'] do not match that of "
-                      "the cluster.", six.text_type(ex))
+                      "the cluster.", str(ex))
         mock_node.assert_has_calls([
             mock.call(self.ctx, 'OLD'),
             mock.call(self.ctx, 'NEW')
@@ -1935,7 +1934,7 @@ class ClusterTest(base.SenlinTestCase):
                                self.ctx, req.obj_to_primitive())
 
         self.assertEqual(exc.BadRequest, ex.exc_info[0])
-        self.assertEqual("failed.", six.text_type(ex.exc_info[1]))
+        self.assertEqual("failed.", str(ex.exc_info[1]))
         mock_find.assert_called_once_with(self.ctx, 'CLUSTER')
         mock_chk.assert_called_once_with(self.ctx, cluster, nodes)
 
@@ -2106,7 +2105,7 @@ class ClusterTest(base.SenlinTestCase):
         msg = _("The cluster 'FAKE_CLUSTER' cannot be deleted: still "
                 "referenced by profile(s): ['profile1'].")
         self.assertEqual(exc.ResourceInUse, ex.exc_info[0])
-        self.assertEqual(msg, six.text_type(ex.exc_info[1]))
+        self.assertEqual(msg, str(ex.exc_info[1]))
 
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_delete_not_found(self, mock_find):
@@ -2121,7 +2120,7 @@ class ClusterTest(base.SenlinTestCase):
 
         self.assertEqual(exc.ResourceNotFound, ex.exc_info[0])
         self.assertEqual("The cluster 'Bogus' could not be found.",
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     @mock.patch.object(co.Cluster, 'find')
     def test_cluster_delete_improper_status(self, mock_find):
@@ -2139,7 +2138,7 @@ class ClusterTest(base.SenlinTestCase):
             self.assertEqual(exc.ActionInProgress, ex.exc_info[0])
             self.assertEqual(
                 "The cluster 'BUSY' is in status %s." % bad_status,
-                six.text_type(ex.exc_info[1]))
+                str(ex.exc_info[1]))
 
     @mock.patch.object(am.Action, 'create')
     @mock.patch.object(ro.Receiver, 'get_all')

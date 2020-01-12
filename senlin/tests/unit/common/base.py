@@ -18,7 +18,6 @@ import fixtures
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
-import six
 import testscenarios
 import testtools
 
@@ -107,9 +106,9 @@ class SenlinTestCase(testscenarios.WithScenarios,
 
         This code is from Nova.
         """
-        if isinstance(expected, six.string_types):
+        if isinstance(expected, str):
             expected = jsonutils.loads(expected)
-        if isinstance(observed, six.string_types):
+        if isinstance(observed, str):
             observed = jsonutils.loads(observed)
 
         def sort_key(x):

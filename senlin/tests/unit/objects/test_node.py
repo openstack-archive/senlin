@@ -13,7 +13,6 @@
 import mock
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
-import six
 
 from senlin.common import exception as exc
 from senlin.common import utils as common_utils
@@ -88,7 +87,7 @@ class TestNode(base.SenlinTestCase):
                                no.Node.find,
                                self.ctx, 'BOGUS')
         self.assertEqual("The node 'BOGUS' could not be found.",
-                         six.text_type(ex))
+                         str(ex))
         mock_name.assert_called_once_with(self.ctx, 'BOGUS', project_safe=True)
         mock_shortid.assert_called_once_with(self.ctx, 'BOGUS',
                                              project_safe=True)
