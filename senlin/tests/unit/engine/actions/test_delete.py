@@ -535,8 +535,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
         mock_remove_normally.assert_called_once_with('NODE_DELETE',
                                                      ['NODE_ID'])
 
-    @mock.patch.object(ao.Action, 'delete_by_target')
-    def test_do_delete_success(self, mock_action, mock_load):
+    def test_do_delete_success(self, mock_load):
         node1 = mock.Mock(id='NODE_1')
         node2 = mock.Mock(id='NODE_2')
         cluster = mock.Mock(id='FAKE_CLUSTER', nodes=[node1, node2],
@@ -561,15 +560,10 @@ class ClusterDeleteTest(base.SenlinTestCase):
                                                    'Deletion in progress.')
         mock_delete.assert_called_once_with(['NODE_1', 'NODE_2'])
         cluster.do_delete.assert_called_once_with(action.context)
-        mock_action.assert_called_once_with(
-            action.context, 'FAKE_CLUSTER',
-            action_excluded=['CLUSTER_DELETE'],
-            status=['SUCCEEDED', 'FAILED'])
 
     @mock.patch.object(ro.Receiver, 'get_all')
     @mock.patch.object(cpo.ClusterPolicy, 'get_all')
-    @mock.patch.object(ao.Action, 'delete_by_target')
-    def test_do_delete_with_policies(self, mock_action, mock_policies,
+    def test_do_delete_with_policies(self, mock_policies,
                                      mock_receivers, mock_load):
         mock_policy1 = mock.Mock()
         mock_policy1.policy_id = 'POLICY_ID1'
@@ -606,10 +600,6 @@ class ClusterDeleteTest(base.SenlinTestCase):
                                                    'Deletion in progress.')
         mock_delete.assert_called_once_with(['NODE_1', 'NODE_2'])
         cluster.do_delete.assert_called_once_with(action.context)
-        mock_action.assert_called_once_with(
-            action.context, 'FAKE_CLUSTER',
-            action_excluded=['CLUSTER_DELETE'],
-            status=['SUCCEEDED', 'FAILED'])
         detach_calls = [mock.call(action.context, 'POLICY_ID1'),
                         mock.call(action.context, 'POLICY_ID2')]
         cluster.detach_policy.assert_has_calls(detach_calls)
@@ -617,8 +607,7 @@ class ClusterDeleteTest(base.SenlinTestCase):
     @mock.patch.object(ro.Receiver, 'delete')
     @mock.patch.object(ro.Receiver, 'get_all')
     @mock.patch.object(cpo.ClusterPolicy, 'get_all')
-    @mock.patch.object(ao.Action, 'delete_by_target')
-    def test_do_delete_with_receivers(self, mock_action, mock_policies,
+    def test_do_delete_with_receivers(self, mock_policies,
                                       mock_receivers, mock_rec_delete,
                                       mock_load):
         mock_receiver1 = mock.Mock()
@@ -656,10 +645,6 @@ class ClusterDeleteTest(base.SenlinTestCase):
                                                    'Deletion in progress.')
         mock_delete.assert_called_once_with(['NODE_1', 'NODE_2'])
         cluster.do_delete.assert_called_once_with(action.context)
-        mock_action.assert_called_once_with(
-            action.context, 'FAKE_CLUSTER',
-            action_excluded=['CLUSTER_DELETE'],
-            status=['SUCCEEDED', 'FAILED'])
 
         cluster.detach_policy.assert_not_called()
         rec_delete_calls = [mock.call(action.context, 'RECEIVER_ID1'),
