@@ -78,7 +78,8 @@ class DBAPINodeTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='a_different_project',
                                         is_admin=True)
         node = db_api.node_get(admin_ctx, res.id, project_safe=True)
-        self.assertIsNone(node)
+        self.assertIsNotNone(node)
+
         node = db_api.node_get(admin_ctx, res.id, project_safe=False)
         self.assertIsNotNone(node)
 
@@ -153,7 +154,8 @@ class DBAPINodeTest(base.SenlinTestCase):
                                         is_admin=True)
         res = db_api.node_get_by_short_id(admin_ctx, node_id[:11],
                                           project_safe=True)
-        self.assertIsNone(res)
+        self.assertIsNotNone(res)
+
         res = db_api.node_get_by_short_id(admin_ctx, node_id[:11],
                                           project_safe=False)
         self.assertIsNotNone(res)
@@ -368,7 +370,8 @@ class DBAPINodeTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='a_different_project',
                                         is_admin=True)
         results = db_api.node_get_all(admin_ctx, project_safe=True)
-        self.assertEqual(0, len(results))
+        self.assertEqual(2, len(results))
+
         results = db_api.node_get_all(admin_ctx, project_safe=False)
         self.assertEqual(2, len(results))
 
@@ -444,7 +447,8 @@ class DBAPINodeTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='a_different_project',
                                         is_admin=True)
         nodes = db_api.node_get_all_by_cluster(admin_ctx, self.cluster.id)
-        self.assertEqual(0, len(nodes))
+        self.assertEqual(2, len(nodes))
+
         nodes = db_api.node_get_all_by_cluster(admin_ctx, self.cluster.id,
                                                project_safe=False)
         self.assertEqual(2, len(nodes))
@@ -498,7 +502,8 @@ class DBAPINodeTest(base.SenlinTestCase):
                                         is_admin=True)
         res = db_api.node_count_by_cluster(admin_ctx, self.cluster.id,
                                            project_safe=True)
-        self.assertEqual(0, res)
+        self.assertEqual(2, res)
+
         res = db_api.node_count_by_cluster(admin_ctx, self.cluster.id,
                                            project_safe=False)
         self.assertEqual(2, res)

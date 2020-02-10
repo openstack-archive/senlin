@@ -57,7 +57,8 @@ class DBAPIProfileTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='a-different-project',
                                         is_admin=True)
         res = db_api.profile_get(admin_ctx, profile.id, project_safe=True)
-        self.assertIsNone(res)
+        self.assertIsNotNone(res)
+
         res = db_api.profile_get(admin_ctx, profile.id, project_safe=False)
         self.assertIsNotNone(res)
 
@@ -186,7 +187,8 @@ class DBAPIProfileTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='a-different-project',
                                         is_admin=True)
         profiles = db_api.profile_get_all(admin_ctx, project_safe=True)
-        self.assertEqual(0, len(profiles))
+        self.assertEqual(2, len(profiles))
+
         profiles = db_api.profile_get_all(admin_ctx, project_safe=False)
         self.assertEqual(2, len(profiles))
 

@@ -46,6 +46,49 @@ def exact_filter(query, model, filters):
     return query
 
 
+def filter_query_by_project(q, project_safe, context):
+    """Filters a query to the context's project
+
+    Returns the updated query,  Adds filter to limit project to the
+    context's project for non-admin users.  For admin users,
+    the query is returned unmodified.
+
+    :param query: query to apply filters to
+    :param project_safe: boolean indicating if project restriction filter
+                         should be applied
+    :param context: context of the query
+
+    """
+
+    if project_safe and not context.is_admin:
+        return q.filter_by(project=context.project_id)
+
+    return q
+
+
+def check_resource_project(context, resource, project_safe):
+    """Check if the resource's project matches the context's project
+
+    For non-admin users, if project_safe is set and the resource's project
+    does not match the context's project, none is returned.
+    Otherwise return the resource unmodified.
+
+    :param context: context of the call
+    :param resource: resource to check
+    :param project_safe: boolean indicating if project restriction should be
+                         checked.
+    """
+
+    if resource is None:
+        return resource
+
+    if project_safe and not context.is_admin:
+        if context.project_id != resource.project:
+            return None
+
+    return resource
+
+
 def get_sort_params(value, default_key=None):
     """Parse a string into a list of sort_keys and a list of sort_dirs.
 

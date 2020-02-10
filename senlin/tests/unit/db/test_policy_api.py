@@ -90,7 +90,8 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='a-different-project',
                                         is_admin=True)
         res = db_api.policy_get(admin_ctx, policy.id, project_safe=True)
-        self.assertIsNone(res)
+        self.assertIsNotNone(res)
+
         res = db_api.policy_get(admin_ctx, policy.id, project_safe=False)
         self.assertIsNotNone(res)
 
@@ -235,7 +236,8 @@ class DBAPIPolicyTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='a-different-project',
                                         is_admin=True)
         policies = db_api.policy_get_all(admin_ctx, project_safe=True)
-        self.assertEqual(0, len(policies))
+        self.assertEqual(2, len(policies))
+
         policies = db_api.policy_get_all(admin_ctx, project_safe=False)
         self.assertEqual(2, len(policies))
 

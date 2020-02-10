@@ -152,8 +152,10 @@ class DBAPIActionTest(base.SenlinTestCase):
         parser.simple_parse(shared.sample_action)
         action = _create_action(self.ctx)
         new_ctx = utils.dummy_context(project='another-project', is_admin=True)
+
         retobj = db_api.action_get(new_ctx, action.id, project_safe=True)
-        self.assertIsNone(retobj)
+        self.assertIsNotNone(retobj)
+
         retobj = db_api.action_get(new_ctx, action.id, project_safe=False)
         self.assertIsNotNone(retobj)
 

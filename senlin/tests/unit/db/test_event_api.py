@@ -102,7 +102,7 @@ class DBAPIEventTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='a-different-project',
                                         is_admin=True)
         res = db_api.event_get(admin_ctx, event.id, project_safe=True)
-        self.assertIsNone(res)
+        self.assertIsNotNone(res)
         res = db_api.event_get(admin_ctx, event.id, project_safe=False)
         self.assertIsNotNone(res)
 
@@ -274,7 +274,8 @@ class DBAPIEventTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='another-project',
                                         is_admin=True)
         events = db_api.event_get_all(admin_ctx, project_safe=True)
-        self.assertEqual(0, len(events))
+        self.assertEqual(3, len(events))
+
         events = db_api.event_get_all(admin_ctx, project_safe=False)
         self.assertEqual(3, len(events))
 
@@ -354,7 +355,7 @@ class DBAPIEventTest(base.SenlinTestCase):
                                         is_admin=True)
         events = db_api.event_get_all_by_cluster(admin_ctx, cluster1.id,
                                                  project_safe=True)
-        self.assertEqual(0, len(events))
+        self.assertEqual(2, len(events))
         events = db_api.event_get_all_by_cluster(admin_ctx, cluster1.id,
                                                  project_safe=False)
         self.assertEqual(2, len(events))
@@ -423,7 +424,8 @@ class DBAPIEventTest(base.SenlinTestCase):
 
         res = db_api.event_count_by_cluster(admin_ctx, cluster1.id,
                                             project_safe=True)
-        self.assertEqual(0, res)
+        self.assertEqual(1, res)
+
         res = db_api.event_count_by_cluster(admin_ctx, cluster1.id,
                                             project_safe=False)
         self.assertEqual(1, res)

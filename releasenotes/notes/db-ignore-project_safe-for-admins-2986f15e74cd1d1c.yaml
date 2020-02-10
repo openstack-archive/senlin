@@ -1,0 +1,11 @@
+---
+features:
+  - |
+    Admin role users can now access and modify all resources (clusters, nodes,
+    etc) regardless of which project that belong to.
+security:
+  - |
+    Removed the restriction for admin role users that prevented access/changes
+    to resources (clusters, nodes, etc) belonging to projects not matching the
+    project used for authentication.  Access for non-admin users is still
+    isolated to their project used for authentication.

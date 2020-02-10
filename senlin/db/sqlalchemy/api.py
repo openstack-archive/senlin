@@ -90,9 +90,7 @@ def query_by_short_id(context, model_query, model, short_id,
                       project_safe=True):
     q = model_query()
     q = q.filter(model.id.like('%s%%' % short_id))
-
-    if project_safe:
-        q = q.filter_by(project=context.project_id)
+    q = utils.filter_query_by_project(q, project_safe, context)
 
     if q.count() == 1:
         return q.first()
@@ -105,9 +103,7 @@ def query_by_short_id(context, model_query, model, short_id,
 def query_by_name(context, model_query, name, project_safe=True):
     q = model_query()
     q = q.filter_by(name=name)
-
-    if project_safe:
-        q = q.filter_by(project=context.project_id)
+    q = utils.filter_query_by_project(q, project_safe, context)
 
     if q.count() == 1:
         return q.first()
@@ -143,10 +139,7 @@ def cluster_get(context, cluster_id, project_safe=True):
     if cluster is None:
         return None
 
-    if project_safe:
-        if context.project_id != cluster.project:
-            return None
-    return cluster
+    return utils.check_resource_project(context, cluster, project_safe)
 
 
 def cluster_get_by_name(context, name, project_safe=True):
@@ -161,9 +154,8 @@ def cluster_get_by_short_id(context, short_id, project_safe=True):
 
 def _query_cluster_get_all(context, project_safe=True):
     query = cluster_model_query()
+    query = utils.filter_query_by_project(query, project_safe, context)
 
-    if project_safe:
-        query = query.filter_by(project=context.project_id)
     return query
 
 
@@ -260,11 +252,7 @@ def node_get(context, node_id, project_safe=True):
     if not node:
         return None
 
-    if project_safe:
-        if context.project_id != node.project:
-            return None
-
-    return node
+    return utils.check_resource_project(context, node, project_safe)
 
 
 def node_get_by_name(context, name, project_safe=True):
@@ -283,8 +271,7 @@ def _query_node_get_all(context, project_safe=True, cluster_id=None):
     if cluster_id is not None:
         query = query.filter_by(cluster_id=cluster_id)
 
-    if project_safe:
-        query = query.filter_by(project=context.project_id)
+    query = utils.filter_query_by_project(query, project_safe, context)
 
     return query
 
@@ -330,8 +317,7 @@ def node_count_by_cluster(context, cluster_id, **kwargs):
     query = node_model_query()
     query = query.filter_by(cluster_id=cluster_id)
     query = query.filter_by(**kwargs)
-    if project_safe:
-        query = query.filter_by(project=context.project_id)
+    query = utils.filter_query_by_project(query, project_safe, context)
 
     return query.count()
 
@@ -612,11 +598,7 @@ def policy_get(context, policy_id, project_safe=True):
     if policy is None:
         return None
 
-    if project_safe:
-        if context.project_id != policy.project:
-            return None
-
-    return policy
+    return utils.check_resource_project(context, policy, project_safe)
 
 
 def policy_get_by_name(context, name, project_safe=True):
@@ -632,9 +614,7 @@ def policy_get_by_short_id(context, short_id, project_safe=True):
 def policy_get_all(context, limit=None, marker=None, sort=None, filters=None,
                    project_safe=True):
     query = policy_model_query()
-
-    if project_safe:
-        query = query.filter_by(project=context.project_id)
+    query = utils.filter_query_by_project(query, project_safe, context)
 
     if filters:
         query = utils.exact_filter(query, models.Policy, filters)
@@ -861,11 +841,7 @@ def profile_get(context, profile_id, project_safe=True):
     if profile is None:
         return None
 
-    if project_safe:
-        if context.project_id != profile.project:
-            return None
-
-    return profile
+    return utils.check_resource_project(context, profile, project_safe)
 
 
 def profile_get_by_name(context, name, project_safe=True):
@@ -881,9 +857,7 @@ def profile_get_by_short_id(context, short_id, project_safe=True):
 def profile_get_all(context, limit=None, marker=None, sort=None, filters=None,
                     project_safe=True):
     query = profile_model_query()
-
-    if project_safe:
-        query = query.filter_by(project=context.project_id)
+    query = utils.filter_query_by_project(query, project_safe, context)
 
     if filters:
         query = utils.exact_filter(query, models.Profile, filters)
@@ -996,11 +970,7 @@ def event_create(context, values):
 @retry_on_deadlock
 def event_get(context, event_id, project_safe=True):
     event = event_model_query().get(event_id)
-    if project_safe and event is not None:
-        if event.project != context.project_id:
-            return None
-
-    return event
+    return utils.check_resource_project(context, event, project_safe)
 
 
 def event_get_by_short_id(context, short_id, project_safe=True):
@@ -1023,8 +993,7 @@ def _event_filter_paginate_query(context, query, filters=None,
 def event_get_all(context, limit=None, marker=None, sort=None, filters=None,
                   project_safe=True):
     query = event_model_query()
-    if project_safe:
-        query = query.filter_by(project=context.project_id)
+    query = utils.filter_query_by_project(query, project_safe, context)
 
     return _event_filter_paginate_query(context, query, filters=filters,
                                         limit=limit, marker=marker, sort=sort)
@@ -1032,9 +1001,8 @@ def event_get_all(context, limit=None, marker=None, sort=None, filters=None,
 
 def event_count_by_cluster(context, cluster_id, project_safe=True):
     query = event_model_query()
+    query = utils.filter_query_by_project(query, project_safe, context)
 
-    if project_safe:
-        query = query.filter_by(project=context.project_id)
     count = query.filter_by(cluster_id=cluster_id).count()
 
     return count
@@ -1044,9 +1012,7 @@ def event_get_all_by_cluster(context, cluster_id, limit=None, marker=None,
                              sort=None, filters=None, project_safe=True):
     query = event_model_query()
     query = query.filter_by(cluster_id=cluster_id)
-
-    if project_safe:
-        query = query.filter_by(project=context.project_id)
+    query = utils.filter_query_by_project(query, project_safe, context)
 
     return _event_filter_paginate_query(context, query, filters=filters,
                                         limit=limit, marker=marker, sort=sort)
@@ -1057,8 +1023,7 @@ def event_prune(context, cluster_id, project_safe=True):
     with session_for_write() as session:
         query = session.query(models.Event).with_for_update()
         query = query.filter_by(cluster_id=cluster_id)
-        if project_safe:
-            query = query.filter_by(project=context.project_id)
+        query = utils.filter_query_by_project(query, project_safe, context)
 
         return query.delete(synchronize_session='fetch')
 
@@ -1117,17 +1082,13 @@ def action_get(context, action_id, project_safe=True, refresh=False):
     if action is None:
         return None
 
-    if project_safe:
-        if action.project != context.project_id:
-            return None
-
-    return action
+    return utils.check_resource_project(context, action, project_safe)
 
 
 def action_list_active_scaling(context, cluster_id=None, project_safe=True):
     query = action_model_query()
-    if project_safe:
-        query = query.filter_by(project=context.project_id)
+    query = utils.filter_query_by_project(query, project_safe, context)
+
     if cluster_id:
         query = query.filter_by(target=cluster_id)
     query = query.filter(
@@ -1159,8 +1120,7 @@ def action_get_all_by_owner(context, owner_id):
 
 def action_get_all_active_by_target(context, target_id, project_safe=True):
     query = action_model_query()
-    if project_safe:
-        query = query.filter_by(project=context.project_id)
+    query = utils.filter_query_by_project(query, project_safe, context)
     query = query.filter_by(target=target_id)
     query = query.filter(
         models.Action.status.in_(
@@ -1175,8 +1135,7 @@ def action_get_all_active_by_target(context, target_id, project_safe=True):
 def action_get_all(context, filters=None, limit=None, marker=None, sort=None,
                    project_safe=True):
     query = action_model_query()
-    if project_safe:
-        query = query.filter_by(project=context.project_id)
+    query = utils.filter_query_by_project(query, project_safe, context)
 
     if filters:
         query = utils.exact_filter(query, models.Action, filters)
@@ -1480,9 +1439,7 @@ def action_delete_by_target(context, target, action=None,
 
     with session_for_write() as session:
         q = session.query(models.Action).filter_by(target=target)
-
-        if project_safe:
-            q = q.filter_by(project=context.project_id)
+        q = utils.filter_query_by_project(q, project_safe, context)
 
         if action:
             q = q.filter(models.Action.action.in_(action))
@@ -1537,18 +1494,13 @@ def receiver_get(context, receiver_id, project_safe=True):
     if not receiver:
         return None
 
-    if project_safe:
-        if context.project_id != receiver.project:
-            return None
-
-    return receiver
+    return utils.check_resource_project(context, receiver, project_safe)
 
 
 def receiver_get_all(context, limit=None, marker=None, filters=None, sort=None,
                      project_safe=True):
     query = receiver_model_query()
-    if project_safe:
-        query = query.filter_by(project=context.project_id)
+    query = utils.filter_query_by_project(query, project_safe, context)
 
     if filters:
         query = utils.exact_filter(query, models.Receiver, filters)

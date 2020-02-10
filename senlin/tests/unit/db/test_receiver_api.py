@@ -85,7 +85,8 @@ class DBAPIReceiverTest(base.SenlinTestCase):
         r = self._create_receiver(self.ctx)
 
         res = db_api.receiver_get(admin_ctx, r.id, project_safe=True)
-        self.assertIsNone(res)
+        self.assertIsNotNone(res)
+
         res = db_api.receiver_get(admin_ctx, r.id, project_safe=False)
         self.assertIsNotNone(res)
 
@@ -295,7 +296,8 @@ class DBAPIReceiverTest(base.SenlinTestCase):
         admin_ctx = utils.dummy_context(project='a-different-project',
                                         is_admin=True)
         results = db_api.receiver_get_all(admin_ctx, project_safe=True)
-        self.assertEqual(0, len(results))
+        self.assertEqual(2, len(results))
+
         results = db_api.receiver_get_all(admin_ctx, project_safe=False)
         self.assertEqual(2, len(results))
 
