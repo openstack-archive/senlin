@@ -34,23 +34,20 @@ LOG = logging.getLogger('senlin.api')
 
 
 def main():
-    try:
-        config.parse_args(sys.argv, 'senlin-api')
-        logging.setup(CONF, 'senlin-api')
-        gmr.TextGuruMeditation.setup_autorun(version)
-        objects.register_all()
-        messaging.setup()
+    config.parse_args(sys.argv, 'senlin-api')
+    logging.setup(CONF, 'senlin-api')
+    gmr.TextGuruMeditation.setup_autorun(version)
+    objects.register_all()
+    messaging.setup()
 
-        app = wsgi.load_paste_app()
+    app = wsgi.load_paste_app()
 
-        host = CONF.senlin_api.bind_host
-        port = CONF.senlin_api.bind_port
-        LOG.info('Starting Senlin API on %(host)s:%(port)s',
-                 {'host': host, 'port': port})
-        profiler.setup('senlin-api', host)
-        server = wsgi.Server('senlin-api', CONF.senlin_api)
-        server.start(app, default_port=port)
-        systemd.notify_once()
-        server.wait()
-    except RuntimeError as ex:
-        sys.exit("ERROR: %s" % str(ex))
+    host = CONF.senlin_api.bind_host
+    port = CONF.senlin_api.bind_port
+    LOG.info('Starting Senlin API on %(host)s:%(port)s',
+             {'host': host, 'port': port})
+    profiler.setup('senlin-api', host)
+    server = wsgi.Server('senlin-api', CONF.senlin_api)
+    server.start(app, default_port=port)
+    systemd.notify_once()
+    server.wait()
