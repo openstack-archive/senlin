@@ -89,7 +89,7 @@ class LoadBalancerDriver(base.DriverBase):
 
         return False
 
-    def lb_create(self, vip, pool, hm=None):
+    def lb_create(self, vip, pool, hm=None, az=None):
         """Create a LBaaS instance
 
         :param vip: A dict containing the properties for the VIP;
@@ -111,9 +111,9 @@ class LoadBalancerDriver(base.DriverBase):
             return False, msg
         subnet_id = subnet.id
         try:
-            lb = self.oc().loadbalancer_create(subnet_id,
-                                               vip.get('address', None),
-                                               vip['admin_state_up'])
+            lb = self.oc().loadbalancer_create(
+                subnet_id, vip.get('address', None), vip['admin_state_up'],
+                availability_zone=az)
         except exception.InternalError as ex:
             msg = ('Failed in creating loadbalancer: %s.'
                    % str(ex))

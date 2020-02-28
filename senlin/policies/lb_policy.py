@@ -50,6 +50,9 @@ class LoadBalancingPolicy(base.Policy):
         '1.1': [
             {'status': consts.SUPPORTED, 'since': '2018.01'}
         ],
+        '1.2': [
+            {'status': consts.SUPPORTED, 'since': '2020.02'}
+        ],
     }
 
     PRIORITY = 500
@@ -73,9 +76,11 @@ class LoadBalancingPolicy(base.Policy):
     ]
 
     KEYS = (
-        POOL, VIP, HEALTH_MONITOR, LB_STATUS_TIMEOUT, LOADBALANCER
+        POOL, VIP, HEALTH_MONITOR, LB_STATUS_TIMEOUT, LOADBALANCER,
+        AVAILABILITY_ZONE
     ) = (
-        'pool', 'vip', 'health_monitor', 'lb_status_timeout', 'loadbalancer'
+        'pool', 'vip', 'health_monitor', 'lb_status_timeout', 'loadbalancer',
+        'availability_zone'
     )
 
     _POOL_KEYS = (
@@ -283,6 +288,11 @@ class LoadBalancingPolicy(base.Policy):
             _('Name or ID of loadbalancer for the cluster on which nodes can '
               'be connected.'),
             default=None,
+        ),
+        AVAILABILITY_ZONE: schema.String(
+            _('Name of the loadbalancer availability zone to use for creation '
+              'of the loadbalancer.'),
+            default=None,
         )
     }
 
@@ -292,6 +302,7 @@ class LoadBalancingPolicy(base.Policy):
         self.pool_spec = self.properties.get(self.POOL, {})
         self.vip_spec = self.properties.get(self.VIP, {})
         self.hm_spec = self.properties.get(self.HEALTH_MONITOR, None)
+        self.az_spec = self.properties.get(self.AVAILABILITY_ZONE, None)
         self.lb_status_timeout = self.properties.get(self.LB_STATUS_TIMEOUT)
         self.lb = self.properties.get(self.LOADBALANCER, None)
 
@@ -359,7 +370,7 @@ class LoadBalancingPolicy(base.Policy):
                 data['healthmonitor'] = self.hm_spec.get(self.HM_ID)
         else:
             res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec,
-                                            self.hm_spec)
+                                            self.hm_spec, self.az_spec)
             if res is False:
                 return False, data
 

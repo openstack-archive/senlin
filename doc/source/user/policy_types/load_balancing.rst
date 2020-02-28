@@ -248,6 +248,16 @@ load-balancing policy to mitigate this effect. In real production environment,
 you are expected to set this value based on some careful dry-runs.
 
 
+Availability Zone
+~~~~~~~~~~~~~~~~~
+
+Load balancers have their own availability zones, similar to the compute
+service.
+
+The ``availability_zone`` option is provided since version 1.2 of the
+load-balancing policy, to allow the user to choose which availability zone to
+use when provisioning the load balancer.
+
 Validation
 ~~~~~~~~~~
 

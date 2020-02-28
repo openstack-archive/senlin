@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Add availability_zone option for loadbalancers. This is supported by
+    Octavia starting in the Ussuri release.

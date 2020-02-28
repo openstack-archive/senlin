@@ -64,7 +64,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
                     'url_path': '/index.html',
                     'expected_codes': '200,201,202'
                 },
-                'lb_status_timeout': 300
+                'lb_status_timeout': 300,
             }
         }
         self.sd = mock.Mock()
@@ -254,7 +254,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.assertEqual('policy_data', data)
         self.lb_driver.lb_create.assert_called_once_with(policy.vip_spec,
                                                          policy.pool_spec,
-                                                         policy.hm_spec)
+                                                         policy.hm_spec,
+                                                         policy.az_spec)
         member_add_calls = [
             mock.call(node1, 'LB_ID', 'POOL_ID', 80, 'internal-subnet'),
             mock.call(node2, 'LB_ID', 'POOL_ID', 80, 'internal-subnet')

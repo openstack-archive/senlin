@@ -63,6 +63,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
             "url_path": "/index.html",
             "expected_codes": "200,201,202"
         }
+        self.availability_zone = 'my_fake_az'
 
     def test_init(self):
         conn_params = self.context.to_dict()
@@ -150,11 +151,13 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
 
         self.lb_driver._wait_for_lb_ready = mock.Mock()
         self.lb_driver._wait_for_lb_ready.return_value = True
-        status, res = self.lb_driver.lb_create(self.vip, self.pool, self.hm)
+        status, res = self.lb_driver.lb_create(self.vip, self.pool, self.hm,
+                                               self.availability_zone)
 
         self.assertTrue(status)
         self.oc.loadbalancer_create.assert_called_once_with(
-            'SUBNET_ID', self.vip['address'], self.vip['admin_state_up'])
+            'SUBNET_ID', self.vip['address'], self.vip['admin_state_up'],
+            availability_zone=self.availability_zone)
         self.assertEqual('LB_ID', res['loadbalancer'])
         self.assertEqual('192.168.1.100', res['vip_address'])
         self.oc.listener_create.assert_called_once_with(
@@ -195,7 +198,8 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         msg = _('Failed in creating loadbalancer (%s).') % 'LB_ID'
         self.assertEqual(msg, res)
         self.oc.loadbalancer_create.assert_called_once_with(
-            'SUBNET_ID', self.vip['address'], self.vip['admin_state_up'])
+            'SUBNET_ID', self.vip['address'], self.vip['admin_state_up'],
+            availability_zone=None)
         self.lb_driver._wait_for_lb_ready.assert_called_once_with('LB_ID')
         self.lb_driver.lb_delete.assert_called_once_with(
             loadbalancer='LB_ID')
@@ -240,7 +244,8 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         msg = _('Failed in creating listener (%s).') % 'LISTENER_ID'
         self.assertEqual(msg, res)
         self.oc.loadbalancer_create.assert_called_once_with(
-            'SUBNET_ID', self.vip['address'], self.vip['admin_state_up'])
+            'SUBNET_ID', self.vip['address'], self.vip['admin_state_up'],
+            availability_zone=None)
         self.oc.listener_create.assert_called_once_with(
             'LB_ID', self.vip['protocol'], self.vip['protocol_port'],
             self.vip['connection_limit'], self.vip['admin_state_up'])
@@ -284,7 +289,8 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         msg = _('Failed in creating pool (%s).') % 'POOL_ID'
         self.assertEqual(msg, res)
         self.oc.loadbalancer_create.assert_called_once_with(
-            'SUBNET_ID', self.vip['address'], self.vip['admin_state_up'])
+            'SUBNET_ID', self.vip['address'], self.vip['admin_state_up'],
+            availability_zone=None)
         self.oc.listener_create.assert_called_once_with(
             'LB_ID', self.vip['protocol'], self.vip['protocol_port'],
             self.vip['connection_limit'], self.vip['admin_state_up'])

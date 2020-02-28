@@ -36,7 +36,8 @@ class OctaviaClient(base.DriverBase):
 
     @sdk.translate_exception
     def loadbalancer_create(self, vip_subnet_id, vip_address=None,
-                            admin_state_up=True, name=None, description=None):
+                            admin_state_up=True, name=None, description=None,
+                            availability_zone=None):
 
         kwargs = {
             'vip_subnet_id': vip_subnet_id,
@@ -49,6 +50,8 @@ class OctaviaClient(base.DriverBase):
             kwargs['name'] = name
         if description is not None:
             kwargs['description'] = description
+        if availability_zone is not None:
+            kwargs['availability_zone'] = availability_zone
 
         res = self.conn.load_balancer.create_load_balancer(**kwargs)
         return res
