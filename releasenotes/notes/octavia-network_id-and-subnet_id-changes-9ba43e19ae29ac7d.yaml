@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Loadbalancers incorrectly required a VIP subnet, when they should actually
+    accept either a VIP subnet or VIP network. Now either/both is acceptable.

@@ -51,11 +51,9 @@ As you can see, there are many properties related to the policy. The good news
 is that for most of them, there are reasonable default values. All properties
 are optional except for the following few:
 
-- ``pool.subnet``: This property provides the name or ID of the subnet for the
-  port on which nodes can be connected.
-
-- ``vip.subnet``: This property provides the name or ID of the subnet on which
-  the virtual IP (VIP) is allocated.
+- ``vip.subnet`` or ``vip.network``: These properties provides the name or ID
+  of the subnet or network on which the virtual IP (VIP) is allocated. At least
+  one (or both) of them must be specified.
 
 The following subsections describe each and every group of properties and the
 general rules on using them.
@@ -128,13 +126,15 @@ Virtual IP
 The Virtual IP (or "VIP" for short) refers to the IP address visible from the
 client side. It is the single IP address used by all clients to access the
 application or service running on the pool nodes. You have to specify a value
-for the ``vip.subnet`` property even though you don't have a preference about
-the actual VIP allocated. However, if you do have a preferred VIP address to
-use, you will need to provide both ``vip.subnet`` and ``vip.address`` values.
+for either the ``vip.subnet`` or ``vip.network`` property even though you don't
+have a preference about the actual VIP allocated. However, if you do have a
+preferred VIP address to use, you will need to provide both a
+``vip.subnet``/``vip.network`` and a ``vip.address`` value.
 The LBaaS service will check if both values are valid.
 
 Note that if you choose to omit the ``vip.address`` property, the LBaaS
-service will allocate an address for you from the provided subnet. You will
+service will allocate an address for you from the either the provided subnet,
+or a subnet automatically chosen from the provided network. You will
 have to check the cluster's ``data`` property after the load-balancing policy
 has been successfully attached to your cluster. For example:
 
@@ -262,8 +262,8 @@ Validation
 ~~~~~~~~~~
 
 When creating a new load-balancing policy object, Senlin checks if the subnet
-provided are actually known to the Neutron network service. Or else, the
-policy creation will fail.
+and/or network provided are actually known to the Neutron network service. If
+they are not, the policy creation will fail.
 
 
 Updates to the Cluster and Nodes

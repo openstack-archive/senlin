@@ -35,15 +35,18 @@ class OctaviaClient(base.DriverBase):
         return lb
 
     @sdk.translate_exception
-    def loadbalancer_create(self, vip_subnet_id, vip_address=None,
-                            admin_state_up=True, name=None, description=None,
-                            availability_zone=None):
+    def loadbalancer_create(self, vip_subnet_id=None, vip_network_id=None,
+                            vip_address=None, admin_state_up=True, name=None,
+                            description=None, availability_zone=None):
 
         kwargs = {
-            'vip_subnet_id': vip_subnet_id,
             'admin_state_up': admin_state_up,
         }
 
+        if vip_subnet_id is not None:
+            kwargs['vip_subnet_id'] = vip_subnet_id
+        if vip_network_id is not None:
+            kwargs['vip_network_id'] = vip_network_id
         if vip_address is not None:
             kwargs['vip_address'] = vip_address
         if name is not None:

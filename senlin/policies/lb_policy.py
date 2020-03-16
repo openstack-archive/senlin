@@ -42,7 +42,7 @@ class LoadBalancingPolicy(base.Policy):
     the cluster (which could be created by the policy) when these actions are
     performed.
     """
-    VERSION = '1.1'
+    VERSION = '1.3'
     VERSIONS = {
         '1.0': [
             {'status': consts.SUPPORTED, 'since': '2016.04'}
@@ -52,6 +52,9 @@ class LoadBalancingPolicy(base.Policy):
         ],
         '1.2': [
             {'status': consts.SUPPORTED, 'since': '2020.02'}
+        ],
+        '1.3': [
+            {'status': consts.SUPPORTED, 'since': '2020.03'}
         ],
     }
 
@@ -116,10 +119,10 @@ class LoadBalancingPolicy(base.Policy):
     )
 
     _VIP_KEYS = (
-        VIP_SUBNET, VIP_ADDRESS, VIP_CONNECTION_LIMIT, VIP_PROTOCOL,
-        VIP_PROTOCOL_PORT, VIP_ADMIN_STATE_UP,
+        VIP_SUBNET, VIP_NETWORK, VIP_ADDRESS, VIP_CONNECTION_LIMIT,
+        VIP_PROTOCOL, VIP_PROTOCOL_PORT, VIP_ADMIN_STATE_UP,
     ) = (
-        'subnet', 'address', 'connection_limit', 'protocol',
+        'subnet', 'network', 'address', 'connection_limit', 'protocol',
         'protocol_port', 'admin_state_up',
     )
 
@@ -201,8 +204,13 @@ class LoadBalancingPolicy(base.Policy):
             schema={
                 VIP_SUBNET: schema.String(
                     _('Name or ID of Subnet on which the VIP address will be '
-                      'allocated.'),
-                    required=True,
+                      'allocated. One of Subnet or Network is required.'),
+                    required=False,
+                ),
+                VIP_NETWORK: schema.String(
+                    _('Name or ID of Network on which the VIP address will be '
+                      'allocated. One of Subnet or Network is required.'),
+                    required=False,
                 ),
                 VIP_ADDRESS: schema.String(
                     _('IP address of the VIP.'),
@@ -324,13 +332,33 @@ class LoadBalancingPolicy(base.Policy):
                     ) % {'key': self.POOL_SUBNET, 'value': name_or_id}
             raise exc.InvalidSpec(message=msg)
 
-        # validate VIP subnet
-        name_or_id = self.vip_spec.get(self.VIP_SUBNET)
+        # validate VIP subnet or network
+        subnet_name_or_id = self.vip_spec.get(self.VIP_SUBNET)
+        network_name_or_id = self.vip_spec.get(self.VIP_NETWORK)
+        if not subnet_name_or_id and not network_name_or_id:
+            msg = _("At least one of VIP Subnet or Network must be defined.")
+            raise exc.InvalidSpec(message=msg)
         try:
-            nc.subnet_get(name_or_id)
+            # Check subnet if it is set
+            obj_type = self.VIP_SUBNET
+            name_or_id = subnet_name_or_id
+            if name_or_id:
+                nc.subnet_get(name_or_id)
+
+            # Check network if it is set
+            obj_type = self.VIP_NETWORK
+            name_or_id = network_name_or_id
+            if name_or_id:
+                nc.network_get(name_or_id)
+
+            # TODO(rm_work): We *could* do more validation here to catch issues
+            # at validation time, like verifying the subnet's network_id is the
+            # same as the id of the network, if both are set -- but for now we
+            # will just leave that up to the LB API, which means if there is a
+            # failure, it won't be caught until attach time.
         except exc.InternalError:
             msg = _("The specified %(key)s '%(value)s' could not be found."
-                    ) % {'key': self.VIP_SUBNET, 'value': name_or_id}
+                    ) % {'key': obj_type, 'value': name_or_id}
             raise exc.InvalidSpec(message=msg)
 
         # validate loadbalancer

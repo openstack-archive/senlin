@@ -28,6 +28,7 @@ class OctaviaClient(base.DriverBase):
     def __init__(self, ctx):
         self.fake_lb = {
             "admin_state_up": True,
+            "availability_zone": "test_az",
             "description": "Best App load balancer 1",
             "id": FAKE_LB_ID,
             "listeners": [{"id": FAKE_LISTENER_ID}],
@@ -39,7 +40,8 @@ class OctaviaClient(base.DriverBase):
             "provisioning_status": "ACTIVE",
             "vip_address": "203.0.113.10",
             "vip_port_id": "1e20d91d-8df9-4c15-9778-28bc89226c19",
-            "vip_subnet_id": "08dce793-daef-411d-a896-d389cd45b1ea"
+            "vip_subnet_id": "08dce793-daef-411d-a896-d389cd45b1ea",
+            "vip_network_id": "e2de51e5-f10a-40f3-8f5c-7bab784b1380",
         }
 
         self.fake_listener = {
@@ -128,9 +130,11 @@ class OctaviaClient(base.DriverBase):
             "url_path": "/"
         }
 
-    def loadbalancer_create(self, vip_subnet_id, vip_address=None,
-                            admin_state_up=True, name=None, description=None):
+    def loadbalancer_create(self, vip_subnet_id=None, vip_network_id=None,
+                            vip_address=None, admin_state_up=True, name=None,
+                            description=None):
         self.fake_lb["vip_subnet_id"] = vip_subnet_id
+        self.fake_lb["vip_network_id"] = vip_network_id
         self.fake_lb["admin_state_up"] = admin_state_up
         if vip_address:
             self.fake_lb["vip_address"] = vip_address

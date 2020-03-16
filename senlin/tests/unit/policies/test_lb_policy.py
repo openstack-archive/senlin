@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
 import mock
 from oslo_context import context as oslo_context
 
@@ -32,7 +33,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.context = utils.dummy_context()
         self.spec = {
             'type': 'senlin.policy.loadbalance',
-            'version': '1.0',
+            'version': '1.3',
             'properties': {
                 'pool': {
                     'id': '',
@@ -49,6 +50,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
                 'vip': {
                     'address': '192.168.1.100',
                     'subnet': 'external-subnet',
+                    'network': 'external-network',
                     'connection_limit': 500,
                     'protocol': 'HTTP',
                     'protocol_port': 80,
@@ -65,6 +67,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
                     'expected_codes': '200,201,202'
                 },
                 'lb_status_timeout': 300,
+                'availability_zone': 'test_az'
             }
         }
         self.sd = mock.Mock()
@@ -79,15 +82,15 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
 
         self.assertIsNone(policy.id)
         self.assertEqual('test-policy', policy.name)
-        self.assertEqual('senlin.policy.loadbalance-1.0', policy.type)
+        self.assertEqual('senlin.policy.loadbalance-1.3', policy.type)
         self.assertEqual(self.spec['properties']['pool'], policy.pool_spec)
         self.assertEqual(self.spec['properties']['vip'], policy.vip_spec)
         self.assertIsNone(policy.lb)
 
-    def test_init_with_default_value(self):
+    def test_init_with_default_value_subnet_only(self):
         spec = {
             'type': 'senlin.policy.loadbalance',
-            'version': '1.0',
+            'version': '1.3',
             'properties': {
                 'pool': {'subnet': 'internal-subnet'},
                 'vip': {'subnet': 'external-subnet'}
@@ -95,7 +98,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         }
         default_spec = {
             'type': 'senlin.policy.loadbalance',
-            'version': '1.0',
+            'version': '1.3',
             'properties': {
                 'pool': {
                     'id': None,
@@ -109,6 +112,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
                 'vip': {
                     'address': None,
                     'subnet': 'external-subnet',
+                    'network': None,
                     'connection_limit': -1,
                     'protocol': 'HTTP',
                     'protocol_port': 80,
@@ -122,7 +126,100 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
 
         self.assertIsNone(policy.id)
         self.assertEqual('test-policy', policy.name)
-        self.assertEqual('senlin.policy.loadbalance-1.0', policy.type)
+        self.assertEqual('senlin.policy.loadbalance-1.3', policy.type)
+        self.assertEqual(default_spec['properties']['pool'], policy.pool_spec)
+        self.assertEqual(default_spec['properties']['vip'], policy.vip_spec)
+        self.assertEqual(default_spec['properties']['lb_status_timeout'],
+                         policy.lb_status_timeout)
+        self.assertIsNone(policy.lb)
+
+    def test_init_with_default_value_network_only(self):
+        spec = {
+            'type': 'senlin.policy.loadbalance',
+            'version': '1.3',
+            'properties': {
+                'pool': {'subnet': 'internal-subnet'},
+                'vip': {'network': 'external-network'}
+            }
+        }
+        default_spec = {
+            'type': 'senlin.policy.loadbalance',
+            'version': '1.3',
+            'properties': {
+                'pool': {
+                    'id': None,
+                    'protocol': 'HTTP',
+                    'protocol_port': 80,
+                    'subnet': 'internal-subnet',
+                    'lb_method': 'ROUND_ROBIN',
+                    'admin_state_up': True,
+                    'session_persistence': {},
+                },
+                'vip': {
+                    'address': None,
+                    'subnet': None,
+                    'network': 'external-network',
+                    'connection_limit': -1,
+                    'protocol': 'HTTP',
+                    'protocol_port': 80,
+                    'admin_state_up': True,
+                },
+                'lb_status_timeout': 300
+            }
+        }
+
+        policy = lb_policy.LoadBalancingPolicy('test-policy', spec)
+
+        self.assertIsNone(policy.id)
+        self.assertEqual('test-policy', policy.name)
+        self.assertEqual('senlin.policy.loadbalance-1.3', policy.type)
+        self.assertEqual(default_spec['properties']['pool'], policy.pool_spec)
+        self.assertEqual(default_spec['properties']['vip'], policy.vip_spec)
+        self.assertEqual(default_spec['properties']['lb_status_timeout'],
+                         policy.lb_status_timeout)
+        self.assertIsNone(policy.lb)
+
+    def test_init_with_default_value_subnet_and_network(self):
+        spec = {
+            'type': 'senlin.policy.loadbalance',
+            'version': '1.3',
+            'properties': {
+                'pool': {'subnet': 'internal-subnet'},
+                'vip': {'subnet': 'external-subnet',
+                        'network': 'external-network'}
+            }
+        }
+        default_spec = {
+            'type': 'senlin.policy.loadbalance',
+            'version': '1.3',
+            'properties': {
+                'pool': {
+                    'id': None,
+                    'protocol': 'HTTP',
+                    'protocol_port': 80,
+                    'subnet': 'internal-subnet',
+                    'lb_method': 'ROUND_ROBIN',
+                    'admin_state_up': True,
+                    'session_persistence': {},
+                },
+                'vip': {
+                    'address': None,
+                    'subnet': 'external-subnet',
+                    'network': 'external-network',
+                    'connection_limit': -1,
+                    'protocol': 'HTTP',
+                    'protocol_port': 80,
+                    'admin_state_up': True,
+                },
+                'lb_status_timeout': 300
+            }
+        }
+
+        policy = lb_policy.LoadBalancingPolicy('test-policy', spec)
+
+        self.assertIsNone(policy.id)
+        self.assertEqual('test-policy', policy.name)
+        self.assertEqual('senlin.policy.loadbalance-1.3', policy.type)
         self.assertEqual(default_spec['properties']['pool'], policy.pool_spec)
         self.assertEqual(default_spec['properties']['vip'], policy.vip_spec)
         self.assertEqual(default_spec['properties']['lb_status_timeout'],
@@ -132,7 +229,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
     def test_loadbalancer_value(self):
         spec = {
             'type': 'senlin.policy.loadbalance',
-            'version': '1.0',
+            'version': '1.3',
             'properties': {
                 'loadbalancer': 'LB_ID',
                 'pool': {
@@ -141,7 +238,8 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
                 },
                 'vip': {
                     'address': '192.168.1.100',
-                    'subnet': 'external-subnet'
+                    'subnet': 'external-subnet',
+                    'network': 'external-network',
                 },
                 'health_monitor': {
                     'id': 'HM_ID'
@@ -156,7 +254,7 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         policy = lb_policy.LoadBalancingPolicy('test-policy', spec)
         self.assertIsNone(policy.id)
         self.assertEqual('test-policy', policy.name)
-        self.assertEqual('senlin.policy.loadbalance-1.0', policy.type)
+        self.assertEqual('senlin.policy.loadbalance-1.3', policy.type)
         self.assertEqual(self.spec['properties']['pool'], policy.pool_spec)
         self.assertEqual(self.spec['properties']['vip'], policy.vip_spec)
         self.assertEqual(self.spec['properties']['loadbalancer'], policy.lb)
@@ -210,7 +308,42 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
                          "be found.", str(ex))
 
     @mock.patch.object(policy_base.Policy, 'validate')
-    def test_validate_loadbalancer_notfund(self, mock_validate):
+    def test_validate_vip_network_notfound(self, mock_validate):
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        policy._networkclient = self.net_driver
+        policy._octaviaclient = self.octavia_driver
+        ctx = mock.Mock(user='user1', project='project1')
+        self.net_driver.network_get = mock.Mock(
+            side_effect=[
+                exc.InternalError(code='404', message='not found')
+            ]
+        )
+
+        ex = self.assertRaises(exc.InvalidSpec, policy.validate, ctx, True)
+
+        mock_validate.assert_called_with(ctx, True)
+        self.net_driver.network_get.assert_called_with('external-network')
+        self.assertEqual("The specified network 'external-network' could not "
+                         "be found.", str(ex))
+
+    @mock.patch.object(policy_base.Policy, 'validate')
+    def test_validate_vip_no_subnet_or_network_provided(self, mock_validate):
+        spec = copy.deepcopy(self.spec)
+        del spec['properties']['vip']['subnet']
+        del spec['properties']['vip']['network']
+        policy = lb_policy.LoadBalancingPolicy('test-policy', spec)
+        policy._networkclient = self.net_driver
+        policy._octaviaclient = self.octavia_driver
+        ctx = mock.Mock(user='user1', project='project1')
+
+        ex = self.assertRaises(exc.InvalidSpec, policy.validate, ctx, True)
+
+        mock_validate.assert_called_with(ctx, True)
+        self.assertEqual("At least one of VIP Subnet or Network must be "
+                         "defined.", str(ex))
+
+    @mock.patch.object(policy_base.Policy, 'validate')
+    def test_validate_loadbalancer_notfound(self, mock_validate):
         self.spec['properties']['loadbalancer'] = "LB_ID"
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
         policy._networkclient = self.net_driver
@@ -490,7 +623,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         self.context = utils.dummy_context()
         self.spec = {
             'type': 'senlin.policy.loadbalance',
-            'version': '1.0',
+            'version': '1.3',
             'properties': {
                 'pool': {
                     'protocol': 'HTTP',
@@ -506,6 +639,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
                 'vip': {
                     'address': '192.168.1.100',
                     'subnet': 'test-subnet',
+                    'network': 'test-network',
                     'connection_limit': 500,
                     'protocol': 'HTTP',
                     'protocol_port': 80,
@@ -520,7 +654,8 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
                     'http_method': 'GET',
                     'url_path': '/index.html',
                     'expected_codes': '200,201,202'
-                }
+                },
+                'availability_zone': 'test_az',
             }
         }
         self.lb_driver = mock.Mock()

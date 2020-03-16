@@ -103,17 +103,23 @@ class LoadBalancerDriver(base.DriverBase):
 
         result = {}
         # Create loadblancer
+        subnet_id = None
+        network_id = None
         try:
-            subnet = self.nc().subnet_get(vip['subnet'])
+            if vip.get('subnet'):
+                subnet = self.nc().subnet_get(vip['subnet'])
+                subnet_id = subnet.id
+            if vip.get('network'):
+                network = self.nc().network_get(vip['network'])
+                network_id = network.id
         except exception.InternalError as ex:
             msg = 'Failed in getting subnet: %s.' % ex
             LOG.exception(msg)
             return False, msg
-        subnet_id = subnet.id
         try:
             lb = self.oc().loadbalancer_create(
-                subnet_id, vip.get('address', None), vip['admin_state_up'],
-                availability_zone=az)
+                subnet_id, network_id, vip.get('address', None),
+                vip['admin_state_up'], availability_zone=az)
         except exception.InternalError as ex:
             msg = ('Failed in creating loadbalancer: %s.'
                    % str(ex))
