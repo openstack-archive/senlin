@@ -115,7 +115,7 @@ class TestMessage(base.SenlinTestCase):
         message = mmod.Message('message', None, None, id=UUID)
         res = message._generate_subscriber_url()
 
-        expected = 'trust+http://test-host:8778/v1/receivers/%s/notify' % UUID
+        expected = 'trust+http://test-host:8777/v1/receivers/%s/notify' % UUID
         self.assertEqual(expected, res)
 
     def test_to_dict(self):

@@ -145,7 +145,7 @@ by two nodes every time it is triggered:
   |            |   "trust_id": "432f81d339444cac959bab2fd9ba92fa"                                |
   |            | }                                                                               |
   | channel    | {                                                                               |
-  |            |   "alarm_url": "http://node1:8778/v1/webhooks/ba...5a/trigger?V=2&count=2       |
+  |            |   "alarm_url": "http://node1:8777/v1/webhooks/ba...5a/trigger?V=2&count=2       |
   |            | }                                                                               |
   | cluster_id | b75d25e7-e84d-4742-abf7-d8a3001e25a9                                            |
   | created_at | 2016-08-01T02:17:14Z                                                            |
@@ -191,7 +191,7 @@ triggering. For convenience, we export that value to an environment variable:
 
 .. code-block:: console
 
-  $ export ALRM_URL01="http://node1:8778/v1/webhooks/ba...5a/trigger?V=2&count=2"
+  $ export ALRM_URL01="http://node1:8777/v1/webhooks/ba...5a/trigger?V=2&count=2"
 
 Similar to the example above, you can create other receivers for different
 kinds of cluster operations or the same cluster operation with different

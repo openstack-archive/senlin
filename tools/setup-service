@@ -18,7 +18,7 @@ if [ $# -ne 2 ]; then
   exit -1
 fi
 
-PORT=8778
+PORT=8777
 HOST=$1 # Put your host IP here
 SVC_PASSWD=$2
 OS_REGION_NAME=${OS_REGION_NAME:-RegionOne}

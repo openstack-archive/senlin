@@ -107,7 +107,7 @@ using the option :option:`--type`, for example:
   |            |   "trust_id": "2e76547947954e6ea62b61a658ffb8e5"          |
   |            | }                                                         |
   | channel    | {                                                         |
-  |            |   "alarm_url": "http://10.20.10.17:8778/v1/webhooks/...." |
+  |            |   "alarm_url": "http://10.20.10.17:8777/v1/webhooks/...." |
   |            | }                                                         |
   | cluster_id | 9f1883a7-6837-4fe4-b621-6ec6ba6c3668                      |
   | created_at | 2018-02-24T09:23:48Z                                      |

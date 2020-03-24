@@ -2,7 +2,7 @@
     Require all granted
 </Directory>
 
-<VirtualHost *:8778>
+<VirtualHost *:8777>
     WSGIDaemonProcess senlin-api processes=%APIWORKERS% threads=1 user=%USER% display-name=%{GROUP} %VIRTUALENV%
     WSGIProcessGroup senlin-api
     WSGIScriptAlias / %SENLIN_BIN_DIR%/senlin-wsgi-api

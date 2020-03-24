@@ -30,7 +30,7 @@ class PolicyTypeControllerTest(shared.ControllerTest, base.SenlinTestCase):
         super(PolicyTypeControllerTest, self).setUp()
 
         class DummyConfig(object):
-            bind_port = 8778
+            bind_port = 8777
 
         cfgopts = DummyConfig()
         self.controller = policy_types.PolicyTypeController(options=cfgopts)

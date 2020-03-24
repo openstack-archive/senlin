@@ -19,7 +19,7 @@ API_OPTS = [
     cfg.IPOpt('bind_host', default='0.0.0.0',
               help=_('Address to bind the server. Useful when '
                      'selecting a particular network interface.')),
-    cfg.PortOpt('bind_port', default=8778,
+    cfg.PortOpt('bind_port', default=8777,
                 help=_('The port on which the server will listen.')),
     cfg.IntOpt('backlog', default=4096,
                help=_("Number of backlog requests "

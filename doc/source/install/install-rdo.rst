@@ -70,7 +70,7 @@ Replace ``Senlin_DBPASS`` with a suitable password.
 
 ::
 
-        $openstack user create --project services --password-prompt senlin
+        $openstack user create --project service --password-prompt senlin
         User Password:
         Repeat User Password:
         +-----------+----------------------------------+
@@ -86,7 +86,7 @@ Replace ``Senlin_DBPASS`` with a suitable password.
 
 ::
 
-        $ openstack role add --project services --user senlin admin
+        $ openstack role add --project service --user senlin admin
 
      .. note::
 
@@ -125,7 +125,7 @@ Replace ``Senlin_DBPASS`` with a suitable password.
       | service_id   | 9130295921b04601a81f95c417b9f113 |
       | service_name | senlin                           |
       | service_type | clustering                       |
-      | url          | http://controller:8778           |
+      | url          | http://controller:8777           |
       +--------------+----------------------------------+
 
       $ openstack endpoint create senlin --region RegionOne \
@@ -141,7 +141,7 @@ Replace ``Senlin_DBPASS`` with a suitable password.
       | service_id   | 9130295921b04601a81f95c417b9f113 |
       | service_name | senlin                           |
       | service_type | clustering                       |
-      | url          | http://controller:8778           |
+      | url          | http://controller:8777           |
       +--------------+----------------------------------+
 
       $ openstack endpoint create senlin --region RegionOne \
@@ -157,7 +157,7 @@ Replace ``Senlin_DBPASS`` with a suitable password.
       | service_id   | 9130295921b04601a81f95c417b9f113 |
       | service_name | senlin                           |
       | service_type | clustering                       |
-      | url          | http://controller:8778           |
+      | url          | http://controller:8777           |
       +--------------+----------------------------------+
 
 Install and configure components

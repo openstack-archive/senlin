@@ -33,7 +33,7 @@ class ProfileControllerTest(shared.ControllerTest, base.SenlinTestCase):
         super(ProfileControllerTest, self).setUp()
 
         class DummyConfig(object):
-            bind_port = 8778
+            bind_port = 8777
 
         cfgopts = DummyConfig()
         self.controller = profiles.ProfileController(options=cfgopts)
