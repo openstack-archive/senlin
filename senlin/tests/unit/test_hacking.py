@@ -11,7 +11,7 @@
 # under the License.
 
 import mock
-import pep8
+import pycodestyle
 import textwrap
 
 from senlin.hacking import checks
@@ -19,14 +19,14 @@ from senlin.tests.unit.common import base
 
 
 class HackingTestCase(base.SenlinTestCase):
-    @mock.patch('pep8._checks',
+    @mock.patch('pycodestyle._checks',
                 {'physical_line': {}, 'logical_line': {}, 'tree': {}})
     def _run_check(self, code, checker, filename=None):
-        pep8.register_check(checker)
+        pycodestyle.register_check(checker)
 
         lines = textwrap.dedent(code).strip().splitlines(True)
 
-        checker = pep8.Checker(filename=filename, lines=lines)
+        checker = pycodestyle.Checker(filename=filename, lines=lines)
         checker.check_all()
         checker.report._deferred_print.sort()
         return checker.report._deferred_print

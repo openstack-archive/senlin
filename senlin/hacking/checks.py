@@ -12,6 +12,8 @@
 
 import re
 
+from hacking import core
+
 asse_equal_end_with_none_re = re.compile(r"assertEqual\(.*?,\s+None\)$")
 asse_equal_start_with_none_re = re.compile(r"assertEqual\(None,")
 asse_equal_start_with_true_re = re.compile(r"assertEqual\(True,")
@@ -21,6 +23,7 @@ api_version_dec = re.compile(r"@.*api_version")
 decorator_re = re.compile(r"@.*")
 
 
+@core.flake8ext
 def assert_equal_none(logical_line):
     """Check for assertEqual(A, None) or assertEqual(None, A) sentences
 
@@ -33,6 +36,7 @@ def assert_equal_none(logical_line):
                "sentences not allowed")
 
 
+@core.flake8ext
 def use_jsonutils(logical_line, filename):
     msg = "S319: jsonutils.%(fun)s must be used instead of json.%(fun)s"
 
@@ -44,12 +48,14 @@ def use_jsonutils(logical_line, filename):
                 yield (pos, msg % {'fun': f[:-1]})
 
 
+@core.flake8ext
 def no_mutable_default_args(logical_line):
     msg = "S320: Method's default argument shouldn't be mutable!"
     if mutable_default_args.match(logical_line):
         yield (0, msg)
 
 
+@core.flake8ext
 def no_log_warn(logical_line):
     """Disallow 'LOG.warn('
 
@@ -64,6 +70,7 @@ def no_log_warn(logical_line):
         yield (0, msg)
 
 
+@core.flake8ext
 def assert_equal_true(logical_line):
     """Check for assertEqual(A, True) or assertEqual(True, A) sentences
 
@@ -76,6 +83,7 @@ def assert_equal_true(logical_line):
                "sentences not allowed")
 
 
+@core.flake8ext
 def check_api_version_decorator(logical_line, previous_logical, blank_before,
                                 filename):
     msg = ("S321: The api_version decorator must be the first decorator on "
@@ -83,12 +91,3 @@ def check_api_version_decorator(logical_line, previous_logical, blank_before,
     if (blank_before == 0 and re.match(api_version_dec, logical_line) and
             re.match(decorator_re, previous_logical)):
         yield(0, msg)
-
-
-def factory(register):
-    register(assert_equal_none)
-    register(use_jsonutils)
-    register(no_mutable_default_args)
-    register(no_log_warn)
-    register(check_api_version_decorator)
-    register(assert_equal_true)

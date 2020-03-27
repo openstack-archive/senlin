@@ -143,8 +143,8 @@ class TestConstraintsSchema(testtools.TestCase):
         c = constraints.AllowedValues(['foo', 'bar'])
         s = schema.String('A string', default='wibble', required=True,
                           constraints=[c])
-        l = schema.List('A list', schema=s)
-        self.assertEqual(d, dict(l))
+        li = schema.List('A list', schema=s)
+        self.assertEqual(d, dict(li))
 
     def test_schema_map_schema(self):
         d = {
@@ -204,8 +204,8 @@ class TestConstraintsSchema(testtools.TestCase):
         s = schema.String('A string', default='wibble', required=True,
                           constraints=[c])
         m = schema.Map('A map', schema={'Foo': s})
-        l = schema.List('A list', schema=m)
-        self.assertEqual(d, dict(l))
+        li = schema.List('A list', schema=m)
+        self.assertEqual(d, dict(li))
 
     def test_schema_validate_good(self):
         c = constraints.AllowedValues(['foo', 'bar'])

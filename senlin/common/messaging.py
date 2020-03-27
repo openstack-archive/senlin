@@ -88,7 +88,7 @@ def setup(url=None, optional=False):
         try:
             NOTIFICATION_TRANSPORT = messaging.get_notification_transport(
                 cfg.CONF, allowed_remote_exmods=exmods)
-        except Exception as e:
+        except Exception:
             raise
 
         serializer = RequestContextSerializer(JsonPayloadSerializer())
