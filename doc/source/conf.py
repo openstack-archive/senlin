@@ -15,8 +15,6 @@ import os
 import sys
 
 
-from senlin.version import version_info as senlin_version
-
 sys.path.insert(0, os.path.abspath('../..'))
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
