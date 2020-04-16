@@ -585,7 +585,7 @@ class RuntimeHealthRegistry(object):
                 self.add_health_check(self.registries[cluster_id])
         except Exception as ex:
             LOG.error("Error while trying to register cluster for health "
-                      "checks %s: %s", cluster_id, ex)
+                      "check %s: %s", cluster_id, ex)
             if entry:
                 entry.db_delete()
 
@@ -601,10 +601,9 @@ class RuntimeHealthRegistry(object):
             if cluster_id in self.registries:
                 entry = self.registries.pop(cluster_id)
                 entry.db_delete()
-
         except Exception as ex:
-            LOG.error("Error while trying to unregister cluster from health"
-                      "checks %s: %s", cluster_id, ex)
+            LOG.error("Error while trying to unregister cluster from health "
+                      "check %s: %s", cluster_id, ex)
         finally:
             if entry:
                 self.remove_health_check(entry)
@@ -623,7 +622,7 @@ class RuntimeHealthRegistry(object):
                 LOG.error("Unable to enable cluster for health checking: %s",
                           cluster_id)
         except Exception as ex:
-            LOG.error("Error while enabling health checks for cluster %s: %s",
+            LOG.error("Error while enabling health check for cluster %s: %s",
                       cluster_id, ex)
             if cluster_id in self.registries:
                 self.remove_health_check(self.registries[cluster_id])
@@ -642,7 +641,7 @@ class RuntimeHealthRegistry(object):
                 LOG.error("Unable to disable cluster for health checking: %s",
                           cluster_id)
         except Exception as ex:
-            LOG.error("Error while disabling health checks for cluster %s: %s",
+            LOG.error("Error while disabling health check for cluster %s: %s",
                       cluster_id, ex)
         finally:
             if cluster_id in self.registries:
