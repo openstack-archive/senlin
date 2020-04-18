@@ -12,8 +12,8 @@
 
 from collections import namedtuple
 import copy
+from unittest import mock
 
-import mock
 
 from oslo_config import cfg
 

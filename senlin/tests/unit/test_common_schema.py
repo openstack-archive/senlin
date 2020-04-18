@@ -11,8 +11,8 @@
 # under the License.
 
 import collections
+from unittest import mock
 
-import mock
 
 from senlin.common import constraints
 from senlin.common import exception as exc

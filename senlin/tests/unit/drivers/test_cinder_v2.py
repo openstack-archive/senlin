@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import mock
+from unittest import mock
 
 from senlin.drivers.os import cinder_v2
 from senlin.drivers import sdk

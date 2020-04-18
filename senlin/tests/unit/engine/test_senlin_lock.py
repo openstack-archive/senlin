@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import mock
+from unittest import mock
 
 from senlin.common import utils as common_utils
 from senlin.engine import senlin_lock as lockm

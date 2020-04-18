@@ -13,7 +13,7 @@
 
 import datetime
 import iso8601
-import mock
+from unittest import mock
 
 from senlin.api.openstack.v1 import services
 from senlin.common import policy

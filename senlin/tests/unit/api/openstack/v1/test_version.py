@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import mock
+from unittest import mock
 
 from senlin.api.common import version_request as vr
 from senlin.api.common import wsgi

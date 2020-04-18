@@ -11,8 +11,8 @@
 # under the License.
 
 
-import mock
 import socket
+from unittest import mock
 
 from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg

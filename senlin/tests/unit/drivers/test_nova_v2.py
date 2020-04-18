@@ -10,8 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import mock
 from openstack import exceptions as sdk_exc
+from unittest import mock
+
 from oslo_config import cfg
 
 from senlin.drivers.os import nova_v2

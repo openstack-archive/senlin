@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import mock
+from unittest import mock
 
 from senlin.db.sqlalchemy import api as db_api
 from senlin.db.sqlalchemy import utils as db_utils

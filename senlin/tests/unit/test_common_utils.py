@@ -12,9 +12,9 @@
 
 import datetime
 import io
+from unittest import mock
 import urllib
 
-import mock
 from oslo_log import log as logging
 from oslo_utils import timeutils
 import requests

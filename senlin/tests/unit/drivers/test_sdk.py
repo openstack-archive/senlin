@@ -11,8 +11,8 @@
 # under the License.
 
 import types
+from unittest import mock
 
-import mock
 from openstack import connection
 from oslo_serialization import jsonutils
 from requests import exceptions as req_exc

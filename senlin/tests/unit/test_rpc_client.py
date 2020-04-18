@@ -13,7 +13,7 @@
 """
 Unit Tests for senlin.rpc.client
 """
-import mock
+from unittest import mock
 
 from senlin.common import messaging
 from senlin.rpc import client as rpc_client
