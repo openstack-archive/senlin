@@ -32,7 +32,7 @@ dynamically.
 
 A policy type implementation dictates which fields are required, which fields
 are optional and sometimes the constraints on field values. When a
-:term:`policy` is created by referencing this policy type, the fields are
+:term:`Policy` is created by referencing this policy type, the fields are
 assigned with concrete values. For example, a policy type
 ``senlin.policy.deletion`` conceptually specifies the properties required::
 

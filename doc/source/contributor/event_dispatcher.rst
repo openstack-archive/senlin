@@ -16,7 +16,7 @@
 Event Dispatchers
 =================
 
-An event :term:`dispatcher` is a processor that converts a given action in
+An event :term:`dispatcher<Dispatcher>` is a processor that converts a given action in
 Senlin engine into certain format and then persists it into some storage or
 sends it to downstream processing software.
 
@@ -123,4 +123,3 @@ you will need to add the following line to the ``senlin.conf`` file:
 ::
 
   event_dispatchers = jsonfile
-

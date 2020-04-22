@@ -18,7 +18,7 @@ Welcome to the Senlin documentation!
 1 Introduction
 ~~~~~~~~~~~~~~
 
-Senlin is a service to create and manage :term:`cluster` of multiple cloud
+Senlin is a service to create and manage :term:`Cluster` of multiple cloud
 resources. Senlin provides an OpenStack-native REST API and a AWS
 AutoScaling-compatible Query API is in plan.
 

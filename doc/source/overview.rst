@@ -23,7 +23,7 @@ The goal is to make orchestration of collections of similar objects easier.
 
 Senlin interacts with other OpenStack services so that clusters of resources
 exposed by those services can be created and operated. These interactions are
-mostly done through the via :term:`profile` plugins. Each profile type
+mostly done through the via :term:`profile<Profile>` plugins. Each profile type
 implementation enable Senlin to create, update, delete a specific type of
 resources.
 

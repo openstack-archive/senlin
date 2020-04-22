@@ -105,7 +105,7 @@ clusters respectively, you will receive an error message. If the identifier
 provided matches more than one object, you will get an error message as well.
 
 Before Senlin engine performs the cluster membership changes, it will verify
-if the nodes to be added have the same :term:`profile type` with the target
+if the nodes to be added have the same :term:`Profile Type` with the target
 cluster. If the profile types don't match, you will get an error message.
 
 When nodes are added to a cluster, they will get new ``index`` property values

@@ -169,7 +169,7 @@ When a node becomes a member of a cluster, it will get a value for its
 ``index`` property that uniquely identifies itself within the owning cluster.
 
 When the owning cluster is specified, Senlin engine will verify if the cluster
-specified is referencing a profile that has the same :term:`profile type` as
+specified is referencing a profile that has the same :term:`Profile Type` as
 that of the new node. If the profile types don't match, you will receive an
 error message from the :command:`openstack cluster` command.
 

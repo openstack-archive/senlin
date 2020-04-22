@@ -22,8 +22,8 @@ Actions
 Concept
 ~~~~~~~
 
-An :term:`Action` is an operation that can be performed on a :term:`cluster`
-or a :term:`node`. Each action is executed asynchronously by a worker thread
+An :term:`Action` is an operation that can be performed on a :term:`Cluster`
+or a :term:`Node`. Each action is executed asynchronously by a worker thread
 after being created. Most Senlin APIs are executed asynchronously inside the
 Senlin engine except for some object retrieval or object listing APIs.
 

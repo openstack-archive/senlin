@@ -24,7 +24,7 @@ Concept
 A :term:`Policy` is an object instantiated from a :term:`Policy Type`. Once
 created, it can be dynamically attached to or detached from a cluster. Such a
 policy usually contains rules to be checked/enforced when certain
-:term:`action` is about to be executed or has been executed.
+:term:`Action` is about to be executed or has been executed.
 
 One policy can be attached to many clusters, and one cluster can be attached
 with many policies. In addition to this, a policy on a cluster can be
@@ -103,7 +103,7 @@ Creating a Policy
 When creating a new policy object, you need a "spec" file in YAML format. You
 may want to check the :command:`openstack cluster policy type show` command in
 :ref:`ref-policy-types` for the property names and types for a specific
-:term:`policy type`. For example, the following is a spec for the policy type
+:term:`Policy Type`. For example, the following is a spec for the policy type
 ``senlin.policy.deletion`` (the source can be found in the
 :file:`examples/policies/deletion_policy.yaml` file)::
 

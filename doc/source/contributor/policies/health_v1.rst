@@ -310,7 +310,7 @@ Default Recovery Action
 -----------------------
 
 Since Senlin is designed to manage different types of resources, each resource
-type, i.e. :term:`profile type`, may support different sets of operations that
+type, i.e. :term:`Profile Type`, may support different sets of operations that
 can be used for failure recovery.
 
 A more practical and more general operation to recover a failed resource is to
