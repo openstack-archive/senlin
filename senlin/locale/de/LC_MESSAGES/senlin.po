@@ -1,15 +1,16 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 # Frank Kloeker <eumel@arcor.de>, 2018. #zanata
+# Andreas Jaeger <jaegerandi@gmail.com>, 2020. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: senlin VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2018-08-03 04:36+0000\n"
+"POT-Creation-Date: 2020-04-23 16:05+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2018-03-06 07:50+0000\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"PO-Revision-Date: 2020-04-25 11:33+0000\n"
+"Last-Translator: Andreas Jaeger <jaegerandi@gmail.com>\n"
 "Language-Team: German\n"
 "Language: de\n"
 "X-Generator: Zanata 4.3.3\n"
@@ -200,6 +201,9 @@ msgstr "Verwaltungszustand des Gesundheitsmonitors"
 msgid "Administrative state of the pool."
 msgstr "Verwaltungszustand des Pools"
 
+msgid "Age must be a positive integer."
+msgstr "Alter muss eine positive Ganzzahl sein."
+
 #, python-format
 msgid "Allowed values: %s"
 msgstr "Erlaubte Werte: %s"
@@ -256,18 +260,6 @@ msgid "Change the administrator password."
 msgstr "Ändern Sie das Administratorkennwort."
 
 #, python-format
-msgid "Cluster %(id)s cannot be deleted without having all policies detached."
-msgstr ""
-"Cluster %(id)s können nicht gelöscht werden, ohne dass alle Richtlinien "
-"entfernt wurden."
-
-#, python-format
-msgid "Cluster %(id)s cannot be deleted without having all receivers deleted."
-msgstr ""
-"Cluster %(id)s können nicht gelöscht werden, ohne dass alle Empfänger "
-"gelöscht wurden."
-
-#, python-format
 msgid "Cluster (%(cid)s) cannot be found."
 msgstr "Cluster (%(cid)s) kann nicht gefunden werden."
 
@@ -290,6 +282,12 @@ msgstr "Inhalt von Dateien, auf die die Vorlage verweist, falls vorhanden."
 
 msgid "Contents of the file to be injected."
 msgstr "Inhalt der zu injizierenden Datei."
+
+#, python-format
+msgid "Could not bind to %(bind_addr)s after trying 30 seconds"
+msgstr ""
+"Nach dem Versuch von 30 Sekunden konnte nicht an %(bind_addr)s gebunden "
+"werden"
 
 msgid "Count for scale-in request cannot be 0."
 msgstr "Die Anzahl der Scale-In-Anforderungen kann nicht 0 sein."
@@ -641,6 +639,10 @@ msgstr "Sperren Sie den Server."
 msgid "Lowest event priorities to be dispatched."
 msgstr "Niedrigste Ereignisprioritäten, die gesendet werden sollen."
 
+msgid "Malformed request data, missing 'action' key in request body."
+msgstr ""
+"Fehlgeschlagene Anfragedaten, fehlender 'action' Schlüssel im Anfragetext."
+
 msgid "Malformed request data, missing 'cluster' key in request body."
 msgstr "Fehlerhafte Anfragedaten, fehlender Clusterschlüssel im Anfragetext."
 
@@ -813,9 +815,6 @@ msgstr "Name des Servers. Ohne Angabe wird der Knotenname verwendet."
 msgid "Name of the service project."
 msgstr "Name des Serviceprojekts"
 
-msgid "Name or ID of Subnet on which the VIP address will be allocated."
-msgstr "Name oder ID des Subnetzes, dem die VIP-Adresse zugewiesen wird."
-
 msgid ""
 "Name or ID of loadbalancer for the cluster on which nodes can be connected."
 msgstr ""
@@ -941,8 +940,8 @@ msgstr ""
 "Anzahl der Sekunden, die gewartet werden muss, bevor der Container beendet "
 "wird"
 
-msgid "Number of senlin-engine processes to fork and run."
-msgstr "Anzahl der Senlin-Engine-Prozesse zum Abzweigen und Ausführen"
+msgid "Number of senlin-conductor threads."
+msgstr "Anzahl der Arbeiter für den Senlin-Conductor-Dienst."
 
 msgid "Number of times trying to grab a lock."
 msgstr "Anzahl der Versuche, eine Sperre zu erfassen."
@@ -1061,6 +1060,9 @@ msgid ""
 msgstr ""
 "Ereignisdatensätze mit dem angegebenen Projekt löschen Dies kann mehrmals "
 "oder einmal mit durch Semikolon getrennten Parametern angegeben werden."
+
+msgid "Quota exceeded for resources."
+msgstr "Kontingent für Ressourcen überschritten."
 
 msgid ""
 "RPC timeout for the engine liveness check that is used for cluster locking."
@@ -1220,11 +1222,6 @@ msgstr ""
 "Die Eigenschaft '%(p)s' und die Eigenschaft '%(fip)s' können nicht "
 "gleichzeitig angegeben werden"
 
-#, python-format
-msgid "The 'number' must be positive integer for adjustment type '%s'."
-msgstr ""
-"Die 'Nummer' muss eine positive Ganzzahl für den Anpassungstyp '%s' sein."
-
 msgid "The 'type' key is missing from the provided spec map."
 msgstr "Der Typschlüssel fehlt in der angegebenen Spezifikationsübersicht."
 
@@ -1263,20 +1260,6 @@ msgid ""
 msgstr ""
 "Der Cluster 'FAKE_CLUSTER' kann nicht gelöscht werden: wird immer noch von "
 "Profil (en) referenziert: ['profile1']."
-
-msgid ""
-"The cluster 'IDENTITY' cannot be deleted: there is still policy(s) attached "
-"to it."
-msgstr ""
-"Der Cluster 'IDENTITY' kann nicht gelöscht werden: Es sind noch Richtlinien "
-"beigefügt."
-
-msgid ""
-"The cluster 'IDENTITY' cannot be deleted: there is still receiver(s) "
-"associated with it."
-msgstr ""
-"Der Cluster 'IDENTITY' kann nicht gelöscht werden: Es sind immer noch "
-"Empfänger zugeordnet."
 
 #, python-format
 msgid "The cluster (%s) contains no active nodes"
@@ -1874,9 +1857,6 @@ msgstr "Ein Cluster namens '%s' existiert bereits."
 msgid "a cluster named 'CLUSTER' already exists."
 msgstr "Ein Cluster mit dem Namen 'CLUSTER' existiert bereits."
 
-msgid "age must be a positive integer."
-msgstr "Alter muss eine positive Ganzzahl sein."
-
 #, python-format
 msgid "environment has unknown section \"%s\""
 msgstr "Umgebung hat unbekannten Abschnitt '%s'"
@@ -1930,9 +1910,3 @@ msgstr "Die 'Nummer' für 'Anpassung' muss > 0 sein"
 #, python-format
 msgid "the floating IP %s has been used."
 msgstr "die Floating IP %s wurde verwendet."
-
-msgid "there is still policy(s) attached to it."
-msgstr "Es sind noch Richtlinien beigefügt."
-
-msgid "there is still receiver(s) associated with it."
-msgstr "Es sind immer noch Empfänger verbunden."
