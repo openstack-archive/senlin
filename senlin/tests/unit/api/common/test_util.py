@@ -11,7 +11,8 @@
 # under the License.
 
 import jsonschema
-import mock
+from unittest import mock
+
 from webob import exc
 
 from senlin.api.common import util

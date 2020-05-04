@@ -11,8 +11,8 @@
 # under the License.
 
 import base64
+from unittest import mock
 
-import mock
 from oslo_config import cfg
 from oslo_utils import encodeutils
 

@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 import copy
-import mock
+from unittest import mock
 
 from senlin.policies import batch_policy as bp
 from senlin.tests.unit.common import base

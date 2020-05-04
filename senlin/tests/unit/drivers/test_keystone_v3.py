@@ -11,8 +11,8 @@
 # under the License.
 
 import copy
+from unittest import mock
 
-import mock
 from oslo_config import cfg
 
 from senlin.drivers.os import keystone_v3 as kv3

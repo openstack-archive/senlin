@@ -11,9 +11,9 @@
 # under the License.
 
 import datetime
+from unittest import mock
 
 import eventlet
-import mock
 from oslo_config import cfg
 import oslo_messaging
 from oslo_utils import timeutils

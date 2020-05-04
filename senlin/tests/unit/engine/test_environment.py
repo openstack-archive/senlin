@@ -11,7 +11,7 @@
 # under the License.
 
 import glob
-import mock
+from unittest import mock
 
 from senlin.common import exception
 from senlin.engine import environment

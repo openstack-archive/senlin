@@ -11,7 +11,7 @@
 # under the License.
 
 import eventlet
-import mock
+from unittest import mock
 
 from senlin.common import consts
 from senlin.common import scaleutils

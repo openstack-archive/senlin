@@ -11,7 +11,7 @@
 # under the License.
 
 import copy
-import mock
+from unittest import mock
 
 from senlin.common import consts
 from senlin.common import scaleutils as su

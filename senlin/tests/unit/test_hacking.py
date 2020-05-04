@@ -10,9 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import mock
 import pycodestyle
 import textwrap
+from unittest import mock
 
 from senlin.hacking import checks
 from senlin.tests.unit.common import base

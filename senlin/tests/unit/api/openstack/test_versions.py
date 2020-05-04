@@ -11,7 +11,8 @@
 # under the License.
 
 import http.client as http_client
-import mock
+from unittest import mock
+
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 import webob

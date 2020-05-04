@@ -11,8 +11,8 @@
 # under the License.
 
 import copy
+from unittest import mock
 
-import mock
 
 from senlin.common import consts
 from senlin.common import context

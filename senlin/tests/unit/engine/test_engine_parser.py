@@ -12,9 +12,9 @@
 
 import io
 import os
+from unittest import mock
 import urllib
 
-import mock
 
 from senlin.engine import parser
 from senlin.tests.unit.common import base

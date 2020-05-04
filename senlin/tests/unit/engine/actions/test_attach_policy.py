@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import mock
+from unittest import mock
 
 from senlin.engine.actions import cluster_action as ca
 from senlin.engine import cluster as cm

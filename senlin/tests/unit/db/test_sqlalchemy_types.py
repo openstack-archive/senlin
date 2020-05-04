@@ -12,7 +12,8 @@
 #    under the License.
 
 
-import mock
+from unittest import mock
+
 from oslo_utils import timeutils
 import pytz
 from sqlalchemy.dialects.mysql import base as mysql_base

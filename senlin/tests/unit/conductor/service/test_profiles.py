@@ -11,8 +11,8 @@
 # under the License.
 
 import copy
+from unittest import mock
 
-import mock
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher as rpc
 from oslo_utils import uuidutils

@@ -11,8 +11,8 @@
 # under the License.
 
 import copy
+from unittest import mock
 
-import mock
 from oslo_context import context as oslo_ctx
 
 from senlin.common import consts
