@@ -15,7 +15,6 @@ import base64
 import jinja2
 from oslo_log import log as logging
 from oslo_utils import encodeutils
-import six
 
 from kube import base
 from senlin.common import consts
@@ -166,7 +165,7 @@ class ServerProfile(base.KubeBaseProfile):
             cluster = cluster_obj.Cluster.find(ctx, master)
         except Exception as ex:
             raise exc.EResourceCreation(type='kubernetes.worker',
-                                        message=six.text_type(ex))
+                                        message=str(ex))
         for key in self.MASTER_CLUSTER_KEYS:
             if key not in cluster.data:
                 raise exc.EResourceCreation(
@@ -316,7 +315,7 @@ class ServerProfile(base.KubeBaseProfile):
             if server and server.id:
                 resource_id = server.id
             raise exc.EResourceCreation(type='server',
-                                        message=six.text_type(ex),
+                                        message=str(ex),
                                         resource_id=resource_id)
 
     def do_delete(self, obj, **params):
@@ -351,4 +350,4 @@ class ServerProfile(base.KubeBaseProfile):
             return True
         except exc.InternalError as ex:
             raise exc.EResourceDeletion(type='server', id=server_id,
-                                        message=six.text_type(ex))
+                                        message=str(ex))

@@ -15,7 +15,6 @@ import random
 import string
 
 from oslo_log import log as logging
-import six
 
 from senlin.common import context
 from senlin.common import exception as exc
@@ -84,7 +83,7 @@ class KubeBaseProfile(server.ServerProfile):
                                           ip_version=4)
         except exc.InternalError as ex:
             raise exc.EResourceCreation(type='kubernetes',
-                                        message=six.text_type(ex),
+                                        message=str(ex),
                                         resource_id=obj.id)
         pub_net = client.network_get(self.properties[self.PUBLIC_NETWORK])
         try:
@@ -94,7 +93,7 @@ class KubeBaseProfile(server.ServerProfile):
             fip = client.floatingip_create(floating_network_id=pub_net.id)
         except exc.InternalError as ex:
             raise exc.EResourceCreation(type='kubernetes',
-                                        message=six.text_type(ex),
+                                        message=str(ex),
                                         resource_id=obj.id)
 
         ctx = context.get_service_context(user_id=obj.user,
@@ -119,7 +118,7 @@ class KubeBaseProfile(server.ServerProfile):
                 client.floatingip_delete(fip_id)
             except exc.InternalError as ex:
                 raise exc.EResourceDeletion(type='kubernetes', id=fip_id,
-                                            message=six.text_type(ex))
+                                            message=str(ex))
 
         router = obj.data.get(self.PRIVATE_ROUTER)
         subnet = obj.data.get(self.PRIVATE_SUBNET)
@@ -129,7 +128,7 @@ class KubeBaseProfile(server.ServerProfile):
             except exc.InternalError as ex:
                 raise exc.EResourceDeletion(type='kubernetes',
                                             id=subnet,
-                                            message=six.text_type(ex))
+                                            message=str(ex))
 
         if router:
             try:
@@ -138,7 +137,7 @@ class KubeBaseProfile(server.ServerProfile):
             except exc.InternalError as ex:
                 raise exc.EResourceDeletion(type='kubernetes',
                                             id=router,
-                                            message=six.text_type(ex))
+                                            message=str(ex))
 
         net = obj.data.get(self.PRIVATE_NETWORK)
         if net:
@@ -148,7 +147,7 @@ class KubeBaseProfile(server.ServerProfile):
             except exc.InternalError as ex:
                 raise exc.EResourceDeletion(type='kubernetes',
                                             id=net,
-                                            message=six.text_type(ex))
+                                            message=str(ex))
 
     def _associate_floatingip(self, obj, server):
         ctx = context.get_service_context(user_id=obj.user,
@@ -165,7 +164,7 @@ class KubeBaseProfile(server.ServerProfile):
                     raise exc.EResourceOperation(op='floatingip',
                                                  type='kubernetes',
                                                  id=fip,
-                                                 message=six.text_type(ex))
+                                                 message=str(ex))
 
     def _disassociate_floatingip(self, obj, server):
         ctx = context.get_service_context(user_id=obj.user,
@@ -181,7 +180,7 @@ class KubeBaseProfile(server.ServerProfile):
                     raise exc.EResourceOperation(op='floatingip',
                                                  type='kubernetes',
                                                  id=fip,
-                                                 message=six.text_type(ex))
+                                                 message=str(ex))
 
     def _get_cluster_data(self, obj):
         ctx = context.get_service_context(user_id=obj.user,
@@ -211,7 +210,7 @@ class KubeBaseProfile(server.ServerProfile):
             sg = client.security_group_create(name=self.name)
         except Exception as ex:
             raise exc.EResourceCreation(type='kubernetes',
-                                        message=six.text_type(ex))
+                                        message=str(ex))
         data = obj.data
         data[self.SECURITY_GROUP] = sg.id
         cluster_obj.Cluster.update(ctx, obj.id, {'data': data})
@@ -241,7 +240,7 @@ class KubeBaseProfile(server.ServerProfile):
                     client.security_group_rule_create(sgid, port, protocol=p)
                 except Exception as ex:
                     raise exc.EResourceCreation(type='kubernetes',
-                                                message=six.text_type(ex))
+                                                message=str(ex))
 
     def _delete_security_group(self, obj):
         sgid = obj.data.get(self.SECURITY_GROUP)
@@ -252,7 +251,7 @@ class KubeBaseProfile(server.ServerProfile):
             except exc.InternalError as ex:
                 raise exc.EResourceDeletion(type='kubernetes',
                                             id=sgid,
-                                            message=six.text_type(ex))
+                                            message=str(ex))
 
     def do_validate(self, obj):
         """Validate if the spec has provided valid info for server creation.
