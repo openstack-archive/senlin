@@ -17,7 +17,6 @@ import jinja2
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
-import six
 
 from senlin.common import constraints
 from senlin.common import consts
@@ -343,7 +342,7 @@ class ServerProfile(base.Profile):
         except exc.InternalError as ex:
             if reason == 'create':
                 raise exc.EResourceCreation(type='server',
-                                            message=six.text_type(ex))
+                                            message=str(ex))
             else:
                 raise
 
@@ -363,7 +362,7 @@ class ServerProfile(base.Profile):
         try:
             flavor = self.compute(obj).flavor_find(name_or_id, False)
         except exc.InternalError as ex:
-            msg = six.text_type(ex)
+            msg = str(ex)
             if reason is None:  # reason is 'validate'
                 if ex.code == 404:
                     msg = _("The specified %(k)s '%(v)s' could not be found."
@@ -392,10 +391,10 @@ class ServerProfile(base.Profile):
         except exc.InternalError as ex:
             if reason == 'create':
                 raise exc.EResourceCreation(type='server',
-                                            message=six.text_type(ex))
+                                            message=str(ex))
             elif reason == 'update':
                 raise exc.EResourceUpdate(type='server', id=obj.physical_id,
-                                          message=six.text_type(ex))
+                                          message=str(ex))
             elif ex.code == 404:
                 msg = _("The specified %(k)s '%(v)s' could not be found."
                         ) % {'k': self.IMAGE, 'v': name_or_id}
@@ -409,10 +408,10 @@ class ServerProfile(base.Profile):
         except exc.InternalError as ex:
             if reason == 'create':
                 raise exc.EResourceCreation(type='server',
-                                            message=six.text_type(ex))
+                                            message=str(ex))
             elif reason == 'update':
                 raise exc.EResourceUpdate(type='server', id=obj.physical_id,
-                                          message=six.text_type(ex))
+                                          message=str(ex))
             elif ex.code == 404:
                 msg = _("The specified %(k)s '%(v)s' could not be found."
                         ) % {'k': self.KEY_NAME, 'v': name_or_id}
@@ -476,7 +475,7 @@ class ServerProfile(base.Profile):
                 sg_obj = nc.security_group_find(sg)
                 res.append(sg_obj.id)
         except exc.InternalError as ex:
-            return six.text_type(ex)
+            return str(ex)
 
         result[self.PORT_SECURITY_GROUPS] = res
         return
@@ -495,7 +494,7 @@ class ServerProfile(base.Profile):
             net_obj = nc.network_get(net)
             result[self.NETWORK] = net_obj.id
         except exc.InternalError as ex:
-            return six.text_type(ex)
+            return str(ex)
 
     def _check_port(self, nc, port, result):
         """Check the specified port.
@@ -516,7 +515,7 @@ class ServerProfile(base.Profile):
             result[self.PORT] = port_obj.id
             return
         except exc.InternalError as ex:
-            return six.text_type(ex)
+            return str(ex)
 
     def _check_floating_ip(self, nc, net_spec, result):
         """Check floating IP and network, if specified.
@@ -532,7 +531,7 @@ class ServerProfile(base.Profile):
                 net_obj = nc.network_get(net)
                 result[self.FLOATING_NETWORK] = net_obj.id
             except exc.InternalError as ex:
-                return six.text_type(ex)
+                return str(ex)
 
         flt_ip = net_spec.get(self.FLOATING_IP)
         if not flt_ip:
@@ -554,7 +553,7 @@ class ServerProfile(base.Profile):
             result[self.FLOATING_IP] = flt_ip
             return
         except exc.InternalError as ex:
-            return six.text_type(ex)
+            return str(ex)
 
     def _validate_network(self, obj, net_spec, reason=None):
 
@@ -754,7 +753,7 @@ class ServerProfile(base.Profile):
         metadata['cluster_node_id'] = obj.id
         if obj.cluster_id:
             metadata['cluster_id'] = obj.cluster_id
-            metadata['cluster_node_index'] = six.text_type(obj.index)
+            metadata['cluster_node_index'] = str(obj.index)
 
         return metadata
 
@@ -904,7 +903,7 @@ class ServerProfile(base.Profile):
             if server and server.id:
                 resource_id = server.id
             raise exc.EResourceCreation(type='server',
-                                        message=six.text_type(ex),
+                                        message=str(ex),
                                         resource_id=resource_id)
 
     def do_delete(self, obj, **params):
@@ -939,7 +938,7 @@ class ServerProfile(base.Profile):
             return True
         except exc.InternalError as ex:
             raise exc.EResourceDeletion(type='server', id=server_id,
-                                        message=six.text_type(ex))
+                                        message=str(ex))
 
     def _check_server_name(self, obj, profile):
         """Check if there is a new name to be assigned to the server.
@@ -968,7 +967,7 @@ class ServerProfile(base.Profile):
             self.compute(obj).server_update(obj.physical_id, name=new_name)
         except exc.InternalError as ex:
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
-                                      message=six.text_type(ex))
+                                      message=str(ex))
 
     def _check_password(self, obj, new_profile):
         """Check if the admin password has been changed in the new profile.
@@ -999,7 +998,7 @@ class ServerProfile(base.Profile):
                                                      new_password)
         except exc.InternalError as ex:
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
-                                      message=six.text_type(ex))
+                                      message=str(ex))
 
     def _update_metadata(self, obj, new_profile):
         """Update the server metadata.
@@ -1020,7 +1019,7 @@ class ServerProfile(base.Profile):
             self.compute(obj).server_metadata_update(obj.physical_id, new_meta)
         except exc.InternalError as ex:
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
-                                      message=six.text_type(ex))
+                                      message=str(ex))
 
     def _update_flavor(self, obj, new_profile):
         """Update server flavor.
@@ -1043,12 +1042,12 @@ class ServerProfile(base.Profile):
             cc.server_resize(obj.physical_id, newflavor.id)
             cc.wait_for_server(obj.physical_id, 'VERIFY_RESIZE')
         except exc.InternalError as ex:
-            msg = six.text_type(ex)
+            msg = str(ex)
             try:
                 cc.server_resize_revert(obj.physical_id)
                 cc.wait_for_server(obj.physical_id, 'ACTIVE')
             except exc.InternalError as ex1:
-                msg = six.text_type(ex1)
+                msg = str(ex1)
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
                                       message=msg)
 
@@ -1057,7 +1056,7 @@ class ServerProfile(base.Profile):
             cc.wait_for_server(obj.physical_id, 'ACTIVE')
         except exc.InternalError as ex:
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
-                                      message=six.text_type(ex))
+                                      message=str(ex))
 
     def _update_image(self, obj, new_profile, new_name, new_password):
         """Update image used by server node.
@@ -1091,7 +1090,7 @@ class ServerProfile(base.Profile):
                 server = driver.server_get(obj.physical_id)
             except exc.InternalError as ex:
                 raise exc.EResourceUpdate(type='server', id=obj.physical_id,
-                                          message=six.text_type(ex))
+                                          message=str(ex))
             # Still, this 'old_image_id' could be empty, but it doesn't matter
             # because the comparison below would fail if that is the case
             old_image_id = server.image.get('id', None)
@@ -1105,7 +1104,7 @@ class ServerProfile(base.Profile):
             driver.wait_for_server(obj.physical_id, 'ACTIVE')
         except exc.InternalError as ex:
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
-                                      message=six.text_type(ex))
+                                      message=str(ex))
         return True
 
     def _update_network_add_port(self, obj, networks):
@@ -1122,7 +1121,7 @@ class ServerProfile(base.Profile):
             server = cc.server_get(obj.physical_id)
         except exc.InternalError as ex:
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
-                                      message=six.text_type(ex))
+                                      message=str(ex))
 
         ports = self._create_ports_from_properties(
             obj, networks, 'update')
@@ -1133,7 +1132,7 @@ class ServerProfile(base.Profile):
             except exc.InternalError as ex:
                 raise exc.EResourceUpdate(type='server',
                                           id=obj.physical_id,
-                                          message=six.text_type(ex))
+                                          message=str(ex))
 
     def _find_port_by_net_spec(self, obj, net_spec, ports):
         """Find existing ports match with specific network properties.
@@ -1207,7 +1206,7 @@ class ServerProfile(base.Profile):
                                          ignore_missing=True)
             except exc.InternalError as ex:
                 raise exc.EResourceUpdate(type='server', id=obj.physical_id,
-                                          message=six.text_type(ex))
+                                          message=str(ex))
             internal_ports.remove(port)
         obj.data['internal_ports'] = internal_ports
         node_obj.Node.update(self.context, obj.id, {'data': obj.data})
@@ -1311,7 +1310,7 @@ class ServerProfile(base.Profile):
             return {
                 'Error': {
                     'code': ex.code,
-                    'message': six.text_type(ex)
+                    'message': str(ex)
                 }
             }
 
@@ -1362,7 +1361,7 @@ class ServerProfile(base.Profile):
         driver = self.compute(obj)
         metadata = driver.server_metadata_get(obj.physical_id) or {}
         metadata['cluster_id'] = cluster_id
-        metadata['cluster_node_index'] = six.text_type(obj.index)
+        metadata['cluster_node_index'] = str(obj.index)
         driver.server_metadata_update(obj.physical_id, metadata)
         return super(ServerProfile, self).do_join(obj, cluster_id)
 
@@ -1383,7 +1382,7 @@ class ServerProfile(base.Profile):
         except exc.InternalError as ex:
             raise exc.EResourceOperation(op='checking', type='server',
                                          id=obj.physical_id,
-                                         message=six.text_type(ex))
+                                         message=str(ex))
 
         if (server is None or server.status != 'ACTIVE'):
             return False
@@ -1399,7 +1398,7 @@ class ServerProfile(base.Profile):
         """
         operation = options.get('operation', None)
 
-        if operation and not isinstance(operation, six.string_types):
+        if operation and not isinstance(operation, str):
             operation = operation[0]
 
         op_name = operation['name']
@@ -1420,7 +1419,7 @@ class ServerProfile(base.Profile):
             return False
 
         reboot_type = options.get(self.REBOOT_TYPE, self.REBOOT_SOFT)
-        if (not isinstance(reboot_type, six.string_types) or
+        if (not isinstance(reboot_type, str) or
                 reboot_type not in self.REBOOT_TYPES):
             return False
 
@@ -1439,7 +1438,7 @@ class ServerProfile(base.Profile):
         except exc.InternalError as ex:
             raise exc.EResourceOperation(op='rebuilding', type='server',
                                          id=server_id,
-                                         message=six.text_type(ex))
+                                         message=str(ex))
 
         if server is None or server.image is None:
             return False
@@ -1454,7 +1453,7 @@ class ServerProfile(base.Profile):
         except exc.InternalError as ex:
             raise exc.EResourceOperation(op='rebuilding', type='server',
                                          id=server_id,
-                                         message=six.text_type(ex))
+                                         message=str(ex))
         return True
 
     def handle_change_password(self, obj, **options):
@@ -1463,7 +1462,7 @@ class ServerProfile(base.Profile):
             return False
 
         password = options.get(self.ADMIN_PASSWORD, None)
-        if (password is None or not isinstance(password, six.string_types)):
+        if (password is None or not isinstance(password, str)):
             return False
 
         self.compute(obj).server_change_password(obj.physical_id, password)
