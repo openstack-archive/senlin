@@ -40,9 +40,9 @@ extensions = [
 ]
 
 # openstackdocstheme options
-repository_name = 'openstack/senlin'
-bug_project = 'senlin'
-bug_tag = ''
+openstackdocs_repo_name = 'openstack/senlin'
+openstackdocs_bug_project = 'senlin'
+openstackdocs_bug_tag = ''
 
 policy_generator_config_file = (
     '../../tools/policy-generator.conf'
@@ -74,7 +74,7 @@ add_function_parentheses = True
 add_module_names = True
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = 'native'
 
 # -- Options for HTML output --------------------------------------------------
 
