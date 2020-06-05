@@ -24,13 +24,11 @@ eventlet==0.18.2
 extras==1.0.0
 fasteners==0.14.1
 fixtures==3.0.0
-flake8==3.7.9
 future==0.16.0
 futurist==1.6.0
 gitdb2==2.0.3
 GitPython==2.1.8
 greenlet==0.4.13
-hacking==2.0.0
 idna==2.6
 iso8601==0.1.12
 Jinja2==2.10
@@ -88,7 +86,6 @@ pyasn1==0.4.2
 pycadf==2.7.0
 pycparser==2.18
 pycodestyle==2.5.0
-pyflakes==1.0.0
 pyinotify==0.9.6
 PyMySQL==0.7.6
 PyNaCl==1.2.1
