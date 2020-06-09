@@ -119,10 +119,11 @@ class OctaviaClient(base.DriverBase):
         return
 
     @sdk.translate_exception
-    def pool_member_create(self, pool_id, address, protocol_port, subnet_id,
-                           weight=None, admin_state_up=True):
+    def pool_member_create(self, name, pool_id, address, protocol_port,
+                           subnet_id, weight=None, admin_state_up=True):
 
         kwargs = {
+            'name': name,
             'address': address,
             'protocol_port': protocol_port,
             'admin_state_up': admin_state_up,

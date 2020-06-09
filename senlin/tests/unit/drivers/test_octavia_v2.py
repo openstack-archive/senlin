@@ -167,6 +167,7 @@ class TestOctaviaV2Driver(base.SenlinTestCase):
             pool_id, ignore_missing=True)
 
     def test_pool_member_create(self):
+        name = 'web-server-1'
         pool_id = 'ID1'
         address = '192.168.1.100'
         protocol_port = 80
@@ -182,9 +183,9 @@ class TestOctaviaV2Driver(base.SenlinTestCase):
 
         self.conn.load_balancer.create_member.return_value = member_obj
         self.assertEqual(member_obj, self.oc.pool_member_create(
-            pool_id, address, protocol_port, subnet_id, **kwargs))
+            name, pool_id, address, protocol_port, subnet_id, **kwargs))
         self.conn.load_balancer.create_member.assert_called_once_with(
-            pool_id, address=address, protocol_port=protocol_port,
+            pool_id, name=name, address=address, protocol_port=protocol_port,
             subnet_id=subnet_id, **kwargs)
 
         # Use default input parameters
@@ -192,9 +193,9 @@ class TestOctaviaV2Driver(base.SenlinTestCase):
             'admin_state_up': True
         }
         self.assertEqual(member_obj, self.oc.pool_member_create(
-            pool_id, address, protocol_port, subnet_id))
+            name, pool_id, address, protocol_port, subnet_id))
         self.conn.load_balancer.create_member.assert_called_with(
-            pool_id, address=address, protocol_port=protocol_port,
+            pool_id, name=name, address=address, protocol_port=protocol_port,
             subnet_id=subnet_id, **kwargs)
 
     def test_pool_member_delete(self):

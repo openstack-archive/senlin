@@ -523,6 +523,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
                 'network2': [{'addr': 'ipaddr_net2', 'version': '4'}]
             }
         }
+        name = node_detail.get('name')
         mock_pb_load.return_value.do_get_details.return_value = node_detail
 
         self.nc.subnet_get.return_value = subnet_obj
@@ -537,7 +538,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         self.nc.network_get.assert_called_once_with('NETWORK_ID')
         # Make sure the ip matches with subnet ip_version
         self.oc.pool_member_create.assert_called_once_with(
-            pool_id, 'ipaddr2_net1', port, 'SUBNET_ID')
+            name, pool_id, 'ipaddr2_net1', port, 'SUBNET_ID')
         self.lb_driver._wait_for_lb_ready.assert_has_calls(
             [mock.call('LB_ID'), mock.call('LB_ID')])
 

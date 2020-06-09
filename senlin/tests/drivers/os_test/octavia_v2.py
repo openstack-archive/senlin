@@ -187,9 +187,10 @@ class OctaviaClient(base.DriverBase):
     def pool_delete(self, pool_id, ignore_missing=True):
         return
 
-    def pool_member_create(self, pool_id, address, protocol_port, subnet_id,
-                           weight=None, admin_state_up=True):
+    def pool_member_create(self, name, pool_id, address, protocol_port,
+                           subnet_id, weight=None, admin_state_up=True):
         # pool_id is ignored
+        self.fake_member["name"] = name
         self.fake_member["address"] = address
         self.fake_member["protocol_port"] = protocol_port
         self.fake_member["subnet_id"] = subnet_id

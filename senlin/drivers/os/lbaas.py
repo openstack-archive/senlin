@@ -291,6 +291,7 @@ class LoadBalancerDriver(base.DriverBase):
                                project_safe=False)
         node_detail = prof.do_get_details(node)
         addresses = node_detail.get('addresses')
+        node_name = node_detail.get('name')
         if net_name not in addresses:
             LOG.error('Node is not in subnet %(subnet)s', {'subnet': subnet})
             return None
@@ -318,8 +319,8 @@ class LoadBalancerDriver(base.DriverBase):
             if not res:
                 msg = 'Loadbalancer %s is not ready.' % lb_id
                 raise exception.Error(msg)
-            member = self.oc().pool_member_create(pool_id, address, port,
-                                                  subnet_obj.id)
+            member = self.oc().pool_member_create(
+                node_name, pool_id, address, port, subnet_obj.id)
         except (exception.InternalError, exception.Error) as ex:
             LOG.exception('Failed in creating lb pool member: %s.', ex)
             return None
