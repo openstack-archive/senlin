@@ -128,7 +128,6 @@ function configure_senlin {
     #configure_auth_token_middleware $SENLIN_CONF senlin $SENLIN_AUTH_CACHE_DIR
     iniset $SENLIN_CONF keystone_authtoken cafile $SSL_BUNDLE_FILE
     iniset $SENLIN_CONF keystone_authtoken auth_url $KEYSTONE_AUTH_URI
-    iniset $SENLIN_CONF keystone_authtoken www_authenticate_uri $KEYSTONE_SERVICE_URI_V3
     iniset $SENLIN_CONF keystone_authtoken username senlin
     iniset $SENLIN_CONF keystone_authtoken password $SERVICE_PASSWORD
     iniset $SENLIN_CONF keystone_authtoken project_name $SERVICE_TENANT_NAME
@@ -136,6 +135,7 @@ function configure_senlin {
     iniset $SENLIN_CONF keystone_authtoken user_domain_name Default
     iniset $SENLIN_CONF keystone_authtoken auth_type password
     iniset $SENLIN_CONF keystone_authtoken service_token_roles_required True
+    iniset $SENLIN_CONF keystone_authtoken interface public
 
     # Senlin service credentials
     iniset $SENLIN_CONF authentication auth_url $KEYSTONE_AUTH_URI/v3
@@ -272,7 +272,7 @@ function start_senlin {
     run_process sl-health-manager "$SENLIN_BIN_DIR/senlin-health-manager --config-file=$SENLIN_CONF"
 
     if [[ "$SENLIN_WSGI_MODE" == "uwsgi" ]]; then
-        run_process sl-api "$SENLIN_BIN_DIR/uwsgi --procname-prefix senlin-api --ini $SENLIN_UWSGI_CONF"
+        run_process sl-api "$(which uwsgi) --procname-prefix senlin-api --ini $SENLIN_UWSGI_CONF"
     else
         enable_apache_site senlin-api
         restart_apache_server
