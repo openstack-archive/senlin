@@ -495,7 +495,13 @@ class ServerProfile(base.Profile):
         res = []
         try:
             for sg in sgs:
-                sg_obj = nc.security_group_find(sg)
+                try:
+                    # try to find sg scoped by project first
+                    sg_obj = nc.security_group_find(
+                        sg, project_id=self.project)
+                except exc.InternalError:
+                    # if it fails to find sg, try without project scope
+                    sg_obj = nc.security_group_find(sg)
                 res.append(sg_obj.id)
         except exc.InternalError as ex:
             return str(ex)

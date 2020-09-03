@@ -52,8 +52,15 @@ class NeutronClient(base.DriverBase):
         return port
 
     @sdk.translate_exception
-    def security_group_find(self, name_or_id, ignore_missing=False):
-        sg = self.conn.network.find_security_group(name_or_id, ignore_missing)
+    def security_group_find(self, name_or_id, ignore_missing=False,
+                            project_id=None):
+        if project_id is None:
+            attrs = {}
+        else:
+            attrs = {'project_id': project_id}
+
+        sg = self.conn.network.find_security_group(name_or_id, ignore_missing,
+                                                   **attrs)
         return sg
 
     @sdk.translate_exception

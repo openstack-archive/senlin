@@ -902,7 +902,37 @@ class TestNetworkValidation(base.SenlinTestCase):
         if self.port_result:
             self.nc.port_find.assert_called_once_with('PORT')
         if self.sg_result:
-            self.nc.security_group_find.assert_called_once_with('default')
+            self.nc.security_group_find.assert_called_once_with(
+                'default', project_id=None)
+        if self.floating_result:
+            self.nc.floatingip_find.assert_called_once_with('FLOATINGIP')
+
+    def test_validation_with_project_scope(self):
+        self.nc.network_get.side_effect = self.net_result
+        self.nc.port_find.side_effect = self.port_result
+        self.nc.security_group_find.side_effect = self.sg_result
+        self.nc.floatingip_find.side_effect = self.floating_result
+        obj = mock.Mock(physical_id='NOVA_ID')
+
+        self.profile.project_scope = True
+        self.profile.project = 'FAKE_PROJECT_ID'
+
+        if self.success:
+            res = self.profile._validate_network(obj, self.inputs, self.reason)
+            self.assertEqual(self.result, res)
+        else:
+            ex = self.assertRaises(self.exception,
+                                   self.profile._validate_network,
+                                   obj, self.inputs, self.reason)
+            self.assertEqual(self.message, str(ex))
+
+        if self.net_result:
+            self.nc.network_get.assert_called_with('NET')
+        if self.port_result:
+            self.nc.port_find.assert_called_once_with('PORT')
+        if self.sg_result:
+            self.nc.security_group_find.assert_called_once_with(
+                'default', project_id='FAKE_PROJECT_ID')
         if self.floating_result:
             self.nc.floatingip_find.assert_called_once_with('FLOATINGIP')
 

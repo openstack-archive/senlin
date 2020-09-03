@@ -76,6 +76,16 @@ class TestNeutronV2Driver(base.SenlinTestCase):
             sg_id, False)
         self.assertEqual(sg_obj, res)
 
+    def test_security_group_find_with_project_id(self):
+        sg_id = 'sg_identifier'
+        sg_obj = mock.Mock()
+
+        self.conn.network.find_security_group.return_value = sg_obj
+        res = self.nc.security_group_find(sg_id, project_id='fake_project_id')
+        self.conn.network.find_security_group.assert_called_once_with(
+            sg_id, False, project_id='fake_project_id')
+        self.assertEqual(sg_obj, res)
+
     def test_subnet_get(self):
         subnet_id = 'subnet_identifier'
         subnet_obj = mock.Mock()
