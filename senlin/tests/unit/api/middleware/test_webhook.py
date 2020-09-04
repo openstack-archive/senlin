@@ -148,7 +148,13 @@ class TestWebhookMiddleware(base.SenlinTestCase):
                               group='authentication')
         cfg.CONF.set_override('service_user_domain', 'DOMAIN',
                               group='authentication')
+        cfg.CONF.set_override('service_project_domain', 'DOMAIN1',
+                              group='authentication')
         cfg.CONF.set_override('service_password', 'PASSWORD',
+                              group='authentication')
+        cfg.CONF.set_override('verify_ssl', False,
+                              group='authentication')
+        cfg.CONF.set_override('interface', 'admin',
                               group='authentication')
 
         req = mock.Mock()
@@ -185,7 +191,8 @@ class TestWebhookMiddleware(base.SenlinTestCase):
         mock_extract.assert_called_once_with('http://url1/v1')
         mock_token.assert_called_once_with(
             auth_url='AUTH_URL', password='PASSWORD', username='USERNAME',
-            user_domain_name='DOMAIN', foo='bar')
+            user_domain_name='DOMAIN', foo='bar', verify=False,
+            project_domain_name='DOMAIN1', interface='admin')
 
         mock_parse.assert_called_once_with('ReceiverGetRequest', req,
                                            {'identity': 'WEBHOOK'})

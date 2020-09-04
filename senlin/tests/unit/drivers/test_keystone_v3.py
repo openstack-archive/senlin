@@ -187,13 +187,20 @@ class TestKeystoneV3(base.SenlinTestCase):
                               group='authentication')
         cfg.CONF.set_override('service_project_domain', 'FAKE_DOMAIN_2',
                               group='authentication')
+        cfg.CONF.set_override('verify_ssl', False,
+                              group='authentication')
+        cfg.CONF.set_override('interface', 'internal',
+                              group='authentication')
+
         expected = {
             'auth_url': 'FAKE_URL',
             'username': 'FAKE_USERNAME',
             'password': 'FAKE_PASSWORD',
             'project_name': 'FAKE_PROJECT',
             'user_domain_name': 'FAKE_DOMAIN_1',
-            'project_domain_name': 'FAKE_DOMAIN_2'
+            'project_domain_name': 'FAKE_DOMAIN_2',
+            'verify': False,
+            'interface': 'internal',
         }
 
         actual = kv3.KeystoneClient.get_service_credentials()

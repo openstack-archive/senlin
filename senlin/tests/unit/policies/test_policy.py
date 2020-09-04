@@ -537,7 +537,10 @@ class TestPolicyBase(base.SenlinTestCase):
             'auth_url': 'AUTH_URL',
             'username': 'senlin',
             'user_domain_name': 'default',
-            'password': '123'
+            'password': '123',
+            'project_domain_name': 'Domain',
+            'verify': True,
+            'interface': 'Public',
         }
         current_ctx = {
             'auth_url': 'auth_url',
@@ -564,7 +567,10 @@ class TestPolicyBase(base.SenlinTestCase):
             'username': 'senlin',
             'user_domain_name': 'default',
             'password': '123',
-            'trust_id': 'TRUST_ID'
+            'trust_id': 'TRUST_ID',
+            'project_domain_name': 'Domain',
+            'verify': True,
+            'interface': 'Public',
         }
         self.assertEqual(expected_result, res)
         mock_get_service_creds.assert_called_once_with()

@@ -345,7 +345,10 @@ class TestReceiver(base.SenlinTestCase):
             'auth_url': 'AUTH_URL',
             'username': 'senlin',
             'user_domain_name': 'default',
-            'password': '123'
+            'password': '123',
+            'project_domain_name': 'default',
+            'verify': True,
+            'interface': 'internal',
         }
         current_ctx = {
             'auth_url': 'auth_url',
@@ -372,7 +375,10 @@ class TestReceiver(base.SenlinTestCase):
             'username': 'senlin',
             'user_domain_name': 'default',
             'password': '123',
-            'trust_id': 'TRUST_ID'
+            'trust_id': 'TRUST_ID',
+            'project_domain_name': 'default',
+            'verify': True,
+            'interface': 'internal',
         }
         res = receiver._build_conn_params(user, project)
         self.assertEqual(expected_result, res)

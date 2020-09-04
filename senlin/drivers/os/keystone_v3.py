@@ -120,6 +120,8 @@ class KeystoneClient(base.DriverBase):
             'user_domain_name': cfg.CONF.authentication.service_user_domain,
             'project_domain_name':
                 cfg.CONF.authentication.service_project_domain,
+            'verify': cfg.CONF.authentication.verify_ssl,
+            'interface': cfg.CONF.authentication.interface,
         }
         creds.update(**kwargs)
         return creds
@@ -147,8 +149,9 @@ class KeystoneClient(base.DriverBase):
     def get_senlin_endpoint(self):
         """Get Senlin service endpoint."""
         region = cfg.CONF.default_region_name
+        interface = cfg.CONF.authentication.interface
         base = self.conn.session.get_endpoint(service_type='clustering',
-                                              interface='public',
+                                              interface=interface,
                                               region_name=region)
 
         return base

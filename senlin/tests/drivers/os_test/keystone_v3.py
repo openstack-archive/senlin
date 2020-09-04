@@ -118,6 +118,8 @@ class KeystoneClient(base.DriverBase):
             'user_domain_name': cfg.CONF.authentication.service_user_domain,
             'project_domain_name':
                 cfg.CONF.authentication.service_project_domain,
+            'verify': cfg.CONF.authentication.verify_ssl,
+            'interface': cfg.CONF.authentication.interface,
         }
         creds.update(**kwargs)
         return creds

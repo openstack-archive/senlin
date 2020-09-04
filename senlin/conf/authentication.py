@@ -16,7 +16,7 @@ from senlin.common.i18n import _
 AUTHENTICATION_GROUP = cfg.OptGroup('authentication')
 AUTHENTICATION_OPTS = [
     cfg.StrOpt('auth_url', default='',
-               help=_('Complete public identity V3 API endpoint.')),
+               help=_('Complete identity V3 API endpoint.')),
     cfg.StrOpt('service_username', default='senlin',
                help=_('Senlin service user name.')),
     cfg.StrOpt('service_password', default='', secret=True,
@@ -27,6 +27,10 @@ AUTHENTICATION_OPTS = [
                help=_('Name of the domain for the service user.')),
     cfg.StrOpt('service_project_domain', default='Default',
                help=_('Name of the domain for the service project.')),
+    cfg.BoolOpt('verify_ssl', default=True,
+                help=_('Verify HTTPS connections.')),
+    cfg.StrOpt('interface', default='public',
+               help=_('Interface to use for the API endpoints.')),
 ]
 
 

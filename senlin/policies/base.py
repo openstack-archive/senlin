@@ -233,7 +233,10 @@ class Policy(object):
             'username': service_creds.get('username'),
             'password': service_creds.get('password'),
             'auth_url': service_creds.get('auth_url'),
-            'user_domain_name': service_creds.get('user_domain_name')
+            'user_domain_name': service_creds.get('user_domain_name'),
+            'project_domain_name': service_creds.get('project_domain_name'),
+            'verify': service_creds.get('verify'),
+            'interface': service_creds.get('interface'),
         }
 
         cred = co.Credential.get(oslo_context.get_current(), user, project)

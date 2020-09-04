@@ -58,7 +58,10 @@ class WebhookMiddleware(wsgi.Middleware):
             'auth_url': svc_ctx['auth_url'],
             'username': svc_ctx['username'],
             'user_domain_name': svc_ctx['user_domain_name'],
-            'password': svc_ctx['password']
+            'password': svc_ctx['password'],
+            'project_domain_name': svc_ctx['project_domain_name'],
+            'verify': svc_ctx['verify'],
+            'interface': svc_ctx['interface'],
         }
         kwargs.update(receiver['actor'])
 
