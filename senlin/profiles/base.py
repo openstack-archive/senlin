@@ -305,9 +305,9 @@ class Profile(object):
 
     @classmethod
     @profiler.trace('Profile.check_object', hide_args=False)
-    def healthcheck_object(cls, ctx, obj):
+    def healthcheck_object(cls, ctx, obj, health_check_type):
         profile = cls.load(ctx, profile_id=obj.profile_id)
-        return profile.do_healthcheck(obj)
+        return profile.do_healthcheck(obj, health_check_type)
 
     @classmethod
     @profiler.trace('Profile.recover_object', hide_args=False)

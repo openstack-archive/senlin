@@ -266,6 +266,41 @@ class NovaClient(base.DriverBase):
         return self.conn.compute.get_hypervisor(hypervisor)
 
     @sdk.translate_exception
+    def hypervisor_find(self, name_or_id, ignore_missing=False):
+        # try finding hypervisor by id
+        try:
+            return self.conn.compute.get_hypervisor(name_or_id)
+        except sdk_exc.HttpException:
+            # ignore http exception and instead get list and check by name
+            pass
+
+        # if the hypervisor could not be found using id, search list using name
+        results = self.conn.compute.hypervisors(
+            hypervisor_hostname_pattern=name_or_id)
+
+        result = None
+        for maybe_result in results:
+            name_value = maybe_result.name
+
+            if name_value == name_or_id:
+                # Only allow one resource to be found. If we already
+                # found a match, raise an exception to show it.
+                if result is None:
+                    result = maybe_result
+                else:
+                    msg = "More than one hypervisor exists with the name '%s'."
+                    msg = (msg % name_or_id)
+                    raise sdk_exc.DuplicateResource(msg)
+
+        if result is not None:
+            return result
+
+        if ignore_missing:
+            return None
+        raise sdk_exc.ResourceNotFound(
+            "No hypervisor found for %s" % (name_or_id))
+
+    @sdk.translate_exception
     def service_list(self):
         return self.conn.compute.services()
 

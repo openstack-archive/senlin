@@ -35,7 +35,7 @@ class TestHealthPolicy(base.SenlinTestCase):
 
         self.spec = {
             'type': 'senlin.policy.health',
-            'version': '1.1',
+            'version': '1.2',
             'properties': {
                 'detection': {
                     "detection_modes": [
@@ -82,7 +82,7 @@ class TestHealthPolicy(base.SenlinTestCase):
 
         spec = {
             'type': 'senlin.policy.health',
-            'version': '1.1',
+            'version': '1.2',
             'properties': {
                 'detection': {
                     "detection_modes": [
@@ -105,7 +105,7 @@ class TestHealthPolicy(base.SenlinTestCase):
 
         self.assertIsNone(hp.id)
         self.assertEqual('test-policy', hp.name)
-        self.assertEqual('senlin.policy.health-1.1', hp.type)
+        self.assertEqual('senlin.policy.health-1.2', hp.type)
         self.assertEqual(detection_modes, hp.detection_modes)
         self.assertEqual(60, hp.interval)
         self.assertEqual([{'name': 'REBUILD', 'params': None}],
@@ -114,12 +114,15 @@ class TestHealthPolicy(base.SenlinTestCase):
     def test_policy_init_ops(self):
         spec = {
             'type': 'senlin.policy.health',
-            'version': '1.1',
+            'version': '1.2',
             'properties': {
                 'detection': {
                     "detection_modes": [
                         {
                             'type': 'NODE_STATUS_POLLING'
+                        },
+                        {
+                            'type': 'HYPERVISOR_STATUS_POLLING'
                         },
                         {
                             'type': 'NODE_STATUS_POLL_URL'
@@ -148,7 +151,7 @@ class TestHealthPolicy(base.SenlinTestCase):
             # check result
             self.assertIsNone(hp.id)
             self.assertEqual('test-policy', hp.name)
-            self.assertEqual('senlin.policy.health-1.1', hp.type)
+            self.assertEqual('senlin.policy.health-1.2', hp.type)
             self.assertEqual(60, hp.interval)
             self.assertEqual([{'name': 'REBUILD', 'params': None}],
                              hp.recover_actions)
@@ -216,7 +219,7 @@ class TestHealthPolicy(base.SenlinTestCase):
                     'node_force_recreate': False,
                     'recovery_conditional': 'ANY_FAILED'
                 },
-                'version': '1.1'
+                'version': '1.2'
             }
         }
 

@@ -349,7 +349,7 @@ class Node(object):
 
         return True
 
-    def do_healthcheck(self, context):
+    def do_healthcheck(self, context, health_check_type):
         """health check a node.
 
         This function is supposed to be invoked from the health manager to
@@ -358,7 +358,7 @@ class Node(object):
         :returns: True if node is healthy. False otherwise.
         """
 
-        return pb.Profile.healthcheck_object(context, self)
+        return pb.Profile.healthcheck_object(context, self, health_check_type)
 
     def do_recover(self, context, action):
         """recover a node.
