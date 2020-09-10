@@ -50,7 +50,7 @@ class WebhookController(wsgi.Controller):
 
     @wsgi.Controller.api_version("1.10")  # noqa
     @util.policy_enforce
-    def trigger(self, req, webhook_id, body=None):
+    def trigger(self, req, webhook_id, body=None):  # noqa F811
         obj = util.parse_request(
             'WebhookTriggerRequestParamsInBody', req, {'identity': webhook_id,
                                                        'body': body})

@@ -345,7 +345,7 @@ class FakeController(wsgi.Controller):
         return {'score': 100}
 
     @wsgi.Controller.api_version('4.0')   # noqa
-    def dance(self, req):
+    def dance(self, req):   # noqa F811
         return {'score': 60}
 
 
