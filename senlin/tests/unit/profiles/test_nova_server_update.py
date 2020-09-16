@@ -797,9 +797,9 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         mock_validate.assert_has_calls(validation_calls)
         mock_get_port.assert_called_with(obj, {'port': 'port4'})
         create_calls = [
-            mock.call(server_obj, port='port1_id'),
-            mock.call(server_obj, port='port2_id'),
-            mock.call(server_obj, port='port4_id'),
+            mock.call(server_obj, port_id='port1_id'),
+            mock.call(server_obj, port_id='port2_id'),
+            mock.call(server_obj, port_id='port4_id'),
         ]
         cc.server_interface_create.assert_has_calls(create_calls)
 
