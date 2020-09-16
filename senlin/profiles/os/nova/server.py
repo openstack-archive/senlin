@@ -1183,7 +1183,7 @@ class ServerProfile(base.Profile):
         ports = self._create_ports_from_properties(
             obj, networks, 'update')
         for port in ports:
-            params = {'port': port['id']}
+            params = {'port_id': port['id']}
             try:
                 cc.server_interface_create(server, **params)
             except exc.InternalError as ex:
