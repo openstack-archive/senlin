@@ -371,9 +371,9 @@ class TestNovaV2(base.SenlinTestCase):
     def test_server_interface_create(self):
         server = mock.Mock()
         d = nova_v2.NovaClient(self.conn_params)
-        d.server_interface_create(server, name='foo')
+        d.server_interface_create(server, port_id='fake-port-id')
         self.compute.create_server_interface.assert_called_once_with(
-            server, name='foo')
+            server, port_id='fake-port-id')
 
     def test_server_interface_list(self):
         d = nova_v2.NovaClient(self.conn_params)
