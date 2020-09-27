@@ -381,7 +381,12 @@ class HealthPolicy(base.Policy):
         detection_mode = {'detection_modes': converted_detection_modes}
         kwargs['params'].update(detection_mode)
 
-        health_manager.register(cluster.id, engine_id=None, **kwargs)
+        ret = health_manager.register(cluster.id, engine_id=None, **kwargs)
+        if not ret:
+            LOG.warning('Registering health manager for cluster %s '
+                        'timed out.', cluster.id)
+            err_msg = _("Registering health manager for cluster timed out.")
+            return False, err_msg
 
         data = {
             'interval': self.interval,
@@ -405,6 +410,8 @@ class HealthPolicy(base.Policy):
         if not ret:
             LOG.warning('Unregistering health manager for cluster %s '
                         'timed out.', cluster.id)
+            err_msg = _("Unregistering health manager for cluster timed out.")
+            return False, err_msg
         return True, ''
 
     def pre_op(self, cluster_id, action, **args):
