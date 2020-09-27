@@ -70,7 +70,7 @@ Replace ``Senlin_DBPASS`` with a suitable password.
 
 ::
 
-        $openstack user create --project services --password-prompt senlin
+        $openstack user create --project service --password-prompt senlin
         User Password:
         Repeat User Password:
         +-----------+----------------------------------+
@@ -86,7 +86,7 @@ Replace ``Senlin_DBPASS`` with a suitable password.
 
 ::
 
-        $ openstack role add --project services --user senlin admin
+        $ openstack role add --project service --user senlin admin
 
      .. note::
 
