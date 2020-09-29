@@ -1,0 +1,8 @@
+---
+other:
+  - |
+    Fix hacking lower constraints to 3.0.1
+    Fix jsonschema lower constraints to 3.2.0
+    Remove Babel requirement
+    Remove six requirement
+    Remove mock requirement, unittest.mock instead

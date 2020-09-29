@@ -1,0 +1,4 @@
+---
+features:
+  - When we use load balancer policy to attach cluster, members will
+    add to pool by member name.
