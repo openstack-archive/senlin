@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    Find security group profiles by project scope.
