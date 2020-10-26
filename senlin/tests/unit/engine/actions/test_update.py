@@ -110,18 +110,38 @@ class ClusterUpdateTest(base.SenlinTestCase):
         cluster = mock.Mock(id='FAKE_ID', nodes=[], ACTIVE='ACTIVE')
         mock_load.return_value = cluster
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
+        config = {'cluster.stop_timeout_before_update': 25}
         action.inputs = {'name': 'FAKE_NAME',
                          'metadata': {'foo': 'bar'},
                          'timeout': 3600,
                          'new_profile_id': 'FAKE_PROFILE',
-                         'profile_only': True}
+                         'profile_only': True,
+                         'config': config}
         res_code, res_msg = action.do_update()
 
         self.assertEqual(action.RES_OK, res_code)
         self.assertEqual('Cluster update completed.', res_msg)
+        self.assertEqual(action.entity.config, config)
         cluster.eval_status.assert_called_once_with(
             action.context, consts.CLUSTER_UPDATE, profile_id='FAKE_PROFILE',
             updated_at=mock.ANY)
+
+    @mock.patch.object(ca.ClusterAction, '_update_nodes')
+    def test_do_update_invalid_stop_timeout(self, mock_update, mock_load):
+        cluster = mock.Mock(id='FAKE_ID', nodes=[], ACTIVE='ACTIVE')
+        mock_load.return_value = cluster
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
+        config = {'cluster.stop_timeout_before_update': 'abc'}
+        action.inputs = {'name': 'FAKE_NAME',
+                         'metadata': {'foo': 'bar'},
+                         'timeout': 3600,
+                         'new_profile_id': 'FAKE_PROFILE',
+                         'profile_only': True,
+                         'config': config}
+        res_code, res_msg = action.do_update()
+
+        self.assertEqual(action.RES_ERROR, res_code)
+        mock_update.assert_not_called()
 
     def test_do_update_empty_cluster(self, mock_load):
         cluster = mock.Mock(id='FAKE_ID', nodes=[], ACTIVE='ACTIVE')
@@ -149,7 +169,7 @@ class ClusterUpdateTest(base.SenlinTestCase):
         node1 = mock.Mock(id='node_id1')
         node2 = mock.Mock(id='node_id2')
         cluster = mock.Mock(id='FAKE_ID', nodes=[node1, node2],
-                            ACTIVE='ACTIVE')
+                            ACTIVE='ACTIVE', config={})
         mock_load.return_value = cluster
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
@@ -157,12 +177,84 @@ class ClusterUpdateTest(base.SenlinTestCase):
         action.id = 'CLUSTER_ACTION_ID'
         mock_wait.return_value = (action.RES_OK, 'All dependents completed')
         mock_action.side_effect = ['NODE_ACTION1', 'NODE_ACTION2']
+        kwargs1 = {
+            'name': 'node_update_node_id1',
+            'cluster_id': cluster.id,
+            'cause': consts.CAUSE_DERIVED,
+            'inputs': {
+                'new_profile_id': 'FAKE_PROFILE',
+            },
+        }
+        kwargs2 = {
+            'name': 'node_update_node_id2',
+            'cluster_id': cluster.id,
+            'cause': consts.CAUSE_DERIVED,
+            'inputs': {
+                'new_profile_id': 'FAKE_PROFILE',
+            },
+        }
 
         res_code, reason = action._update_nodes('FAKE_PROFILE',
                                                 [node1, node2])
         self.assertEqual(res_code, action.RES_OK)
         self.assertEqual(reason, 'Cluster update completed.')
-        self.assertEqual(2, mock_action.call_count)
+        mock_action.assert_has_calls([
+            mock.call(action.context, node1.id, consts.NODE_UPDATE, **kwargs1),
+            mock.call(action.context, node2.id, consts.NODE_UPDATE, **kwargs2),
+        ])
+        self.assertEqual(1, mock_dep.call_count)
+        self.assertEqual(2, mock_update.call_count)
+        mock_start.assert_called_once_with()
+
+        cluster.eval_status.assert_called_once_with(
+            action.context, consts.CLUSTER_UPDATE, profile_id='FAKE_PROFILE',
+            updated_at=mock.ANY)
+
+    @mock.patch.object(ao.Action, 'update')
+    @mock.patch.object(ab.Action, 'create')
+    @mock.patch.object(dobj.Dependency, 'create')
+    @mock.patch.object(dispatcher, 'start_action')
+    @mock.patch.object(ca.ClusterAction, '_wait_for_dependents')
+    def test_update_nodes_with_config(self, mock_wait, mock_start, mock_dep,
+                                      mock_action, mock_update, mock_load):
+        node1 = mock.Mock(id='node_id1')
+        node2 = mock.Mock(id='node_id2')
+        cluster = mock.Mock(id='FAKE_ID', nodes=[node1, node2],
+                            ACTIVE='ACTIVE', config={'blah': 'abc'})
+        mock_load.return_value = cluster
+
+        action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
+        action.inputs = {'new_profile_id': 'FAKE_PROFILE'}
+        action.id = 'CLUSTER_ACTION_ID'
+        mock_wait.return_value = (action.RES_OK, 'All dependents completed')
+        mock_action.side_effect = ['NODE_ACTION1', 'NODE_ACTION2']
+        kwargs1 = {
+            'name': 'node_update_node_id1',
+            'cluster_id': cluster.id,
+            'cause': consts.CAUSE_DERIVED,
+            'inputs': {
+                'blah': 'abc',
+                'new_profile_id': 'FAKE_PROFILE',
+            },
+        }
+        kwargs2 = {
+            'name': 'node_update_node_id2',
+            'cluster_id': cluster.id,
+            'cause': consts.CAUSE_DERIVED,
+            'inputs': {
+                'blah': 'abc',
+                'new_profile_id': 'FAKE_PROFILE',
+            },
+        }
+
+        res_code, reason = action._update_nodes('FAKE_PROFILE',
+                                                [node1, node2])
+        self.assertEqual(res_code, action.RES_OK)
+        self.assertEqual(reason, 'Cluster update completed.')
+        mock_action.assert_has_calls([
+            mock.call(action.context, node1.id, consts.NODE_UPDATE, **kwargs1),
+            mock.call(action.context, node2.id, consts.NODE_UPDATE, **kwargs2),
+        ])
         self.assertEqual(1, mock_dep.call_count)
         self.assertEqual(2, mock_update.call_count)
         mock_start.assert_called_once_with()
@@ -181,7 +273,7 @@ class ClusterUpdateTest(base.SenlinTestCase):
         node1 = mock.Mock(id='node_id1')
         node2 = mock.Mock(id='node_id2')
         cluster = mock.Mock(id='FAKE_ID', nodes=[node1, node2],
-                            ACTIVE='ACTIVE')
+                            ACTIVE='ACTIVE', config={})
         mock_load.return_value = cluster
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)
@@ -220,7 +312,7 @@ class ClusterUpdateTest(base.SenlinTestCase):
         node1 = mock.Mock(id='node_id1')
         node2 = mock.Mock(id='node_id2')
         cluster = mock.Mock(id='FAKE_ID', nodes=[node1, node2],
-                            ACTIVE='ACTIVE')
+                            ACTIVE='ACTIVE', config={})
         mock_load.return_value = cluster
 
         action = ca.ClusterAction(cluster.id, 'CLUSTER_ACTION', self.ctx)

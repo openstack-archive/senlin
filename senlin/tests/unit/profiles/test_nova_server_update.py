@@ -13,7 +13,7 @@
 import copy
 from unittest import mock
 
-
+from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.objects import node as node_obj
 from senlin.profiles.os.nova import server
@@ -275,6 +275,35 @@ class TestNovaServerUpdate(base.SenlinTestCase):
     def test_update_flavor(self):
         obj = mock.Mock(physical_id='NOVA_ID')
         cc = mock.Mock()
+        cc.server_get.return_value = mock.Mock(status=consts.VS_ACTIVE)
+        profile = server.ServerProfile('t', self.spec)
+        profile.stop_timeout = 123
+        profile._computeclient = cc
+        x_flavors = [mock.Mock(id='123'), mock.Mock(id='456')]
+        mock_validate = self.patchobject(profile, '_validate_flavor',
+                                         side_effect=x_flavors)
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['flavor'] = 'new_flavor'
+        new_profile = server.ServerProfile('t1', new_spec)
+        profile._update_flavor(obj, new_profile)
+
+        mock_validate.assert_has_calls([
+            mock.call(obj, 'FLAV', 'update'),
+            mock.call(obj, 'new_flavor', 'update')
+        ])
+        cc.server_resize.assert_called_once_with('NOVA_ID', '456')
+        cc.server_resize_confirm.assert_called_once_with('NOVA_ID')
+        cc.wait_for_server.assert_has_calls([
+            mock.call('NOVA_ID', consts.VS_SHUTOFF,
+                      timeout=profile.stop_timeout),
+            mock.call('NOVA_ID', 'VERIFY_RESIZE'),
+            mock.call('NOVA_ID', consts.VS_SHUTOFF)])
+
+    # update flavor on server that is already stopped
+    def test_update_flavor_stopped_server(self):
+        obj = mock.Mock(physical_id='NOVA_ID')
+        cc = mock.Mock()
+        cc.server_get.return_value = mock.Mock(status=consts.VS_SHUTOFF)
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = cc
         x_flavors = [mock.Mock(id='123'), mock.Mock(id='456')]
@@ -291,9 +320,9 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         ])
         cc.server_resize.assert_called_once_with('NOVA_ID', '456')
         cc.server_resize_confirm.assert_called_once_with('NOVA_ID')
-        cc.wait_for_server.has_calls([
+        cc.wait_for_server.assert_has_calls([
             mock.call('NOVA_ID', 'VERIFY_RESIZE'),
-            mock.call('NOVA_ID', 'ACTIVE')])
+            mock.call('NOVA_ID', consts.VS_SHUTOFF)])
 
     def test_update_flavor_failed_validation(self):
         obj = mock.Mock(physical_id='NOVA_ID')
@@ -351,16 +380,76 @@ class TestNovaServerUpdate(base.SenlinTestCase):
 
         res = profile._update_flavor(obj, new_profile)
 
-        self.assertIsNone(res)
+        self.assertFalse(res)
         mock_validate.assert_has_calls([
             mock.call(obj, 'FLAV', 'update'),
             mock.call(obj, 'FLAV', 'update'),
         ])
         self.assertEqual(0, cc.server_resize.call_count)
 
+    def test_update_flavor_server_stop_failed(self):
+        obj = mock.Mock(physical_id='NOVA_ID')
+        cc = mock.Mock()
+        cc.server_get.return_value = mock.Mock(status=consts.VS_ACTIVE)
+        cc.server_stop.side_effect = [
+            exc.InternalError(code=500, message='Stop failed')]
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['flavor'] = 'new_flavor'
+        new_profile = server.ServerProfile('t1', new_spec)
+        x_flavors = [mock.Mock(id='123'), mock.Mock(id='456')]
+        mock_validate = self.patchobject(profile, '_validate_flavor',
+                                         side_effect=x_flavors)
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_flavor,
+                               obj, new_profile)
+
+        mock_validate.assert_has_calls([
+            mock.call(obj, 'FLAV', 'update'),
+            mock.call(obj, 'new_flavor', 'update'),
+        ])
+        cc.server_resize.assert_not_called()
+        cc.server_resize_revert.assert_not_called()
+        cc.wait_for_server.assert_not_called()
+        self.assertEqual("Failed in updating server 'NOVA_ID': Stop "
+                         "failed.", str(ex))
+
+    def test_update_flavor_server_paused(self):
+        obj = mock.Mock(physical_id='NOVA_ID')
+        cc = mock.Mock()
+        cc.server_get.return_value = mock.Mock(status=consts.VS_PAUSED)
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['flavor'] = 'new_flavor'
+        new_profile = server.ServerProfile('t1', new_spec)
+        x_flavors = [mock.Mock(id='123'), mock.Mock(id='456')]
+        mock_validate = self.patchobject(profile, '_validate_flavor',
+                                         side_effect=x_flavors)
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_flavor,
+                               obj, new_profile)
+
+        mock_validate.assert_has_calls([
+            mock.call(obj, 'FLAV', 'update'),
+            mock.call(obj, 'new_flavor', 'update'),
+        ])
+        cc.server_resize.assert_not_called()
+        cc.server_resize_revert.assert_not_called()
+        cc.wait_for_server.assert_not_called()
+        self.assertEqual("Failed in updating server 'NOVA_ID': Server needs "
+                         "to be ACTIVE or STOPPED in order to update flavor.",
+                         str(ex))
+
     def test_update_flavor_resize_failed(self):
         obj = mock.Mock(physical_id='NOVA_ID')
         cc = mock.Mock()
+        cc.server_get.side_effect = [
+            mock.Mock(status=consts.VS_ACTIVE),
+            mock.Mock(status='RESIZE')]
         cc.server_resize.side_effect = [
             exc.InternalError(code=500, message='Resize failed')]
         profile = server.ServerProfile('t', self.spec)
@@ -382,15 +471,56 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         ])
         cc.server_resize.assert_called_once_with('NOVA_ID', '456')
         cc.server_resize_revert.assert_called_once_with('NOVA_ID')
-        cc.wait_for_server.assert_called_once_with('NOVA_ID', 'ACTIVE')
+        cc.wait_for_server.assert_has_calls([
+            mock.call('NOVA_ID', consts.VS_SHUTOFF, timeout=600),
+            mock.call('NOVA_ID', consts.VS_SHUTOFF),
+            mock.call('NOVA_ID', consts.VS_ACTIVE)
+        ])
         self.assertEqual("Failed in updating server 'NOVA_ID': Resize "
                          "failed.", str(ex))
 
     def test_update_flavor_first_wait_for_server_failed(self):
         obj = mock.Mock(physical_id='NOVA_ID')
         cc = mock.Mock()
+        cc.server_get.return_value = mock.Mock(status=consts.VS_ACTIVE)
         cc.wait_for_server.side_effect = [
+            exc.InternalError(code=500, message='TIMEOUT')
+        ]
+
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = cc
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['flavor'] = 'new_flavor'
+        new_profile = server.ServerProfile('t1', new_spec)
+        x_flavors = [mock.Mock(id='123'), mock.Mock(id='456')]
+        mock_validate = self.patchobject(profile, '_validate_flavor',
+                                         side_effect=x_flavors)
+        # do it
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_flavor,
+                               obj, new_profile)
+
+        # assertions
+        mock_validate.assert_has_calls([
+            mock.call(obj, 'FLAV', 'update'),
+            mock.call(obj, 'new_flavor', 'update'),
+        ])
+        cc.server_resize.assert_not_called()
+        cc.wait_for_server.has_calls([
+            mock.call('NOVA_ID', consts.VS_SHUTOFF, timeout=600)])
+        self.assertEqual("Failed in updating server 'NOVA_ID': "
+                         "TIMEOUT.", str(ex))
+
+    def test_update_flavor_second_wait_for_server_failed(self):
+        obj = mock.Mock(physical_id='NOVA_ID')
+        cc = mock.Mock()
+        cc.server_get.side_effect = [
+            mock.Mock(status=consts.VS_ACTIVE),
+            mock.Mock(status='RESIZE')]
+        cc.wait_for_server.side_effect = [
+            None,
             exc.InternalError(code=500, message='TIMEOUT'),
+            None,
             None
         ]
 
@@ -414,8 +544,11 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         ])
         cc.server_resize.assert_called_once_with('NOVA_ID', '456')
         cc.wait_for_server.has_calls([
+            mock.call('NOVA_ID', consts.VS_SHUTOFF, timeout=600),
             mock.call('NOVA_ID', 'VERIFY_RESIZE'),
-            mock.call('NOVA_ID', 'ACTIVE')])
+            mock.call('NOVA_ID', consts.VS_SHUTOFF),
+            mock.call('NOVA_ID', consts.VS_ACTIVE),
+        ])
         cc.server_resize_revert.assert_called_once_with('NOVA_ID')
         self.assertEqual("Failed in updating server 'NOVA_ID': "
                          "TIMEOUT.", str(ex))
@@ -423,6 +556,9 @@ class TestNovaServerUpdate(base.SenlinTestCase):
     def test_update_flavor_resize_failed_revert_failed(self):
         obj = mock.Mock(physical_id='NOVA_ID')
         cc = mock.Mock()
+        cc.server_get.side_effect = [
+            mock.Mock(status=consts.VS_ACTIVE),
+            mock.Mock(status='RESIZE')]
         err_resize = exc.InternalError(code=500, message='Resize')
         cc.server_resize.side_effect = err_resize
         err_revert = exc.InternalError(code=500, message='Revert')
@@ -448,14 +584,16 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         ])
         cc.server_resize.assert_called_once_with('NOVA_ID', '456')
         cc.server_resize_revert.assert_called_once_with('NOVA_ID')
-        # the wait_for_server wasn't called
-        self.assertEqual(0, cc.wait_for_server.call_count)
+        cc.wait_for_server.has_calls([
+            mock.call('NOVA_ID', consts.VS_SHUTOFF, timeout=600),
+        ])
         self.assertEqual("Failed in updating server 'NOVA_ID': "
                          "Revert.", str(ex))
 
     def test_update_flavor_confirm_failed(self):
         obj = mock.Mock(physical_id='NOVA_ID')
         cc = mock.Mock()
+        cc.server_get.return_value = mock.Mock(status=consts.VS_ACTIVE)
         err_confirm = exc.InternalError(code=500, message='Confirm')
         cc.server_resize_confirm.side_effect = err_confirm
         profile = server.ServerProfile('t', self.spec)
@@ -479,13 +617,17 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         ])
         cc.server_resize.assert_called_once_with('NOVA_ID', '456')
         cc.server_resize_confirm.assert_called_once_with('NOVA_ID')
-        cc.wait_for_server.assert_called_once_with('NOVA_ID', 'VERIFY_RESIZE')
+        cc.wait_for_server.has_calls([
+            mock.call('NOVA_ID', consts.VS_SHUTOFF, timeout=600),
+            mock.call('NOVA_ID', 'VERIFY_RESIZE'),
+        ])
         self.assertEqual("Failed in updating server 'NOVA_ID': Confirm.",
                          str(ex))
 
     def test_update_flavor_wait_confirm_failed(self):
         obj = mock.Mock(physical_id='NOVA_ID')
         cc = mock.Mock()
+        cc.server_get.return_value = mock.Mock(status=consts.VS_SHUTOFF)
         err_wait = exc.InternalError(code=500, message='Wait')
         cc.wait_for_server.side_effect = [None, err_wait]
         profile = server.ServerProfile('t', self.spec)
@@ -511,15 +653,16 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         cc.server_resize_confirm.assert_called_once_with('NOVA_ID')
         cc.wait_for_server.assert_has_calls([
             mock.call('NOVA_ID', 'VERIFY_RESIZE'),
-            mock.call('NOVA_ID', 'ACTIVE')
+            mock.call('NOVA_ID', consts.VS_SHUTOFF)
         ])
         self.assertEqual("Failed in updating server 'NOVA_ID': Wait.",
                          str(ex))
 
     def test_update_image(self):
         profile = server.ServerProfile('t', self.spec)
+        profile.stop_timeout = 123
         x_image = {'id': '123'}
-        x_server = mock.Mock(image=x_image)
+        x_server = mock.Mock(image=x_image, status=consts.VS_ACTIVE)
         cc = mock.Mock()
         cc.server_get.return_value = x_server
         profile._computeclient = cc
@@ -539,7 +682,68 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         ])
         cc.server_rebuild.assert_called_once_with(
             'NOVA_ID', '456', 'new_name', 'new_pass')
-        cc.wait_for_server.assert_called_once_with('NOVA_ID', 'ACTIVE')
+        cc.wait_for_server.assert_has_calls([
+            mock.call('NOVA_ID', consts.VS_SHUTOFF,
+                      timeout=profile.stop_timeout),
+            mock.call('NOVA_ID', consts.VS_SHUTOFF),
+        ])
+
+    def test_update_image_server_stopped(self):
+        profile = server.ServerProfile('t', self.spec)
+        x_image = {'id': '123'}
+        x_server = mock.Mock(image=x_image, status=consts.VS_SHUTOFF)
+        cc = mock.Mock()
+        cc.server_get.return_value = x_server
+        profile._computeclient = cc
+        x_new_image = mock.Mock(id='456')
+        x_images = [x_new_image]
+        mock_check = self.patchobject(profile, '_validate_image',
+                                      side_effect=x_images)
+        obj = mock.Mock(physical_id='NOVA_ID')
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['image'] = 'new_image'
+        new_profile = server.ServerProfile('t1', new_spec)
+
+        profile._update_image(obj, new_profile, 'new_name', 'new_pass')
+
+        mock_check.assert_has_calls([
+            mock.call(obj, 'new_image', reason='update'),
+        ])
+        cc.server_rebuild.assert_called_once_with(
+            'NOVA_ID', '456', 'new_name', 'new_pass')
+        cc.wait_for_server.assert_has_calls([
+            mock.call('NOVA_ID', consts.VS_SHUTOFF),
+        ])
+
+    def test_update_image_server_paused(self):
+        profile = server.ServerProfile('t', self.spec)
+        x_image = {'id': '123'}
+        x_server = mock.Mock(image=x_image, status=consts.VS_PAUSED)
+        cc = mock.Mock()
+        cc.server_get.return_value = x_server
+        profile._computeclient = cc
+        x_new_image = mock.Mock(id='456')
+        x_images = [x_new_image]
+        mock_check = self.patchobject(profile, '_validate_image',
+                                      side_effect=x_images)
+        obj = mock.Mock(physical_id='NOVA_ID')
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['image'] = 'new_image'
+        new_profile = server.ServerProfile('t1', new_spec)
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_image,
+                               obj, new_profile, 'new_name', '')
+
+        msg = ("Failed in updating server 'NOVA_ID': Server needs to be ACTIVE"
+               " or STOPPED in order to update image.")
+        self.assertEqual(msg, str(ex))
+
+        mock_check.assert_has_calls([
+            mock.call(obj, 'new_image', reason='update'),
+        ])
+        cc.server_rebuild.assert_not_called()
+        cc.wait_for_server.assert_not_called()
 
     def test_update_image_new_image_is_none(self):
         profile = server.ServerProfile('t', self.spec)
@@ -613,7 +817,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         profile = server.ServerProfile('t', old_spec)
         cc = mock.Mock()
         profile._computeclient = cc
-        x_server = mock.Mock(image={'id': '123'})
+        x_server = mock.Mock(image={'id': '123'}, status=consts.VS_ACTIVE)
         cc.server_get.return_value = x_server
         # this is the new one
         x_image = mock.Mock(id='456')
@@ -631,7 +835,11 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         cc.server_get.assert_called_once_with('NOVA_ID')
         cc.server_rebuild.assert_called_once_with(
             'NOVA_ID', '456', 'new_name', 'new_pass')
-        cc.wait_for_server.assert_called_once_with('NOVA_ID', 'ACTIVE')
+        cc.wait_for_server.assert_has_calls([
+            # first wait is from active to shutoff and has custom timeout
+            mock.call('NOVA_ID', consts.VS_SHUTOFF, timeout=600),
+            mock.call('NOVA_ID', consts.VS_SHUTOFF),
+        ])
 
     def test_update_image_old_image_is_none_but_failed(self):
         old_spec = copy.deepcopy(self.spec)
@@ -683,10 +891,40 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         self.assertEqual(0, cc.server_rebuild.call_count)
         self.assertEqual(0, cc.wait_for_server.call_count)
 
-    def test_update_image_failed_rebuilding(self):
+    def test_update_image_failed_stopping(self):
         profile = server.ServerProfile('t', self.spec)
         x_image = {'id': '123'}
         x_server = mock.Mock(image=x_image)
+        cc = mock.Mock()
+        cc.server_get.return_value = x_server
+        cc.server_stop.side_effect = exc.InternalError(message='FAILED')
+        profile._computeclient = cc
+        x_new_image = mock.Mock(id='456')
+        x_images = [x_new_image]
+        mock_check = self.patchobject(profile, '_validate_image',
+                                      side_effect=x_images)
+        obj = mock.Mock(physical_id='NOVA_ID')
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['image'] = 'new_image'
+        new_profile = server.ServerProfile('t1', new_spec)
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_image,
+                               obj, new_profile, 'new_name', 'new_pass')
+
+        self.assertEqual("Failed in updating server 'NOVA_ID': Server needs to"
+                         " be ACTIVE or STOPPED in order to update image.",
+                         str(ex))
+        mock_check.assert_has_calls([
+            mock.call(obj, 'new_image', reason='update'),
+        ])
+        cc.server_rebuild.assert_not_called()
+        cc.wait_for_server.assert_not_called()
+
+    def test_update_image_failed_rebuilding(self):
+        profile = server.ServerProfile('t', self.spec)
+        x_image = {'id': '123'}
+        x_server = mock.Mock(image=x_image, status=consts.VS_ACTIVE)
         cc = mock.Mock()
         cc.server_get.return_value = x_server
         cc.server_rebuild.side_effect = exc.InternalError(message='FAILED')
@@ -711,12 +949,14 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         ])
         cc.server_rebuild.assert_called_once_with(
             'NOVA_ID', '456', 'new_name', 'new_pass')
-        self.assertEqual(0, cc.wait_for_server.call_count)
+        cc.wait_for_server.assert_has_calls([
+            mock.call('NOVA_ID', consts.VS_SHUTOFF, timeout=600),
+        ])
 
-    def test_update_image_failed_waiting(self):
+    def test_update_image_failed_first_waiting(self):
         profile = server.ServerProfile('t', self.spec)
         x_image = {'id': '123'}
-        x_server = mock.Mock(image=x_image)
+        x_server = mock.Mock(image=x_image, status=consts.VS_ACTIVE)
         cc = mock.Mock()
         cc.server_get.return_value = x_server
         cc.wait_for_server.side_effect = exc.InternalError(message='TIMEOUT')
@@ -739,9 +979,43 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         mock_check.assert_has_calls([
             mock.call(obj, 'new_image', reason='update'),
         ])
+        cc.server_rebuild.assert_not_called()
+        cc.wait_for_server.assert_called_once_with(
+            'NOVA_ID', consts.VS_SHUTOFF, timeout=600)
+
+    def test_update_image_failed_second_waiting(self):
+        profile = server.ServerProfile('t', self.spec)
+        x_image = {'id': '123'}
+        x_server = mock.Mock(image=x_image, status=consts.VS_ACTIVE)
+        cc = mock.Mock()
+        cc.server_get.return_value = x_server
+        cc.wait_for_server.side_effect = [
+            None,
+            exc.InternalError(message='TIMEOUT')]
+        profile._computeclient = cc
+        x_new_image = mock.Mock(id='456')
+        x_images = [x_new_image]
+        mock_check = self.patchobject(profile, '_validate_image',
+                                      side_effect=x_images)
+        obj = mock.Mock(physical_id='NOVA_ID')
+        new_spec = copy.deepcopy(self.spec)
+        new_spec['properties']['image'] = 'new_image'
+        new_profile = server.ServerProfile('t1', new_spec)
+
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile._update_image,
+                               obj, new_profile, 'new_name', 'new_pass')
+
+        self.assertEqual("Failed in updating server 'NOVA_ID': TIMEOUT.",
+                         str(ex))
+        mock_check.assert_has_calls([
+            mock.call(obj, 'new_image', reason='update'),
+        ])
         cc.server_rebuild.assert_called_once_with(
             'NOVA_ID', '456', 'new_name', 'new_pass')
-        cc.wait_for_server.assert_called_once_with('NOVA_ID', 'ACTIVE')
+        cc.wait_for_server.assert_has_calls([
+            mock.call('NOVA_ID', consts.VS_SHUTOFF, timeout=600),
+            mock.call('NOVA_ID', consts.VS_SHUTOFF)])
 
     def test_create_interfaces(self):
         cc = mock.Mock()
@@ -847,11 +1121,13 @@ class TestNovaServerUpdate(base.SenlinTestCase):
 
     def test_delete_interfaces(self):
         cc = mock.Mock()
+        cc.server_get.return_value = mock.Mock(status=consts.VS_ACTIVE)
         nc = mock.Mock()
         net1 = mock.Mock(id='net1')
         nc.network_get.return_value = net1
         nc.port_find.return_value = mock.Mock(id='port3', status='DOWN')
         profile = server.ServerProfile('t', self.spec)
+        profile.stop_timeout = 232
         profile._computeclient = cc
         profile._networkclient = nc
         obj = mock.Mock(physical_id='NOVA_ID', data={'internal_ports': [
@@ -873,6 +1149,10 @@ class TestNovaServerUpdate(base.SenlinTestCase):
 
         nc.network_get.assert_has_calls([
             mock.call('net1'), mock.call('net1')
+        ])
+        cc.wait_for_server.assert_has_calls([
+            mock.call('NOVA_ID', consts.VS_SHUTOFF,
+                      timeout=profile.stop_timeout),
         ])
         cc.server_interface_delete.assert_has_calls([
             mock.call('port1', 'NOVA_ID'),
@@ -935,9 +1215,11 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         ]
         new_profile = server.ServerProfile('t1', new_spec)
 
-        res = profile._update_network(obj, new_profile)
+        networks_created, networks_deleted = profile._update_network(
+            obj, new_profile)
 
-        self.assertIsNone(res)
+        self.assertTrue(networks_created)
+        self.assertTrue(networks_deleted)
 
         networks_create = [
             {'floating_network': None, 'network': 'net1', 'fixed_ip': 'ip2',
@@ -974,10 +1256,14 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         mock_check_name.return_value = True, 'NEW_NAME'
         mock_check_password.return_value = True, 'NEW_PASSWORD'
         mock_update_image.return_value = False
+        mock_update_flavor.return_value = False
+        mock_update_network.return_value = False, False
         obj = mock.Mock(physical_id='FAKE_ID')
 
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = mock.Mock()
+        profile._computeclient.server_get = mock.Mock()
+        profile._computeclient.server_start = mock.Mock()
         new_profile = server.ServerProfile('t', self.spec)
 
         res = profile.do_update(obj, new_profile)
@@ -1007,6 +1293,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                                       mock_update_password):
         mock_check_name.return_value = False, 'NEW_NAME'
         mock_check_password.return_value = False, 'OLD_PASS'
+        mock_update_network.return_value = False, False
         obj = mock.Mock(physical_id='NOVA_ID')
 
         profile = server.ServerProfile('t', self.spec)
@@ -1083,6 +1370,9 @@ class TestNovaServerUpdate(base.SenlinTestCase):
 
         profile = server.ServerProfile('t', self.spec)
         profile._computeclient = mock.Mock()
+        profile._computeclient.server_get = mock.Mock()
+        profile._computeclient.server_get.return_value = mock.Mock(
+            status=consts.VS_SHUTOFF)
         new_spec = copy.deepcopy(self.spec)
         new_spec['properties']['image'] = 'FAKE_IMAGE_NEW'
         new_profile = server.ServerProfile('t', new_spec)
@@ -1094,6 +1384,10 @@ class TestNovaServerUpdate(base.SenlinTestCase):
             obj, new_profile, 'OLD_NAME', 'OLD_PASS')
         self.assertEqual(0, mock_update_name.call_count)
         self.assertEqual(0, mock_update_password.call_count)
+        profile._computeclient.server_get.assert_called_once_with(
+            obj.physical_id)
+        profile._computeclient.server_start.assert_called_once_with(
+            obj.physical_id)
 
     @mock.patch.object(server.ServerProfile, '_update_flavor')
     @mock.patch.object(server.ServerProfile, '_update_name')
@@ -1129,10 +1423,11 @@ class TestNovaServerUpdate(base.SenlinTestCase):
 
     @mock.patch.object(server.ServerProfile, '_update_flavor')
     def test_do_update_update_flavor_succeeded(self, mock_update_flavor):
+        mock_update_flavor.return_value = True
         obj = mock.Mock(physical_id='FAKE_ID')
         profile = server.ServerProfile('t', self.spec)
         x_image = {'id': '123'}
-        x_server = mock.Mock(image=x_image)
+        x_server = mock.Mock(image=x_image, status=consts.VS_SHUTOFF)
         cc = mock.Mock()
         cc.server_get.return_value = x_server
         gc = mock.Mock()
@@ -1146,6 +1441,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         self.assertTrue(res)
         mock_update_flavor.assert_called_with(obj, new_profile)
         gc.image_find.assert_called_with('FAKE_IMAGE', False)
+        cc.server_start.assert_called_once_with(obj.physical_id)
 
     @mock.patch.object(server.ServerProfile, '_update_flavor')
     def test_do_update_update_flavor_failed(self, mock_update_flavor):
@@ -1155,7 +1451,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         obj = mock.Mock(physical_id='NOVA_ID')
         profile = server.ServerProfile('t', self.spec)
         x_image = {'id': '123'}
-        x_server = mock.Mock(image=x_image)
+        x_server = mock.Mock(image=x_image, status=consts.VS_ACTIVE)
         cc = mock.Mock()
         cc.server_get.return_value = x_server
         gc = mock.Mock()
@@ -1179,10 +1475,10 @@ class TestNovaServerUpdate(base.SenlinTestCase):
     @mock.patch.object(server.ServerProfile, '_update_network')
     def test_do_update_update_network_succeeded(
             self, mock_update_network, mock_update_flavor):
-        mock_update_network.return_value = True
+        mock_update_network.return_value = True, True
         profile = server.ServerProfile('t', self.spec)
         x_image = {'id': '123'}
-        x_server = mock.Mock(image=x_image)
+        x_server = mock.Mock(image=x_image, status=consts.VS_SHUTOFF)
         cc = mock.Mock()
         gc = mock.Mock()
         cc.server_get.return_value = x_server
@@ -1197,10 +1493,16 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         ]
         new_profile = server.ServerProfile('t', new_spec)
 
-        res = profile.do_update(obj, new_profile)
+        params = {'cluster.stop_timeout_before_update': 134}
+
+        res = profile.do_update(obj, new_profile=new_profile, **params)
+
         self.assertTrue(res)
         gc.image_find.assert_called_with('FAKE_IMAGE', False)
         mock_update_network.assert_called_with(obj, new_profile)
+        cc.server_start.assert_called_once_with(obj.physical_id)
+        self.assertEqual(profile.stop_timeout,
+                         params['cluster.stop_timeout_before_update'])
 
     @mock.patch.object(server.ServerProfile, '_update_password')
     @mock.patch.object(server.ServerProfile, '_check_password')
@@ -1267,3 +1569,20 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         res = profile.do_update(node_obj, new_profile)
 
         self.assertFalse(res)
+
+    def test_do_update_invalid_stop_timeout(self):
+        profile = server.ServerProfile('t', self.spec)
+        profile._computeclient = mock.Mock()
+        node_obj = mock.Mock(physical_id='NOVA_ID')
+        new_spec = copy.deepcopy(self.spec)
+        new_profile = server.ServerProfile('t', new_spec)
+
+        params = {'cluster.stop_timeout_before_update': '123'}
+        ex = self.assertRaises(exc.EResourceUpdate,
+                               profile.do_update,
+                               node_obj, new_profile, **params)
+
+        self.assertEqual("Failed in updating server 'NOVA_ID': "
+                         "cluster.stop_timeout_before_update value must be of "
+                         "type int.",
+                         str(ex))

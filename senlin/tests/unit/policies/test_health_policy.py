@@ -287,7 +287,7 @@ class TestHealthPolicy(base.SenlinTestCase):
 
     def test_pre_op_default(self):
         action = mock.Mock(context='action_context', data={},
-                           action=consts.CLUSTER_RECOVER)
+                           action=consts.CLUSTER_SCALE_OUT)
 
         res = self.hp.pre_op(self.cluster.id, action)
 
@@ -304,6 +304,36 @@ class TestHealthPolicy(base.SenlinTestCase):
     def test_pre_op_scale_in(self, mock_disable):
         action = mock.Mock(context='action_context', data={},
                            action=consts.CLUSTER_SCALE_IN)
+
+        res = self.hp.pre_op(self.cluster.id, action)
+
+        self.assertTrue(res)
+        mock_disable.assert_called_once_with(self.cluster.id)
+
+    @mock.patch.object(health_manager, 'disable')
+    def test_pre_op_update(self, mock_disable):
+        action = mock.Mock(context='action_context', data={},
+                           action=consts.CLUSTER_UPDATE)
+
+        res = self.hp.pre_op(self.cluster.id, action)
+
+        self.assertTrue(res)
+        mock_disable.assert_called_once_with(self.cluster.id)
+
+    @mock.patch.object(health_manager, 'disable')
+    def test_pre_op_cluster_recover(self, mock_disable):
+        action = mock.Mock(context='action_context', data={},
+                           action=consts.CLUSTER_RECOVER)
+
+        res = self.hp.pre_op(self.cluster.id, action)
+
+        self.assertTrue(res)
+        mock_disable.assert_called_once_with(self.cluster.id)
+
+    @mock.patch.object(health_manager, 'disable')
+    def test_pre_op_cluster_replace_nodes(self, mock_disable):
+        action = mock.Mock(context='action_context', data={},
+                           action=consts.CLUSTER_REPLACE_NODES)
 
         res = self.hp.pre_op(self.cluster.id, action)
 
@@ -388,6 +418,33 @@ class TestHealthPolicy(base.SenlinTestCase):
     @mock.patch.object(health_manager, 'enable')
     def test_post_op_scale_in(self, mock_enable):
         action = mock.Mock(action=consts.CLUSTER_SCALE_IN)
+
+        res = self.hp.post_op(self.cluster.id, action)
+
+        self.assertTrue(res)
+        mock_enable.assert_called_once_with(self.cluster.id)
+
+    @mock.patch.object(health_manager, 'enable')
+    def test_post_op_update(self, mock_enable):
+        action = mock.Mock(action=consts.CLUSTER_UPDATE)
+
+        res = self.hp.post_op(self.cluster.id, action)
+
+        self.assertTrue(res)
+        mock_enable.assert_called_once_with(self.cluster.id)
+
+    @mock.patch.object(health_manager, 'enable')
+    def test_post_op_cluster_recover(self, mock_enable):
+        action = mock.Mock(action=consts.CLUSTER_RECOVER)
+
+        res = self.hp.post_op(self.cluster.id, action)
+
+        self.assertTrue(res)
+        mock_enable.assert_called_once_with(self.cluster.id)
+
+    @mock.patch.object(health_manager, 'enable')
+    def test_post_op_cluster_replace_nodes(self, mock_enable):
+        action = mock.Mock(action=consts.CLUSTER_REPLACE_NODES)
 
         res = self.hp.post_op(self.cluster.id, action)
 

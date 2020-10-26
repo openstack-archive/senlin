@@ -46,10 +46,16 @@ class HealthPolicy(base.Policy):
         ('BEFORE', consts.CLUSTER_DEL_NODES),
         ('BEFORE', consts.CLUSTER_SCALE_IN),
         ('BEFORE', consts.CLUSTER_RESIZE),
+        ('BEFORE', consts.CLUSTER_UPDATE),
+        ('BEFORE', consts.CLUSTER_RECOVER),
+        ('BEFORE', consts.CLUSTER_REPLACE_NODES),
         ('BEFORE', consts.NODE_DELETE),
         ('AFTER', consts.CLUSTER_DEL_NODES),
         ('AFTER', consts.CLUSTER_SCALE_IN),
         ('AFTER', consts.CLUSTER_RESIZE),
+        ('AFTER', consts.CLUSTER_UPDATE),
+        ('AFTER', consts.CLUSTER_RECOVER),
+        ('AFTER', consts.CLUSTER_REPLACE_NODES),
         ('AFTER', consts.NODE_DELETE),
     ]
 
@@ -410,9 +416,10 @@ class HealthPolicy(base.Policy):
     def pre_op(self, cluster_id, action, **args):
         """Hook before action execution.
 
-        One of the task for this routine is to disable health policy if the
-        action is a request that will shrink the cluster. The reason is that
-        the policy may attempt to recover nodes that are to be deleted.
+        Disable health policy for actions that modify cluster nodes (e.g.
+        scale in, delete nodes, cluster update, cluster recover and cluster
+        replace nodes).
+        For all other actions, set the health policy data in the action data.
 
         :param cluster_id: The ID of the target cluster.
         :param action: The action to be examined.
@@ -421,7 +428,10 @@ class HealthPolicy(base.Policy):
         """
         if action.action in (consts.CLUSTER_SCALE_IN,
                              consts.CLUSTER_DEL_NODES,
-                             consts.NODE_DELETE):
+                             consts.NODE_DELETE,
+                             consts.CLUSTER_UPDATE,
+                             consts.CLUSTER_RECOVER,
+                             consts.CLUSTER_REPLACE_NODES):
             health_manager.disable(cluster_id)
             return True
 
@@ -467,7 +477,10 @@ class HealthPolicy(base.Policy):
         """
         if action.action in (consts.CLUSTER_SCALE_IN,
                              consts.CLUSTER_DEL_NODES,
-                             consts.NODE_DELETE):
+                             consts.NODE_DELETE,
+                             consts.CLUSTER_UPDATE,
+                             consts.CLUSTER_RECOVER,
+                             consts.CLUSTER_REPLACE_NODES):
             health_manager.enable(cluster_id)
             return True
 

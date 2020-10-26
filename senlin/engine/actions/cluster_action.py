@@ -240,16 +240,17 @@ class ClusterAction(base.Action):
         for node_set in plan:
             child = []
             nodes = list(node_set)
+            nodes.sort()
 
             for node in nodes:
                 kwargs = {
                     'name': 'node_update_%s' % node[:8],
                     'cluster_id': self.entity.id,
                     'cause': consts.CAUSE_DERIVED,
-                    'inputs': {
-                        'new_profile_id': profile_id,
-                    },
+                    'inputs': self.entity.config,
                 }
+                kwargs['inputs']['new_profile_id'] = profile_id
+
                 action_id = base.Action.create(self.context, node,
                                                consts.NODE_UPDATE, **kwargs)
                 child.append(action_id)
@@ -299,6 +300,14 @@ class ClusterAction(base.Action):
         profile_only = self.inputs.get('profile_only')
 
         if config is not None:
+            # make sure config values are valid
+            try:
+                stop_timeout = config['cluster.stop_timeout_before_update']
+                config['cluster.stop_timeout_before_update'] = int(
+                    stop_timeout)
+            except Exception as e:
+                return self.RES_ERROR, str(e)
+
             self.entity.config = config
         if name is not None:
             self.entity.name = name
