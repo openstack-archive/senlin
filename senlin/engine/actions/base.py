@@ -379,13 +379,10 @@ class Action(object):
 
         :raises: `ActionImmutable` if the action is in an unchangeable state
         """
-        expected = (self.INIT, self.WAITING, self.READY, self.RUNNING,
-                    self.WAITING_LIFECYCLE_COMPLETION)
-        if self.status not in expected:
-            raise exception.ActionImmutable(id=self.id[:8], expected=expected,
-                                            actual=self.status)
         LOG.debug('Forcing action %s to cancel.', self.id)
         self.set_status(self.RES_CANCEL, 'Action execution force cancelled')
+
+        self.release_lock()
 
         depended = dobj.Dependency.get_depended(self.context, self.id)
         if not depended:
@@ -400,6 +397,7 @@ class Action(object):
                 LOG.debug('Forcing action %s to cancel.', action.id)
                 action.set_status(action.RES_CANCEL,
                                   'Action execution force cancelled')
+                action.release_lock()
 
     def execute(self, **kwargs):
         """Execute the action.
@@ -409,6 +407,10 @@ class Action(object):
         :param kwargs: additional parameters that may override the default
                        properties stored in the action record.
         """
+        raise NotImplementedError
+
+    def release_lock(self):
+        """Release the lock associated with the action."""
         raise NotImplementedError
 
     def set_status(self, result, reason=None):
