@@ -1024,29 +1024,6 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         self.assertEqual(0, mock_pre_op.call_count)
         self.assertEqual(0, mock_post_op.call_count)
 
-    def test_check_result_true(self):
-        cluster_id = CLUSTER_ID
-        action = ab.Action(cluster_id, 'OBJECT_ACTION', self.ctx)
-        action.data['status'] = policy_mod.CHECK_OK
-        action.data['reason'] = "Completed policy checking."
-
-        res = action._check_result('FAKE_POLICY_NAME')
-
-        self.assertTrue(res)
-
-    def test_check_result_false(self):
-        cluster_id = CLUSTER_ID
-        action = ab.Action(cluster_id, 'OBJECT_ACTION', self.ctx)
-        action.data['status'] = policy_mod.CHECK_ERROR
-        reason = ("Policy '%s' cooldown is still in progress." %
-                  'FAKE_POLICY_2')
-        action.data['reason'] = reason
-
-        res = action._check_result('FAKE_POLICY_NAME')
-        reason = ("Failed policy '%(name)s': %(reason)s"
-                  ) % {'name': 'FAKE_POLICY_NAME', 'reason': reason}
-        self.assertFalse(res)
-
     @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     @mock.patch.object(policy_mod.Policy, 'load')
     def test_policy_check_pre_op(self, mock_load, mock_load_all):
@@ -1112,8 +1089,7 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
 
     @mock.patch.object(cpo.ClusterPolicy, 'get_all')
     @mock.patch.object(policy_mod.Policy, 'load')
-    @mock.patch.object(ab.Action, '_check_result')
-    def test_policy_check_abort_in_middle(self, mock_check, mock_load,
+    def test_policy_check_abort_in_middle(self, mock_load,
                                           mock_load_all):
         cluster_id = CLUSTER_ID
         # Note: both policies are mocked
@@ -1124,6 +1100,13 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
                             TARGET=[('AFTER', 'OBJECT_ACTION')])
         policy2.name = 'P2'
         action = ab.Action(cluster_id, 'OBJECT_ACTION', self.ctx)
+        action.data = mock.MagicMock()
+
+        # mock action.data to return error for the first policy call
+        # (i.e. after policy1 post_op method has been called).
+        # this should stop the policy check and prevent the
+        # the policy2 post_op method from being called.
+        action.data.__getitem__.side_effect = [policy_mod.CHECK_ERROR, '']
 
         # Note: policy binding is created but not stored
         pb1 = self._create_cp_binding(cluster_id, policy1.id)
@@ -1131,7 +1114,6 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         mock_load_all.return_value = [pb1, pb2]
         # mock return value for two calls
         mock_load.side_effect = [policy1, policy2]
-        mock_check.side_effect = [False, True]
 
         res = action.policy_check(cluster_id, 'AFTER')
 

@@ -25,9 +25,9 @@ from senlin.objects import credential as co
 from senlin.objects import policy as po
 
 CHECK_RESULTS = (
-    CHECK_OK, CHECK_ERROR,
+    CHECK_OK, CHECK_ERROR, CHECK_NONE
 ) = (
-    'OK', 'ERROR',
+    'OK', 'ERROR', 'NONE'
 )
 
 

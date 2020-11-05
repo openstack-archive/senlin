@@ -496,21 +496,6 @@ class Action(object):
     def is_resumed(self):
         return self._check_signal() == self.SIG_RESUME
 
-    def _check_result(self, name):
-        """Check policy status and generate event.
-
-        :param name: Name of policy checked
-        :return: True if the policy checking can be continued, or False if the
-                 policy checking should be aborted.
-        """
-        reason = self.data['reason']
-        if self.data['status'] == policy_mod.CHECK_OK:
-            return True
-
-        self.data['reason'] = ("Failed policy '%(name)s': %(reason)s"
-                               ) % {'name': name, 'reason': reason}
-        return False
-
     def policy_check(self, cluster_id, target):
         """Check all policies attached to cluster and give result.
 
@@ -526,9 +511,10 @@ class Action(object):
         bindings = cpo.ClusterPolicy.get_all(self.context, cluster_id,
                                              sort='priority',
                                              filters={'enabled': True})
+
         # default values
-        self.data['status'] = policy_mod.CHECK_OK
-        self.data['reason'] = 'Completed policy checking.'
+        self.data['status'] = policy_mod.CHECK_NONE
+        self.data['reason'] = ''
 
         for pb in bindings:
             policy = policy_mod.Policy.load(self.context, pb.policy_id)
@@ -545,12 +531,22 @@ class Action(object):
             else:  # target == 'AFTER'
                 method = getattr(policy, 'post_op', None)
 
+            # call policy check function
+            # it will set result in data['status']
             if method is not None:
                 method(cluster_id, self)
 
-            res = self._check_result(policy.name)
-            if res is False:
+            # stop policy check is one of them fails
+            if self.data['status'] == policy_mod.CHECK_ERROR:
+                reason = self.data['reason']
+                self.data['reason'] = ("Failed policy '%(name)s': %(reason)s"
+                                       ) % {'name': policy.name,
+                                            'reason': reason}
                 return
+
+        self.data['status'] = policy_mod.CHECK_OK
+        self.data['reason'] = 'Completed policy checking.'
+
         return
 
     @staticmethod
