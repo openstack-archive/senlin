@@ -531,7 +531,8 @@ class Action(object):
         self.data['reason'] = 'Completed policy checking.'
 
         for pb in bindings:
-            policy = policy_mod.Policy.load(self.context, pb.policy_id)
+            policy = policy_mod.Policy.load(self.context, pb.policy_id,
+                                            project_safe=False)
 
             # add last_op as input for the policy so that it can be used
             # during pre_op

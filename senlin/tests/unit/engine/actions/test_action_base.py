@@ -1017,7 +1017,8 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         mock_load_all.assert_called_once_with(
             action.context, cluster_id, sort='priority',
             filters={'enabled': True})
-        mock_load.assert_called_once_with(action.context, policy.id)
+        mock_load.assert_called_once_with(action.context, policy.id,
+                                          project_safe=False)
         # last_op was updated anyway
         self.assertEqual(action.inputs['last_op'], pb.last_op)
         # neither pre_op nor post_op was called, because target not match
@@ -1076,7 +1077,8 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         mock_load_all.assert_called_once_with(
             action.context, cluster_id, sort='priority',
             filters={'enabled': True})
-        mock_load.assert_called_once_with(action.context, policy.id)
+        mock_load.assert_called_once_with(action.context, policy.id,
+                                          project_safe=False)
         # last_op was not updated
         self.assertIsNone(pb.last_op)
 
@@ -1103,7 +1105,8 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         mock_load_all.assert_called_once_with(
             action.context, cluster_id, sort='priority',
             filters={'enabled': True})
-        mock_load.assert_called_once_with(action.context, policy.id)
+        mock_load.assert_called_once_with(action.context, policy.id,
+                                          project_safe=False)
         # last_op was updated for POST check
         self.assertEqual(action.inputs['last_op'], pb.last_op)
         # pre_op is called, but post_op was not called
@@ -1144,7 +1147,7 @@ class ActionPolicyCheckTest(base.SenlinTestCase):
         mock_load_all.assert_called_once_with(
             action.context, cluster_id, sort='priority',
             filters={'enabled': True})
-        calls = [mock.call(action.context, policy1.id)]
+        calls = [mock.call(action.context, policy1.id, project_safe=False)]
         mock_load.assert_has_calls(calls)
 
 
