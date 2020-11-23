@@ -331,6 +331,7 @@ class ServerProfile(base.Profile):
     def __init__(self, type_name, name, **kwargs):
         super(ServerProfile, self).__init__(type_name, name, **kwargs)
         self.server_id = None
+        self.stop_timeout = cfg.CONF.default_nova_timeout
 
     def _validate_az(self, obj, az_name, reason=None):
         try:
@@ -1106,7 +1107,7 @@ class ServerProfile(base.Profile):
         :param obj: The node object to operate on.
         :param old_flavor: The identity of the current flavor.
         :param new_flavor: The identity of the new flavor.
-        :returns: ``None``.
+        :returns: Returns true if the flavor was updated or false otherwise.
         :raises: `EResourceUpdate` when operation was a failure.
         """
         old_flavor = self.properties[self.FLAVOR]
@@ -1115,7 +1116,23 @@ class ServerProfile(base.Profile):
         oldflavor = self._validate_flavor(obj, old_flavor, 'update')
         newflavor = self._validate_flavor(obj, new_flavor, 'update')
         if oldflavor.id == newflavor.id:
-            return
+            return False
+
+        try:
+            # server has to be active or stopped in order to resize
+            # stop server if it is active
+            server = cc.server_get(obj.physical_id)
+            if server.status == consts.VS_ACTIVE:
+                cc.server_stop(obj.physical_id)
+                cc.wait_for_server(obj.physical_id, consts.VS_SHUTOFF,
+                                   timeout=self.stop_timeout)
+            elif server.status != consts.VS_SHUTOFF:
+                raise exc.InternalError(
+                    message='Server needs to be ACTIVE or STOPPED in order to'
+                            ' update flavor.')
+        except exc.InternalError as ex:
+            raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                      message=str(ex))
 
         try:
             cc.server_resize(obj.physical_id, newflavor.id)
@@ -1123,7 +1140,13 @@ class ServerProfile(base.Profile):
         except exc.InternalError as ex:
             msg = str(ex)
             try:
-                cc.server_resize_revert(obj.physical_id)
+                server = cc.server_get(obj.physical_id)
+                if server.status == 'RESIZE':
+                    cc.server_resize_revert(obj.physical_id)
+                    cc.wait_for_server(obj.physical_id, consts.VS_SHUTOFF)
+
+                # start server back up in case of exception during resize
+                cc.server_start(obj.physical_id)
                 cc.wait_for_server(obj.physical_id, consts.VS_ACTIVE)
             except exc.InternalError as ex1:
                 msg = str(ex1)
@@ -1132,10 +1155,12 @@ class ServerProfile(base.Profile):
 
         try:
             cc.server_resize_confirm(obj.physical_id)
-            cc.wait_for_server(obj.physical_id, consts.VS_ACTIVE)
+            cc.wait_for_server(obj.physical_id, consts.VS_SHUTOFF)
         except exc.InternalError as ex:
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
                                       message=str(ex))
+
+        return True
 
     def _update_image(self, obj, new_profile, new_name, new_password):
         """Update image used by server node.
@@ -1172,9 +1197,20 @@ class ServerProfile(base.Profile):
             return False
 
         try:
+            # server has to be active or stopped in order to resize
+            # stop server if it is active
+            if server.status == consts.VS_ACTIVE:
+                driver.server_stop(obj.physical_id)
+                driver.wait_for_server(obj.physical_id, consts.VS_SHUTOFF,
+                                       timeout=self.stop_timeout)
+            elif server.status != consts.VS_SHUTOFF:
+                raise exc.InternalError(
+                    message='Server needs to be ACTIVE or STOPPED in order to'
+                            ' update image.')
+
             driver.server_rebuild(obj.physical_id, new_image_id,
                                   new_name, new_password)
-            driver.wait_for_server(obj.physical_id, consts.VS_ACTIVE)
+            driver.wait_for_server(obj.physical_id, consts.VS_SHUTOFF)
         except exc.InternalError as ex:
             raise exc.EResourceUpdate(type='server', id=obj.physical_id,
                                       message=str(ex))
@@ -1262,6 +1298,18 @@ class ServerProfile(base.Profile):
         nc = self.network(obj)
         internal_ports = obj.data.get('internal_ports', [])
 
+        if networks:
+            try:
+                # stop server if it is active
+                server = cc.server_get(obj.physical_id)
+                if server.status == consts.VS_ACTIVE:
+                    cc.server_stop(obj.physical_id)
+                    cc.wait_for_server(obj.physical_id, consts.VS_SHUTOFF,
+                                       timeout=self.stop_timeout)
+            except exc.InternalError as ex:
+                raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                          message=str(ex))
+
         for n in networks:
             candidate_ports = self._find_port_by_net_spec(
                 obj, n, internal_ports)
@@ -1290,7 +1338,7 @@ class ServerProfile(base.Profile):
         :param obj: The node object to operate.
         :param new_profile: The new profile which may contain new network
                             settings.
-        :return: ``None``
+        :return: Returns a tuple of booleans if network was created or deleted.
         :raises: ``EResourceUpdate`` if there are driver failures.
         """
         networks_current = self.properties[self.NETWORKS]
@@ -1308,7 +1356,8 @@ class ServerProfile(base.Profile):
         # Attach new interfaces
         if networks_create:
             self._update_network_add_port(obj, networks_create)
-        return
+
+        return networks_create, networks_delete
 
     def do_update(self, obj, new_profile=None, **params):
         """Perform update on the server.
@@ -1328,6 +1377,15 @@ class ServerProfile(base.Profile):
         if not self.validate_for_update(new_profile):
             return False
 
+        self.stop_timeout = params.get('cluster.stop_timeout_before_update',
+                                       cfg.CONF.default_nova_timeout)
+
+        if not isinstance(self.stop_timeout, int):
+            raise exc.EResourceUpdate(
+                type='server', id=obj.physical_id,
+                message='cluster.stop_timeout_before_update value must be of '
+                        'type int.')
+
         name_changed, new_name = self._check_server_name(obj, new_profile)
         passwd_changed, new_passwd = self._check_password(obj, new_profile)
         # Update server image: may have side effect of changing server name
@@ -1342,12 +1400,25 @@ class ServerProfile(base.Profile):
                 self._update_password(obj, new_passwd)
 
         # Update server flavor: note that flavor is a required property
-        self._update_flavor(obj, new_profile)
-        self._update_network(obj, new_profile)
+        flavor_changed = self._update_flavor(obj, new_profile)
+        network_created, network_deleted = self._update_network(
+            obj, new_profile)
 
         # TODO(Yanyan Hu): Update block_device properties
         # Update server metadata
         self._update_metadata(obj, new_profile)
+
+        # start server if it was stopped as part of this update operation
+        if image_changed or flavor_changed or network_deleted:
+            cc = self.compute(obj)
+            try:
+                server = cc.server_get(obj.physical_id)
+                if server.status == consts.VS_SHUTOFF:
+                    cc.server_start(obj.physical_id)
+                    cc.wait_for_server(obj.physical_id, consts.VS_ACTIVE)
+            except exc.InternalError as ex:
+                raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                          message=str(ex))
 
         return True
 

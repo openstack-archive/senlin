@@ -15,6 +15,7 @@ import time
 
 from oslo_utils import uuidutils
 
+from senlin.common import consts
 from senlin.drivers import base
 from senlin.drivers import sdk
 
@@ -199,7 +200,9 @@ class NovaClient(base.DriverBase):
     def server_get(self, server):
         return sdk.FakeResourceObject(self.fake_server_get)
 
-    def wait_for_server(self, server, timeout=None):
+    def wait_for_server(self, server, status=consts.VS_ACTIVE,
+                        failures=None,
+                        interval=2, timeout=None):
         # sleep for simulated wait time if it was supplied during server_create
         if server in self.simulated_waits:
             time.sleep(self.simulated_waits[server])
