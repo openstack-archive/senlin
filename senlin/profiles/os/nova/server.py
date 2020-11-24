@@ -1332,6 +1332,43 @@ class ServerProfile(base.Profile):
         obj.data['internal_ports'] = internal_ports
         node_obj.Node.update(self.context, obj.id, {'data': obj.data})
 
+    def _nw_compare(self, n1, n2, property):
+        return n1.get(property, None) == n2.get(property, None)
+
+    def _update_network_update_port(self, obj, networks):
+        """Update existing port in network from the node.
+
+           Currently only update to security group is supported.
+
+        :param obj: The node object to operate.
+        :param networks: A list networks that contain updated security groups.
+        :returns: ``None``
+        :raises: ``EResourceUpdate``
+        """
+        nc = self.network(obj)
+        internal_ports = obj.data.get('internal_ports', [])
+
+        # process each network to be updated
+        for n in networks:
+            # verify network properties and resolve names into ids
+            net = self._validate_network(obj, n, 'update')
+
+            # find existing port that matches network
+            candidate_ports = self._find_port_by_net_spec(
+                obj, net, internal_ports)
+            port = candidate_ports[0]
+            try:
+                # set updated security groups for port
+                port_attr = {
+                    'security_groups': net.get(self.PORT_SECURITY_GROUPS, []),
+                }
+                LOG.debug("Setting security groups %s for port %s",
+                          port_attr, port['id'])
+                nc.port_update(port['id'], **port_attr)
+            except exc.InternalError as ex:
+                raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                          message=str(ex))
+
     def _update_network(self, obj, new_profile):
         """Updating server network interfaces.
 
@@ -1344,10 +1381,36 @@ class ServerProfile(base.Profile):
         networks_current = self.properties[self.NETWORKS]
         networks_create = new_profile.properties[self.NETWORKS]
         networks_delete = copy.deepcopy(networks_current)
-        for network in networks_current:
-            if network in networks_create:
-                networks_create.remove(network)
-                networks_delete.remove(network)
+        networks_update = []
+
+        for nw in networks_current:
+            if nw in networks_create:
+                # network already exist.  no need to create or delete it.
+                LOG.debug("Network %s already exists, skip create/delete", nw)
+                networks_create.remove(nw)
+                networks_delete.remove(nw)
+
+        # find networks for which only security group changed
+        for nw in networks_current:
+            # networks to be created with only sg changes
+            sg_create_nw = [n for n in networks_create
+                            if (self._nw_compare(n, nw, 'network') and
+                                self._nw_compare(n, nw, 'port') and
+                                self._nw_compare(n, nw, 'fixed_ip') and
+                                self._nw_compare(n, nw, 'floating_network') and
+                                self._nw_compare(n, nw, 'floating_ip'))]
+            for n in sg_create_nw:
+                # don't create networks with only security group changes
+                LOG.debug("Network %s only has security group changes, "
+                          "don't create/delete it.  Only update it.", n)
+                networks_create.remove(n)
+                networks_update.append(n)
+                if nw in networks_delete:
+                    networks_delete.remove(nw)
+
+        # update network
+        if networks_update:
+            self._update_network_update_port(obj, networks_update)
 
         # Detach some existing interfaces
         if networks_delete:

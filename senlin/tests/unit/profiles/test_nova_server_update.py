@@ -1195,9 +1195,91 @@ class TestNovaServerUpdate(base.SenlinTestCase):
                          str(ex))
         cc.server_interface_delete.assert_called_once_with('port1', 'NOVA_ID')
 
+    def test_update_port(self):
+        cc = mock.Mock()
+        cc.server_get.return_value = mock.Mock(status=consts.VS_ACTIVE)
+        nc = mock.Mock()
+        net1 = mock.Mock(id='net1')
+        nc.network_get.return_value = net1
+        nc.port_find.return_value = mock.Mock(id='port3', status='DOWN')
+        profile = server.ServerProfile('t', self.spec)
+        profile.stop_timeout = 232
+        profile._computeclient = cc
+        profile._networkclient = nc
+        validation_results = [
+            {'network': 'net1_id', 'fixed_ip': 'ip1',
+             'security_groups': ['sg1_id']},
+            {'network': 'net1_id', 'fixed_ip': 'ip1',
+             'security_groups': ['sg1_id', 'sg2_id']},
+            {'network': 'net1_id', 'fixed_ip': 'ip1'}
+        ]
+        mock_validate = self.patchobject(profile, '_validate_network',
+                                         side_effect=validation_results)
+        candidate_ports = [
+            [{'id': 'port1_id', 'network_id': 'net1_id',
+              'fixed_ips': [{'ip_address': 'ip1'}]}],
+            [{'id': 'port2_id', 'network_id': 'net1_id',
+              'fixed_ips': [{'ip_address': 'ip1'}]}],
+            [{'id': 'port3_id', 'network_id': 'net1_id',
+              'fixed_ips': [{'ip_address': 'ip1'}]}]
+        ]
+        self.patchobject(profile, '_find_port_by_net_spec',
+                         side_effect=candidate_ports)
+
+        obj = mock.Mock(physical_id='NOVA_ID', data={'internal_ports': [
+            {'id': 'port1', 'network_id': 'net1',
+             'fixed_ips': [{'ip_address': 'ip1'}]},
+            {'id': 'port2', 'network_id': 'net1', 'remove': True,
+             'fixed_ips': [{'ip_address': 'ip-random2'}],
+             'security_groups': ['default']},
+            {'id': 'port3', 'network_id': 'net1', 'remove': True,
+             'fixed_ips': [{'ip_address': 'ip3'}],
+             'security_groups': ['default']}
+        ]})
+        networks = [
+            {'network': 'net1', 'port': None, 'fixed_ip': 'ip1',
+             'security_groups': ['default'], 'floating_network': None,
+             'floating_ip': None},
+            {'network': 'net1', 'port': None, 'fixed_ip': 'ip1',
+             'security_groups': ['default', 'blah'], 'floating_network': None,
+             'floating_ip': None},
+            {'network': 'net1', 'port': None, 'fixed_ip': 'ip1',
+             'security_groups': None, 'floating_network': None,
+             'floating_ip': None},
+        ]
+
+        res = profile._update_network_update_port(obj, networks)
+
+        self.assertIsNone(res)
+        validation_calls = [
+            mock.call(obj,
+                      {'network': 'net1', 'port': None, 'fixed_ip': 'ip1',
+                       'security_groups': ['default'],
+                       'floating_network': None, 'floating_ip': None},
+                      'update'),
+            mock.call(obj,
+                      {'network': 'net1', 'port': None, 'fixed_ip': 'ip1',
+                       'security_groups': ['default', 'blah'],
+                       'floating_network': None, 'floating_ip': None},
+                      'update'),
+            mock.call(obj,
+                      {'network': 'net1', 'port': None, 'fixed_ip': 'ip1',
+                       'security_groups': None, 'floating_network': None,
+                       'floating_ip': None},
+                      'update')
+        ]
+        mock_validate.assert_has_calls(validation_calls)
+        update_calls = [
+            mock.call('port1_id', security_groups=['sg1_id']),
+            mock.call('port2_id', security_groups=['sg1_id', 'sg2_id']),
+            mock.call('port3_id', security_groups=[]),
+        ]
+        nc.port_update.assert_has_calls(update_calls)
+
+    @mock.patch.object(server.ServerProfile, '_update_network_update_port')
     @mock.patch.object(server.ServerProfile, '_update_network_remove_port')
     @mock.patch.object(server.ServerProfile, '_update_network_add_port')
-    def test_update_network(self, mock_create, mock_delete):
+    def test_update_network(self, mock_create, mock_delete, mock_update):
         obj = mock.Mock(physical_id='FAKE_ID')
 
         old_spec = copy.deepcopy(self.spec)
@@ -1205,6 +1287,11 @@ class TestNovaServerUpdate(base.SenlinTestCase):
             {'network': 'net1', 'fixed_ip': 'ip1'},
             {'network': 'net1'},
             {'port': 'port3'},
+            # sg only changes:
+            {'network': 'net3', 'fixed_ip': 'ip1'},
+            {'network': 'net4', 'fixed_ip': 'ip1',
+             'security_groups': ['blah']},
+            {'port': 'port5', 'security_groups': ['default']},
         ]
         profile = server.ServerProfile('t', old_spec)
         new_spec = copy.deepcopy(self.spec)
@@ -1212,6 +1299,12 @@ class TestNovaServerUpdate(base.SenlinTestCase):
             {'network': 'net1', 'fixed_ip': 'ip2'},
             {'network': 'net2'},
             {'port': 'port4'},
+            # sg only changes:
+            {'network': 'net3', 'fixed_ip': 'ip1',
+             'security_groups': ['default']},
+            {'network': 'net4', 'fixed_ip': 'ip1',
+             'security_groups': ['default']},
+            {'port': 'port5', 'security_groups': ['default', 'blah']},
         ]
         new_profile = server.ServerProfile('t1', new_spec)
 
@@ -1239,6 +1332,18 @@ class TestNovaServerUpdate(base.SenlinTestCase):
              'floating_ip': None, 'port': 'port3', 'security_groups': None}
         ]
         mock_delete.assert_called_once_with(obj, networks_delete)
+        networks_update = [
+            {'network': 'net3', 'port': None, 'fixed_ip': 'ip1',
+             'security_groups': ['default'], 'floating_network': None,
+             'floating_ip': None},
+            {'network': 'net4', 'port': None, 'fixed_ip': 'ip1',
+             'security_groups': ['default'], 'floating_network': None,
+             'floating_ip': None},
+            {'network': None, 'port': 'port5', 'fixed_ip': None,
+             'security_groups': ['default', 'blah'], 'floating_network': None,
+             'floating_ip': None}
+        ]
+        mock_update.assert_called_once_with(obj, networks_update)
 
     @mock.patch.object(server.ServerProfile, '_update_password')
     @mock.patch.object(server.ServerProfile, '_check_password')
