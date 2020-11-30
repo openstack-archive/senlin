@@ -302,9 +302,10 @@ class ClusterAction(base.Action):
         if config is not None:
             # make sure config values are valid
             try:
-                stop_timeout = config['cluster.stop_timeout_before_update']
-                config['cluster.stop_timeout_before_update'] = int(
-                    stop_timeout)
+                stop_timeout = config.get('cluster.stop_timeout_before_update')
+                if stop_timeout:
+                    config['cluster.stop_timeout_before_update'] = int(
+                        stop_timeout)
             except Exception as e:
                 return self.RES_ERROR, str(e)
 
