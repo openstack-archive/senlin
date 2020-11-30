@@ -232,6 +232,11 @@ cluster to be created. The following config properties are supported:
   deleted. The default setting is False for which a cluster performs a node
   delete without stopping the node.
 
+- ``cluster.stop_timeout_before_update``: Specifies the timeout value in
+  seconds to wait for when stopping a node as part of a cluster update
+  operation.  If this value is not set, the value for default_nova_timeout in
+  the configuration will be used.
+
 
 Showing Details of a Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
