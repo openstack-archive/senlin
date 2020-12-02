@@ -38,6 +38,7 @@ spec = {
             'floating_network': 'FAKE_FLOATING_NET',
             'security_groups': ['FAKE_SECURITY_GROUP'],
             'port': 'FAKE_PORT',
+            'vnic_type': 'direct',
             'fixed_ip': 'FAKE_IP',
             'network': 'FAKE_NET',
         }],

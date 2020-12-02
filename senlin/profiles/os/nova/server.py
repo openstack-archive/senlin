@@ -64,10 +64,10 @@ class ServerProfile(base.Profile):
     )
 
     NETWORK_KEYS = (
-        PORT, FIXED_IP, NETWORK, PORT_SECURITY_GROUPS,
+        PORT, VNIC_TYPE, FIXED_IP, NETWORK, PORT_SECURITY_GROUPS,
         FLOATING_NETWORK, FLOATING_IP,
     ) = (
-        'port', 'fixed_ip', 'network', 'security_groups',
+        'port', 'vnic_type', 'fixed_ip', 'network', 'security_groups',
         'floating_network', 'floating_ip',
     )
 
@@ -181,6 +181,9 @@ class ServerProfile(base.Profile):
                     ),
                     PORT: schema.String(
                         _('Port ID to be used by the network.'),
+                    ),
+                    VNIC_TYPE: schema.String(
+                        _('Define vnic_type to be used by port'),
                     ),
                     FIXED_IP: schema.String(
                         _('Fixed IP to be used by the network.'),
@@ -628,6 +631,15 @@ class ServerProfile(base.Profile):
                           ) % {'p': self.PORT, 'fip': self.FIXED_IP})
             result[self.FIXED_IP] = fixed_ip
 
+        # Validate vnic_type input
+        vnic_type = net_spec.get(self.VNIC_TYPE, None)
+        if vnic_type is not None:
+            if vnic_type not in ['normal', 'direct', 'macvtap']:
+                _verify(_("vnic_type: '%(v)s' is not supported."
+                          "(supported types are: normal, direct, macvtap)"
+                          ) % {'v': vnic_type})
+            result[self.VNIC_TYPE] = vnic_type
+
         # Check security_groups
         error = self._check_security_groups(nc, net_spec, result)
         _verify(error)
@@ -661,8 +673,12 @@ class ServerProfile(base.Profile):
         security_groups = net_spec.get(self.PORT_SECURITY_GROUPS, [])
         if security_groups:
             port_attr['security_groups'] = security_groups
+        vnic_type = net_spec.get(self.VNIC_TYPE, None)
+        if vnic_type:
+            port_attr['binding_vnic_type'] = vnic_type
         try:
             port = self.network(obj).port_create(**port_attr)
+            LOG.debug('Network port_attr : %s', port)
             return port, None
         except exc.InternalError as ex:
             return None, ex
