@@ -29,7 +29,7 @@ LOG = logging.getLogger(__name__)
 class HealthPolicy(base.Policy):
     """Policy for health management of a cluster."""
 
-    VERSION = '1.1'
+    VERSION = '1.2'
     VERSIONS = {
         '1.0': [
             {'status': consts.EXPERIMENTAL, 'since': '2017.02'},
@@ -37,6 +37,9 @@ class HealthPolicy(base.Policy):
         ],
         '1.1': [
             {'status': consts.SUPPORTED, 'since': '2018.09'}
+        ],
+        '1.2': [
+            {'status': consts.SUPPORTED, 'since': '2020.09'}
         ],
     }
     PRIORITY = 600
@@ -113,7 +116,7 @@ class HealthPolicy(base.Policy):
                 DETECTION_INTERVAL: schema.Integer(
                     _("Number of seconds between pollings. Only "
                       "required when type is 'NODE_STATUS_POLLING' or "
-                      "'NODE_STATUS_POLL_URL'."),
+                      "'NODE_STATUS_POLL_URL' or 'HYPERVISOR_STATUS_POLLING."),
                     default=60,
                 ),
                 NODE_UPDATE_TIMEOUT: schema.Integer(
@@ -322,7 +325,8 @@ class HealthPolicy(base.Policy):
 
         # check valid detection types
         polling_types = [consts.NODE_STATUS_POLLING,
-                         consts.NODE_STATUS_POLL_URL]
+                         consts.NODE_STATUS_POLL_URL,
+                         consts.HYPERVISOR_STATUS_POLLING]
 
         has_valid_polling_types = all(
             d.type in polling_types

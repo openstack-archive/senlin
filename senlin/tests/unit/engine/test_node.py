@@ -600,15 +600,16 @@ class TestNode(base.SenlinTestCase):
         node.status = consts.NS_ACTIVE
         node.physical_id = 'd94d6333-82e6-4f87-b7ab-b786776df9d1'
         mock_healthcheck.return_value = True
-        res = node.do_healthcheck(self.context)
+        res = node.do_healthcheck(self.context, consts.NODE_STATUS_POLLING)
 
         self.assertTrue(res)
-        mock_healthcheck.assert_called_once_with(self.context, node)
+        mock_healthcheck.assert_called_once_with(self.context, node,
+                                                 consts.NODE_STATUS_POLLING)
 
     def test_node_healthcheck_no_physical_id(self):
         node = nodem.Node('node1', PROFILE_ID, '')
 
-        res = node.do_healthcheck(self.context)
+        res = node.do_healthcheck(self.context, consts.NODE_STATUS_POLLING)
 
         self.assertFalse(res)
 

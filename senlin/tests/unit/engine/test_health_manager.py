@@ -327,6 +327,15 @@ class TestHealthCheckType(base.SenlinTestCase):
                     'poll_url_retry_interval': ''
                 },
                 {
+                    'type': 'HYPERVISOR_STATUS_POLLING',
+                    'poll_url': '',
+                    'poll_url_ssl_verify': True,
+                    'poll_url_conn_error_as_unhealthy': True,
+                    'poll_url_healthy_response': '',
+                    'poll_url_retry_limit': '',
+                    'poll_url_retry_interval': ''
+                },
+                {
                     'type': 'NODE_STATUS_POLL_URL',
                     'poll_url': '',
                     'poll_url_ssl_verify': True,
@@ -408,6 +417,95 @@ class TestNodePollStatusHealthCheck(base.SenlinTestCase):
         super(TestNodePollStatusHealthCheck, self).setUp()
 
         self.hc = hm.NodePollStatusHealthCheck(
+            cluster_id='CLUSTER_ID',
+            interval=1, node_update_timeout=1, params=''
+        )
+
+    @mock.patch.object(node_mod.Node, '_from_object')
+    @mock.patch.object(tu, 'is_older_than')
+    def test_run_health_check_healthy(self, mock_tu, mock_node_obj):
+        x_entity = mock.Mock()
+        x_entity.do_healthcheck.return_value = True
+        mock_node_obj.return_value = x_entity
+
+        ctx = mock.Mock()
+        node = mock.Mock(id='FAKE_NODE1', status="ERROR",
+                         updated_at='2018-08-13 18:00:00',
+                         init_at='2018-08-13 17:00:00')
+
+        # do it
+        res = self.hc.run_health_check(ctx, node)
+
+        self.assertTrue(res)
+        mock_tu.assert_not_called()
+
+    @mock.patch.object(node_mod.Node, '_from_object')
+    @mock.patch.object(tu, 'is_older_than')
+    def test_run_health_check_healthy_internal_error(
+            self, mock_tu, mock_node_obj):
+        x_entity = mock.Mock()
+        x_entity.do_healthcheck.side_effect = exc.InternalError(
+            message='error')
+        mock_node_obj.return_value = x_entity
+
+        ctx = mock.Mock()
+        node = mock.Mock(id='FAKE_NODE1', status="ERROR",
+                         updated_at='2018-08-13 18:00:00',
+                         init_at='2018-08-13 17:00:00')
+
+        # do it
+        res = self.hc.run_health_check(ctx, node)
+
+        self.assertTrue(res)
+        mock_tu.assert_not_called()
+
+    @mock.patch.object(node_mod.Node, '_from_object')
+    @mock.patch.object(tu, 'is_older_than')
+    def test_run_health_check_unhealthy(self, mock_tu, mock_node_obj):
+        x_entity = mock.Mock()
+        x_entity.do_healthcheck.return_value = False
+        mock_node_obj.return_value = x_entity
+
+        mock_tu.return_value = True
+
+        ctx = mock.Mock()
+        node = mock.Mock(id='FAKE_NODE1', status="ERROR",
+                         updated_at='2018-08-13 18:00:00',
+                         init_at='2018-08-13 17:00:00')
+
+        # do it
+        res = self.hc.run_health_check(ctx, node)
+
+        self.assertFalse(res)
+        mock_tu.assert_called_once_with(node.updated_at, 1)
+
+    @mock.patch.object(node_mod.Node, '_from_object')
+    @mock.patch.object(tu, 'is_older_than')
+    def test_run_health_check_unhealthy_within_timeout(
+            self, mock_tu, mock_node_obj):
+        x_entity = mock.Mock()
+        x_entity.do_healthcheck.return_value = False
+        mock_node_obj.return_value = x_entity
+
+        mock_tu.return_value = False
+
+        ctx = mock.Mock()
+        node = mock.Mock(id='FAKE_NODE1', status="ERROR",
+                         updated_at='2018-08-13 18:00:00',
+                         init_at='2018-08-13 17:00:00')
+
+        # do it
+        res = self.hc.run_health_check(ctx, node)
+
+        self.assertTrue(res)
+        mock_tu.assert_called_once_with(node.updated_at, 1)
+
+
+class TestHypervisorPollStatusHealthCheck(base.SenlinTestCase):
+    def setUp(self):
+        super(TestHypervisorPollStatusHealthCheck, self).setUp()
+
+        self.hc = hm.HypervisorPollStatusHealthCheck(
             cluster_id='CLUSTER_ID',
             interval=1, node_update_timeout=1, params=''
         )

@@ -1772,22 +1772,20 @@ class ServerProfile(base.Profile):
 
         return True
 
-    def do_healthcheck(self, obj):
+    def do_healthcheck(self, obj, health_check_type):
         """Healthcheck operation.
 
-        This method checks if a server node is healthy by getting the server
-        status from nova.  A server is considered unhealthy if it does not
-        exist or its status is one of the following:
-        - ERROR
-        - SHUTOFF
-        - DELETED
+        This method checks if a node is healthy.  If health check type is
+        NODE_STATUS_POLLING it will check the server status.  If health check
+        type is HYPERVISOR_STATUS_POLLING it will check the hypervisor state
+        and status.
 
         :param obj: The node object to operate on.
+        :param health_check_type: The type of health check.  Either
+        NODE_STATUS_POLLING or HYPERVISOR_STATUS_POLLING.
         :return status: True indicates node is healthy, False indicates
             it is unhealthy.
         """
-        unhealthy_server_status = [consts.VS_ERROR, consts.VS_SHUTOFF,
-                                   consts.VS_DELETED]
 
         if not obj.physical_id:
             if obj.status == 'BUILD' or obj.status == 'CREATING':
@@ -1821,10 +1819,98 @@ class ServerProfile(base.Profile):
                 consts.POLL_STATUS_PASS, obj.name)
             return True
 
+        if health_check_type == consts.NODE_STATUS_POLLING:
+            return self._do_healthcheck_server(obj, server)
+        elif health_check_type == consts.HYPERVISOR_STATUS_POLLING:
+            return self._do_healthcheck_hypervisor(obj, server)
+        else:
+            LOG.info('%s for %s: ignoring invalid health check type %s',
+                     consts.POLL_STATUS_PASS, obj.name, health_check_type)
+            return True
+
+    def _do_healthcheck_server(self, obj, server):
+        """Healthcheck operation based on server.
+
+        This method checks if a server node is healthy by getting the server
+        status from nova.  A server is considered unhealthy if it does not
+        exist or its status is one of the following:
+        - ERROR
+        - SHUTOFF
+        - DELETED
+
+        :param obj: The node object to operate on.
+        :param server: The server object associated with the node.
+        :return status: True indicates node is healthy, False indicates
+            it is unhealthy.
+        """
+
+        unhealthy_server_status = [consts.VS_ERROR, consts.VS_SHUTOFF,
+                                   consts.VS_DELETED]
+
         if server.status in unhealthy_server_status:
             LOG.info('%s for %s: server status is unhealthy.',
                      consts.POLL_STATUS_FAIL, obj.name)
             return False
+
+        LOG.info('%s for %s', consts.POLL_STATUS_PASS, obj.name)
+        return True
+
+    def _do_healthcheck_hypervisor(self, obj, server):
+        """Healthcheck operation based on hypervisor.
+
+        This method checks if a server node is healthy by getting the
+        hypervisor state and status from nova.  A server is considered
+        unhealthy if the hypervisor it is running on has a state that is down
+        or a status that is disabled.
+
+        :param obj: The node object to operate on.
+        :param server: The server object associated with the node.
+        :return status: True indicates node is healthy, False indicates
+            it is unhealthy.
+        """
+
+        if server.hypervisor_hostname != "":
+            try:
+                hv = self.compute(obj).hypervisor_find(
+                    server.hypervisor_hostname)
+            except Exception as ex:
+                if isinstance(ex, exc.InternalError) and ex.code == 404:
+                    # treat resource not found exception as unhealthy
+                    LOG.info('%s for %s: hypervisor %s was not found.',
+                             consts.POLL_STATUS_FAIL, obj.name,
+                             server.hypervisor_hostname)
+                    return False
+                else:
+                    # treat all other exceptions as healthy
+                    LOG.info(
+                        '%s for %s: Exception when trying to get hypervisor '
+                        'info for %s, but ignoring this error: %s.',
+                        consts.POLL_STATUS_PASS, obj.name,
+                        server.hypervisor_hostname, ex.message)
+                    return True
+
+            if hv is None:
+                # no hypervisor information is available, treat the node as
+                # healthy
+                LOG.info(
+                    '%s for %s: No hypervisor information was returned but '
+                    'ignoring this error.',
+                    consts.POLL_STATUS_PASS, obj.name)
+                return True
+
+            if hv.state == 'down':
+                LOG.info('%s for %s: server status is unhealthy because '
+                         'hypervisor %s state is down',
+                         consts.POLL_STATUS_FAIL, obj.name,
+                         server.hypervisor_hostname)
+                return False
+
+            if hv.status == 'disabled':
+                LOG.info('%s for %s: server status is unhealthy because '
+                         'hypervisor %s status is disabled',
+                         consts.POLL_STATUS_FAIL, obj.name,
+                         server.hypervisor_hostname)
+                return False
 
         LOG.info('%s for %s', consts.POLL_STATUS_PASS, obj.name)
         return True

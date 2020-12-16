@@ -16,6 +16,7 @@ from unittest import mock
 from oslo_config import cfg
 from oslo_utils import encodeutils
 
+from senlin.common import consts
 from senlin.common import exception as exc
 from senlin.objects import node as node_ob
 from senlin.profiles import base as profiles_base
@@ -1715,7 +1716,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         test_server = mock.Mock(physical_id='FAKE_ID')
 
-        res = profile.do_healthcheck(test_server)
+        res = profile.do_healthcheck(test_server, consts.NODE_STATUS_POLLING)
         cc.server_get.assert_called_once_with('FAKE_ID')
         self.assertTrue(res)
 
@@ -1728,7 +1729,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         test_server = mock.Mock(physical_id='FAKE_ID')
 
-        res = profile.do_healthcheck(test_server)
+        res = profile.do_healthcheck(test_server, consts.NODE_STATUS_POLLING)
         cc.server_get.assert_called_once_with('FAKE_ID')
         self.assertTrue(res)
 
@@ -1742,7 +1743,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         test_server = mock.Mock(physical_id='FAKE_ID')
 
-        res = profile.do_healthcheck(test_server)
+        res = profile.do_healthcheck(test_server, consts.NODE_STATUS_POLLING)
 
         cc.server_get.assert_called_once_with('FAKE_ID')
         self.assertTrue(res)
@@ -1756,7 +1757,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         test_server = mock.Mock(physical_id='FAKE_ID')
 
-        res = profile.do_healthcheck(test_server)
+        res = profile.do_healthcheck(test_server, consts.NODE_STATUS_POLLING)
 
         cc.server_get.assert_called_once_with('FAKE_ID')
         self.assertFalse(res)
@@ -1771,9 +1772,111 @@ class TestNovaServerBasic(base.SenlinTestCase):
 
         test_server = mock.Mock(physical_id='FAKE_ID')
 
-        res = profile.do_healthcheck(test_server)
+        res = profile.do_healthcheck(test_server, consts.NODE_STATUS_POLLING)
 
         cc.server_get.assert_called_once_with('FAKE_ID')
+        self.assertFalse(res)
+
+    def test_do_healthcheck_empty_hv_name(self):
+        profile = server.ServerProfile('t', self.spec)
+
+        cc = mock.Mock()
+        cc.hypervisor_find.return_value = None
+        cc.server_get.return_value = mock.Mock(hypervisor_hostname='')
+        profile._computeclient = cc
+
+        test_server = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_healthcheck(test_server,
+                                     consts.HYPERVISOR_STATUS_POLLING)
+        cc.server_get.assert_called_once_with('FAKE_ID')
+        cc.hypervisor_find.assert_not_called()
+        self.assertTrue(res)
+
+    def test_do_healthcheck_empty_hv_obj(self):
+        profile = server.ServerProfile('t', self.spec)
+
+        cc = mock.Mock()
+        cc.hypervisor_find.return_value = None
+        cc.server_get.return_value = mock.Mock(hypervisor_hostname='FAKE_HV')
+        profile._computeclient = cc
+
+        test_server = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_healthcheck(test_server,
+                                     consts.HYPERVISOR_STATUS_POLLING)
+        cc.server_get.assert_called_once_with('FAKE_ID')
+        cc.hypervisor_find.assert_called_once_with('FAKE_HV')
+        self.assertTrue(res)
+
+    def test_do_healthcheck_hv_exception(self):
+        profile = server.ServerProfile('t', self.spec)
+
+        cc = mock.Mock()
+        cc.server_get.return_value = mock.Mock(hypervisor_hostname='FAKE_HV')
+        ex = exc.InternalError(code=503, message='Error')
+        cc.hypervisor_find.side_effect = ex
+        profile._computeclient = cc
+
+        test_server = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_healthcheck(test_server,
+                                     consts.HYPERVISOR_STATUS_POLLING)
+
+        cc.server_get.assert_called_once_with('FAKE_ID')
+        cc.hypervisor_find.assert_called_once_with('FAKE_HV')
+        self.assertTrue(res)
+
+    def test_do_healthcheck_hv_not_found(self):
+        profile = server.ServerProfile('t', self.spec)
+
+        cc = mock.Mock()
+        cc.server_get.return_value = mock.Mock(hypervisor_hostname='FAKE_HV')
+        ex = exc.InternalError(code=404, message='No Hypervisor found')
+        cc.hypervisor_find.side_effect = ex
+        profile._computeclient = cc
+
+        test_server = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_healthcheck(test_server,
+                                     consts.HYPERVISOR_STATUS_POLLING)
+
+        cc.server_get.assert_called_once_with('FAKE_ID')
+        cc.hypervisor_find.assert_called_once_with('FAKE_HV')
+        self.assertFalse(res)
+
+    def test_do_healthcheck_hv_down(self):
+        profile = server.ServerProfile('t', self.spec)
+
+        cc = mock.Mock()
+        cc.server_get.return_value = mock.Mock(hypervisor_hostname='FAKE_HV')
+        cc.hypervisor_find.return_value = mock.Mock(state='down')
+        profile._computeclient = cc
+
+        test_server = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_healthcheck(test_server,
+                                     consts.HYPERVISOR_STATUS_POLLING)
+
+        cc.server_get.assert_called_once_with('FAKE_ID')
+        cc.hypervisor_find.assert_called_once_with('FAKE_HV')
+        self.assertFalse(res)
+
+    def test_do_healthcheck_hv_disabled(self):
+        profile = server.ServerProfile('t', self.spec)
+
+        cc = mock.Mock()
+        cc.server_get.return_value = mock.Mock(hypervisor_hostname='FAKE_HV')
+        cc.hypervisor_find.return_value = mock.Mock(status='disabled')
+        profile._computeclient = cc
+
+        test_server = mock.Mock(physical_id='FAKE_ID')
+
+        res = profile.do_healthcheck(test_server,
+                                     consts.HYPERVISOR_STATUS_POLLING)
+
+        cc.server_get.assert_called_once_with('FAKE_ID')
+        cc.hypervisor_find.assert_called_once_with('FAKE_HV')
         self.assertFalse(res)
 
     @mock.patch.object(server.ServerProfile, 'do_delete')

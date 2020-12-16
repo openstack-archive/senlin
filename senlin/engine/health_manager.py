@@ -105,6 +105,9 @@ class HealthCheckType(object):
         elif detection_type == consts.NODE_STATUS_POLL_URL:
             return NodePollUrlHealthCheck(
                 cid, interval, node_update_timeout, detection_params[0])
+        elif detection_type == consts.HYPERVISOR_STATUS_POLLING:
+            return HypervisorPollStatusHealthCheck(
+                cid, interval, node_update_timeout, detection_params[0])
         else:
             raise Exception(
                 'Invalid detection type: {}'.format(detection_type))
@@ -171,7 +174,36 @@ class NodePollStatusHealthCheck(HealthCheckType):
             # Return False to mark the node as unhealthy if we are outside the
             # grace period.
 
-            return (entity.do_healthcheck(ctx) or
+            return (entity.do_healthcheck(ctx, consts.NODE_STATUS_POLLING) or
+                    self._node_within_grace_period(node))
+        except Exception as ex:
+            LOG.warning(
+                'Error when performing health check on node %s: %s',
+                node.id, ex
+            )
+
+            # treat node as healthy when an exception is encountered
+            return True
+
+
+class HypervisorPollStatusHealthCheck(HealthCheckType):
+    def run_health_check(self, ctx, node):
+        """Routine to be executed for polling hypervisor status.
+
+        :returns: True if node is healthy. False otherwise.
+        """
+        try:
+            # create engine node from db node
+            entity = node_mod.Node._from_object(ctx, node)
+
+            # If health check returns True, return True to mark node as
+            # healthy. Else return True to mark node as healthy if we are still
+            # within the node's grace period to allow the node to warm-up.
+            # Return False to mark the node as unhealthy if we are outside the
+            # grace period.
+
+            return (entity.do_healthcheck(ctx,
+                                          consts.HYPERVISOR_STATUS_POLLING) or
                     self._node_within_grace_period(node))
         except Exception as ex:
             LOG.warning(
@@ -313,7 +345,8 @@ class HealthCheck(object):
 
     def get_health_check_types(self):
         polling_types = [consts.NODE_STATUS_POLLING,
-                         consts.NODE_STATUS_POLL_URL]
+                         consts.NODE_STATUS_POLL_URL,
+                         consts.HYPERVISOR_STATUS_POLLING]
 
         detection_types = self.check_type.split(',')
         if all(check in polling_types for check in detection_types):

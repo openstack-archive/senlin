@@ -15,6 +15,7 @@ from unittest import mock
 
 from oslo_config import cfg
 
+from senlin.common import exception as exc
 from senlin.drivers.os import nova_v2
 from senlin.drivers import sdk
 from senlin.tests.unit.common import base
@@ -551,6 +552,65 @@ class TestNovaV2(base.SenlinTestCase):
         d = nova_v2.NovaClient(self.conn_params)
         d.hypervisor_get('k')
         self.compute.get_hypervisor.assert_called_once_with('k')
+
+    def test_hypervisor_find(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        self.compute.get_hypervisor.return_value = mock.Mock()
+
+        d.hypervisor_find('k')
+
+        self.compute.get_hypervisor.assert_called_once_with('k')
+
+    def test_hypervisor_find_name(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        self.compute.get_hypervisor.side_effect = sdk_exc.HttpException
+        fake_result = mock.Mock()
+        fake_result.name = 'FAKE_HV'
+        self.compute.hypervisors.return_value = [mock.Mock(name='not_it'),
+                                                 fake_result]
+
+        r = d.hypervisor_find('FAKE_HV')
+
+        self.compute.get_hypervisor.assert_called_once_with('FAKE_HV')
+        self.compute.hypervisors.assert_called_once_with(
+            hypervisor_hostname_pattern='FAKE_HV')
+        self.assertEqual(r, fake_result)
+
+    def test_hypervisor_find_name_duplicate(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        self.compute.get_hypervisor.side_effect = sdk_exc.HttpException
+        fake_result = mock.Mock()
+        fake_result.name = 'FAKE_HV'
+        self.compute.hypervisors.return_value = [fake_result, fake_result]
+
+        self.assertRaises(exc.InternalError, d.hypervisor_find, 'FAKE_HV')
+
+        self.compute.get_hypervisor.assert_called_once_with('FAKE_HV')
+        self.compute.hypervisors.assert_called_once_with(
+            hypervisor_hostname_pattern='FAKE_HV')
+
+    def test_hypervisor_find_name_ignore_missing(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        self.compute.get_hypervisor.side_effect = sdk_exc.HttpException
+        self.compute.hypervisors.return_value = [mock.Mock(name='not_it')]
+
+        r = d.hypervisor_find('FAKE_HV', True)
+
+        self.compute.get_hypervisor.assert_called_once_with('FAKE_HV')
+        self.compute.hypervisors.assert_called_once_with(
+            hypervisor_hostname_pattern='FAKE_HV')
+        self.assertIsNone(r)
+
+    def test_hypervisor_find_name_not_found(self):
+        d = nova_v2.NovaClient(self.conn_params)
+        self.compute.get_hypervisor.side_effect = sdk_exc.HttpException
+        self.compute.hypervisors.return_value = [mock.Mock(name='not_it')]
+
+        self.assertRaises(exc.InternalError, d.hypervisor_find, 'FAKE_HV')
+
+        self.compute.get_hypervisor.assert_called_once_with('FAKE_HV')
+        self.compute.hypervisors.assert_called_once_with(
+            hypervisor_hostname_pattern='FAKE_HV')
 
     def test_service_list(self):
         d = nova_v2.NovaClient(self.conn_params)
