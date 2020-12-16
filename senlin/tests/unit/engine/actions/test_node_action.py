@@ -639,6 +639,40 @@ class NodeActionTest(base.SenlinTestCase):
 
     @mock.patch.object(lock, 'cluster_lock_acquire')
     @mock.patch.object(lock, 'cluster_lock_release')
+    @mock.patch.object(base_action.Action, 'policy_check')
+    def test_execute_policy_check_exception(self, mock_check, mock_release,
+                                            mock_acquire, mock_load):
+        node = mock.Mock()
+        node.id = 'NID'
+        node.cluster_id = 'FAKE_CLUSTER'
+        mock_load.return_value = node
+
+        action = node_action.NodeAction('NODE_ID', 'NODE_FLY', self.ctx,
+                                        cause='RPC Request')
+        action.id = 'ACTION_ID'
+        action.data = {
+            'status': policy_mod.CHECK_NONE,
+            'reason': ''
+        }
+        mock_acquire.return_value = action.id
+
+        mock_check.side_effect = Exception('error')
+
+        res_code, res_msg = action.execute()
+
+        reason = 'Policy check: '
+        self.assertEqual(action.RES_ERROR, res_code)
+        self.assertEqual(reason, res_msg)
+        mock_load.assert_called_once_with(action.context, node_id='NODE_ID')
+        mock_acquire.assert_called_once_with(self.ctx, 'FAKE_CLUSTER',
+                                             'ACTION_ID', None,
+                                             lock.NODE_SCOPE, False)
+        mock_release.assert_called_once_with('FAKE_CLUSTER', 'ACTION_ID',
+                                             lock.NODE_SCOPE)
+        mock_check.assert_called_once_with('FAKE_CLUSTER', 'BEFORE')
+
+    @mock.patch.object(lock, 'cluster_lock_acquire')
+    @mock.patch.object(lock, 'cluster_lock_release')
     @mock.patch.object(lock, 'node_lock_acquire')
     @mock.patch.object(lock, 'node_lock_release')
     @mock.patch.object(base_action.Action, 'policy_check')
