@@ -1224,6 +1224,12 @@ class ClusterAction(base.Action):
         """Handler to cancel the execution of action."""
         return self.RES_OK
 
+    def release_lock(self):
+        """Handler to release the lock."""
+        senlin_lock.cluster_lock_release(self.target, self.id,
+                                         senlin_lock.CLUSTER_SCOPE)
+        return self.RES_OK
+
 
 def CompleteLifecycleProc(context, action_id):
     """Complete lifecycle process."""

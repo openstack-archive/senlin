@@ -635,6 +635,7 @@ class ActionBaseTest(base.SenlinTestCase):
         action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id=ACTION_ID)
         action.load = mock.Mock()
         action.set_status = mock.Mock()
+        action.release_lock = mock.Mock()
         mock_dobj.return_value = None
 
         action.status = action.RUNNING
@@ -643,19 +644,23 @@ class ActionBaseTest(base.SenlinTestCase):
         action.load.assert_not_called()
         action.set_status.assert_called_once_with(
             action.RES_CANCEL, 'Action execution force cancelled')
+        self.assertEqual(1, action.release_lock.call_count)
 
     @mock.patch.object(dobj.Dependency, 'get_depended')
     def test_force_cancel_children(self, mock_dobj):
         action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id=ACTION_ID)
         child_status_mock = mock.Mock()
+        child_release_mock = mock.Mock()
         children = []
         for child_id in CHILD_IDS:
             child = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id=child_id)
             child.status = child.WAITING_LIFECYCLE_COMPLETION
             child.set_status = child_status_mock
+            child.release_lock = child_release_mock
             children.append(child)
         mock_dobj.return_value = CHILD_IDS
         action.set_status = mock.Mock()
+        action.release_lock = mock.Mock()
         action.load = mock.Mock()
         action.load.side_effect = children
 
@@ -664,20 +669,9 @@ class ActionBaseTest(base.SenlinTestCase):
 
         mock_dobj.assert_called_once_with(action.context, action.id)
         self.assertEqual(2, child_status_mock.call_count)
+        self.assertEqual(2, child_release_mock.call_count)
         self.assertEqual(2, action.load.call_count)
-
-    @mock.patch.object(dobj.Dependency, 'get_depended')
-    def test_force_cancel_immutable(self, mock_dobj):
-        action = ab.Action(OBJID, 'OBJECT_ACTION', self.ctx, id=ACTION_ID)
-        action.load = mock.Mock()
-        action.set_status = mock.Mock()
-        mock_dobj.return_value = None
-
-        action.status = action.FAILED
-        self.assertRaises(exception.ActionImmutable, action.force_cancel)
-
-        action.load.assert_not_called()
-        action.set_status.assert_not_called()
+        self.assertEqual(1, action.release_lock.call_count)
 
     def test_execute_default(self):
         action = ab.Action.__new__(DummyAction, OBJID, 'BOOM', self.ctx)

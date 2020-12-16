@@ -283,3 +283,15 @@ class NodeAction(base.Action):
     def cancel(self):
         """Handler for cancelling the action."""
         return self.RES_OK
+
+    def release_lock(self):
+        """Handler to release the lock."""
+        senlin_lock.node_lock_release(self.entity.id, self.id)
+
+        # only release cluster lock if it was locked as part of this
+        # action (i.e. it's a user intiated action aka CAUSE_RPC from
+        # senlin API and a not a CAUSED_DERIVED)
+        if self.cause == consts.CAUSE_RPC:
+            senlin_lock.cluster_lock_release(self.entity.cluster_id, self.id,
+                                             senlin_lock.NODE_SCOPE)
+        return self.RES_OK
