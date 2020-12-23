@@ -123,6 +123,16 @@ def create_connection(params=None):
     except Exception as ex:
         raise parse_exception(ex)
 
+    if cfg.CONF.authentication.certfile and \
+            cfg.CONF.authentication.keyfile:
+        conn.session.cert = (cfg.CONF.authentication.certfile,
+                             cfg.CONF.authentication.keyfile)
+    if cfg.CONF.authentication.verify_ssl:
+        if cfg.CONF.authentication.cafile:
+            conn.session.verify = cfg.CONF.authentication.cafile
+        else:
+            conn.session.verify = cfg.CONF.authentication.verify_ssl
+
     return conn
 
 

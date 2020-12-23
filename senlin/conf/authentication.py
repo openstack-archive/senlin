@@ -9,6 +9,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
 
 from senlin.common.i18n import _
@@ -37,6 +38,7 @@ AUTHENTICATION_OPTS = [
 def register_opts(conf):
     conf.register_group(AUTHENTICATION_GROUP)
     conf.register_opts(AUTHENTICATION_OPTS, group=AUTHENTICATION_GROUP)
+    ks_loading.register_session_conf_options(cfg.CONF, 'authentication')
 
 
 def list_opts():

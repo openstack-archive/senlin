@@ -175,6 +175,52 @@ class TestKeystoneV3(base.SenlinTestCase):
         mock_auth.assert_called_once_with(key='value')
         self.assertEqual('abc', user_id)
 
+    def test_get_service_credentials_with_tls(self, mock_create):
+        cfg.CONF.set_override('auth_url', 'FAKE_URL', group='authentication')
+        cfg.CONF.set_override('service_username', 'FAKE_USERNAME',
+                              group='authentication')
+        cfg.CONF.set_override('service_password', 'FAKE_PASSWORD',
+                              group='authentication')
+        cfg.CONF.set_override('service_project_name', 'FAKE_PROJECT',
+                              group='authentication')
+        cfg.CONF.set_override('service_user_domain', 'FAKE_DOMAIN_1',
+                              group='authentication')
+        cfg.CONF.set_override('service_project_domain', 'FAKE_DOMAIN_2',
+                              group='authentication')
+        cfg.CONF.set_override('interface', 'internal',
+                              group='authentication')
+        cfg.CONF.set_override('cafile', '/fake/capath',
+                              group='authentication')
+        cfg.CONF.set_override('certfile', '/fake/certpath',
+                              group='authentication')
+        cfg.CONF.set_override('keyfile', '/fake/keypath',
+                              group='authentication')
+        expected = {
+            'auth_url': 'FAKE_URL',
+            'username': 'FAKE_USERNAME',
+            'password': 'FAKE_PASSWORD',
+            'project_name': 'FAKE_PROJECT',
+            'user_domain_name': 'FAKE_DOMAIN_1',
+            'project_domain_name': 'FAKE_DOMAIN_2',
+            'interface': 'internal',
+            'cert': '/fake/certpath',
+            'key': '/fake/keypath',
+            'cacert': '/fake/capath',
+            'verify': True
+        }
+        actual = kv3.KeystoneClient.get_service_credentials()
+
+        self.assertEqual(expected, actual)
+
+        new_expected = copy.copy(expected)
+        new_expected['key1'] = 'value1'
+        new_expected['password'] = 'NEW_PASSWORD'
+
+        actual = kv3.KeystoneClient.get_service_credentials(
+            key1='value1', password='NEW_PASSWORD')
+
+        self.assertEqual(new_expected, actual)
+
     def test_get_service_credentials(self, mock_create):
         cfg.CONF.set_override('auth_url', 'FAKE_URL', group='authentication')
         cfg.CONF.set_override('service_username', 'FAKE_USERNAME',
