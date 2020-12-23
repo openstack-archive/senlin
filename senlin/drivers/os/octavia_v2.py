@@ -37,7 +37,8 @@ class OctaviaClient(base.DriverBase):
     @sdk.translate_exception
     def loadbalancer_create(self, vip_subnet_id=None, vip_network_id=None,
                             vip_address=None, admin_state_up=True, name=None,
-                            description=None, availability_zone=None):
+                            description=None, availability_zone=None,
+                            flavor_id=None):
 
         kwargs = {
             'admin_state_up': admin_state_up,
@@ -55,6 +56,8 @@ class OctaviaClient(base.DriverBase):
             kwargs['description'] = description
         if availability_zone is not None:
             kwargs['availability_zone'] = availability_zone
+        if flavor_id is not None:
+            kwargs['flavor_id'] = flavor_id
 
         res = self.conn.load_balancer.create_load_balancer(**kwargs)
         return res
@@ -171,4 +174,10 @@ class OctaviaClient(base.DriverBase):
     def healthmonitor_delete(self, hm_id, ignore_missing=True):
         self.conn.load_balancer.delete_health_monitor(
             hm_id, ignore_missing=ignore_missing)
+        return
+
+    @sdk.translate_exception
+    def find_flavor(self, flavor_id, ignore_missing=False):
+        self.conn.load_balancer.find_flavor(
+            flavor_id, ignore_missing=ignore_missing)
         return

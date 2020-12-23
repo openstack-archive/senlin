@@ -80,10 +80,10 @@ class LoadBalancingPolicy(base.Policy):
 
     KEYS = (
         POOL, VIP, HEALTH_MONITOR, LB_STATUS_TIMEOUT, LOADBALANCER,
-        AVAILABILITY_ZONE
+        AVAILABILITY_ZONE, FLAVOR_ID,
     ) = (
         'pool', 'vip', 'health_monitor', 'lb_status_timeout', 'loadbalancer',
-        'availability_zone'
+        'availability_zone', 'flavor_id',
     )
 
     _POOL_KEYS = (
@@ -301,6 +301,11 @@ class LoadBalancingPolicy(base.Policy):
             _('Name of the loadbalancer availability zone to use for creation '
               'of the loadbalancer.'),
             default=None,
+        ),
+        FLAVOR_ID: schema.String(
+            _('ID of octavia loadbalancer flavor to use for creation '
+              'of the loadbalancer.'),
+            default=None,
         )
     }
 
@@ -311,6 +316,7 @@ class LoadBalancingPolicy(base.Policy):
         self.vip_spec = self.properties.get(self.VIP, {})
         self.hm_spec = self.properties.get(self.HEALTH_MONITOR, None)
         self.az_spec = self.properties.get(self.AVAILABILITY_ZONE, None)
+        self.flavor_id_spec = self.properties.get(self.FLAVOR_ID, None)
         self.lb_status_timeout = self.properties.get(self.LB_STATUS_TIMEOUT)
         self.lb = self.properties.get(self.LOADBALANCER, None)
 
@@ -331,6 +337,16 @@ class LoadBalancingPolicy(base.Policy):
             msg = _("The specified %(key)s '%(value)s' could not be found."
                     ) % {'key': self.POOL_SUBNET, 'value': name_or_id}
             raise exc.InvalidSpec(message=msg)
+
+        # validate loadbalancer flavor_id
+        flavor_id = self.flavor_id_spec
+        if flavor_id:
+            try:
+                oc.find_flavor(flavor_id)
+            except exc.InternalError:
+                msg = _("The specified %(key)s '%(value)s' could not be found."
+                        ) % {'key': self.FLAVOR_ID, 'value': flavor_id}
+                raise exc.InvalidSpec(message=msg)
 
         # validate VIP subnet or network
         subnet_name_or_id = self.vip_spec.get(self.VIP_SUBNET)
@@ -398,7 +414,8 @@ class LoadBalancingPolicy(base.Policy):
                 data['healthmonitor'] = self.hm_spec.get(self.HM_ID)
         else:
             res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec,
-                                            self.hm_spec, self.az_spec)
+                                            self.hm_spec, self.az_spec,
+                                            self.flavor_id_spec)
             if res is False:
                 return False, data
 
