@@ -64,6 +64,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
             "expected_codes": "200,201,202"
         }
         self.availability_zone = 'my_fake_az'
+        self.flavor_id = 'my_fake_flavor_id'
 
     def test_init(self):
         conn_params = self.context.to_dict()
@@ -152,12 +153,13 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         self.lb_driver._wait_for_lb_ready = mock.Mock()
         self.lb_driver._wait_for_lb_ready.return_value = True
         status, res = self.lb_driver.lb_create(self.vip, self.pool, self.hm,
-                                               self.availability_zone)
+                                               self.availability_zone,
+                                               self.flavor_id)
 
         self.assertTrue(status)
         self.oc.loadbalancer_create.assert_called_once_with(
             'SUBNET_ID', None, self.vip['address'], self.vip['admin_state_up'],
-            availability_zone=self.availability_zone)
+            availability_zone=self.availability_zone, flavor_id=self.flavor_id)
         self.assertEqual('LB_ID', res['loadbalancer'])
         self.assertEqual('192.168.1.100', res['vip_address'])
         self.oc.listener_create.assert_called_once_with(
@@ -215,7 +217,8 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         self.assertTrue(status)
         self.oc.loadbalancer_create.assert_called_once_with(
             None, 'NETWORK_ID', vip['address'], vip['admin_state_up'],
-            availability_zone=self.availability_zone)
+            availability_zone=self.availability_zone,
+            flavor_id=None)
         self.assertEqual('LB_ID', res['loadbalancer'])
         self.assertEqual('192.168.1.100', res['vip_address'])
         self.oc.listener_create.assert_called_once_with(
@@ -257,7 +260,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         self.assertEqual(msg, res)
         self.oc.loadbalancer_create.assert_called_once_with(
             'SUBNET_ID', None, self.vip['address'], self.vip['admin_state_up'],
-            availability_zone=None)
+            availability_zone=None, flavor_id=None)
         self.lb_driver._wait_for_lb_ready.assert_called_once_with('LB_ID')
         self.lb_driver.lb_delete.assert_called_once_with(
             loadbalancer='LB_ID')
@@ -303,7 +306,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         self.assertEqual(msg, res)
         self.oc.loadbalancer_create.assert_called_once_with(
             'SUBNET_ID', None, self.vip['address'], self.vip['admin_state_up'],
-            availability_zone=None)
+            availability_zone=None, flavor_id=None)
         self.oc.listener_create.assert_called_once_with(
             'LB_ID', self.vip['protocol'], self.vip['protocol_port'],
             self.vip['connection_limit'], self.vip['admin_state_up'])
@@ -348,7 +351,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         self.assertEqual(msg, res)
         self.oc.loadbalancer_create.assert_called_once_with(
             'SUBNET_ID', None, self.vip['address'], self.vip['admin_state_up'],
-            availability_zone=None)
+            availability_zone=None, flavor_id=None)
         self.oc.listener_create.assert_called_once_with(
             'LB_ID', self.vip['protocol'], self.vip['protocol_port'],
             self.vip['connection_limit'], self.vip['admin_state_up'])
