@@ -433,6 +433,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
         expect_params = {
             'floating_network': None,
             'network': 'FAKE_NET',
+            'vnic_type': None,
             'fixed_ip': None,
             'floating_ip': None,
             'port': None,
