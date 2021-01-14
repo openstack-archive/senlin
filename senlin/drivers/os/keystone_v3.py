@@ -123,6 +123,13 @@ class KeystoneClient(base.DriverBase):
             'verify': cfg.CONF.authentication.verify_ssl,
             'interface': cfg.CONF.authentication.interface,
         }
+        if cfg.CONF.authentication.certfile and \
+           cfg.CONF.authentication.keyfile:
+            creds['cert'] = cfg.CONF.authentication.certfile
+            creds['key'] = cfg.CONF.authentication.keyfile
+        if cfg.CONF.authentication.cafile:
+            creds['cacert'] = cfg.CONF.authentication.cafile
+
         creds.update(**kwargs)
         return creds
 
