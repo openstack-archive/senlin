@@ -15,6 +15,7 @@ Routines for configuring Senlin
 """
 from oslo_log import log
 from oslo_middleware import cors
+from oslo_policy import opts
 from oslo_utils import importutils
 
 import senlin.conf
@@ -61,3 +62,8 @@ def set_config_defaults():
                        'POST',
                        'DELETE',
                        'PATCH'])
+
+    # TODO(gmann): Remove setting the default value of config policy_file
+    # once oslo_policy change the default value to 'policy.yaml'.
+    # https://github.com/openstack/oslo.policy/blob/a626ad12fe5a3abd49d70e3e5b95589d279ab578/oslo_policy/opts.py#L49
+    opts.set_defaults(CONF, 'policy.yaml')
