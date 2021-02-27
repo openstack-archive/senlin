@@ -142,8 +142,9 @@ class LoadBalancingPolicy(base.Policy):
 
     PERSISTENCE_TYPES = (
         PERSIST_SOURCE_IP, PERSIST_HTTP_COOKIE, PERSIST_APP_COOKIE,
+        PERSIST_NONE,
     ) = (
-        'SOURCE_IP', 'HTTP_COOKIE', 'APP_COOKIE',
+        'SOURCE_IP', 'HTTP_COOKIE', 'APP_COOKIE', 'NONE',
     )
 
     properties_schema = {

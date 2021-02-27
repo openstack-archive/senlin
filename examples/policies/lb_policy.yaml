@@ -19,7 +19,7 @@ properties:
 
     session_persistence:
       # type of session persistence, valid values include:
-      # SOURCE_IP, HTTP_COOKIE, APP_COOKIE
+      # SOURCE_IP, HTTP_COOKIE, APP_COOKIE, NONE
       type: SOURCE_IP
       # Name of cookie if type set to APP_COOKIE
       cookie_name: whatever
