@@ -164,16 +164,18 @@ def format_node_name(fmt, cluster, index):
 
     result = ""
     last = 0
-    pattern = re.compile("(\$\d{0,8}[RI])")
+    pattern = re.compile("(\$\d{0,8}[rRI])")
     for m in pattern.finditer(fmt):
         group = m.group()
         t = group[-1]
         width = group[1:-1]
-        if t == "R":  # random string
+        if t == "R" or t == "r":  # random string
             if width != "":
                 sub = random_name(int(width))
             else:
                 sub = random_name(8)
+            if t == "r":
+                sub = sub.lower()
         elif t == "I":  # node index
             if width != "":
                 str_index = str(index)
