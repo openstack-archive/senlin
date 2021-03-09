@@ -129,6 +129,12 @@ class TestOctaviaV2Driver(base.SenlinTestCase):
         lb_algorithm = 'ROUND_ROBIN'
         listener_id = 'ID1'
         protocol = 'HTTP'
+        session_persistence = {
+            'type': 'SOURCE_IP',
+            'cookie_name': 'whatever',
+        }
+        session_persistence_expected = session_persistence.copy()
+        session_persistence_expected.pop('cookie_name', None)
         pool_obj = mock.Mock()
 
         # All input parameters are provided
@@ -140,20 +146,55 @@ class TestOctaviaV2Driver(base.SenlinTestCase):
 
         self.conn.load_balancer.create_pool.return_value = pool_obj
         self.assertEqual(pool_obj, self.oc.pool_create(
-            lb_algorithm, listener_id, protocol, **kwargs))
+            lb_algorithm, listener_id, protocol, session_persistence,
+            **kwargs))
         self.conn.load_balancer.create_pool.assert_called_once_with(
             lb_algorithm=lb_algorithm, listener_id=listener_id,
-            protocol=protocol, **kwargs)
+            protocol=protocol,
+            session_persistence=session_persistence_expected,
+            **kwargs)
 
         # Use default input parameters
         kwargs = {
             'admin_state_up': True
         }
         self.assertEqual(pool_obj, self.oc.pool_create(
-            lb_algorithm, listener_id, protocol))
+            lb_algorithm, listener_id, protocol, session_persistence))
         self.conn.load_balancer.create_pool.assert_called_with(
             lb_algorithm=lb_algorithm, listener_id=listener_id,
-            protocol=protocol, **kwargs)
+            protocol=protocol,
+            session_persistence=session_persistence_expected,
+            **kwargs)
+
+    def test_pool_create_cookie_removed(self):
+        lb_algorithm = 'ROUND_ROBIN'
+        listener_id = 'ID1'
+        protocol = 'HTTP'
+        pool_obj = mock.Mock()
+
+        # All input parameters are provided
+        kwargs = {
+            'admin_state_up': True,
+            'name': 'test-pool',
+            'description': 'This is a pool',
+        }
+
+        self.conn.load_balancer.create_pool.return_value = pool_obj
+
+        # Check type is APP_COOKIE
+        session_persistence_app_cookie = {
+            'type': 'APP_COOKIE',
+            'cookie_name': 'whatever',
+        }
+        self.assertEqual(pool_obj, self.oc.pool_create(
+            lb_algorithm, listener_id, protocol,
+            session_persistence_app_cookie, **kwargs))
+        # cookie_name is not removed
+        self.conn.load_balancer.create_pool.assert_called_once_with(
+            lb_algorithm=lb_algorithm, listener_id=listener_id,
+            protocol=protocol,
+            session_persistence=session_persistence_app_cookie,
+            **kwargs)
 
     def test_pool_delete(self):
         pool_id = 'ID1'

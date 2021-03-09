@@ -50,7 +50,11 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         self.pool = {
             'lb_method': 'ROUND_ROBIN',
             'protocol': 'HTTP',
-            'admin_state_up': True
+            'session_persistence': {
+                'type': 'SOURCE_IP',
+                'cookie_name': 'whatever',
+            },
+            'admin_state_up': True,
         }
         self.hm = {
             "type": "HTTP",
@@ -168,7 +172,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         self.assertEqual('LISTENER_ID', res['listener'])
         self.oc.pool_create.assert_called_once_with(
             self.pool['lb_method'], 'LISTENER_ID', self.pool['protocol'],
-            self.pool['admin_state_up'])
+            self.pool['session_persistence'], self.pool['admin_state_up'])
         self.assertEqual('POOL_ID', res['pool'])
         self.oc.healthmonitor_create.assert_called_once_with(
             self.hm['type'], self.hm['delay'], self.hm['timeout'],
@@ -227,7 +231,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
         self.assertEqual('LISTENER_ID', res['listener'])
         self.oc.pool_create.assert_called_once_with(
             self.pool['lb_method'], 'LISTENER_ID', self.pool['protocol'],
-            self.pool['admin_state_up'])
+            self.pool['session_persistence'], self.pool['admin_state_up'])
         self.assertEqual('POOL_ID', res['pool'])
         self.oc.healthmonitor_create.assert_called_once_with(
             self.hm['type'], self.hm['delay'], self.hm['timeout'],
@@ -357,7 +361,7 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
             self.vip['connection_limit'], self.vip['admin_state_up'])
         self.oc.pool_create.assert_called_once_with(
             self.pool['lb_method'], 'LISTENER_ID', self.pool['protocol'],
-            self.pool['admin_state_up'])
+            self.pool['session_persistence'], self.pool['admin_state_up'])
         self.lb_driver._wait_for_lb_ready.assert_called_with('LB_ID')
         self.lb_driver.lb_delete.assert_called_once_with(
             loadbalancer='LB_ID', listener='LISTENER_ID', pool='POOL_ID')

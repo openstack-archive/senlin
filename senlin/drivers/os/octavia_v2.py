@@ -98,12 +98,18 @@ class OctaviaClient(base.DriverBase):
 
     @sdk.translate_exception
     def pool_create(self, lb_algorithm, listener_id, protocol,
-                    admin_state_up=True, name=None, description=None):
+                    session_persistence, admin_state_up=True,
+                    name=None, description=None):
+
+        # Remove cookie_name when type not equal to APP_COOKIE
+        if session_persistence['type'] != 'APP_COOKIE':
+            session_persistence.pop('cookie_name', None)
 
         kwargs = {
             'lb_algorithm': lb_algorithm,
             'listener_id': listener_id,
             'protocol': protocol,
+            'session_persistence': session_persistence,
             'admin_state_up': admin_state_up,
         }
 

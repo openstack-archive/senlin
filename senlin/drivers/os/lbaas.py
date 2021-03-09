@@ -159,6 +159,7 @@ class LoadBalancerDriver(base.DriverBase):
         try:
             pool = self.oc().pool_create(pool['lb_method'], listener.id,
                                          pool['protocol'],
+                                         pool['session_persistence'],
                                          pool['admin_state_up'])
         except exception.InternalError as ex:
             msg = 'Failed in creating lb pool: %s.' % str(ex)
