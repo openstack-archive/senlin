@@ -32,7 +32,7 @@ class WebhookControllerBaseTest(shared.ControllerTest, base.SenlinTestCase):
         super(WebhookControllerBaseTest, self).setUp()
 
         class DummyConfig(object):
-            bind_port = 8778
+            bind_port = 8777
 
         cfgopts = DummyConfig()
         self.controller = webhooks.WebhookController(options=cfgopts)

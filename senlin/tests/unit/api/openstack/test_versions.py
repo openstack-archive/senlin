@@ -41,7 +41,7 @@ class VersionControllerTest(base.SenlinTestCase):
         environ = {
             'REQUEST_METHOD': 'GET',
             'SERVER_NAME': 'host',
-            'SERVER_PORT': 8778,
+            'SERVER_PORT': 8777,
             'SCRIPT_NAME': '/',
             'PATH_INFO': '/',
             'wsgi.url_scheme': 'http',

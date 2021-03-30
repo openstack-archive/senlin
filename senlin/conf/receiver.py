@@ -23,7 +23,7 @@ RECEIVER_OPTS = [
                help=_('The address for notifying and triggering receivers. '
                       'It is useful for case Senlin API service is running '
                       'behind a proxy.')),
-    cfg.PortOpt('port', default=8778, deprecated_group='webhook',
+    cfg.PortOpt('port', default=8777, deprecated_group='webhook',
                 help=_('The port for notifying and triggering receivers. '
                        'It is useful for case Senlin API service is running '
                        'behind a proxy.')),

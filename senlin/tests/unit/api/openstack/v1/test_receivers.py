@@ -32,7 +32,7 @@ class ReceiverControllerTest(shared.ControllerTest, base.SenlinTestCase):
         super(ReceiverControllerTest, self).setUp()
 
         class DummyConfig(object):
-            bind_port = 8778
+            bind_port = 8777
 
         cfgopts = DummyConfig()
         self.controller = receivers.ReceiverController(options=cfgopts)

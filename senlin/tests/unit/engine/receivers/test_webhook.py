@@ -68,7 +68,7 @@ class TestWebhook(base.SenlinTestCase):
         channel = webhook.initialize_channel(self.context)
 
         expected = {
-            'alarm_url': ('http://test-host:8778/v1/webhooks/%s/trigger'
+            'alarm_url': ('http://test-host:8777/v1/webhooks/%s/trigger'
                           '?V=2' % UUID1)
         }
         self.assertEqual(expected, channel)

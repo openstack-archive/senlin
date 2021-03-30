@@ -33,7 +33,7 @@ class ClusterPolicyControllerTest(shared.ControllerTest, base.SenlinTestCase):
 
         # Create WSGI controller instance
         class DummyConfig(object):
-            bind_port = 8778
+            bind_port = 8777
 
         cfgopts = DummyConfig()
         self.controller = cp_mod.ClusterPolicyController(options=cfgopts)
