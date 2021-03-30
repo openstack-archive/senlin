@@ -196,6 +196,40 @@ class TestOctaviaV2Driver(base.SenlinTestCase):
             session_persistence=session_persistence_app_cookie,
             **kwargs)
 
+    def test_pool_create_type_none(self):
+        lb_algorithm = 'ROUND_ROBIN'
+        listener_id = 'ID1'
+        protocol = 'HTTP'
+        session_persistence = {
+            'type': 'NONE',
+            'cookie_name': 'whatever',
+        }
+        session_persistence_expected = session_persistence.copy()
+        session_persistence_expected.pop('cookie_name', None)
+        pool_obj = mock.Mock()
+
+        # All input parameters are provided
+        kwargs = {
+            'admin_state_up': True,
+            'name': 'test-pool',
+            'description': 'This is a pool',
+        }
+
+        self.conn.load_balancer.create_pool.return_value = pool_obj
+
+        # when type=NONE set session_persistence_type_none to None
+        session_persistence_expected = None
+
+        self.assertEqual(pool_obj, self.oc.pool_create(
+            lb_algorithm, listener_id, protocol,
+            session_persistence, **kwargs))
+        # cookie_name is not removed
+        self.conn.load_balancer.create_pool.assert_called_once_with(
+            lb_algorithm=lb_algorithm, listener_id=listener_id,
+            protocol=protocol,
+            session_persistence=session_persistence_expected,
+            **kwargs)
+
     def test_pool_delete(self):
         pool_id = 'ID1'
 

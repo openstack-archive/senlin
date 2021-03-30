@@ -104,6 +104,9 @@ class OctaviaClient(base.DriverBase):
         # Remove cookie_name when type not equal to APP_COOKIE
         if session_persistence['type'] != 'APP_COOKIE':
             session_persistence.pop('cookie_name', None)
+        # When type=NONE set session_persistence to None
+        if session_persistence['type'] == 'NONE':
+            session_persistence = None
 
         kwargs = {
             'lb_algorithm': lb_algorithm,
