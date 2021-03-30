@@ -281,12 +281,29 @@ class TestHealthPolicy(base.SenlinTestCase):
         self.assertEqual("Recovery action REBOOT is only applicable to "
                          "os.nova.server clusters.", data)
 
+    @mock.patch.object(health_manager, 'register')
+    def test_attach_failed_with_notify_timeout(self, mock_hm_reg):
+        mock_hm_reg.return_value = False
+        res, data = self.hp.attach(self.cluster)
+        self.assertFalse(res)
+        self.assertEqual("Registering health manager for cluster timed "
+                         "out.", data)
+
     @mock.patch.object(health_manager, 'unregister')
-    def test_detach(self, mock_hm_reg):
+    def test_detach(self, mock_hm_unreg):
         res, data = self.hp.detach(self.cluster)
         self.assertTrue(res)
         self.assertEqual('', data)
-        mock_hm_reg.assert_called_once_with('CLUSTER_ID')
+        mock_hm_unreg.assert_called_once_with('CLUSTER_ID')
+
+    @mock.patch.object(health_manager, 'unregister')
+    def test_detach_failed_with_notify_timeout(self, mock_hm_unreg):
+        mock_hm_unreg.return_value = False
+        res, data = self.hp.detach(self.cluster)
+        self.assertFalse(res)
+        self.assertEqual("Unregistering health manager for cluster timed "
+                         "out.", data)
+        mock_hm_unreg.assert_called_once_with('CLUSTER_ID')
 
     def test_pre_op_default(self):
         action = mock.Mock(context='action_context', data={},
