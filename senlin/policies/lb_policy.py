@@ -402,6 +402,9 @@ class LoadBalancingPolicy(base.Policy):
         lb_driver = self.lbaas(cluster.user, cluster.project)
         lb_driver.lb_status_timeout = self.lb_status_timeout
 
+        # Set default name variable senlin cluster name
+        cluster_name = cluster.name
+
         # TODO(Anyone): Check if existing nodes has conflicts regarding the
         # subnets. Each VM addresses detail has a key named to the network
         # which can be used for validation.
@@ -416,7 +419,7 @@ class LoadBalancingPolicy(base.Policy):
         else:
             res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec,
                                             self.hm_spec, self.az_spec,
-                                            self.flavor_id_spec)
+                                            self.flavor_id_spec, cluster_name)
             if res is False:
                 return False, data
 

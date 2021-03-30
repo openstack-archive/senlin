@@ -89,7 +89,8 @@ class LoadBalancerDriver(base.DriverBase):
 
         return False
 
-    def lb_create(self, vip, pool, hm=None, az=None, flavor_id=None):
+    def lb_create(self, vip, pool, cluster_name, hm=None, az=None,
+                  flavor_id=None):
         """Create a LBaaS instance
 
         :param vip: A dict containing the properties for the VIP;
@@ -117,9 +118,11 @@ class LoadBalancerDriver(base.DriverBase):
             LOG.exception(msg)
             return False, msg
         try:
+            lb_name = 'senlin-lb-%s' % cluster_name
             lb = self.oc().loadbalancer_create(
                 subnet_id, network_id, vip.get('address', None),
-                vip['admin_state_up'], availability_zone=az,
+                vip['admin_state_up'], name=lb_name,
+                availability_zone=az,
                 flavor_id=flavor_id)
         except exception.InternalError as ex:
             msg = ('Failed in creating loadbalancer: %s.'
@@ -138,11 +141,13 @@ class LoadBalancerDriver(base.DriverBase):
 
         # Create listener
         try:
+            listener_name = 'senlin-listener-%s' % cluster_name
             listener = self.oc().listener_create(lb.id, vip['protocol'],
                                                  vip['protocol_port'],
                                                  vip.get('connection_limit',
                                                          None),
-                                                 vip['admin_state_up'])
+                                                 vip['admin_state_up'],
+                                                 name=listener_name)
         except exception.InternalError as ex:
             msg = 'Failed in creating lb listener: %s.' % str(ex)
             LOG.exception(msg)
@@ -157,10 +162,12 @@ class LoadBalancerDriver(base.DriverBase):
 
         # Create pool
         try:
+            pool_name = 'senlin-pool-%s' % cluster_name
             pool = self.oc().pool_create(pool['lb_method'], listener.id,
                                          pool['protocol'],
                                          pool['session_persistence'],
-                                         pool['admin_state_up'])
+                                         pool['admin_state_up'],
+                                         name=pool_name)
         except exception.InternalError as ex:
             msg = 'Failed in creating lb pool: %s.' % str(ex)
             LOG.exception(msg)
