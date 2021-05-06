@@ -96,7 +96,7 @@ depends on the log level you are using in ``senlin.conf``. The corresponding
 
 There are two options to consume the notifications:
 
-- Consume the notifications from the default queues directlly.
+- Consume the notifications from the default queues directly.
 - Declare your own queues, then bind them to ``senlin`` exchange with
   corresponding ``routing_key`` to customize the flow.
 
