@@ -418,8 +418,9 @@ class LoadBalancingPolicy(base.Policy):
                 data['healthmonitor'] = self.hm_spec.get(self.HM_ID)
         else:
             res, data = lb_driver.lb_create(self.vip_spec, self.pool_spec,
+                                            cluster_name,
                                             self.hm_spec, self.az_spec,
-                                            self.flavor_id_spec, cluster_name)
+                                            self.flavor_id_spec)
             if res is False:
                 return False, data
 
