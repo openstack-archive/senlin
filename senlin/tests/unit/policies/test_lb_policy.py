@@ -391,10 +391,10 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         self.assertEqual('policy_data', data)
         self.lb_driver.lb_create.assert_called_once_with(policy.vip_spec,
                                                          policy.pool_spec,
+                                                         cluster_name,
                                                          policy.hm_spec,
                                                          policy.az_spec,
-                                                         policy.flavor_id_spec,
-                                                         cluster_name)
+                                                         policy.flavor_id_spec)
         member_add_calls = [
             mock.call(node1, 'LB_ID', 'POOL_ID', 80, 'internal-subnet'),
             mock.call(node2, 'LB_ID', 'POOL_ID', 80, 'internal-subnet')
