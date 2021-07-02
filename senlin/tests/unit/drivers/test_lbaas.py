@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
 import eventlet
 from unittest import mock
 
@@ -132,6 +133,68 @@ class TestOctaviaLBaaSDriver(base.SenlinTestCase):
 
         self.assertFalse(res)
         mock_sleep.assert_called_once_with(10)
+
+    def test_lb_create_succeeded_session_persistence_none(self):
+        lb_obj = mock.Mock()
+        listener_obj = mock.Mock()
+        pool_obj = mock.Mock()
+        hm_obj = mock.Mock()
+        lb_obj.id = 'LB_ID'
+        lb_obj.vip_address = '192.168.1.100'
+        listener_obj.id = 'LISTENER_ID'
+        pool_obj.id = 'POOL_ID'
+        subnet_obj = mock.Mock()
+        subnet_obj.name = 'subnet'
+        subnet_obj.id = 'SUBNET_ID'
+        subnet_obj.network_id = 'NETWORK_ID'
+        hm_obj.id = 'HEALTHMONITOR_ID'
+        cluster_name = 'test_cluster'
+
+        self.oc.loadbalancer_create.return_value = lb_obj
+        self.oc.listener_create.return_value = listener_obj
+        self.oc.pool_create.return_value = pool_obj
+        self.oc.healthmonitor_create.return_value = hm_obj
+        self.nc.subnet_get.return_value = subnet_obj
+
+        self.lb_driver._wait_for_lb_ready = mock.Mock()
+        self.lb_driver._wait_for_lb_ready.return_value = True
+        temp_pool = copy.deepcopy(self.pool)
+        temp_pool['session_persistence'] = {}
+        status, res = self.lb_driver.lb_create(self.vip, temp_pool,
+                                               cluster_name, self.hm,
+                                               self.availability_zone,
+                                               self.flavor_id)
+
+        self.assertTrue(status)
+        lb_name = 'senlin-lb-%s' % cluster_name
+        self.oc.loadbalancer_create.assert_called_once_with(
+            'SUBNET_ID', None, self.vip['address'], self.vip['admin_state_up'],
+            name=lb_name, availability_zone=self.availability_zone,
+            flavor_id=self.flavor_id)
+        self.assertEqual('LB_ID', res['loadbalancer'])
+        self.assertEqual('192.168.1.100', res['vip_address'])
+        listener_name = 'senlin-listener-%s' % cluster_name
+        self.oc.listener_create.assert_called_once_with(
+            'LB_ID', self.vip['protocol'], self.vip['protocol_port'],
+            self.vip['connection_limit'], self.vip['admin_state_up'],
+            name=listener_name)
+        self.assertEqual('LISTENER_ID', res['listener'])
+        pool_name = 'senlin-pool-%s' % cluster_name
+        self.oc.pool_create.assert_called_once_with(
+            temp_pool['lb_method'], 'LISTENER_ID', temp_pool['protocol'],
+            temp_pool['session_persistence'], temp_pool['admin_state_up'],
+            name=pool_name)
+        self.assertEqual('POOL_ID', res['pool'])
+        self.oc.healthmonitor_create.assert_called_once_with(
+            self.hm['type'], self.hm['delay'], self.hm['timeout'],
+            self.hm['max_retries'], 'POOL_ID', self.hm['admin_state_up'],
+            self.hm['http_method'], self.hm['url_path'],
+            self.hm['expected_codes'])
+        self.assertEqual('HEALTHMONITOR_ID', res['healthmonitor'])
+        self.lb_driver._wait_for_lb_ready.assert_called_with('LB_ID')
+        calls = [mock.call('LB_ID') for i in range(1, 5)]
+        self.lb_driver._wait_for_lb_ready.assert_has_calls(
+            calls, any_order=False)
 
     def test_lb_create_succeeded_subnet(self):
         lb_obj = mock.Mock()

@@ -102,10 +102,10 @@ class OctaviaClient(base.DriverBase):
                     name=None, description=None):
 
         # Remove cookie_name when type not equal to APP_COOKIE
-        if session_persistence['type'] != 'APP_COOKIE':
+        if session_persistence.get('type') != 'APP_COOKIE':
             session_persistence.pop('cookie_name', None)
         # When type=NONE set session_persistence to None
-        if session_persistence['type'] == 'NONE':
+        if session_persistence.get('type') in ('NONE', None):
             session_persistence = None
 
         kwargs = {
