@@ -80,7 +80,7 @@ Weekly Meetings
 
 IRC
 ---
-IRC Channel: #senlin on `Freenode`_.
+IRC Channel: #senlin on `OFTC`_.
 
 Mailinglist
 -----------
@@ -89,7 +89,7 @@ as the mailinglist. Please use tag ``[Senlin]`` in the subject for new
 threads.
 
 
-.. _Freenode: https://freenode.net/
+.. _OFTC: https://oftc.net/
 
 Release notes
 ------------------

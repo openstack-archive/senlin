@@ -85,7 +85,7 @@ Meet the Developers
 ===================
 
 Real-time communication among developers are mostly done via IRC.
-The team is using the #senlin channel on freenode.net.
+The team is using the #senlin channel on oftc.net.
 
 .. _`etherpad page`: https://etherpad.openstack.org/p/senlin-newton-workitems
 .. _`blueprint page`: https://blueprints.launchpad.net/senlin
