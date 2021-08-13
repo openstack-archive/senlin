@@ -323,7 +323,7 @@ class Profile(object):
 
         ctx_dict = self.properties.get('context', {})
         if ctx_dict:
-            argspec = inspect.getargspec(context.RequestContext.__init__)
+            argspec = inspect.getfullargspec(context.RequestContext.__init__)
             valid_keys = argspec.args
             bad_keys = [k for k in ctx_dict if k not in valid_keys]
             if bad_keys:
