@@ -285,8 +285,8 @@ class ActionBaseTest(base.SenlinTestCase):
         error_message = (
             'CLUSTER_CREATE for cluster \'{}\' cannot be completed because '
             'it is already locked.').format(OBJID)
-        with self.assertRaisesRegexp(exception.ResourceIsLocked,
-                                     error_message):
+        with self.assertRaisesRegex(exception.ResourceIsLocked,
+                                    error_message):
             ab.Action.create(self.ctx, OBJID, 'CLUSTER_CREATE', name='test')
 
         mock_store.assert_not_called()
@@ -336,8 +336,8 @@ class ActionBaseTest(base.SenlinTestCase):
         error_message = (
             'NODE_CREATE for node \'{}\' cannot be completed because '
             'it is already locked.').format(OBJID)
-        with self.assertRaisesRegexp(exception.ResourceIsLocked,
-                                     error_message):
+        with self.assertRaisesRegex(exception.ResourceIsLocked,
+                                    error_message):
             ab.Action.create(self.ctx, OBJID, 'NODE_CREATE', name='test')
 
         mock_store.assert_not_called()
@@ -356,8 +356,8 @@ class ActionBaseTest(base.SenlinTestCase):
         error_message = (
             'The NODE_CREATE action for target {} conflicts with the following'
             ' action\(s\): {},{}').format(OBJID, uuid1, uuid2)
-        with self.assertRaisesRegexp(exception.ActionConflict,
-                                     error_message):
+        with self.assertRaisesRegex(exception.ActionConflict,
+                                    error_message):
             ab.Action.create(self.ctx, OBJID, 'NODE_CREATE', name='test')
 
         mock_store.assert_not_called()
