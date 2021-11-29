@@ -326,14 +326,6 @@ command:
       senlin_tempest_plugin.tests.integration.test_nova_server_cluster
 
 
-Stress Tests
-~~~~~~~~~~~~
-
-Stress tests are designed to measure a service's performance under certain
-workload pressure. In senlin, the stress tests are written to be executed
-using the *Rally* framework.
-
-
 Writing Stress Test Cases
 -------------------------
 

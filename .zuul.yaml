@@ -18,9 +18,6 @@
         - senlin-dsvm-tempest-py35-api
         - senlin-tempest-api-ipv6-only
         - senlin-dsvm-tempest-py35-functional
-    experimental:
-      jobs:
-        - rally-dsvm-senlin-senlin
 
 - job:
     name: senlin-tempest-base
@@ -123,29 +120,3 @@
              DEFAULT:
                cloud_backend: openstack_test
 
-- job:
-    name: rally-dsvm-senlin-senlin
-    parent: senlin-tempest-base
-    run: playbooks/legacy/rally-dsvm-senlin-senlin/run.yaml
-    post-run: playbooks/legacy/rally-dsvm-senlin-senlin/post.yaml
-    required-projects:
-      - openstack/devstack-gate
-      - openstack/aodh
-      - openstack/ceilometer
-      - openstack/diskimage-builder
-      - openstack/ironic
-      - openstack/magnum
-      - openstack/networking-bgpvpn
-      - openstack/neutron
-      - openstack/neutron-vpnaas
-      - openstack/octavia
-      - openstack/panko
-      - openstack/python-magnumclient
-      - openstack/python-senlinclient
-      - openstack/python-watcherclient
-      - openstack/python-zaqarclient
-      - openstack/rally
-      - openstack/senlin
-      - openstack/tripleo-image-elements
-      - openstack/watcher
-      - openstack/zaqar-ui
