@@ -39,7 +39,7 @@ class TestAnyIndexDict(base.SenlinTestCase):
     def test_basic(self):
         sot = schema.AnyIndexDict('*')
 
-        self.assertIsInstance(sot, collections.Mapping)
+        self.assertIsInstance(sot, collections.abc.Mapping)
 
         self.assertEqual('*', sot.value)
         self.assertEqual('*', sot[1])

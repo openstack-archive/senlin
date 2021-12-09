@@ -16,7 +16,7 @@ from senlin.common import exception as exc
 from senlin.common.i18n import _
 
 
-class BaseConstraint(collections.Mapping):
+class BaseConstraint(collections.abc.Mapping):
     KEYS = (
         TYPE, CONSTRAINT,
     ) = (
@@ -59,7 +59,7 @@ class BaseConstraint(collections.Mapping):
 
 class AllowedValues(BaseConstraint):
     def __init__(self, allowed_values):
-        if (not isinstance(allowed_values, collections.Sequence) or
+        if (not isinstance(allowed_values, collections.abc.Sequence) or
                 isinstance(allowed_values, str)):
             msg = _('AllowedValues must be a list or a string')
             raise exc.ESchema(message=msg)

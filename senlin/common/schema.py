@@ -23,7 +23,7 @@ from senlin.common.i18n import _
 LOG = logging.getLogger(__name__)
 
 
-class AnyIndexDict(collections.Mapping):
+class AnyIndexDict(collections.abc.Mapping):
     """Convenience schema for a list."""
 
     def __init__(self, value):
@@ -42,7 +42,7 @@ class AnyIndexDict(collections.Mapping):
         return 1
 
 
-class SchemaBase(collections.Mapping):
+class SchemaBase(collections.abc.Mapping):
     """Class for validating property or operation schemas."""
 
     KEYS = (
@@ -316,14 +316,14 @@ class List(PropertySchema):
         return res
 
     def resolve(self, value, context=None):
-        if not isinstance(value, collections.Sequence):
+        if not isinstance(value, collections.abc.Sequence):
             raise TypeError(_('"%s" is not a List') % value)
 
         return [v for v in self._get_children(value, context=context)]
 
     def validate(self, value, context=None):
-        # if not isinstance(value, collections.Mapping):
-        if not isinstance(value, collections.Sequence):
+        # if not isinstance(value, collections.abc.Mapping):
+        if not isinstance(value, collections.abc.Sequence):
             msg = _("'%s' is not a List") % value
             raise exc.ESchema(message=msg)
 
@@ -358,7 +358,7 @@ class Map(PropertySchema):
         if self.default is None:
             return {}
 
-        if not isinstance(self.default, collections.Mapping):
+        if not isinstance(self.default, collections.abc.Mapping):
             msg = _("'%s' is not a Map") % self.default
             raise exc.ESchema(message=msg)
 
@@ -372,14 +372,14 @@ class Map(PropertySchema):
                 msg = _("'%s' is not a Map") % value
                 raise exc.ESchema(message=msg)
 
-        if not isinstance(value, collections.Mapping):
+        if not isinstance(value, collections.abc.Mapping):
             msg = _("'%s' is not a Map") % value
             raise exc.ESchema(message=msg)
 
         return dict(self._get_children(value.items(), context))
 
     def validate(self, value, context=None):
-        if not isinstance(value, collections.Mapping):
+        if not isinstance(value, collections.abc.Mapping):
             msg = _("'%s' is not a Map") % value
             raise exc.ESchema(message=msg)
 
@@ -460,7 +460,7 @@ class Operation(SchemaBase):
                 raise exc.ESchema(message=str(ex))
 
 
-class Spec(collections.Mapping):
+class Spec(collections.abc.Mapping):
     """A class that contains all spec items."""
 
     def __init__(self, schema, data, version=None):
