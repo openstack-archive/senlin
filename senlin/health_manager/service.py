@@ -11,18 +11,15 @@
 # under the License.
 from oslo_config import cfg
 from oslo_log import log as logging
-import oslo_messaging as messaging
+import oslo_messaging
 from oslo_utils import timeutils
-from oslo_utils import uuidutils
 from osprofiler import profiler
 
 from senlin.common import consts
 from senlin.common import context
-from senlin.common import context as senlin_context
 from senlin.common import messaging as rpc
 from senlin.common import service
 from senlin.engine import health_manager
-from senlin.objects import service as service_obj
 
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
@@ -42,8 +39,6 @@ class HealthManagerService(service.Service):
         # The following are initialized here and will be assigned in start()
         # which happens after the fork when spawning multiple worker processes
         self.health_registry = None
-        self.server = None
-        self.service_id = None
         self.target = None
 
     @property
@@ -52,44 +47,24 @@ class HealthManagerService(service.Service):
 
     def start(self):
         super(HealthManagerService, self).start()
-        self.service_id = uuidutils.generate_uuid()
 
         self.health_registry = health_manager.RuntimeHealthRegistry(
             ctx=self.ctx, engine_id=self.service_id,
             thread_group=self.tg
         )
-
-        # create service record
-        ctx = senlin_context.get_admin_context()
-        service_obj.Service.create(ctx, self.service_id, self.host,
-                                   self.service_name,
-                                   self.topic)
-        self.tg.add_timer(CONF.periodic_interval, self.service_manage_report)
-
-        self.target = messaging.Target(server=self.service_id,
-                                       topic=self.topic,
-                                       version=self.version)
+        self.target = oslo_messaging.Target(server=self.service_id,
+                                            topic=self.topic,
+                                            version=self.version)
         self.server = rpc.get_rpc_server(self.target, self)
         self.server.start()
 
         self.tg.add_dynamic_timer(self.task, None, cfg.CONF.periodic_interval)
 
-    def stop(self, graceful=True):
+    def stop(self, graceful=False):
         if self.server:
             self.server.stop()
             self.server.wait()
-
-        service_obj.Service.delete(self.service_id)
-        LOG.info('Health-manager %s deleted', self.service_id)
-
         super(HealthManagerService, self).stop(graceful)
-
-    def service_manage_report(self):
-        try:
-            ctx = senlin_context.get_admin_context()
-            service_obj.Service.update(ctx, self.service_id)
-        except Exception as ex:
-            LOG.error('Error while updating health-manager service: %s', ex)
 
     def task(self):
         """Task that is queued on the health manager thread group.

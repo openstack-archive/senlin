@@ -42,7 +42,7 @@ class SenlinLockTest(base.SenlinTestCase):
         mock_acquire.assert_called_once_with('CLUSTER_A', 'ACTION_XYZ',
                                              lockm.CLUSTER_SCOPE)
 
-    @mock.patch.object(common_utils, 'is_engine_dead')
+    @mock.patch.object(common_utils, 'is_service_dead')
     @mock.patch.object(svco.Service, 'gc_by_engine')
     @mock.patch.object(clo.ClusterLock, "acquire")
     @mock.patch.object(clo.ClusterLock, "steal")
@@ -62,7 +62,7 @@ class SenlinLockTest(base.SenlinTestCase):
         mock_steal.assert_called_once_with('CLUSTER_A', 'ACTION_XYZ')
         mock_gc.assert_called_once_with(mock.ANY)
 
-    @mock.patch.object(common_utils, 'is_engine_dead')
+    @mock.patch.object(common_utils, 'is_service_dead')
     @mock.patch.object(clo.ClusterLock, "acquire")
     def test_cluster_lock_acquire_failed(self, mock_acquire, mock_dead):
         mock_dead.return_value = False
@@ -90,7 +90,7 @@ class SenlinLockTest(base.SenlinTestCase):
         self.assertEqual(3, mock_acquire.call_count)
         mock_steal.assert_called_once_with('CLUSTER_A', 'ACTION_XY')
 
-    @mock.patch.object(common_utils, 'is_engine_dead')
+    @mock.patch.object(common_utils, 'is_service_dead')
     @mock.patch.object(clo.ClusterLock, "acquire")
     @mock.patch.object(clo.ClusterLock, "steal")
     def test_cluster_lock_acquire_steal_failed(self, mock_steal, mock_acquire,
@@ -124,7 +124,7 @@ class SenlinLockTest(base.SenlinTestCase):
         self.assertTrue(res)
         mock_acquire.assert_called_once_with('NODE_A', 'ACTION_XYZ')
 
-    @mock.patch.object(common_utils, 'is_engine_dead')
+    @mock.patch.object(common_utils, 'is_service_dead')
     @mock.patch.object(ao.Action, 'mark_failed')
     @mock.patch.object(nlo.NodeLock, "acquire")
     @mock.patch.object(nlo.NodeLock, "steal")
@@ -144,7 +144,7 @@ class SenlinLockTest(base.SenlinTestCase):
             self.ctx, 'ACTION_ABC', mock.ANY,
             'Engine died when executing this action.')
 
-    @mock.patch.object(common_utils, 'is_engine_dead')
+    @mock.patch.object(common_utils, 'is_service_dead')
     @mock.patch.object(nlo.NodeLock, "acquire")
     def test_node_lock_acquire_failed(self, mock_acquire, mock_dead):
         mock_dead.return_value = False

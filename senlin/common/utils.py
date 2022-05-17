@@ -221,22 +221,22 @@ def get_path_parser(path):
     return expr
 
 
-def is_engine_dead(ctx, engine_id, duration=None):
-    """Check if an engine is dead.
+def is_service_dead(ctx, service_id, duration=None):
+    """Check if a service is dead.
 
-    If engine hasn't reported its status for the given duration, it is treated
-    as a dead engine.
+    If the service hasn't reported its status for the given duration, it is
+    treated as a dead service.
 
     :param ctx: A request context.
-    :param engine_id: The ID of the engine to test.
+    :param service_id: The ID of the service to test.
     :param duration: The time duration in seconds.
     """
     if not duration:
-        duration = 2 * cfg.CONF.periodic_interval
+        duration = 2.2 * cfg.CONF.periodic_interval
 
-    eng = service_obj.Service.get(ctx, engine_id)
-    if not eng:
+    service = service_obj.Service.get(ctx, service_id)
+    if not service:
         return True
-    if timeutils.is_older_than(eng.updated_at, duration):
+    if timeutils.is_older_than(service.updated_at, duration):
         return True
     return False

@@ -266,7 +266,7 @@ class EngineDeathTest(base.SenlinTestCase):
     @mock.patch.object(service_obj.Service, 'get')
     def test_engine_is_none(self, mock_service):
         mock_service.return_value = None
-        self.assertTrue(utils.is_engine_dead(self.ctx, 'fake_engine_id'))
+        self.assertTrue(utils.is_service_dead(self.ctx, 'fake_engine_id'))
         mock_service.assert_called_once_with(self.ctx, 'fake_engine_id')
 
     @mock.patch.object(service_obj.Service, 'get')
@@ -275,7 +275,7 @@ class EngineDeathTest(base.SenlinTestCase):
         update_time = timeutils.utcnow(True) - delta
         mock_service.return_value = mock.Mock(updated_at=update_time)
 
-        res = utils.is_engine_dead(self.ctx, 'fake_engine_id')
+        res = utils.is_service_dead(self.ctx, 'fake_engine_id')
 
         self.assertTrue(res)
         mock_service.assert_called_once_with(self.ctx, 'fake_engine_id')
@@ -284,7 +284,7 @@ class EngineDeathTest(base.SenlinTestCase):
     def test_engine_is_alive(self, mock_svc):
         mock_svc.return_value = mock.Mock(updated_at=timeutils.utcnow(True))
 
-        res = utils.is_engine_dead(self.ctx, 'fake_engine_id')
+        res = utils.is_service_dead(self.ctx, 'fake_engine_id')
 
         self.assertFalse(res)
         mock_svc.assert_called_once_with(self.ctx, 'fake_engine_id')
@@ -293,7 +293,7 @@ class EngineDeathTest(base.SenlinTestCase):
     def test_use_specified_duration(self, mock_svc):
         mock_svc.return_value = mock.Mock(updated_at=timeutils.utcnow(True))
 
-        res = utils.is_engine_dead(self.ctx, 'fake_engine_id', 10000)
+        res = utils.is_service_dead(self.ctx, 'fake_engine_id', 10000)
 
         self.assertFalse(res)
         mock_svc.assert_called_once_with(self.ctx, 'fake_engine_id')

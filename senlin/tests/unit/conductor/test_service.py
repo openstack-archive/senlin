@@ -123,12 +123,12 @@ class ConductorCleanupTest(base.SenlinTestCase):
         self.service_id = '4db0a14c-dc10-4131-8ed6-7573987ce9b0'
         self.topic = consts.HEALTH_MANAGER_TOPIC
 
-        self.svc = service.ConductorService('HOST', self.topic)
-        self.svc.service_id = self.service_id
-
     @mock.patch.object(service_obj.Service, 'update')
     def test_conductor_manage_report(self, mock_update):
         cfg.CONF.set_override('periodic_interval', 0.1)
+
+        self.svc = service.ConductorService('HOST', self.topic)
+        self.svc.service_id = self.service_id
 
         # start engine and verify that update is being called more than once
         self.svc.start()
@@ -140,6 +140,9 @@ class ConductorCleanupTest(base.SenlinTestCase):
     def test_conductor_manage_report_with_exception(self, mock_update):
         cfg.CONF.set_override('periodic_interval', 0.1)
 
+        self.svc = service.ConductorService('HOST', self.topic)
+        self.svc.service_id = self.service_id
+
         # start engine and verify that update is being called more than once
         # even with the exception being thrown
         mock_update.side_effect = Exception('blah')
@@ -149,34 +152,46 @@ class ConductorCleanupTest(base.SenlinTestCase):
         self.svc.stop()
 
     @mock.patch.object(service_obj.Service, 'gc_by_engine')
-    @mock.patch.object(service_obj.Service, 'get_all')
+    @mock.patch.object(service_obj.Service, 'get_all_expired')
     @mock.patch.object(service_obj.Service, 'delete')
-    def test_service_manage_cleanup(self, mock_delete, mock_get_all, mock_gc):
-        delta = datetime.timedelta(seconds=2 * cfg.CONF.periodic_interval)
+    def test_service_manage_cleanup(self, mock_delete, mock_get_all_expired,
+                                    mock_gc):
+        self.svc = service.ConductorService('HOST', self.topic)
+        self.svc.service_id = self.service_id
+        delta = datetime.timedelta(seconds=2.2 * cfg.CONF.periodic_interval)
         ages_a_go = timeutils.utcnow(True) - delta
-        mock_get_all.return_value = [{'id': 'foo', 'updated_at': ages_a_go}]
-        self.svc._service_manage_cleanup()
+        mock_get_all_expired.return_value = [
+            {'id': 'foo', 'updated_at': ages_a_go}
+        ]
+        self.svc.service_manage_cleanup()
         mock_delete.assert_called_once_with('foo')
         mock_gc.assert_called_once_with('foo')
 
-    @mock.patch.object(service_obj.Service, 'get_all')
-    def test_service_manage_cleanup_without_exception(self, mock_get_all):
+    @mock.patch.object(service_obj.Service, 'get_all_expired')
+    def test_service_manage_cleanup_without_exception(self,
+                                                      mock_get_all_expired):
         cfg.CONF.set_override('periodic_interval', 0.1)
+
+        self.svc = service.ConductorService('HOST', self.topic)
+        self.svc.service_id = self.service_id
 
         # start engine and verify that get_all is being called more than once
         self.svc.start()
         eventlet.sleep(0.6)
-        self.assertGreater(mock_get_all.call_count, 1)
+        self.assertGreater(mock_get_all_expired.call_count, 1)
         self.svc.stop()
 
-    @mock.patch.object(service_obj.Service, 'get_all')
-    def test_service_manage_cleanup_with_exception(self, mock_get_all):
+    @mock.patch.object(service_obj.Service, 'get_all_expired')
+    def test_service_manage_cleanup_with_exception(self, mock_get_all_expired):
         cfg.CONF.set_override('periodic_interval', 0.1)
+
+        self.svc = service.ConductorService('HOST', self.topic)
+        self.svc.service_id = self.service_id
 
         # start engine and verify that get_all is being called more than once
         # even with the exception being thrown
-        mock_get_all.side_effect = Exception('blah')
+        mock_get_all_expired.side_effect = Exception('blah')
         self.svc.start()
         eventlet.sleep(0.6)
-        self.assertGreater(mock_get_all.call_count, 1)
+        self.assertGreater(mock_get_all_expired.call_count, 1)
         self.svc.stop()

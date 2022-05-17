@@ -486,6 +486,10 @@ def service_get_all():
     return IMPL.service_get_all()
 
 
+def service_get_all_expired(binary):
+    return IMPL.service_get_all_expired(binary)
+
+
 def gc_by_engine(engine_id):
     return IMPL.gc_by_engine(engine_id)
 

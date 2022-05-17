@@ -9,10 +9,13 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import datetime
 
+from oslo_utils import timeutils
 from oslo_utils import uuidutils
 
 from senlin.db.sqlalchemy import api as db_api
+from senlin.db.sqlalchemy import models
 from senlin.tests.unit.common import base
 from senlin.tests.unit.common import utils
 
@@ -29,9 +32,21 @@ class DBAPIServiceTest(base.SenlinTestCase):
             'binary': 'senlin-engine',
             'topic': 'engine',
         }
-
         values.update(kwargs)
-        return db_api.service_create(service_id, **values)
+
+        with db_api.session_for_write() as session:
+            time_now = timeutils.utcnow(True)
+            svc = models.Service(
+                id=service_id,
+                host=values.get('host'),
+                binary=values.get('binary'),
+                topic=values.get('topic'),
+                created_at=values.get('created_at') or time_now,
+                updated_at=values.get('updated_at') or time_now,
+            )
+            session.add(svc)
+
+        return svc
 
     def test_service_create_get(self):
         service = self._create_service()
@@ -57,6 +72,31 @@ class DBAPIServiceTest(base.SenlinTestCase):
         services = db_api.service_get_all()
 
         self.assertEqual(4, len(services))
+
+    def test_service_get_all_expired(self):
+        for index in range(6):
+            dt = timeutils.utcnow() - datetime.timedelta(seconds=60 * index)
+            values = {
+                'binary': 'senlin-health-manager',
+                'host': 'host-%s' % index,
+                'updated_at': dt
+            }
+            self._create_service(uuidutils.generate_uuid(), **values)
+
+        for index in range(8):
+            dt = timeutils.utcnow() - datetime.timedelta(seconds=60 * index)
+            values = {
+                'binary': 'senlin-engine',
+                'host': 'host-%s' % index,
+                'updated_at': dt
+            }
+            self._create_service(uuidutils.generate_uuid(), **values)
+
+        services = db_api.service_get_all_expired('senlin-health-manager')
+        self.assertEqual(3, len(services.all()))
+
+        services = db_api.service_get_all_expired('senlin-engine')
+        self.assertEqual(5, len(services.all()))
 
     def test_service_update(self):
         old_service = self._create_service()

@@ -78,6 +78,11 @@ def _get_main_context_manager():
     return _MAIN_CONTEXT_MANAGER
 
 
+def service_expired_time():
+    return (timeutils.utcnow() -
+            datetime.timedelta(seconds=2.2 * CONF.periodic_interval))
+
+
 def get_engine():
     return _get_main_context_manager().writer.get_engine()
 
@@ -1603,6 +1608,15 @@ def service_get(service_id):
 def service_get_all():
     with session_for_read() as session:
         return session.query(models.Service).all()
+
+
+def service_get_all_expired(binary):
+    with session_for_read() as session:
+        date_limit = service_expired_time()
+        svc = models.Service
+        return session.query(models.Service).filter(
+            and_(svc.binary == binary, svc.updated_at <= date_limit)
+        )
 
 
 @retry_on_deadlock

@@ -76,7 +76,7 @@ def cluster_lock_acquire(context, cluster_id, action_id, engine=None,
     # Will reach here only because scope == CLUSTER_SCOPE
     action = ao.Action.get(context, owners[0])
     if (action and action.owner and action.owner != engine and
-            utils.is_engine_dead(context, action.owner)):
+            utils.is_service_dead(context, action.owner)):
         LOG.info('The cluster %(c)s is locked by dead action %(a)s, '
                  'try to steal the lock.',
                  {'c': cluster_id, 'a': owners[0]})
@@ -133,7 +133,7 @@ def node_lock_acquire(context, node_id, action_id, engine=None,
     # if this node lock by dead engine
     action = ao.Action.get(context, owner)
     if (action and action.owner and action.owner != engine and
-            utils.is_engine_dead(context, action.owner)):
+            utils.is_service_dead(context, action.owner)):
         LOG.info('The node %(n)s is locked by dead action %(a)s, '
                  'try to steal the lock.',
                  {'n': node_id, 'a': owner})

@@ -9,7 +9,6 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
 import copy
 import functools
 
@@ -17,7 +16,6 @@ from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_utils import timeutils
-from oslo_utils import uuidutils
 from osprofiler import profiler
 
 from senlin.common import consts
@@ -46,7 +44,6 @@ from senlin.objects import node as node_obj
 from senlin.objects import policy as policy_obj
 from senlin.objects import profile as profile_obj
 from senlin.objects import receiver as receiver_obj
-from senlin.objects import service as service_obj
 from senlin.policies import base as policy_base
 from senlin.profiles import base as profile_base
 
@@ -91,10 +88,7 @@ class ConductorService(service.Service):
 
         # The following are initialized here and will be assigned in start()
         # which happens after the fork when spawning multiple worker processes
-        self.server = None
-        self.service_id = None
-        self.cleanup_timer = None
-        self.cleanup_count = 0
+        self.target = None
 
         # Initialize the global environment
         environment.initialize()
@@ -105,68 +99,20 @@ class ConductorService(service.Service):
 
     def start(self):
         super(ConductorService, self).start()
-        self.service_id = uuidutils.generate_uuid()
 
-        target = oslo_messaging.Target(version=consts.RPC_API_VERSION,
-                                       server=self.host,
-                                       topic=self.topic)
+        self.target = oslo_messaging.Target(version=consts.RPC_API_VERSION,
+                                            server=self.host,
+                                            topic=self.topic)
         serializer = obj_base.VersionedObjectSerializer()
-        self.server = rpc_messaging.get_rpc_server(
-            target, self, serializer=serializer)
+        self.server = rpc_messaging.get_rpc_server(self.target, self,
+                                                   serializer=serializer)
         self.server.start()
 
-        # create service record
-        ctx = senlin_context.get_admin_context()
-        service_obj.Service.create(ctx, self.service_id, self.host,
-                                   self.service_name, self.topic)
-
-        # we may want to make the clean-up attempts configurable.
-        self.cleanup_timer = self.tg.add_timer(2 * CONF.periodic_interval,
-                                               self.service_manage_cleanup)
-
-        self.tg.add_timer(CONF.periodic_interval, self.service_manage_report)
-
-    def stop(self, graceful=True):
+    def stop(self, graceful=False):
         if self.server:
             self.server.stop()
             self.server.wait()
-
-        service_obj.Service.delete(self.service_id)
-        LOG.info('Conductor %s is deleted', self.service_id)
-
         super(ConductorService, self).stop(graceful)
-
-    def service_manage_report(self):
-        try:
-            ctx = senlin_context.get_admin_context()
-            service_obj.Service.update(ctx, self.service_id)
-        except Exception as ex:
-            LOG.error('Error while updating engine service: %s', ex)
-
-    def _service_manage_cleanup(self):
-        try:
-            ctx = senlin_context.get_admin_context()
-            time_window = (2 * CONF.periodic_interval)
-            svcs = service_obj.Service.get_all(ctx)
-            for svc in svcs:
-                if svc['id'] == self.service_id:
-                    continue
-                if timeutils.is_older_than(svc['updated_at'], time_window):
-                    LOG.info('Service %s was aborted', svc['id'])
-                    LOG.info('Breaking locks for dead engine %s', svc['id'])
-                    service_obj.Service.gc_by_engine(svc['id'])
-                    LOG.info('Done breaking locks for engine %s', svc['id'])
-                    service_obj.Service.delete(svc['id'])
-        except Exception as ex:
-            LOG.error('Error while cleaning up engine service: %s', ex)
-
-    def service_manage_cleanup(self):
-        self._service_manage_cleanup()
-        self.cleanup_count += 1
-        LOG.info('Service clean-up attempt count: %s', self.cleanup_count)
-        if self.cleanup_count >= 2:
-            self.cleanup_timer.stop()
-            LOG.info("Finished cleaning up dead services.")
 
     @request_context
     def credential_create(self, ctx, req):
