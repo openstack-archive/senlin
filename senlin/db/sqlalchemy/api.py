@@ -28,6 +28,7 @@ from oslo_log import log as logging
 from oslo_utils import timeutils
 import osprofiler.sqlalchemy
 import sqlalchemy
+from sqlalchemy import and_
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import func
 
@@ -682,8 +683,8 @@ def cluster_policy_get_all(context, cluster_id, filters=None, sort=None):
             key_name = consts.CP_POLICY_NAME
             if key_type in filters and key_name in filters:
                 query = query.join(models.Policy).filter(
-                    models.Policy.type == filters[key_type] and
-                    models.Policy.name == filters[key_name])
+                    and_(models.Policy.type == filters[key_type],
+                         models.Policy.name == filters[key_name]))
             elif key_type in filters:
                 query = query.join(models.Policy).filter(
                     models.Policy.type == filters[key_type])

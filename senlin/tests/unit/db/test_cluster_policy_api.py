@@ -299,6 +299,13 @@ class DBAPIClusterPolicyTest(base.SenlinTestCase):
                                                 filters=filters)
         self.assertEqual(0, len(results))
 
+        filters = {'enabled': True,
+                   'policy_name': 'wrong_name',
+                   'policy_type': 'ScalingPolicy'}
+        results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
+                                                filters=filters)
+        self.assertEqual(0, len(results))
+
         filters = {'policy_name': 'test_policy'}
         results = db_api.cluster_policy_get_all(self.ctx, self.cluster.id,
                                                 filters=filters)
