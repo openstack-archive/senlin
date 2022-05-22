@@ -1166,6 +1166,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
             'created': 'CREATED_TIMESTAMP',
             'flavor': {
                 'id': '1',
+                'name': 'FAKE_FLAVOR',
                 'links': [{
                     'href': 'http://url_flavor',
                     'rel': 'bookmark'
@@ -1201,6 +1202,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
             'user_id': 'FAKE_USER_ID',
         }
         cc.server_get.return_value = nova_server
+        cc.flavor_find.return_value = mock.Mock(id='1')
         res = profile.do_get_details(node_obj)
         expected = {
             'OS-DCF:diskConfig': 'MANUAL',
@@ -1261,6 +1263,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
             'security_groups': [],
         }
         cc.server_get.return_value = nova_server
+        cc.flavor_find.return_value = mock.Mock(id='FAKE_FLAVOR')
         res = profile.do_get_details(node_obj)
         expected = {
             'flavor': 'FAKE_FLAVOR',
@@ -1334,7 +1337,8 @@ class TestNovaServerBasic(base.SenlinTestCase):
                 }]
             },
             'flavor': {
-                'id': 'FAKE_FLAVOR',
+                'id': '1',
+                'name': 'FAKE_FLAVOR'
             },
             'id': 'FAKE_ID',
             'image': {},
@@ -1344,9 +1348,10 @@ class TestNovaServerBasic(base.SenlinTestCase):
             'security_groups': [{'name': 'default'}],
         }
         cc.server_get.return_value = nova_server
+        cc.flavor_find.return_value = mock.Mock(id='1')
         res = profile.do_get_details(node_obj)
         expected = {
-            'flavor': 'FAKE_FLAVOR',
+            'flavor': '1',
             'id': 'FAKE_ID',
             'image': {},
             'attached_volumes': ['FAKE_VOLUME'],
@@ -1385,6 +1390,7 @@ class TestNovaServerBasic(base.SenlinTestCase):
             'security_groups': [{'name': 'default'}],
         }
         cc.server_get.return_value = nova_server
+        cc.flavor_find.return_value = mock.Mock(id='FAKE_FLAVOR')
         res = profile.do_get_details(node_obj)
         expected = {
             'flavor': 'FAKE_FLAVOR',

@@ -1599,11 +1599,8 @@ class ServerProfile(base.Profile):
         :return: The flavor_id for the server.
         """
         flavor = server['flavor']
-
-        if 'id' in flavor:
-            return flavor['id']
-
-        return self.compute(obj).flavor_find(flavor['original_name'], False).id
+        flavor_name = flavor.get('name') or flavor.get('original_name')
+        return self.compute(obj).flavor_find(flavor_name, False).id
 
     def _get_image_id(self, obj, server, op):
         """Get image id.
