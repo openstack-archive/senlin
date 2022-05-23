@@ -25,8 +25,8 @@ from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy import utils as sa_utils
 from oslo_log import log as logging
+from oslo_utils import importutils
 from oslo_utils import timeutils
-import osprofiler.sqlalchemy
 import sqlalchemy
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload
@@ -38,27 +38,44 @@ from senlin.db.sqlalchemy import migration
 from senlin.db.sqlalchemy import models
 from senlin.db.sqlalchemy import utils
 
+osprofiler_sqlalchemy = importutils.try_import('osprofiler.sqlalchemy')
+
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
-_main_context_manager = None
+_MAIN_CONTEXT_MANAGER = None
 _CONTEXT = threading.local()
 
-cfg.CONF.import_opt('database_retry_limit', 'senlin.conf')
-cfg.CONF.import_opt('database_retry_interval', 'senlin.conf')
-cfg.CONF.import_opt('database_max_retry_interval', 'senlin.conf')
+CONF.import_opt('database_retry_limit', 'senlin.conf')
+CONF.import_opt('database_retry_interval', 'senlin.conf')
+CONF.import_opt('database_max_retry_interval', 'senlin.conf')
+
+try:
+    CONF.import_group('profiler', 'senlin.conf')
+except cfg.NoSuchGroupError:
+    pass
+
+
+def add_db_tracing():
+    global _MAIN_CONTEXT_MANAGER
+
+    if not osprofiler_sqlalchemy:
+        return
+    if not hasattr(CONF, 'profiler'):
+        return
+    if not CONF.profiler.enabled or not CONF.profiler.trace_sqlalchemy:
+        return
+    osprofiler_sqlalchemy.add_tracing(
+        sqlalchemy, _MAIN_CONTEXT_MANAGER.writer.get_engine(), 'db'
+    )
 
 
 def _get_main_context_manager():
-    global _main_context_manager
-    if not _main_context_manager:
-        _main_context_manager = enginefacade.transaction_context()
-        cfg.CONF.import_group('profiler', 'senlin.conf')
-        if cfg.CONF.profiler.enabled:
-            if cfg.CONF.profiler.trace_sqlalchemy:
-                eng = _main_context_manager.writer.get_engine()
-                osprofiler.sqlalchemy.add_tracing(sqlalchemy, eng, "db")
-    return _main_context_manager
+    global _MAIN_CONTEXT_MANAGER
+    if not _MAIN_CONTEXT_MANAGER:
+        _MAIN_CONTEXT_MANAGER = enginefacade.transaction_context()
+        add_db_tracing()
+    return _MAIN_CONTEXT_MANAGER
 
 
 def get_engine():
