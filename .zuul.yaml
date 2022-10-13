@@ -1,4 +1,5 @@
 - project:
+    queue: senlin
     templates:
       - check-requirements
       - openstack-python3-jobs
@@ -13,7 +14,6 @@
         - openstack-tox-cover:
             voting: false
     gate:
-      queue: senlin
       jobs:
         - senlin-dsvm-tempest-py35-api
         - senlin-tempest-api-ipv6-only
