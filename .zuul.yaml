@@ -1,4 +1,5 @@
 - project:
+    queue: senlin
     templates:
       - check-requirements
       - openstack-lower-constraints-jobs
@@ -21,7 +22,6 @@
         - openstack-tox-cover:
             voting: false
     gate:
-      queue: senlin
       jobs:
         - senlin-dsvm-tempest-py27-api
         - senlin-dsvm-tempest-py35-api
@@ -175,7 +175,6 @@
       - openstack/networking-bgpvpn
       - openstack/neutron
       - openstack/neutron-fwaas
-      - openstack/neutron-lbaas
       - openstack/neutron-vpnaas
       - openstack/octavia
       - openstack/panko
