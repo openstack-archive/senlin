@@ -175,11 +175,14 @@ Install and configure components
 
 ::
 
-      # yum install openstack-senlin-engine.noarch \
-        openstack-senlin-api.noarch openstack-senlin-common.noarch \
+      # yum install openstack-senlin-api.noarch \
+        openstack-senlin-common.noarch \
+        openstack-senlin-conductor.noarch \
+        openstack-senlin-engine.noarch \
+        openstack-senlin-health-manager.noarch \
         python3-senlinclient.noarch
 
-2. Edit file :file:`/etc/senlin/senlin.conf` according to your system settis. The most common options to be customized include:
+2. Edit file :file:`/etc/senlin/senlin.conf` according to your system settings. The most common options to be customized include:
 
 ::
 
