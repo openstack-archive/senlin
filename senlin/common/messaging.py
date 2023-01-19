@@ -126,7 +126,8 @@ def get_rpc_client(topic, server, serializer=None):
     if serializer is None:
         serializer = JsonPayloadSerializer()
     serializer = RequestContextSerializer(serializer)
-    return messaging.RPCClient(TRANSPORT, target, serializer=serializer)
+    return messaging.get_rpc_client(
+        TRANSPORT, target, serializer=serializer)
 
 
 def get_notifier(publisher_id):

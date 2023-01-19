@@ -69,61 +69,68 @@ class TestUtilFunctions(testtools.TestCase):
             messaging.TRANSPORT, x_target, [x_endpoint],
             executor='eventlet', serializer=x_context_serializer)
 
-    @mock.patch("oslo_messaging.RPCClient")
+    @mock.patch("oslo_messaging.Target")
     @mock.patch("senlin.common.messaging.RequestContextSerializer")
     @mock.patch("senlin.common.messaging.JsonPayloadSerializer")
-    @mock.patch("oslo_messaging.Target")
-    def test_get_rpc_client(self, mock_target, mock_json_serializer,
-                            mock_context_serializer,
-                            mock_rpc_client):
-        x_topic = mock.Mock()
-        x_server = mock.Mock()
-        x_target = mock.Mock()
-        mock_target.return_value = x_target
-        x_json_serializer = mock.Mock()
-        mock_json_serializer.return_value = x_json_serializer
-        x_context_serializer = mock.Mock()
-        mock_context_serializer.return_value = x_context_serializer
-        x_rpc_client = mock.Mock()
-        mock_rpc_client.return_value = x_rpc_client
+    @mock.patch("oslo_messaging.get_rpc_client")
+    def test_get_rpc_client(self, mock_rpc_client, mock_json_serializer,
+                            mock_context_serializer, mock_target):
+        topic = 'fake'
+        client = mock.Mock()
+        context = mock.Mock()
+        server = mock.Mock()
+        serializer = mock.Mock()
+        target = mock.Mock()
 
-        res = messaging.get_rpc_client(x_topic, x_server)
+        mock_context_serializer.return_value = context
+        mock_json_serializer.return_value = serializer
+        mock_rpc_client.return_value = client
+        mock_target.return_value = target
 
-        self.assertEqual(x_rpc_client, res)
-        mock_target.assert_called_once_with(
-            topic=x_topic, server=x_server,
-            version=consts.RPC_API_VERSION_BASE)
-        mock_json_serializer.assert_called_once_with()
-        mock_context_serializer.assert_called_once_with(x_json_serializer)
+        result = messaging.get_rpc_client(topic, server)
+
         mock_rpc_client.assert_called_once_with(
-            messaging.TRANSPORT, x_target, serializer=x_context_serializer)
+            None, target, serializer=context
+        )
+        mock_target.assert_called_once_with(
+            topic=topic, server=server, version=consts.RPC_API_VERSION_BASE
+        )
+        mock_json_serializer.assert_called_once_with()
+        mock_context_serializer.assert_called_once_with(serializer)
 
-    @mock.patch("oslo_messaging.RPCClient")
+        self.assertEqual(client, result)
+
+    @mock.patch("oslo_messaging.Target")
     @mock.patch("senlin.common.messaging.RequestContextSerializer")
     @mock.patch("senlin.common.messaging.JsonPayloadSerializer")
-    @mock.patch("oslo_messaging.Target")
-    def test_get_rpc_client_with_serializer(self, mock_target,
+    @mock.patch("oslo_messaging.get_rpc_client")
+    def test_get_rpc_client_with_serializer(self, mock_rpc_client,
                                             mock_json_serializer,
                                             mock_context_serializer,
-                                            mock_rpc_client):
-        x_topic = mock.Mock()
-        x_server = mock.Mock()
-        x_target = mock.Mock()
-        x_serializer = mock.Mock()
-        mock_target.return_value = x_target
-        x_context_serializer = mock.Mock()
-        mock_context_serializer.return_value = x_context_serializer
-        x_rpc_client = mock.Mock()
-        mock_rpc_client.return_value = x_rpc_client
+                                            mock_target):
+        topic = 'fake'
+        client = mock.Mock()
+        context = mock.Mock()
+        custom_serializer = mock.Mock(name='custom')
+        server = mock.Mock()
+        target = mock.Mock()
 
-        res = messaging.get_rpc_client(x_topic, x_server,
-                                       serializer=x_serializer)
+        mock_context_serializer.return_value = context
+        mock_json_serializer.return_value = custom_serializer
+        mock_rpc_client.return_value = client
+        mock_target.return_value = target
 
-        self.assertEqual(x_rpc_client, res)
-        mock_target.assert_called_once_with(
-            topic=x_topic, server=x_server,
-            version=consts.RPC_API_VERSION_BASE)
-        self.assertEqual(0, mock_json_serializer.call_count)
-        mock_context_serializer.assert_called_once_with(x_serializer)
+        result = messaging.get_rpc_client(
+            topic, server, serializer=custom_serializer
+        )
+
         mock_rpc_client.assert_called_once_with(
-            messaging.TRANSPORT, x_target, serializer=x_context_serializer)
+            None, target, serializer=context
+        )
+        mock_target.assert_called_once_with(
+            topic=topic, server=server, version=consts.RPC_API_VERSION_BASE
+        )
+        mock_json_serializer.assert_not_called()
+        mock_context_serializer.assert_called_once_with(custom_serializer)
+
+        self.assertEqual(client, result)
