@@ -81,9 +81,9 @@
     name: senlin-dsvm-tempest-py3-integration
     parent: senlin-tempest-base
     vars:
-      tempest_test_regex: senlin_tempest_plugin.tests.integration(?!\.test_nova_server_cluster.TestNovaServerCluster).*
+      tempest_test_regex: senlin_tempest_plugin.tests.integration
       devstack_plugins:
-        # zaqar: https://opendev.org/openstack/zaqar
+        zaqar: https://opendev.org/openstack/zaqar
         heat: https://opendev.org/openstack/heat
       devstack_localrc:
         USE_PYTHON3: true
@@ -99,8 +99,8 @@
       - openstack/python-zaqarclient
       - openstack/senlin
       - openstack/senlin-tempest-plugin
-      # - openstack/zaqar
-      # - openstack/zaqar-ui
+      - openstack/zaqar
+      - openstack/zaqar-ui
       - openstack/zaqar-tempest-plugin
 
 - job:
