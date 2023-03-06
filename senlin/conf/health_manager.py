@@ -33,6 +33,9 @@ HEALTH_MANAGER_OPTS = [
                deprecated_name='health_manager_thread_pool_size',
                deprecated_group="DEFAULT",
                help=_('Number of senlin-health-manager threads.')),
+    cfg.IntOpt('cleanup_interval',
+               default=900,
+               help=_('Seconds between running periodic cleanup tasks.')),
 ]
 
 

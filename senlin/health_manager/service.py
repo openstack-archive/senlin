@@ -40,6 +40,7 @@ class HealthManagerService(service.Service):
         # which happens after the fork when spawning multiple worker processes
         self.health_registry = None
         self.target = None
+        self.cleanup_task_timer = None
 
     @property
     def service_name(self):
@@ -59,8 +60,15 @@ class HealthManagerService(service.Service):
         self.server.start()
 
         self.tg.add_dynamic_timer(self.task, None, cfg.CONF.periodic_interval)
+        self.cleanup_task_timer = self.tg.add_timer(
+            CONF.health_manager.cleanup_interval, self.cleanup_task,
+            initial_delay=CONF.health_manager.cleanup_interval
+        )
 
     def stop(self, graceful=False):
+        if self.cleanup_task_timer:
+            self.cleanup_task_timer.stop()
+            self.cleanup_task_timer = None
         if self.server:
             self.server.stop()
             self.server.wait()
@@ -81,6 +89,13 @@ class HealthManagerService(service.Service):
         return health_manager.chase_up(
             start_time, cfg.CONF.periodic_interval, name='Health manager task'
         )
+
+    def cleanup_task(self):
+        LOG.debug('Running cleanup task')
+        try:
+            self.health_registry.cleanup_orphaned_healthchecks()
+        except Exception as ex:
+            LOG.error("Failed to run cleanup tasks for health manager: %s", ex)
 
     def listening(self, ctx):
         """Respond to confirm that the rpc service is still alive."""
