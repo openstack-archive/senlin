@@ -520,6 +520,10 @@ def registry_get_by_param(context, params):
     return IMPL.registry_get_by_param(context, params)
 
 
+def registry_list_ids_by_service(context, params):
+    return IMPL.registry_list_by_service(context, params)
+
+
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
     return IMPL.db_sync(engine, version=version)

@@ -133,3 +133,38 @@ class DBAPIRegistryTest(base.SenlinTestCase):
         self.assertEqual(registry.interval, obj.interval)
         self.assertEqual(registry.params, obj.params)
         self.assertEqual(registry.engine_id, obj.engine_id)
+
+    def test_registry_list_ids_by_service(self):
+        for index in range(10):
+            self._create_registry(
+                cluster_id='MAIN_FAKE_ID_%d' % index,
+                check_type='NODE_STATUS_POLLING',
+                interval=60,
+                params={},
+                engine_id='ENGINE0'
+            )
+        for index in range(10):
+            self._create_registry(
+                cluster_id='FAKE_ID_%d' % (index + 1),
+                check_type='NODE_STATUS_POLLING',
+                interval=60,
+                params={},
+                engine_id='ENGINE%d'
+            )
+
+        registries = db_api.registry_list_ids_by_service(self.ctx, 'ENGINE0')
+        self.assertEqual(10, len(registries))
+        for registry in registries:
+            self.assertIn('MAIN_FAKE_ID', registry.cluster_id)
+
+    def test_registry_list_ids_by_service_is_empty(self):
+        self._create_registry(
+            cluster_id='FAKE_ID',
+            check_type='NODE_STATUS_POLLING',
+            interval=60,
+            params={},
+            engine_id='ENGINE'
+        )
+
+        registries = db_api.registry_list_ids_by_service(self.ctx, 'ENGINE1')
+        self.assertEqual(0, len(registries))

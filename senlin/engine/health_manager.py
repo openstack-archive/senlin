@@ -30,6 +30,7 @@ from senlin.common import consts
 from senlin.common import context
 from senlin.common import messaging as rpc
 from senlin.common import utils
+from senlin.db.sqlalchemy import api as db_api
 from senlin.engine import node as node_mod
 from senlin.engine.notifications import heat_endpoint
 from senlin.engine.notifications import nova_endpoint
@@ -534,13 +535,9 @@ class RuntimeHealthRegistry(object):
     def __init__(self, ctx, engine_id, thread_group):
         self.ctx = ctx
         self.engine_id = engine_id
-        self.rt = {}
+        self.registries = {}
         self.tg = thread_group
         self.health_check_types = defaultdict(lambda: [])
-
-    @property
-    def registries(self):
-        return self.rt
 
     def register_cluster(self, cluster_id, interval=None,
                          node_update_timeout=None, params=None,
@@ -776,6 +773,21 @@ class RuntimeHealthRegistry(object):
             self.registries[registry.cluster_id] = entry
             if registry.enabled:
                 self.add_health_check(self.registries[registry.cluster_id])
+
+    def cleanup_orphaned_healthchecks(self):
+        """Cleanup orphaned healthchecks."""
+        db_registries = db_api.registry_list_ids_by_service(
+            self.ctx, self.engine_id
+        )
+        for registry_id in self.registries:
+            if registry_id in db_registries:
+                continue
+            entity = self.registries[registry_id]
+            if not entity:
+                continue
+            LOG.info('Removing orphaned health check: %s from %s',
+                     registry_id, self.engine_id)
+            self.remove_health_check(self.registries[registry_id])
 
 
 def notify(engine_id, method, **kwargs):

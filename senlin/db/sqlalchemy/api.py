@@ -1760,6 +1760,12 @@ def registry_get_by_param(context, params):
     return obj
 
 
+def registry_list_ids_by_service(context, engine_id):
+    with session_for_read() as session:
+        return session.query(models.HealthRegistry.cluster_id).filter_by(
+            engine_id=engine_id).all()
+
+
 # Utils
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
