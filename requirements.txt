@@ -1,7 +1,7 @@
 # The order of packages is significant, because pip processes them in the order
 # of appearance. Changing the order has an impact on the overall integration
 # process, which may cause wedges in the gate later.
-
+alembic>=1.6.5 # MIT
 pbr>=3.1.1 # Apache-2.0
 docker>=2.4.2 # Apache-2.0
 eventlet>=0.26.1 # MIT
@@ -31,8 +31,7 @@ pytz>=2015.7 # MIT
 PyYAML>=5.1 # MIT
 requests>=2.20.0 # Apache-2.0
 Routes>=2.3.1 # MIT
-SQLAlchemy!=1.1.5,!=1.1.6,!=1.1.7,!=1.1.8,>=1.0.10 # MIT
-sqlalchemy-migrate>=0.13.0 # Apache-2.0
+SQLAlchemy>=1.4.41 # MIT
 stevedore>=1.20.0 # Apache-2.0
 tenacity>=6.0.0 # Apache-2.0
 WebOb>=1.7.1 # MIT

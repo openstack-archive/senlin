@@ -22,11 +22,13 @@ import time
 from oslo_config import cfg
 from oslo_db import api as oslo_db_api
 from oslo_db import exception as db_exc
+from oslo_db import options as db_options
 from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy import utils as sa_utils
 from oslo_log import log as logging
 from oslo_utils import importutils
 from oslo_utils import timeutils
+from osprofiler import opts as profiler
 import sqlalchemy
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload
@@ -43,8 +45,9 @@ osprofiler_sqlalchemy = importutils.try_import('osprofiler.sqlalchemy')
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
+_CONTEXT = None
+_LOCK = threading.Lock()
 _MAIN_CONTEXT_MANAGER = None
-_CONTEXT = threading.local()
 
 CONF.import_opt('database_retry_limit', 'senlin.conf')
 CONF.import_opt('database_retry_interval', 'senlin.conf')
@@ -56,26 +59,51 @@ except cfg.NoSuchGroupError:
     pass
 
 
-def add_db_tracing():
-    global _MAIN_CONTEXT_MANAGER
-
-    if not osprofiler_sqlalchemy:
-        return
-    if not hasattr(CONF, 'profiler'):
-        return
-    if not CONF.profiler.enabled or not CONF.profiler.trace_sqlalchemy:
-        return
-    osprofiler_sqlalchemy.add_tracing(
-        sqlalchemy, _MAIN_CONTEXT_MANAGER.writer.get_engine(), 'db'
+def initialize():
+    connection = CONF['database'].connection
+    db_options.set_defaults(
+        CONF, connection=connection
     )
+    profiler.set_defaults(CONF, enabled=False, trace_sqlalchemy=False)
 
 
 def _get_main_context_manager():
+    global _LOCK
     global _MAIN_CONTEXT_MANAGER
-    if not _MAIN_CONTEXT_MANAGER:
-        _MAIN_CONTEXT_MANAGER = enginefacade.transaction_context()
-        add_db_tracing()
+
+    with _LOCK:
+        if not _MAIN_CONTEXT_MANAGER:
+            initialize()
+            _MAIN_CONTEXT_MANAGER = enginefacade.transaction_context()
+            _MAIN_CONTEXT_MANAGER.configure(__autocommit=True)
+
     return _MAIN_CONTEXT_MANAGER
+
+
+def _get_context():
+    global _CONTEXT
+    if _CONTEXT is None:
+        import threading
+        _CONTEXT = threading.local()
+    return _CONTEXT
+
+
+def _wrap_session(sess):
+    if not osprofiler_sqlalchemy:
+        return sess
+    if CONF.profiler.enabled and CONF.profiler.trace_sqlalchemy:
+        sess = osprofiler_sqlalchemy.wrap_session(sqlalchemy, sess)
+    return sess
+
+
+def session_for_read():
+    reader = _get_main_context_manager().reader
+    return _wrap_session(reader.using(_get_context()))
+
+
+def session_for_write():
+    writer = _get_main_context_manager().writer
+    return _wrap_session(writer.using(_get_context()))
 
 
 def service_expired_time():
@@ -85,14 +113,6 @@ def service_expired_time():
 
 def get_engine():
     return _get_main_context_manager().writer.get_engine()
-
-
-def session_for_read():
-    return _get_main_context_manager().reader.using(_CONTEXT)
-
-
-def session_for_write():
-    return _get_main_context_manager().writer.using(_CONTEXT)
 
 
 def get_backend():
@@ -1767,14 +1787,14 @@ def registry_list_ids_by_service(context, engine_id):
 
 
 # Utils
-def db_sync(engine, version=None):
+def db_sync(db_url):
     """Migrate the database to `version` or the most recent version."""
-    return migration.db_sync(engine, version=version)
+    return migration.db_sync(db_url)
 
 
-def db_version(engine):
+def db_version():
     """Display the current database version."""
-    return migration.db_version(engine)
+    return migration.db_version()
 
 
 def parent_status_update_needed(action):

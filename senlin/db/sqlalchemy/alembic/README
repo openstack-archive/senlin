@@ -1,0 +1,4 @@
+Please use the "selin-manage database" command for database management.
+
+Developers adding new migrations can run 'alembic -m "<migration title>"' from
+the senlin/db/sqlalchemy directory where the alembic.ini file is located.

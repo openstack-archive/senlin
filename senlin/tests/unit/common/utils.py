@@ -9,42 +9,18 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
 import random
 import string
 
-from oslo_config import cfg
-from oslo_db import options
 from oslo_utils import timeutils
-import sqlalchemy
 
 from senlin.common import context
-from senlin.db import api as db_api
 from senlin import objects
 
 
 def random_name():
     return ''.join(random.choice(string.ascii_uppercase)
                    for x in range(10))
-
-
-def setup_dummy_db():
-    options.cfg.set_defaults(options.database_opts, sqlite_synchronous=False)
-    options.set_defaults(cfg.CONF, connection="sqlite://")
-    engine = db_api.get_engine()
-    db_api.db_sync(engine)
-    engine.connect()
-
-
-def reset_dummy_db():
-    engine = db_api.get_engine()
-    meta = sqlalchemy.MetaData()
-    meta.reflect(bind=engine)
-
-    for table in reversed(meta.sorted_tables):
-        if table.name == 'migrate_version':
-            continue
-        engine.execute(table.delete())
 
 
 def dummy_context(user=None, project=None, password=None, roles=None,

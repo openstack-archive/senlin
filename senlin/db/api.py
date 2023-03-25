@@ -524,14 +524,14 @@ def registry_list_ids_by_service(context, params):
     return IMPL.registry_list_by_service(context, params)
 
 
-def db_sync(engine, version=None):
-    """Migrate the database to `version` or the most recent version."""
-    return IMPL.db_sync(engine, version=version)
+def db_sync(db_url=None):
+    """Migrate the database to the most recent version."""
+    return IMPL.db_sync(db_url)
 
 
-def db_version(engine):
+def db_version():
     """Display the current database version."""
-    return IMPL.db_version(engine)
+    return IMPL.db_version()
 
 
 def event_purge(engine, project, granularity, age):

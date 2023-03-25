@@ -31,7 +31,7 @@ CONF = cfg.CONF
 
 def do_db_version():
     """Print database's current migration level."""
-    print(api.db_version(api.get_engine()))
+    print(api.db_version())
 
 
 def do_db_sync():
@@ -39,7 +39,7 @@ def do_db_sync():
 
     DB is created first if necessary.
     """
-    api.db_sync(api.get_engine(), CONF.command.version)
+    api.db_sync()
 
 
 def do_event_purge():

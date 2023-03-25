@@ -9,29 +9,42 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
 import os
+import sys
 
-from oslo_db.sqlalchemy import migration as oslo_migration
+from alembic import command as alembic_command
+from alembic.config import Config
+from alembic import migration as alembic_migration
+from oslo_config import cfg
 
+from senlin.db.sqlalchemy import api as db_api
 
-INIT_VERSION = 0
-
-
-def db_sync(engine, version=None):
-    path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                        'migrate_repo')
-    return oslo_migration.db_sync(engine, path, version,
-                                  init_version=INIT_VERSION)
+CONF = cfg.CONF
 
 
-def db_version(engine):
-    path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                        'migrate_repo')
-    return oslo_migration.db_version(engine, path, INIT_VERSION)
+def get_alembic_config(db_url=None):
+    alembic_dir = os.path.join(os.path.dirname(__file__),
+                               os.pardir, 'db/sqlalchemy')
+    alembic_cfg = Config(os.path.join(alembic_dir, 'alembic.ini'),
+                         stdout=sys.stdout)
+    alembic_cfg.set_main_option(
+        'script_location', 'senlin.db.sqlalchemy:alembic')
+    if db_url:
+        alembic_cfg.set_main_option('sqlalchemy.url', db_url)
+    else:
+        alembic_cfg.set_main_option('sqlalchemy.url',
+                                    CONF['database'].connection)
+    return alembic_cfg
 
 
-def db_version_control(engine, version=None):
-    path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                        'migrate_repo')
-    return oslo_migration.db_version_control(engine, path, version)
+def db_sync(db_url):
+    alembic_command.upgrade(
+        get_alembic_config(db_url), 'head'
+    )
+
+
+def db_version():
+    engine = db_api.get_engine()
+    with engine.connect() as connection:
+        m_context = alembic_migration.MigrationContext.configure(connection)
+        return m_context.get_current_revision()

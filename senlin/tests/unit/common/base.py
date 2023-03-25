@@ -12,18 +12,21 @@
 
 import datetime
 import os
+import tempfile
 import time
 
 import fixtures
 from oslo_config import cfg
+from oslo_db import options
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
+import shutil
 import testscenarios
 import testtools
 
 from senlin.common import messaging
+from senlin.db import api as db_api
 from senlin.engine import service
-from senlin.tests.unit.common import utils
 
 
 TEST_DEFAULT_LOGLEVELS = {'migrate': logging.WARN,
@@ -54,6 +57,40 @@ class FakeLogMixin(object):
                     name=base, format=_LOG_FORMAT))
 
 
+class DatabaseFixture(fixtures.Fixture):
+    fixture = None
+
+    @staticmethod
+    def mktemp():
+        tmpfs_path = '/dev/shm'
+        if not os.path.isdir(tmpfs_path):
+            tmpfs_path = '/tmp'
+        return tempfile.mkstemp(
+            prefix='senlin-', suffix='.sqlite', dir=tmpfs_path)[1]
+
+    @staticmethod
+    def get_fixture():
+        if not DatabaseFixture.fixture:
+            DatabaseFixture.fixture = DatabaseFixture()
+        return DatabaseFixture.fixture
+
+    def __init__(self):
+        super(DatabaseFixture, self).__init__()
+        self.golden_path = self.mktemp()
+        self.golden_url = 'sqlite:///%s' % self.golden_path
+        db_api.db_sync(self.golden_url)
+        self.working_path = self.mktemp()
+        self.working_url = 'sqlite:///%s' % self.working_path
+
+    def setUp(self):
+        super(DatabaseFixture, self).setUp()
+        shutil.copy(self.golden_path, self.working_path)
+
+    def cleanup(self):
+        if os.path.exists(self.working_path):
+            os.remove(self.working_path)
+
+
 class SenlinTestCase(testscenarios.WithScenarios,
                      testtools.TestCase, FakeLogMixin):
 
@@ -76,8 +113,13 @@ class SenlinTestCase(testscenarios.WithScenarios,
         messaging.setup("fake://", optional=True)
         self.addCleanup(messaging.cleanup)
 
-        utils.setup_dummy_db()
-        self.addCleanup(utils.reset_dummy_db)
+        self.db_fixture = self.useFixture(DatabaseFixture.get_fixture())
+        self.addCleanup(self.db_fixture.cleanup)
+
+        options.cfg.set_defaults(
+            options.database_opts, sqlite_synchronous=False
+        )
+        options.set_defaults(cfg.CONF, connection=self.db_fixture.working_url)
 
     def stub_wallclock(self):
         # Overrides scheduler wallclock to speed up tests expecting timeouts.
