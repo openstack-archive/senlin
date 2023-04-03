@@ -11,6 +11,8 @@
         - senlin-tempest-api-ipv6-only
         - senlin-dsvm-tempest-py3-functional
         - senlin-dsvm-tempest-py3-integration
+        - senlin-dsvm-tempest-py3-integration-zaqar:
+            voting: false
         - openstack-tox-cover:
             voting: false
     gate:
@@ -83,7 +85,6 @@
     vars:
       tempest_test_regex: senlin_tempest_plugin.tests.integration(?!\.test_nova_server_cluster.TestNovaServerCluster).*
       devstack_plugins:
-        # zaqar: https://opendev.org/openstack/zaqar
         heat: https://opendev.org/openstack/heat
       devstack_localrc:
         USE_PYTHON3: true
@@ -99,8 +100,31 @@
       - openstack/python-zaqarclient
       - openstack/senlin
       - openstack/senlin-tempest-plugin
-      # - openstack/zaqar
-      # - openstack/zaqar-ui
+      - openstack/zaqar-tempest-plugin
+
+- job:
+    name: senlin-dsvm-tempest-py3-integration-zaqar
+    parent: senlin-tempest-base
+    vars:
+      tempest_test_regex: senlin_tempest_plugin.tests.integration.test_nova_server_cluster.TestNovaServerCluster
+      devstack_plugins:
+        zaqar: https://opendev.org/openstack/zaqar
+        heat: https://opendev.org/openstack/heat
+      devstack_localrc:
+        USE_PYTHON3: true
+        TEMPEST_PLUGINS: '"/opt/stack/senlin-tempest-plugin /opt/stack/zaqar-tempest-plugin"'
+      devstack_local_conf:
+        post-config:
+          $SENLIN_CONF:
+             DEFAULT:
+               health_check_interval_min: 10
+    required-projects:
+      - openstack/heat
+      - openstack/python-zaqarclient
+      - openstack/senlin
+      - openstack/senlin-tempest-plugin
+      - openstack/zaqar
+      - openstack/zaqar-ui
       - openstack/zaqar-tempest-plugin
 
 - job:
