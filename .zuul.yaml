@@ -15,9 +15,9 @@
             voting: false
     gate:
       jobs:
-        - senlin-dsvm-tempest-py35-api
+        - senlin-dsvm-tempest-py3-api
         - senlin-tempest-api-ipv6-only
-        - senlin-dsvm-tempest-py35-functional
+        - senlin-dsvm-tempest-py3-functional
 
 - job:
     name: senlin-tempest-base
