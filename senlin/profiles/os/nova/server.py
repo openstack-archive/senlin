@@ -32,9 +32,13 @@ LOG = logging.getLogger(__name__)
 class ServerProfile(base.Profile):
     """Profile for an OpenStack Nova server."""
 
+    VERSION = '1.1'
     VERSIONS = {
         '1.0': [
             {'status': consts.SUPPORTED, 'since': '2016.04'}
+        ],
+        '1.1': [
+            {'status': consts.SUPPORTED, 'since': '2023.04'}
         ]
     }
 
@@ -65,10 +69,10 @@ class ServerProfile(base.Profile):
 
     NETWORK_KEYS = (
         PORT, VNIC_TYPE, FIXED_IP, NETWORK, PORT_SECURITY_GROUPS,
-        FLOATING_NETWORK, FLOATING_IP,
+        FLOATING_NETWORK, FLOATING_IP, SUBNET
     ) = (
         'port', 'vnic_type', 'fixed_ip', 'network', 'security_groups',
-        'floating_network', 'floating_ip',
+        'floating_network', 'floating_ip', 'subnet'
     )
 
     PERSONALITY_KEYS = (
@@ -201,6 +205,10 @@ class ServerProfile(base.Profile):
                     ),
                     FLOATING_IP: schema.String(
                         _('The floating IP address to be associated with '
+                          'this port.'),
+                    ),
+                    SUBNET: schema.String(
+                        _('Subnet in which to allocate the IP address for '
                           'this port.'),
                     ),
                 },
@@ -531,6 +539,25 @@ class ServerProfile(base.Profile):
         except exc.InternalError as ex:
             return str(ex)
 
+    def _check_subnet(self, nc, subnet, result):
+        """Check the specified subnet.
+
+        :param nc: network driver connection.
+        :param subnet: the name or ID of subnet to check.
+        :param result: the result that is used as return value.
+        :returns: None if succeeded or an error message if things go wrong.
+        """
+        if subnet is None:
+            return
+        try:
+            net_obj = nc.subnet_get(subnet)
+            if net_obj is None:
+                return _("The specified subnet %s could not be found."
+                         ) % subnet
+            result[self.SUBNET] = net_obj.id
+        except exc.InternalError as ex:
+            return str(ex)
+
     def _check_port(self, nc, port, result):
         """Check the specified port.
 
@@ -614,6 +641,11 @@ class ServerProfile(base.Profile):
         error = self._check_network(nc, net, result)
         _verify(error)
 
+        # check subnet
+        subnet_net = net_spec.get(self.SUBNET)
+        error = self._check_subnet(nc, subnet_net, result)
+        _verify(error)
+
         # check port
         port = net_spec.get(self.PORT)
         error = self._check_port(nc, port, result)
@@ -667,9 +699,15 @@ class ServerProfile(base.Profile):
         port_attr = {
             'network_id': net_spec.get(self.NETWORK),
         }
+        fixed_ips = {}
         fixed_ip = net_spec.get(self.FIXED_IP, None)
         if fixed_ip:
-            port_attr['fixed_ips'] = [fixed_ip]
+            fixed_ips['fixed_ip'] = fixed_ip
+        subnet = net_spec.get(self.SUBNET, None)
+        if subnet:
+            fixed_ips['subnet_id'] = subnet
+        if fixed_ips:
+            port_attr['fixed_ips'] = [fixed_ips]
         security_groups = net_spec.get(self.PORT_SECURITY_GROUPS, [])
         if security_groups:
             port_attr['security_groups'] = security_groups
@@ -1414,7 +1452,8 @@ class ServerProfile(base.Profile):
                                 self._nw_compare(n, nw, 'port') and
                                 self._nw_compare(n, nw, 'fixed_ip') and
                                 self._nw_compare(n, nw, 'floating_network') and
-                                self._nw_compare(n, nw, 'floating_ip'))]
+                                self._nw_compare(n, nw, 'floating_ip') and
+                                self._nw_compare(n, nw, 'subnet'))]
             for n in sg_create_nw:
                 # don't create networks with only security group changes
                 LOG.debug("Network %s only has security group changes, "

@@ -1317,37 +1317,37 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         networks_create = [
             {'floating_network': None, 'network': 'net1', 'fixed_ip': 'ip2',
              'floating_ip': None, 'port': None, 'vnic_type': None,
-             'security_groups': None},
+             'security_groups': None, 'subnet': None},
             {'floating_network': None, 'network': 'net2', 'fixed_ip': None,
              'floating_ip': None, 'port': None, 'vnic_type': None,
-             'security_groups': None},
+             'security_groups': None, 'subnet': None},
             {'floating_network': None, 'network': None, 'fixed_ip': None,
              'floating_ip': None, 'port': 'port4', 'vnic_type': None,
-             'security_groups': None}
+             'security_groups': None, 'subnet': None}
         ]
         mock_create.assert_called_once_with(obj, networks_create)
         networks_delete = [
             {'floating_network': None, 'network': 'net1', 'fixed_ip': 'ip1',
              'floating_ip': None, 'port': None, 'vnic_type': None,
-             'security_groups': None},
+             'security_groups': None, 'subnet': None},
             {'floating_network': None, 'network': 'net1', 'fixed_ip': None,
              'floating_ip': None, 'port': None, 'vnic_type': None,
-             'security_groups': None},
+             'security_groups': None, 'subnet': None},
             {'floating_network': None, 'network': None, 'fixed_ip': None,
              'floating_ip': None, 'port': 'port3', 'vnic_type': None,
-             'security_groups': None}
+             'security_groups': None, 'subnet': None}
         ]
         mock_delete.assert_called_once_with(obj, networks_delete)
         networks_update = [
             {'network': 'net3', 'port': None, 'fixed_ip': 'ip1',
              'security_groups': ['default'], 'floating_network': None,
-             'vnic_type': None, 'floating_ip': None},
+             'vnic_type': None, 'floating_ip': None, 'subnet': None},
             {'network': 'net4', 'port': None, 'fixed_ip': 'ip1',
              'security_groups': ['default'], 'floating_network': None,
-             'vnic_type': None, 'floating_ip': None},
+             'vnic_type': None, 'floating_ip': None, 'subnet': None},
             {'network': None, 'port': 'port5', 'fixed_ip': None,
              'security_groups': ['default', 'blah'], 'floating_network': None,
-             'vnic_type': None, 'floating_ip': None}
+             'vnic_type': None, 'floating_ip': None, 'subnet': None}
         ]
         mock_update.assert_called_once_with(obj, networks_update)
 

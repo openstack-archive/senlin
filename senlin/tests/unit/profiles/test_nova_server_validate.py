@@ -41,6 +41,7 @@ spec = {
             'vnic_type': 'direct',
             'fixed_ip': 'FAKE_IP',
             'network': 'FAKE_NET',
+            'subnet': 'FAKE_SUBNET',
         }],
         'scheduler_hints': {
             'same_host': 'HOST_ID',

@@ -437,7 +437,8 @@ class TestNovaServerBasic(base.SenlinTestCase):
             'fixed_ip': None,
             'floating_ip': None,
             'port': None,
-            'security_groups': None
+            'security_groups': None,
+            'subnet': None
         }
         mock_net.assert_called_once_with(
             node_obj, expect_params, 'create')
