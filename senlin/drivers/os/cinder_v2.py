@@ -48,3 +48,16 @@ class CinderClient(base.DriverBase):
     @sdk.translate_exception
     def snapshot_get(self, snapshot):
         return self.conn.block_store.get_snapshot(snapshot)
+
+    @sdk.translate_exception
+    def volume_type_get(self, volume_type):
+        return self.conn.block_store.get_type(volume_type)
+
+    @sdk.translate_exception
+    def volume_type_create(self, **attr):
+        return self.conn.block_store.create_type(**attr)
+
+    @sdk.translate_exception
+    def volume_type_delete(self, volume_type, ignore_missing=True):
+        return self.conn.block_store.delete_type(volume_type,
+                                                 ignore_missing=ignore_missing)

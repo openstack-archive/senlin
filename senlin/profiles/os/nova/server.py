@@ -32,13 +32,16 @@ LOG = logging.getLogger(__name__)
 class ServerProfile(base.Profile):
     """Profile for an OpenStack Nova server."""
 
-    VERSION = '1.1'
+    VERSION = '1.2'
     VERSIONS = {
         '1.0': [
             {'status': consts.SUPPORTED, 'since': '2016.04'}
         ],
         '1.1': [
             {'status': consts.SUPPORTED, 'since': '2023.04'}
+        ],
+        '1.2': [
+            {'status': consts.SUPPORTED, 'since': '2023.07'}
         ]
     }
 
@@ -60,11 +63,11 @@ class ServerProfile(base.Profile):
         BDM2_UUID, BDM2_SOURCE_TYPE, BDM2_DESTINATION_TYPE,
         BDM2_DISK_BUS, BDM2_DEVICE_NAME, BDM2_VOLUME_SIZE,
         BDM2_GUEST_FORMAT, BDM2_BOOT_INDEX, BDM2_DEVICE_TYPE,
-        BDM2_DELETE_ON_TERMINATION,
+        BDM2_DELETE_ON_TERMINATION, BDM2_VOLUME_TYPE,
     ) = (
         'uuid', 'source_type', 'destination_type', 'disk_bus',
         'device_name', 'volume_size', 'guest_format', 'boot_index',
-        'device_type', 'delete_on_termination',
+        'device_type', 'delete_on_termination', 'volume_type'
     )
 
     NETWORK_KEYS = (
@@ -145,6 +148,9 @@ class ServerProfile(base.Profile):
                     BDM2_DELETE_ON_TERMINATION: schema.Boolean(
                         _('Whether to delete the volume when the server '
                           'stops.'),
+                    ),
+                    BDM2_VOLUME_TYPE: schema.String(
+                        _('Id or name of volume type.'),
                     ),
                 }
             ),
@@ -448,6 +454,23 @@ class ServerProfile(base.Profile):
             else:
                 raise
 
+    def _validate_volume_type(self, obj, name_or_id, reason=None):
+        try:
+            return self.block_storage(obj).volume_type_get(name_or_id, False)
+        except exc.InternalError as ex:
+            if reason == 'create':
+                raise exc.EResourceCreation(type='server',
+                                            message=str(ex))
+            elif reason == 'update':
+                raise exc.EResourceUpdate(type='server', id=obj.physical_id,
+                                          message=str(ex))
+            elif ex.code == 404:
+                msg = _("The specified volume type '%(k)s' could not be found."
+                        ) % {'k': name_or_id}
+                raise exc.InvalidSpec(message=msg)
+            else:
+                raise
+
     def do_validate(self, obj):
         """Validate if the spec has provided valid info for server creation.
 
@@ -484,6 +507,9 @@ class ServerProfile(base.Profile):
             for key in self.BDM2_KEYS:
                 if bd[key] is None:
                     del bd[key]
+            if 'volume_type' in bd:
+                bd['volume_type'] = self._validate_volume_type(
+                    bd['volume_type'])
             if 'uuid' in bd and 'source_type' in bd:
                 if bd['source_type'] == 'image':
                     self._validate_image(obj, bd['uuid'], reason)

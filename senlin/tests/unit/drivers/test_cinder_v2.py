@@ -80,3 +80,26 @@ class TestCinderV2(base.SenlinTestCase):
     def test_snapshot_get(self):
         self.vo.snapshot_get('foo')
         self.volume.get_snapshot.assert_called_once_with('foo')
+
+    def test_volume_type_create(self):
+        self.vo.volume_type_create(name='foo')
+        self.volume.create_type.assert_called_once_with(name='foo')
+
+    def test_volume_type_delete(self):
+        self.vo.volume_type_delete('foo', True)
+        self.volume.delete_type.assert_called_once_with(
+            'foo', ignore_missing=True)
+        self.volume.delete_type.reset_mock()
+
+        self.vo.volume_type_delete('foo', False)
+        self.volume.delete_type.assert_called_once_with(
+            'foo', ignore_missing=False)
+
+        self.volume.delete_type.reset_mock()
+        self.vo.volume_type_delete('foo')
+        self.volume.delete_type.assert_called_once_with(
+            'foo', ignore_missing=True)
+
+    def test_volume_type_get(self):
+        self.vo.volume_type_get('foo')
+        self.volume.get_type.assert_called_once_with('foo')
