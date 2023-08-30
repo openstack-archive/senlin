@@ -1,0 +1,4 @@
+---
+others:
+  - Sqlalchemy-migrate is no longer supported and we switch to alembic
+    for database migrations.
