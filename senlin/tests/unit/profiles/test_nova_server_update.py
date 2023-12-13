@@ -506,7 +506,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
             mock.call(obj, 'new_flavor', 'update'),
         ])
         cc.server_resize.assert_not_called()
-        cc.wait_for_server.has_calls([
+        cc.wait_for_server.assert_has_calls([
             mock.call('NOVA_ID', consts.VS_SHUTOFF, timeout=600)])
         self.assertEqual("Failed in updating server 'NOVA_ID': "
                          "TIMEOUT.", str(ex))
@@ -543,7 +543,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
             mock.call(obj, 'new_flavor', 'update'),
         ])
         cc.server_resize.assert_called_once_with('NOVA_ID', '456')
-        cc.wait_for_server.has_calls([
+        cc.wait_for_server.assert_has_calls([
             mock.call('NOVA_ID', consts.VS_SHUTOFF, timeout=600),
             mock.call('NOVA_ID', 'VERIFY_RESIZE'),
             mock.call('NOVA_ID', consts.VS_SHUTOFF),
@@ -584,7 +584,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         ])
         cc.server_resize.assert_called_once_with('NOVA_ID', '456')
         cc.server_resize_revert.assert_called_once_with('NOVA_ID')
-        cc.wait_for_server.has_calls([
+        cc.wait_for_server.assert_has_calls([
             mock.call('NOVA_ID', consts.VS_SHUTOFF, timeout=600),
         ])
         self.assertEqual("Failed in updating server 'NOVA_ID': "
@@ -617,7 +617,7 @@ class TestNovaServerUpdate(base.SenlinTestCase):
         ])
         cc.server_resize.assert_called_once_with('NOVA_ID', '456')
         cc.server_resize_confirm.assert_called_once_with('NOVA_ID')
-        cc.wait_for_server.has_calls([
+        cc.wait_for_server.assert_has_calls([
             mock.call('NOVA_ID', consts.VS_SHUTOFF, timeout=600),
             mock.call('NOVA_ID', 'VERIFY_RESIZE'),
         ])
