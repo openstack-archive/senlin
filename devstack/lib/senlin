@@ -196,9 +196,12 @@ function _config_senlin_apache_wsgi {
 
 # init_senlin() - Initialize database
 function init_senlin {
-
     # (re)create senlin database
     recreate_database senlin utf8
+
+    if [[ "$USE_SQLALCHEMY_LATEST" == "True" ]]; then
+        pip3 install --upgrade alembic sqlalchemy
+    fi
 
     $SENLIN_BIN_DIR/senlin-manage db_sync
     create_senlin_cache_dir

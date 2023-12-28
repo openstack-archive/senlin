@@ -20,6 +20,7 @@ from oslo_upgradecheck import upgradecheck
 
 from senlin.common.i18n import _
 from senlin.db import api
+from senlin.db.sqlalchemy import api as sql_api
 
 from sqlalchemy import MetaData, Table, select, column
 
@@ -42,15 +43,19 @@ class Checks(upgradecheck.UpgradeCommands):
         """
 
         engine = api.get_engine()
-        metadata = MetaData(bind=engine)
-        policy = Table('policy', metadata, autoload=True)
+        metadata = MetaData()
+        metadata.bind = engine
+
+        policy = Table('policy', metadata, autoload_with=engine)
 
         healthpolicy_select = (
-            select([column('name')])
+            select(column('name'))
             .select_from(policy)
             .where(column('type') == 'senlin.policy.health-1.0')
         )
-        healthpolicy_rows = engine.execute(healthpolicy_select).fetchall()
+
+        with sql_api.session_for_read() as session:
+            healthpolicy_rows = session.execute(healthpolicy_select).fetchall()
 
         if not healthpolicy_rows:
             return upgradecheck.Result(upgradecheck.Code.SUCCESS)

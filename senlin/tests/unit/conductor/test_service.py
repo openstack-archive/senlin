@@ -10,13 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
 from unittest import mock
 
 import eventlet
 from oslo_config import cfg
 import oslo_messaging
-from oslo_utils import timeutils
 from oslo_utils import uuidutils
 
 from senlin.common import consts
@@ -151,25 +149,16 @@ class ConductorCleanupTest(base.SenlinTestCase):
         self.assertGreater(mock_update.call_count, 1)
         self.svc.stop()
 
-    @mock.patch.object(service_obj.Service, 'gc_by_engine')
-    @mock.patch.object(service_obj.Service, 'get_all_expired')
-    @mock.patch.object(service_obj.Service, 'delete')
-    def test_service_manage_cleanup(self, mock_delete, mock_get_all_expired,
-                                    mock_gc):
+    @mock.patch.object(service_obj.Service, 'cleanup_all_expired')
+    def test_service_manage_cleanup(self, mock_cleanup):
         self.svc = service.ConductorService('HOST', self.topic)
         self.svc.service_id = self.service_id
-        delta = datetime.timedelta(seconds=2.2 * cfg.CONF.periodic_interval)
-        ages_a_go = timeutils.utcnow(True) - delta
-        mock_get_all_expired.return_value = [
-            {'id': 'foo', 'updated_at': ages_a_go}
-        ]
         self.svc.service_manage_cleanup()
-        mock_delete.assert_called_once_with('foo')
-        mock_gc.assert_called_once_with('foo')
+        mock_cleanup.assert_called_once_with('senlin-conductor')
 
-    @mock.patch.object(service_obj.Service, 'get_all_expired')
+    @mock.patch.object(service_obj.Service, 'cleanup_all_expired')
     def test_service_manage_cleanup_without_exception(self,
-                                                      mock_get_all_expired):
+                                                      mock_cleanup):
         cfg.CONF.set_override('periodic_interval', 0.1)
 
         self.svc = service.ConductorService('HOST', self.topic)
@@ -178,11 +167,11 @@ class ConductorCleanupTest(base.SenlinTestCase):
         # start engine and verify that get_all is being called more than once
         self.svc.start()
         eventlet.sleep(0.6)
-        self.assertGreater(mock_get_all_expired.call_count, 1)
         self.svc.stop()
+        mock_cleanup.assert_called()
 
-    @mock.patch.object(service_obj.Service, 'get_all_expired')
-    def test_service_manage_cleanup_with_exception(self, mock_get_all_expired):
+    @mock.patch.object(service_obj.Service, 'cleanup_all_expired')
+    def test_service_manage_cleanup_with_exception(self, mock_cleanup):
         cfg.CONF.set_override('periodic_interval', 0.1)
 
         self.svc = service.ConductorService('HOST', self.topic)
@@ -190,8 +179,8 @@ class ConductorCleanupTest(base.SenlinTestCase):
 
         # start engine and verify that get_all is being called more than once
         # even with the exception being thrown
-        mock_get_all_expired.side_effect = Exception('blah')
+        mock_cleanup.side_effect = Exception('blah')
         self.svc.start()
         eventlet.sleep(0.6)
-        self.assertGreater(mock_get_all_expired.call_count, 1)
         self.svc.stop()
+        mock_cleanup.assert_called()

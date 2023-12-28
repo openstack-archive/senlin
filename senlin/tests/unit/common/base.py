@@ -78,17 +78,15 @@ class DatabaseFixture(fixtures.Fixture):
         super(DatabaseFixture, self).__init__()
         self.golden_path = self.mktemp()
         self.golden_url = 'sqlite:///%s' % self.golden_path
+
         db_api.db_sync(self.golden_url)
+
         self.working_path = self.mktemp()
         self.working_url = 'sqlite:///%s' % self.working_path
 
     def setUp(self):
         super(DatabaseFixture, self).setUp()
         shutil.copy(self.golden_path, self.working_path)
-
-    def cleanup(self):
-        if os.path.exists(self.working_path):
-            os.remove(self.working_path)
 
 
 class SenlinTestCase(testscenarios.WithScenarios,
@@ -114,7 +112,6 @@ class SenlinTestCase(testscenarios.WithScenarios,
         self.addCleanup(messaging.cleanup)
 
         self.db_fixture = self.useFixture(DatabaseFixture.get_fixture())
-        self.addCleanup(self.db_fixture.cleanup)
 
         options.cfg.set_defaults(
             options.database_opts, sqlite_synchronous=False

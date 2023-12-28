@@ -90,29 +90,7 @@ class Service(service.Service):
     def service_manage_cleanup(self):
         self.cleanup_count += 1
         try:
-            ctx = senlin_context.get_admin_context()
-            services = service_obj.Service.get_all_expired(
-                ctx, self.name
-            )
-            for svc in services:
-                LOG.info(
-                    'Breaking locks for dead service %(name)s '
-                    '(id: %(service_id)s)',
-                    {
-                        'name': self.name,
-                        'service_id': svc['id'],
-                    }
-                )
-                service_obj.Service.gc_by_engine(svc['id'])
-                LOG.info(
-                    'Done breaking locks for service %(name)s '
-                    '(id: %(service_id)s)',
-                    {
-                        'name': self.name,
-                        'service_id': svc['id'],
-                    }
-                )
-                service_obj.Service.delete(svc['id'])
+            service_obj.Service.cleanup_all_expired(self.name)
         except Exception as ex:
             LOG.error(
                 'Error while cleaning up service %(name)s: %(ex)s',

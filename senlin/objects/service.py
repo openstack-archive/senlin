@@ -49,9 +49,8 @@ class Service(base.SenlinObject, base.VersionedObjectDictCompat):
         return [cls._from_db_object(context, cls(), obj) for obj in objs]
 
     @classmethod
-    def get_all_expired(cls, context, binary):
-        objs = db_api.service_get_all_expired(binary)
-        return [cls._from_db_object(context, cls(), obj) for obj in objs]
+    def cleanup_all_expired(cls, binary):
+        db_api.service_cleanup_all_expired(binary)
 
     @classmethod
     def update(cls, context, obj_id, values=None):

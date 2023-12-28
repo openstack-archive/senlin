@@ -8,8 +8,10 @@
     check:
       jobs:
         - senlin-dsvm-tempest-py3-api
+        - senlin-dsvm-tempest-py3-api-sqlalchemy-2x
         - senlin-tempest-api-ipv6-only
         - senlin-dsvm-tempest-py3-functional
+        - senlin-dsvm-tempest-py3-functional-sqlalchemy-2x
         - senlin-dsvm-tempest-py3-integration
         - senlin-dsvm-tempest-py3-integration-zaqar:
             voting: false
@@ -66,12 +68,45 @@
                cloud_backend: openstack_test
 
 - job:
+    name: senlin-dsvm-tempest-py3-api-sqlalchemy-2x
+    parent: senlin-tempest-base
+    required-projects:
+      - name: openstack/oslo.db
+    vars:
+      tempest_test_regex: senlin_tempest_plugin.tests.api
+      devstack_localrc:
+        USE_PYTHON3: true
+        USE_SQLALCHEMY_LATEST: true
+      devstack_local_conf:
+        post-config:
+          $SENLIN_CONF:
+             DEFAULT:
+               cloud_backend: openstack_test
+
+- job:
     name: senlin-dsvm-tempest-py3-functional
     parent: senlin-tempest-base
     vars:
       tempest_test_regex: senlin_tempest_plugin.tests.functional
       devstack_localrc:
         USE_PYTHON3: true
+      devstack_local_conf:
+        post-config:
+          $SENLIN_CONF:
+             DEFAULT:
+               cloud_backend: openstack_test
+               health_check_interval_min: 10
+
+- job:
+    name: senlin-dsvm-tempest-py3-functional-sqlalchemy-2x
+    parent: senlin-tempest-base
+    required-projects:
+      - name: openstack/oslo.db
+    vars:
+      tempest_test_regex: senlin_tempest_plugin.tests.functional
+      devstack_localrc:
+        USE_PYTHON3: true
+        USE_SQLALCHEMY_LATEST: true
       devstack_local_conf:
         post-config:
           $SENLIN_CONF:
@@ -143,4 +178,3 @@
           $SENLIN_CONF:
              DEFAULT:
                cloud_backend: openstack_test
-
