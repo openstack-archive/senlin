@@ -330,6 +330,26 @@ class GetSocketTestCase(base.SenlinTestCase):
         self.assertRaises(wsgi.socket.error, wsgi.get_socket,
                           wsgi.cfg.CONF.senlin_api, 1234)
 
+    def test_run_server_with_unexpected_socket_errno(self):
+        mock_server = mock.Mock(side_effect=wsgi.socket.error())
+        mock_server.side_effect.errno = socket.errno.ENOMEM
+        self.useFixture(fixtures.MonkeyPatch(
+            'senlin.api.common.wsgi.eventlet.wsgi.server', mock_server))
+
+        wsgi.cfg.CONF.senlin_api.workers = 1
+        wsgi.cfg.CONF.debug = False
+        server = wsgi.Server(name='senlin-api', conf=cfg.CONF.senlin_api)
+        server.sock = mock.Mock()
+        server.application = mock.Mock()
+
+        exc = self.assertRaises(wsgi.socket.error, server.run_server)
+        self.assertEqual(socket.errno.ENOMEM, exc.errno)
+
+        mock_server.side_effect = wsgi.socket.error()
+        mock_server.side_effect.errno = socket.errno.EINVAL
+
+        server.run_server()
+
 
 class FakeController(wsgi.Controller):
 

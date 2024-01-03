@@ -52,7 +52,7 @@ VER_METHOD_ATTR = 'versioned_methods'
 
 
 def get_bind_addr(conf, default_port=None):
-    return (conf.bind_host, conf.bind_port or default_port)
+    return conf.bind_host, conf.bind_port or default_port
 
 
 def get_socket(conf, default_port):
@@ -376,7 +376,7 @@ class Server(object):
                 keepalive=cfg.CONF.senlin_api.wsgi_keep_alive,
                 socket_timeout=socket_timeout)
         except socket.error as err:
-            if err[0] != errno.EINVAL:
+            if err.errno != errno.EINVAL:
                 raise
 
         self.pool.waitall()
@@ -566,7 +566,7 @@ class Resource(object):
                                                  action, request)
             action_args.update(deserialized_request)
 
-            LOG.debug(('Calling %(controller)s : %(action)s'),
+            LOG.debug('Calling %(controller)s : %(action)s',
                       {'controller': self.controller, 'action': action})
 
             action_result = self.dispatch(self.controller, action,
