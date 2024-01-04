@@ -28,6 +28,7 @@ from senlin.common.i18n import _
 from senlin.common import scaleutils
 from senlin.common import schema
 from senlin.engine import cluster_policy
+from senlin.objects import cluster as co
 from senlin.objects import node as no
 from senlin.policies import base
 
@@ -663,6 +664,15 @@ class LoadBalancingPolicy(base.Policy):
         :param action: The action object that triggered this operation.
         :returns: Nothing.
         """
+
+        cluster = co.Cluster.get(oslo_context.get_current(), cluster_id)
+        # Skip pre_op if cluster is already at min size
+        # except in the case of node replacement
+        if (
+            cluster.desired_capacity == cluster.min_size and
+                action.action != consts.CLUSTER_REPLACE_NODES
+        ):
+            return
 
         candidates = self._get_delete_candidates(cluster_id, action)
         if len(candidates) == 0:

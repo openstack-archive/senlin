@@ -20,6 +20,7 @@ from senlin.common import exception as exc
 from senlin.common import scaleutils
 from senlin.drivers import base as driver_base
 from senlin.engine import cluster_policy
+from senlin.objects import cluster as co
 from senlin.objects import node as no
 from senlin.policies import base as policy_base
 from senlin.policies import lb_policy
@@ -972,16 +973,27 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_add_member')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_get_delete_candidates')
-    def test_pre_op_node_replace(self, m_get, m_remove, m_add,
-                                 m_candidates, m_load):
+    @mock.patch.object(co.Cluster, 'get')
+    def test_pre_op_node_replace(
+        self, m_cluster_get, m_get, m_remove, m_add, m_candidates, m_load
+    ):
         ctx = mock.Mock()
-        cid = 'CLUSTER_ID'
-        cluster = mock.Mock(user='user1', project='project1')
-        action = mock.Mock(data={}, context=ctx,
-                           action=consts.CLUSTER_REPLACE_NODES,
-                           inputs={'candidates': {
-                               'OLD_NODE_ID': 'NEW_NODE_ID'}})
-        action.entity = cluster
+        cluster_id = 'CLUSTER_ID'
+        cluster = mock.Mock(
+            user='user1',
+            project='project1',
+            desired_capacity=5,
+            min_size=0
+        )
+        action = mock.Mock(
+            data={},
+            context=ctx,
+            action=consts.CLUSTER_REPLACE_NODES,
+            inputs={'candidates': {'OLD_NODE_ID': 'NEW_NODE_ID'}},
+            entity=cluster
+        )
+
+        m_cluster_get.return_value = cluster
         cp = mock.Mock()
         m_load.return_value = cp
         m_add.return_value = []
@@ -989,15 +1001,15 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
         policy._lbaasclient = self.lb_driver
-        # do it
-        res = policy.pre_op(cid, action)
+        res = policy.pre_op(cluster_id, action)
 
         # assertion
         self.assertIsNone(res)
-        m_get.assert_called_once_with(cid, action)
-        m_load.assert_called_once_with(ctx, cid, policy.id)
-        m_remove.assert_called_once_with(ctx, ['OLD_NODE_ID'],
-                                         cp, self.lb_driver)
+        m_get.assert_called_once_with(cluster_id, action)
+        m_load.assert_called_once_with(ctx, cluster_id, policy.id)
+        m_remove.assert_called_once_with(
+            ctx, ['OLD_NODE_ID'], cp, self.lb_driver
+        )
 
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_add_member')
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
@@ -1273,43 +1285,67 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         self.assertEqual(['NODE1'], res)
 
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
-    def test_pre_op_del_nodes_ok(self, m_remove, m_candidates, m_load):
+    @mock.patch.object(co.Cluster, 'get')
+    def test_pre_op_del_nodes_ok(
+        self, m_cluster_get, m_remove, m_candidates, m_load
+    ):
         cluster_id = 'CLUSTER_ID'
-        cluster = mock.Mock(user='user1', project='project1')
+        cluster = mock.Mock(
+            user='user1',
+            project='project1',
+            desired_capacity=5,
+            min_size=0
+        )
         action = mock.Mock(
-            context='action_context', action=consts.CLUSTER_DEL_NODES,
+            context='action_context',
+            action=consts.CLUSTER_DEL_NODES,
+            entity=cluster,
             data={
                 'deletion': {
                     'count': 2,
                     'candidates': ['NODE1_ID', 'NODE2_ID']
                 }
-            })
-        action.entity = cluster
+            }
+        )
+
+        m_cluster_get.return_value = cluster
         m_candidates.return_value = ['NODE1_ID', 'NODE2_ID']
-        cp = mock.Mock()
-        m_load.return_value = cp
+        m_load.return_value = mock.Mock()
         m_remove.return_value = []
+
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
         policy._lbaasclient = self.lb_driver
-
         res = policy.pre_op(cluster_id, action)
+
         self.assertIsNone(res)
-
         m_load.assert_called_once_with('action_context', cluster_id, policy.id)
-
-        expected_data = {'deletion': {'candidates': ['NODE1_ID', 'NODE2_ID'],
-                                      'count': 2}}
+        expected_data = {
+            'deletion': {
+                'candidates': ['NODE1_ID', 'NODE2_ID'], 'count': 2
+            }
+        }
         self.assertEqual(expected_data, action.data)
 
     @mock.patch.object(lb_policy.LoadBalancingPolicy, '_remove_member')
-    def test_pre_op_del_nodes_failed(self, m_remove, m_candidates, m_load):
+    @mock.patch.object(co.Cluster, 'get')
+    def test_pre_op_del_nodes_failed(
+        self, m_cluster_get, m_remove, *args, **kwargs
+    ):
         cluster_id = 'CLUSTER_ID'
-        cluster = mock.Mock(user='user1', project='project1')
+        cluster = mock.Mock(
+            user='user1',
+            project='project1',
+            desired_capacity=5,
+            min_size=0
+        )
         action = mock.Mock(
             action=consts.CLUSTER_RESIZE,
             context='action_context',
-            data={'deletion': {'candidates': ['NODE1_ID']}})
-        action.entity = cluster
+            data={'deletion': {'candidates': ['NODE1_ID']}},
+            entity=cluster
+        )
+
+        m_cluster_get.return_value = cluster
         m_remove.return_value = ['NODE1_ID']
 
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
@@ -1318,8 +1354,10 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
 
         self.assertIsNone(res)
         self.assertEqual(policy_base.CHECK_ERROR, action.data['status'])
-        self.assertEqual("Failed in removing deleted node(s) from lb pool: "
-                         "['NODE1_ID']", action.data['reason'])
+        self.assertEqual(
+            "Failed in removing deleted node(s) from lb pool: ['NODE1_ID']",
+            action.data['reason']
+        )
 
         m_remove.assert_called_once_with(action.context, ['NODE1_ID'],
                                          mock.ANY, self.lb_driver)
@@ -1378,3 +1416,140 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         m_remove.assert_called_once_with(action.context, ['NODE'], cp,
                                          self.lb_driver, handle_err=False)
         m_update.assert_called_once_with(action.context, 'NODE', {'data': {}})
+
+    @mock.patch.object(
+        lb_policy.LoadBalancingPolicy, '_get_delete_candidates'
+    )
+    @mock.patch.object(co.Cluster, 'get')
+    def test_pre_op_cluster_del_nodes_at_min_threshold(
+        self, m_cluster_get, m_candidates, *args, **kwargs
+    ):
+        cluster = mock.Mock(
+            user='user1',
+            project='project1',
+            desired_capacity=1,
+            min_size=1
+        )
+        action = mock.Mock(
+            action=consts.CLUSTER_DEL_NODES,
+            entity=cluster,
+            context='action_context'
+        )
+
+        m_cluster_get.return_value = cluster
+
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        res = policy.pre_op(cluster_id='CLUSTER_ID', action=action)
+
+        self.assertIsNone(res)
+        m_candidates.assert_not_called()
+
+    @mock.patch.object(
+        lb_policy.LoadBalancingPolicy, '_get_delete_candidates'
+    )
+    @mock.patch.object(co.Cluster, 'get')
+    def test_pre_op_cluster_scale_in_at_min_threshold(
+        self, m_cluster_get, m_candidates, *args, **kwargs
+    ):
+        cluster = mock.Mock(
+            user='user1',
+            project='project1',
+            desired_capacity=1,
+            min_size=1
+        )
+        action = mock.Mock(
+            action=consts.CLUSTER_SCALE_IN,
+            entity=cluster,
+            context='action_context'
+        )
+
+        m_cluster_get.return_value = cluster
+
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        res = policy.pre_op(cluster_id='CLUSTER_ID', action=action)
+
+        self.assertIsNone(res)
+        m_candidates.assert_not_called()
+
+    @mock.patch.object(
+        lb_policy.LoadBalancingPolicy, '_get_delete_candidates'
+    )
+    @mock.patch.object(co.Cluster, 'get')
+    def test_pre_op_cluster_resize_at_min_threshold(
+        self, m_cluster_get, m_candidates, *args, **kwargs
+    ):
+        cluster = mock.Mock(
+            user='user1',
+            project='project1',
+            desired_capacity=1,
+            min_size=1
+        )
+        action = mock.Mock(
+            action=consts.CLUSTER_RESIZE,
+            entity=cluster,
+            context='action_context'
+        )
+
+        m_cluster_get.return_value = cluster
+
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        res = policy.pre_op(cluster_id='CLUSTER_ID', action=action)
+
+        self.assertIsNone(res)
+        m_candidates.assert_not_called()
+
+    @mock.patch.object(
+        lb_policy.LoadBalancingPolicy, '_get_delete_candidates'
+    )
+    @mock.patch.object(co.Cluster, 'get')
+    def test_pre_op_node_delete_at_min_threshold(
+        self, m_cluster_get, m_candidates, *args, **kwargs
+    ):
+        cluster = mock.Mock(
+            user='user1',
+            project='project1',
+            desired_capacity=1,
+            min_size=1
+        )
+        node = mock.Mock()
+        action = mock.Mock(
+            action=consts.NODE_DELETE,
+            entity=node,
+            context='action_context'
+        )
+
+        m_cluster_get.return_value = cluster
+
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        res = policy.pre_op(cluster_id='CLUSTER_ID', action=action)
+
+        self.assertIsNone(res)
+        m_candidates.assert_not_called()
+
+    @mock.patch.object(
+        lb_policy.LoadBalancingPolicy, '_get_delete_candidates'
+    )
+    @mock.patch.object(co.Cluster, 'get')
+    def test_pre_op_cluster_replace_at_min_threshold(
+        self, m_cluster_get, m_candidates, *args, **kwargs
+    ):
+        cluster_id = 'CLUSTER_ID'
+        cluster = mock.Mock(
+            user='user1',
+            project='project1',
+            desired_capacity=2,
+            min_size=2
+        )
+        action = mock.Mock(
+            action=consts.CLUSTER_REPLACE_NODES,
+            entity=cluster,
+            context='action_context',
+        )
+
+        m_cluster_get.return_value = cluster
+
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        res = policy.pre_op(cluster_id=cluster_id, action=action)
+
+        self.assertIsNone(res)
+        m_candidates.assert_called_once_with(cluster_id, action)
