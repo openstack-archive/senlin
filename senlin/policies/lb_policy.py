@@ -525,7 +525,7 @@ class LoadBalancingPolicy(base.Policy):
                 else:
                     count = action.data['deletion']['count']
             else:  # action.action == consts.CLUSTER_SCALE_IN
-                count = 1
+                count = action.inputs.get('count', 1)
         elif action.action == consts.CLUSTER_REPLACE_NODES:
             candidates = list(action.inputs['candidates'].keys())
             count = len(candidates)
