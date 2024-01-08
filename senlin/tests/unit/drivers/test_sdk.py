@@ -13,7 +13,7 @@
 import types
 from unittest import mock
 
-from openstack import connection
+import openstack
 from oslo_serialization import jsonutils
 from requests import exceptions as req_exc
 
@@ -127,7 +127,6 @@ class OpenStackSDKTest(base.SenlinTestCase):
         self.assertEqual('Unknown Error', str(ex))
 
     def test_translate_exception_wrapper(self):
-
         @sdk.translate_exception
         def test_func(driver):
             return driver.__name__
@@ -136,10 +135,9 @@ class OpenStackSDKTest(base.SenlinTestCase):
         self.assertEqual(types.FunctionType, type(res))
 
     def test_translate_exception_with_exception(self):
-
         @sdk.translate_exception
         def test_func(driver):
-            raise(Exception('test exception'))
+            raise (Exception('test exception'))
 
         error = senlin_exc.InternalError(code=500, message='BOOM')
         self.patchobject(sdk, 'parse_exception', side_effect=error)
@@ -149,24 +147,62 @@ class OpenStackSDKTest(base.SenlinTestCase):
         self.assertEqual(500, ex.code)
         self.assertEqual('BOOM', ex.message)
 
-    @mock.patch.object(connection, 'Connection')
+    @mock.patch.object(openstack, 'connect')
     def test_create_connection_token(self, mock_conn):
         x_conn = mock.Mock()
+        mock_session_client = mock.Mock()
+        x_conn.config.get_session_client.return_value = mock_session_client
         mock_conn.return_value = x_conn
+        mock_session_client.get_endpoint.return_value = 'https://FAKE_URL'
 
         res = sdk.create_connection({'token': 'TOKEN', 'foo': 'bar'})
 
         self.assertEqual(x_conn, res)
-        mock_conn.assert_called_once_with(
-            app_name=sdk.USER_AGENT, app_version=self.app_version,
-            identity_api_version='3',
-            messaging_api_version='2',
-            region_name=None,
-            auth_type='token',
-            token='TOKEN',
-            foo='bar')
+        calls = [
+            mock.call(
+                load_envvars=False,
+                load_yaml_config=False,
+                insecure=False,
+                cafile=None,
+                cert=None,
+                key=None,
+                app_name=sdk.USER_AGENT,
+                app_version=self.app_version,
+                auth_url='',
+                username='senlin',
+                password='',
+                project_name='service',
+                user_domain_name='Default',
+                project_domain_name='Default',
+                verify=True,
+                interface='public'
+            ),
+            mock.call().config.get_session_client(
+                service_type='identity',
+                region_name=None,
+                allow_version_hack=True
+            ),
+            mock.call().config.get_session_client().get_endpoint(
+                region_name=None, interface='public'),
+            mock.call(load_envvars=False,
+                      load_yaml_config=False,
+                      insecure=False,
+                      cafile=None,
+                      cert=None,
+                      key=None,
+                      app_name=sdk.USER_AGENT,
+                      app_version=self.app_version,
+                      token='TOKEN',
+                      foo='bar',
+                      region_name=None,
+                      identity_api_version='3',
+                      messaging_api_version='2',
+                      auth_type='admin_token',
+                      endpoint='https://FAKE_URL'),
+        ]
+        mock_conn.assert_has_calls(calls)
 
-    @mock.patch.object(connection, 'Connection')
+    @mock.patch.object(openstack, 'connect')
     def test_create_connection_password(self, mock_conn):
         x_conn = mock.Mock()
         mock_conn.return_value = x_conn
@@ -176,7 +212,14 @@ class OpenStackSDKTest(base.SenlinTestCase):
 
         self.assertEqual(x_conn, res)
         mock_conn.assert_called_once_with(
-            app_name=sdk.USER_AGENT, app_version=self.app_version,
+            load_envvars=False,
+            load_yaml_config=False,
+            insecure=False,
+            cafile=None,
+            cert=None,
+            key=None,
+            app_name=sdk.USER_AGENT,
+            app_version=self.app_version,
             identity_api_version='3',
             messaging_api_version='2',
             region_name=None,
@@ -184,7 +227,7 @@ class OpenStackSDKTest(base.SenlinTestCase):
             password='abc',
             foo='bar')
 
-    @mock.patch.object(connection, 'Connection')
+    @mock.patch.object(openstack, 'connect')
     def test_create_connection_with_region(self, mock_conn):
         x_conn = mock.Mock()
         mock_conn.return_value = x_conn
@@ -193,12 +236,19 @@ class OpenStackSDKTest(base.SenlinTestCase):
 
         self.assertEqual(x_conn, res)
         mock_conn.assert_called_once_with(
-            app_name=sdk.USER_AGENT, app_version=self.app_version,
+            load_envvars=False,
+            load_yaml_config=False,
+            insecure=False,
+            cafile=None,
+            cert=None,
+            key=None,
+            app_name=sdk.USER_AGENT,
+            app_version=self.app_version,
             identity_api_version='3',
             messaging_api_version='2',
             region_name='REGION_ONE')
 
-    @mock.patch.object(connection, 'Connection')
+    @mock.patch.object(openstack, 'connect')
     @mock.patch.object(sdk, 'parse_exception')
     def test_create_connection_with_exception(self, mock_parse, mock_conn):
         ex_raw = Exception('Whatever')
@@ -210,7 +260,14 @@ class OpenStackSDKTest(base.SenlinTestCase):
                                sdk.create_connection)
 
         mock_conn.assert_called_once_with(
-            app_name=sdk.USER_AGENT, app_version=self.app_version,
+            load_envvars=False,
+            load_yaml_config=False,
+            insecure=False,
+            cafile=None,
+            cert=None,
+            key=None,
+            app_name=sdk.USER_AGENT,
+            app_version=self.app_version,
             identity_api_version='3',
             messaging_api_version='2',
             region_name=None)

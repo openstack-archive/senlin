@@ -37,7 +37,8 @@ class TestNovaV2(base.SenlinTestCase):
 
     def test_init(self):
         d = nova_v2.NovaClient(self.conn_params)
-        self.mock_create.assert_called_once_with(self.conn_params)
+        self.mock_create.assert_called_once_with(self.conn_params,
+                                                 service_type='compute')
         self.assertEqual(self.mock_conn, d.conn)
 
     def test_flavor_find(self):

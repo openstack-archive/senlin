@@ -21,7 +21,7 @@ class HeatClient(base.DriverBase):
 
     def __init__(self, params):
         super(HeatClient, self).__init__(params)
-        self.conn = sdk.create_connection(params)
+        self.conn = sdk.create_connection(params, service_type='orchestration')
 
     @sdk.translate_exception
     def stack_create(self, **params):

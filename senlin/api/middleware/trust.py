@@ -44,7 +44,6 @@ class TrustMiddleware(wsgi.Middleware):
         params = {
             'auth_url': ctx.auth_url,
             'token': ctx.auth_token,
-            'project_id': ctx.project_id,
             'user_id': ctx.user_id,
         }
         kc = driver_base.SenlinDriver().identity(params)

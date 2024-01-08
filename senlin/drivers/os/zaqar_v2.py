@@ -21,7 +21,7 @@ class ZaqarClient(base.DriverBase):
 
     def __init__(self, params):
         super(ZaqarClient, self).__init__(params)
-        self.conn = sdk.create_connection(params)
+        self.conn = sdk.create_connection(params, service_type='messaging')
         self.session = self.conn.session
 
     @sdk.translate_exception

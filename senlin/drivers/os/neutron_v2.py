@@ -21,7 +21,7 @@ class NeutronClient(base.DriverBase):
 
     def __init__(self, params):
         super(NeutronClient, self).__init__(params)
-        self.conn = sdk.create_connection(params)
+        self.conn = sdk.create_connection(params, service_type='network')
 
     @sdk.translate_exception
     def network_get(self, name_or_id, ignore_missing=False):

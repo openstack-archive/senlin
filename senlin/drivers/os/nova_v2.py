@@ -26,7 +26,7 @@ class NovaClient(base.DriverBase):
 
     def __init__(self, params):
         super(NovaClient, self).__init__(params)
-        self.conn = sdk.create_connection(params)
+        self.conn = sdk.create_connection(params, service_type='compute')
         self.session = self.conn.session
 
     @sdk.translate_exception
