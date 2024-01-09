@@ -50,8 +50,9 @@ class CinderClient(base.DriverBase):
         return self.conn.block_store.get_snapshot(snapshot)
 
     @sdk.translate_exception
-    def volume_type_get(self, volume_type):
-        return self.conn.block_store.get_type(volume_type)
+    def volume_type_get(self, volume_type, ignore_missing=True):
+        return self.conn.block_store.find_type(volume_type,
+                                               ignore_missing=ignore_missing)
 
     @sdk.translate_exception
     def volume_type_create(self, **attr):

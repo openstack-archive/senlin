@@ -102,4 +102,5 @@ class TestCinderV2(base.SenlinTestCase):
 
     def test_volume_type_get(self):
         self.vo.volume_type_get('foo')
-        self.volume.get_type.assert_called_once_with('foo')
+        self.volume.find_type.assert_called_once_with('foo',
+                                                      ignore_missing=True)

@@ -508,8 +508,9 @@ class ServerProfile(base.Profile):
                 if bd[key] is None:
                     del bd[key]
             if 'volume_type' in bd:
-                bd['volume_type'] = self._validate_volume_type(
-                    bd['volume_type'])
+                volume_type = self._validate_volume_type(obj,
+                                                         bd['volume_type'])
+                bd['volume_type'] = volume_type.name
             if 'uuid' in bd and 'source_type' in bd:
                 if bd['source_type'] == 'image':
                     self._validate_image(obj, bd['uuid'], reason)
@@ -1104,7 +1105,7 @@ class ServerProfile(base.Profile):
         """Check if there is a new name to be assigned to the server.
 
         :param obj: The node object to operate on.
-        :param new_profile: The new profile which may contain a name for
+        :param profile: The new profile which may contain a name for
                             the server instance.
         :return: A tuple consisting a boolean indicating whether the name
                  needs change and the server name determined.
@@ -1185,8 +1186,6 @@ class ServerProfile(base.Profile):
         """Update server flavor.
 
         :param obj: The node object to operate on.
-        :param old_flavor: The identity of the current flavor.
-        :param new_flavor: The identity of the new flavor.
         :returns: Returns true if the flavor was updated or false otherwise.
         :raises: `EResourceUpdate` when operation was a failure.
         """
@@ -1347,7 +1346,7 @@ class ServerProfile(base.Profile):
             # If network properties didn't contain floating ip,
             # then we should better not make a port with floating ip
             # as candidate.
-            if (floating and not floating_network and not floating_ip_address):
+            if floating and not floating_network and not floating_ip_address:
                 continue
             port_id = net.get(self.PORT, None)
             if port_id and p['id'] != port_id:
@@ -1412,8 +1411,8 @@ class ServerProfile(base.Profile):
         obj.data['internal_ports'] = internal_ports
         node_obj.Node.update(self.context, obj.id, {'data': obj.data})
 
-    def _nw_compare(self, n1, n2, property):
-        return n1.get(property, None) == n2.get(property, None)
+    def _nw_compare(self, n1, n2, attribute):
+        return n1.get(attribute, None) == n2.get(attribute, None)
 
     def _update_network_update_port(self, obj, networks):
         """Update existing port in network from the node.
@@ -1845,7 +1844,7 @@ class ServerProfile(base.Profile):
                                              id=obj.physical_id,
                                              message=str(ex))
 
-        if (server is None or server.status != consts.VS_ACTIVE):
+        if server is None or server.status != consts.VS_ACTIVE:
             return False
 
         return True
