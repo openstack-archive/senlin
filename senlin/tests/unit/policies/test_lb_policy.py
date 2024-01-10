@@ -517,18 +517,21 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
         node1 = mock.Mock(id='node1')
         node2 = mock.Mock(id='node2')
         node3 = mock.Mock(id='node3')
-        cluster = mock.Mock()
-        cluster.nodes = [node1, node2, node3]
-        action = mock.Mock(action=consts.CLUSTER_SCALE_IN, data={})
-        action.entity = cluster
+        cluster = mock.Mock(nodes=[node1, node2, node3])
+        action = mock.Mock(
+            action=consts.CLUSTER_SCALE_IN,
+            entity=cluster,
+            data={},
+            inputs={'count': 1}
+        )
 
-        m_nodes_random.return_value = ['node1', 'node3']
+        m_nodes_random.return_value = ['node3']
+
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
-
-        res = policy._get_delete_candidates('CLUSTERID', action)
+        res = policy._get_delete_candidates('CLUSTER_ID', action)
 
         m_nodes_random.assert_called_once_with([node1, node2, node3], 1)
-        self.assertEqual(['node1', 'node3'], res)
+        self.assertEqual(['node3'], res)
 
     @mock.patch.object(scaleutils, 'parse_resize_params')
     @mock.patch.object(scaleutils, 'nodes_by_random')
@@ -618,6 +621,30 @@ class TestLoadBalancingPolicy(base.SenlinTestCase):
 
         res = policy._get_delete_candidates('CLUSTERID', action)
         self.assertEqual(['node3'], res)
+
+    @mock.patch.object(scaleutils, 'nodes_by_random')
+    def test_get_delete_candidates_no_deletion_data_count_gt_one_scale_in(
+        self, m_nodes_random
+    ):
+        self.context = utils.dummy_context()
+        node1 = mock.Mock(id='node1')
+        node2 = mock.Mock(id='node2')
+        node3 = mock.Mock(id='node3')
+        cluster = mock.Mock(nodes=[node1, node2, node3])
+        action = mock.Mock(
+            action=consts.CLUSTER_SCALE_IN,
+            entity=cluster,
+            data={},
+            inputs={'count': 2}
+        )
+
+        m_nodes_random.return_value = ['node1', 'node3']
+
+        policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
+        res = policy._get_delete_candidates('CLUSTER_ID', action)
+
+        m_nodes_random.assert_called_once_with([node1, node2, node3], 2)
+        self.assertEqual(['node1', 'node3'], res)
 
 
 @mock.patch.object(cluster_policy.ClusterPolicy, 'load')
