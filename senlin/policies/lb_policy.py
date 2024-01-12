@@ -670,7 +670,8 @@ class LoadBalancingPolicy(base.Policy):
         # except in the case of node replacement
         if (
             cluster.desired_capacity == cluster.min_size and
-                action.action != consts.CLUSTER_REPLACE_NODES
+                action.action not in [consts.CLUSTER_REPLACE_NODES,
+                                      consts.CLUSTER_RESIZE]
         ):
             return
 
