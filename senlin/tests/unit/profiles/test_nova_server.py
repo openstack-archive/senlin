@@ -98,8 +98,12 @@ class TestNovaServerBasic(base.SenlinTestCase):
             res
         )
 
-    def _stubout_profile(self, profile, mock_image=False, mock_flavor=False,
-                         mock_keypair=False, mock_net=False):
+    def _stubout_profile(self, profile,
+                         mock_image=False,
+                         mock_flavor=False,
+                         mock_keypair=False,
+                         mock_net=False,
+                         mock_volume_type=False):
         if mock_image:
             image = mock.Mock(id='FAKE_IMAGE_ID')
             self.patchobject(profile, '_validate_image', return_value=image)
@@ -127,6 +131,12 @@ class TestNovaServerBasic(base.SenlinTestCase):
             }]
             self.patchobject(profile, '_create_ports_from_properties',
                              return_value=fake_ports)
+        if mock_volume_type:
+            fake_volume_type = mock.Mock()
+            fake_volume_type.id = '588854a9'
+            fake_volume_type.name = 'FAKE_VOLUME_TYPE'
+            self.patchobject(profile, '_validate_volume_type',
+                             return_value=fake_volume_type)
 
     def test_do_create(self):
         cc = mock.Mock()
@@ -656,7 +666,8 @@ class TestNovaServerBasic(base.SenlinTestCase):
         profile._computeclient = cc
         profile._networkclient = nc
         self._stubout_profile(profile, mock_image=True, mock_flavor=True,
-                              mock_keypair=True, mock_net=True)
+                              mock_keypair=True, mock_net=True,
+                              mock_volume_type=True)
         mock_zone_info = self.patchobject(profile, '_update_zone_info')
         node_obj = mock.Mock(id='NODE_ID', cluster_id='', index=-1, data={})
         node_obj.name = None
