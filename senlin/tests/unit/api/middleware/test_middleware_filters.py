@@ -12,8 +12,6 @@
 
 from unittest import mock
 
-from oslo_middleware import ssl
-
 from senlin.api import middleware as mw
 from senlin.api.middleware import context
 from senlin.api.middleware import fault
@@ -51,17 +49,6 @@ class MiddlewareFilterTest(base.SenlinTestCase):
 
         self.assertEqual(exp, actual)
         mock_fw.assert_called_once_with(self.app)
-
-    @mock.patch.object(ssl, 'SSLMiddleware')
-    def test_sslmiddlware_filter(self, mock_ssl):
-        exp = mock.Mock()
-        mock_ssl.return_value = exp
-
-        actual = ssl.SSLMiddleware(self.app, self.conf, **self.local_conf)
-
-        self.assertEqual(exp, actual)
-        mock_ssl.assert_called_once_with(self.app, self.conf,
-                                         **self.local_conf)
 
     @mock.patch.object(context, 'ContextMiddleware')
     def test_contextmiddlware_filter(self, mock_ctx):
