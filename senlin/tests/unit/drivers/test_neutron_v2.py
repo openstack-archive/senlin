@@ -35,7 +35,8 @@ class TestNeutronV2Driver(base.SenlinTestCase):
     def test_init(self, mock_create_connection):
         params = self.conn_params
         neutron_v2.NeutronClient(params)
-        mock_create_connection.assert_called_once_with(params)
+        mock_create_connection.assert_called_once_with(params,
+                                                       service_type='network')
 
     def test_network_get_with_uuid(self):
         net_id = uuidutils.generate_uuid()

@@ -19,7 +19,7 @@ class OctaviaClient(base.DriverBase):
 
     def __init__(self, params):
         super(OctaviaClient, self).__init__(params)
-        self.conn = sdk.create_connection(params)
+        self.conn = sdk.create_connection(params, service_type='load-balancer')
 
     @sdk.translate_exception
     def loadbalancer_get(self, name_or_id, ignore_missing=False,

@@ -35,7 +35,8 @@ class TestGlanceV2(base.SenlinTestCase):
         gc = glance_v2.GlanceClient(self.conn_params)
 
         self.assertEqual(self.fake_conn, gc.conn)
-        mock_create.assert_called_once_with(self.conn_params)
+        mock_create.assert_called_once_with(self.conn_params,
+                                            service_type='image')
 
     def test_image_find(self, mock_create):
         mock_create.return_value = self.fake_conn

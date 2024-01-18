@@ -19,7 +19,7 @@ class GlanceClient(base.DriverBase):
 
     def __init__(self, params):
         super(GlanceClient, self).__init__(params)
-        self.conn = sdk.create_connection(params)
+        self.conn = sdk.create_connection(params, service_type='image')
         self.session = self.conn.session
 
     @sdk.translate_exception

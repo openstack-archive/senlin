@@ -34,7 +34,8 @@ class TestMistralV2(base.SenlinTestCase):
     def test_init(self):
         d = mistral_v2.MistralClient(self.conn_params)
 
-        self.mock_create.assert_called_once_with(self.conn_params)
+        self.mock_create.assert_called_once_with(self.conn_params,
+                                                 service_type='workflow')
         self.assertEqual(self.mock_conn, d.conn)
 
     def test_workflow_find(self):

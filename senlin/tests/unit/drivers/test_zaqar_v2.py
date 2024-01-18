@@ -35,7 +35,8 @@ class TestZaqarV2(base.SenlinTestCase):
 
     def test_init(self):
         zc = zaqar_v2.ZaqarClient(self.conn_params)
-        self.mock_create.assert_called_once_with(self.conn_params)
+        self.mock_create.assert_called_once_with(self.conn_params,
+                                                 service_type='messaging')
         self.assertEqual(self.mock_conn, zc.conn)
 
     def test_queue_create(self):

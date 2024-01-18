@@ -85,7 +85,6 @@ class TestTrustMiddleware(base.SenlinTestCase):
         mock_driver.assert_called_once_with()
         x_driver.identity.assert_called_once_with({
             'auth_url': self.context.auth_url,
-            'project_id': self.context.project_id,
             'user_id': self.context.user_id,
             'token': self.context.auth_token,
         })
@@ -123,7 +122,6 @@ class TestTrustMiddleware(base.SenlinTestCase):
         mock_driver.assert_called_once_with()
         x_driver.identity.assert_called_once_with({
             'auth_url': self.context.auth_url,
-            'project_id': self.context.project_id,
             'user_id': self.context.user_id,
             'token': self.context.auth_token,
         })
@@ -162,7 +160,6 @@ class TestTrustMiddleware(base.SenlinTestCase):
         mock_driver.assert_called_once_with()
         x_driver.identity.assert_called_once_with({
             'auth_url': self.context.auth_url,
-            'project_id': self.context.project_id,
             'user_id': self.context.user_id,
             'token': self.context.auth_token,
         })
@@ -205,7 +202,6 @@ class TestTrustMiddleware(base.SenlinTestCase):
         mock_driver.assert_called_once_with()
         x_driver.identity.assert_called_once_with({
             'auth_url': self.context.auth_url,
-            'project_id': self.context.project_id,
             'user_id': self.context.user_id,
             'token': self.context.auth_token,
         })

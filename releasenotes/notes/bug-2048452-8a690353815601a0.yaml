@@ -1,0 +1,9 @@
+---
+fixes:
+  - |
+    [`bug 2048452 <https://bugs.launchpad.net/senlin/+bug/2048452>`_]
+    Fixed a bug where `TrustMiddleware` unable to fetch trusts/credentials
+    from Identity service, may be related to: 
+    https://bugs.launchpad.net/keystone/+bug/1959674
+    This bug is fixed by using `admin_token` instead of `token` auth method
+    to fetch trusts/credentials from Identity service.

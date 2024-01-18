@@ -17,13 +17,13 @@ import sys
 
 import functools
 import openstack
-from openstack import connection
 from openstack import exceptions as sdk_exc
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from requests import exceptions as req_exc
 
+from senlin.common import context
 from senlin.common import exception as senlin_exc
 from senlin import version
 
@@ -106,34 +106,61 @@ def translate_exception(func):
     return invoke_with_catch
 
 
-def create_connection(params=None):
-    if params is None:
-        params = {}
-
-    if 'token' in params:
-        params['auth_type'] = 'token'
-    params['app_name'] = USER_AGENT
-    params['app_version'] = version.version_info.version_string()
+def create_connection(params=None, service_type='identity'):
+    """Create a connection to SDK service client."""
+    params = params or {}
     params.setdefault('region_name', cfg.CONF.default_region_name)
     params.setdefault('identity_api_version', '3')
     params.setdefault('messaging_api_version', '2')
 
+    if 'token' in params:
+        # NOTE(daiplg): If existing token is provided, use admin_token plugin
+        # to authenticate to avoid fetching service catalog or determining
+        # scope info because of:
+        #   https://bugs.launchpad.net/keystone/+bug/1959674
+        # Refer: keystoneauth1.loading._plugins.admin_token.AdminToken
+        params['auth_type'] = 'admin_token'
+        if 'endpoint' not in params:
+            # NOTE(daiplg): Because there is no service catalog the endpoint
+            # that is supplied with initialization is used for all operations
+            # performed with this plugin so must be the full base URL to
+            # an actual service.
+            service_credentials = context.get_service_credentials() or {}
+            admin_connection = _create_connection(service_credentials)
+
+            region_name = params['region_name']
+            interface = service_credentials.get('interface', 'public')
+
+            temp_adapter = admin_connection.config.get_session_client(
+                service_type=service_type,
+                region_name=region_name,
+                allow_version_hack=True,
+            )
+            params['endpoint'] = temp_adapter.get_endpoint(
+                region_name=region_name,
+                interface=interface
+            )
+    return _create_connection(params)
+
+
+def _create_connection(params=None):
+    """Create a connection to SDK service client."""
+    params = params or {}
     try:
-        conn = connection.Connection(**params)
+        connection = openstack.connect(
+            load_envvars=False,
+            load_yaml_config=False,
+            insecure=not cfg.CONF.authentication.verify_ssl,
+            cafile=cfg.CONF.authentication.cafile,
+            cert=cfg.CONF.authentication.certfile,
+            key=cfg.CONF.authentication.keyfile,
+            app_name=USER_AGENT,
+            app_version=version.version_info.version_string(),
+            **params,
+        )
     except Exception as ex:
         raise parse_exception(ex)
-
-    if cfg.CONF.authentication.certfile and \
-            cfg.CONF.authentication.keyfile:
-        conn.session.cert = (cfg.CONF.authentication.certfile,
-                             cfg.CONF.authentication.keyfile)
-    if cfg.CONF.authentication.verify_ssl:
-        if cfg.CONF.authentication.cafile:
-            conn.session.verify = cfg.CONF.authentication.cafile
-        else:
-            conn.session.verify = cfg.CONF.authentication.verify_ssl
-
-    return conn
+    return connection
 
 
 def authenticate(**kwargs):
@@ -151,6 +178,7 @@ def authenticate(**kwargs):
 
 class FakeResourceObject(object):
     """Generate a fake SDK resource object based on given dictionary"""
+
     def __init__(self, params):
         for key in params:
             setattr(self, key, params[key])

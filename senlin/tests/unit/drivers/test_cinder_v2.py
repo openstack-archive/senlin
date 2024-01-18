@@ -32,7 +32,8 @@ class TestCinderV2(base.SenlinTestCase):
         self.vo = cinder_v2.CinderClient(self.conn_params)
 
     def test_init(self):
-        self.mock_create.assert_called_once_with(self.conn_params)
+        self.mock_create.assert_called_once_with(self.conn_params,
+                                                 service_type='block-storage')
         self.assertEqual(self.mock_conn, self.vo.conn)
 
     def test_volume_get(self):

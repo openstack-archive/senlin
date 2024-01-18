@@ -34,7 +34,8 @@ class TestHeatV1(base.SenlinTestCase):
         self.hc = heat_v1.HeatClient(self.conn_params)
 
     def test_init(self):
-        self.mock_create.assert_called_once_with(self.conn_params)
+        self.mock_create.assert_called_once_with(self.conn_params,
+                                                 service_type='orchestration')
         self.assertEqual(self.mock_conn, self.hc.conn)
 
     def test_stack_create(self):

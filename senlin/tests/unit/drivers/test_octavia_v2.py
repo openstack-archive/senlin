@@ -33,7 +33,9 @@ class TestOctaviaV2Driver(base.SenlinTestCase):
     def test_init(self, mock_create_connection):
         params = self.conn_params
         octavia_v2.OctaviaClient(params)
-        mock_create_connection.assert_called_once_with(params)
+        mock_create_connection.assert_called_once_with(
+            params,
+            service_type='load-balancer')
 
     def test_loadbalancer_get(self):
         lb_id = 'loadbalancer_identifier'
