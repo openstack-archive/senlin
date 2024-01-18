@@ -1,0 +1,8 @@
+---
+fixes:
+  - |
+    Excluding CLUSTER_RESIZE from the list of actions that skip pre-op checks
+    if the cluster is already at the minimum threshold. When the cluster is at
+    the minimum threshold, pre-operation LB will function with actions such as
+    CLUSTER_DEL_NODES, CLUSTER_SCALE_IN, NODE_DELETE, and will skip actions
+    like CLUSTER_REPLACE_NODES and CLUSTER_RESIZE.

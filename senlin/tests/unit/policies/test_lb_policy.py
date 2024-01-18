@@ -1505,6 +1505,7 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
     def test_pre_op_cluster_resize_at_min_threshold(
         self, m_cluster_get, m_candidates, *args, **kwargs
     ):
+        cluster_id = 'CLUSTER_ID'
         cluster = mock.Mock(
             user='user1',
             project='project1',
@@ -1520,10 +1521,10 @@ class TestLoadBalancingPolicyOperations(base.SenlinTestCase):
         m_cluster_get.return_value = cluster
 
         policy = lb_policy.LoadBalancingPolicy('test-policy', self.spec)
-        res = policy.pre_op(cluster_id='CLUSTER_ID', action=action)
+        res = policy.pre_op(cluster_id=cluster_id, action=action)
 
         self.assertIsNone(res)
-        m_candidates.assert_not_called()
+        m_candidates.assert_called_once_with(cluster_id, action)
 
     @mock.patch.object(
         lb_policy.LoadBalancingPolicy, '_get_delete_candidates'
