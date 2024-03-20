@@ -120,8 +120,12 @@ class TestNovaV2(base.SenlinTestCase):
             'metadata': {'k1': 'v1'}
         }
         d.server_rebuild('sid', 'new_image', 'new_name', 'new_pass', **attrs)
+        attrs.update({
+            "name": 'new_name',
+            "admin_password": 'new_pass'
+        })
         self.compute.rebuild_server.assert_called_once_with(
-            'sid', 'new_name', 'new_pass', image='new_image', **attrs)
+            'sid', image='new_image', **attrs)
 
     def test_server_resize(self):
         d = nova_v2.NovaClient(self.conn_params)
