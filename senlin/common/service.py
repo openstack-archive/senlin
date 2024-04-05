@@ -13,10 +13,6 @@
 #    under the License.
 from oslo_log import log as logging
 from oslo_service import service
-
-from oslo_service import sslutils
-from oslo_service import wsgi
-from oslo_utils import netutils
 from oslo_utils import uuidutils
 
 from senlin.common import context as senlin_context
@@ -123,42 +119,3 @@ class Service(service.Service):
                     'ex': ex,
                 }
             )
-
-
-class WSGIService(service.Service):
-    def __init__(self, app, name, listen, max_url_len=None):
-        super(WSGIService, self).__init__(CONF.senlin_api.threads)
-        self.app = app
-        self.name = name
-
-        self.listen = listen
-
-        self.servers = []
-
-        for address in self.listen:
-            host, port = netutils.parse_host_port(address)
-            server = wsgi.Server(
-                CONF, name, app,
-                host=host,
-                port=port,
-                pool_size=CONF.senlin_api.threads,
-                use_ssl=sslutils.is_enabled(CONF),
-                max_url_len=max_url_len
-            )
-
-            self.servers.append(server)
-
-    def start(self):
-        for server in self.servers:
-            server.start()
-        super(WSGIService, self).start()
-
-    def stop(self, graceful=True):
-        for server in self.servers:
-            server.stop()
-        super(WSGIService, self).stop(graceful)
-
-    def wait(self):
-        for server in self.servers:
-            server.wait()
-        super(WSGIService, self).wait()
