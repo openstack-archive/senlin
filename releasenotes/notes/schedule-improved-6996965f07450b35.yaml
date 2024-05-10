@@ -1,6 +1,0 @@
----
-features:
-  - |
-    The action scheduler has been refactored so that no premature sleeping will
-    be performed and no unwanted exceptions will be thrown when shutting down
-    workers.

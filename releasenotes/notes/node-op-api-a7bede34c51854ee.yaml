@@ -1,4 +1,0 @@
----
-features:
-  - Added new `node-operation` API for performing profile type supported
-    operations on a node.

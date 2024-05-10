@@ -1,4 +1,0 @@
----
-Fixes:
-  - |
-    Fixed db locking logic to avoid deadlock.

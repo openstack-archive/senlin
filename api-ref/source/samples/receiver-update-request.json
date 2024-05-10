@@ -1,9 +1,0 @@
-{
-    "receiver": {
-        "name": "new-name",
-        "action": "CLUSTER_SCALE_OUT",
-        "params": {
-            "count": "2"
-        }
-    }
-}

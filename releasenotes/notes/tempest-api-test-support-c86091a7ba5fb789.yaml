@@ -1,4 +1,0 @@
----
-features:
-  - Tempest API test for all Senlin API interfaces for both positive
-    and negative cases.

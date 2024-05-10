@@ -1,9 +1,0 @@
-{
-    "cluster": {
-        "metadata": null,
-        "name": null,
-        "profile_id": null,
-        "timeout": 30,
-        "profile_only": true
-    }
-}

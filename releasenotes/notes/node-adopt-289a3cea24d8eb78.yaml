@@ -1,5 +1,0 @@
----
-features:
-  - |
-    Added support to adopt an existing object as Senlin node given the UUID
-    and profile type to use.

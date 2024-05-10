@@ -1,9 +1,0 @@
-{
-    "del_nodes": {
-        "nodes": [
-            "aff0135",
-            "e28a207"
-        ],
-        "destroy_after_deletion": false
-    }
-}

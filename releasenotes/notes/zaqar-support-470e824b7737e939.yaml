@@ -1,4 +1,0 @@
----
-features:
-  - Zaqar resources including "queue", "message", "subscription" and
-    "claim" are now supported in Senlin driver.

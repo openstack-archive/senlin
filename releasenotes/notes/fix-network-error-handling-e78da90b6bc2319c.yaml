@@ -1,3 +1,0 @@
----
-fixes:
-  - Fixed error handling when network is not found in nova server creation.

@@ -1,4 +1,0 @@
----
-features:
-  - Added support to listen to heat event notifications for stack failure
-    detection.

@@ -1,4 +1,0 @@
----
-features:
-  - |
-    Added a scheduler thread pool size.

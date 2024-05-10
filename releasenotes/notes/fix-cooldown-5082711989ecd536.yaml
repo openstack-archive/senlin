@@ -1,4 +1,0 @@
----
-fixes:
-  - |
-    Fixed immature return from policy cooldown check.

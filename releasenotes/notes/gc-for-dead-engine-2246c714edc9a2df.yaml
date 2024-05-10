@@ -1,6 +1,0 @@
----
-features:
-  - |
-    When an engine is detected to be dead, the actions (and the clusters/nodes
-    locked by those actions) are now unlocked. Such clusters and nodes can be
-    operated again.

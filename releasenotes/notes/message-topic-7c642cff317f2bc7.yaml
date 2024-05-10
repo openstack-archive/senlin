@@ -1,4 +1,0 @@
----
-features:
-  - A new configuration option is exposed for the message topic to use when
-    sending event notifications.

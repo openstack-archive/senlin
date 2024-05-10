@@ -1,4 +1,0 @@
----
-features:
-  - Added retry logic to post_lifecycle_hook_message when posting a lifecyle hook to Zaqar.
-

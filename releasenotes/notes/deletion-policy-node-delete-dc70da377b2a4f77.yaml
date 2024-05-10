@@ -1,4 +1,0 @@
----
-features:
-  - The deletion policy is enhanced to handle 'NODE_DELETE' actions which
-    derives from a standalone 'node_delete' request.

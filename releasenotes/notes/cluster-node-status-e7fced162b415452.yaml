@@ -1,3 +1,0 @@
----
-fixes:
-  - Fixed cluster/node status setting after a cluster/node check operation.

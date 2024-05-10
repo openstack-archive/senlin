@@ -1,4 +1,0 @@
----
-features:
-  - Integrated OSProfiler into Senlin, support using OSProfiler to measure
-    performance of Senlin.

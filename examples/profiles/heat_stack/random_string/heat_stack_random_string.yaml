@@ -1,7 +1,0 @@
-type: os.heat.stack
-version: 1.0
-properties:
-  name: random_string_stack
-  template: random_string_template.yaml
-  context:
-    region_name: RegionOne

@@ -1,4 +1,0 @@
----
-fixes:
-  - |
-    Fixed a problem related to duplicated event dumps during action execution.

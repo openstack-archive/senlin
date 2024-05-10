@@ -1,3 +1,0 @@
----
-fixes:
-  - Fixed bug related to cluster-collect API where the path parameter is None.

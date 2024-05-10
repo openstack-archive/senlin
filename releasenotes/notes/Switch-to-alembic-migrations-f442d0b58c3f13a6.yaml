@@ -1,4 +1,0 @@
----
-other:
-  - |
-    Senlin will now use Alembic migrations for database schema updates.

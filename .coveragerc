@@ -1,9 +1,0 @@
-[run]
-branch = True
-source = senlin
-omit = senlin/tests/*,senlin/hacking/*
-concurrency = greenlet
-
-[report]
-ignore_errors = True
-

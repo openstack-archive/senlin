@@ -1,3 +1,0 @@
-#!/bin/sh
-
-oslopolicy-sample-generator --config-file tools/policy-generator.conf

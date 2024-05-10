@@ -1,4 +1,0 @@
----
-fixes:
-  - The new API documentation include fixes to the header like 'location',
-    'OpenStack-Request-Id' and responses during version negotiation.

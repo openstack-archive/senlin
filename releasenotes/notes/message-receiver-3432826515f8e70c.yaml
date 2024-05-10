@@ -1,4 +1,0 @@
----
-features:
-  - Added a new type of receiver (i.e. message) which is based on Zaqar
-    message queue.

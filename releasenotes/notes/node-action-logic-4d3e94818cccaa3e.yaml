@@ -1,5 +1,0 @@
----
-fixes:
-  - The node action execution logic is fixed so that it will skip cluster
-    checking for orphan nodes and policy checking will be skipped for derived
-    node actions.

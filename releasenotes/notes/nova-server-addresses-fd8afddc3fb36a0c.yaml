@@ -1,5 +1,0 @@
----
-upgrade:
-  - The 'details/addresses' property of a node output for a nova server used
-    to contain only some trimed information. This has been changed to a
-    faithful dumping of the 'addresses' property.

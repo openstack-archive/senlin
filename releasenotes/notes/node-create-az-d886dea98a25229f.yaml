@@ -1,4 +1,0 @@
----
-features:
-  - The availability-zone placement policy is improved to handle NODE_CREATE
-    actions which are derived from 'node_create' RPC requests.

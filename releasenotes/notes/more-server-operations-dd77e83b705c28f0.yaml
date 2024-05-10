@@ -1,4 +1,0 @@
----
-features:
-  - Many new operations are added to os.nova.server profile type. These
-    operations can be shown using the "profile-type-ops" API.

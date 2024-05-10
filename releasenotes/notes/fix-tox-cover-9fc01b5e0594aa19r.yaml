@@ -1,4 +1,0 @@
----
-fixes:
-  - |
-    Fixed openstack-tox-cover which was broken as part of the switch to stestr.

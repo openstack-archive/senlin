@@ -1,4 +1,0 @@
----
-features:
-  - The affinity policy, loadbalancing policy now support spec validation.
-    Invalid properties can be detected using policy-validate API.

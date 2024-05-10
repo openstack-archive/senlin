@@ -1,5 +1,0 @@
----
-features:
-  - |
-    New logics added to event-list operation so that users can specify the
-    name or short-id of a cluster for filtering.

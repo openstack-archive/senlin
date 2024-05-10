@@ -1,6 +1,0 @@
----
-fixes:
-  - |
-    Fixed a bug where exception raised in the `_resolve_bdm` method of the
-    `senlin.profile.os.nova.server` profile would cause cluster cannot create
-    new nodes.

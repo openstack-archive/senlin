@@ -1,8 +1,0 @@
----
-features:
-  - Event notifications (versioned) are added to enable senlin-engine to send
-    out messaging events when configured. The old event repo is adapted to
-    follow the same design.
-upgrade:
-  - New setup configuration items are provided to enable the "message" and/or
-    "database" event generation.

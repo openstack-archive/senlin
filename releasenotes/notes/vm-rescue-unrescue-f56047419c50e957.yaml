@@ -1,4 +1,0 @@
----
-features:
-  - |
-    Added operation support to rescue and unrescue a nova server node.

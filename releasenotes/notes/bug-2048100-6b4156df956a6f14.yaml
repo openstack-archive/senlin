@@ -1,6 +1,0 @@
----
-fixes:
-  - |
-    Fix incorrect handling of actions causing node reduction in cluster
-    and load balancer with desired_capacity = min_size. The node remains in
-    the cluster, and its IP is no longer removed from the load balancer.

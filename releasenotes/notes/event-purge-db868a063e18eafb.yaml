@@ -1,4 +1,0 @@
----
-features:
-  - A event_purge subcommand is added to senlin-manage tool for purging events
-    generated in a specific project.

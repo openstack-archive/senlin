@@ -1,4 +1,0 @@
----
-fixes:
-  - Removed 'metadata' from profile query parameters because the current
-    support is known to have issues.

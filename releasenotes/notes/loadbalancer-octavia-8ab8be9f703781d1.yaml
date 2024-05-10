@@ -1,6 +1,0 @@
----
-features:
-  - Added support to Octavia as the load-balancer driver.
-upgrade:
-  - The Octavia service must be properly installed and configured to enable
-    load-balancing policy.

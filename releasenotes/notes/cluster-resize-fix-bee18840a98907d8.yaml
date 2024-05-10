@@ -1,4 +1,0 @@
----
-fixes:
-  - Fixed a bug related to oslo.versionedobjects change that prevents cluster
-    actions to be properly encoded in JSON requests.

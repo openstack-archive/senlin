@@ -1,6 +1,0 @@
----
-features:
-  - |
-    Add cluster_id as a parameter in query action APIs.
-    This allow we can filter result returned from API instead by received
-    so many result action.

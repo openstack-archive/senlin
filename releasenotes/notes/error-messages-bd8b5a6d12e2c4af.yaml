@@ -1,4 +1,0 @@
----
-features:
-  - Error messages returned from API requests are now unified. All parameter
-    validation failures of the same reason returns a similar message.

@@ -1,4 +1,0 @@
----
-fixes:
-  - Fixed DB layer dead lock issue that surfaced recently during concurrent
-    DB operations.

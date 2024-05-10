@@ -1,4 +1,0 @@
----
-fixes:
-  - Node creation request that might break cluster size constraints now results
-    in node ERROR status.

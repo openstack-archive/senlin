@@ -1,5 +1,0 @@
----
-features:
-  - |
-    When a cluster or a node is deleted, the action records associated with
-    them are now automatically deleted from database.

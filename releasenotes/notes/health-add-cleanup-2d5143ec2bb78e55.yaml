@@ -1,3 +1,0 @@
----
-features:
-  - Adds a cleanup task on the health manager to help prevent orphaned health checks.

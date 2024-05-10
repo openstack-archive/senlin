@@ -1,4 +1,0 @@
----
-fixes:
-  - |
-    Fixed an error when restarting a docker container node.

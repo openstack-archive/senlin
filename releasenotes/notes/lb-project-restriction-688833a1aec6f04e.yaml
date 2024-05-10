@@ -1,4 +1,0 @@
----
-features:
-  - |
-    Bypass lb project restriction for get_details in LBaaS driver.

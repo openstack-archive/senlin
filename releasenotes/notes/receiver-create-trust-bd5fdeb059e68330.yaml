@@ -1,3 +1,0 @@
----
-fixes:
-  - Fixed bugs related to receiver creation when type is set to 'message'.

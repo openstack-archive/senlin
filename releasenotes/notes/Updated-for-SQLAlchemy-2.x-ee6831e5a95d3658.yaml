@@ -1,4 +1,0 @@
----
-fixes:
-  - |
-    Fixed compatibility issues with SQLAlchemy 2.x.

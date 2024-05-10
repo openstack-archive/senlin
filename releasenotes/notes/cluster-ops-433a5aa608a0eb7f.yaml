@@ -1,5 +1,0 @@
----
-features:
-  - A new API "cluster-op" is introduced to trigger a profile type specific
-    operation on all nodes in a cluster. This API is available since API
-    micro-version 1.4.

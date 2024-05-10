@@ -1,5 +1,0 @@
----
-fixes:
-  - |
-    Fixed various problems in load-balancer policy so that it can handle
-    node-recover and cluster-recover operations properly.

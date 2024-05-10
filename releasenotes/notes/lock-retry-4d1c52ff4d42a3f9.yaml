@@ -1,3 +1,0 @@
----
-fixes:
-  - DB lock contentions are alleviated by allowing lock retries.

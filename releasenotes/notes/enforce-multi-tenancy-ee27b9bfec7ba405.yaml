@@ -1,4 +1,0 @@
----
-security:
-  - Multi-tenancy is enhanced so that an admin role user has to respect
-    project isolation unless explicitly asking for an exception.

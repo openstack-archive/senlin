@@ -1,5 +1,0 @@
----
-features:
-  - |
-    Allow the cluster delete action to detach policies and delete receivers instead
-    of erroring.

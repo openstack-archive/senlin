@@ -1,4 +1,0 @@
----
-features:
-  - The senlin-engine now supports fencing a corrupted VM instance by deleting
-    it forcibly.

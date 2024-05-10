@@ -1,6 +1,0 @@
----
-fixes:
-  - |
-    Addresses an issue related to the SCALE_IN action. The bug caused
-    the removal of only one node from the load balancer even when the
-    count of inputs was greater than 1.

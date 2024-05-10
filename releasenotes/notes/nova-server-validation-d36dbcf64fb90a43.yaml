@@ -1,5 +1,0 @@
----
-features:
-  - With the new 'profile-validate' API, the nova server profile now supports
-    the validation of its 'flavor', 'image' (if provided), 'availability_zone'
-    and block device driver properties.

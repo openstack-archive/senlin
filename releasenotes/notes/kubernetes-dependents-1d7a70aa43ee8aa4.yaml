@@ -1,5 +1,0 @@
----
-features:
-  - |
-    Added dependency relationship between the master cluster and the worker
-    cluster creatd for Kubernetes.

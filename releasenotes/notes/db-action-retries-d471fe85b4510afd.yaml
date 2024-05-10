@@ -1,4 +1,0 @@
----
-other:
-  - |
-    DB layer operations now feature some retries if there are transient errors.
